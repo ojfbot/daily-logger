@@ -1,20 +1,18 @@
 name: Daily Dev Blog
 
-# Generates one blog article per day by sweeping GitHub activity across all
-# ojfbot repos and calling Claude, then commits it to articles/YYYY-MM-DD.md.
+# Two jobs:
+#   generate  — sweeps GitHub activity, calls Claude, commits articles/YYYY-MM-DD.md
+#   pages     — builds Jekyll site and deploys to GitHub Pages
 #
-# Required secrets (set in this repo's Settings → Secrets):
-#   ANTHROPIC_API_KEY     — Claude API key
-#   GITHUB_TOKEN          — auto-provided by Actions, needs org read access
-#                           (default token is sufficient for public repos;
-#                            for private repos use a PAT with repo scope)
+# Required secrets:
+#   ANTHROPIC_API_KEY   — Claude API key
+#   GITHUB_TOKEN        — auto-provided; use a PAT for private ojfbot repos
 #
-# Optional secrets:
-#   BLOGENGINE_API_URL    — when set, also POSTs the article to BlogEngine
+# Enable GitHub Pages in repo Settings → Pages → Source: GitHub Actions
 
 on:
   schedule:
-    - cron: '0 9 * * *'    # 09:00 UTC daily — after overnight commits land
+    - cron: '0 9 * * *'    # 09:00 UTC daily
   workflow_dispatch:
     inputs:
       date_override:
@@ -27,7 +25,6 @@ on:
         type: boolean
         default: false
 
-# Never cancel a blog run mid-generation
 concurrency:
   group: daily-blog
   cancel-in-progress: false
@@ -38,15 +35,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write       # git push the article
-      issues: read          # gh api /issues
-      pull-requests: read   # gh api /pulls
+      contents: write
+      issues: read
+      pull-requests: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0       # full history so previous articles are readable
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup pnpm
@@ -70,11 +67,8 @@ jobs:
           OJFBOT_ORG: ojfbot
           DATE_OVERRIDE: ${{ github.event.inputs.date_override }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
-          BLOGENGINE_API_URL: ${{ secrets.BLOGENGINE_API_URL }}
         run: pnpm generate
 
-      # Always upload the article as an artifact so it's inspectable
-      # even on dry runs or if the commit step fails.
       - name: Upload article artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -97,7 +91,56 @@ jobs:
           DATE="${{ github.event.inputs.date_override }}"
           DATE="${DATE:-$(date -u +%Y-%m-%d)}"
           git commit -m "blog: ${DATE} [skip ci]"
-          # Rebase in case a concurrent run (e.g. manual + scheduled) raced
           git pull --rebase origin ${{ github.ref_name }} \
             && git push \
             || echo "::warning::Push failed — article saved as artifact above."
+
+  pages:
+    name: Deploy to GitHub Pages
+    needs: generate
+    # Run on every push to main (including the article commit) and on manual dispatch.
+    # Skipped during dry runs since no new article is committed.
+    if: |
+      always() &&
+      github.event.inputs.dry_run != 'true' &&
+      (needs.generate.result == 'success' || needs.generate.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Pull latest so we have the article just committed by generate job
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Setup Ruby (Jekyll)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Install Jekyll
+        run: gem install jekyll bundler
+
+      - name: Build Jekyll site
+        run: jekyll build --destination _site
+        env:
+          JEKYLL_ENV: production
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site/
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

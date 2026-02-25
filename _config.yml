@@ -1,0 +1,32 @@
+title: "ojfbot dev log"
+description: "Building Frame — a daily record."
+baseurl: ""
+url: ""
+
+# No theme — custom minimal layouts only
+theme: null
+
+# Articles live in articles/ as a Jekyll collection
+collections:
+  articles:
+    output: true
+    permalink: /:collection/:name/
+
+defaults:
+  - scope:
+      path: ""
+      type: articles
+    values:
+      layout: post
+
+exclude:
+  - node_modules/
+  - pnpm-lock.yaml
+  - package.json
+  - tsconfig.json
+  - src/
+  - dist/
+  - .env
+  - .env.example
+  - .github/
+  - CLAUDE.md

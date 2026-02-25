@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ site.title }}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --border: #222;
+      --text: #e8e8e8;
+      --muted: #666;
+      --accent: #7c6af7;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-sans); min-height: 100vh; }
+    header {
+      padding: 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+    }
+    header h1 { font-family: var(--font-mono); font-size: 1rem; color: var(--accent); letter-spacing: -0.02em; }
+    header p { font-size: 0.85rem; color: var(--muted); }
+    main { max-width: 680px; margin: 0 auto; padding: 3rem 2rem; }
+    .article-list { list-style: none; display: flex; flex-direction: column; gap: 2rem; }
+    .article-item { border-left: 2px solid var(--border); padding-left: 1.5rem; transition: border-color 0.15s; }
+    .article-item:hover { border-color: var(--accent); }
+    .article-date { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); margin-bottom: 0.4rem; }
+    .article-title a { color: var(--text); text-decoration: none; font-size: 1rem; font-weight: 500; line-height: 1.4; }
+    .article-title a:hover { color: var(--accent); }
+    .article-summary { font-size: 0.85rem; color: var(--muted); margin-top: 0.35rem; line-height: 1.5; }
+    .article-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+    .tag { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); background: var(--surface);
+           border: 1px solid var(--border); padding: 0.1rem 0.5rem; border-radius: 3px; }
+    footer { text-align: center; padding: 3rem 2rem; font-size: 0.75rem; color: var(--muted); border-top: 1px solid var(--border); }
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ojfbot/dev-log</h1>
+    <p>{{ site.description }}</p>
+  </header>
+  <main>
+    <ul class="article-list">
+      {% assign articles = site.articles | sort: 'date' | reverse %}
+      {% for article in articles %}
+      <li class="article-item">
+        <div class="article-date">{{ article.date | date: "%Y-%m-%d" }}</div>
+        <div class="article-title"><a href="{{ article.url }}">{{ article.title }}</a></div>
+        {% if article.summary %}<div class="article-summary">{{ article.summary }}</div>{% endif %}
+        {% if article.tags %}
+        <div class="article-tags">
+          {% for tag in article.tags %}<span class="tag">{{ tag }}</span>{% endfor %}
+        </div>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </main>
+  <footer>
+    <a href="https://github.com/ojfbot/daily-logger">ojfbot/daily-logger</a>
+  </footer>
+</body>
+</html>
