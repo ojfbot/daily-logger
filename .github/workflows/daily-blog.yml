@@ -1,0 +1,103 @@
+name: Daily Dev Blog
+
+# Generates one blog article per day by sweeping GitHub activity across all
+# ojfbot repos and calling Claude, then commits it to articles/YYYY-MM-DD.md.
+#
+# Required secrets (set in this repo's Settings → Secrets):
+#   ANTHROPIC_API_KEY     — Claude API key
+#   GITHUB_TOKEN          — auto-provided by Actions, needs org read access
+#                           (default token is sufficient for public repos;
+#                            for private repos use a PAT with repo scope)
+#
+# Optional secrets:
+#   BLOGENGINE_API_URL    — when set, also POSTs the article to BlogEngine
+
+on:
+  schedule:
+    - cron: '0 9 * * *'    # 09:00 UTC daily — after overnight commits land
+  workflow_dispatch:
+    inputs:
+      date_override:
+        description: 'Generate for this date (YYYY-MM-DD). Defaults to today UTC.'
+        required: false
+        type: string
+      dry_run:
+        description: 'Print article to logs without writing or committing.'
+        required: false
+        type: boolean
+        default: false
+
+# Never cancel a blog run mid-generation
+concurrency:
+  group: daily-blog
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate & commit article
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write       # git push the article
+      issues: read          # gh api /issues
+      pull-requests: read   # gh api /pulls
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0       # full history so previous articles are readable
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate article
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OJFBOT_ORG: ojfbot
+          DATE_OVERRIDE: ${{ github.event.inputs.date_override }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          BLOGENGINE_API_URL: ${{ secrets.BLOGENGINE_API_URL }}
+        run: pnpm generate
+
+      # Always upload the article as an artifact so it's inspectable
+      # even on dry runs or if the commit step fails.
+      - name: Upload article artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: article-${{ github.run_number }}
+          path: articles/
+          retention-days: 90
+          if-no-files-found: ignore
+
+      - name: Commit and push article
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          git config user.name "ojfbot-blog[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add articles/
+          if git diff --staged --quiet; then
+            echo "No changes — article already exists for this date."
+            exit 0
+          fi
+          DATE="${{ github.event.inputs.date_override }}"
+          DATE="${DATE:-$(date -u +%Y-%m-%d)}"
+          git commit -m "blog: ${DATE} [skip ci]"
+          # Rebase in case a concurrent run (e.g. manual + scheduled) raced
+          git pull --rebase origin ${{ github.ref_name }} \
+            && git push \
+            || echo "::warning::Push failed — article saved as artifact above."
