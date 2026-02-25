@@ -63,7 +63,9 @@ jobs:
       - name: Generate article
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GH_TOKEN is preferred by the gh CLI over GITHUB_TOKEN.
+          # The PAT has read access to all ojfbot repos (private + public).
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           OJFBOT_ORG: ojfbot
           DATE_OVERRIDE: ${{ github.event.inputs.date_override }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
