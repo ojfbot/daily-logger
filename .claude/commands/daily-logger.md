@@ -181,4 +181,24 @@ Local dev: create `.env` from `.env.example`. `.env` is gitignored.
 | `principal-cloud-architect` | Principal Cloud Architect, Enterprise IT | Architecture defensibility, ADRs, cost story, live demos, innovation lab tangibility |
 | `design-program-manager` | Senior DPM, Platform Products (Roblox) | Demo choreography, visual design visibility, Roblox platform analogy, the missing moment |
 
+---
+
+## GitHub comment convention
+
+**All comments, reviews, and issue bodies posted by Claude must end with:**
+
+```
+---
+*🤖 Claude Code*
+```
+
+This distinguishes Claude-generated GitHub content from human posts. Apply this footer to:
+- `gh pr review --comment` posts
+- `gh issue create` body
+- `gh api` PATCH/PUT edits to existing comments or issues
+- Any `gh pr comment` calls
+
+Human posts from the repo owner (`ojfbot`) will not have this footer. If you see a comment
+without it that you authored, edit it to add the signature.
+
 $ARGUMENTS
