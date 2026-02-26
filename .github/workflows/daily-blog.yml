@@ -74,7 +74,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: article-${{ github.run_number }}
-          path: articles/
+          path: _articles/
           retention-days: 90
           if-no-files-found: ignore
 
@@ -101,7 +101,7 @@ jobs:
           fi
 
           git checkout -b "${BRANCH}"
-          git add articles/
+          git add _articles/
 
           if git diff --staged --quiet; then
             echo "::notice::No article changes staged."
@@ -129,7 +129,7 @@ jobs:
           BRANCH="${{ steps.commit.outputs.branch }}"
 
           python3 .github/scripts/build_pr_body.py \
-            "${DATE}" "${BRANCH}" "articles/${DATE}.md" \
+            "${DATE}" "${BRANCH}" "_articles/${DATE}.md" \
             > /tmp/pr-body.md
 
           gh pr create \

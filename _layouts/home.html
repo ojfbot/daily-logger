@@ -52,7 +52,7 @@
       {% for article in articles %}
       <li class="article-item">
         <div class="article-date">{{ article.date | date: "%Y-%m-%d" }}</div>
-        <div class="article-title"><a href="{{ article.url }}">{{ article.title }}</a></div>
+        <div class="article-title"><a href="{{ site.baseurl }}{{ article.url }}">{{ article.title }}</a></div>
         {% if article.summary %}<div class="article-summary">{{ article.summary }}</div>{% endif %}
         {% if article.tags %}
         <div class="article-tags">
