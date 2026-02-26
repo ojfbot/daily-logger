@@ -1,0 +1,127 @@
+import Anthropic from '@anthropic-ai/sdk'
+import type { BlogContext, Persona, GeneratedReport } from './types.js'
+
+const MODEL = 'claude-sonnet-4-6'
+const MAX_TOKENS = 4096
+
+// ─── System prompt builder ────────────────────────────────────────────────────
+
+function buildSystemPrompt(persona: Persona, ctx: BlogContext): string {
+  return `You are Jim Green, a Design Engineer building Frame OS and writing a direct progress memo to a trusted advisor.
+
+## About the recipient
+
+${persona.role}
+
+Their background and lens:
+${persona.content}
+
+## Project context: Frame OS
+
+Frame is a shared shell framework hosting multiple Claude-powered AI applications inside a unified, browser-like interface. Strategic target: Design Engineer role at The Browser Company (building Dia, an AI-first browser). Core argument: Frame is Dia one layer down — Dia controls the web through natural language, Frame controls applications through natural language.
+
+Active repos: shell (Frame OS — Vite Module Federation host + frame-agent LLM gateway + K8s manifests), cv-builder (AI resume builder — production CI flagship with visual regression pipeline), BlogEngine, TripPlanner, node-template (23 Claude Code slash commands backed by a TypeScript engine), MrPlug (Chrome extension for AI UI/UX feedback), purefoy (Roger Deakins knowledge base), daily-logger (generates this report).
+
+Key architectural decisions already locked:
+- Module Federation over iframes: shared React + Redux singleton — sub-apps compose into one memory space, share AI context
+- Single frame-agent gateway: cost control, one billing surface, one rate limiter, one observability point
+- K8s over serverless: agents hold conversation history in memory + stream SSE; cold start breaks both
+- Carbon Design System: mature, accessible, dark-theme ready, IBM-supported — boring by design so design energy goes to the AI layer
+- App → Instance → Thread model: mirrors Dia's session model for how people multitask
+
+## Project vision
+
+${ctx.projectVision ? ctx.projectVision.slice(0, 1500) : '(no ROADMAP.md found)'}
+
+The persona file above includes a report format section — follow it exactly.
+
+Write the memo now. First person as Jim. Do not include YAML frontmatter or a top-level title. Start directly with the first ## section heading.`
+}
+
+// ─── User prompt builder ──────────────────────────────────────────────────────
+
+function buildUserPrompt(ctx: BlogContext): string {
+  const parts: string[] = [`Generate the progress report for **${ctx.date}**.\n`]
+
+  if (ctx.commits.length > 0) {
+    parts.push(`## Commits in last 24h (${ctx.commits.length})`)
+    ctx.commits.slice(0, 40).forEach((c) => {
+      parts.push(`- [${c.repo}] ${c.message} (${c.hash})`)
+    })
+    if (ctx.commits.length > 40) parts.push(`  …and ${ctx.commits.length - 40} more`)
+    parts.push('')
+  } else {
+    parts.push('## Commits in last 24h\n_No commits today._\n')
+  }
+
+  if (ctx.mergedPRs.length > 0) {
+    parts.push(`## PRs merged in last 7 days (${ctx.mergedPRs.length})`)
+    ctx.mergedPRs.slice(0, 15).forEach((pr) => {
+      parts.push(
+        `- [${pr.repo}] #${pr.number}: ${pr.title} (+${pr.additions}/-${pr.deletions})`
+      )
+      if (pr.body) parts.push(`  > ${pr.body.slice(0, 200).replace(/\n/g, ' ')}`)
+    })
+    parts.push('')
+  }
+
+  if (ctx.openIssues.length > 0) {
+    parts.push(`## Open issues snapshot (top ${Math.min(ctx.openIssues.length, 20)})`)
+    ctx.openIssues.slice(0, 20).forEach((i) => {
+      const l = i.labels.length ? ` [${i.labels.join(', ')}]` : ''
+      parts.push(`- [${i.repo}] #${i.number}: ${i.title}${l}`)
+    })
+    parts.push('')
+  }
+
+  if (ctx.previousArticles.length > 0) {
+    parts.push(`## Recent dev log excerpts (continuity context)`)
+    ctx.previousArticles.forEach((a) => {
+      parts.push(`### ${a.date}\n${a.excerpt.slice(0, 600)}\n`)
+    })
+  }
+
+  return parts.join('\n')
+}
+
+// ─── Main exports ─────────────────────────────────────────────────────────────
+
+export async function generateReport(ctx: BlogContext, persona: Persona): Promise<GeneratedReport> {
+  const client = new Anthropic()
+
+  console.log(`  Calling Claude for: ${persona.slug}...`)
+  const message = await client.messages.create({
+    model: MODEL,
+    max_tokens: MAX_TOKENS,
+    system: buildSystemPrompt(persona, ctx),
+    messages: [{ role: 'user', content: buildUserPrompt(ctx) }],
+  })
+
+  const body = message.content[0].type === 'text' ? message.content[0].text : ''
+
+  return {
+    personaSlug: persona.slug,
+    personaRole: persona.role,
+    date: ctx.date,
+    body,
+  }
+}
+
+export function reportToMarkdown(report: GeneratedReport): string {
+  const esc = (s: string) => s.replace(/"/g, '\\"')
+
+  return [
+    '---',
+    `persona: "${report.personaSlug}"`,
+    `date: ${report.date}`,
+    `target: "${esc(report.personaRole)}"`,
+    '---',
+    '',
+    report.body,
+    '',
+    '---',
+    '',
+    `*Generated by [daily-logger](https://github.com/ojfbot/daily-logger) — council report for ${report.personaRole}.*`,
+    '',
+  ].join('\n')
+}

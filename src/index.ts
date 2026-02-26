@@ -1,8 +1,14 @@
 /**
  * ojfbot daily-logger
  *
- * Collects 24 h of GitHub activity across all ojfbot repos, feeds it to
- * Claude, and writes a markdown article to articles/YYYY-MM-DD.md.
+ * Four-phase pipeline:
+ *   1. Collect  — 24 h of GitHub activity across all ojfbot repos
+ *   2. Draft    — Claude generates an initial article
+ *   3. Council  — each persona in personas/*.md critiques the draft independently
+ *   4. Synthesize + Write — Claude incorporates the council feedback into a final article
+ *
+ * The council phase adds 1 Claude call per persona plus 1 synthesis call.
+ * It is designed for overnight runs. Set SKIP_COUNCIL=true to bypass it.
  *
  * Env vars:
  *   ANTHROPIC_API_KEY    required
@@ -10,6 +16,7 @@
  *   OJFBOT_ORG           default: "ojfbot"
  *   DATE_OVERRIDE        ISO date string, default: today UTC
  *   DRY_RUN              "true" → print article, skip all writes
+ *   SKIP_COUNCIL         "true" → skip council review (faster, lower quality)
  *   BLOGENGINE_API_URL   optional: POST to BlogEngine on completion
  */
 
@@ -18,10 +25,11 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
 import { generateArticle, toMarkdown } from './generate-article.js'
+import { loadPersonas, reviewDraft, synthesizeWithCouncil } from './council.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
-const ARTICLES_DIR = join(REPO_ROOT, 'articles')
+const ARTICLES_DIR = join(REPO_ROOT, '_articles')
 
 function todayUTC(): string {
   return new Date().toISOString().slice(0, 10)
@@ -47,10 +55,12 @@ async function postToBlogEngine(markdown: string, apiUrl: string): Promise<void>
 async function main() {
   const date = process.env.DATE_OVERRIDE?.trim().slice(0, 10) || todayUTC()
   const isDryRun = process.env.DRY_RUN === 'true'
+  const skipCouncil = process.env.SKIP_COUNCIL === 'true'
   const blogEngineUrl = process.env.BLOGENGINE_API_URL
 
   console.log(`\n📝 ojfbot daily-logger — ${date}`)
   console.log(`   Mode: ${isDryRun ? 'dry run' : 'live'}`)
+
   if (!process.env.ANTHROPIC_API_KEY) {
     console.error('❌ ANTHROPIC_API_KEY is not set')
     process.exit(1)
@@ -61,21 +71,52 @@ async function main() {
   console.log()
 
   // ── 1. Collect ─────────────────────────────────────────────────────────────
-  console.log('1/3  Collecting GitHub context...')
+  console.log('1/4  Collecting GitHub context...')
   const ctx = await collectContext(date)
   console.log()
 
-  // ── 2. Generate ────────────────────────────────────────────────────────────
-  console.log('2/3  Generating article...')
-  const article = await generateArticle(ctx)
-  const markdown = toMarkdown(article)
+  // ── 2. Draft ───────────────────────────────────────────────────────────────
+  console.log('2/4  Generating draft article...')
+  let article = await generateArticle(ctx)
   console.log(`     Title : "${article.title}"`)
-  console.log(`     Tags  : ${article.tags.join(', ')}`)
   console.log(`     Words : ~${article.body.split(/\s+/).length}`)
   console.log()
 
+  // ── 3. Council review ──────────────────────────────────────────────────────
+  const personas = loadPersonas()
+
+  if (skipCouncil || personas.length === 0) {
+    if (skipCouncil) {
+      console.log('3/4  Council review skipped (SKIP_COUNCIL=true)')
+    } else {
+      console.log('3/4  Council review skipped — no personas found in personas/')
+    }
+    console.log()
+  } else {
+    console.log(`3/4  Council review — ${personas.length} persona(s)...`)
+
+    const notes = []
+    for (const persona of personas) {
+      console.log(`     → ${persona.slug}`)
+      const note = await reviewDraft(article, persona)
+      notes.push(note)
+    }
+    console.log()
+
+    // ── 4a. Synthesize ───────────────────────────────────────────────────────
+    console.log('4/4  Synthesizing final article with council input...')
+    article = await synthesizeWithCouncil(article, notes, ctx)
+    console.log(`     Title : "${article.title}"`)
+    console.log(`     Words : ~${article.body.split(/\s+/).length}`)
+    console.log()
+  }
+
+  const markdown = toMarkdown(article)
+
   if (isDryRun) {
-    console.log('3/3  DRY RUN — article preview:\n')
+    if (personas.length > 0 && !skipCouncil) {
+      console.log('     (Council-reviewed draft)')
+    }
     console.log('─'.repeat(72))
     console.log(markdown)
     console.log('─'.repeat(72))
@@ -83,16 +124,14 @@ async function main() {
     return
   }
 
-  // ── 3. Write ───────────────────────────────────────────────────────────────
-  console.log('3/3  Writing article...')
-
+  // ── 4b. Write ──────────────────────────────────────────────────────────────
   if (!existsSync(ARTICLES_DIR)) {
     mkdirSync(ARTICLES_DIR, { recursive: true })
   }
 
   const outPath = join(ARTICLES_DIR, `${date}.md`)
   writeFileSync(outPath, markdown, 'utf-8')
-  console.log(`     Written: articles/${date}.md`)
+  console.log(`     Written: _articles/${date}.md`)
 
   if (blogEngineUrl) {
     console.log('     Posting to BlogEngine...')

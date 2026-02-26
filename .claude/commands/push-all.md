@@ -1,0 +1,1 @@
+../../../node-template/.claude/commands/push-all.md

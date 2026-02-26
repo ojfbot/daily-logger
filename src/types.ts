@@ -47,3 +47,22 @@ export interface GeneratedArticle {
   summary: string
   body: string
 }
+
+export interface Persona {
+  slug: string
+  role: string
+  content: string  // full markdown body after frontmatter
+}
+
+export interface CouncilNote {
+  personaSlug: string
+  personaRole: string
+  critique: string  // raw markdown critique from this persona's POV
+}
+
+export interface GeneratedReport {
+  personaSlug: string
+  personaRole: string
+  date: string
+  body: string
+}
