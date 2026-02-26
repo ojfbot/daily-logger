@@ -45,7 +45,7 @@ async function postToBlogEngine(markdown: string, apiUrl: string): Promise<void>
 }
 
 async function main() {
-  const date = process.env.DATE_OVERRIDE?.slice(0, 10) ?? todayUTC()
+  const date = process.env.DATE_OVERRIDE?.trim().slice(0, 10) || todayUTC()
   const isDryRun = process.env.DRY_RUN === 'true'
   const blogEngineUrl = process.env.BLOGENGINE_API_URL
 
