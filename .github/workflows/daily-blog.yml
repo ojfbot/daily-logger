@@ -1,14 +1,13 @@
 name: Daily Dev Blog
 
-# Two jobs:
-#   generate  — sweeps GitHub activity, calls Claude, commits articles/YYYY-MM-DD.md
-#   pages     — builds Jekyll site and deploys to GitHub Pages
+# Two responsibilities:
+#   generate  — sweeps GitHub activity, calls Claude, commits the article to a
+#               branch article/YYYY-MM-DD, and opens a draft PR for editorial review.
+#   deploy    — lives in deploy-pages.yml; fires on push to main (PR merge).
 #
 # Required secrets:
 #   ANTHROPIC_API_KEY   — Claude API key
-#   GITHUB_TOKEN        — auto-provided; use a PAT for private ojfbot repos
-#
-# Enable GitHub Pages in repo Settings → Pages → Source: GitHub Actions
+#   GH_PAT              — PAT with read access to all ojfbot repos (private + public)
 
 on:
   schedule:
@@ -20,7 +19,7 @@ on:
         required: false
         type: string
       dry_run:
-        description: 'Print article to logs without writing or committing.'
+        description: 'Print article to logs without writing, committing, or opening a PR.'
         required: false
         type: boolean
         default: false
@@ -31,13 +30,13 @@ concurrency:
 
 jobs:
   generate:
-    name: Generate & commit article
+    name: Generate & open draft PR
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write
       issues: read
-      pull-requests: read
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -63,8 +62,7 @@ jobs:
       - name: Generate article
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # GH_TOKEN is preferred by the gh CLI over GITHUB_TOKEN.
-          # The PAT has read access to all ojfbot repos (private + public).
+          # GH_PAT has read access to all private ojfbot repos for the sweep.
           GH_TOKEN: ${{ secrets.GH_PAT }}
           OJFBOT_ORG: ojfbot
           DATE_OVERRIDE: ${{ github.event.inputs.date_override }}
@@ -80,69 +78,63 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
-      - name: Commit and push article
+      # ── Branch + commit ─────────────────────────────────────────────────────
+      # Creates branch article/YYYY-MM-DD, commits the article, pushes.
+      # Emits step outputs `date` and `branch` consumed by the PR step.
+      # Exits cleanly (empty outputs) if: dry_run, branch exists, or no changes.
+
+      - name: Create branch and commit article
         if: github.event.inputs.dry_run != 'true'
+        id: commit
         run: |
-          git config user.name "ojfbot-blog[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add articles/
-          if git diff --staged --quiet; then
-            echo "No changes — article already exists for this date."
-            exit 0
-          fi
           DATE="${{ github.event.inputs.date_override }}"
           DATE="${DATE:-$(date -u +%Y-%m-%d)}"
+          DATE="${DATE:0:10}"
+          BRANCH="article/${DATE}"
+
+          git config user.name "ojfbot-blog[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code origin "${BRANCH}" > /dev/null 2>&1; then
+            echo "::notice::Branch ${BRANCH} already exists — skipping."
+            exit 0
+          fi
+
+          git checkout -b "${BRANCH}"
+          git add articles/
+
+          if git diff --staged --quiet; then
+            echo "::notice::No article changes staged."
+            exit 0
+          fi
+
           git commit -m "blog: ${DATE} [skip ci]"
-          git pull --rebase origin ${{ github.ref_name }} \
-            && git push \
-            || echo "::warning::Push failed — article saved as artifact above."
+          git push -u origin "${BRANCH}"
 
-  pages:
-    name: Deploy to GitHub Pages
-    needs: generate
-    # Run on every push to main (including the article commit) and on manual dispatch.
-    # Skipped during dry runs since no new article is committed.
-    if: |
-      always() &&
-      github.event.inputs.dry_run != 'true' &&
-      (needs.generate.result == 'success' || needs.generate.result == 'skipped')
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+          echo "date=${DATE}" >> "$GITHUB_OUTPUT"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          # Pull latest so we have the article just committed by generate job
-          ref: ${{ github.ref_name }}
-          fetch-depth: 0
+      # ── Draft PR ────────────────────────────────────────────────────────────
+      # Opens a structured draft PR using the article frontmatter.
+      # PR body is built by .github/scripts/build_pr_body.py (avoids YAML/heredoc issues).
+      # Uses GITHUB_TOKEN (pull-requests: write declared above).
+      # Only runs when the commit step actually pushed a new branch.
 
-      - name: Setup Ruby (Jekyll)
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.3'
-          bundler-cache: true
-
-      - name: Install Jekyll
-        run: gem install jekyll bundler
-
-      - name: Build Jekyll site
-        run: jekyll build --destination _site
+      - name: Open draft PR
+        if: steps.commit.outputs.date != ''
         env:
-          JEKYLL_ENV: production
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DATE="${{ steps.commit.outputs.date }}"
+          BRANCH="${{ steps.commit.outputs.branch }}"
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site/
+          python3 .github/scripts/build_pr_body.py \
+            "${DATE}" "${BRANCH}" "articles/${DATE}.md" \
+            > /tmp/pr-body.md
 
-      - name: Deploy to GitHub Pages
-        id: deploy
-        uses: actions/deploy-pages@v4
+          gh pr create \
+            --draft \
+            --title "blog: ${DATE}" \
+            --body-file /tmp/pr-body.md \
+            --base main \
+            --head "${BRANCH}"
