@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "generate": "tsx src/index.ts",
-    "generate:dry": "DRY_RUN=true tsx src/index.ts"
+    "generate:dry": "DRY_RUN=true tsx src/index.ts",
+    "report": "tsx src/report.ts",
+    "report:dry": "DRY_RUN=true tsx src/report.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0"
