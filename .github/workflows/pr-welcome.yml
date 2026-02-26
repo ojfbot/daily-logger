@@ -1,0 +1,49 @@
+name: PR Welcome Comment
+
+# Posts a comment on every new PR explaining how to trigger the manual Claude review.
+# The Claude Code Review workflow (claude-code-review.yml) is dispatch-only —
+# this comment gives reviewers the link and instructions.
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  post-welcome:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Post Claude review instructions
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number
+            const repo = context.repo
+            const reviewUrl = `https://github.com/${repo.owner}/${repo.repo}/actions/workflows/claude-code-review.yml`
+
+            const body = [
+              '## AI Code Review',
+              '',
+              'To request a Claude code review on this PR:',
+              '',
+              `1. Go to the [Claude Code Review workflow](${reviewUrl})`,
+              `2. Click **Run workflow**`,
+              `3. Enter PR number \`${prNumber}\` and click **Run workflow**`,
+              '',
+              'Claude will post a review comment here when done.',
+              '',
+              'You can also mention `@claude` in any comment for ad-hoc assistance.',
+              '',
+              '---',
+              '*🤖 Claude Code*',
+            ].join('\n')
+
+            await github.rest.issues.createComment({
+              owner: repo.owner,
+              repo: repo.repo,
+              issue_number: prNumber,
+              body,
+            })

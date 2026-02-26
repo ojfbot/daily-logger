@@ -1,29 +1,25 @@
 name: Claude Code Review
 
+# Manual-only trigger. Dispatched from the PR welcome comment link.
+# Enter the PR number when prompted.
+
 on:
-  pull_request:
-    types: [opened, synchronize, ready_for_review, reopened]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to review'
+        required: true
+        type: string
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: read
       id-token: write
+      actions: read
 
     steps:
       - name: Checkout repository
@@ -36,9 +32,20 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
-          plugins: 'code-review@claude-code-plugins'
-          prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
+          prompt: |
+            Review PR #${{ inputs.pr_number }} in the ${{ github.repository }} repository.
 
+            Use `gh pr view ${{ inputs.pr_number }}` to read the PR description and metadata,
+            and `gh pr diff ${{ inputs.pr_number }}` to read the full diff.
+
+            Perform a thorough code review covering:
+            1. Correctness — logic errors, edge cases, obvious bugs
+            2. Architecture — does it fit the existing patterns in this codebase?
+            3. Security — injection, secrets exposure, auth gaps
+            4. Quality — clarity, naming, unnecessary complexity
+
+            Post your review as a comment on the PR using `gh pr review ${{ inputs.pr_number }} --comment --body "..."`.
+
+            End your comment with:
+            ---
+            *🤖 Claude Code*
