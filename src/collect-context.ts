@@ -6,7 +6,7 @@ import type { BlogContext, CommitInfo, IssueInfo, PRInfo } from './types.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
-const ARTICLES_DIR = join(REPO_ROOT, 'articles')
+const ARTICLES_DIR = join(REPO_ROOT, '_articles')
 
 // All ojfbot repos swept on every run, ordered by activity weight.
 // To add a repo: append its name here. Run `gh repo list ojfbot` to audit.

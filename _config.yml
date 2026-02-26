@@ -1,12 +1,12 @@
 title: "ojfbot dev log"
 description: "Building Frame — a daily record."
-baseurl: ""
-url: ""
+baseurl: "/daily-logger"
+url: "https://ojfbot.github.io"
 
 # No theme — custom minimal layouts only
 theme: null
 
-# Articles live in articles/ as a Jekyll collection
+# Articles live in _articles/ as a Jekyll collection
 collections:
   articles:
     output: true
@@ -30,3 +30,6 @@ exclude:
   - .env.example
   - .github/
   - CLAUDE.md
+  - domain-knowledge/
+  - .claude/
+  - _site_preview/
