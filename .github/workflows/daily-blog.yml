@@ -117,13 +117,13 @@ jobs:
       # ── Draft PR ────────────────────────────────────────────────────────────
       # Opens a structured draft PR using the article frontmatter.
       # PR body is built by .github/scripts/build_pr_body.py (avoids YAML/heredoc issues).
-      # Uses GITHUB_TOKEN (pull-requests: write declared above).
+      # Uses GH_PAT — GITHUB_TOKEN cannot create PRs without org-level settings.
       # Only runs when the commit step actually pushed a new branch.
 
       - name: Open draft PR
         if: steps.commit.outputs.date != ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           DATE="${{ steps.commit.outputs.date }}"
           BRANCH="${{ steps.commit.outputs.branch }}"
