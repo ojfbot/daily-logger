@@ -8,14 +8,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
 const ARTICLES_DIR = join(REPO_ROOT, 'articles')
 
-// All ojfbot repos swept on every run, ordered by activity weight
+// All ojfbot repos swept on every run, ordered by activity weight.
+// To add a repo: append its name here. Run `gh repo list ojfbot` to audit.
 const REPOS = [
+  'shell',          // Frame OS — Vite Module Federation host + frame-agent LLM gateway + K8s
   'cv-builder',
   'BlogEngine',
   'TripPlanner',
   'node-template',
   'MrPlug',
   'purefoy',
+  'daily-logger',   // this repo — captures logger's own commits and improvements
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────

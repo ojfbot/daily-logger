@@ -17,6 +17,7 @@ Frame is a shared shell framework that hosts multiple Claude-powered application
 - **TripPlanner** — AI trip planning and itinerary management.
 
 Additional repos:
+- **shell** — Frame OS. Vite Module Federation host + \`frame-agent\` LLM gateway + K8s manifests. This IS the Phase 1/3 work: the shared shell being extracted and the ShellAgent that will become Frame's AI address bar equivalent. Most architecturally significant repo after cv-builder.
 - **node-template** — Dev environment as a product: 23 Claude Code slash commands backed by a TypeScript engine. The \`/techdebt\` command is a self-improving loop that scans for debt, proposes file patches, and applies them. Domain-knowledge docs keep all five apps in context.
 - **MrPlug** — Chrome extension for AI UI/UX feedback on localhost pages. Click any DOM element, get AI design analysis with a per-element chat session. Being rebuilt as the dev-tooling companion for Frame.
 - **purefoy** — Roger Deakins cinematography knowledge base (Python scraper + podcast transcripts). Roadmap: AI podcast interaction agent inside Frame.
