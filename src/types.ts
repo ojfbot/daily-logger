@@ -66,3 +66,27 @@ export interface GeneratedReport {
   date: string
   body: string
 }
+
+// ─── Daily cleaner types ───────────────────────────────────────────────────────
+
+export interface CleanCandidate {
+  repo: string
+  filePath: string
+  startLine: number
+  endLine: number
+  original: string    // exact line(s) to examine
+  context: string     // surrounding content with line numbers for Claude
+  kind: 'todo' | 'fixme' | 'doc-file' | 'inline-comment'
+  recentCommits: string  // summary of recent commits in this repo
+}
+
+export interface CleanProposal {
+  repo: string
+  filePath: string
+  startLine: number
+  endLine: number
+  original: string
+  replacement: string  // empty string = delete those lines entirely
+  rationale: string    // one sentence: what made this stale
+  confidence: 'high' | 'medium'
+}

@@ -1,0 +1,94 @@
+name: Daily Cleaner
+
+# Runs after daily-logger (09:00 UTC) to check for stale documentation and
+# resolved TODO/FIXME comments across all active ojfbot repos.
+#
+# Phase 1: Sweep   — find candidates in changed files + doc files
+# Phase 2: Validate — Claude Opus validates each one (slow, rigorous)
+# Phase 3: PR      — one PR per affected repo with specific line edits
+#
+# Required secrets:
+#   ANTHROPIC_API_KEY  — Claude API key (Opus calls)
+#   GH_PAT             — PAT with read+write access to all ojfbot repos
+
+on:
+  # Fire 2h after daily-logger cron (gives the logger time to finish)
+  schedule:
+    - cron: '0 11 * * *'
+
+  # Also fire when daily-logger workflow completes successfully
+  workflow_run:
+    workflows: ['Daily Dev Blog']
+    types: [completed]
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Print proposals without opening PRs.'
+        required: false
+        type: boolean
+        default: true
+      target_repo:
+        description: 'Sweep only this repo slug (e.g. "shell"). Default: all active.'
+        required: false
+        type: string
+      date_override:
+        description: 'Override date for context sweep (YYYY-MM-DD). Default: today.'
+        required: false
+        type: string
+
+concurrency:
+  group: daily-cleaner
+  cancel-in-progress: false
+
+jobs:
+  clean:
+    # On workflow_run: only proceed if the triggering workflow succeeded
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    name: Sweep, validate, and PR stale content
+    runs-on: ubuntu-latest
+    timeout-minutes: 60    # Opus validation can take 30-45 min for a full sweep
+
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure git identity
+        run: |
+          git config --global user.name "ojfbot-clean[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Run daily cleaner
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # GH_PAT needs read+write access to all ojfbot repos for cloning + PR creation
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OJFBOT_ORG: ojfbot
+          DATE_OVERRIDE: ${{ github.event.inputs.date_override || '' }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          TARGET_REPO: ${{ github.event.inputs.target_repo || '' }}
+        run: pnpm clean
