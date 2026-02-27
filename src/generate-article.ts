@@ -72,6 +72,22 @@ The body must contain these sections (## headings):
 - **Roadmap pulse** (specific phase progress, not vague references to "the plan")
 - **What's next** (one concrete next action)
 
+### Action items per section
+
+Each of the four sections must end with a **> Suggested actions** blockquote listing 1–3 concrete follow-up items. Format:
+
+\`\`\`
+> **Suggested actions**
+> - \`/skill-name\` — one sentence describing the specific action and why
+> - \`/skill-name\` — ...
+\`\`\`
+
+Rules for action items:
+- Reference specific slash commands from the ojfbot skill catalog where applicable: \`/plan-feature\`, \`/techdebt\`, \`/investigate\`, \`/validate\`, \`/adr\`, \`/hardening\`, \`/pr-review\`, \`/roadmap\`, \`/scaffold\`, \`/sweep\`
+- If no skill applies, use a plain imperative: "Open a tracking issue for X", "Pin this as a discussion topic"
+- Items must be specific to what actually shipped or was decided that day — never generic
+- **What's next** section: action items should be the most immediately actionable of all four sections
+
 On days with zero commits: write a "thinking day" article — architecture analysis, a tradeoff exploration, or a deep-dive on one specific technical area. Never write filler.`
 
 // ─── User prompt builder ──────────────────────────────────────────────────────
