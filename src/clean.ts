@@ -17,6 +17,7 @@
 
 import { collectContext } from './collect-context.js'
 import {
+  readTodayArticle,
   sweepForCandidates,
   validateCandidates,
   openCleanPRs,
@@ -45,7 +46,7 @@ async function main() {
   }
   console.log()
 
-  // ── 1. Collect context (reuse daily-logger's sweep for activity data) ─────────
+  // ── 1. Collect context ────────────────────────────────────────────────────────
   console.log('1/3  Collecting GitHub activity context...')
   let ctx = await collectContext(date)
 
@@ -61,6 +62,15 @@ async function main() {
     console.log('     No recent commits found — nothing to sweep.')
     console.log('\n✓ Done (no activity).')
     return
+  }
+
+  // Read today's article — the authoritative synthesized summary of what shipped.
+  // Tries the draft PR branch (article/YYYY-MM-DD) first, falls back to main.
+  const todayArticle = readTodayArticle(org, date)
+  if (todayArticle) {
+    console.log(`     Today's article: loaded (${todayArticle.length} chars)`)
+  } else {
+    console.log('     Today\'s article: not found — validation will rely on commits only')
   }
   console.log()
 
@@ -78,7 +88,7 @@ async function main() {
   // ── 3. Validate ───────────────────────────────────────────────────────────────
   console.log(`3/3  Validating ${candidates.length} candidate(s) with Claude Opus...`)
   console.log('     (This is the slow phase — each call is rigorous.)')
-  const proposals = await validateCandidates(candidates)
+  const proposals = await validateCandidates(candidates, todayArticle)
   console.log()
 
   if (proposals.length === 0) {

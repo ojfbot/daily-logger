@@ -64,15 +64,29 @@ function ghApi<T>(endpoint: string): T | null {
 
 // ─── Remote file reader ───────────────────────────────────────────────────────
 
-function readRemoteFile(org: string, repo: string, path: string): string | null {
+function readRemoteFile(org: string, repo: string, path: string, ref?: string): string | null {
   type GHContent = { content: string; encoding: string }
-  const data = ghApi<GHContent>(`repos/${org}/${repo}/contents/${encodeURIComponent(path)}`)
+  const refSuffix = ref ? `?ref=${encodeURIComponent(ref)}` : ''
+  const data = ghApi<GHContent>(
+    `repos/${org}/${repo}/contents/${encodeURIComponent(path)}${refSuffix}`,
+  )
   if (!data || data.encoding !== 'base64') return null
   try {
     return Buffer.from(data.content.replace(/\n/g, ''), 'base64').toString('utf-8')
   } catch {
     return null
   }
+}
+
+// Reads today's daily-logger article.
+// The article lands in branch article/YYYY-MM-DD (draft PR) before it merges to main.
+// Tries the draft branch first, falls back to main.
+export function readTodayArticle(org: string, date: string): string {
+  const path = `_articles/${date}.md`
+  const fromBranch = readRemoteFile(org, 'daily-logger', path, `article/${date}`)
+  if (fromBranch) return fromBranch
+  const fromMain = readRemoteFile(org, 'daily-logger', path)
+  return fromMain ?? ''
 }
 
 // ─── Phase 1: Sweep ───────────────────────────────────────────────────────────
@@ -182,22 +196,27 @@ export async function sweepForCandidates(ctx: BlogContext): Promise<CleanCandida
 
 // ─── Phase 2: Validate ────────────────────────────────────────────────────────
 
-// Doc validation: Claude reads the full file + recent commits, returns an array
-// of specific edits (each with line range, original, replacement, rationale, confidence).
-// Returns [] if nothing is stale.
+// Doc validation: Claude reads the full file + recent commits + today's article,
+// returns an array of specific edits (each with line range, original, replacement,
+// rationale, confidence). Returns [] if nothing is stale.
 
 async function validateDocCandidate(
   candidate: CleanCandidate,
+  todayArticle: string,
 ): Promise<CleanProposal[]> {
   const client = new Anthropic()
 
   const system = `You are a rigorous technical writer auditing documentation for staleness.
 
-Given the full content of a documentation file and recent git commits in the repo,
-identify sections that have become inaccurate or outdated because of those changes.
+You will receive:
+- The full content of a documentation file (with line numbers)
+- Recent git commits from the repo
+- Today's synthesized daily-logger article, which is the authoritative human-readable
+  summary of what actually shipped — written after a 4-phase Claude pipeline including
+  a council review. This is your strongest signal.
 
+Identify sections that have become inaccurate or outdated based on this evidence.
 For each stale section, produce an exact edit — either a replacement or a deletion.
-Be specific: name the exact text that is wrong and why, and provide exact replacement text.
 
 Return a JSON array. Each element describes one edit:
 {
@@ -205,20 +224,22 @@ Return a JSON array. Each element describes one edit:
   "endLine": <number>,
   "original": "<exact text of the stale line(s)>",
   "replacement": "<corrected text, or empty string to delete>",
-  "rationale": "<one sentence: what recent change made this stale>",
+  "rationale": "<one sentence: what shipped that made this stale>",
   "confidence": "high" | "medium"
 }
 
 Rules:
-- Only flag things you are CERTAIN are wrong given the commit evidence.
-- "high" = the doc directly contradicts what the commits show shipped.
-- "medium" = the doc is likely outdated but you can't be 100% certain from commits alone.
+- "high" = the doc directly contradicts what the article or commits show shipped.
+- "medium" = the doc is likely outdated but you can't be 100% certain from the evidence.
 - If nothing is stale, return [].
 - Raw JSON array only — no fences, no commentary.`
 
   const userPrompt = [
     `**Repo:** ojfbot/${candidate.repo}`,
     `**File:** ${candidate.filePath}`,
+    '',
+    '## Today\'s daily-logger article (authoritative — what actually shipped)',
+    todayArticle ? todayArticle.slice(0, 3000) : '(not available)',
     '',
     '## Recent commits (last 48h)',
     candidate.recentCommits || '(none)',
@@ -264,29 +285,36 @@ Rules:
   }
 }
 
-// TODO validation: was this resolved by a recent commit?
-// Returns one proposal (delete or update) or null if still open / low confidence.
+// TODO validation: was this resolved by a recent commit or the shipped work described
+// in today's article? Returns one proposal (delete or update) or null.
 
 async function validateTodoCandidate(
   candidate: CleanCandidate,
+  todayArticle: string,
 ): Promise<CleanProposal | null> {
   const client = new Anthropic()
 
   const system = `You are a rigorous code auditor checking whether a TODO/FIXME comment has been resolved.
 
-Given the comment in context and recent git commits, determine if the thing the
-TODO/FIXME asked for has been shipped or is no longer relevant.
+You will receive:
+- The comment in its surrounding code context
+- Recent git commits from the repo
+- Today's synthesized daily-logger article — the authoritative summary of what actually
+  shipped, written after a 4-phase pipeline including council review. If the article
+  explicitly mentions the feature or fix the TODO asked for, treat that as strong evidence.
+
+Determine if the thing the TODO/FIXME asked for has been shipped or is no longer relevant.
 
 Return a JSON object:
 {
   "resolved": true | false,
-  "evidence": "<one sentence: the commit or change that resolved it, or why it's still open>",
+  "evidence": "<one sentence: what shipped that resolved it, citing article or commit>",
   "replacement": "<updated comment if partially addressed, or empty string to delete>",
   "confidence": "high" | "medium" | "low"
 }
 
 Rules:
-- resolved=true only with clear commit evidence.
+- resolved=true only with clear evidence from commits or the article.
 - If resolved=true and replacement is empty, the line will be deleted.
 - If resolved=true and replacement is non-empty, the line is updated.
 - "low" confidence findings are ignored.
@@ -296,6 +324,9 @@ Rules:
     `**Repo:** ojfbot/${candidate.repo}`,
     `**File:** ${candidate.filePath}:${candidate.startLine}`,
     `**Kind:** ${candidate.kind.toUpperCase()}`,
+    '',
+    '## Today\'s daily-logger article (authoritative — what actually shipped)',
+    todayArticle ? todayArticle.slice(0, 2000) : '(not available)',
     '',
     '## Recent commits to this repo',
     candidate.recentCommits || '(none)',
@@ -341,6 +372,7 @@ Rules:
 
 export async function validateCandidates(
   candidates: CleanCandidate[],
+  todayArticle: string,
 ): Promise<CleanProposal[]> {
   const proposals: CleanProposal[] = []
 
@@ -352,10 +384,10 @@ export async function validateCandidates(
     console.log(`  Validating ${tag}...`)
 
     if (candidate.kind === 'doc-file') {
-      const edits = await validateDocCandidate(candidate)
+      const edits = await validateDocCandidate(candidate, todayArticle)
       proposals.push(...edits)
     } else {
-      const proposal = await validateTodoCandidate(candidate)
+      const proposal = await validateTodoCandidate(candidate, todayArticle)
       if (proposal) proposals.push(proposal)
     }
   }
