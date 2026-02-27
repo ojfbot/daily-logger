@@ -6,6 +6,7 @@ Writes markdown to stdout — redirect to a file for gh pr create --body-file.
 """
 import sys
 import re
+import json
 
 
 def fm_field(fm: str, *patterns: str, default: str = "") -> str:
@@ -30,7 +31,11 @@ def main() -> None:
         r"^title:\s+(.+)",
         default="(untitled)",
     )
-    tags = fm_field(fm, r"^tags:\s+(.+)", default="")
+    tags_raw = fm_field(fm, r"^tags:\s+(.+)", default="")
+    try:
+        tags = ", ".join(f"`{t}`" for t in json.loads(tags_raw))
+    except (json.JSONDecodeError, TypeError):
+        tags = tags_raw
     summary = fm_field(fm,
         r'^summary:\s+"(.+)"',
         r"^summary:\s+'(.+)'",
