@@ -2,7 +2,7 @@ import { execSync } from 'child_process'
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { BlogContext, CommitInfo, IssueInfo, PRInfo } from './types.js'
+import type { BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo } from './types.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -124,6 +124,7 @@ function getOpenIssues(org: string, repo: string): IssueInfo[] {
     number: number
     title: string
     labels: Array<{ name: string }>
+    created_at: string
     html_url: string
     pull_request?: unknown
     body: string | null
@@ -139,10 +140,35 @@ function getOpenIssues(org: string, repo: string): IssueInfo[] {
       title: i.title,
       state: 'open' as const,
       labels: i.labels.map((l) => l.name),
+      createdAt: i.created_at,
       url: i.html_url,
       repo,
       body: i.body ? i.body.slice(0, 200) : undefined,
     }))
+}
+
+function getOpenPRs(org: string, repo: string): OpenPRInfo[] {
+  type GHPR = {
+    number: number
+    title: string
+    html_url: string
+    body: string | null
+    created_at: string
+    draft: boolean
+  }
+  const data = ghApi<GHPR[]>(
+    `repos/${org}/${repo}/pulls?state=open&sort=updated&direction=desc&per_page=15`
+  )
+  if (!data) return []
+  return data.map((pr) => ({
+    number: pr.number,
+    title: pr.title,
+    repo,
+    url: pr.html_url,
+    body: pr.body ? pr.body.slice(0, 300) : undefined,
+    createdAt: pr.created_at,
+    draft: pr.draft,
+  }))
 }
 
 // ─── Local context ────────────────────────────────────────────────────────────
@@ -190,6 +216,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
 
   const allCommits: CommitInfo[] = []
   const allPRs: PRInfo[] = []
+  const allOpenPRs: OpenPRInfo[] = []
   const allClosed: IssueInfo[] = []
   const allOpen: IssueInfo[] = []
 
@@ -197,6 +224,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
     console.log(`  ${repo}...`)
     allCommits.push(...getCommits(org, repo, since24h))
     allPRs.push(...getMergedPRs(org, repo, since7d))
+    allOpenPRs.push(...getOpenPRs(org, repo))
     allClosed.push(...getClosedIssues(org, repo, since7d))
     allOpen.push(...getOpenIssues(org, repo))
   }
@@ -210,6 +238,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
     repos: REPOS,
     commits: dedup(allCommits).sort((a, b) => b.date.localeCompare(a.date)),
     mergedPRs: dedup(allPRs).sort((a, b) => b.mergedAt.localeCompare(a.mergedAt)),
+    openPRs: dedup(allOpenPRs).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     closedIssues: dedup(allClosed),
     openIssues: dedup(allOpen).slice(0, 25),
     projectVision: getProjectVision(),
@@ -217,7 +246,8 @@ export async function collectContext(date: string): Promise<BlogContext> {
   }
 
   console.log(
-    `  → ${ctx.commits.length} commits · ${ctx.mergedPRs.length} PRs · ` +
+    `  → ${ctx.commits.length} commits · ${ctx.mergedPRs.length} merged PRs · ` +
+      `${ctx.openPRs.length} open PRs · ` +
       `${ctx.closedIssues.length} closed issues · ${ctx.openIssues.length} open issues`
   )
   return ctx

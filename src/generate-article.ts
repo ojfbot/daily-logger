@@ -117,6 +117,16 @@ function buildUserPrompt(ctx: BlogContext): string {
     parts.push('')
   }
 
+  if (ctx.openPRs.length > 0) {
+    parts.push(`## Open PRs — in-flight work (${ctx.openPRs.length})`)
+    ctx.openPRs.slice(0, 20).forEach((pr) => {
+      const draft = pr.draft ? ' [DRAFT]' : ''
+      parts.push(`- [${pr.repo}] #${pr.number}${draft}: ${pr.title} (opened ${pr.createdAt.slice(0, 10)})`)
+      if (pr.body) parts.push(`  > ${pr.body.slice(0, 200).replace(/\n/g, ' ')}`)
+    })
+    parts.push('')
+  }
+
   if (ctx.closedIssues.length > 0) {
     parts.push(`## Issues closed in last 7 days (${ctx.closedIssues.length})`)
     ctx.closedIssues.slice(0, 20).forEach((i) => {
@@ -130,7 +140,8 @@ function buildUserPrompt(ctx: BlogContext): string {
     parts.push(`## Open issues snapshot (top ${Math.min(ctx.openIssues.length, 25)})`)
     ctx.openIssues.slice(0, 25).forEach((i) => {
       const l = i.labels.length ? ` [${i.labels.join(', ')}]` : ''
-      parts.push(`- [${i.repo}] #${i.number}: ${i.title}${l}`)
+      const created = i.createdAt ? ` (opened ${i.createdAt.slice(0, 10)})` : ''
+      parts.push(`- [${i.repo}] #${i.number}: ${i.title}${l}${created}`)
     })
     parts.push('')
   }

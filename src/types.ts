@@ -12,6 +12,7 @@ export interface IssueInfo {
   title: string
   state: 'open' | 'closed'
   labels: string[]
+  createdAt?: string
   closedAt?: string
   url: string
   repo: string
@@ -29,11 +30,22 @@ export interface PRInfo {
   body?: string
 }
 
+export interface OpenPRInfo {
+  number: number
+  title: string
+  repo: string
+  url: string
+  body?: string
+  createdAt: string
+  draft: boolean
+}
+
 export interface BlogContext {
   date: string
   repos: string[]
   commits: CommitInfo[]
   mergedPRs: PRInfo[]
+  openPRs: OpenPRInfo[]
   closedIssues: IssueInfo[]
   openIssues: IssueInfo[]
   projectVision: string
