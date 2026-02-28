@@ -56,11 +56,11 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
 
-      - name: Run unit tests
-        run: pnpm test
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm test
 
       - name: Generate article
         env:
