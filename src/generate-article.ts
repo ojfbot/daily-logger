@@ -27,6 +27,12 @@ Additional repos:
 
 The goal is to pitch for a Design Engineer role at The Browser Company (building Dia, an AI-first browser). The argument: "We're building the same thing you're building, one layer down." Dia controls the web through natural language. Frame controls applications through natural language. The header chat input in Frame is Dia's AI bar. The multi-instance app launcher is Dia's tab manager.
 
+The four Samir/TBCoNY pillars — name one in every article:
+1. **Assistant-centric architecture** (ShellAgent as organizing primitive)
+2. **Tooling for fast iteration** (node-template slash commands, daily-logger, cv-builder eval loop)
+3. **Model behavior as design discipline** (evals, prompt versioning as first-class artifacts)
+4. **Security as emergent UX** (tool-use confirmations, trusted/untrusted separation)
+
 ## Architecture snapshot
 
 All three TypeScript apps share an identical extracted shell:
@@ -53,42 +59,90 @@ All three TypeScript apps share an identical extracted shell:
 - Honest: distinguish shipped from in-progress from planned
 - Aware that this blog is itself a demonstration of AI-native development (the system writes about itself)
 - No marketing language, no hype, no "exciting new features"
-- Body length: 600–900 words
 
 ## Output format
 
-Return a single JSON object — no markdown fences, no preamble, raw JSON only:
+Return a single JSON object — no markdown fences, no preamble, raw JSON only. ALL keys are required.
 
 {
   "title": "string — specific and informative, not clickbait. Example: 'Extracting @ojfbot/shell: what three identical App.tsx files tell you'",
   "tags": ["3-6 lowercase-hyphenated tags"],
   "summary": "One sentence, 15–25 words, plain text for preview cards",
-  "body": "Full article body in GitHub-flavored markdown. No title/date/tags in the body — start directly with content."
+  "lede": "1–3 sentence opening paragraph setting the day's narrative theme. Use empty string on zero-commit days.",
+  "whatShipped": "GFM markdown body for the What shipped section. Name specific PRs, commits, files. ONLY reference merged/committed work here — open/in-flight PRs must go in roadmapPulse.",
+  "theDecisions": "GFM markdown body for The decisions section — the most important section. Name architectural choices and WHY. Name which TBCoNY/Samir pillar this work demonstrates.",
+  "roadmapPulse": "GFM markdown body for Roadmap pulse. Specific phase progress. MUST explicitly reference every open PR from the Open PRs context by [repo] #number as in-flight work — do not omit any.",
+  "whatsNext": "GFM markdown body for What's next — the one or two most immediately actionable items.",
+  "actions": {
+    "whatShipped": ["- \`/skill\` — one sentence action specific to what shipped today"],
+    "theDecisions": ["- \`/skill\` — one sentence action specific to a decision made today"],
+    "roadmapPulse": ["- \`/skill\` — one sentence action specific to phase progress"],
+    "whatsNext": ["- \`/skill\` — the single most immediately actionable follow-up"]
+  }
 }
 
-The body must contain these sections (## headings):
-- **What shipped** (or "What we worked on" for low-commit days)
-- **The decisions** (architecture choices or tradeoffs made — the most important section)
-- **Roadmap pulse** (specific phase progress, not vague references to "the plan")
-- **What's next** (one concrete next action)
+Field rules:
+- \`actions\`: each sub-key requires 1–3 items. Skill commands: \`/plan-feature\`, \`/techdebt\`, \`/investigate\`, \`/validate\`, \`/adr\`, \`/hardening\`, \`/pr-review\`, \`/roadmap\`, \`/scaffold\`, \`/sweep\`. Use a plain imperative when no skill fits.
+- All action items must be specific to that day's actual shipped work or decisions — never generic filler.
+- Total word count across lede + four sections combined: 600–900 words.
+- Zero-commit days: \`whatShipped\` becomes "What we explored" — architecture deep-dive or tradeoff analysis. Never write filler.`
 
-### Action items per section
+// ─── Structured article type (what Claude returns) ────────────────────────────
 
-Each of the four sections must end with a **> Suggested actions** blockquote listing 1–3 concrete follow-up items. Format:
+type StructuredArticle = {
+  title: string
+  tags: string[]
+  summary: string
+  lede?: string
+  whatShipped: string
+  theDecisions: string
+  roadmapPulse: string
+  whatsNext: string
+  actions?: {
+    whatShipped?: string[]
+    theDecisions?: string[]
+    roadmapPulse?: string[]
+    whatsNext?: string[]
+  }
+}
 
-\`\`\`
-> **Suggested actions**
-> - \`/skill-name\` — one sentence describing the specific action and why
-> - \`/skill-name\` — ...
-\`\`\`
+// ─── Deterministic body assembly ──────────────────────────────────────────────
 
-Rules for action items:
-- Reference specific slash commands from the ojfbot skill catalog where applicable: \`/plan-feature\`, \`/techdebt\`, \`/investigate\`, \`/validate\`, \`/adr\`, \`/hardening\`, \`/pr-review\`, \`/roadmap\`, \`/scaffold\`, \`/sweep\`
-- If no skill applies, use a plain imperative: "Open a tracking issue for X", "Pin this as a discussion topic"
-- Items must be specific to what actually shipped or was decided that day — never generic
-- **What's next** section: action items should be the most immediately actionable of all four sections
+/**
+ * Assembles the article body from structured Claude output.
+ * Section headings and suggested-actions blockquotes are injected by code —
+ * Claude only supplies the prose content and action items.
+ * This guarantees every article has the required four sections and blockquotes,
+ * regardless of what Claude decided to include or omit.
+ */
+export function assembleBody(s: StructuredArticle): string {
+  const formatActions = (acts?: string[]): string => {
+    const items =
+      acts && acts.length > 0
+        ? acts.map((a) => `> ${a.startsWith('- ') ? a : `- ${a}`}`)
+        : ['> - `/roadmap` — review this section and queue the next concrete action']
+    return ['> **Suggested actions**', ...items].join('\n')
+  }
 
-On days with zero commits: write a "thinking day" article — architecture analysis, a tradeoff exploration, or a deep-dive on one specific technical area. Never write filler.`
+  const sections: Array<[string, string, string[] | undefined]> = [
+    ['What shipped', s.whatShipped, s.actions?.whatShipped],
+    ['The decisions', s.theDecisions, s.actions?.theDecisions],
+    ['Roadmap pulse', s.roadmapPulse, s.actions?.roadmapPulse],
+    ["What's next", s.whatsNext, s.actions?.whatsNext],
+  ]
+
+  const parts: string[] = []
+
+  if (s.lede?.trim()) {
+    parts.push(s.lede.trim(), '')
+  }
+
+  for (const [heading, content, acts] of sections) {
+    parts.push(`## ${heading}`, '', content.trim(), '', formatActions(acts), '')
+  }
+
+  return parts.join('\n').trimEnd()
+}
 
 // ─── User prompt builder ──────────────────────────────────────────────────────
 
@@ -183,12 +237,35 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
     .replace(/\s*```$/i, '')
     .trim()
 
-  let parsed: { title: string; tags: string[]; summary: string; body: string }
+  let parsed: StructuredArticle | null = null
   try {
-    parsed = JSON.parse(jsonText)
+    const p = JSON.parse(jsonText) as StructuredArticle
+    // Validate required section fields are present
+    if (p.whatShipped && p.theDecisions && p.roadmapPulse && p.whatsNext) {
+      parsed = p
+    }
   } catch {
-    console.warn('  ⚠ JSON parse failed — using raw response as body')
-    parsed = {
+    // fall through to legacy body fallback below
+  }
+
+  if (parsed) {
+    return {
+      title: parsed.title ?? `ojfbot dev log — ${ctx.date}`,
+      date: ctx.date,
+      tags: parsed.tags ?? ['dev-log'],
+      summary: parsed.summary ?? '',
+      body: assembleBody(parsed),
+    }
+  }
+
+  // Fallback: legacy single-body parse (handles malformed / old-format responses)
+  console.warn('  ⚠ Structured JSON parse failed — attempting legacy body fallback')
+  let legacy: { title: string; tags: string[]; summary: string; body: string }
+  try {
+    legacy = JSON.parse(jsonText)
+  } catch {
+    console.warn('  ⚠ JSON parse failed entirely — using raw response as body')
+    legacy = {
       title: `ojfbot dev log — ${ctx.date}`,
       tags: ['dev-log'],
       summary: `Development notes for ${ctx.date}.`,
@@ -197,11 +274,11 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
   }
 
   return {
-    title: parsed.title ?? `ojfbot dev log — ${ctx.date}`,
+    title: legacy.title ?? `ojfbot dev log — ${ctx.date}`,
     date: ctx.date,
-    tags: parsed.tags ?? ['dev-log'],
-    summary: parsed.summary ?? '',
-    body: parsed.body ?? raw,
+    tags: legacy.tags ?? ['dev-log'],
+    summary: legacy.summary ?? '',
+    body: legacy.body ?? raw,
   }
 }
 
