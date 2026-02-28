@@ -92,7 +92,7 @@ On days with zero commits: write a "thinking day" article — architecture analy
 
 // ─── User prompt builder ──────────────────────────────────────────────────────
 
-function buildUserPrompt(ctx: BlogContext): string {
+export function buildUserPrompt(ctx: BlogContext): string {
   const parts: string[] = [`Generate the daily development blog article for **${ctx.date}**.\n`]
 
   if (ctx.commits.length > 0) {
