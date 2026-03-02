@@ -15,8 +15,8 @@ const REPOS = [
   'cv-builder',
   'BlogEngine',
   'TripPlanner',
-  'core-reader',      // Frame OS metadata dashboard — registered remote at :3015; Phase 3
-  'node-template',
+  'core',           // core (formerly node-template) — slash commands + TypeScript engine
+  'core-reader',    // CoreReader — metadata dashboard for core commands, ADRs, roadmap
   'MrPlug',
   'purefoy',
   'daily-logger',     // this repo — captures logger's own commits and improvements
