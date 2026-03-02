@@ -11,14 +11,16 @@ const ARTICLES_DIR = join(REPO_ROOT, '_articles')
 // All ojfbot repos swept on every run, ordered by activity weight.
 // To add a repo: append its name here. Run `gh repo list ojfbot` to audit.
 const REPOS = [
-  'shell',          // Frame OS — Vite Module Federation host + frame-agent LLM gateway + K8s
+  'shell',            // Frame OS — Vite Module Federation host + frame-agent LLM gateway + K8s
   'cv-builder',
   'BlogEngine',
   'TripPlanner',
+  'core-reader',      // Frame OS metadata dashboard — registered remote at :3015; Phase 3
+  'core-reader-api',  // CoreReader backend API — runs at :3016 under frame-dev.sh
   'node-template',
   'MrPlug',
   'purefoy',
-  'daily-logger',   // this repo — captures logger's own commits and improvements
+  'daily-logger',     // this repo — captures logger's own commits and improvements
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
