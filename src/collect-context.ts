@@ -16,7 +16,6 @@ const REPOS = [
   'BlogEngine',
   'TripPlanner',
   'core-reader',      // Frame OS metadata dashboard — registered remote at :3015; Phase 3
-  'core-reader-api',  // CoreReader backend API — runs at :3016 under frame-dev.sh
   'node-template',
   'MrPlug',
   'purefoy',
