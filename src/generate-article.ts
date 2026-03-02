@@ -2,7 +2,10 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { BlogContext, GeneratedArticle } from './types.js'
 
 const MODEL = 'claude-sonnet-4-6'
-const MAX_TOKENS = 4096
+// 8 k output budget — enough headroom on high-activity days (64+ commits) to
+// avoid mid-response cutoff that causes JSON.parse to fail and fall back to the
+// legacy body path (which skips assembleBody and loses the action blockquotes).
+const MAX_TOKENS = 8192
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 
@@ -146,15 +149,51 @@ export function assembleBody(s: StructuredArticle): string {
 
 // ─── User prompt builder ──────────────────────────────────────────────────────
 
+/**
+ * Groups commits by repo and returns a summarised string.
+ * Used when total commit count exceeds COMMIT_GROUP_THRESHOLD to keep the user
+ * prompt manageable on high-activity days without losing per-repo signal.
+ */
+function groupCommitsByRepo(commits: BlogContext['commits']): string {
+  const byRepo = new Map<string, typeof commits>()
+  for (const c of commits) {
+    if (!byRepo.has(c.repo)) byRepo.set(c.repo, [])
+    byRepo.get(c.repo)!.push(c)
+  }
+  const lines: string[] = []
+  for (const [repo, cs] of byRepo) {
+    // Show up to 6 representative commits per repo; surface the rest as a count
+    const shown = cs.slice(0, 6)
+    const extra = cs.length - shown.length
+    lines.push(`**${repo}** (${cs.length} commits):`)
+    shown.forEach((c) => lines.push(`  - ${c.message} (${c.hash})`))
+    if (extra > 0) lines.push(`  …and ${extra} more`)
+  }
+  return lines.join('\n')
+}
+
+// When a day has more commits than this, switch to grouped repo summaries
+// rather than a flat list so the user prompt stays under ~3 k tokens.
+const COMMIT_GROUP_THRESHOLD = 30
+
 export function buildUserPrompt(ctx: BlogContext): string {
   const parts: string[] = [`Generate the daily development blog article for **${ctx.date}**.\n`]
 
   if (ctx.commits.length > 0) {
-    parts.push(`## Commits in last 24h (${ctx.commits.length})`)
-    ctx.commits.slice(0, 40).forEach((c) => {
-      parts.push(`- [${c.repo}] ${c.message} (${c.hash}, ${c.author})`)
-    })
-    if (ctx.commits.length > 40) parts.push(`  …and ${ctx.commits.length - 40} more`)
+    const total = ctx.commits.length
+    parts.push(`## Commits in last 24h (${total})`)
+    if (total > COMMIT_GROUP_THRESHOLD) {
+      // High-activity day: group by repo to keep prompt size manageable
+      parts.push(
+        `_High-activity day — commits grouped by repo. Write repo-level summaries._`
+      )
+      parts.push(groupCommitsByRepo(ctx.commits))
+    } else {
+      ctx.commits.slice(0, 40).forEach((c) => {
+        parts.push(`- [${c.repo}] ${c.message} (${c.hash}, ${c.author})`)
+      })
+      if (total > 40) parts.push(`  …and ${total - 40} more`)
+    }
     parts.push('')
   } else {
     parts.push('## Commits in last 24h\n_No commits today._\n')

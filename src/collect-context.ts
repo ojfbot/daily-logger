@@ -197,7 +197,9 @@ function getPreviousArticles(): Array<{ date: string; excerpt: string }> {
       .slice(0, 5)
       .map((f) => {
         const content = readFileSync(join(ARTICLES_DIR, f), 'utf-8')
-        return { date: f.replace('.md', ''), excerpt: content.slice(0, 800) }
+        // 500 chars keeps enough continuity context without bloating the user
+        // prompt on high-activity days (5 articles × 800 chars was ~1 k tokens).
+        return { date: f.replace('.md', ''), excerpt: content.slice(0, 500) }
       })
   } catch {
     return []
