@@ -1,1 +1,0 @@
-../../../node-template/.claude/commands/skill-loader.md

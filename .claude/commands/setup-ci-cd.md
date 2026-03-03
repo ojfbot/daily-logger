@@ -1,1 +1,0 @@
-../../../node-template/.claude/commands/setup-ci-cd.md
