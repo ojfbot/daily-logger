@@ -93,14 +93,13 @@ async function main() {
     }
     console.log()
   } else {
-    console.log(`3/4  Council review — ${personas.length} persona(s)...`)
+    console.log(`3/4  Council review — ${personas.length} persona(s) in parallel...`)
+    console.log(`     → ${personas.map((p) => p.slug).join(', ')}`)
 
-    const notes = []
-    for (const persona of personas) {
-      console.log(`     → ${persona.slug}`)
-      const note = await reviewDraft(article, persona)
-      notes.push(note)
-    }
+    // Run all persona reviews concurrently — each reads the draft independently,
+    // so there's no dependency between them. With 4 personas, parallel execution
+    // takes roughly the same wall-clock time as a single review call.
+    const notes = await Promise.all(personas.map((p) => reviewDraft(article, p)))
     console.log()
 
     // ── 4a. Synthesize ───────────────────────────────────────────────────────

@@ -7,13 +7,20 @@
  *
  * Designed for overnight runs — 2-4 extra Claude calls per persona,
  * but the output quality gain is the point.
+ *
+ * Architecture note: synthesis returns a StructuredArticle routed through
+ * assembleBody() — same path as the initial draft. This guarantees every
+ * council-reviewed article has the same structural guarantees (section headings,
+ * > **Suggested actions** blockquotes) as the initial draft, regardless of what
+ * the synthesis Claude call decides to include or omit.
  */
 
 import Anthropic from '@anthropic-ai/sdk'
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { BlogContext, GeneratedArticle, Persona, CouncilNote } from './types.js'
+import type { BlogContext, GeneratedArticle, Persona, CouncilNote, StructuredArticle } from './types.js'
+import { assembleBody } from './generate-article.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -91,7 +98,7 @@ Be direct. No hedging. This is feedback from someone who wants him to succeed, n
 
   const message = await client.messages.create({
     model: MODEL,
-    max_tokens: 1024,
+    max_tokens: 2048,
     system,
     messages: [
       {
@@ -110,13 +117,62 @@ Be direct. No hedging. This is feedback from someone who wants him to succeed, n
   }
 }
 
+// ─── Synthesis tool schema ────────────────────────────────────────────────────
+//
+// The synthesis call uses the same tool_use mechanism as the initial draft
+// so the output is guaranteed structured — no JSON fence issues, no partial
+// parse, and all fields are schema-validated by the API.
+
+const SYNTHESIS_TOOL: Anthropic.Tool = {
+  name: 'write_article',
+  description: 'Write the final polished article incorporating council feedback.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      title: { type: 'string' },
+      tags: { type: 'array', items: { type: 'string' } },
+      summary: { type: 'string', description: 'One sentence, 15-25 words' },
+      lede: { type: 'string', description: '1-3 sentence opening paragraph. Empty string if none.' },
+      whatShipped: {
+        type: 'string',
+        description: 'GFM markdown for What shipped section body (no ## heading). Merged/committed work only.',
+      },
+      theDecisions: {
+        type: 'string',
+        description: 'GFM markdown for The decisions section body (no ## heading). Explain WHY. Teach. Name a Samir pillar.',
+      },
+      roadmapPulse: {
+        type: 'string',
+        description: 'GFM markdown for Roadmap pulse section body (no ## heading). Reference every open PR by [repo] #number.',
+      },
+      whatsNext: {
+        type: 'string',
+        description: 'GFM markdown for What\'s next section body (no ## heading). 1-2 immediately actionable items.',
+      },
+      actions: {
+        type: 'object',
+        properties: {
+          whatShipped: { type: 'array', items: { type: 'string' } },
+          theDecisions: { type: 'array', items: { type: 'string' } },
+          roadmapPulse: { type: 'array', items: { type: 'string' } },
+          whatsNext: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['whatShipped', 'theDecisions', 'roadmapPulse', 'whatsNext'],
+      },
+    },
+    required: ['title', 'tags', 'summary', 'lede', 'whatShipped', 'theDecisions', 'roadmapPulse', 'whatsNext', 'actions'],
+  },
+}
+
 // ─── Synthesis phase ──────────────────────────────────────────────────────────
 //
 // Takes the draft + all council notes and produces a final, polished article
 // that preemptively addresses the council's questions where information exists,
 // honestly acknowledges known gaps, and sharpens the framing based on what landed.
 //
-// Returns the same GeneratedArticle shape — drops directly into the write step.
+// IMPORTANT: synthesis returns a StructuredArticle routed through assembleBody().
+// Never assign the raw synthesis body directly — the deterministic assembly step
+// is what guarantees section headings and > **Suggested actions** blockquotes.
 
 export async function synthesizeWithCouncil(
   draft: GeneratedArticle,
@@ -133,27 +189,21 @@ export async function synthesizeWithCouncil(
     )
     .join('\n\n---\n\n')
 
-  const system = `You are the technical writer for the ojfbot project — the same writer who produced the draft below. You have now received feedback from a panel of trusted expert reviewers, each reading the article through their own professional lens.
+  const system = `You are the technical writer and educational narrator for the ojfbot project — the same writer who produced the draft below. You have now received feedback from a panel of trusted expert reviewers, each reading the article through their own professional lens.
 
 Your job is to produce the final, polished version of this article. Incorporate the feedback by:
 
 1. **Preemptively answering questions** where the information is available from the project context. If a reviewer asks "is this live?" and it is, say so clearly in the article.
 2. **Honestly acknowledging gaps** that the reviewers flagged where the information isn't available — a sentence of honest acknowledgment is better than silence.
 3. **Sharpening the framing** based on what the reviewers said landed well — if something worked, make sure it's prominent.
-4. **Preserving the structure** — the final article must still have these sections: What shipped, The decisions, Roadmap pulse, What's next.
-5. **Do not add marketing language or fluff** to compensate for gaps. Honest and direct always wins.
+4. **Deepening the didactic layer**: if a reviewer asked a question that the article doesn't answer, and the answer is knowable, answer it. Explain it as if teaching a developer who is returning to this codebase after two weeks away.
+5. **Preserving structure** — the final article must have four sections: What shipped, The decisions, Roadmap pulse, What's next.
+6. **Preserving action items** — include 1-3 slash-command action items per section in the \`actions\` field. These must be specific to today's work, not generic filler.
+7. **Do not add marketing language or fluff** to compensate for gaps. Honest and direct always wins.
 
 The audience for this article is a technical reader who is also evaluating the author as an engineer and systems thinker. Every word should earn its place.
 
-Return the same JSON format as the original:
-{
-  "title": "string",
-  "tags": ["3-6 lowercase-hyphenated tags"],
-  "summary": "One sentence, 15–25 words",
-  "body": "Full article body in GitHub-flavored markdown. No title/date/tags in body."
-}
-
-Raw JSON only — no fences, no preamble.`
+Output each section as its body text only — no ## headings, those are injected automatically. Use the write_article tool.`
 
   const userPrompt = [
     `Synthesize the final article for **${ctx.date}**.`,
@@ -170,38 +220,44 @@ Raw JSON only — no fences, no preamble.`
     '',
     councilBlock,
     '',
-    `## Project context`,
+    '## Project context',
     ctx.projectVision ? ctx.projectVision.slice(0, 1000) : '',
   ].join('\n')
 
-  console.log('  Synthesizing final article with council input...')
+  console.log('  Synthesizing final article with council input (tool_use)...')
   const message = await client.messages.create({
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 8192,
     system,
+    tools: [SYNTHESIS_TOOL],
+    tool_choice: { type: 'tool', name: 'write_article' },
     messages: [{ role: 'user', content: userPrompt }],
   })
 
-  const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+  const toolUse = message.content.find((b) => b.type === 'tool_use')
+  const parsed = toolUse
+    ? (toolUse as { type: 'tool_use'; input: StructuredArticle }).input
+    : null
 
-  const jsonText = raw
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim()
-
-  let parsed: { title: string; tags: string[]; summary: string; body: string }
-  try {
-    parsed = JSON.parse(jsonText)
-  } catch {
-    console.warn('  ⚠ Synthesis JSON parse failed — falling back to draft')
-    return draft
+  if (
+    parsed &&
+    parsed.whatShipped &&
+    parsed.theDecisions &&
+    parsed.roadmapPulse &&
+    parsed.whatsNext
+  ) {
+    return {
+      title: parsed.title ?? draft.title,
+      date: ctx.date,
+      tags: parsed.tags ?? draft.tags,
+      summary: parsed.summary ?? draft.summary,
+      // Route through assembleBody() — this is the structural guarantee:
+      // section headings and > **Suggested actions** blockquotes are ALWAYS
+      // injected by code, never left to Claude's discretion.
+      body: assembleBody(parsed),
+    }
   }
 
-  return {
-    title: parsed.title ?? draft.title,
-    date: ctx.date,
-    tags: parsed.tags ?? draft.tags,
-    summary: parsed.summary ?? draft.summary,
-    body: parsed.body ?? draft.body,
-  }
+  console.warn('  ⚠ Synthesis tool_use block missing or incomplete — falling back to draft')
+  return draft
 }
