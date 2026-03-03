@@ -54,10 +54,19 @@ jobs:
 
           MISSING=()
           while IFS= read -r link; do
-            dir=$(dirname "$link")
-            # Check if the symlink path or its parent directory appears in
-            # the exclude list (strips trailing slash for comparison)
-            if ! grep -qE "^\s*-\s+['\"]?(${link}|${dir}|${dir}/)['\"]?" _config.yml; then
+            # Walk up the directory tree: a symlink is safe if it OR any of
+            # its ancestor directories appears in _config.yml's exclude list.
+            # e.g. .claude/commands/adr passes because .claude/ is excluded.
+            path="$link"
+            excluded=false
+            while [[ "$path" != "." && "$path" != "/" && "$path" != "" ]]; do
+              if grep -qE "^\s*-\s+['\"]?${path}/?['\"]?" _config.yml; then
+                excluded=true
+                break
+              fi
+              path=$(dirname "$path")
+            done
+            if [[ "$excluded" == "false" ]]; then
               MISSING+=("$link")
             fi
           done <<< "$SYMLINKS"
