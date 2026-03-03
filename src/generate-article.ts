@@ -1,15 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { BlogContext, GeneratedArticle } from './types.js'
+import type { BlogContext, GeneratedArticle, StructuredArticle } from './types.js'
 
 const MODEL = 'claude-sonnet-4-6'
 // 8 k output budget — enough headroom on high-activity days (64+ commits) to
-// avoid mid-response cutoff that causes JSON.parse to fail and fall back to the
-// legacy body path (which skips assembleBody and loses the action blockquotes).
+// avoid mid-response cutoff.
 const MAX_TOKENS = 8192
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are the technical writer for the ojfbot project — a solo developer building an AI App OS called Frame.
+const SYSTEM_PROMPT = `You are the technical writer and educational narrator for the ojfbot project — a solo developer building an AI App OS called Frame.
 
 ## What ojfbot is building
 
@@ -20,19 +19,29 @@ Frame is a shared shell framework that hosts multiple Claude-powered application
 - **TripPlanner** — AI trip planning and itinerary management.
 
 Additional repos:
-- **shell** — Frame OS. Vite Module Federation host + \`frame-agent\` LLM gateway + K8s manifests. This IS the Phase 1/3 work: the shared shell being extracted and the ShellAgent that will become Frame's AI address bar equivalent. Most architecturally significant repo after cv-builder. **The shell is live at http://frame.jim.software** — a GitHub Pages deployment of \`/shell\` behind a CNAME record. Sub-apps (cv-builder, BlogEngine, TripPlanner) are not yet deployed as Federation remotes against that host. Never say Frame is undeployed or running locally only.
-- **node-template** — Dev environment as a product: 23 Claude Code slash commands backed by a TypeScript engine. The \`/techdebt\` command is a self-improving loop that scans for debt, proposes file patches, and applies them. Domain-knowledge docs keep all five apps in context.
-- **MrPlug** — Chrome extension for AI UI/UX feedback on localhost pages. Click any DOM element, get AI design analysis with a per-element chat session. Being rebuilt as the dev-tooling companion for Frame.
+- **shell** — Frame OS. Vite Module Federation host + \`frame-agent\` LLM gateway + K8s manifests. Most architecturally significant repo after cv-builder. **The shell is live at http://frame.jim.software** — a GitHub Pages deployment of \`/shell\` behind a CNAME record. Sub-apps (cv-builder, BlogEngine, TripPlanner) are not yet deployed as Federation remotes against that host. Never say Frame is undeployed or running locally only.
+- **core** — (formerly node-template) Dev environment as a product: 23 Claude Code slash commands backed by a TypeScript engine. The \`/techdebt\` command is a self-improving loop that scans for debt, proposes file patches, and applies them.
+- **core-reader** — Frame OS metadata dashboard registered as a remote at :3015. Implementation not yet started.
+- **MrPlug** — Chrome extension for AI UI/UX feedback on localhost pages.
 - **purefoy** — Roger Deakins cinematography knowledge base (Python scraper + podcast transcripts). Roadmap: AI podcast interaction agent inside Frame.
-- **daily-logger** — This repo. Generates and commits one blog article per day by sweeping GitHub activity across all ojfbot repos and calling Claude.
+- **daily-logger** — This repo. Generates and commits one blog article per day.
+
+## Authoritative dev environment ports (frame-dev.sh)
+- shell: :3000
+- cv-builder: :3001
+- BlogEngine: :3002
+- TripPlanner: :3003
+- CoreReader: :3015
+
+Do NOT invent repo names not on the list above. Do NOT fabricate ports.
 
 ## The bigger pitch
 
-The goal is to pitch for a Design Engineer role at The Browser Company (building Dia, an AI-first browser). The argument: "We're building the same thing you're building, one layer down." Dia controls the web through natural language. Frame controls applications through natural language. The header chat input in Frame is Dia's AI bar. The multi-instance app launcher is Dia's tab manager.
+The goal is to pitch for a Design Engineer role at The Browser Company (building Dia, an AI-first browser). The argument: "We're building the same thing you're building, one layer down." Dia controls the web through natural language. Frame controls applications through natural language.
 
 The four Samir/TBCoNY pillars — name one in every article:
 1. **Assistant-centric architecture** (ShellAgent as organizing primitive)
-2. **Tooling for fast iteration** (node-template slash commands, daily-logger, cv-builder eval loop)
+2. **Tooling for fast iteration** (node-template/core slash commands, daily-logger, cv-builder eval loop)
 3. **Model behavior as design discipline** (evals, prompt versioning as first-class artifacts)
 4. **Security as emergent UX** (tool-use confirmations, trusted/untrusted separation)
 
@@ -45,68 +54,121 @@ All three TypeScript apps share an identical extracted shell:
 
 **Active roadmap phases:**
 1. Extract shared components to \`@ojfbot/shell\` + Storybook (design system source of truth)
-2. Figma design system with MCP integration (figma-developer-mcp + bidirectional claude-talk-to-figma-mcp)
+2. Figma design system with MCP integration
 3. Header chat command bar — natural language modifies the active app via ShellAgent
-4. Multi-instance app launching from the chat bar (replace port-hop navigation)
-5. MrPlug rebuilt as Frame's dev companion + CLI element-chat agent (\`ojf inspect <selector>\`)
-6. Visual regression CI as A/B testing foundation (same baseline system, variant flag added)
+4. Multi-instance app launching from the chat bar
+5. MrPlug rebuilt as Frame's dev companion + CLI element-chat agent
+6. Visual regression CI as A/B testing foundation
 7. purefoy as podcast AI agent inside Frame
-8. App definition from the UI (ShellAgent scaffolds + registers new apps via node-template)
-9. daily-logger articles published to BlogEngine (this system)
+8. App definition from the UI (ShellAgent scaffolds + registers new apps via core)
+9. daily-logger articles published to BlogEngine
 
-## Tone
+## Tone and writing standards
 
 - First-person plural ("we built", "we decided", "we're exploring")
 - Direct and technical — name the files, patterns, and decisions
-- Opinionated — explain the "why" behind architectural choices, not just the "what"
-- Honest: distinguish shipped from in-progress from planned
-- Aware that this blog is itself a demonstration of AI-native development (the system writes about itself)
+- **Didactic**: Write every architectural decision as if teaching a developer who hasn't touched this codebase in two weeks. Answer: WHY was this chosen? WHAT would break if we did it differently? WHEN does this tradeoff bite you?
+- Honest: distinguish shipped from in-progress from planned with explicit clarity
+- **Educational callouts** (GFM blockquotes starting with a question): Use \`> **Why X?**\` or \`> **What does this mean in practice?**\` blockquotes to surface the explanation a reader unfamiliar with context would need
 - No marketing language, no hype, no "exciting new features"
+- Aware that this blog is itself a demonstration of AI-native development
 
-## Output format
+## Action item standards
 
-Return a single JSON object — no markdown fences, no preamble, raw JSON only. ALL keys are required.
+Action items in the \`actions\` fields must be:
+- **Specific**: tied to today's actual shipped work, not generic
+- **Executable**: the reader could act on this within 30 minutes of reading
+- **Command-linked**: prefer \`/plan-feature\`, \`/techdebt\`, \`/investigate\`, \`/validate\`, \`/adr\`, \`/hardening\`, \`/pr-review\`, \`/roadmap\`, \`/scaffold\`, \`/sweep\` when applicable. Use plain imperative when no skill fits.
+- Never filler. If you can't find a specific action, name the concrete next step in plain English.
 
-{
-  "title": "string — specific and informative, not clickbait. Example: 'Extracting @ojfbot/shell: what three identical App.tsx files tell you'",
-  "tags": ["3-6 lowercase-hyphenated tags"],
-  "summary": "One sentence, 15–25 words, plain text for preview cards",
-  "lede": "1–3 sentence opening paragraph setting the day's narrative theme. Use empty string on zero-commit days.",
-  "whatShipped": "GFM markdown body for the What shipped section. Name specific PRs, commits, files. ONLY reference merged/committed work here — open/in-flight PRs must go in roadmapPulse.",
-  "theDecisions": "GFM markdown body for The decisions section — the most important section. Name architectural choices and WHY. Name which TBCoNY/Samir pillar this work demonstrates.",
-  "roadmapPulse": "GFM markdown body for Roadmap pulse. Specific phase progress. MUST explicitly reference every open PR from the Open PRs context by [repo] #number as in-flight work — do not omit any.",
-  "whatsNext": "GFM markdown body for What's next — the one or two most immediately actionable items.",
-  "actions": {
-    "whatShipped": ["- \`/skill\` — one sentence action specific to what shipped today"],
-    "theDecisions": ["- \`/skill\` — one sentence action specific to a decision made today"],
-    "roadmapPulse": ["- \`/skill\` — one sentence action specific to phase progress"],
-    "whatsNext": ["- \`/skill\` — the single most immediately actionable follow-up"]
-  }
-}
+## Output
+
+Call the \`write_article\` tool with all required fields. Do not add preamble or explanation.
 
 Field rules:
-- \`actions\`: each sub-key requires 1–3 items. Skill commands: \`/plan-feature\`, \`/techdebt\`, \`/investigate\`, \`/validate\`, \`/adr\`, \`/hardening\`, \`/pr-review\`, \`/roadmap\`, \`/scaffold\`, \`/sweep\`. Use a plain imperative when no skill fits.
-- All action items must be specific to that day's actual shipped work or decisions — never generic filler.
-- Total word count across lede + four sections combined: 600–900 words.
+- \`whatShipped\`: GFM markdown. Name specific PRs (#number), commits (7-char hash), files. ONLY reference merged/committed work here — open/in-flight PRs must go in roadmapPulse.
+- \`theDecisions\`: The most important section. Explain WHY each architectural choice was made, what alternatives were considered, and what would break if the decision were different. Name which TBCoNY/Samir pillar this demonstrates.
+- \`roadmapPulse\`: MUST explicitly reference every open PR from the Open PRs context by [repo] #number as in-flight work — do not omit any.
+- \`whatsNext\`: 1-2 items. Immediately actionable. The reader should be able to start in the next 30 minutes.
+- Total word count across lede + four sections: 800–1200 words.
 - Zero-commit days: \`whatShipped\` becomes "What we explored" — architecture deep-dive or tradeoff analysis. Never write filler.`
 
-// ─── Structured article type (what Claude returns) ────────────────────────────
+// ─── Tool schema (write_article) ─────────────────────────────────────────────
+//
+// Using tool_use instead of raw JSON prompting guarantees structured output:
+// - No JSON fence stripping needed
+// - No JSON.parse failure on high-activity days
+// - Schema validates required fields at the API layer
 
-type StructuredArticle = {
-  title: string
-  tags: string[]
-  summary: string
-  lede?: string
-  whatShipped: string
-  theDecisions: string
-  roadmapPulse: string
-  whatsNext: string
-  actions?: {
-    whatShipped?: string[]
-    theDecisions?: string[]
-    roadmapPulse?: string[]
-    whatsNext?: string[]
-  }
+const ARTICLE_TOOL: Anthropic.Tool = {
+  name: 'write_article',
+  description: 'Write the structured daily development blog article and submit all fields.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      title: {
+        type: 'string',
+        description: 'Specific and informative. Example: "Extracting @ojfbot/shell: what three identical App.tsx files tell you"',
+      },
+      tags: {
+        type: 'array',
+        items: { type: 'string' },
+        description: '3-6 lowercase-hyphenated tags',
+      },
+      summary: {
+        type: 'string',
+        description: 'One sentence, 15–25 words, plain text for preview cards',
+      },
+      lede: {
+        type: 'string',
+        description: '1–3 sentence opening paragraph setting the day\'s narrative theme. Empty string on zero-commit days.',
+      },
+      whatShipped: {
+        type: 'string',
+        description: 'GFM markdown body for the What shipped section. Name specific PRs, commits, files. ONLY reference merged/committed work here.',
+      },
+      theDecisions: {
+        type: 'string',
+        description: 'GFM markdown body for The decisions section — the most important section. Name architectural choices and WHY. Explain the tradeoffs as if teaching. Name which TBCoNY/Samir pillar this demonstrates.',
+      },
+      roadmapPulse: {
+        type: 'string',
+        description: 'GFM markdown body for Roadmap pulse. Specific phase progress. MUST explicitly reference every open PR by [repo] #number.',
+      },
+      whatsNext: {
+        type: 'string',
+        description: 'GFM markdown body for What\'s next — 1-2 most immediately actionable items.',
+      },
+      actions: {
+        type: 'object',
+        description: 'Suggested slash-command actions for each section',
+        properties: {
+          whatShipped: {
+            type: 'array',
+            items: { type: 'string' },
+            description: '1-3 slash command action items specific to what shipped today',
+          },
+          theDecisions: {
+            type: 'array',
+            items: { type: 'string' },
+            description: '1-3 slash command action items specific to decisions made today',
+          },
+          roadmapPulse: {
+            type: 'array',
+            items: { type: 'string' },
+            description: '1-3 slash command action items specific to phase progress',
+          },
+          whatsNext: {
+            type: 'array',
+            items: { type: 'string' },
+            description: '1-2 slash command action items for the most immediately actionable follow-up',
+          },
+        },
+        required: ['whatShipped', 'theDecisions', 'roadmapPulse', 'whatsNext'],
+      },
+    },
+    required: ['title', 'tags', 'summary', 'lede', 'whatShipped', 'theDecisions', 'roadmapPulse', 'whatsNext', 'actions'],
+  },
 }
 
 // ─── Deterministic body assembly ──────────────────────────────────────────────
@@ -260,34 +322,23 @@ export function buildUserPrompt(ctx: BlogContext): string {
 export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticle> {
   const client = new Anthropic()
 
-  console.log('  Calling Claude...')
+  console.log('  Calling Claude (tool_use)...')
   const message = await client.messages.create({
     model: MODEL,
     max_tokens: MAX_TOKENS,
     system: SYSTEM_PROMPT,
+    tools: [ARTICLE_TOOL],
+    tool_choice: { type: 'tool', name: 'write_article' },
     messages: [{ role: 'user', content: buildUserPrompt(ctx) }],
   })
 
-  const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+  // With tool_choice: {type: 'tool'}, the API guarantees a tool_use block.
+  // This eliminates JSON.parse failures, markdown fence stripping, and
+  // the legacy body fallback path that loses action blockquotes.
+  const toolUse = message.content.find((b) => b.type === 'tool_use')
+  const parsed = toolUse ? (toolUse as { type: 'tool_use'; input: StructuredArticle }).input : null
 
-  // Claude occasionally wraps in ```json fences despite instructions — strip them
-  const jsonText = raw
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim()
-
-  let parsed: StructuredArticle | null = null
-  try {
-    const p = JSON.parse(jsonText) as StructuredArticle
-    // Validate required section fields are present
-    if (p.whatShipped && p.theDecisions && p.roadmapPulse && p.whatsNext) {
-      parsed = p
-    }
-  } catch {
-    // fall through to legacy body fallback below
-  }
-
-  if (parsed) {
+  if (parsed && parsed.whatShipped && parsed.theDecisions && parsed.roadmapPulse && parsed.whatsNext) {
     return {
       title: parsed.title ?? `ojfbot dev log — ${ctx.date}`,
       date: ctx.date,
@@ -297,27 +348,15 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
     }
   }
 
-  // Fallback: legacy single-body parse (handles malformed / old-format responses)
-  console.warn('  ⚠ Structured JSON parse failed — attempting legacy body fallback')
-  let legacy: { title: string; tags: string[]; summary: string; body: string }
-  try {
-    legacy = JSON.parse(jsonText)
-  } catch {
-    console.warn('  ⚠ JSON parse failed entirely — using raw response as body')
-    legacy = {
-      title: `ojfbot dev log — ${ctx.date}`,
-      tags: ['dev-log'],
-      summary: `Development notes for ${ctx.date}.`,
-      body: raw,
-    }
-  }
-
+  // Should never reach here with tool_choice: {type: 'tool'}, but log and
+  // produce a minimal safe fallback so CI doesn't fail hard on article-write.
+  console.warn('  ⚠ tool_use block missing or incomplete — check API response')
   return {
-    title: legacy.title ?? `ojfbot dev log — ${ctx.date}`,
+    title: `ojfbot dev log — ${ctx.date}`,
     date: ctx.date,
-    tags: legacy.tags ?? ['dev-log'],
-    summary: legacy.summary ?? '',
-    body: legacy.body ?? raw,
+    tags: ['dev-log'],
+    summary: `Development notes for ${ctx.date}.`,
+    body: '_(Article generation failed — no tool_use block returned. Check daily-logger CI logs.)_',
   }
 }
 

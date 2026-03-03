@@ -198,9 +198,12 @@ function getPreviousArticles(): Array<{ date: string; excerpt: string }> {
       .slice(0, 5)
       .map((f) => {
         const content = readFileSync(join(ARTICLES_DIR, f), 'utf-8')
-        // 500 chars keeps enough continuity context without bloating the user
-        // prompt on high-activity days (5 articles × 800 chars was ~1 k tokens).
-        return { date: f.replace('.md', ''), excerpt: content.slice(0, 500) }
+        // Strip YAML frontmatter (--- ... ---) before slicing so the excerpt
+        // contains actual article prose, not just title/date/tags metadata.
+        // A raw slice(0, 500) on a typical article wastes ~150 chars on frontmatter.
+        const fmEnd = content.indexOf('\n---\n', 3)
+        const body = fmEnd > -1 ? content.slice(fmEnd + 5).trim() : content
+        return { date: f.replace('.md', ''), excerpt: body.slice(0, 600) }
       })
   } catch {
     return []
