@@ -76,6 +76,15 @@ export async function reviewDraft(
   draft: GeneratedArticle,
   persona: Persona,
 ): Promise<CouncilNote> {
+  // MOCK_LLM=true: return a fixture critique, no API call.
+  if (process.env.MOCK_LLM === 'true') {
+    return {
+      personaSlug: persona.slug,
+      personaRole: persona.role,
+      critique: `**Questions you'd ask**\n- Mock question 1: is the pipeline working correctly?\n- Mock question 2: are all four sections present?\n\n**Gaps you'd flag**\n- Mock gap: this is a smoke test, no real gaps to flag.\n\n**What lands**\n- The mock fixture article structure looks correct.`,
+    }
+  }
+
   const client = new Anthropic()
 
   const system = `You are ${persona.role}. You are a trusted friend and advisor to Jim Green, who is building Frame OS — a shared AI app shell — and targeting a Design Engineer role at The Browser Company.
@@ -223,6 +232,13 @@ Output each section as its body text only — no ## headings, those are injected
     '## Project context',
     ctx.projectVision ? ctx.projectVision.slice(0, 1000) : '',
   ].join('\n')
+
+  // MOCK_LLM=true: skip synthesis, return the draft as-is.
+  // The draft already went through assembleBody() so structure is guaranteed.
+  if (process.env.MOCK_LLM === 'true') {
+    console.log('  [MOCK_LLM] Skipping synthesis — returning draft unchanged')
+    return draft
+  }
 
   console.log('  Synthesizing final article with council input (tool_use)...')
   const message = await client.messages.create({

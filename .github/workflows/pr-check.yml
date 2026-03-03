@@ -1,0 +1,91 @@
+name: PR Check
+
+# Validates every PR to main:
+#   1. Unit tests
+#   2. Pipeline smoke test (MOCK_LLM=true — no Anthropic API call, no GH_PAT required)
+#   3. PR body builder script
+#
+# The smoke test exercises the full generate → council → synthesize → write path
+# using a fixture StructuredArticle instead of a real LLM response. This catches
+# structural regressions (tool_use parsing, assembleBody, toMarkdown) without
+# burning API credits or requiring secrets.
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    name: Test + pipeline smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Pipeline smoke test (mock LLM — no API call)
+        env:
+          # MOCK_LLM=true: generateArticle() and council calls return fixtures.
+          # The Anthropic SDK constructor requires a key string but never calls
+          # the API in mock mode — this placeholder satisfies the env check.
+          ANTHROPIC_API_KEY: sk-ant-mock-smoke-test
+          # GITHUB_TOKEN has read access to public repos for the collect phase.
+          # Private repos return empty arrays (ghApi silently skips 404s).
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OJFBOT_ORG: ojfbot
+          MOCK_LLM: "true"
+          # Fixed date so the output file is predictable for the PR body check below.
+          DATE_OVERRIDE: "2026-01-01"
+          DRY_RUN: "false"
+        run: pnpm generate
+
+      - name: Verify article was written
+        run: |
+          if [ ! -f "_articles/2026-01-01.md" ]; then
+            echo "❌ _articles/2026-01-01.md was not created by the smoke test"
+            exit 1
+          fi
+          echo "✓ Article file exists"
+          # Verify required sections are present
+          for section in "## What shipped" "## The decisions" "## Roadmap pulse" "## What's next" "Suggested actions"; do
+            if ! grep -q "${section}" _articles/2026-01-01.md; then
+              echo "❌ Missing section: ${section}"
+              exit 1
+            fi
+          done
+          echo "✓ All required sections and blockquotes present"
+
+      - name: PR body builder check
+        run: |
+          python3 .github/scripts/build_pr_body.py \
+            "2026-01-01" "article/2026-01-01" "_articles/2026-01-01.md" \
+            > /tmp/pr-body.md
+          # Verify the output contains expected structural elements
+          if ! grep -q "Daily article" /tmp/pr-body.md; then
+            echo "❌ PR body builder output missing expected content"
+            cat /tmp/pr-body.md
+            exit 1
+          fi
+          echo "✓ PR body builder produced valid output"
+          echo "--- PR body preview ---"
+          head -20 /tmp/pr-body.md
