@@ -26,15 +26,20 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 
 ## Where we are now (update this section weekly)
 
-**Active: Phase 6 + Phase 9**
+**Active: Phase 4 + Phase 5 + Phase 6 + Phase 9**
 
+- **Phase 5 (Phase 5B merged)**: MrPlug Phase 5B fully merged — GitHub issue creation,
+  Claude Code relay, Module Federation-aware project routing, confirmation UX.
+  S3 screenshot upload + rich issue bodies landed. Open: S3 cost model docs, injection
+  failure hardening.
+- **Phase 4 (shipped)**: shell multi-instance UI landed 2026-03-09.
 - **Phase 6 (~70%)**: visual regression landed (PR #93 — CanvasRunNavigator, S3,
   draw.io canvas, rich PR comments with thumbnails). Missing: run-history + diff
   timeline (issue #94). This CI eval loop IS Samir's Pillar 2 in production.
 - **Phase 1 (stalled)**: shell extraction issues #83–86 open. Sprint consumed by
   Phase 6. Core tension: can't build ShellAgent (Pillar 1) without the shell first.
 - **Phase 9 (live)**: daily-logger running. Editorial UI (draft-PR + GitHub Pages SPA)
-  is the next step.
+  is the next step. Progressive disclosure for new issues shipped. Rest-day handling added.
 
 ---
 
@@ -83,8 +88,8 @@ The pitch: "building what Concur would build if it started over in 2025."
 1. Extract `@ojfbot/shell` + Storybook — **stalled** (#83–86)
 2. Figma design system with MCP — **not started**
 3. Header chat bar / ShellAgent — **not started**
-4. Multi-instance app launching — **not started**
-5. MrPlug as `ojf inspect` dev companion — **not started**
+4. Multi-instance app launching — **shipped** (shell multi-instance UI, 2026-03-09)
+5. MrPlug as `ojf inspect` dev companion — **Phase 5B merged** (GitHub issue creation, Claude Code relay, MF-aware routing)
 6. Visual regression CI as A/B foundation — **~70%** (issue #94)
 7. purefoy as podcast AI agent in Frame — **not started**
 8. App definition from UI (ShellAgent scaffolds apps) — **not started**
