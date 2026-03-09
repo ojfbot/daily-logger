@@ -17,6 +17,8 @@ export interface IssueInfo {
   url: string
   repo: string
   body?: string
+  /** True when the issue was created in the last 24h (first time the sweep sees it). */
+  isNew?: boolean
 }
 
 export interface PRInfo {

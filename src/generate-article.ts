@@ -326,13 +326,30 @@ export function buildUserPrompt(ctx: BlogContext): string {
   }
 
   if (ctx.openIssues.length > 0) {
-    parts.push(`## Open issues snapshot (top ${Math.min(ctx.openIssues.length, 25)})`)
-    ctx.openIssues.slice(0, 25).forEach((i) => {
-      const l = i.labels.length ? ` [${i.labels.join(', ')}]` : ''
-      const created = i.createdAt ? ` (opened ${i.createdAt.slice(0, 10)})` : ''
-      parts.push(`- [${i.repo}] #${i.number}: ${i.title}${l}${created}`)
-    })
-    parts.push('')
+    const newIssues = ctx.openIssues.filter((i) => i.isNew)
+    const existingIssues = ctx.openIssues.filter((i) => !i.isNew)
+
+    if (newIssues.length > 0) {
+      parts.push(`## New issues — created in last 24h (${newIssues.length})`)
+      parts.push('_These are newly filed and have not appeared in a previous article. Include them in roadmapPulse and whatsNext where relevant._')
+      newIssues.forEach((i) => {
+        const l = i.labels.length ? ` [${i.labels.join(', ')}]` : ''
+        parts.push(`- [${i.repo}] #${i.number}: ${i.title}${l}`)
+        if (i.body) parts.push(`  > ${i.body.replace(/\n/g, ' ').slice(0, 800)}`)
+      })
+      parts.push('')
+    }
+
+    if (existingIssues.length > 0) {
+      parts.push(`## Open issues snapshot (${existingIssues.length} existing)`)
+      existingIssues.slice(0, 20).forEach((i) => {
+        const l = i.labels.length ? ` [${i.labels.join(', ')}]` : ''
+        const created = i.createdAt ? ` (opened ${i.createdAt.slice(0, 10)})` : ''
+        parts.push(`- [${i.repo}] #${i.number}: ${i.title}${l}${created}`)
+        if (i.body) parts.push(`  > ${i.body.replace(/\n/g, ' ')}`)
+      })
+      parts.push('')
+    }
   }
 
   if (ctx.projectVision) {

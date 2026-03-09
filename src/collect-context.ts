@@ -120,7 +120,7 @@ function getClosedIssues(org: string, repo: string, since: string): IssueInfo[] 
     }))
 }
 
-function getOpenIssues(org: string, repo: string): IssueInfo[] {
+function getOpenIssues(org: string, repo: string, since24h: string): IssueInfo[] {
   type GHIssue = {
     number: number
     title: string
@@ -130,22 +130,32 @@ function getOpenIssues(org: string, repo: string): IssueInfo[] {
     pull_request?: unknown
     body: string | null
   }
+  // Fetch more results so new issues aren't pushed off by older high-traffic repos.
   const data = ghApi<GHIssue[]>(
-    `repos/${org}/${repo}/issues?state=open&sort=updated&direction=desc&per_page=15`
+    `repos/${org}/${repo}/issues?state=open&sort=created&direction=desc&per_page=30`
   )
   if (!data) return []
   return data
     .filter((i) => !i.pull_request)
-    .map((i) => ({
-      number: i.number,
-      title: i.title,
-      state: 'open' as const,
-      labels: i.labels.map((l) => l.name),
-      createdAt: i.created_at,
-      url: i.html_url,
-      repo,
-      body: i.body ? i.body.slice(0, 200) : undefined,
-    }))
+    .map((i) => {
+      const isNew = i.created_at >= since24h
+      return {
+        number: i.number,
+        title: i.title,
+        state: 'open' as const,
+        labels: i.labels.map((l) => l.name),
+        createdAt: i.created_at,
+        url: i.html_url,
+        repo,
+        // New issues (created in last 24h) get full body up to 800 chars so
+        // Claude has the full context without truncation killing the detail.
+        // Existing issues stay at 200 chars — they've already had a prior run.
+        body: i.body ? i.body.slice(0, isNew ? 800 : 200) : undefined,
+        isNew,
+      }
+    })
+    // New issues first so they're never bumped off by the 25-item global cap
+    .sort((a, b) => (a.isNew === b.isNew ? 0 : a.isNew ? -1 : 1))
 }
 
 function getOpenPRs(org: string, repo: string): OpenPRInfo[] {
@@ -232,7 +242,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
     allPRs.push(...getMergedPRs(org, repo, since7d))
     allOpenPRs.push(...getOpenPRs(org, repo))
     allClosed.push(...getClosedIssues(org, repo, since7d))
-    allOpen.push(...getOpenIssues(org, repo))
+    allOpen.push(...getOpenIssues(org, repo, since24h))
   }
 
   // Deduplicate by URL (org-level pagination can surface duplicates)
