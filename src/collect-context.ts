@@ -126,19 +126,23 @@ function getOpenIssues(org: string, repo: string, since24h: string): IssueInfo[]
     title: string
     labels: Array<{ name: string }>
     created_at: string
+    updated_at: string
     html_url: string
     pull_request?: unknown
     body: string | null
   }
-  // Fetch more results so new issues aren't pushed off by older high-traffic repos.
+  // Sort by updated so both newly created AND recently commented/labelled issues
+  // appear first. Fetch 30 so active issues aren't pushed off by the cap.
   const data = ghApi<GHIssue[]>(
-    `repos/${org}/${repo}/issues?state=open&sort=created&direction=desc&per_page=30`
+    `repos/${org}/${repo}/issues?state=open&sort=updated&direction=desc&per_page=30`
   )
   if (!data) return []
   return data
     .filter((i) => !i.pull_request)
     .map((i) => {
-      const isNew = i.created_at >= since24h
+      // Active = created OR updated in the last 24h (catches both new issues
+      // and existing issues that received comments, labels, or edits today).
+      const isNew = i.created_at >= since24h || i.updated_at >= since24h
       return {
         number: i.number,
         title: i.title,
@@ -147,14 +151,12 @@ function getOpenIssues(org: string, repo: string, since24h: string): IssueInfo[]
         createdAt: i.created_at,
         url: i.html_url,
         repo,
-        // New issues (created in last 24h) get full body up to 800 chars so
-        // Claude has the full context without truncation killing the detail.
-        // Existing issues stay at 200 chars — they've already had a prior run.
+        // Active issues get full body up to 800 chars — stale ones stay at 200.
         body: i.body ? i.body.slice(0, isNew ? 800 : 200) : undefined,
         isNew,
       }
     })
-    // New issues first so they're never bumped off by the 25-item global cap
+    // Active issues first so they're never bumped off by the global cap
     .sort((a, b) => (a.isNew === b.isNew ? 0 : a.isNew ? -1 : 1))
 }
 
