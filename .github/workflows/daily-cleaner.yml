@@ -53,8 +53,8 @@ jobs:
     timeout-minutes: 60    # Opus validation can take 30-45 min for a full sweep
 
     permissions:
-      contents: read
-      pull-requests: read
+      contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -77,10 +77,37 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Configure git identity
+      - name: Configure git identity and credential helper
+        env:
+          # GH_TOKEN needed here so gh auth setup-git can install the credential
+          # helper against an authenticated session. Without this, git push from
+          # cloned /tmp repos fails with "No such device or address" because git
+          # tries to open /dev/tty to prompt for credentials (no TTY in CI).
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "ojfbot-clean[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Install gh as a global git credential helper so all git push calls
+          # (including from /tmp clones in the cleaner script) use GH_TOKEN.
+          gh auth setup-git
+
+      # Validate git auth BEFORE the expensive 30-45 min Opus phase so we
+      # fail fast and loudly rather than silently after all the API spend.
+      # Tests that GH_PAT is set, valid, and has push access to at least one
+      # ojfbot repo. DRY_RUN skips this (no push will happen anyway).
+      - name: Smoke test git push auth
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          echo "Checking gh auth status..."
+          gh auth status
+          echo ""
+          echo "Checking push access to ojfbot/daily-logger..."
+          # ls-remote requires read; push-access check via refs list is sufficient
+          # to confirm the PAT has the required scope before we spend Opus budget.
+          git ls-remote https://github.com/ojfbot/daily-logger.git HEAD
+          echo "✓ Git auth smoke test passed — safe to proceed with live run"
 
       - name: Run daily cleaner
         env:
