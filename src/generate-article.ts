@@ -91,7 +91,20 @@ Field rules:
 - \`roadmapPulse\`: MUST explicitly reference every open PR from the Open PRs context by [repo] #number as in-flight work — do not omit any.
 - \`whatsNext\`: 1-2 items. Immediately actionable. The reader should be able to start in the next 30 minutes.
 - Total word count across lede + four sections: 800–1200 words.
-- Zero-commit days: \`whatShipped\` becomes "What we explored" — architecture deep-dive or tradeoff analysis. Never write filler.`
+- Zero-commit days: \`whatShipped\` becomes "What we explored" — architecture deep-dive or tradeoff analysis. Never write filler.
+
+## Day naming
+
+The article \`date\` is the date the generator runs (09:00 UTC). The article covers the 24h commit window **ending** at that time — it documents **the previous calendar day's** work. The user prompt provides the previous day name explicitly. Use it in the title and prose. If the run date is a Sunday, the work window was Saturday — write "Saturday", not "Sunday".
+
+## Rest days
+
+Zero-commit days (weekends, holidays, deliberate rest) are expected and must be handled gracefully:
+- Never apologise for or frame a rest day as a problem
+- Use the window as a focused audit: review open PRs, surface the critical-path blocker, document a deferred tradeoff
+- \`lede\`: set the reading/audit frame directly — e.g. "No commits Saturday. That's not a gap — it's a reading day."
+- \`whatShipped\`: open with "No code committed [day]. What follows is…" then an architectural deep-dive or open PR audit. Never write filler.
+- \`theDecisions\`, \`roadmapPulse\`, \`whatsNext\`: same standards as any active development day`
 
 // ─── Tool schema (write_article) ─────────────────────────────────────────────
 //
@@ -238,8 +251,29 @@ function groupCommitsByRepo(commits: BlogContext['commits']): string {
 // rather than a flat list so the user prompt stays under ~3 k tokens.
 const COMMIT_GROUP_THRESHOLD = 30
 
+/** Returns the full name of the day-of-week for the date string (YYYY-MM-DD). */
+function dayOfWeek(dateStr: string): string {
+  return new Date(`${dateStr}T12:00:00Z`).toLocaleDateString('en-US', {
+    weekday: 'long',
+    timeZone: 'UTC',
+  })
+}
+
 export function buildUserPrompt(ctx: BlogContext): string {
-  const parts: string[] = [`Generate the daily development blog article for **${ctx.date}**.\n`]
+  // The run date is today (when the generator fires). The commit window covers
+  // the previous 24h, so the article documents the *previous* calendar day.
+  const runDate = new Date(`${ctx.date}T12:00:00Z`)
+  const prevDate = new Date(runDate)
+  prevDate.setUTCDate(prevDate.getUTCDate() - 1)
+  const prevDay = prevDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
+  const zeroCommit = ctx.commits.length === 0
+
+  const parts: string[] = [
+    `Generate the daily development blog article for **${ctx.date}** (run date: ${dayOfWeek(ctx.date)}).`,
+    `The 24h commit window covers **${prevDay}**'s work — use "${prevDay}" when naming the day in the title and prose, not "${dayOfWeek(ctx.date)}".`,
+    zeroCommit ? `This is a **rest/reading day** — no commits in the window. Follow the Rest days guidelines from the system prompt.` : '',
+    '',
+  ].filter((l) => l !== undefined)
 
   if (ctx.commits.length > 0) {
     const total = ctx.commits.length
