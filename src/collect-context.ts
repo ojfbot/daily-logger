@@ -227,10 +227,13 @@ function getPreviousArticles(): Array<{ date: string; excerpt: string }> {
 export async function collectContext(date: string): Promise<BlogContext> {
   const org = process.env.OJFBOT_ORG ?? 'ojfbot'
 
-  // Commits: last 24 h.  PRs + issues: last 7 days so we capture things that
-  // closed slightly before the cron fired without repeating across articles.
-  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  // Anchor sweep windows to the article date at 09:00 UTC (cron fire time)
+  // rather than Date.now(). This gives stable, predictable windows for both
+  // cron runs and DATE_OVERRIDE re-generations, and makes tests deterministic
+  // (fixture dates don't expire as calendar time advances).
+  const anchor = new Date(`${date}T09:00:00Z`).getTime()
+  const since24h = new Date(anchor - 24 * 60 * 60 * 1000).toISOString()
+  const since7d = new Date(anchor - 7 * 24 * 60 * 60 * 1000).toISOString()
 
   const allCommits: CommitInfo[] = []
   const allPRs: PRInfo[] = []
