@@ -36,8 +36,8 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 - **Phase 6 (~70%)**: visual regression landed (PR #93 — CanvasRunNavigator, S3,
   draw.io canvas, rich PR comments with thumbnails). Missing: run-history + diff
   timeline (issue #94). This CI eval loop IS Samir's Pillar 2 in production.
-- **Phase 1 (stalled)**: shell extraction issues #83–86 open. Sprint consumed by
-  Phase 6. Core tension: can't build ShellAgent (Pillar 1) without the shell first.
+- **Phase 1 (active)**: shell extraction issues #83–86 open. [shell] #23 opened to
+  kick off Phase 1 component extraction. Core tension: can't build ShellAgent (Pillar 1) without the shell first.
 - **Phase 9 (live)**: daily-logger running. Editorial UI (draft-PR + GitHub Pages SPA)
   is the next step. Progressive disclosure for new issues shipped. Rest-day handling added.
 
@@ -85,7 +85,7 @@ The pitch: "building what Concur would build if it started over in 2025."
 
 ## Roadmap phases
 
-1. Extract `@ojfbot/shell` + Storybook — **stalled** (#83–86)
+1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PR #23 open)
 2. Figma design system with MCP — **not started**
 3. Header chat bar / ShellAgent — **not started**
 4. Multi-instance app launching — **shipped** (shell multi-instance UI, 2026-03-09)
