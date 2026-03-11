@@ -13,12 +13,12 @@ Frame controls apps via natural language. The assistant IS the product.
 
 Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thread:
 
-1. **Assistant-centric** — ShellAgent orchestrates apps; cv-builder/BlogEngine/TripPlanner
+1. **Assistant-centric** — ShellAgent orchestrates apps; Resume Builder/BlogEngine/TripPlanner
    are what it hosts. Same bet as Dia's AI address bar orchestrating web content.
-2. **Tooling for iteration** — node-template 23 slash commands; daily-logger itself;
-   cv-builder eval/visual regression loop. Prompts + evals are versioned artifacts.
+   Resume Builder eval/visual regression loop. Prompts + evals are versioned artifacts.
 3. **Model behavior as design** — behavior specs, evals, per-skill prompt requirements
-   are first-class design work. cv-builder's Claude Code review loop IS this.
+3. **Model behavior as design** — behavior specs, evals, per-skill prompt requirements
+   are first-class design work. Resume Builder's Claude Code review loop IS this.
 4. **Security as emergent UX** — tool-use confirmations, trusted/untrusted content
    separation. Every high-impact agent action shows a summary before firing.
 
@@ -26,7 +26,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 
 ## Where we are now (update this section weekly)
 
-**Active: Phase 4 + Phase 5 + Phase 6 + Phase 9**
+**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 9 + Gas Town Sprint 1**
 
 - **Phase 5 (Phase 5B merged)**: MrPlug Phase 5B fully merged — GitHub issue creation,
   Claude Code relay, Module Federation-aware project routing, confirmation UX.
@@ -36,8 +36,13 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 - **Phase 6 (~70%)**: visual regression landed (PR #93 — CanvasRunNavigator, S3,
   draw.io canvas, rich PR comments with thumbnails). Missing: run-history + diff
   timeline (issue #94). This CI eval loop IS Samir's Pillar 2 in production.
-- **Phase 1 (active)**: shell extraction issues #83–86 open. [shell] #23 opened to
-  kick off Phase 1 component extraction. Core tension: can't build ShellAgent (Pillar 1) without the shell first.
+- **Phase 1 (active)**: shell extraction issues #83–86 open. [shell] #23 merged —
+  `AppSwitcher` extracted to `packages/ui/`. [shell] #25 merged — `ShellHeader` extracted.
+  Display label rename ("CV Builder" → "Resume Builder") shipped in #26/#27.
+  Cross-domain signal detection fix landed. Storybook hoisting fix merged.
+  Core tension: can't build ShellAgent (Pillar 1) without the shell first.
+- **Gas Town Sprint 1 (active)**: FrameBead (`FrameBeadLike`) has two live implementations
+  (cv-builder and core-reader). ADR-0016 ratified. `@resume-builder/*` is the new module namespace.
 - **Phase 9 (live)**: daily-logger running. Editorial UI (draft-PR + GitHub Pages SPA)
   is the next step. Progressive disclosure for new issues shipped. Rest-day handling added.
 
@@ -46,7 +51,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 ## Narrative threads (name at least one per article)
 
 1. **Name the Samir pillar** today's work demonstrates — be explicit, not implicit
-2. **cv-builder visual regression = Jeba-lite** — the CI eval loop is Pillar 2 shipping
+2. **Resume Builder visual regression = Jeba-lite** — the CI eval loop is Pillar 2 shipping
 3. **WebSocket arc**: AmEx GBT chat (Concur) → cv-builder agent streaming → Frame chat bar —
    same capability at escalating ambition levels; use when agent/real-time work ships
 4. **Phase 1 honest tension**: ShellAgent can't exist without the shell it lives in —
@@ -75,7 +80,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 - **AI tooling**: AI-enabled debugging/validation for T2 seat map; empowering Bangalore
   support engineers to investigate without deep domain expertise = Pillar 2
 - **Eval-driven discipline**: automated rollback validation for Air across company configs,
-  agency configs, i18n variants — this IS the mindset behind cv-builder's visual regression
+   agency configs, i18n variants — this IS the mindset behind Resume Builder's visual regression
 - **Cross-geo scaling**: Brazil team transfer; pair programming; compounding via teaching
 - **Complex UX**: matrix air filter; EY compliance gating; Hotel↔Air cross-vertical flows
 
@@ -85,7 +90,7 @@ The pitch: "building what Concur would build if it started over in 2025."
 
 ## Roadmap phases
 
-1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PR #23 open)
+1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PRs #23 + #25 merged, AppSwitcher + Header extracted to `packages/ui/`)
 2. Figma design system with MCP — **not started**
 3. Header chat bar / ShellAgent — **not started**
 4. Multi-instance app launching — **shipped** (shell multi-instance UI, 2026-03-09)
