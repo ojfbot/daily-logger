@@ -38,7 +38,11 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
   timeline (issue #94). This CI eval loop IS Samir's Pillar 2 in production.
 - **Phase 1 (active)**: shell extraction issues #83–86 open. [shell] #23 merged —
   `AppSwitcher` extracted to `packages/ui/`. [shell] #25 merged — `ShellHeader` extracted.
-  Display label rename ("CV Builder" → "Resume Builder") shipped in #26/#27.
+  [shell] #29 merged — `Header` extracted to `packages/ui/` (pure props-driven, zero Redux).
+  [shell] #30 merged — `HomeScreen` extracted to `packages/ui/`.
+  [shell] #31 merged — `HeaderConnected` + `HomeScreenConnected` wired in `shell-app`.
+  [shell] #33 merged — `POST /api/resumption` thread resumption synthesis endpoint.
+  Display label rename ("CV Builder" → "Resume Builder") shipped in #26/#27; four rename regression fixes merged.
   Cross-domain signal detection fix landed. Storybook hoisting fix merged.
   Core tension: can't build ShellAgent (Pillar 1) without the shell first.
 - **Gas Town Sprint 1 (active)**: FrameBead (`FrameBeadLike`) has two live implementations
@@ -90,7 +94,7 @@ The pitch: "building what Concur would build if it started over in 2025."
 
 ## Roadmap phases
 
-1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PRs #23 + #25 merged, AppSwitcher + Header extracted to `packages/ui/`)
+1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PRs #23 + #25 + #29 + #30 + #31 merged, AppSwitcher + Header + HomeScreen extracted to `packages/ui/`, connected wiring landed, `/api/resumption` endpoint live)
 2. Figma design system with MCP — **not started**
 3. Header chat bar / ShellAgent — **not started**
 4. Multi-instance app launching — **shipped** (shell multi-instance UI, 2026-03-09)
