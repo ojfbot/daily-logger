@@ -20,6 +20,7 @@ const REPOS = [
   'MrPlug',
   'purefoy',
   'daily-logger',     // this repo — captures logger's own commits and improvements
+  'lean-canvas',      // Lean Canvas — Frame OS sub-app, AI-assisted business model design
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
