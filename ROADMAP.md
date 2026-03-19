@@ -26,7 +26,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 
 ## Where we are now (update this section weekly)
 
-**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1**
+**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app**
 
 - **Phase 5 (Phase 5B merged)**: MrPlug Phase 5B fully merged — GitHub issue creation,
   Claude Code relay, Module Federation-aware project routing, confirmation UX.
@@ -43,14 +43,17 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
   [shell] #31 merged — `HeaderConnected` + `HomeScreenConnected` wired in `shell-app`.
   [shell] #32 merged — cross-domain fan-out PR (ADR-0019 isolation hardened with integration tests).
   [shell] #33 merged — `POST /api/resumption` thread resumption synthesis endpoint.
-  lean-canvas registered as Frame OS sub-app (`DEFAULT_APP_TYPES`, AppSwitcher, persisted registry).
+   lean-canvas deployed to Vercel as a Module Federation remote ([lean-canvas] #3); `.claude/commands/` renamed to `.claude/skills/` ([lean-canvas] #2). **Not yet registered in the shell** — `VITE_REMOTE_LEAN_CANVAS`, `AppType`, and `REMOTE_LOADERS` entries are pending.
+   gastown-pilot registered end-to-end as a shell sub-app ([shell] #39 — `AppType` union, `APP_CONFIG`, Storybook stories).
   Display label rename ("CV Builder" → "Resume Builder") shipped in #26/#27; four rename regression fixes merged.
   Resume Builder default label renamed 'My Resume' → 'Start Fresh'.
   Cross-domain signal detection fix landed. Storybook hoisting fix merged.
   Core tension: can't build ShellAgent (Pillar 1) without the shell first.
   Core tension: can't build ShellAgent (Pillar 1) without the shell first.
 - **Gas Town Sprint 1 (active)**: FrameBead (`FrameBeadLike`) has two live implementations
-  (cv-builder and core-reader). ADR-0016 ratified. `@resume-builder/*` is the new module namespace.
+   (cv-builder and core-reader). ADR-0016 ratified. `@resume-builder/*` is the new module namespace.
+   gastown-pilot now registered in shell ([shell] #39) — `AppType` union, `APP_CONFIG`, Storybook stories.
+   `/scaffold-frame-app` codified as a 28-item validation skill for creating new Frame sub-apps.
 - **Phase 9 (live)**: daily-logger running. Editorial UI (draft-PR + GitHub Pages SPA)
   is the next step. Progressive disclosure for new issues shipped. Rest-day handling added.
 
@@ -98,7 +101,7 @@ The pitch: "building what Concur would build if it started over in 2025."
 
 ## Roadmap phases
 
-1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PRs #23 + #25 + #29 + #30 + #31 + #32 merged, AppSwitcher + Header + HomeScreen extracted to `packages/ui/`, connected wiring landed, `/api/resumption` endpoint live, lean-canvas registered as sub-app, ADR-0019 isolation hardened)
+1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PRs #23 + #25 + #29 + #30 + #31 + #32 + #39 merged, AppSwitcher + Header + HomeScreen extracted to `packages/ui/`, connected wiring landed, `/api/resumption` endpoint live, gastown-pilot registered end-to-end as sub-app, ADR-0019 isolation hardened, lean-canvas deployed to Vercel but **not yet registered in shell**)
 2. Figma design system with MCP — **not started**
 3. Header chat bar / ShellAgent — **not started**
 4. Multi-instance app launching — **shipped** (shell multi-instance UI, 2026-03-09)
