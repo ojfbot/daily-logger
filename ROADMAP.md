@@ -37,10 +37,11 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
   draw.io canvas, rich PR comments with thumbnails). Missing: run-history + diff
   timeline (issue #94). This CI eval loop IS Samir's Pillar 2 in production.
 - **Phase 1 (active)**: shell extraction issues #83–86 open. [shell] #23 merged —
-  `AppSwitcher` extracted to `packages/ui/`. [shell] #25 merged — `ShellHeader` extracted.
-  [shell] #29 merged — `Header` extracted to `packages/ui/` (pure props-driven, zero Redux).
-  [shell] #30 merged — `HomeScreen` extracted to `packages/ui/`.
-  [shell] #31 merged — `HeaderConnected` + `HomeScreenConnected` wired in `shell-app`.
+   `AppSwitcher` extracted to `packages/ui/`. [shell] #25 merged — `ShellHeader` extracted.
+   [shell] #29 merged — `Header` extracted to `packages/ui/` (pure props-driven, zero Redux).
+   [shell] #30 merged — `HomeScreen` extracted to `packages/ui/`.
+   [shell] #31 merged — `HeaderConnected` + `HomeScreenConnected` wired in `shell-app`.
+   [shell] #41 merged — `ApprovalQueue`, `ResumptionToast`, `SettingsModal` decomposed into pure components + `*Connected` wrappers (five components extracted total).
   [shell] #32 merged — cross-domain fan-out PR (ADR-0019 isolation hardened with integration tests).
   [shell] #33 merged — `POST /api/resumption` thread resumption synthesis endpoint.
    lean-canvas deployed to Vercel as a Module Federation remote ([lean-canvas] #3); `.claude/commands/` renamed to `.claude/skills/` ([lean-canvas] #2). **Not yet registered in the shell** — `VITE_REMOTE_LEAN_CANVAS`, `AppType`, and `REMOTE_LOADERS` entries are pending.
@@ -101,7 +102,7 @@ The pitch: "building what Concur would build if it started over in 2025."
 
 ## Roadmap phases
 
-1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PRs #23 + #25 + #29 + #30 + #31 + #32 + #39 merged, AppSwitcher + Header + HomeScreen extracted to `packages/ui/`, connected wiring landed, `/api/resumption` endpoint live, gastown-pilot registered end-to-end as sub-app, ADR-0019 isolation hardened, lean-canvas deployed to Vercel but **not yet registered in shell**)
+1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PRs #23 + #25 + #29 + #30 + #31 + #32 + #39 + #41 merged, AppSwitcher + Header + HomeScreen + ApprovalQueue + ResumptionToast + SettingsModal extracted to `packages/ui/` as pure components with `*Connected` wrappers in shell-app, five components decomposed total, `/api/resumption` endpoint live, gastown-pilot registered end-to-end as sub-app, ADR-0019 isolation hardened, lean-canvas deployed to Vercel but **not yet registered in shell**)
 2. Figma design system with MCP — **not started**
 3. Header chat bar / ShellAgent — **not started**
 4. Multi-instance app launching — **shipped** (shell multi-instance UI, 2026-03-09)
