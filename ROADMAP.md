@@ -26,7 +26,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 
 ## Where we are now (update this section weekly)
 
-**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app**
+**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study**
 
 - **Phase 5 (Phase 5B merged)**: MrPlug Phase 5B fully merged — GitHub issue creation,
   Claude Code relay, Module Federation-aware project routing, confirmation UX.
@@ -102,13 +102,13 @@ The pitch: "building what Concur would build if it started over in 2025."
 
 ## Roadmap phases
 
-1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PRs #23 + #25 + #29 + #30 + #31 + #32 + #39 + #41 merged, AppSwitcher + Header + HomeScreen + ApprovalQueue + ResumptionToast + SettingsModal extracted to `packages/ui/` as pure components with `*Connected` wrappers in shell-app, five components decomposed total, `/api/resumption` endpoint live, gastown-pilot registered end-to-end as sub-app, ADR-0019 isolation hardened, lean-canvas deployed to Vercel but **not yet registered in shell**)
+1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PRs #23 + #25 + #29 + #30 + #31 + #32 + #39 + #41 merged, AppSwitcher + Header + HomeScreen + ApprovalQueue + ResumptionToast + SettingsModal extracted to `packages/ui/` as pure components with `*Connected` wrappers in shell-app, five components decomposed total, `/api/resumption` endpoint live, gastown-pilot registered end-to-end as sub-app, SEH Study registered as fifth sub-app, ADR-0019 isolation hardened, lean-canvas deployed to Vercel but **not yet registered in shell**)
 2. Figma design system with MCP — **not started**
 3. Header chat bar / ShellAgent — **not started**
 4. Multi-instance app launching — **shipped** (shell multi-instance UI, 2026-03-09)
-5. MrPlug as `ojf inspect` dev companion — **Phase 5B merged** (GitHub issue creation, Claude Code relay, MF-aware routing)
+5. MrPlug as `ojf inspect` dev companion — **Phase 5B merged** (GitHub issue creation, Claude Code relay, MF-aware routing, `file-techdebt` handler — AI-spotted debt files directly to `TECHDEBT.md`)
 6. Visual regression CI as A/B foundation — **~70%** (issue #94)
-7. purefoy as podcast AI agent in Frame — **in progress** ([purefoy] #9 + #10 merged — TypeScript UI layer, read-only knowledge browser, ADR-006–009)
+7. purefoy as podcast AI agent in Frame — **corpus complete** ([purefoy] #9–#14 merged — 348/348 episodes transcribed, AWS runner retired, typed transcript editing UI in Frame, standalone Flask reference UI at localhost:5050, ADR-006–009)
 8. App definition from UI (ShellAgent scaffolds apps) — **not started**
 9. daily-logger → BlogEngine + editorial UI — **live / in progress**
 
