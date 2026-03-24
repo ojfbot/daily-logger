@@ -26,7 +26,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 
 ## Where we are now (update this section weekly)
 
-**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study**
+**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning**
 
 - **Phase 5 (Phase 5B merged)**: MrPlug Phase 5B fully merged — GitHub issue creation,
   Claude Code relay, Module Federation-aware project routing, confirmation UX.
@@ -44,7 +44,8 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
    [shell] #41 merged — `ApprovalQueue`, `ResumptionToast`, `SettingsModal` decomposed into pure components + `*Connected` wrappers (five components extracted total).
   [shell] #32 merged — cross-domain fan-out PR (ADR-0019 isolation hardened with integration tests).
   [shell] #33 merged — `POST /api/resumption` thread resumption synthesis endpoint.
-   lean-canvas deployed to Vercel as a Module Federation remote ([lean-canvas] #3); `.claude/commands/` renamed to `.claude/skills/` ([lean-canvas] #2). **Not yet registered in the shell** — `VITE_REMOTE_LEAN_CANVAS`, `AppType`, and `REMOTE_LOADERS` entries are pending.
+    lean-canvas deployed to Vercel as a Module Federation remote ([lean-canvas] #3); `.claude/commands/` renamed to `.claude/skills/` ([lean-canvas] #2). **Not yet registered in the shell** — `VITE_REMOTE_LEAN_CANVAS`, `AppType`, and `REMOTE_LOADERS` entries are pending.
+    [lean-canvas] #6 merged — `DashboardLayout` adopted from `@ojfbot/frame-ui-components`, local dashboard CSS deleted, Carbon g100 dark theme added.
    gastown-pilot registered end-to-end as a shell sub-app ([shell] #39 — `AppType` union, `APP_CONFIG`, Storybook stories).
   Display label rename ("CV Builder" → "Resume Builder") shipped in #26/#27; four rename regression fixes merged.
   Resume Builder default label renamed 'My Resume' → 'Start Fresh'.
@@ -102,13 +103,13 @@ The pitch: "building what Concur would build if it started over in 2025."
 
 ## Roadmap phases
 
-1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PRs #23 + #25 + #29 + #30 + #31 + #32 + #39 + #41 merged, AppSwitcher + Header + HomeScreen + ApprovalQueue + ResumptionToast + SettingsModal extracted to `packages/ui/` as pure components with `*Connected` wrappers in shell-app, five components decomposed total, `/api/resumption` endpoint live, gastown-pilot registered end-to-end as sub-app, SEH Study registered as fifth sub-app, ADR-0019 isolation hardened, lean-canvas deployed to Vercel but **not yet registered in shell**)
+1. Extract `@ojfbot/shell` + Storybook — **active** (#83–86, PRs #23 + #25 + #29 + #30 + #31 + #32 + #39 + #41 merged, AppSwitcher + Header + HomeScreen + ApprovalQueue + ResumptionToast + SettingsModal extracted to `packages/ui/` as pure components with `*Connected` wrappers in shell-app, five components decomposed total, `/api/resumption` endpoint live, gastown-pilot registered end-to-end as sub-app, SEH Study registered as fifth sub-app, ADR-0019 isolation hardened, lean-canvas deployed to Vercel but **not yet registered in shell**). Fleet-wide `@ojfbot/frame-ui-components` adoption complete across purefoy, lean-canvas, TripPlanner, BlogEngine, cv-builder, core-reader — 2,816 lines of duplicated component code deleted. TruffleHog secret scanning added to all CI pipelines.
 2. Figma design system with MCP — **not started**
 3. Header chat bar / ShellAgent — **not started**
 4. Multi-instance app launching — **shipped** (shell multi-instance UI, 2026-03-09)
 5. MrPlug as `ojf inspect` dev companion — **Phase 5B merged** (GitHub issue creation, Claude Code relay, MF-aware routing, `file-techdebt` handler — AI-spotted debt files directly to `TECHDEBT.md`)
 6. Visual regression CI as A/B foundation — **~70%** (issue #94)
-7. purefoy as podcast AI agent in Frame — **corpus complete** ([purefoy] #9–#14 merged — 348/348 episodes transcribed, AWS runner retired, typed transcript editing UI in Frame, standalone Flask reference UI at localhost:5050, ADR-006–009)
+7. purefoy as podcast AI agent in Frame — **corpus complete; frame-ui-components migration complete** ([purefoy] #9–#14 merged — 348/348 episodes transcribed, AWS runner retired, typed transcript editing UI in Frame, standalone Flask reference UI at localhost:5050, ADR-006–009; [purefoy] #17 + #18 merged — local components replaced with `@ojfbot/frame-ui-components` wrappers, `DashboardLayout` adopted, Vercel deployment wired)
 8. App definition from UI (ShellAgent scaffolds apps) — **not started**
 9. daily-logger → BlogEngine + editorial UI — **live / in progress**
 
