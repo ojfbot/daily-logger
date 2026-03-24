@@ -21,6 +21,7 @@ const REPOS = [
   'purefoy',
   'daily-logger',     // this repo — captures logger's own commits and improvements
   'lean-canvas',      // Lean Canvas — Frame OS sub-app, AI-assisted business model design
+  'seh-study',        // SEH Study — NASA SE Handbook study client, Frame OS sub-app
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
