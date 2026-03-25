@@ -23,6 +23,9 @@ Additional repos:
 - **core** — (formerly node-template) Dev environment as a product: 23 Claude Code slash commands backed by a TypeScript engine. The \`/techdebt\` command is a self-improving loop that scans for debt, proposes file patches, and applies them.
 - **core-reader** — Frame OS metadata dashboard registered as a remote at :3015. Implementation not yet started.
 - **MrPlug** — Chrome extension for AI UI/UX feedback on localhost pages.
+- **lean-canvas** — Frame OS sub-app for AI-assisted Lean Canvas business model design. Registered as a remote at :3004.
+- **seh-study** — NASA SE Handbook study client, Frame OS sub-app. AI-guided study sessions with structured knowledge extraction.
+- **GroupThink** — LLM-powered Chrome extension for intelligent tab grouping. Frame-adjacent: demonstrates the same assistant-centric architecture (Pillar 1) applied to the browser chrome layer — the exact layer Dia operates at. Uses Claude to infer semantic relationships between open tabs and auto-organise them.
 - **purefoy** — Roger Deakins cinematography knowledge base (Python scraper + podcast transcripts). Roadmap: AI podcast interaction agent inside Frame.
 - **daily-logger** — This repo. Generates and commits one blog article per day.
 
