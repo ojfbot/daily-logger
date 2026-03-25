@@ -22,6 +22,7 @@ const REPOS = [
   'daily-logger',     // this repo — captures logger's own commits and improvements
   'lean-canvas',      // Lean Canvas — Frame OS sub-app, AI-assisted business model design
   'seh-study',        // SEH Study — NASA SE Handbook study client, Frame OS sub-app
+  'GroupThink',       // GroupThink — LLM-powered tab grouping Chrome extension
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
