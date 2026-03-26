@@ -32,7 +32,7 @@ Each article lives at `/articles/YYYY-MM-DD/`.
   → deploy-pages.yml     fires on push to main → Jekyll build → GitHub Pages
 ```
 
-Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `node-template`, `MrPlug`, `purefoy`, `daily-logger`.
+Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `node-template`, `MrPlug`, `purefoy`, `daily-logger`, `GroupThink`, `lean-canvas`, `seh-study`.
 
 ---
 
@@ -47,8 +47,10 @@ Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `node-template`
 | [node-template](https://github.com/ojfbot/node-template) | Dev environment as a product — 23 Claude Code slash commands |
 | [MrPlug](https://github.com/ojfbot/MrPlug) | Chrome extension for AI UI/UX feedback; Frame dev companion |
 | [purefoy](https://github.com/ojfbot/purefoy) | Roger Deakins knowledge base; roadmap: podcast AI agent in Frame |
+| [GroupThink](https://github.com/ojfbot/GroupThink) | Chrome extension — AI-powered tab grouping and management |
+| [lean-canvas](https://github.com/ojfbot/lean-canvas) | Lean canvas tool |
+| [seh-study](https://github.com/ojfbot/seh-study) | SEH study resource |
 | **daily-logger** | This repo — self-documenting dev system |
-
 ---
 
 ## Development
