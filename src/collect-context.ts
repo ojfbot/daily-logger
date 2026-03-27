@@ -21,6 +21,7 @@ const REPOS = [
   'purefoy',
   'daily-logger',     // this repo — captures logger's own commits and improvements
   'lean-canvas',      // Lean Canvas — Frame OS sub-app, AI-assisted business model design
+  'landing',           // jim.software — personal landing page
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
