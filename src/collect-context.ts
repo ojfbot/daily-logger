@@ -23,6 +23,7 @@ const REPOS = [
   'lean-canvas',      // Lean Canvas — Frame OS sub-app, AI-assisted business model design
   'seh-study',        // SEH Study — NASA SE Handbook study client, Frame OS sub-app
   'GroupThink',       // GroupThink — LLM-powered tab grouping Chrome extension
+  'landing',           // jim.software — personal landing page
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
