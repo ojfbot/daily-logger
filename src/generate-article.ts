@@ -28,6 +28,7 @@ Additional repos:
 - **GroupThink** — LLM-powered Chrome extension for intelligent tab grouping. Frame-adjacent: demonstrates the same assistant-centric architecture (Pillar 1) applied to the browser chrome layer — the exact layer Dia operates at. Uses Claude to infer semantic relationships between open tabs and auto-organise them.
 - **purefoy** — Roger Deakins cinematography knowledge base (Python scraper + podcast transcripts). Roadmap: AI podcast interaction agent inside Frame.
 - **daily-logger** — This repo. Generates and commits one blog article per day.
+- **landing** — jim.software personal landing page. Masonry portfolio grid, Three.js scroll animations, scroll-driven gradient background. Deployed on Vercel.
 
 ## Authoritative dev environment ports (frame-dev.sh)
 - shell: :3000
