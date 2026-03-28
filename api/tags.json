@@ -1,0 +1,417 @@
+[
+  {
+    "name": "module-federation",
+    "type": "arch",
+    "count": 18
+  },
+  {
+    "name": "shell",
+    "type": "repo",
+    "count": 15
+  },
+  {
+    "name": "phase-1",
+    "type": "phase",
+    "count": 9
+  },
+  {
+    "name": "ci-cd",
+    "type": "practice",
+    "count": 8
+  },
+  {
+    "name": "security",
+    "type": "practice",
+    "count": 7
+  },
+  {
+    "name": "mrplug",
+    "type": "repo",
+    "count": 7
+  },
+  {
+    "name": "frame-agent",
+    "type": "arch",
+    "count": 7
+  },
+  {
+    "name": "cv-builder",
+    "type": "repo",
+    "count": 7
+  },
+  {
+    "name": "daily-logger",
+    "type": "repo",
+    "count": 5
+  },
+  {
+    "name": "adr",
+    "type": "practice",
+    "count": 5
+  },
+  {
+    "name": "purefoy",
+    "type": "repo",
+    "count": 5
+  },
+  {
+    "name": "gas-town",
+    "type": "phase",
+    "count": 5
+  },
+  {
+    "name": "core-reader",
+    "type": "repo",
+    "count": 4
+  },
+  {
+    "name": "hero-demo",
+    "type": "activity",
+    "count": 4
+  },
+  {
+    "name": "node-template",
+    "type": "repo",
+    "count": 4
+  },
+  {
+    "name": "assistant-centric",
+    "type": "concept",
+    "count": 3
+  },
+  {
+    "name": "groupthink",
+    "type": "repo",
+    "count": 3
+  },
+  {
+    "name": "storybook",
+    "type": "infra",
+    "count": 3
+  },
+  {
+    "name": "container-presenter",
+    "type": "arch",
+    "count": 3
+  },
+  {
+    "name": "rest-day",
+    "type": "activity",
+    "count": 3
+  },
+  {
+    "name": "frame-os",
+    "type": "arch",
+    "count": 3
+  },
+  {
+    "name": "tooling",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "chrome-extension",
+    "type": "infra",
+    "count": 2
+  },
+  {
+    "name": "scaffold-app",
+    "type": "practice",
+    "count": 2
+  },
+  {
+    "name": "frame-ui-components",
+    "type": "infra",
+    "count": 2
+  },
+  {
+    "name": "shared-components",
+    "type": "infra",
+    "count": 2
+  },
+  {
+    "name": "deployment",
+    "type": "infra",
+    "count": 2
+  },
+  {
+    "name": "lean-canvas",
+    "type": "repo",
+    "count": 2
+  },
+  {
+    "name": "architecture",
+    "type": "arch",
+    "count": 2
+  },
+  {
+    "name": "phase-5b",
+    "type": "phase",
+    "count": 2
+  },
+  {
+    "name": "blogengine",
+    "type": "repo",
+    "count": 2
+  },
+  {
+    "name": "visual-regression",
+    "type": "practice",
+    "count": 2
+  },
+  {
+    "name": "groupthing",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "daily-maintenance",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "code-hygiene",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "fleet-operations",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "landing-page",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "ollama",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "fleet-tooling",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "system-prompt",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "prompt-optimization",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "fleet-management",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "fleet-wide",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "security-scanning",
+    "type": "practice",
+    "count": 1
+  },
+  {
+    "name": "fleet-ops",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "seh-study",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "design-system",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "cache-headers",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "gastown-pilot",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "scaffold",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "core-skills",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "carbon-tokens",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "platform-features",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "phase-4",
+    "type": "phase",
+    "count": 1
+  },
+  {
+    "name": "adr-0019",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "rename-cleanup",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "meta-orchestrator",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "isolated-synthesis",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "pr-audit",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "rest-day-audit",
+    "type": "activity",
+    "count": 1
+  },
+  {
+    "name": "daily-cleaner",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "cross-app-orchestration",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "rename",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "core",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "github-integration",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "hardening",
+    "type": "practice",
+    "count": 1
+  },
+  {
+    "name": "multi-instance",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "transcription",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "diarization",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "claude-code",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "settings",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "phase-5",
+    "type": "phase",
+    "count": 1
+  },
+  {
+    "name": "vercel",
+    "type": "infra",
+    "count": 1
+  },
+  {
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "tripplanner",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "settings-modal",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "structured-output",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "langgraph",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "pipeline",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "draw-io",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "s3",
+    "type": "infra",
+    "count": 1
+  },
+  {
+    "name": "eval-loop",
+    "type": "concept",
+    "count": 1
+  }
+]

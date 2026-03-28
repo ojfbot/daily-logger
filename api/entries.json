@@ -1,0 +1,2263 @@
+[
+  {
+    "date": "2026-03-28",
+    "title": "Friday cleanup: GroupThink sheds stale docs as the fleet idles before the weekend",
+    "summary": "Friday was a light day — one automated cleanup PR in GroupThink and the daily blog commit, both bot-authored, holding the line before the weekend.",
+    "tags": [
+      {
+        "name": "groupthing",
+        "type": "concept"
+      },
+      {
+        "name": "daily-maintenance",
+        "type": "concept"
+      },
+      {
+        "name": "code-hygiene",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-operations",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "tooling",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "GroupThink",
+      "purefoy",
+      "seh-study",
+      "lean-canvas",
+      "core-reader",
+      "shell",
+      "core",
+      "cv-builder",
+      "daily-logger"
+    ],
+    "commitCount": 3,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "The bot-first maintenance model: why it holds up under low-velocity days",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "GroupThink's doc surface after a sprint week — and what it means for TBCoNY",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-27",
+    "title": "Thursday: landing page ships, GroupThink goes local, and the fleet closes its system-prompt gap",
+    "summary": "Thursday shipped the jim.software landing page, Ollama local-model support in GroupThink, and closed a silent fleet gap where new repos were invisible to the article generator's system prompt.",
+    "tags": [
+      {
+        "name": "landing-page",
+        "type": "concept"
+      },
+      {
+        "name": "groupthink",
+        "type": "repo"
+      },
+      {
+        "name": "ollama",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-tooling",
+        "type": "concept"
+      },
+      {
+        "name": "system-prompt",
+        "type": "concept"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      }
+    ],
+    "reposActive": [
+      "cv-builder",
+      "shell",
+      "daily-logger",
+      "landing",
+      "GroupThink"
+    ],
+    "commitCount": 17,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: `LLMClient` interface in GroupThink — provider abstraction before you need it",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: Two fields, not one, in fleet registration",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: Resumé PDF as a repo asset in `landing`",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-26",
+    "title": "Wednesday's GroupThink stability sprint: removing automatic LLM calls, fixing the black screen, and closing the fleet registration gap",
+    "summary": "Wednesday hardened GroupThink with five targeted fixes — removing automatic LLM calls being the most consequential — and closed a fleet registration gap so new repos land in the article generator's context from day one.",
+    "tags": [
+      {
+        "name": "groupthink",
+        "type": "repo"
+      },
+      {
+        "name": "chrome-extension",
+        "type": "infra"
+      },
+      {
+        "name": "prompt-optimization",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-management",
+        "type": "concept"
+      },
+      {
+        "name": "scaffold-app",
+        "type": "practice"
+      },
+      {
+        "name": "security",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "GroupThink",
+      "core"
+    ],
+    "commitCount": 20,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: Remove automatic LLM calls — explicit over ambient",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: Per-method token limits rather than a global cap",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: Step 7.2 — SYSTEM_PROMPT registration as a required checklist item",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-25",
+    "title": "Tuesday's double launch: GroupThink ships from zero to chat-driven tab grouping while CI hardening reaches every pipeline",
+    "summary": "Tuesday shipped GroupThink — a new LLM-powered tab grouping Chrome extension — from zero to chat-driven focus in nine commits, while CI hardening brought frame-ui-components into every pipeline fleet-wide.",
+    "tags": [
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "frame-ui-components",
+        "type": "infra"
+      },
+      {
+        "name": "shared-components",
+        "type": "infra"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "fleet-wide",
+        "type": "concept"
+      },
+      {
+        "name": "scaffold-app",
+        "type": "practice"
+      },
+      {
+        "name": "groupthink",
+        "type": "repo"
+      },
+      {
+        "name": "chrome-extension",
+        "type": "infra"
+      }
+    ],
+    "reposActive": [
+      "BlogEngine",
+      "purefoy",
+      "lean-canvas",
+      "core-reader",
+      "shell",
+      "TripPlanner",
+      "cv-builder",
+      "daily-logger",
+      "core",
+      "GroupThink"
+    ],
+    "commitCount": 56,
+    "activityType": "sprint",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Why `file:` links require special CI treatment — and why we chose them anyway",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Why Vite `optimizeDeps` needs two changes, not one",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Branch restriction removal — the silent test-swallowing failure",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "GroupThink as a Pillar 1 proof point",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-24",
+    "title": "Monday's fleet consolidation: `@ojfbot/frame-ui-components` reaches every repo and security scanning goes fleet-wide",
+    "summary": "Monday drove `@ojfbot/frame-ui-components` adoption and TruffleHog security scanning to every repo in the fleet — 62 commits across 11 repos, all merged.",
+    "tags": [
+      {
+        "name": "frame-ui-components",
+        "type": "infra"
+      },
+      {
+        "name": "shared-components",
+        "type": "infra"
+      },
+      {
+        "name": "security-scanning",
+        "type": "practice"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "fleet-ops",
+        "type": "concept"
+      },
+      {
+        "name": "seh-study",
+        "type": "repo"
+      }
+    ],
+    "reposActive": [
+      "cv-builder",
+      "BlogEngine",
+      "TripPlanner",
+      "purefoy",
+      "lean-canvas",
+      "core-reader",
+      "shell",
+      "daily-logger",
+      "seh-study",
+      "core"
+    ],
+    "commitCount": 34,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: `pnpm audit` runs non-blocking in CI",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: CI clones `frame-ui-components` via `git clone` rather than resolving a `file:` workspace dep",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: Connected wrappers live in the consuming app, not in `frame-ui-components`",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-23",
+    "title": "Sunday's corpus sprint: purefoy hits 348/348, Frame gets a fifth sub-app, and MrPlug writes its own tech debt",
+    "summary": "Sunday merged 30 commits across five repos: purefoy's transcript corpus is complete, SEH Study joins Frame as a fifth sub-app, and MrPlug can now file tech debt directly to frame-agent.",
+    "tags": [
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "mrplug",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "tooling",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "cv-builder",
+      "daily-logger",
+      "purefoy",
+      "core",
+      "MrPlug",
+      "lean-canvas"
+    ],
+    "commitCount": 33,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: Flask reference implementation before TypeScript client (purefoy #13 → #14)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: `GoalManifest` + `ReviewProgress` as first-class shared types (purefoy #14)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: MrPlug writes tech debt to frame-agent, not to a local file",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 4: SEH Study registered at the shell layer before the app is built",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 5 (implicit): Shipping SEH Study registration with [shell] #5 open",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-22",
+    "title": "Saturday reading day: auditing the Storybook sweep and the prop-only boundary before next week's shell sprint",
+    "summary": "No commits Saturday — a structured audit of the week's Storybook sweep, ADR-0029's prop-only boundary, and the seven open PRs blocking the next shell sprint.",
+    "tags": [
+      {
+        "name": "storybook",
+        "type": "infra"
+      },
+      {
+        "name": "container-presenter",
+        "type": "arch"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "core",
+      "TripPlanner",
+      "BlogEngine",
+      "lean-canvas",
+      "core-reader",
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "ADR-0029: the prop-only boundary and why it matters for Module Federation",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The NL instance spawning PR: what it's waiting for, and the answer to [shell] #5",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-21",
+    "title": "Friday's Storybook sweep: every app gets a CI story gate, and ADR-0029 locks the prop-only boundary",
+    "summary": "Friday closed Phase 1's Storybook gap: all three sub-apps now have stories and a CI build gate, ADR-0029 formalises the prop-only boundary, and Docker CI stops blocking PRs on startup failures.",
+    "tags": [
+      {
+        "name": "storybook",
+        "type": "infra"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "container-presenter",
+        "type": "arch"
+      },
+      {
+        "name": "design-system",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      }
+    ],
+    "reposActive": [
+      "cv-builder",
+      "BlogEngine",
+      "TripPlanner",
+      "shell",
+      "core",
+      "daily-logger",
+      "core-reader",
+      "lean-canvas"
+    ],
+    "commitCount": 20,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "ADR-0029: why prop-only is a hard rule, not a guideline",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "A note on the absence of a Module Federation ADR",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Why the Storybook build gate comes before visual regression",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Docker CI as warning, not failure",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-20",
+    "title": "Thursday's deployment sweep: container/presenter decomposition lands in shell, cache header fixes propagate across every remote",
+    "summary": "Thursday swept deployment bugs from four remotes, locked in container/presenter decomposition for three shell components, and fixed core-reader's skills path after the .claude/commands rename.",
+    "tags": [
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "container-presenter",
+        "type": "arch"
+      },
+      {
+        "name": "deployment",
+        "type": "infra"
+      },
+      {
+        "name": "cache-headers",
+        "type": "concept"
+      },
+      {
+        "name": "storybook",
+        "type": "infra"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "cv-builder",
+      "BlogEngine",
+      "TripPlanner",
+      "lean-canvas",
+      "core-reader",
+      "core",
+      "daily-logger"
+    ],
+    "commitCount": 14,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision: container/presenter as the extraction boundary for `@ojfbot/shell`",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision: Vercel header rule order as a deployment contract",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision: core-reader path fix as rename shrapnel completion",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-19",
+    "title": "Wednesday's new app sprint: lean-canvas deploys to Vercel, gastown-pilot lands in the shell, and /scaffold-frame-app formalises app creation",
+    "summary": "Wednesday added a new Frame sub-app (lean-canvas on Vercel), wired gastown-pilot into the shell registry, and codified app scaffolding into a 28-item validation skill.",
+    "tags": [
+      {
+        "name": "lean-canvas",
+        "type": "repo"
+      },
+      {
+        "name": "gastown-pilot",
+        "type": "concept"
+      },
+      {
+        "name": "scaffold",
+        "type": "concept"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "core-skills",
+        "type": "concept"
+      },
+      {
+        "name": "carbon-tokens",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "lean-canvas",
+      "shell",
+      "core",
+      "TripPlanner",
+      "daily-logger",
+      "cv-builder"
+    ],
+    "commitCount": 15,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: `remoteEntry.js` must be `no-store`, everything else `immutable`",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: /scaffold-frame-app as a machine-readable checklist, not prose documentation",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: `AppType` as the discriminated union source of truth",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Open issue disposition",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-18",
+    "title": "Tuesday's platform sprint: NL instance spawning, thread resumption, Gas Town A2–A8, and CoreReader phases 2–5",
+    "summary": "Tuesday delivered three large feature merges across shell, core, and core-reader — the stack now has NL instance spawning, full Gas Town governance, and a seven-tab CoreReader dashboard.",
+    "tags": [
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "gas-town",
+        "type": "phase"
+      },
+      {
+        "name": "core-reader",
+        "type": "repo"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "platform-features",
+        "type": "concept"
+      },
+      {
+        "name": "phase-4",
+        "type": "phase"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "core",
+      "core-reader",
+      "cv-builder",
+      "daily-logger"
+    ],
+    "commitCount": 12,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: NL spawning via ShellAgent, not a sidebar affordance",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: G3 Approval Queue as the security primitive, not permission dialogs",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: Gas Town A2–A8 in `@core/workflows` before shell adoption",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 4: CoreReader write-capability in Phase 5, not Phase 1",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "On [shell] #5 — this is a hard stop, not a suggestion",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-17",
+    "title": "Monday's merge window: lean-canvas registered, ADR-0019 isolation hardened, and purefoy's TypeScript UI landed",
+    "summary": "Thirty-eight commits across seven repos Monday: lean-canvas joins Frame OS, ADR-0019 fan-out isolation closes a context-bleed gap, and purefoy ships its full TypeScript UI layer.",
+    "tags": [
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "frame-agent",
+        "type": "arch"
+      },
+      {
+        "name": "adr-0019",
+        "type": "concept"
+      },
+      {
+        "name": "lean-canvas",
+        "type": "repo"
+      },
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "security",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "cv-builder",
+      "purefoy",
+      "core",
+      "BlogEngine",
+      "MrPlug",
+      "TripPlanner",
+      "daily-logger"
+    ],
+    "commitCount": 31,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: Per-domain history scoping in `fanOut()` (ADR-0019)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: lean-canvas port assignment (3025/3026, not 3020/3021)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: ADR-0007 distinct per-tool endpoints across all sub-apps",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 4: purefoy TypeScript layer as a read-only knowledge browser first — and what the overnight batch fixed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 5: 'Start Fresh' and why that label matters",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "On [shell] #5 and why it has been open this long",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "On [cv-builder] #99 and its blast radius",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-16",
+    "title": "Sunday audit: sequencing the hero-demo merge window, naming the gaps the week left open",
+    "summary": "A structured Sunday audit of five open PRs, the merge-order gate between them, and the three architectural gaps the article names honestly rather than papers over.",
+    "tags": [
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "hero-demo",
+        "type": "activity"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "frame-agent",
+        "type": "arch"
+      },
+      {
+        "name": "rename-cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "meta-orchestrator",
+        "type": "concept"
+      },
+      {
+        "name": "isolated-synthesis",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "cv-builder",
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Merge order: [shell] #31 must land before [shell] #32",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Why props-driven with zero Redux inside the package?",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The isolated synthesis pattern in [shell] #32: design intent and the enforcement gap",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "[shell] #5 (Redux store composition): non-blocking today, explicitly accepted risk",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "[shell] #24 and the resumption gap: what the hero demo proves and what it doesn't",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The daily-logger draft backlog: operational, not architectural",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-15",
+    "title": "Saturday's reading day: auditing the hero-demo PR stack and the rename shrapnel that's still in flight",
+    "summary": "No commits Saturday — a focused audit of the four open PRs gating the hero demo and what merging them in order actually requires.",
+    "tags": [
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "hero-demo",
+        "type": "activity"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "frame-agent",
+        "type": "arch"
+      },
+      {
+        "name": "pr-audit",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "daily-logger",
+      "cv-builder"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 2,
+    "decisions": [],
+    "actions": []
+  },
+  {
+    "date": "2026-03-14",
+    "title": "Friday's reading day: auditing the hero-demo PR stack before the weekend merge window",
+    "summary": "No commits Friday. Three in-flight PRs are queued — here's the merge order, the sequencing risk, and the one Monday morning instruction that matters.",
+    "tags": [
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "hero-demo",
+        "type": "activity"
+      },
+      {
+        "name": "frame-agent",
+        "type": "arch"
+      },
+      {
+        "name": "rest-day-audit",
+        "type": "activity"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "cv-builder",
+      "TripPlanner",
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "The open PR stack — merge order is a hard constraint",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The sequencing risk: #32 before #31 creates a misleading signal",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "On [shell] #5 — Redux store composition",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-13",
+    "title": "Thursday's cleanup window: bot-driven hygiene in daily-logger and cv-builder while two hero-demo PRs sit in review",
+    "summary": "Thursday brought automated hygiene commits across daily-logger and cv-builder while two strategically critical shell PRs — cross-domain fan-out and @ojfbot/shell wiring — remain open in review.",
+    "tags": [
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "hero-demo",
+        "type": "activity"
+      },
+      {
+        "name": "daily-cleaner",
+        "type": "concept"
+      },
+      {
+        "name": "frame-agent",
+        "type": "arch"
+      },
+      {
+        "name": "cross-app-orchestration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "daily-logger",
+      "cv-builder"
+    ],
+    "commitCount": 3,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Priority stack for this session",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 1: Cross-domain fan-out lands in `MetaOrchestratorAgent`, not in individual app agents — [shell] #32",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: `HeaderConnected` + `HomeScreenConnected` as the boundary proof — [shell] #31",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-12",
+    "title": "Wednesday's Phase 1 closing sprint: Header + HomeScreen extracted, resumption endpoint live, and the rename cleanup that had to happen",
+    "summary": "Wednesday completed Phase 1 @ojfbot/shell extraction with Header and HomeScreen merged, patched four rename regressions across shell and cv-builder, and shipped the thread resumption synthesis endpoint.",
+    "tags": [
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "frame-agent",
+        "type": "arch"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "gas-town",
+        "type": "phase"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "cv-builder",
+      "TripPlanner",
+      "daily-logger"
+    ],
+    "commitCount": 16,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: Four rename-fix PRs merged before new feature work resumed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: `POST /api/resumption` as a stateless, schema-validated endpoint",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: Props-driven extraction as the invariant for `@ojfbot/shell` components",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-11",
+    "title": "Tuesday's rename + Gas Town Sprint 1: cv-builder becomes Resume Builder, FrameBead lands in three repos",
+    "summary": "Twenty commits on Tuesday: cv-builder is renamed to Resume Builder, FrameBead Sprint 1 ships in two repos simultaneously, and Phase 1 shell extraction clears its first two components.",
+    "tags": [
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "gas-town",
+        "type": "phase"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "core-reader",
+        "type": "repo"
+      },
+      {
+        "name": "rename",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "cv-builder",
+      "core-reader",
+      "core",
+      "daily-logger"
+    ],
+    "commitCount": 27,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: Rename cv-builder → Resume Builder now, not later",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: FrameBead `/api/beads` ships in cv-builder AND core-reader on the same day",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: Props-driven extraction for @ojfbot/shell — no Redux inside the package",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 4: Vercel serverless bundle configuration for core-reader",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-10",
+    "title": "Monday cleanup and three PRs that open Phase 1: @ojfbot/shell extraction begins",
+    "summary": "Monday was a cleanup day with five commits across three repos, but the real story is three PRs that opened simultaneously: Phase 1 extraction, FrameBead ADRs, and core-reader's Gas Town API.",
+    "tags": [
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "mrplug",
+        "type": "repo"
+      },
+      {
+        "name": "gas-town",
+        "type": "phase"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "core-reader",
+        "type": "repo"
+      },
+      {
+        "name": "architecture",
+        "type": "arch"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "core",
+      "core-reader",
+      "MrPlug",
+      "daily-logger",
+      "cv-builder"
+    ],
+    "commitCount": 8,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Priority order for this week's merge window",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Extracting AppSwitcher first: why the smallest component validates the biggest pattern",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The sequencing risk: [shell] #23 is open and [shell] #5 is unresolved",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "FrameBead as universal work primitive: ADR-0016 and ADR-0017",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Thread resumption synthesis: naming the gap before building the bridge",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-09",
+    "title": "Sunday surge: MrPlug Phase 5B ships, shell gets multi-instance UI, and Gas Town adoption gets its roadmap issues",
+    "summary": "Twenty-nine commits across five repos on Sunday: MrPlug Phase 5B fully merged, shell multi-instance UI ships, and Gas Town adoption gets its first roadmap issues.",
+    "tags": [
+      {
+        "name": "mrplug",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "gas-town",
+        "type": "phase"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "security",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "MrPlug",
+      "shell",
+      "core",
+      "daily-logger",
+      "cv-builder"
+    ],
+    "commitCount": 35,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: Page URL checked before remoteEntry origins in `resolveProjectMapping`",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: Singleton enforcement at the store level, not the UI level",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: `data-mf-remote` attribute on `AppFrame` mount div",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-08",
+    "title": "Zero-commit Saturday: reading the Phase 5B draft before it merges",
+    "summary": "No commits landed Saturday, so we audit the three open Phase 5B and multi-instance shell PRs — and surface the one unmerged change quietly blocking Phases 1, 3, and 4 simultaneously.",
+    "tags": [
+      {
+        "name": "mrplug",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "security",
+        "type": "practice"
+      },
+      {
+        "name": "phase-5b",
+        "type": "phase"
+      },
+      {
+        "name": "architecture",
+        "type": "arch"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "MrPlug",
+      "daily-logger",
+      "cv-builder"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Why MF-aware routing is the right abstraction for the issue-creation write path",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Why [shell] #19 has been open for three days without merging — and what the shim decision actually is",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-07",
+    "title": "MrPlug Phase 5B opens: GitHub issue creation, Claude Code relay, and MF-aware project routing",
+    "summary": "MrPlug Phase 5B draft lands — inspect-to-issue creation, Claude Code relay, and MF-aware routing push the Chrome extension toward Frame's dev companion role.",
+    "tags": [
+      {
+        "name": "mrplug",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "security",
+        "type": "practice"
+      },
+      {
+        "name": "github-integration",
+        "type": "concept"
+      },
+      {
+        "name": "phase-5b",
+        "type": "phase"
+      }
+    ],
+    "reposActive": [
+      "MrPlug",
+      "shell",
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "The dependency that makes #19 the critical path",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "MF-manifest-as-routing-authority: why this design, and what breaks",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Claude Code relay: the contract that needs to be written",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Security boundary: structural, not advisory",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-06",
+    "title": "Security fixes, detached EC2 execution, and multi-instance UI: hardening week closes out",
+    "summary": "A focused hardening day: purefoy's detached EC2 execution ships, MrPlug gets a stale-screenshot guard, and cv-builder closes two dependency CVEs.",
+    "tags": [
+      {
+        "name": "security",
+        "type": "practice"
+      },
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "mrplug",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "multi-instance",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "purefoy",
+      "MrPlug",
+      "core",
+      "daily-logger",
+      "cv-builder"
+    ],
+    "commitCount": 12,
+    "activityType": "hardening",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: Detached execution as an operability primitive, not a deployment concern",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: Mock numpy/torch at the module boundary, not the call site",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: Stale screenshot guard at 10 seconds, not request-scoped",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 4: Dependency CVEs via resolutions overrides, not direct dep upgrades",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-05",
+    "title": "purefoy transcription pipeline v2.0.0: diarization, multi-run layout, and Claude Code CI in one day",
+    "summary": "purefoy shipped transcription pipeline v2.0.0 with speaker diarization and multi-run layout, then layered Claude Code CI review on top in the same day.",
+    "tags": [
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "transcription",
+        "type": "concept"
+      },
+      {
+        "name": "diarization",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "claude-code",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "purefoy",
+      "shell",
+      "cv-builder",
+      "daily-logger",
+      "core"
+    ],
+    "commitCount": 19,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: Multi-run layout over overwrite-in-place",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: Pin pyannote and speechbrain; treat undiarized as re-queue, not drop",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: `terminate_instances` scoped to `run_id` — not project-wide",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 4: Claude Code CI — `CLAUDE_CODE_OAUTH_TOKEN` over `GITHUB_TOKEN`, manual dispatch only",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-04",
+    "title": "Phase 5A lands: MrPlug routes through frame-agent, and every sub-app gets a real settings panel",
+    "summary": "MrPlug's AI calls now route through frame-agent's new /api/inspect endpoint, and all three sub-apps got real Redux-wired settings panels in a coordinated 29-commit push.",
+    "tags": [
+      {
+        "name": "mrplug",
+        "type": "repo"
+      },
+      {
+        "name": "frame-agent",
+        "type": "arch"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "settings",
+        "type": "concept"
+      },
+      {
+        "name": "security",
+        "type": "practice"
+      },
+      {
+        "name": "phase-5",
+        "type": "phase"
+      }
+    ],
+    "reposActive": [
+      "MrPlug",
+      "shell",
+      "cv-builder",
+      "BlogEngine",
+      "TripPlanner",
+      "daily-logger"
+    ],
+    "commitCount": 11,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [
+      {
+        "title": "Decision 1: frame-agent as the CORS trust boundary for MrPlug",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 2: Two-store architecture for BlogEngine settings — shell Redux + localStorage",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 3: `apiBaseUrl` as a runtime connection override in settingsSlice",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decision 4: `frame-os-context.md` as the authoritative symlinked context file",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "On frame-agent's cost and availability model",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
+    "date": "2026-03-03",
+    "title": "Deploying the whole stack: Vercel CI/CD lands across every repo in one coordinated push",
+    "summary": "Vercel deployment pipelines landed across all six active repos today, wiring cv-builder, shell, TripPlanner, BlogEngine, core-reader, and daily-logger into a unified CDN-backed production topology.",
+    "tags": [
+      {
+        "name": "vercel",
+        "type": "infra"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "deployment",
+        "type": "infra"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "cv-builder",
+      "TripPlanner",
+      "BlogEngine",
+      "core-reader",
+      "core",
+      "daily-logger",
+      "purefoy",
+      "MrPlug"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 2,
+    "decisions": [],
+    "actions": []
+  },
+  {
+    "date": "2026-03-02",
+    "title": "Five remotes, one dev script: TripPlanner completes Federation as CoreReader joins the registered stack",
+    "summary": "TripPlanner completes the Federation integration contract across three merged PRs; shell registers CoreReader as the fifth remote; Frame OS now orchestrates five services from a single dev script.",
+    "tags": [
+      {
+        "name": "tripplanner",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "core-reader",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "frame-os",
+        "type": "arch"
+      },
+      {
+        "name": "node-template",
+        "type": "repo"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "TripPlanner",
+      "MrPlug",
+      "daily-logger"
+    ],
+    "commitCount": 5,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "close TripPlanner #9 (opened 2025-12-15) with a reference to #11; confirm nothing unshipped remains before closing",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-02"
+      },
+      {
+        "command": "/adr",
+        "description": "document the three-step MF remote integration contract (shellMode + vite-plugin-css-injected-by-js chunk scope + frame-dev.sh entry) before CoreReader UI work begins; the pattern has run across four remotes without a canonical spec",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-02"
+      },
+      {
+        "command": "/adr",
+        "description": "write ADR-0012 covering the shellMode interface contract; the pattern is running across four remotes but no canonical spec exists",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-02"
+      },
+      {
+        "command": "/adr",
+        "description": "document the vite-plugin-css-injected-by-js chunk scoping constraint as a prerequisite for CoreReader UI onboarding; rationale currently lives only in commit history",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-02"
+      },
+      {
+        "command": "/pr-review",
+        "description": "focused review on shell #6 with shellMode contract stable; move off DRAFT and finalize ADR-0011",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-02"
+      },
+      {
+        "command": "/roadmap",
+        "description": "set a concrete CoreReader UI milestone now that registration infrastructure and ADR-0010 are both resolved; name a Phase 1 target date before the stall compounds further",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-02"
+      },
+      {
+        "command": "/adr",
+        "description": "promote shell #6 from DRAFT by completing ADR-0011 with shellMode contract, always-mounted modal pattern, EB reset behavior, and enforcement mechanism",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-02"
+      },
+      {
+        "command": "/adr",
+        "description": "write the MF remote integration contract ADR before CoreReader UI begins; this is the first implementation that can be built against a spec rather than reverse-engineered from three prior remotes",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-02"
+      }
+    ]
+  },
+  {
+    "date": "2026-03-01",
+    "title": "Shell gets a settings modal; purefoy gets a transcription pipeline; node-template renames itself core",
+    "summary": "Shell claims settings chrome across all sub-apps via Module Federation; purefoy ships faster-whisper transcription; node-template becomes core.",
+    "tags": [
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "node-template",
+        "type": "repo"
+      },
+      {
+        "name": "settings-modal",
+        "type": "concept"
+      },
+      {
+        "name": "frame-os",
+        "type": "arch"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "TripPlanner",
+      "MrPlug",
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [],
+    "actions": [
+      {
+        "command": "/adr",
+        "description": "document the shell chrome ownership contract (modal, Suspense, ErrorBoundary) as a reusable pattern for the command bar surface",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-01"
+      },
+      {
+        "command": "/adr",
+        "description": "write ADR-0011 covering the `'./Settings'` MF entry point convention and always-mounted modal + EB reset pattern before shell #6 leaves draft",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-01"
+      },
+      {
+        "command": "/investigate",
+        "description": "evaluate whether the `APP_CONFIG` registry can drive Phase 2 Figma MCP token generation directly",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-01"
+      },
+      {
+        "command": "/investigate",
+        "description": "document the per-transcript EC2 cost and Fargate comparison in ADR-004 before closing the infrastructure decision",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-01"
+      },
+      {
+        "command": "/pr-review",
+        "description": "do a focused review pass on TripPlanner #11's MF remote integration section now that #12 has proven the Federation plumbing against the shell host",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-01"
+      },
+      {
+        "command": "/roadmap",
+        "description": "set a concrete milestone for CoreReader implementation now that ADR-0010 is resolved and issue #8 is closed",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-01"
+      },
+      {
+        "command": "/adr",
+        "description": "add CI enforcement mechanism for the shell chrome ownership contract to ADR-0011",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-01"
+      },
+      {
+        "command": "/adr",
+        "description": "promote shell #6 from draft by completing ADR-0011 with chrome ownership contract, MF convention, EB reset pattern, and enforcement mechanism",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-01"
+      },
+      {
+        "command": "/adr",
+        "description": "add per-transcript cost figures to ADR-004 to close the infrastructure decision",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-01"
+      }
+    ]
+  },
+  {
+    "date": "2026-02-28",
+    "title": "daily-logger gets deterministic output, cv-builder becomes a Federation remote, and node-template ships two new skills",
+    "summary": "Structured JSON output locks daily-logger article shape; cv-builder's Dashboard loads into the shell host at runtime for the first time.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "node-template",
+        "type": "repo"
+      },
+      {
+        "name": "blogengine",
+        "type": "repo"
+      },
+      {
+        "name": "structured-output",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "TripPlanner",
+      "purefoy",
+      "MrPlug",
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 2,
+    "decisions": [],
+    "actions": [
+      {
+        "command": "/adr",
+        "description": "document the structured JSON output contract for daily-logger as an ADR; the schema is load-bearing and currently undocumented",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-28"
+      },
+      {
+        "command": "/techdebt",
+        "description": "implement a config lint rule catching `shared` string shorthand across all Frame vite configs; `TD-001` is flagged but not yet enforced",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-28"
+      },
+      {
+        "command": "/adr",
+        "description": "write the Redux store composition ADR for [shell] #5 before any code touches cross-boundary state in the Module Federation setup",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-28"
+      },
+      {
+        "command": "/techdebt",
+        "description": "audit remaining `shared` string shorthand usages across all Frame app vite configs and convert to explicit object form",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-28"
+      },
+      {
+        "command": "/pr-review",
+        "description": "review [node-template] #6 (ADR-0007) so TripPlanner #11 and BlogEngine's endpoint have a ratified contract to implement against",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-28"
+      },
+      {
+        "command": "/roadmap",
+        "description": "update Phase 6 progress to reflect issues #90 and #94 closed; capture what the diff timeline would take to complete",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-28"
+      },
+      {
+        "command": "/adr",
+        "description": "draft the Frame-wide Redux store strategy decision captured in [shell] #5 before Module Federation remote integration proceeds further",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-28"
+      },
+      {
+        "command": "/adr",
+        "description": "document the structured JSON output schema for daily-logger before the schema drifts from the prompt",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-28"
+      }
+    ]
+  },
+  {
+    "date": "2026-02-27",
+    "title": "BlogEngine ships its agent graph, daily-logger gets a cleaner, and node-template formalizes decisions",
+    "summary": "BlogEngine merges a 9-node agent graph with JWT auth; daily-logger adds a nightly cleaner; node-template formalizes ADRs and migrates 24 commands to skill directories.",
+    "tags": [
+      {
+        "name": "blogengine",
+        "type": "repo"
+      },
+      {
+        "name": "langgraph",
+        "type": "concept"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "node-template",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 9,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [],
+    "actions": [
+      {
+        "command": "/adr",
+        "description": "write ADR-006 for the `GET /api/tools` capability manifest contract in node-template before a second Frame app implements it independently",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-27"
+      },
+      {
+        "command": "/plan-feature",
+        "description": "spec the frame-agent routing logic that consumes `GET /api/tools` responses; this is the piece that's explicitly not wired yet",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-27"
+      },
+      {
+        "command": "/techdebt",
+        "description": "add a daily-cleaner inference budget cap before repo count exceeds 10 active apps",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-27"
+      },
+      {
+        "command": "/adr",
+        "description": "write prospective ADR-007 for the ShellAgent routing protocol; the chat command bar (Phase 3) shouldn't be built before this contract is owned",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-27"
+      },
+      {
+        "command": "/plan-feature",
+        "description": "spec the \"stale because shipped\" vs \"stale because abandoned\" distinction for the daily-cleaner eval loop; this is the gap that limits it as a production tool",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-27"
+      },
+      {
+        "command": "/scaffold",
+        "description": "stub the Phase 9 POST pipeline in `daily-logger/src/` (client, retry logic, error handling) now that BlogEngine's API is ready to receive",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-27"
+      },
+      {
+        "command": "/roadmap",
+        "description": "update Phase 3 shell entry with the ShellAgent routing ADR as a prerequisite gate before the chat command bar build starts",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-27"
+      },
+      {
+        "command": "/validate",
+        "description": "run a cross-repo invariant check: every active Frame app should expose `GET /api/tools`; BlogEngine does, cv-builder and TripPlanner do not yet",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-27"
+      },
+      {
+        "command": "/scaffold",
+        "description": "generate the `src/post-to-blogengine.ts` stub with typed request/response shapes against BlogEngine's agent graph API",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-27"
+      },
+      {
+        "command": "/plan-feature",
+        "description": "write the full Phase 9 spec including auth flow, retry semantics, dry-run flag, and rollback if BlogEngine rejects the article",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-27"
+      },
+      {
+        "command": "/adr",
+        "description": "write ADR-006 for the capability manifest contract today, before starting the POST pipeline work; the pipeline will depend on it",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-02-27"
+      }
+    ]
+  },
+  {
+    "date": "2026-02-26",
+    "title": "cv-builder closes issue #94, daily-logger gets a council review pipeline, and shell gets Claude Code",
+    "summary": "Issue #94 closes with Pages-first data fetch and run selector; daily-logger ships a 4-phase council review pipeline with independent persona critiques.",
+    "tags": [
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "visual-regression",
+        "type": "practice"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 2,
+    "decisions": [],
+    "actions": []
+  },
+  {
+    "date": "2026-02-25",
+    "title": "shell repo gets its first commit: Carbon header, GitHub Pages deploy, and what identical chrome means",
+    "summary": "The shell repo ships its first real application code — Carbon header and sidenav matching cv-builder — while daily-logger grows into a proper Frame stack component.",
+    "tags": [
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "frame-os",
+        "type": "arch"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 7,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [],
+    "actions": []
+  },
+  {
+    "date": "2026-02-24",
+    "title": "cv-builder's visual regression loop closes its first issue: what PR #93 actually built",
+    "summary": "PR #93 closes issue #90 and completes ~70% of Phase 6 — here's what the CanvasRunNavigator pipeline actually does and what's missing.",
+    "tags": [
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "visual-regression",
+        "type": "practice"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "draw-io",
+        "type": "concept"
+      },
+      {
+        "name": "s3",
+        "type": "infra"
+      },
+      {
+        "name": "eval-loop",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 10,
+    "activityType": "build",
+    "schemaVersion": 2,
+    "decisions": [],
+    "actions": []
+  }
+]
