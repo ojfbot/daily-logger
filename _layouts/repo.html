@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="baseurl" content="{{ site.baseurl }}">
+  <title>{{ page.repo_name }} — {{ site.title }}</title>
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/dashboard.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="site-title" href="{{ site.baseurl }}/">ojfbot/dev-log</a>
+    <nav class="site-nav">
+      <a href="{{ site.baseurl }}/">Index</a>
+      <a href="{{ site.baseurl }}/decisions-log/">Decisions</a>
+      <a href="{{ site.baseurl }}/actions/">Actions</a>
+      <button class="theme-toggle">DARK</button>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="repo-header">
+      <h1 class="repo-name">{{ page.repo_name }}</h1>
+      <div class="repo-stats" id="repo-stats">
+        <div>
+          <div class="repo-stat-value" id="stat-articles">--</div>
+          <div class="metric-label">ARTICLES</div>
+        </div>
+        <div>
+          <div class="repo-stat-value" id="stat-commits">--</div>
+          <div class="metric-label">TOTAL COMMITS</div>
+        </div>
+        <div>
+          <div class="repo-stat-value" id="stat-decisions">--</div>
+          <div class="metric-label">DECISIONS</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-heading" style="margin-top:1.5rem">RELATED TAGS</div>
+    <div class="entry-tags" id="repo-tags"></div>
+
+    <div class="sidebar-heading" style="margin-top:2rem">TIMELINE</div>
+    <div class="entry-list" id="repo-timeline">
+      <div class="empty-state">Loading...</div>
+    </div>
+
+    <div class="sidebar-heading" style="margin-top:2rem">DECISIONS</div>
+    <div id="repo-decisions">
+      <div class="empty-state">Loading...</div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <a href="https://github.com/ojfbot/daily-logger">ojfbot/daily-logger</a> — self-documenting development system
+  </footer>
+
+  <script type="module">
+    import { getEntries, getRepos } from '{{ site.baseurl }}/assets/js/data.js'
+    import { initTheme } from '{{ site.baseurl }}/assets/js/theme.js'
+
+    const BASE = '{{ site.baseurl }}'
+    const REPO_NAME = '{{ page.repo_name }}'
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      initTheme()
+
+      const [entries, repos] = await Promise.all([getEntries(), getRepos()])
+      const repoInfo = repos.find(r => r.name === REPO_NAME)
+
+      // Stats
+      const repoEntries = entries.filter(e =>
+        e.reposActive?.includes(REPO_NAME) || e.tags.some(t => t.name === REPO_NAME)
+      )
+      document.getElementById('stat-articles').textContent = repoEntries.length
+      document.getElementById('stat-commits').textContent = repoInfo?.totalCommits ?? 0
+
+      const allDecisions = repoEntries.flatMap(e =>
+        (e.decisions ?? []).filter(d => d.repo === REPO_NAME)
+      )
+      document.getElementById('stat-decisions').textContent = allDecisions.length
+
+      // Tags
+      const tagsEl = document.getElementById('repo-tags')
+      if (repoInfo?.relatedTags) {
+        tagsEl.innerHTML = repoInfo.relatedTags
+          .filter(t => t !== REPO_NAME)
+          .slice(0, 12)
+          .map(t => `<span class="tag">${t}</span>`)
+          .join('')
+      }
+
+      // Timeline
+      const timelineEl = document.getElementById('repo-timeline')
+      if (repoEntries.length === 0) {
+        timelineEl.innerHTML = '<div class="empty-state">No articles mention this repo.</div>'
+      } else {
+        timelineEl.innerHTML = repoEntries.map(e => `
+          <div class="entry-card">
+            <a href="${BASE}/articles/${e.date}/">
+              <div class="entry-date">${e.date}</div>
+              <div class="entry-title">${e.title}</div>
+              <div class="entry-summary">${e.summary}</div>
+            </a>
+          </div>
+        `).join('')
+      }
+
+      // Decisions
+      const decisionsEl = document.getElementById('repo-decisions')
+      if (allDecisions.length === 0) {
+        decisionsEl.innerHTML = '<div class="empty-state">No decisions recorded for this repo.</div>'
+      } else {
+        decisionsEl.innerHTML = allDecisions.map(d => `
+          <div class="decision-card">
+            <span class="decision-title">${d.title}</span>
+            ${d.pillar ? '<span class="pillar-badge">' + d.pillar + '</span>' : ''}
+            ${d.summary ? '<div class="decision-summary">' + d.summary + '</div>' : ''}
+          </div>
+        `).join('')
+      }
+    })
+  </script>
+</body>
+</html>
