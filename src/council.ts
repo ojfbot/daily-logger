@@ -21,6 +21,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { BlogContext, GeneratedArticle, Persona, CouncilNote, StructuredArticle } from './types.js'
 import { assembleBody } from './generate-article.js'
+import { validateArticleOutput } from './schema.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -134,42 +135,73 @@ Be direct. No hedging. This is feedback from someone who wants him to succeed, n
 
 const SYNTHESIS_TOOL: Anthropic.Tool = {
   name: 'write_article',
-  description: 'Write the final polished article incorporating council feedback.',
+  description: 'Write the final polished article incorporating council feedback (v2 schema).',
   input_schema: {
     type: 'object',
     properties: {
+      schemaVersion: { type: 'number', description: 'Always 2.' },
       title: { type: 'string' },
-      tags: { type: 'array', items: { type: 'string' } },
       summary: { type: 'string', description: 'One sentence, 15-25 words' },
       lede: { type: 'string', description: '1-3 sentence opening paragraph. Empty string if none.' },
-      whatShipped: {
-        type: 'string',
-        description: 'GFM markdown for What shipped section body (no ## heading). Merged/committed work only.',
-      },
-      theDecisions: {
-        type: 'string',
-        description: 'GFM markdown for The decisions section body (no ## heading). Explain WHY. Teach. Name a Samir pillar.',
-      },
-      roadmapPulse: {
-        type: 'string',
-        description: 'GFM markdown for Roadmap pulse section body (no ## heading). Reference every open PR by [repo] #number.',
-      },
-      whatsNext: {
-        type: 'string',
-        description: 'GFM markdown for What\'s next section body (no ## heading). 1-2 immediately actionable items.',
-      },
-      actions: {
-        type: 'object',
-        properties: {
-          whatShipped: { type: 'array', items: { type: 'string' } },
-          theDecisions: { type: 'array', items: { type: 'string' } },
-          roadmapPulse: { type: 'array', items: { type: 'string' } },
-          whatsNext: { type: 'array', items: { type: 'string' } },
+      tags: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            type: { type: 'string', enum: ['repo', 'arch', 'practice', 'phase', 'activity', 'concept', 'infra'] },
+          },
+          required: ['name', 'type'],
         },
-        required: ['whatShipped', 'theDecisions', 'roadmapPulse', 'whatsNext'],
       },
+      whatShipped: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            repo: { type: 'string' },
+            description: { type: 'string' },
+            commits: { type: 'array', items: { type: 'string' } },
+            prs: { type: 'array', items: { type: 'string' } },
+          },
+          required: ['repo', 'description', 'commits'],
+        },
+      },
+      decisions: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            summary: { type: 'string' },
+            repo: { type: 'string' },
+            pillar: { type: 'string', enum: ['assistant-centric', 'tooling-for-iteration', 'model-behavior-as-design', 'security-as-emergent-ux'] },
+            relatedTags: { type: 'array', items: { type: 'string' } },
+          },
+          required: ['title', 'summary', 'repo', 'relatedTags'],
+        },
+      },
+      roadmapPulse: { type: 'string' },
+      whatsNext: { type: 'string' },
+      suggestedActions: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            command: { type: 'string' },
+            description: { type: 'string' },
+            repo: { type: 'string' },
+            status: { type: 'string', enum: ['open'] },
+            sourceDate: { type: 'string' },
+          },
+          required: ['command', 'description', 'repo', 'status', 'sourceDate'],
+        },
+      },
+      commitCount: { type: 'number' },
+      reposActive: { type: 'array', items: { type: 'string' } },
+      activityType: { type: 'string', enum: ['build', 'rest', 'audit', 'hardening', 'cleanup', 'sprint'] },
     },
-    required: ['title', 'tags', 'summary', 'lede', 'whatShipped', 'theDecisions', 'roadmapPulse', 'whatsNext', 'actions'],
+    required: ['schemaVersion', 'title', 'summary', 'tags', 'whatShipped', 'decisions', 'roadmapPulse', 'whatsNext', 'suggestedActions', 'commitCount', 'reposActive', 'activityType'],
   },
 }
 
@@ -240,40 +272,59 @@ Output each section as its body text only — no ## headings, those are injected
     return draft
   }
 
-  console.log('  Synthesizing final article with council input (tool_use)...')
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 8192,
-    system,
-    tools: [SYNTHESIS_TOOL],
-    tool_choice: { type: 'tool', name: 'write_article' },
-    messages: [{ role: 'user', content: userPrompt }],
-  })
+  console.log('  Synthesizing final article with council input (tool_use, v2 schema)...')
+  let raw: unknown = null
+  try {
+    const message = await client.messages.create({
+      model: MODEL,
+      max_tokens: 8192,
+      system,
+      tools: [SYNTHESIS_TOOL],
+      tool_choice: { type: 'tool', name: 'write_article' },
+      messages: [{ role: 'user', content: userPrompt }],
+    })
 
-  const toolUse = message.content.find((b) => b.type === 'tool_use')
-  const parsed = toolUse
-    ? (toolUse as { type: 'tool_use'; input: StructuredArticle }).input
-    : null
+    const toolUse = message.content.find((b) => b.type === 'tool_use')
+    raw = toolUse ? (toolUse as { type: 'tool_use'; input: unknown }).input : null
+  } catch (err) {
+    console.error('  ✗ Synthesis API call failed:', (err as Error).message)
+  }
 
-  if (
-    parsed &&
-    parsed.whatShipped &&
-    parsed.theDecisions &&
-    parsed.roadmapPulse &&
-    parsed.whatsNext
-  ) {
+  if (!raw) {
+    console.warn('  ⚠ Synthesis returned no data — falling back to draft')
+    return draft
+  }
+
+  // Inject date/schemaVersion if omitted
+  if (typeof raw === 'object' && raw !== null) {
+    const r = raw as Record<string, unknown>
+    if (!r.date) r.date = ctx.date
+    if (!r.schemaVersion) r.schemaVersion = 2
+  }
+
+  const result = validateArticleOutput(raw, ctx.date)
+
+  if (result.version === 2) {
     return {
-      title: parsed.title ?? draft.title,
+      title: result.data.title,
       date: ctx.date,
-      tags: parsed.tags ?? draft.tags,
-      summary: parsed.summary ?? draft.summary,
-      // Route through assembleBody() — this is the structural guarantee:
-      // section headings and > **Suggested actions** blockquotes are ALWAYS
-      // injected by code, never left to Claude's discretion.
-      body: assembleBody(parsed),
+      tags: result.data.tags.map((t) => t.name),
+      summary: result.data.summary,
+      body: assembleBody(result.data),
     }
   }
 
-  console.warn('  ⚠ Synthesis tool_use block missing or incomplete — falling back to draft')
+  if (result.version === 1) {
+    console.warn('  ⚠ Synthesis fell back to v1 schema')
+    return {
+      title: result.data.title ?? draft.title,
+      date: ctx.date,
+      tags: result.data.tags ?? draft.tags,
+      summary: result.data.summary ?? draft.summary,
+      body: assembleBody(result.data),
+    }
+  }
+
+  console.warn('  ⚠ Synthesis validation failed — falling back to draft')
   return draft
 }

@@ -1,5 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { BlogContext, GeneratedArticle, StructuredArticle } from './types.js'
+import type { ArticleDataV2 } from './schema.js'
+import { validateArticleOutput, getValidationErrors } from './schema.js'
 
 const MODEL = 'claude-sonnet-4-6'
 // 8 k output budget — enough headroom on high-activity days (64+ commits) to
@@ -108,7 +110,38 @@ Zero-commit days (weekends, holidays, deliberate rest) are expected and must be 
 - Use the window as a focused audit: review open PRs, surface the critical-path blocker, document a deferred tradeoff
 - \`lede\`: set the reading/audit frame directly — e.g. "No commits Saturday. That's not a gap — it's a reading day."
 - \`whatShipped\`: open with "No code committed [day]. What follows is…" then an architectural deep-dive or open PR audit. Never write filler.
-- \`theDecisions\`, \`roadmapPulse\`, \`whatsNext\`: same standards as any active development day`
+- \`theDecisions\`, \`roadmapPulse\`, \`whatsNext\`: same standards as any active development day
+
+## Structured output schema (v2)
+
+You MUST return structured data matching the v2 schema. Key differences from previous format:
+
+### Typed tags
+Every tag MUST have a \`type\` field. The 7 tag types:
+- **repo**: Repository names — e.g. \`shell\`, \`cv-builder\`, \`daily-logger\`, \`GroupThink\`
+- **arch**: Architecture patterns — e.g. \`module-federation\`, \`micro-frontend\`, \`container-presenter\`, \`cross-app-orchestration\`
+- **practice**: Development practices — e.g. \`ci-cd\`, \`visual-regression\`, \`adr\`, \`security-scanning\`
+- **phase**: Roadmap phases — e.g. \`phase-1\`, \`phase-4\`, \`phase-5b\`
+- **activity**: Day-level activity type — e.g. \`rest-day\`, \`hardening\`, \`sprint\`, \`cleanup\`
+- **concept**: Design/architecture concepts — e.g. \`assistant-centric\`, \`model-behavior-as-design\`, \`hero-demo\`
+- **infra**: Infrastructure — e.g. \`storybook\`, \`s3\`, \`vercel\`, \`github-integration\`
+
+### Structured shipments
+\`whatShipped\` is an ARRAY of objects, each with: \`repo\` (string), \`description\` (1-3 sentences), \`commits\` (array of 7-char SHAs or short descriptions), optional \`prs\` (array of "#number" strings). Group by repo.
+
+### Structured decisions
+\`decisions\` is an ARRAY of objects, each with: \`title\` (heading), \`summary\` (1-2 sentences), \`repo\` (primary repo), optional \`pillar\` (one of: "assistant-centric", "tooling-for-iteration", "model-behavior-as-design", "security-as-emergent-ux"), \`relatedTags\` (array of tag name strings).
+
+### Structured action items
+\`suggestedActions\` is an ARRAY of objects, each with: \`command\` (slash command like /adr, /test, /validate, /document, /techdebt, /hardening, /investigate, /sweep), \`description\` (what to do), \`repo\` (where), \`status\` (always "open"), \`sourceDate\` (today's date YYYY-MM-DD).
+
+### Activity type
+Classify the day as one of: \`build\` (normal development), \`rest\` (zero/very few commits), \`audit\` (review/audit focus), \`hardening\` (stability/security focus), \`cleanup\` (refactoring/debt), \`sprint\` (high-volume feature work).
+
+### Metadata
+- \`commitCount\`: total commits across all repos for this day
+- \`reposActive\`: array of repo names that had commits
+- \`schemaVersion\`: always 2`
 
 // ─── Tool schema (write_article) ─────────────────────────────────────────────
 //
@@ -117,74 +150,135 @@ Zero-commit days (weekends, holidays, deliberate rest) are expected and must be 
 // - No JSON.parse failure on high-activity days
 // - Schema validates required fields at the API layer
 
-const ARTICLE_TOOL: Anthropic.Tool = {
+const ARTICLE_TOOL_V2: Anthropic.Tool = {
   name: 'write_article',
-  description: 'Write the structured daily development blog article and submit all fields.',
+  description: 'Write the structured daily development blog article (v2 schema) and submit all fields.',
   input_schema: {
     type: 'object',
     properties: {
+      schemaVersion: {
+        type: 'number',
+        description: 'Always 2.',
+      },
       title: {
         type: 'string',
         description: 'Specific and informative. Example: "Extracting @ojfbot/shell: what three identical App.tsx files tell you"',
       },
-      tags: {
-        type: 'array',
-        items: { type: 'string' },
-        description: '3-6 lowercase-hyphenated tags',
-      },
       summary: {
         type: 'string',
-        description: 'One sentence, 15–25 words, plain text for preview cards',
+        description: 'One sentence, 15–25 words, plain text for preview cards.',
       },
       lede: {
         type: 'string',
         description: '1–3 sentence opening paragraph setting the day\'s narrative theme. Empty string on zero-commit days.',
       },
-      whatShipped: {
-        type: 'string',
-        description: 'GFM markdown body for the What shipped section. Name specific PRs, commits, files. ONLY reference merged/committed work here.',
+      tags: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', description: 'Lowercase hyphenated tag name.' },
+            type: {
+              type: 'string',
+              enum: ['repo', 'arch', 'practice', 'phase', 'activity', 'concept', 'infra'],
+              description: 'Tag type category.',
+            },
+          },
+          required: ['name', 'type'],
+        },
+        description: '4-8 typed tags. Every tag MUST have a type field.',
       },
-      theDecisions: {
-        type: 'string',
-        description: 'GFM markdown body for The decisions section — the most important section. Name architectural choices and WHY. Explain the tradeoffs as if teaching. Name which TBCoNY/Samir pillar this demonstrates.',
+      whatShipped: {
+        type: 'array',
+        description: 'Array of shipment entries grouped by repo. ONLY reference merged/committed work.',
+        items: {
+          type: 'object',
+          properties: {
+            repo: { type: 'string', description: 'Repository name.' },
+            description: { type: 'string', description: '1-3 sentences describing what shipped.' },
+            commits: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Array of 7-char SHAs or short commit descriptions.',
+            },
+            prs: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'PR numbers like "#42". Optional.',
+            },
+          },
+          required: ['repo', 'description', 'commits'],
+        },
+      },
+      decisions: {
+        type: 'array',
+        description: 'Array of architectural decisions. The most important section. Name choices and WHY. Explain tradeoffs as if teaching.',
+        items: {
+          type: 'object',
+          properties: {
+            title: { type: 'string', description: 'Decision heading.' },
+            summary: { type: 'string', description: '1-2 sentence summary of the decision and its rationale.' },
+            repo: { type: 'string', description: 'Primary repo affected.' },
+            pillar: {
+              type: 'string',
+              enum: ['assistant-centric', 'tooling-for-iteration', 'model-behavior-as-design', 'security-as-emergent-ux'],
+              description: 'Which TBCoNY/Samir pillar this demonstrates. Optional.',
+            },
+            relatedTags: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Architecture/practice tag names relevant to this decision.',
+            },
+          },
+          required: ['title', 'summary', 'repo', 'relatedTags'],
+        },
       },
       roadmapPulse: {
         type: 'string',
-        description: 'GFM markdown body for Roadmap pulse. Specific phase progress. MUST explicitly reference every open PR by [repo] #number.',
+        description: 'GFM markdown for Roadmap pulse. MUST explicitly reference every open PR by [repo] #number.',
       },
       whatsNext: {
         type: 'string',
-        description: 'GFM markdown body for What\'s next — 1-2 most immediately actionable items.',
+        description: 'GFM markdown for What\'s next — 1-2 most immediately actionable items.',
       },
-      actions: {
-        type: 'object',
-        description: 'Suggested slash-command actions for each section',
-        properties: {
-          whatShipped: {
-            type: 'array',
-            items: { type: 'string' },
-            description: '1-3 slash command action items specific to what shipped today',
+      suggestedActions: {
+        type: 'array',
+        description: 'Structured action items with slash command prefixes.',
+        items: {
+          type: 'object',
+          properties: {
+            command: {
+              type: 'string',
+              description: 'Slash command: /adr, /test, /validate, /document, /techdebt, /hardening, /investigate, /sweep, /roadmap, /scaffold, /pr-review',
+            },
+            description: { type: 'string', description: 'What needs to be done.' },
+            repo: { type: 'string', description: 'Target repo.' },
+            status: { type: 'string', enum: ['open'], description: 'Always "open".' },
+            sourceDate: { type: 'string', description: 'Today\'s date YYYY-MM-DD.' },
           },
-          theDecisions: {
-            type: 'array',
-            items: { type: 'string' },
-            description: '1-3 slash command action items specific to decisions made today',
-          },
-          roadmapPulse: {
-            type: 'array',
-            items: { type: 'string' },
-            description: '1-3 slash command action items specific to phase progress',
-          },
-          whatsNext: {
-            type: 'array',
-            items: { type: 'string' },
-            description: '1-2 slash command action items for the most immediately actionable follow-up',
-          },
+          required: ['command', 'description', 'repo', 'status', 'sourceDate'],
         },
-        required: ['whatShipped', 'theDecisions', 'roadmapPulse', 'whatsNext'],
+      },
+      commitCount: {
+        type: 'number',
+        description: 'Total commits across all repos for this day.',
+      },
+      reposActive: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Repo names that had commits today.',
+      },
+      activityType: {
+        type: 'string',
+        enum: ['build', 'rest', 'audit', 'hardening', 'cleanup', 'sprint'],
+        description: 'Classify the day: build (normal), rest (zero/few commits), audit, hardening, cleanup, sprint (high-volume).',
       },
     },
-    required: ['title', 'tags', 'summary', 'lede', 'whatShipped', 'theDecisions', 'roadmapPulse', 'whatsNext', 'actions'],
+    required: [
+      'schemaVersion', 'title', 'summary', 'tags', 'whatShipped', 'decisions',
+      'roadmapPulse', 'whatsNext', 'suggestedActions', 'commitCount',
+      'reposActive', 'activityType',
+    ],
   },
 }
 
@@ -196,8 +290,17 @@ const ARTICLE_TOOL: Anthropic.Tool = {
  * Claude only supplies the prose content and action items.
  * This guarantees every article has the required four sections and blockquotes,
  * regardless of what Claude decided to include or omit.
+ *
+ * Handles both v1 (StructuredArticle) and v2 (ArticleDataV2) inputs.
  */
-export function assembleBody(s: StructuredArticle): string {
+export function assembleBody(s: StructuredArticle | ArticleDataV2): string {
+  if ('schemaVersion' in s && s.schemaVersion === 2) {
+    return assembleBodyV2(s as ArticleDataV2)
+  }
+  return assembleBodyV1(s as StructuredArticle)
+}
+
+function assembleBodyV1(s: StructuredArticle): string {
   const formatActions = (acts?: string[]): string => {
     const items =
       acts && acts.length > 0
@@ -222,6 +325,60 @@ export function assembleBody(s: StructuredArticle): string {
   for (const [heading, content, acts] of sections) {
     parts.push(`## ${heading}`, '', content.trim(), '', formatActions(acts), '')
   }
+
+  return parts.join('\n').trimEnd()
+}
+
+function assembleBodyV2(s: ArticleDataV2): string {
+  const parts: string[] = []
+
+  if (s.lede?.trim()) {
+    parts.push(s.lede.trim(), '')
+  }
+
+  // ── What shipped ──
+  parts.push('## What shipped', '')
+  if (s.whatShipped.length === 0) {
+    parts.push('No code committed today. What follows is an audit of in-flight work.', '')
+  } else {
+    for (const ship of s.whatShipped) {
+      const prRefs = ship.prs?.length ? ` (${ship.prs.join(', ')})` : ''
+      parts.push(`### ${ship.repo}${prRefs}`, '')
+      parts.push(ship.description.trim(), '')
+      if (ship.commits.length > 0) {
+        parts.push(ship.commits.map((c) => `- \`${c}\``).join('\n'), '')
+      }
+    }
+  }
+
+  // ── The decisions ──
+  parts.push('## The decisions', '')
+  if (s.decisions.length === 0) {
+    parts.push('No major architectural decisions today.', '')
+  } else {
+    for (const dec of s.decisions) {
+      const pillarBadge = dec.pillar ? ` — *${dec.pillar}*` : ''
+      parts.push(`### ${dec.title}${pillarBadge}`, '')
+      parts.push(dec.summary.trim(), '')
+      if (dec.relatedTags.length > 0) {
+        parts.push(`Tags: ${dec.relatedTags.map((t) => `\`${t}\``).join(', ')}`, '')
+      }
+    }
+  }
+
+  // ── Roadmap pulse ──
+  parts.push('## Roadmap pulse', '')
+  parts.push((s.roadmapPulse ?? 'No roadmap update today.').trim(), '')
+
+  // ── What's next ──
+  parts.push("## What's next", '')
+  parts.push((s.whatsNext ?? 'Review the roadmap and queue the next action.').trim(), '')
+
+  // ── Suggested actions (unified from suggestedActions array) ──
+  const actionLines = s.suggestedActions.length > 0
+    ? s.suggestedActions.map((a) => `> - \`${a.command}\` — ${a.description} (${a.repo})`)
+    : ['> - `/roadmap` — review phase progress and queue the next concrete action']
+  parts.push('> **Suggested actions**', ...actionLines, '')
 
   return parts.join('\n').trimEnd()
 }
@@ -380,21 +537,55 @@ export function buildUserPrompt(ctx: BlogContext): string {
 // Used in CI smoke tests (pr-check.yml) so we can verify the pipeline
 // structure on every PR without burning API credits or needing ANTHROPIC_API_KEY.
 
-const MOCK_ARTICLE_FIXTURE: StructuredArticle = {
+const MOCK_ARTICLE_FIXTURE_V2: ArticleDataV2 = {
+  schemaVersion: 2,
+  date: '2026-01-01',
   title: 'Pipeline smoke test — mock article for CI validation',
-  tags: ['ci', 'mock', 'pipeline', 'smoke-test'],
-  summary: 'Mock article exercising the full tool_use → assembleBody() → toMarkdown() path in CI.',
+  summary: 'Mock article exercising the full tool_use → assembleBody() ��� toMarkdown() path in CI.',
   lede: 'This article was generated by the pipeline smoke test. No real LLM call was made. If you see this in production, something went wrong.',
-  whatShipped: 'Pipeline smoke test ran successfully. The `write_article` tool_use path, `assembleBody()`, and `toMarkdown()` all produced valid output from a fixture `StructuredArticle`.',
-  theDecisions: 'Mocking at the LLM layer (not the HTTP layer) exercises the real parsing code — `assembleBody()`, field validation, section assembly — without the API call cost. Pillar 2 — Tooling for fast iteration: the smoke test gives the build fast feedback on structural regressions before they reach the scheduled cron.',
+  tags: [
+    { name: 'ci', type: 'practice' },
+    { name: 'pipeline', type: 'infra' },
+    { name: 'smoke-test', type: 'practice' },
+    { name: 'daily-logger', type: 'repo' },
+  ],
+  whatShipped: [
+    {
+      repo: 'daily-logger',
+      description: 'Pipeline smoke test ran successfully. The `write_article` tool_use path, `assembleBody()`, and `toMarkdown()` all produced valid output.',
+      commits: ['mock123'],
+    },
+  ],
+  decisions: [
+    {
+      title: 'Mock at the LLM layer, not the HTTP layer',
+      summary: 'Exercises the real parsing code — assembleBody(), field validation, section assembly — without the API call cost.',
+      repo: 'daily-logger',
+      pillar: 'tooling-for-iteration',
+      relatedTags: ['ci', 'pipeline'],
+    },
+  ],
   roadmapPulse: 'No open PRs in this mock run. In a real run, every open PR would be listed here by [repo] #number.',
   whatsNext: 'Merge the PR if the smoke test passes. The real pipeline runs at 09:00 UTC.',
-  actions: {
-    whatShipped: ['- `/validate` — confirm the pipeline smoke test passes in CI before merging'],
-    theDecisions: ['- `/techdebt` — scan for any remaining quality gaps in the pipeline'],
-    roadmapPulse: ['- `/roadmap` — review phase progress against the real roadmap'],
-    whatsNext: ['- `/validate` — run the full quality gate before merging to main'],
-  },
+  suggestedActions: [
+    {
+      command: '/validate',
+      description: 'Confirm the pipeline smoke test passes in CI before merging.',
+      repo: 'daily-logger',
+      status: 'open',
+      sourceDate: '2026-01-01',
+    },
+    {
+      command: '/roadmap',
+      description: 'Review phase progress against the real roadmap.',
+      repo: 'daily-logger',
+      status: 'open',
+      sourceDate: '2026-01-01',
+    },
+  ],
+  commitCount: 1,
+  reposActive: ['daily-logger'],
+  activityType: 'build',
 }
 
 export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticle> {
@@ -402,64 +593,120 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
   // Used in CI smoke tests — exercises assembleBody() without burning credits.
   if (process.env.MOCK_LLM === 'true') {
     console.log('  [MOCK_LLM] Returning fixture article — no API call made')
+    const fixture = { ...MOCK_ARTICLE_FIXTURE_V2, date: ctx.date }
     return {
-      title: MOCK_ARTICLE_FIXTURE.title,
+      title: fixture.title,
       date: ctx.date,
-      tags: MOCK_ARTICLE_FIXTURE.tags,
-      summary: MOCK_ARTICLE_FIXTURE.summary,
-      body: assembleBody(MOCK_ARTICLE_FIXTURE),
+      tags: fixture.tags.map((t) => t.name),
+      summary: fixture.summary,
+      body: assembleBody(fixture),
     }
   }
 
   const client = new Anthropic()
+  const userPrompt = buildUserPrompt(ctx)
 
-  console.log('  Calling Claude (tool_use)...')
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: MAX_TOKENS,
-    system: SYSTEM_PROMPT,
-    tools: [ARTICLE_TOOL],
-    tool_choice: { type: 'tool', name: 'write_article' },
-    messages: [{ role: 'user', content: buildUserPrompt(ctx) }],
-  })
+  // ── First attempt ──
+  console.log('  Calling Claude (tool_use, v2 schema)...')
+  let raw = await callClaudeForArticle(client, userPrompt)
 
-  // With tool_choice: {type: 'tool'}, the API guarantees a tool_use block.
-  // This eliminates JSON.parse failures, markdown fence stripping, and
-  // the legacy body fallback path that loses action blockquotes.
-  const toolUse = message.content.find((b) => b.type === 'tool_use')
-  const parsed = toolUse ? (toolUse as { type: 'tool_use'; input: StructuredArticle }).input : null
+  // Inject date and schemaVersion if Claude omitted them
+  if (raw && typeof raw === 'object') {
+    const r = raw as Record<string, unknown>
+    if (!r.date) r.date = ctx.date
+    if (!r.schemaVersion) r.schemaVersion = 2
+  }
 
-  if (parsed && parsed.whatShipped && parsed.theDecisions && parsed.roadmapPulse && parsed.whatsNext) {
-    return {
-      title: parsed.title ?? `ojfbot dev log — ${ctx.date}`,
-      date: ctx.date,
-      tags: parsed.tags ?? ['dev-log'],
-      summary: parsed.summary ?? '',
-      body: assembleBody(parsed),
+  let result = validateArticleOutput(raw, ctx.date, userPrompt.slice(0, 1500))
+
+  // ── Retry once with validation errors if v2 failed ──
+  if (result.version !== 2) {
+    const errors = getValidationErrors(raw)
+    if (errors) {
+      console.log('  v2 validation failed, retrying with error feedback...')
+      const retryPrompt = `${userPrompt}\n\n---\n\n**VALIDATION ERROR — FIX THESE ISSUES:**\n${errors}\n\nReturn corrected JSON matching the v2 schema. Fix ONLY the invalid fields.`
+      raw = await callClaudeForArticle(client, retryPrompt)
+      if (raw && typeof raw === 'object') {
+        const r = raw as Record<string, unknown>
+        if (!r.date) r.date = ctx.date
+        if (!r.schemaVersion) r.schemaVersion = 2
+      }
+      result = validateArticleOutput(raw, ctx.date, userPrompt.slice(0, 1500))
     }
   }
 
-  // Should never reach here with tool_choice: {type: 'tool'}, but log and
-  // produce a minimal safe fallback so CI doesn't fail hard on article-write.
-  console.warn('  ⚠ tool_use block missing or incomplete — check API response')
+  // ── Build GeneratedArticle from validation result ──
+  if (result.version === 2) {
+    return {
+      title: result.data.title,
+      date: ctx.date,
+      tags: result.data.tags.map((t) => t.name),
+      summary: result.data.summary,
+      body: assembleBody(result.data),
+    }
+  }
+
+  if (result.version === 1) {
+    console.warn('  ⚠ Fell back to v1 schema — article generated with legacy format')
+    return {
+      title: result.data.title ?? `ojfbot dev log — ${ctx.date}`,
+      date: ctx.date,
+      tags: result.data.tags ?? ['dev-log'],
+      summary: result.data.summary ?? '',
+      body: assembleBody(result.data),
+    }
+  }
+
+  // Stub: last resort — pipeline must never produce zero output
+  console.warn('  ⚠ Article generation failed — producing stub article')
+  const stub = result.data
   return {
-    title: `ojfbot dev log — ${ctx.date}`,
+    title: stub.title,
     date: ctx.date,
-    tags: ['dev-log'],
-    summary: `Development notes for ${ctx.date}.`,
-    body: '_(Article generation failed — no tool_use block returned. Check daily-logger CI logs.)_',
+    tags: ['dev-log', 'generation-failed'],
+    summary: stub.summary,
+    body: `_(${stub.summary})_\n\n\`\`\`\n${stub.rawContext}\n\`\`\``,
   }
 }
 
-export function toMarkdown(article: GeneratedArticle): string {
+async function callClaudeForArticle(
+  client: Anthropic,
+  userPrompt: string,
+): Promise<unknown> {
+  try {
+    const message = await client.messages.create({
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      system: SYSTEM_PROMPT,
+      tools: [ARTICLE_TOOL_V2],
+      tool_choice: { type: 'tool', name: 'write_article' },
+      messages: [{ role: 'user', content: userPrompt }],
+    })
+
+    const toolUse = message.content.find((b) => b.type === 'tool_use')
+    return toolUse ? (toolUse as { type: 'tool_use'; input: unknown }).input : null
+  } catch (err) {
+    console.error('  ✗ Claude API call failed:', (err as Error).message)
+    return null
+  }
+}
+
+export function toMarkdown(article: GeneratedArticle & { schemaVersion?: number }): string {
   const esc = (s: string) => s.replace(/"/g, '\\"')
 
-  return [
+  const lines = [
     '---',
     `title: "${esc(article.title)}"`,
     `date: ${article.date}`,
     `tags: [${article.tags.map((t) => `"${t}"`).join(', ')}]`,
     `summary: "${esc(article.summary)}"`,
+  ]
+
+  if (article.schemaVersion) {
+    lines.push(`schemaVersion: ${article.schemaVersion}`)
+  }
+
+  lines.push(
     '---',
     '',
     article.body,
@@ -469,5 +716,7 @@ export function toMarkdown(article: GeneratedArticle): string {
     '*Generated by [daily-logger](https://github.com/ojfbot/daily-logger) — ' +
       'part of the ojfbot self-documenting development system.*',
     '',
-  ].join('\n')
+  )
+
+  return lines.join('\n')
 }
