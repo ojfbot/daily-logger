@@ -72,6 +72,10 @@ jobs:
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
         run: pnpm generate
 
+      - name: Build static JSON API
+        if: github.event.inputs.dry_run != 'true'
+        run: pnpm build:api
+
       - name: Upload article artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -104,7 +108,7 @@ jobs:
           fi
 
           git checkout -b "${BRANCH}"
-          git add _articles/
+          git add _articles/ api/
 
           if git diff --staged --quiet; then
             echo "::notice::No article changes staged."
