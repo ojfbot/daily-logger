@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { assembleBody } from '../generate-article.js'
+import type { ArticleDataV2 } from '../schema.js'
 
 const base = {
   title: 'Test',
@@ -127,5 +128,127 @@ describe('assembleBody — section content', () => {
     expect(body).toContain('Content with padding.')
     // Should not have double blank lines before heading
     expect(body).not.toMatch(/\n{4,}/)
+  })
+})
+
+// ─── v2 schema tests ────────────────────────────────────────────────────────
+
+const baseV2: ArticleDataV2 = {
+  schemaVersion: 2,
+  date: '2026-03-28',
+  title: 'v2 test article',
+  summary: 'Testing v2 assembly.',
+  lede: 'Opening paragraph for v2.',
+  tags: [
+    { name: 'daily-logger', type: 'repo' },
+    { name: 'ci-cd', type: 'practice' },
+  ],
+  whatShipped: [
+    {
+      repo: 'daily-logger',
+      description: 'Added Zod schema validation for article output.',
+      commits: ['abc1234', 'def5678'],
+      prs: ['#42'],
+    },
+    {
+      repo: 'shell',
+      description: 'Fixed header rendering bug.',
+      commits: ['ghi9012'],
+    },
+  ],
+  decisions: [
+    {
+      title: 'Zod over manual validation',
+      summary: 'Runtime schema validation catches LLM drift.',
+      repo: 'daily-logger',
+      pillar: 'tooling-for-iteration',
+      relatedTags: ['ci-cd', 'structured-output'],
+    },
+  ],
+  roadmapPulse: 'Phase 9 in progress.',
+  whatsNext: 'Run backfill on all 31 articles.',
+  suggestedActions: [
+    {
+      command: '/validate',
+      description: 'Run schema validation against today.',
+      repo: 'daily-logger',
+      status: 'open',
+      sourceDate: '2026-03-28',
+    },
+  ],
+  commitCount: 12,
+  reposActive: ['daily-logger', 'shell'],
+  activityType: 'build',
+}
+
+describe('assembleBody — v2 schema', () => {
+  it('emits all four ## headings for v2 input', () => {
+    const body = assembleBody(baseV2)
+    expect(body).toContain('## What shipped')
+    expect(body).toContain('## The decisions')
+    expect(body).toContain('## Roadmap pulse')
+    expect(body).toContain("## What's next")
+  })
+
+  it('renders shipment entries grouped by repo', () => {
+    const body = assembleBody(baseV2)
+    expect(body).toContain('### daily-logger')
+    expect(body).toContain('### shell')
+    expect(body).toContain('Added Zod schema validation')
+    expect(body).toContain('`abc1234`')
+    expect(body).toContain('#42')
+  })
+
+  it('renders decision entries with pillar badges', () => {
+    const body = assembleBody(baseV2)
+    expect(body).toContain('### Zod over manual validation')
+    expect(body).toContain('*tooling-for-iteration*')
+    expect(body).toContain('Runtime schema validation catches LLM drift.')
+  })
+
+  it('renders decision related tags', () => {
+    const body = assembleBody(baseV2)
+    expect(body).toContain('`ci-cd`')
+    expect(body).toContain('`structured-output`')
+  })
+
+  it('renders suggested actions from suggestedActions array', () => {
+    const body = assembleBody(baseV2)
+    expect(body).toContain('> **Suggested actions**')
+    expect(body).toContain('`/validate`')
+    expect(body).toContain('Run schema validation against today.')
+  })
+
+  it('includes lede before first heading', () => {
+    const body = assembleBody(baseV2)
+    const ledeIdx = body.indexOf('Opening paragraph for v2.')
+    const firstHeading = body.indexOf('## What shipped')
+    expect(ledeIdx).toBeGreaterThanOrEqual(0)
+    expect(ledeIdx).toBeLessThan(firstHeading)
+  })
+
+  it('handles empty whatShipped array gracefully', () => {
+    const body = assembleBody({ ...baseV2, whatShipped: [] })
+    expect(body).toContain('## What shipped')
+    expect(body).toContain('No code committed today')
+  })
+
+  it('handles empty decisions array gracefully', () => {
+    const body = assembleBody({ ...baseV2, decisions: [] })
+    expect(body).toContain('## The decisions')
+    expect(body).toContain('No major architectural decisions today')
+  })
+
+  it('handles empty suggestedActions with fallback', () => {
+    const body = assembleBody({ ...baseV2, suggestedActions: [] })
+    expect(body).toContain('> **Suggested actions**')
+    expect(body).toContain('/roadmap')
+  })
+
+  it('falls back to v1 rendering for v1 input', () => {
+    // v1 input (no schemaVersion) should still work via assembleBody
+    const body = assembleBody(base)
+    expect(body).toContain('## What shipped')
+    expect(body).toContain('Something shipped.')
   })
 })
