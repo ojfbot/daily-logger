@@ -132,6 +132,19 @@ jobs:
           done
           echo "✓ All required sections and blockquotes present"
 
+      - name: Build and verify static JSON API
+        run: |
+          pnpm build:api
+          for f in api/entries.json api/actions.json api/tags.json api/repos.json; do
+            if [ ! -f "$f" ]; then
+              echo "❌ $f was not created"
+              exit 1
+            fi
+            # Validate JSON syntax
+            node -e "JSON.parse(require('fs').readFileSync('$f','utf-8'))"
+            echo "✓ $f is valid JSON"
+          done
+
       - name: PR body builder check
         run: |
           python3 .github/scripts/build_pr_body.py \

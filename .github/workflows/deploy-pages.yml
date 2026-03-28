@@ -27,6 +27,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install Node dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build static JSON API
+        run: pnpm build:api
+
       - name: Setup Ruby (Jekyll)
         uses: ruby/setup-ruby@v1
         with:
