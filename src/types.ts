@@ -100,6 +100,19 @@ export interface StructuredArticle {
   }
 }
 
+// ─── v2 structured article types (re-exported from schema.ts) ────────────────
+
+export type {
+  TypedTag,
+  ShipmentEntry,
+  DecisionEntry,
+  ActionItem,
+  ArticleDataV2,
+  ActivityType,
+  StubArticle,
+  ValidationResult,
+} from './schema.js'
+
 // ─── Daily cleaner types ───────────────────────────────────────────────────────
 
 export interface CleanCandidate {
