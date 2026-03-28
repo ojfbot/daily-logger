@@ -10,11 +10,16 @@
     "report:dry": "DRY_RUN=true tsx src/report.ts",
     "clean": "tsx src/clean.ts",
     "clean:dry": "DRY_RUN=true tsx src/clean.ts",
+    "backfill": "tsx src/backfill-tags.ts",
+    "build:api": "tsx src/build-api.ts",
+    "dev": "tsx src/build-api.ts && jekyll serve --livereload --port 4040",
+    "dev:build": "tsx src/build-api.ts && jekyll build --destination _site",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.36.0"
+    "@anthropic-ai/sdk": "^0.36.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
