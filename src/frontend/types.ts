@@ -1,6 +1,6 @@
 // Re-export backend types (type-only — stripped by esbuild)
-export type { TypedTag, ActionItem, DecisionEntry } from '../schema.js'
-import type { TypedTag, ActionItem, DecisionEntry } from '../schema.js'
+export type { TypedTag, ActionItem, DecisionEntry, CodeReference, CodeReferenceType } from '../schema.js'
+import type { TypedTag, ActionItem, DecisionEntry, CodeReference } from '../schema.js'
 // ^-- Used by interfaces below; the export-from above doesn't bring names into scope
 
 // Frontend-specific interfaces matching build-api.ts JSON output
@@ -16,6 +16,7 @@ export interface EntryData {
   schemaVersion: number
   decisions?: DecisionEntry[]
   actions?: ActionItem[]
+  codeReferences?: CodeReference[]
 }
 
 export interface TagCount {

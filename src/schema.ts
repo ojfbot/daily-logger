@@ -53,6 +53,22 @@ export const ActionItemSchema = z.object({
 
 export const ACTIVITY_TYPES = ['build', 'rest', 'audit', 'hardening', 'cleanup', 'sprint'] as const
 
+// ─── Code references (ADR-0031) ─────────────────────────────────────────────
+
+export const CODE_REFERENCE_TYPES = [
+  'commit', 'component', 'file', 'package',
+  'command', 'config', 'env', 'endpoint', 'directory',
+] as const
+
+export const CodeReferenceSchema = z.object({
+  text: z.string(),
+  type: z.enum(CODE_REFERENCE_TYPES),
+  repo: z.string().optional(),
+  path: z.string().optional(),
+  url: z.string().optional(),
+  meta: z.record(z.string(), z.string()).optional(),
+})
+
 // ─── Full article schema (v2) ────────────────────────────────────────────────
 
 export const ArticleDataSchema = z.object({
@@ -74,6 +90,8 @@ export const ArticleDataSchema = z.object({
   commitCount: z.number(),
   reposActive: z.array(z.string()),
   activityType: z.enum(ACTIVITY_TYPES),
+
+  codeReferences: z.array(CodeReferenceSchema).optional(),
 })
 
 // ─── v1 schema (for fallback detection) ──────────────────────────────────────
@@ -101,6 +119,8 @@ export type TypedTag = z.infer<typeof TypedTagSchema>
 export type ShipmentEntry = z.infer<typeof ShipmentEntrySchema>
 export type DecisionEntry = z.infer<typeof DecisionEntrySchema>
 export type ActionItem = z.infer<typeof ActionItemSchema>
+export type CodeReference = z.infer<typeof CodeReferenceSchema>
+export type CodeReferenceType = z.infer<typeof CodeReferenceSchema>['type']
 export type ArticleDataV2 = z.infer<typeof ArticleDataSchema>
 export type ActivityType = z.infer<typeof ArticleDataSchema>['activityType']
 
