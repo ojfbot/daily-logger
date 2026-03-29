@@ -2,7 +2,7 @@ import { execSync } from 'child_process'
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo } from './types.js'
+import type { BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo, RecentPRInfo } from './types.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -188,6 +188,39 @@ function getOpenPRs(org: string, repo: string): OpenPRInfo[] {
   }))
 }
 
+function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo[] {
+  type GHPR = {
+    number: number
+    title: string
+    html_url: string
+    body: string | null
+    state: string
+    created_at: string
+    updated_at: string
+    merged_at: string | null
+    draft: boolean
+  }
+  // Fetch all PRs (open + closed) sorted by most recently updated
+  const data = ghApi<GHPR[]>(
+    `repos/${org}/${repo}/pulls?state=all&sort=updated&direction=desc&per_page=50`
+  )
+  if (!data) return []
+  return data
+    .filter((pr) => pr.created_at >= since24h || pr.updated_at >= since24h || (pr.merged_at && pr.merged_at >= since24h))
+    .map((pr) => ({
+      number: pr.number,
+      title: pr.title,
+      repo,
+      url: pr.html_url,
+      body: pr.body ? pr.body.slice(0, 400) : undefined,
+      state: (pr.state === 'open' ? 'open' : 'closed') as 'open' | 'closed',
+      createdAt: pr.created_at,
+      updatedAt: pr.updated_at,
+      mergedAt: pr.merged_at ?? undefined,
+      draft: pr.draft,
+    }))
+}
+
 // ─── Local context ────────────────────────────────────────────────────────────
 
 function getProjectVision(): string {
@@ -242,6 +275,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
   const allCommits: CommitInfo[] = []
   const allPRs: PRInfo[] = []
   const allOpenPRs: OpenPRInfo[] = []
+  const allRecentPRs: RecentPRInfo[] = []
   const allClosed: IssueInfo[] = []
   const allOpen: IssueInfo[] = []
 
@@ -250,6 +284,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
     allCommits.push(...getCommits(org, repo, since24h))
     allPRs.push(...getMergedPRs(org, repo, since7d))
     allOpenPRs.push(...getOpenPRs(org, repo))
+    allRecentPRs.push(...getRecentPRs(org, repo, since24h))
     allClosed.push(...getClosedIssues(org, repo, since7d))
     allOpen.push(...getOpenIssues(org, repo, since24h))
   }
@@ -258,21 +293,32 @@ export async function collectContext(date: string): Promise<BlogContext> {
   const dedup = <T extends { url: string }>(arr: T[]): T[] =>
     [...new Map(arr.map((x) => [x.url, x])).values()]
 
+  // Global sort: isNew issues first across ALL repos, then by createdAt desc.
+  // Without this, new issues from repos late in the REPOS array could be
+  // pushed past the cap by stale issues from earlier repos.
+  const sortedOpen = dedup(allOpen)
+    .sort((a, b) => {
+      if (a.isNew !== b.isNew) return a.isNew ? -1 : 1
+      return (b.createdAt ?? '').localeCompare(a.createdAt ?? '')
+    })
+    .slice(0, 40)
+
   const ctx: BlogContext = {
     date,
     repos: REPOS,
     commits: dedup(allCommits).sort((a, b) => b.date.localeCompare(a.date)),
     mergedPRs: dedup(allPRs).sort((a, b) => b.mergedAt.localeCompare(a.mergedAt)),
     openPRs: dedup(allOpenPRs).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    recentPRs: dedup(allRecentPRs).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
     closedIssues: dedup(allClosed),
-    openIssues: dedup(allOpen).slice(0, 25),
+    openIssues: sortedOpen,
     projectVision: getProjectVision(),
     previousArticles: getPreviousArticles(),
   }
 
   console.log(
     `  → ${ctx.commits.length} commits · ${ctx.mergedPRs.length} merged PRs · ` +
-      `${ctx.openPRs.length} open PRs · ` +
+      `${ctx.openPRs.length} open PRs · ${ctx.recentPRs.length} recent PRs (24h) · ` +
       `${ctx.closedIssues.length} closed issues · ${ctx.openIssues.length} open issues`
   )
   return ctx

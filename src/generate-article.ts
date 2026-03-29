@@ -525,6 +525,18 @@ export function buildUserPrompt(ctx: BlogContext): string {
     parts.push('')
   }
 
+  if (ctx.recentPRs.length > 0) {
+    parts.push(`## All PRs active in last 24h — open + closed (${ctx.recentPRs.length})`)
+    parts.push('_Comprehensive view: every PR created, updated, or merged in the last 24h across all repos._')
+    ctx.recentPRs.slice(0, 30).forEach((pr) => {
+      const status = pr.mergedAt ? 'MERGED' : pr.state.toUpperCase()
+      const draft = pr.draft ? ' [DRAFT]' : ''
+      parts.push(`- [${pr.repo}] #${pr.number} [${status}]${draft}: ${pr.title}`)
+      if (pr.body) parts.push(`  > ${pr.body.slice(0, 200).replace(/\n/g, ' ')}`)
+    })
+    parts.push('')
+  }
+
   if (ctx.closedIssues.length > 0) {
     parts.push(`## Issues closed in last 7 days (${ctx.closedIssues.length})`)
     ctx.closedIssues.slice(0, 20).forEach((i) => {
