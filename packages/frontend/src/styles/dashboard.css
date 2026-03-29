@@ -1511,3 +1511,107 @@ a:hover { border-bottom-color: var(--text); }
   color: var(--text-secondary);
   text-align: center;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Mobile / Responsive
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  /* Header: wrap nav, ensure touch targets */
+  .site-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .site-nav {
+    gap: 0.75rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .site-nav a,
+  .theme-toggle {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.7rem;
+  }
+
+  /* Container tighter padding */
+  .container {
+    padding: 0 0.75rem;
+  }
+
+  /* Metrics: 2-column on phones */
+  .metrics-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .metric-value {
+    font-size: 1.25rem;
+  }
+
+  /* Entry cards: tighter padding */
+  .entry-card {
+    padding: 0.75rem 1rem;
+  }
+
+  /* Decision accordion: wrap badges below title */
+  .decision-card-header {
+    flex-wrap: wrap;
+  }
+
+  .decision-title {
+    flex-basis: calc(100% - 2rem);
+  }
+
+  .decision-date-badge {
+    font-size: 0.65rem;
+  }
+
+  /* Search overlay: less top padding for keyboard */
+  .search-overlay {
+    padding-top: 5vh;
+  }
+
+  .search-box {
+    max-height: 80vh;
+  }
+
+  /* Footer */
+  .site-footer {
+    padding: 1rem;
+  }
+}
+
+/* Article layout: stack chat below article on tablets/phones */
+@media (max-width: 768px) {
+  .article-layout {
+    flex-direction: column;
+  }
+
+  .chat-column {
+    width: 100%;
+    flex-shrink: 1;
+    padding-left: 0;
+    padding-top: 1.5rem;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+    border-top: 1px solid var(--border);
+    margin-top: 1.5rem;
+  }
+}
+
+/* Action popover: full-width bottom sheet on phones */
+@media (max-width: 600px) {
+  .action-popover {
+    left: 0.5rem !important;
+    right: 0.5rem;
+    top: auto !important;
+    bottom: 0.5rem;
+    max-width: none;
+    width: calc(100% - 1rem);
+  }
+}
