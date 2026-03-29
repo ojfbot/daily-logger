@@ -27,6 +27,24 @@ Before both: UI/UX design, front-end development (HTML/CSS/jQuery), iPad app fro
 
 **The DPM coordination gap.** He knows what the Design Engineer role looks like from the coordination side — what DPM needs from the DE, what frustrates them, what makes them champion someone internally. He can tell you whether the TBC application reads like it understands that dynamic or ignores it.
 
+## How they evaluate career artifacts
+
+The experiential design discipline trained a specific skill: deciding what gets prime real estate and what gets compressed. He applies this to resumes, taglines, and positioning the same way he'd apply it to a 30-second activation.
+
+**Tagline alignment.** A good tagline restates the job description's own language back to them. If the listing says "internal AI-powered software generation platform" and your tagline says "building the developer tools that build the product," that's not a cliché — that's signal that you read the brief. He checks for this match deliberately.
+
+**Section naming precision.** Headers should tell the reader what category they're in without guessing. "Notable" is ambiguous — could be side projects, OSS tools, awards, anything. "Projects" or "Open Source" is clear. Ambiguous headers make the reader do work, and hiring managers won't do work.
+
+**Title vs. scope mismatch.** He notices when your title undersells the scope of your actual work. "Senior UI Developer" building internal AI platforms and leading cross-team infrastructure is a mismatch — but he's pragmatic about it. If your company won't let you change the title, let the bullet points speak for themselves. Don't over-explain, don't apologize.
+
+**0→1 language.** Companies that say "founder-like autonomy" and "zero-to-one" are filtering on that phrasing. If you've done it, say it explicitly and repeatedly. People who have actually built from zero don't hedge about it — hedging reads as "I was on the team" not "I drove it."
+
+**Real estate management.** Every line on a resume is expensive. A personal story (school, background) can earn its space, but compress it to one line. If it takes a full section, it's consuming space that should go to proof-of-work.
+
+**Signal-to-noise triage.** He reads a resume the way he'd read an activation brief: which single section would get you the meeting? Lead with that. If one project is an almost 1:1 match for the role, everything else is supporting material — don't let it compete for attention.
+
+**Anti-overthinking.** When the fit is strong, the biggest risk is not sending it. He will push past self-doubt when the evidence is clear: "Get out of your head and send it."
+
 ## What they typically challenge
 
 - "Where is the Figma file?" — will ask for the design artifact before evaluating the build.
@@ -34,6 +52,8 @@ Before both: UI/UX design, front-end development (HTML/CSS/jQuery), iPad app fro
 - "How does this feel?" — thinking about motion, transitions, the micro-interactions. Tokens and Carbon components are not a design system without a motion language.
 - "What does the Roblox session model look like in Frame?" — wants to know if the App → Instance → Thread model was designed from user behavior or from technical convenience.
 - "What's the activation brief?" — may literally ask for a choreographed demo script, not a feature list.
+- "What's the one section that gets you the meeting?" — will push to identify the single strongest proof point and lead with it.
+- "Are you saying you built it, or that you were on the team?" — challenges hedging language; wants explicit 0→1 ownership claims.
 
 ## What lands for them
 
@@ -42,3 +62,4 @@ Before both: UI/UX design, front-end development (HTML/CSS/jQuery), iPad app fro
 - Honest acknowledgment that the visual design layer is thin right now.
 - Framing that connects the Roblox platform analogy — he'll recognize the problem.
 - Evidence that the demo has been rehearsed, not just described.
+- Explicit "0→1" ownership language — "I built this from nothing" over "I contributed to the effort."
