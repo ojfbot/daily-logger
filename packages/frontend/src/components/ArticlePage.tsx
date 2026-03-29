@@ -27,10 +27,12 @@ export function ArticlePage() {
 
   const popoverState = useArticlePopovers(contentRef, codeReferences, reposActive)
 
+  const displayEntry = article ?? entry
+
   // Related articles (share 2+ tags)
   const related = useMemo(() => {
-    if (!entry) return []
-    const tagNames = new Set(entry.tags.map((t) => t.name))
+    if (!displayEntry) return []
+    const tagNames = new Set(displayEntry.tags.map((t) => t.name))
     return entries
       .filter((e) => e.date !== date)
       .map((e) => ({
@@ -40,42 +42,41 @@ export function ArticlePage() {
       .filter((e) => e.overlap >= 2)
       .sort((a, b) => b.overlap - a.overlap)
       .slice(0, 5)
-  }, [entry, entries, date])
+  }, [displayEntry, entries, date])
 
   if (articleLoading && !article) return <div className="loading">Loading article...</div>
 
-  const displayEntry = article ?? entry
-
   return (
-    <div className="article-layout">
-      <article className="article-page">
-        {displayEntry && (
-          <header className="article-header">
-            <time className="entry-date">{displayEntry.date}</time>
-            <h1>{displayEntry.title}</h1>
-            <p className="entry-summary">{displayEntry.summary}</p>
+    <>
+      {displayEntry && (
+        <div className="article-header">
+          <div className="entry-date">{displayEntry.date}</div>
+          <h1 className="article-title">{displayEntry.title}</h1>
+          <div className="article-meta">
             <div className="entry-tags">
               {displayEntry.tags.map((t) => (
-                <span key={t.name} className={`tag tag-${t.type}`}>{t.name}</span>
+                <span key={t.name} className="tag">{t.name}</span>
               ))}
             </div>
-          </header>
-        )}
-        {article?.bodyHtml ? (
-          <div
-            ref={contentRef}
-            className="article-content"
-            dangerouslySetInnerHTML={{ __html: article.bodyHtml }}
-          />
-        ) : (
-          !articleLoading && <div className="article-content"><p>Article not found.</p></div>
-        )}
-      </article>
+          </div>
+          <p className="entry-summary">{displayEntry.summary}</p>
+        </div>
+      )}
+
+      {article?.bodyHtml ? (
+        <article
+          ref={contentRef}
+          className="article-content"
+          dangerouslySetInnerHTML={{ __html: article.bodyHtml }}
+        />
+      ) : (
+        !articleLoading && <article className="article-content"><p>Article not found.</p></article>
+      )}
 
       <Popover state={popoverState} />
 
       {related.length > 0 && (
-        <aside className="related-articles">
+        <div className="related-articles related-section">
           <div className="related-heading">RELATED ARTICLES</div>
           {related.map((e) => (
             <div key={e.date} className="related-item">
@@ -83,8 +84,8 @@ export function ArticlePage() {
               <span className="entry-stat">{e.overlap} shared tags</span>
             </div>
           ))}
-        </aside>
+        </div>
       )}
-    </div>
+    </>
   )
 }

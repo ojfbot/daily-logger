@@ -17,8 +17,10 @@ export function ActionsPage() {
 
   return (
     <div className="actions-page">
-      <h1>Actions</h1>
-      <p className="page-subtitle">{sorted.length} open action items{sortedDone.length > 0 ? `, ${sortedDone.length} completed` : ''}</p>
+      <div className="article-header">
+        <h1 className="article-title">Actions</h1>
+        <p className="entry-summary">{sorted.length} open action items{sortedDone.length > 0 ? `, ${sortedDone.length} completed` : ''}</p>
+      </div>
       <div className="actions-list">
         {sorted.map((a, i) => (
           <div key={`${a.sourceDate}-${i}`} className="action-card">
