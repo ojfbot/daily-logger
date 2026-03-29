@@ -12,7 +12,8 @@ function serveApiPlugin(): Plugin {
     name: 'serve-api',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        const prefix = '/daily-logger/api/'
+        const base = process.env.VITE_BASE_PATH || '/daily-logger/'
+        const prefix = `${base}api/`
         if (!req.url?.startsWith(prefix)) return next()
 
         const filePath = resolve(apiDir, req.url.slice(prefix.length))
@@ -44,7 +45,7 @@ export default defineConfig({
       targets: [{ src: resolve(__dirname, '../../api'), dest: '.' }],
     }),
   ],
-  base: '/daily-logger/',
+  base: process.env.VITE_BASE_PATH || '/daily-logger/',
   server: {
     port: 4040,
   },
