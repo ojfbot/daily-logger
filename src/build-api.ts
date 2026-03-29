@@ -13,6 +13,7 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import type { CodeReference } from './schema.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
@@ -46,6 +47,7 @@ interface EntryData {
   // Body sections for detail pages (not included in index to keep payload small)
   decisions?: Array<{ title: string; summary: string; repo: string; pillar?: string; relatedTags: string[] }>
   actions?: ActionItem[]
+  codeReferences?: CodeReference[]
 }
 
 interface TagCount {
@@ -191,6 +193,15 @@ function classifyTag(name: string): TypedTag {
 export function buildApi() {
   if (!existsSync(API_DIR)) mkdirSync(API_DIR, { recursive: true })
 
+  // Load backfilled code references if available
+  const codeRefsPath = join(API_DIR, 'code-refs.json')
+  let codeRefsByDate: Record<string, CodeReference[]> = {}
+  if (existsSync(codeRefsPath)) {
+    try {
+      codeRefsByDate = JSON.parse(readFileSync(codeRefsPath, 'utf-8'))
+    } catch { /* ignore corrupt file */ }
+  }
+
   const files = readdirSync(ARTICLES_DIR)
     .filter((f) => f.endsWith('.md'))
     .sort()
@@ -247,6 +258,7 @@ export function buildApi() {
       schemaVersion: (fm.schemaVersion as number) ?? 1,
       decisions,
       actions,
+      codeReferences: codeRefsByDate[date],
     }
     entries.push(entry)
 

@@ -141,7 +141,31 @@ Classify the day as one of: \`build\` (normal development), \`rest\` (zero/very 
 ### Metadata
 - \`commitCount\`: total commits across all repos for this day
 - \`reposActive\`: array of repo names that had commits
-- \`schemaVersion\`: always 2`
+- \`schemaVersion\`: always 2
+
+## Code reference standards (ADR-0031)
+
+For every backtick-wrapped token in the article body, add a corresponding entry to \`codeReferences\`. Classify each token:
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| commit | 7-40 char hex string | \`f1e5ba1\` |
+| component | PascalCase identifier | \`DashboardLayout\` |
+| file | Contains \`.\` with extension or \`/\` | \`vite.config.ts\` |
+| package | \`@scope/name\` or hyphenated lib name | \`@ojfbot/frame-ui-components\` |
+| command | Starts with \`/\` | \`/scaffold-app\` |
+| config | camelCase identifier | \`optimizeDeps\` |
+| env | ALL_CAPS with underscores | \`VITE_API_URL\` |
+| endpoint | HTTP method + path | \`GET /api/tools\` |
+| directory | Ends with \`/\` | \`formulas/\` |
+
+For each reference, include:
+- \`text\`: exact string as it appears in backticks
+- \`type\`: one of the 9 types above
+- \`repo\`: which ojfbot repo this belongs to (omit if ambiguous)
+- \`path\`: file path within repo (for file/component/directory types)
+- \`url\`: resolved GitHub URL if known (commits, files, packages)
+- \`meta\`: type-specific metadata (e.g. \`{"pr": "42"}\` for commits with associated PRs)`
 
 // ─── Tool schema (write_article) ─────────────────────────────────────────────
 //
@@ -272,6 +296,30 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
         type: 'string',
         enum: ['build', 'rest', 'audit', 'hardening', 'cleanup', 'sprint'],
         description: 'Classify the day: build (normal), rest (zero/few commits), audit, hardening, cleanup, sprint (high-volume).',
+      },
+      codeReferences: {
+        type: 'array',
+        description: 'Every backtick-wrapped token in the article body, classified by type with source metadata.',
+        items: {
+          type: 'object',
+          properties: {
+            text: { type: 'string', description: 'Exact text as it appears in backticks.' },
+            type: {
+              type: 'string',
+              enum: ['commit', 'component', 'file', 'package', 'command', 'config', 'env', 'endpoint', 'directory'],
+              description: 'Code reference type.',
+            },
+            repo: { type: 'string', description: 'Source repo name. Omit if ambiguous.' },
+            path: { type: 'string', description: 'File path within repo (file/component/directory types).' },
+            url: { type: 'string', description: 'Resolved GitHub URL if known.' },
+            meta: {
+              type: 'object',
+              description: 'Type-specific metadata (e.g. {"pr": "42"} for commits).',
+              additionalProperties: { type: 'string' },
+            },
+          },
+          required: ['text', 'type'],
+        },
       },
     },
     required: [

@@ -5,6 +5,7 @@ import { initTheme } from './theme'
 import { initFilters, toggleFilter, clearFilters, isFilterActive, hasActiveFilters, matchesFilters, getActiveFilters } from './filter'
 import { initSearch } from './search'
 import { renderMetrics, renderFilterBar, renderEntryList, renderSidebar } from './render'
+import { initCommitPopovers } from './popover'
 
 async function initIndex(): Promise<void> {
   const metricsEl = document.querySelector('.metrics-bar') as HTMLElement | null
@@ -80,4 +81,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme()
   initIndex()
   initArticleDetail()
+  initCommitPopovers()
 })

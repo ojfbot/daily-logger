@@ -57,7 +57,67 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "3252a24",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/3252a24"
+      },
+      {
+        "text": "high_confidence_stale",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "medium_confidence_stale",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "uncertain",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "642d4f7",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/642d4f7"
+      },
+      {
+        "text": "[skip ci]",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      },
+      {
+        "text": "@ojfbot/frame-ui-components",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-ui-components",
+        "repo": "frame-ui-components"
+      },
+      {
+        "text": "/scaffold-app",
+        "type": "command"
+      },
+      {
+        "text": "SYSTEM_PROMPT",
+        "type": "env",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "daily-logger/src/generate-article.ts",
+        "type": "file",
+        "repo": "GroupThink",
+        "path": "daily-logger/src/generate-article.ts",
+        "url": "https://github.com/ojfbot/GroupThink/blob/main/daily-logger/src/generate-article.ts"
+      }
+    ]
   },
   {
     "date": "2026-03-27",
@@ -119,7 +179,189 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "c18502e",
+        "type": "commit",
+        "repo": "landing",
+        "url": "https://github.com/ojfbot/landing/commit/c18502e"
+      },
+      {
+        "text": "20c1d20",
+        "type": "commit",
+        "repo": "landing",
+        "url": "https://github.com/ojfbot/landing/commit/20c1d20"
+      },
+      {
+        "text": "089199e",
+        "type": "commit",
+        "repo": "landing",
+        "url": "https://github.com/ojfbot/landing/commit/089199e"
+      },
+      {
+        "text": "landing",
+        "type": "directory",
+        "repo": "landing",
+        "url": "https://github.com/ojfbot/landing"
+      },
+      {
+        "text": ".gitignore",
+        "type": "file",
+        "repo": "landing",
+        "path": ".gitignore",
+        "url": "https://github.com/ojfbot/landing/blob/main/.gitignore"
+      },
+      {
+        "text": "CONTRIBUTING.md",
+        "type": "file",
+        "repo": "landing",
+        "path": "CONTRIBUTING.md",
+        "url": "https://github.com/ojfbot/landing/blob/main/CONTRIBUTING.md"
+      },
+      {
+        "text": "51dd36f",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/51dd36f"
+      },
+      {
+        "text": "3d41e31",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/3d41e31"
+      },
+      {
+        "text": "cf8a028",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/cf8a028"
+      },
+      {
+        "text": "feat: add Ollama local model support",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "LLMClient",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "qwen2.5:7b",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "OLLAMA_MODEL=qwen2.5:7b",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": ".env",
+        "type": "file",
+        "repo": "GroupThink",
+        "path": ".env",
+        "url": "https://github.com/ojfbot/GroupThink/blob/main/.env"
+      },
+      {
+        "text": "perf: optimize prompts and grouping pipeline for local models",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "/validate",
+        "type": "command"
+      },
+      {
+        "text": "style: fix biome formatting",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "2b40500",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/2b40500"
+      },
+      {
+        "text": "3ce61e1",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/3ce61e1"
+      },
+      {
+        "text": "REPOS",
+        "type": "env",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "collect-context.ts",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "collect-context.ts",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/collect-context.ts"
+      },
+      {
+        "text": "generate-article.ts",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "generate-article.ts",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/generate-article.ts"
+      },
+      {
+        "text": "/scaffold-app",
+        "type": "command"
+      },
+      {
+        "text": "core",
+        "type": "directory",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core"
+      },
+      {
+        "text": "if (useLocal)",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "complete()",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "if/else",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "if/else",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/if/else"
+      },
+      {
+        "text": "frame.jim.software",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "frame.jim.software",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/frame.jim.software"
+      },
+      {
+        "text": "frame-ui-components",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-ui-components"
+      },
+      {
+        "text": "/plan-feature",
+        "type": "command"
+      },
+      {
+        "text": "/investigate",
+        "type": "command"
+      },
+      {
+        "text": "@originjs/vite-plugin-federation",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@originjs/vite-plugin-federation"
+      }
+    ]
   },
   {
     "date": "2026-03-26",
@@ -179,7 +421,209 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "ac7a7a8",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/ac7a7a8"
+      },
+      {
+        "text": "scheduleRegroup()",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "chrome.tabs.on*",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "7e41a6e",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/7e41a6e"
+      },
+      {
+        "text": "411f2ed",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/411f2ed"
+      },
+      {
+        "text": "DEFAULT_CONFIG",
+        "type": "env",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "env.json",
+        "type": "file",
+        "repo": "GroupThink",
+        "path": "env.json",
+        "url": "https://github.com/ojfbot/GroupThink/blob/main/env.json"
+      },
+      {
+        "text": "9e3d2ef",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/9e3d2ef"
+      },
+      {
+        "text": "token-budgets.ts",
+        "type": "file",
+        "repo": "GroupThink",
+        "path": "token-budgets.ts",
+        "url": "https://github.com/ojfbot/GroupThink/blob/main/token-budgets.ts"
+      },
+      {
+        "text": "6f94eac",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/6f94eac"
+      },
+      {
+        "text": "e2a0fa4",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/e2a0fa4"
+      },
+      {
+        "text": "/scaffold-app",
+        "type": "command"
+      },
+      {
+        "text": "daily-logger/src/generate-article.ts",
+        "type": "file",
+        "repo": "core",
+        "path": "daily-logger/src/generate-article.ts",
+        "url": "https://github.com/ojfbot/core/blob/main/daily-logger/src/generate-article.ts"
+      },
+      {
+        "text": "SYSTEM_PROMPT",
+        "type": "env",
+        "repo": "core"
+      },
+      {
+        "text": "REPOS",
+        "type": "env",
+        "repo": "core"
+      },
+      {
+        "text": "collect-context",
+        "type": "package",
+        "url": "https://github.com/ojfbot/collect-context"
+      },
+      {
+        "text": "84e4f29",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/84e4f29"
+      },
+      {
+        "text": "generate-article.ts",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "generate-article.ts",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/generate-article.ts"
+      },
+      {
+        "text": "10071fd",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/10071fd"
+      },
+      {
+        "text": "6dccd99",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/6dccd99"
+      },
+      {
+        "text": "chrome.tabs.onCreated",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "chrome.tabs.onCreated",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/chrome.tabs.onCreated"
+      },
+      {
+        "text": "onUpdated",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "onActivated",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "/adr GroupThink",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "TOKEN_BUDGETS",
+        "type": "env",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "/investigate GroupThink background.ts",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "/investigate GroupThink background.ts",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main//investigate GroupThink background.ts"
+      },
+      {
+        "text": "frame-ui-components",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-ui-components"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "background.ts",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "background.ts",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/background.ts"
+      },
+      {
+        "text": ":3000",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "/plan-feature",
+        "type": "command"
+      },
+      {
+        "text": "package.json",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "package.json",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/package.json"
+      },
+      {
+        "text": "exports",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "/investigate",
+        "type": "command"
+      },
+      {
+        "text": "storage.local",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "storage.local",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/storage.local"
+      }
+    ]
   },
   {
     "date": "2026-03-25",
@@ -260,7 +704,567 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "frame-ui-components",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-ui-components"
+      },
+      {
+        "text": "f1e5ba1",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/f1e5ba1"
+      },
+      {
+        "text": "file:",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "ChatShell",
+        "type": "component",
+        "repo": "core"
+      },
+      {
+        "text": "ChatMessage",
+        "type": "component",
+        "repo": "core"
+      },
+      {
+        "text": "MarkdownMessage",
+        "type": "component",
+        "repo": "core"
+      },
+      {
+        "text": "DashboardLayout",
+        "type": "component",
+        "repo": "core"
+      },
+      {
+        "text": "ErrorBoundary",
+        "type": "component",
+        "repo": "core"
+      },
+      {
+        "text": "frame-os-context.md",
+        "type": "file",
+        "repo": "core",
+        "path": "frame-os-context.md",
+        "url": "https://github.com/ojfbot/core/blob/main/frame-os-context.md"
+      },
+      {
+        "text": "aed6b2f",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/aed6b2f"
+      },
+      {
+        "text": "formulas/",
+        "type": "directory",
+        "repo": "core",
+        "path": "formulas/",
+        "url": "https://github.com/ojfbot/core/tree/main/formulas/"
+      },
+      {
+        "text": "f1b4685",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/f1b4685"
+      },
+      {
+        "text": "packageManager",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "pnpm/action-setup@v4",
+        "type": "file",
+        "repo": "core",
+        "path": "pnpm/action-setup@v4",
+        "url": "https://github.com/ojfbot/core/blob/main/pnpm/action-setup@v4"
+      },
+      {
+        "text": "544b1e9",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/544b1e9"
+      },
+      {
+        "text": "/scaffold-app",
+        "type": "command"
+      },
+      {
+        "text": "e3c5ff8",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/e3c5ff8"
+      },
+      {
+        "text": "optimizeDeps",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "/investigate frame-ui-components optimizeDeps",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "ThreadSidebar",
+        "type": "component",
+        "repo": "BlogEngine"
+      },
+      {
+        "text": "a493970",
+        "type": "commit",
+        "repo": "BlogEngine",
+        "url": "https://github.com/ojfbot/BlogEngine/commit/a493970"
+      },
+      {
+        "text": "70ff085",
+        "type": "commit",
+        "repo": "BlogEngine",
+        "url": "https://github.com/ojfbot/BlogEngine/commit/70ff085"
+      },
+      {
+        "text": "8d434b8",
+        "type": "commit",
+        "repo": "BlogEngine",
+        "url": "https://github.com/ojfbot/BlogEngine/commit/8d434b8"
+      },
+      {
+        "text": "de5d1ae",
+        "type": "commit",
+        "repo": "BlogEngine",
+        "url": "https://github.com/ojfbot/BlogEngine/commit/de5d1ae"
+      },
+      {
+        "text": "f3148d6",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/f3148d6"
+      },
+      {
+        "text": "5e648f6",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/5e648f6"
+      },
+      {
+        "text": "23507b1",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/23507b1"
+      },
+      {
+        "text": "main",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "70b86d6",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/70b86d6"
+      },
+      {
+        "text": "6d8c3af",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/6d8c3af"
+      },
+      {
+        "text": "optimizeDeps.include",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": "optimizeDeps.include",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/optimizeDeps.include"
+      },
+      {
+        "text": "e43aced",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/e43aced"
+      },
+      {
+        "text": "BadgeButton",
+        "type": "component",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "CondensedChat",
+        "type": "component",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "CondensedChatConnected",
+        "type": "component",
+        "repo": "purefoy"
+      },
+      {
+        "text": "f2b0ccd",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/f2b0ccd"
+      },
+      {
+        "text": "314e4ab",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/314e4ab"
+      },
+      {
+        "text": "fea8eeb",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/fea8eeb"
+      },
+      {
+        "text": "006dd4d",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/006dd4d"
+      },
+      {
+        "text": "76c8126",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/76c8126"
+      },
+      {
+        "text": "suggestions",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "b0e9c26",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/b0e9c26"
+      },
+      {
+        "text": "2d77776",
+        "type": "commit",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas/commit/2d77776"
+      },
+      {
+        "text": "d3bdcdb",
+        "type": "commit",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas/commit/d3bdcdb"
+      },
+      {
+        "text": "529a934",
+        "type": "commit",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas/commit/529a934"
+      },
+      {
+        "text": "e1c4d64",
+        "type": "commit",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas/commit/e1c4d64"
+      },
+      {
+        "text": "d76e361",
+        "type": "commit",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas/commit/d76e361"
+      },
+      {
+        "text": "d82e759",
+        "type": "commit",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader/commit/d82e759"
+      },
+      {
+        "text": "b13cf72",
+        "type": "commit",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader/commit/b13cf72"
+      },
+      {
+        "text": "044ff0f",
+        "type": "commit",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader/commit/044ff0f"
+      },
+      {
+        "text": "435ae2f",
+        "type": "commit",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader/commit/435ae2f"
+      },
+      {
+        "text": "4fb80d1",
+        "type": "commit",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader/commit/4fb80d1"
+      },
+      {
+        "text": "server.fs.allow",
+        "type": "file",
+        "repo": "shell",
+        "path": "server.fs.allow",
+        "url": "https://github.com/ojfbot/shell/blob/main/server.fs.allow"
+      },
+      {
+        "text": "c07f576",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/c07f576"
+      },
+      {
+        "text": "1ef29fd",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/1ef29fd"
+      },
+      {
+        "text": "9837ab5",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/9837ab5"
+      },
+      {
+        "text": "d20f829",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/d20f829"
+      },
+      {
+        "text": "CLAUDE.md",
+        "type": "file",
+        "repo": "TripPlanner",
+        "path": "CLAUDE.md",
+        "url": "https://github.com/ojfbot/TripPlanner/blob/main/CLAUDE.md"
+      },
+      {
+        "text": "cdbc47f",
+        "type": "commit",
+        "repo": "TripPlanner",
+        "url": "https://github.com/ojfbot/TripPlanner/commit/cdbc47f"
+      },
+      {
+        "text": "6870e74",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/6870e74"
+      },
+      {
+        "text": "2d08f4d",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/2d08f4d"
+      },
+      {
+        "text": "9824c26",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/9824c26"
+      },
+      {
+        "text": "7ec60f9",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/7ec60f9"
+      },
+      {
+        "text": "60f9331",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/60f9331"
+      },
+      {
+        "text": "0797d66",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/0797d66"
+      },
+      {
+        "text": "env.ts",
+        "type": "file",
+        "repo": "GroupThink",
+        "path": "env.ts",
+        "url": "https://github.com/ojfbot/GroupThink/blob/main/env.ts"
+      },
+      {
+        "text": "f63a902",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/f63a902"
+      },
+      {
+        "text": "84225ec",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/84225ec"
+      },
+      {
+        "text": "ee42afd",
+        "type": "commit",
+        "repo": "GroupThink",
+        "url": "https://github.com/ojfbot/GroupThink/commit/ee42afd"
+      },
+      {
+        "text": "47c33e1",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/47c33e1"
+      },
+      {
+        "text": "9bbe105",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/9bbe105"
+      },
+      {
+        "text": "59b0a1d",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/59b0a1d"
+      },
+      {
+        "text": "\"frame-ui-components\": \"file:../../frame-ui-components\"",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "\"frame-ui-components\": \"file:../../frame-ui-components\"",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/\"frame-ui-components\": \"file:../../frame-ui-components\""
+      },
+      {
+        "text": "package.json",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "package.json",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/package.json"
+      },
+      {
+        "text": "actions/checkout",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "actions/checkout",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/actions/checkout"
+      },
+      {
+        "text": "pnpm install",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "with: repository: ojfbot/frame-ui-components",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "with: repository: ojfbot/frame-ui-components",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/with: repository: ojfbot/frame-ui-components"
+      },
+      {
+        "text": "with: path: ../frame-ui-components",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "with: path: ../frame-ui-components",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/with: path: ../frame-ui-components"
+      },
+      {
+        "text": "@ojfbot/frame-ui-components@x.y.z",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "@ojfbot/frame-ui-components@x.y.z",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/@ojfbot/frame-ui-components@x.y.z"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      },
+      {
+        "text": "vite.config.ts",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "vite.config.ts",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/vite.config.ts"
+      },
+      {
+        "text": "exclude",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "include",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "require is not defined",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "optimizeDeps.exclude: ['frame-ui-components']",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "optimizeDeps.include: ['@carbon/react', ...]",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "optimizeDeps.include: ['@carbon/react', ...]",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/optimizeDeps.include: ['@carbon/react', ...]"
+      },
+      {
+        "text": "branches: [main]",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "@ojfbot/frame-ui-components",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-ui-components",
+        "repo": "frame-ui-components"
+      },
+      {
+        "text": "/roadmap gas-town-sprint-1",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "collect-context.ts",
+        "type": "file",
+        "repo": "GroupThink",
+        "path": "collect-context.ts",
+        "url": "https://github.com/ojfbot/GroupThink/blob/main/collect-context.ts"
+      },
+      {
+        "text": "SYSTEM_PROMPT",
+        "type": "env",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "generate-article.ts",
+        "type": "file",
+        "repo": "GroupThink",
+        "path": "generate-article.ts",
+        "url": "https://github.com/ojfbot/GroupThink/blob/main/generate-article.ts"
+      },
+      {
+        "text": "optimizeDeps.exclude",
+        "type": "file",
+        "repo": "GroupThink",
+        "path": "optimizeDeps.exclude",
+        "url": "https://github.com/ojfbot/GroupThink/blob/main/optimizeDeps.exclude"
+      },
+      {
+        "text": "repository:",
+        "type": "config",
+        "repo": "GroupThink"
+      },
+      {
+        "text": "path:",
+        "type": "config",
+        "repo": "GroupThink"
+      }
+    ]
   },
   {
     "date": "2026-03-24",
@@ -327,7 +1331,384 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "@ojfbot/frame-ui-components",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-ui-components",
+        "repo": "frame-ui-components"
+      },
+      {
+        "text": "DashboardLayout",
+        "type": "component"
+      },
+      {
+        "text": "ChatShell",
+        "type": "component"
+      },
+      {
+        "text": "ThreadSidebar",
+        "type": "component"
+      },
+      {
+        "text": "46a609a",
+        "type": "commit"
+      },
+      {
+        "text": "ErrorBoundary",
+        "type": "component"
+      },
+      {
+        "text": "MarkdownMessage",
+        "type": "component"
+      },
+      {
+        "text": "CondensedChat",
+        "type": "component"
+      },
+      {
+        "text": "5f0bf72",
+        "type": "commit"
+      },
+      {
+        "text": "BadgeButton",
+        "type": "component"
+      },
+      {
+        "text": "ThreadSidebarConnected",
+        "type": "component"
+      },
+      {
+        "text": "65c3e4b",
+        "type": "commit"
+      },
+      {
+        "text": "b9abd51",
+        "type": "commit"
+      },
+      {
+        "text": "cac6c7e",
+        "type": "commit"
+      },
+      {
+        "text": "402f594",
+        "type": "commit"
+      },
+      {
+        "text": "DashboardContent.css",
+        "type": "file"
+      },
+      {
+        "text": "git clone",
+        "type": "config"
+      },
+      {
+        "text": "frame-ui-components",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-ui-components"
+      },
+      {
+        "text": "file:",
+        "type": "config"
+      },
+      {
+        "text": "@carbon/styles",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@carbon/styles"
+      },
+      {
+        "text": "peerDependencies",
+        "type": "config"
+      },
+      {
+        "text": "34b8295",
+        "type": "commit"
+      },
+      {
+        "text": "ebc777e",
+        "type": "commit"
+      },
+      {
+        "text": "68f806f",
+        "type": "commit"
+      },
+      {
+        "text": "02600a6",
+        "type": "commit"
+      },
+      {
+        "text": "d5d146b",
+        "type": "commit"
+      },
+      {
+        "text": "2d3e5aa",
+        "type": "commit"
+      },
+      {
+        "text": "a457651",
+        "type": "commit"
+      },
+      {
+        "text": "commands → skills",
+        "type": "config"
+      },
+      {
+        "text": "main",
+        "type": "config"
+      },
+      {
+        "text": "ANTHROPIC_API_KEY",
+        "type": "env"
+      },
+      {
+        "text": "dist/",
+        "type": "directory"
+      },
+      {
+        "text": "build/",
+        "type": "directory"
+      },
+      {
+        "text": "pnpm audit",
+        "type": "config"
+      },
+      {
+        "text": "f8891e7",
+        "type": "commit"
+      },
+      {
+        "text": "bb42450",
+        "type": "commit"
+      },
+      {
+        "text": "0580a9e",
+        "type": "commit"
+      },
+      {
+        "text": "a26e036",
+        "type": "commit"
+      },
+      {
+        "text": "e6d6bf6",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/e6d6bf6"
+      },
+      {
+        "text": "VITE_REMOTE_SEH_STUDY=https://seh.jim.software",
+        "type": "file",
+        "repo": "shell",
+        "path": "VITE_REMOTE_SEH_STUDY=https://seh.jim.software",
+        "url": "https://github.com/ojfbot/shell/blob/main/VITE_REMOTE_SEH_STUDY=https://seh.jim.software"
+      },
+      {
+        "text": ".env.production",
+        "type": "file",
+        "repo": "shell",
+        "path": ".env.production",
+        "url": "https://github.com/ojfbot/shell/blob/main/.env.production"
+      },
+      {
+        "text": "localhost:3030",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "ERR_CONNECTION_REFUSED",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": "seh-study",
+        "type": "directory",
+        "repo": "seh-study",
+        "url": "https://github.com/ojfbot/seh-study"
+      },
+      {
+        "text": "31d323c",
+        "type": "commit",
+        "repo": "seh-study",
+        "url": "https://github.com/ojfbot/seh-study/commit/31d323c"
+      },
+      {
+        "text": "shared/",
+        "type": "directory",
+        "repo": "seh-study",
+        "path": "shared/",
+        "url": "https://github.com/ojfbot/seh-study/tree/main/shared/"
+      },
+      {
+        "text": "browser-app/",
+        "type": "directory",
+        "repo": "seh-study",
+        "path": "browser-app/",
+        "url": "https://github.com/ojfbot/seh-study/tree/main/browser-app/"
+      },
+      {
+        "text": "9a3183c",
+        "type": "commit",
+        "repo": "seh-study",
+        "url": "https://github.com/ojfbot/seh-study/commit/9a3183c"
+      },
+      {
+        "text": "bb72bda",
+        "type": "commit",
+        "repo": "seh-study",
+        "url": "https://github.com/ojfbot/seh-study/commit/bb72bda"
+      },
+      {
+        "text": "cd87409",
+        "type": "commit",
+        "repo": "seh-study",
+        "url": "https://github.com/ojfbot/seh-study/commit/cd87409"
+      },
+      {
+        "text": "termIndexByName",
+        "type": "config",
+        "repo": "seh-study"
+      },
+      {
+        "text": "6eff53d",
+        "type": "commit",
+        "repo": "seh-study",
+        "url": "https://github.com/ojfbot/seh-study/commit/6eff53d"
+      },
+      {
+        "text": "6ee4b60",
+        "type": "commit",
+        "repo": "seh-study",
+        "url": "https://github.com/ojfbot/seh-study/commit/6ee4b60"
+      },
+      {
+        "text": "d4f762a",
+        "type": "commit",
+        "repo": "seh-study",
+        "url": "https://github.com/ojfbot/seh-study/commit/d4f762a"
+      },
+      {
+        "text": "b0a8a3b",
+        "type": "commit",
+        "repo": "seh-study",
+        "url": "https://github.com/ojfbot/seh-study/commit/b0a8a3b"
+      },
+      {
+        "text": "d532b3e",
+        "type": "commit",
+        "repo": "seh-study",
+        "url": "https://github.com/ojfbot/seh-study/commit/d532b3e"
+      },
+      {
+        "text": "1c52c87",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/1c52c87"
+      },
+      {
+        "text": "3291b74",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/3291b74"
+      },
+      {
+        "text": "[skip ci]",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "f44a017",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/f44a017"
+      },
+      {
+        "text": "pnpm audit --audit-level=high || true",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "|| true",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "--audit-level=moderate",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "core",
+        "type": "directory",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core"
+      },
+      {
+        "text": "file:../frame-ui-components",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "file:../frame-ui-components",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/file:../frame-ui-components"
+      },
+      {
+        "text": "package.json",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "package.json",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/package.json"
+      },
+      {
+        "text": "git clone https://github.com/ojfbot/frame-ui-components",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "git clone https://github.com/ojfbot/frame-ui-components",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/git clone https://github.com/ojfbot/frame-ui-components"
+      },
+      {
+        "text": "pnpm install",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "../frame-ui-components",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "../frame-ui-components",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/../frame-ui-components"
+      },
+      {
+        "text": "ERR_PNPM_NO_MATCHING_VERSION",
+        "type": "env",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "HEAD",
+        "type": "env",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "ChatShellConnected",
+        "type": "component",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "any",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "VITE_REMOTE_SEH_STUDY",
+        "type": "env",
+        "repo": "seh-study"
+      },
+      {
+        "text": "/validate",
+        "type": "command"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      }
+    ]
   },
   {
     "date": "2026-03-23",
@@ -403,7 +1784,456 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "file-techdebt",
+        "type": "package",
+        "url": "https://github.com/ojfbot/file-techdebt"
+      },
+      {
+        "text": "TECHDEBT.md",
+        "type": "file"
+      },
+      {
+        "text": "4c9b71a",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/4c9b71a"
+      },
+      {
+        "text": "52b59ee",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/52b59ee"
+      },
+      {
+        "text": "06b89d4",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/06b89d4"
+      },
+      {
+        "text": "d2861ea",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/d2861ea"
+      },
+      {
+        "text": "242f147",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/242f147"
+      },
+      {
+        "text": "1e05063",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/1e05063"
+      },
+      {
+        "text": "2229bf0",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/2229bf0"
+      },
+      {
+        "text": "fix(aws_runner)",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "apt-get update",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "ffmpeg",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "which ffmpeg",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "PATH",
+        "type": "env",
+        "repo": "purefoy"
+      },
+      {
+        "text": "nohup",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "8c105bb",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/8c105bb"
+      },
+      {
+        "text": "0839b0b",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/0839b0b"
+      },
+      {
+        "text": "720b0dc",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/720b0dc"
+      },
+      {
+        "text": "dbab418",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/dbab418"
+      },
+      {
+        "text": "localhost:5050",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "downloads/",
+        "type": "directory",
+        "repo": "purefoy",
+        "path": "downloads/",
+        "url": "https://github.com/ojfbot/purefoy/tree/main/downloads/"
+      },
+      {
+        "text": "library/forums/",
+        "type": "directory",
+        "repo": "purefoy",
+        "path": "library/forums/",
+        "url": "https://github.com/ojfbot/purefoy/tree/main/library/forums/"
+      },
+      {
+        "text": "python app.py",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "python app.py",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/python app.py"
+      },
+      {
+        "text": "frame-dev.sh",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "frame-dev.sh",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/frame-dev.sh"
+      },
+      {
+        "text": "ccb6f2a",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/ccb6f2a"
+      },
+      {
+        "text": "8a031ae",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/8a031ae"
+      },
+      {
+        "text": "8134e84",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/8134e84"
+      },
+      {
+        "text": "a838a1c",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/a838a1c"
+      },
+      {
+        "text": "7825633",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/7825633"
+      },
+      {
+        "text": "shared/",
+        "type": "directory",
+        "repo": "purefoy",
+        "path": "shared/",
+        "url": "https://github.com/ojfbot/purefoy/tree/main/shared/"
+      },
+      {
+        "text": "GoalManifest",
+        "type": "component",
+        "repo": "purefoy"
+      },
+      {
+        "text": "ReviewProgress",
+        "type": "component",
+        "repo": "purefoy"
+      },
+      {
+        "text": "hasGoal",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "reviewCoverage",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "EpisodeListItem",
+        "type": "component",
+        "repo": "purefoy"
+      },
+      {
+        "text": "api/",
+        "type": "directory",
+        "repo": "purefoy",
+        "path": "api/",
+        "url": "https://github.com/ojfbot/purefoy/tree/main/api/"
+      },
+      {
+        "text": "client/",
+        "type": "directory",
+        "repo": "purefoy",
+        "path": "client/",
+        "url": "https://github.com/ojfbot/purefoy/tree/main/client/"
+      },
+      {
+        "text": "store/",
+        "type": "directory",
+        "repo": "purefoy",
+        "path": "store/",
+        "url": "https://github.com/ojfbot/purefoy/tree/main/store/"
+      },
+      {
+        "text": "transcriptSlice",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "ui/",
+        "type": "directory",
+        "repo": "purefoy",
+        "path": "ui/",
+        "url": "https://github.com/ojfbot/purefoy/tree/main/ui/"
+      },
+      {
+        "text": "TranscriptViewer",
+        "type": "component",
+        "repo": "purefoy"
+      },
+      {
+        "text": "d0ed173",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/d0ed173"
+      },
+      {
+        "text": "lastSpawnedInstanceId",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "appRegistrySlice",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "onAnimationEnd",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "tokens.css",
+        "type": "file",
+        "repo": "shell",
+        "path": "tokens.css",
+        "url": "https://github.com/ojfbot/shell/blob/main/tokens.css"
+      },
+      {
+        "text": "c37c6dd",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/c37c6dd"
+      },
+      {
+        "text": "seh-study",
+        "type": "directory",
+        "repo": "seh-study",
+        "url": "https://github.com/ojfbot/seh-study"
+      },
+      {
+        "text": "AppType",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "APP_CONFIG",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": "REMOTE_LOADERS",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": "SETTINGS_LOADERS",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": "SehStudyApp",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "5991847",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/5991847"
+      },
+      {
+        "text": ":3030",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": ":3031",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "scripts/frame-dev.sh",
+        "type": "file",
+        "repo": "core",
+        "path": "scripts/frame-dev.sh",
+        "url": "https://github.com/ojfbot/core/blob/main/scripts/frame-dev.sh"
+      },
+      {
+        "text": "domain-knowledge/frame-os-context.md",
+        "type": "file",
+        "repo": "core",
+        "path": "domain-knowledge/frame-os-context.md",
+        "url": "https://github.com/ojfbot/core/blob/main/domain-knowledge/frame-os-context.md"
+      },
+      {
+        "text": "4cb1f3d",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/4cb1f3d"
+      },
+      {
+        "text": "POST /api/techdebt",
+        "type": "endpoint",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "TechDebtIncident",
+        "type": "component",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "core/TECHDEBT.md",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "core/TECHDEBT.md",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/core/TECHDEBT.md"
+      },
+      {
+        "text": "GET /api/techdebt",
+        "type": "endpoint",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "ccbab23",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/ccbab23"
+      },
+      {
+        "text": "AIResponse",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "b2c0b11",
+        "type": "commit",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas/commit/b2c0b11"
+      },
+      {
+        "text": "4d6dec6",
+        "type": "commit",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas/commit/4d6dec6"
+      },
+      {
+        "text": "shared",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "browser-app",
+        "type": "package",
+        "url": "https://github.com/ojfbot/browser-app"
+      },
+      {
+        "text": "api",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "pnpm --filter @lean-canvas/shared build",
+        "type": "file",
+        "repo": "lean-canvas",
+        "path": "pnpm --filter @lean-canvas/shared build",
+        "url": "https://github.com/ojfbot/lean-canvas/blob/main/pnpm --filter @lean-canvas/shared build"
+      },
+      {
+        "text": "vercel build",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "/scaffold-frame-app",
+        "type": "command"
+      },
+      {
+        "text": "detectAction",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "57b4f34",
+        "type": "commit",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas/commit/57b4f34"
+      },
+      {
+        "text": "@originjs/vite-plugin-federation",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@originjs/vite-plugin-federation"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "/scaffold-frame-app purefoy",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "/adr MrPlug file-techdebt write path",
+        "type": "config",
+        "repo": "lean-canvas"
+      }
+    ]
   },
   {
     "date": "2026-03-22",
@@ -461,7 +2291,198 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "ApprovalQueue",
+        "type": "component"
+      },
+      {
+        "text": "ResumptionToast",
+        "type": "component"
+      },
+      {
+        "text": "SettingsModal",
+        "type": "component"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "packages/ui/shell",
+        "type": "file"
+      },
+      {
+        "text": "*Connected.tsx",
+        "type": "file"
+      },
+      {
+        "text": "packages/ui/",
+        "type": "directory"
+      },
+      {
+        "text": "SettingsModal.stories.tsx",
+        "type": "file"
+      },
+      {
+        "text": "MarkdownMessage",
+        "type": "component"
+      },
+      {
+        "text": "ErrorBoundary",
+        "type": "component"
+      },
+      {
+        "text": "DayWeekPanel",
+        "type": "component"
+      },
+      {
+        "text": "ItinerariesOverviewTile",
+        "type": "component"
+      },
+      {
+        "text": "BadgeButton",
+        "type": "component"
+      },
+      {
+        "text": "GenerateDashboard",
+        "type": "component"
+      },
+      {
+        "text": "PublishingDashboard",
+        "type": "component"
+      },
+      {
+        "text": "NotionDashboard",
+        "type": "component"
+      },
+      {
+        "text": "SettingsDashboard",
+        "type": "component"
+      },
+      {
+        "text": "remoteEntry.js",
+        "type": "file"
+      },
+      {
+        "text": "Cache-Control: immutable",
+        "type": "config"
+      },
+      {
+        "text": "no-store",
+        "type": "package",
+        "url": "https://github.com/ojfbot/no-store"
+      },
+      {
+        "text": "vercel.json",
+        "type": "file"
+      },
+      {
+        "text": "parseCommands.ts",
+        "type": "file"
+      },
+      {
+        "text": ".claude/commands",
+        "type": "file"
+      },
+      {
+        "text": ".claude/skills",
+        "type": "file"
+      },
+      {
+        "text": "useSelector",
+        "type": "config"
+      },
+      {
+        "text": "useDispatch",
+        "type": "config"
+      },
+      {
+        "text": "react-redux",
+        "type": "package",
+        "url": "https://github.com/ojfbot/react-redux"
+      },
+      {
+        "text": "Component.tsx",
+        "type": "file"
+      },
+      {
+        "text": "ComponentConnected.tsx",
+        "type": "file"
+      },
+      {
+        "text": "Cannot read properties of undefined",
+        "type": "config"
+      },
+      {
+        "text": "<Provider>",
+        "type": "config"
+      },
+      {
+        "text": "no-restricted-imports",
+        "type": "package",
+        "url": "https://github.com/ojfbot/no-restricted-imports"
+      },
+      {
+        "text": "feat(shell): NL instance spawning + expanding header input",
+        "type": "config"
+      },
+      {
+        "text": "detectSpawnIntent",
+        "type": "config"
+      },
+      {
+        "text": "detectAction",
+        "type": "config"
+      },
+      {
+        "text": "spawn_instance",
+        "type": "config"
+      },
+      {
+        "text": "focus_instance",
+        "type": "config"
+      },
+      {
+        "text": "frame-agent",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-agent"
+      },
+      {
+        "text": "/techdebt",
+        "type": "command"
+      },
+      {
+        "text": "shell",
+        "type": "directory",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell"
+      },
+      {
+        "text": "pnpm install",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "pnpm --filter @lean-canvas/shared build",
+        "type": "file",
+        "repo": "lean-canvas",
+        "path": "pnpm --filter @lean-canvas/shared build",
+        "url": "https://github.com/ojfbot/lean-canvas/blob/main/pnpm --filter @lean-canvas/shared build"
+      },
+      {
+        "text": "vercel build",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      }
+    ]
   },
   {
     "date": "2026-03-21",
@@ -532,7 +2553,291 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "32832f6",
+        "type": "commit"
+      },
+      {
+        "text": "~8.4.0",
+        "type": "file"
+      },
+      {
+        "text": ".storybook/main.ts",
+        "type": "file"
+      },
+      {
+        "text": "preview.ts",
+        "type": "file"
+      },
+      {
+        "text": "b022bf8",
+        "type": "commit"
+      },
+      {
+        "text": "BadgeButton",
+        "type": "component"
+      },
+      {
+        "text": "MarkdownMessage",
+        "type": "component"
+      },
+      {
+        "text": "GenerateDashboard",
+        "type": "component"
+      },
+      {
+        "text": "PublishingDashboard",
+        "type": "component"
+      },
+      {
+        "text": "NotionDashboard",
+        "type": "component"
+      },
+      {
+        "text": "SettingsDashboard",
+        "type": "component"
+      },
+      {
+        "text": "13f22f8",
+        "type": "commit"
+      },
+      {
+        "text": "d3b7df2",
+        "type": "commit"
+      },
+      {
+        "text": "DayWeekPanel",
+        "type": "component"
+      },
+      {
+        "text": "ItinerariesOverviewTile",
+        "type": "component"
+      },
+      {
+        "text": "pnpm storybook:build",
+        "type": "config"
+      },
+      {
+        "text": "db17f6e",
+        "type": "commit"
+      },
+      {
+        "text": "2d35aa5",
+        "type": "commit"
+      },
+      {
+        "text": "59d5313",
+        "type": "commit"
+      },
+      {
+        "text": "fix(ci): build agent-graph before type-check",
+        "type": "config"
+      },
+      {
+        "text": "5065044",
+        "type": "commit"
+      },
+      {
+        "text": "7e0e5e1",
+        "type": "commit"
+      },
+      {
+        "text": "b8b1ba3",
+        "type": "commit"
+      },
+      {
+        "text": "main",
+        "type": "config"
+      },
+      {
+        "text": "46843bf",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/46843bf"
+      },
+      {
+        "text": "SettingsModal.stories.tsx",
+        "type": "file",
+        "repo": "shell",
+        "path": "SettingsModal.stories.tsx",
+        "url": "https://github.com/ojfbot/shell/blob/main/SettingsModal.stories.tsx"
+      },
+      {
+        "text": "WithContextApp",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "SingleApp",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "NoPanel",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "bcb0a09",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/bcb0a09"
+      },
+      {
+        "text": "packages/ui/",
+        "type": "directory",
+        "repo": "core",
+        "path": "packages/ui/",
+        "url": "https://github.com/ojfbot/core/tree/main/packages/ui/"
+      },
+      {
+        "text": "useSelector",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "useDispatch",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "*Connected.tsx",
+        "type": "file",
+        "repo": "core",
+        "path": "*Connected.tsx",
+        "url": "https://github.com/ojfbot/core/blob/main/*Connected.tsx"
+      },
+      {
+        "text": "packages/core/docs/adr/ADR-0029.md",
+        "type": "file",
+        "repo": "core",
+        "path": "packages/core/docs/adr/ADR-0029.md",
+        "url": "https://github.com/ojfbot/core/blob/main/packages/core/docs/adr/ADR-0029.md"
+      },
+      {
+        "text": "packages/core/docs/adr/README.md",
+        "type": "file",
+        "repo": "core",
+        "path": "packages/core/docs/adr/README.md",
+        "url": "https://github.com/ojfbot/core/blob/main/packages/core/docs/adr/README.md"
+      },
+      {
+        "text": "2c6374c",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/2c6374c"
+      },
+      {
+        "text": "182c5e2",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/182c5e2"
+      },
+      {
+        "text": "ca138b6",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/ca138b6"
+      },
+      {
+        "text": "ed34896",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/ed34896"
+      },
+      {
+        "text": "eef3ba0",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/eef3ba0"
+      },
+      {
+        "text": "ojfbot-clean[bot]",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "c5a135c",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/c5a135c"
+      },
+      {
+        "text": "@reduxjs/toolkit",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@reduxjs/toolkit"
+      },
+      {
+        "text": "<Provider>",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "packages/ui/SettingsModal.tsx",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": "packages/ui/SettingsModal.tsx",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/packages/ui/SettingsModal.tsx"
+      },
+      {
+        "text": "SettingsModal",
+        "type": "component",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "shared",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "feat(shell): NL instance spawning + expanding header input",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "detectSpawnIntent → detectAction",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "spawn_instance",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "focus_instance",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "/investigate shell #5",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "pnpm install",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "vercel build",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "detectAction",
+        "type": "config",
+        "repo": "lean-canvas"
+      }
+    ]
   },
   {
     "date": "2026-03-20",
@@ -597,7 +2902,368 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": ".claude/commands → .claude/skills",
+        "type": "file"
+      },
+      {
+        "text": "6c56459",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/6c56459"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "*Connected.tsx",
+        "type": "file",
+        "repo": "shell",
+        "path": "*Connected.tsx",
+        "url": "https://github.com/ojfbot/shell/blob/main/*Connected.tsx"
+      },
+      {
+        "text": "ApprovalQueue",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "ApprovalQueueConnected.tsx",
+        "type": "file",
+        "repo": "shell",
+        "path": "ApprovalQueueConnected.tsx",
+        "url": "https://github.com/ojfbot/shell/blob/main/ApprovalQueueConnected.tsx"
+      },
+      {
+        "text": "ResumptionToast",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "ResumptionToastConnected.tsx",
+        "type": "file",
+        "repo": "shell",
+        "path": "ResumptionToastConnected.tsx",
+        "url": "https://github.com/ojfbot/shell/blob/main/ResumptionToastConnected.tsx"
+      },
+      {
+        "text": "SettingsModal",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "SettingsModalConnected.tsx",
+        "type": "file",
+        "repo": "shell",
+        "path": "SettingsModalConnected.tsx",
+        "url": "https://github.com/ojfbot/shell/blob/main/SettingsModalConnected.tsx"
+      },
+      {
+        "text": "useSelector",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "useDispatch",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "*Connected",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "Header",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "HomeScreen",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "9b84f80",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/9b84f80"
+      },
+      {
+        "text": "631f6ea",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/631f6ea"
+      },
+      {
+        "text": "86d774d",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/86d774d"
+      },
+      {
+        "text": "99c5c01",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/99c5c01"
+      },
+      {
+        "text": "vercel.json",
+        "type": "file",
+        "repo": "shell",
+        "path": "vercel.json",
+        "url": "https://github.com/ojfbot/shell/blob/main/vercel.json"
+      },
+      {
+        "text": "remoteEntry.js",
+        "type": "file",
+        "repo": "shell",
+        "path": "remoteEntry.js",
+        "url": "https://github.com/ojfbot/shell/blob/main/remoteEntry.js"
+      },
+      {
+        "text": "immutable",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "no-store",
+        "type": "package",
+        "url": "https://github.com/ojfbot/no-store"
+      },
+      {
+        "text": "index-abc123.js",
+        "type": "file",
+        "repo": "shell",
+        "path": "index-abc123.js",
+        "url": "https://github.com/ojfbot/shell/blob/main/index-abc123.js"
+      },
+      {
+        "text": "Cache-Control",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "--ignore-scripts",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "5727895",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/5727895"
+      },
+      {
+        "text": "e72e121",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/e72e121"
+      },
+      {
+        "text": "f3fbc1f",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/f3fbc1f"
+      },
+      {
+        "text": "fast-xml-parser",
+        "type": "package",
+        "url": "https://github.com/ojfbot/fast-xml-parser"
+      },
+      {
+        "text": ">=5.5.6",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": ">=5.5.6",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/>=5.5.6"
+      },
+      {
+        "text": ">=5.1.5",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": ">=5.1.5",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/>=5.1.5"
+      },
+      {
+        "text": "fix(deploy)",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "buildCommand",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "@resume-builder/browser-app",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@resume-builder/browser-app"
+      },
+      {
+        "text": "@cv-builder/browser-app",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@cv-builder/browser-app"
+      },
+      {
+        "text": "cv-builder → resume-builder",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "83b30ef",
+        "type": "commit",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader/commit/83b30ef"
+      },
+      {
+        "text": "parseCommands.ts",
+        "type": "file",
+        "repo": "core-reader",
+        "path": "parseCommands.ts",
+        "url": "https://github.com/ojfbot/core-reader/blob/main/parseCommands.ts"
+      },
+      {
+        "text": ".claude/commands",
+        "type": "file",
+        "repo": "core-reader",
+        "path": ".claude/commands",
+        "url": "https://github.com/ojfbot/core-reader/blob/main/.claude/commands"
+      },
+      {
+        "text": ".claude/skills",
+        "type": "file",
+        "repo": "core-reader",
+        "path": ".claude/skills",
+        "url": "https://github.com/ojfbot/core-reader/blob/main/.claude/skills"
+      },
+      {
+        "text": "commands",
+        "type": "config",
+        "repo": "core-reader"
+      },
+      {
+        "text": "[daily-logger]",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "4083e9e",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/4083e9e"
+      },
+      {
+        "text": "[core]",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "a5f59a2",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/a5f59a2"
+      },
+      {
+        "text": "[shell]",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "ca42cac",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/ca42cac"
+      },
+      {
+        "text": "[lean-canvas]",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "ff9e022",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/ff9e022"
+      },
+      {
+        "text": "1bf53b3",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/1bf53b3"
+      },
+      {
+        "text": "./ApprovalQueueConnected",
+        "type": "file",
+        "repo": "core",
+        "path": "./ApprovalQueueConnected",
+        "url": "https://github.com/ojfbot/core/blob/main/./ApprovalQueueConnected"
+      },
+      {
+        "text": ":3000",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "/scaffold-frame-app",
+        "type": "command"
+      },
+      {
+        "text": ".claude/",
+        "type": "directory",
+        "repo": "core",
+        "path": ".claude/",
+        "url": "https://github.com/ojfbot/core/tree/main/.claude/"
+      },
+      {
+        "text": "/pr-review",
+        "type": "command"
+      },
+      {
+        "text": "frame.jim.software",
+        "type": "file",
+        "repo": "core",
+        "path": "frame.jim.software",
+        "url": "https://github.com/ojfbot/core/blob/main/frame.jim.software"
+      },
+      {
+        "text": "APP_CONFIG",
+        "type": "env",
+        "repo": "core"
+      },
+      {
+        "text": "REMOTE_LOADERS",
+        "type": "env",
+        "repo": "core"
+      },
+      {
+        "text": "SETTINGS_LOADERS",
+        "type": "env",
+        "repo": "core"
+      },
+      {
+        "text": "DEFAULT_APP_TYPES",
+        "type": "env",
+        "repo": "core"
+      },
+      {
+        "text": "remotes",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "vite.config.ts",
+        "type": "file",
+        "repo": "core",
+        "path": "vite.config.ts",
+        "url": "https://github.com/ojfbot/core/blob/main/vite.config.ts"
+      }
+    ]
   },
   {
     "date": "2026-03-19",
@@ -666,7 +3332,328 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "vercel.json",
+        "type": "file",
+        "repo": "lean-canvas",
+        "path": "vercel.json",
+        "url": "https://github.com/ojfbot/lean-canvas/blob/main/vercel.json"
+      },
+      {
+        "text": "@lean-canvas/browser-app",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@lean-canvas/browser-app"
+      },
+      {
+        "text": "no-store",
+        "type": "package",
+        "url": "https://github.com/ojfbot/no-store"
+      },
+      {
+        "text": "remoteEntry.js",
+        "type": "file",
+        "repo": "lean-canvas",
+        "path": "remoteEntry.js",
+        "url": "https://github.com/ojfbot/lean-canvas/blob/main/remoteEntry.js"
+      },
+      {
+        "text": "immutable",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "dc357cc",
+        "type": "commit",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas/commit/dc357cc"
+      },
+      {
+        "text": "VITE_REMOTE_LEAN_CANVAS",
+        "type": "env",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "AppType",
+        "type": "component",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "REMOTE_LOADERS",
+        "type": "env",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "Cache-Control: no-store",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "max-age",
+        "type": "package",
+        "url": "https://github.com/ojfbot/max-age"
+      },
+      {
+        "text": ".claude/commands/",
+        "type": "directory",
+        "repo": "lean-canvas",
+        "path": ".claude/commands/",
+        "url": "https://github.com/ojfbot/lean-canvas/tree/main/.claude/commands/"
+      },
+      {
+        "text": ".claude/skills/",
+        "type": "directory",
+        "repo": "lean-canvas",
+        "path": ".claude/skills/",
+        "url": "https://github.com/ojfbot/lean-canvas/tree/main/.claude/skills/"
+      },
+      {
+        "text": "5d4ebe1",
+        "type": "commit",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas/commit/5d4ebe1"
+      },
+      {
+        "text": "4f07f8a",
+        "type": "commit",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas/commit/4f07f8a"
+      },
+      {
+        "text": "packageManager",
+        "type": "config",
+        "repo": "lean-canvas"
+      },
+      {
+        "text": "package.json",
+        "type": "file",
+        "repo": "lean-canvas",
+        "path": "package.json",
+        "url": "https://github.com/ojfbot/lean-canvas/blob/main/package.json"
+      },
+      {
+        "text": "pnpm/action-setup@v4",
+        "type": "file",
+        "repo": "lean-canvas",
+        "path": "pnpm/action-setup@v4",
+        "url": "https://github.com/ojfbot/lean-canvas/blob/main/pnpm/action-setup@v4"
+      },
+      {
+        "text": "@originjs/vite-plugin-federation ≤1.4.x",
+        "type": "file",
+        "repo": "lean-canvas",
+        "path": "@originjs/vite-plugin-federation ≤1.4.x",
+        "url": "https://github.com/ojfbot/lean-canvas/blob/main/@originjs/vite-plugin-federation ≤1.4.x"
+      },
+      {
+        "text": "0824b5f",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/0824b5f"
+      },
+      {
+        "text": "APP_CONFIG",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": ":3017",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "DEFAULT_APP_TYPES",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": "SETTINGS_LOADERS",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": "SETTINGS_META",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": "VITE_REMOTE_GASTOWN_PILOT",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": ".env.production",
+        "type": "file",
+        "repo": "shell",
+        "path": ".env.production",
+        "url": "https://github.com/ojfbot/shell/blob/main/.env.production"
+      },
+      {
+        "text": "5237ef3",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/5237ef3"
+      },
+      {
+        "text": "frame-agent",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-agent"
+      },
+      {
+        "text": "84e7752",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/84e7752"
+      },
+      {
+        "text": "3d2f045",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/3d2f045"
+      },
+      {
+        "text": "gastown-pilot",
+        "type": "package",
+        "url": "https://github.com/ojfbot/gastown-pilot"
+      },
+      {
+        "text": "loadRemote()",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "/scaffold-frame-app",
+        "type": "command"
+      },
+      {
+        "text": "c00399b",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/c00399b"
+      },
+      {
+        "text": "frame-dev.sh",
+        "type": "file",
+        "repo": "core",
+        "path": "frame-dev.sh",
+        "url": "https://github.com/ojfbot/core/blob/main/frame-dev.sh"
+      },
+      {
+        "text": "aadb1c1",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/aadb1c1"
+      },
+      {
+        "text": "core",
+        "type": "directory",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core"
+      },
+      {
+        "text": "2b2ed14",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/2b2ed14"
+      },
+      {
+        "text": "--cds-*",
+        "type": "config",
+        "repo": "TripPlanner"
+      },
+      {
+        "text": "f5cf9e0",
+        "type": "commit",
+        "repo": "TripPlanner",
+        "url": "https://github.com/ojfbot/TripPlanner/commit/f5cf9e0"
+      },
+      {
+        "text": "var(--cds-*)",
+        "type": "config",
+        "repo": "TripPlanner"
+      },
+      {
+        "text": "initial",
+        "type": "config",
+        "repo": "TripPlanner"
+      },
+      {
+        "text": "@carbon/styles/css/styles.css",
+        "type": "file",
+        "repo": "TripPlanner",
+        "path": "@carbon/styles/css/styles.css",
+        "url": "https://github.com/ojfbot/TripPlanner/blob/main/@carbon/styles/css/styles.css"
+      },
+      {
+        "text": "main.tsx",
+        "type": "file",
+        "repo": "TripPlanner",
+        "path": "main.tsx",
+        "url": "https://github.com/ojfbot/TripPlanner/blob/main/main.tsx"
+      },
+      {
+        "text": ".claude/commands/ → .claude/skills/",
+        "type": "file",
+        "repo": "TripPlanner",
+        "path": ".claude/commands/ → .claude/skills/",
+        "url": "https://github.com/ojfbot/TripPlanner/blob/main/.claude/commands/ → .claude/skills/"
+      },
+      {
+        "text": "1d679df",
+        "type": "commit",
+        "repo": "TripPlanner",
+        "url": "https://github.com/ojfbot/TripPlanner/commit/1d679df"
+      },
+      {
+        "text": "c72fba2",
+        "type": "commit",
+        "repo": "TripPlanner",
+        "url": "https://github.com/ojfbot/TripPlanner/commit/c72fba2"
+      },
+      {
+        "text": "curl -I https://<lean-canvas-vercel-url>/remoteEntry.js",
+        "type": "file",
+        "repo": "TripPlanner",
+        "path": "curl -I https://<lean-canvas-vercel-url>/remoteEntry.js",
+        "url": "https://github.com/ojfbot/TripPlanner/blob/main/curl -I https://<lean-canvas-vercel-url>/remoteEntry.js"
+      },
+      {
+        "text": "cache-control: no-store",
+        "type": "config",
+        "repo": "TripPlanner"
+      },
+      {
+        "text": "npm run dev",
+        "type": "config",
+        "repo": "TripPlanner"
+      },
+      {
+        "text": "switch",
+        "type": "config",
+        "repo": "TripPlanner"
+      },
+      {
+        "text": "undefined",
+        "type": "config",
+        "repo": "TripPlanner"
+      },
+      {
+        "text": "@originjs/vite-plugin-federation",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@originjs/vite-plugin-federation"
+      },
+      {
+        "text": "lean-canvas",
+        "type": "directory",
+        "repo": "lean-canvas",
+        "url": "https://github.com/ojfbot/lean-canvas"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      }
+    ]
   },
   {
     "date": "2026-03-18",
@@ -740,7 +3727,96 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "3621e5c",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/3621e5c"
+      },
+      {
+        "text": "ef99ec3",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/ef99ec3"
+      },
+      {
+        "text": "fe48241",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/fe48241"
+      },
+      {
+        "text": "@core/workflows",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@core/workflows"
+      },
+      {
+        "text": "0f2e149",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/0f2e149"
+      },
+      {
+        "text": "d186ea7",
+        "type": "commit",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader/commit/d186ea7"
+      },
+      {
+        "text": "GET /api/okrs",
+        "type": "endpoint",
+        "repo": "core-reader"
+      },
+      {
+        "text": "frame-os-context.md",
+        "type": "file",
+        "repo": "core-reader",
+        "path": "frame-os-context.md",
+        "url": "https://github.com/ojfbot/core-reader/blob/main/frame-os-context.md"
+      },
+      {
+        "text": ":3015",
+        "type": "config",
+        "repo": "core-reader"
+      },
+      {
+        "text": "ojfbot-clean[bot]",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "8eb7b2a",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/8eb7b2a"
+      },
+      {
+        "text": "46bebf0",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/46bebf0"
+      },
+      {
+        "text": "fb6a33f",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/fb6a33f"
+      },
+      {
+        "text": "16dae25",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/16dae25"
+      },
+      {
+        "text": "94b1493",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/94b1493"
+      }
+    ]
   },
   {
     "date": "2026-03-17",
@@ -829,7 +3905,312 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "frame-agent",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-agent"
+      },
+      {
+        "text": "72fb2e4",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/72fb2e4"
+      },
+      {
+        "text": "fix(frame-agent): enforce ADR-0019 isolation in fanOut() — scope history per domain + integration tests",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "fanOut()",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "historyFor(domain)",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "c1dc80e",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/c1dc80e"
+      },
+      {
+        "text": "fix(frame-agent): close isolation gap — fallback cross-domain paths no longer mutate MetaOrchestrator history",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "c19b6f8",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/c19b6f8"
+      },
+      {
+        "text": "feat(shell): register lean-canvas as Frame OS sub-app + purefoy API port fix",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "DEFAULT_APP_TYPES",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": "186e02c",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/186e02c"
+      },
+      {
+        "text": "AppDisplayConfig",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "991efd9",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/991efd9"
+      },
+      {
+        "text": "'My Resume'",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "'Start Fresh'",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "2e6e5f2",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/2e6e5f2"
+      },
+      {
+        "text": "fix(shell): patch persisted registry for all DEFAULT_APP_TYPES, not just singletons",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "3624e1d",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/3624e1d"
+      },
+      {
+        "text": "bef8723",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/bef8723"
+      },
+      {
+        "text": "1a23806",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/1a23806"
+      },
+      {
+        "text": "2923768",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/2923768"
+      },
+      {
+        "text": "packageManager",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "package.json",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "package.json",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/package.json"
+      },
+      {
+        "text": "c3fa53d",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/c3fa53d"
+      },
+      {
+        "text": "g4dn.xlarge",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "g4dn.xlarge",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/g4dn.xlarge"
+      },
+      {
+        "text": "dd2af72",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/dd2af72"
+      },
+      {
+        "text": "feat(lean-canvas): register new sub-app across Frame OS cluster",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "frame-os-context.md",
+        "type": "file",
+        "repo": "core",
+        "path": "frame-os-context.md",
+        "url": "https://github.com/ojfbot/core/blob/main/frame-os-context.md"
+      },
+      {
+        "text": "7fecb6a",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/7fecb6a"
+      },
+      {
+        "text": "62614cb",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/62614cb"
+      },
+      {
+        "text": "feat(core): add queued-prompt-executor subagent definition",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "7efe463",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/7efe463"
+      },
+      {
+        "text": "2591c10",
+        "type": "commit",
+        "repo": "BlogEngine",
+        "url": "https://github.com/ojfbot/BlogEngine/commit/2591c10"
+      },
+      {
+        "text": "feat(api): add distinct tool endpoints — ADR-0007 contract formalization",
+        "type": "config",
+        "repo": "BlogEngine"
+      },
+      {
+        "text": "GET /api/tools",
+        "type": "endpoint",
+        "repo": "BlogEngine"
+      },
+      {
+        "text": "0d8c77d",
+        "type": "commit",
+        "repo": "BlogEngine",
+        "url": "https://github.com/ojfbot/BlogEngine/commit/0d8c77d"
+      },
+      {
+        "text": "922676a",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/922676a"
+      },
+      {
+        "text": "/consume",
+        "type": "command"
+      },
+      {
+        "text": "8289db2",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/8289db2"
+      },
+      {
+        "text": "fix(security): typed message handler + sender.tab validation + prompt injection mitigations",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "any",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "sender.tab",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "sender.tab",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/sender.tab"
+      },
+      {
+        "text": "cv_builder",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "resume_builder",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "@cv-builder/*",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": "@cv-builder/*",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/@cv-builder/*"
+      },
+      {
+        "text": "@resume-builder/*",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": "@resume-builder/*",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/@resume-builder/*"
+      },
+      {
+        "text": "c2a6483",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/c2a6483"
+      },
+      {
+        "text": "packages/frame-agent/src/fanOut.ts",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": "packages/frame-agent/src/fanOut.ts",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/packages/frame-agent/src/fanOut.ts"
+      },
+      {
+        "text": "core/frame-os-context.md",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": "core/frame-os-context.md",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/core/frame-os-context.md"
+      },
+      {
+        "text": "@originjs/vite-plugin-federation",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@originjs/vite-plugin-federation"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "frame-dev.sh",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": "frame-dev.sh",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/frame-dev.sh"
+      },
+      {
+        "text": "main",
+        "type": "config",
+        "repo": "cv-builder"
+      }
+    ]
   },
   {
     "date": "2026-03-16",
@@ -915,7 +4296,104 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "cv-builder",
+        "type": "directory",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder"
+      },
+      {
+        "text": "resume-builder",
+        "type": "package",
+        "url": "https://github.com/ojfbot/resume-builder"
+      },
+      {
+        "text": "vite.config.ts",
+        "type": "file"
+      },
+      {
+        "text": ".env.production",
+        "type": "file"
+      },
+      {
+        "text": "localStorage",
+        "type": "config"
+      },
+      {
+        "text": "AppFrame.tsx",
+        "type": "file"
+      },
+      {
+        "text": "ShellHeader → Header.tsx",
+        "type": "file"
+      },
+      {
+        "text": "HomeScreen",
+        "type": "component"
+      },
+      {
+        "text": "shell-app",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell-app"
+      },
+      {
+        "text": "POST /api/resumption",
+        "type": "endpoint"
+      },
+      {
+        "text": "ShellHeader",
+        "type": "component"
+      },
+      {
+        "text": "HeaderConnected",
+        "type": "component"
+      },
+      {
+        "text": "HomeScreenConnected",
+        "type": "component"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "packages/ui",
+        "type": "file"
+      },
+      {
+        "text": "MetaOrchestratorAgent",
+        "type": "component"
+      },
+      {
+        "text": "Header.tsx",
+        "type": "file"
+      },
+      {
+        "text": "/adr shell",
+        "type": "config"
+      },
+      {
+        "text": "/investigate [shell] #5",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "FeedbackModal",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "HomeScreen.tsx",
+        "type": "file",
+        "repo": "shell",
+        "path": "HomeScreen.tsx",
+        "url": "https://github.com/ojfbot/shell/blob/main/HomeScreen.tsx"
+      }
+    ]
   },
   {
     "date": "2026-03-15",
@@ -956,7 +4434,67 @@
     "activityType": "rest",
     "schemaVersion": 2,
     "decisions": [],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "frame.jim.software",
+        "type": "file"
+      },
+      {
+        "text": "Header",
+        "type": "config"
+      },
+      {
+        "text": "HomeScreen",
+        "type": "component"
+      },
+      {
+        "text": "POST /api/resumption",
+        "type": "endpoint"
+      },
+      {
+        "text": "reply",
+        "type": "config"
+      },
+      {
+        "text": "partial: true",
+        "type": "config"
+      },
+      {
+        "text": "MetaOrchestratorAgent",
+        "type": "component"
+      },
+      {
+        "text": "\"I'm applying for Berlin jobs, how does this affect my trip plan and my resume?\"",
+        "type": "config"
+      },
+      {
+        "text": "max(agent_latencies)",
+        "type": "config"
+      },
+      {
+        "text": "sum(agent_latencies)",
+        "type": "config"
+      },
+      {
+        "text": "HeaderConnected",
+        "type": "component"
+      },
+      {
+        "text": "HomeScreenConnected",
+        "type": "component"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "AppSwitcher",
+        "type": "component"
+      }
+    ]
   },
   {
     "date": "2026-03-14",
@@ -1013,7 +4551,103 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "Header",
+        "type": "config"
+      },
+      {
+        "text": "packages/ui/src/components/Header.tsx",
+        "type": "file"
+      },
+      {
+        "text": "HomeScreen",
+        "type": "component"
+      },
+      {
+        "text": "packages/ui/src/components/HomeScreen.tsx",
+        "type": "file"
+      },
+      {
+        "text": "POST /api/resumption",
+        "type": "endpoint"
+      },
+      {
+        "text": "VITE_REMOTE_CV_BUILDER → VITE_REMOTE_RESUME_BUILDER",
+        "type": "config"
+      },
+      {
+        "text": ".env.production",
+        "type": "file"
+      },
+      {
+        "text": "localStorage",
+        "type": "config"
+      },
+      {
+        "text": "cv_builder",
+        "type": "config"
+      },
+      {
+        "text": "resume_builder",
+        "type": "config"
+      },
+      {
+        "text": "vite.config.ts",
+        "type": "file"
+      },
+      {
+        "text": "GET /api/tools",
+        "type": "endpoint"
+      },
+      {
+        "text": "dataEndpoints",
+        "type": "config"
+      },
+      {
+        "text": "packages/ui",
+        "type": "file"
+      },
+      {
+        "text": "HeaderConnected",
+        "type": "component"
+      },
+      {
+        "text": "HomeScreenConnected",
+        "type": "component"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "Header.tsx",
+        "type": "file"
+      },
+      {
+        "text": "HomeScreen.tsx",
+        "type": "file"
+      },
+      {
+        "text": "pnpm build",
+        "type": "config"
+      },
+      {
+        "text": "MetaOrchestratorAgent",
+        "type": "component"
+      },
+      {
+        "text": "\"I'm applying for Berlin jobs, how does this affect my trip plan?\"",
+        "type": "config"
+      },
+      {
+        "text": "AppSwitcher",
+        "type": "component"
+      }
+    ]
   },
   {
     "date": "2026-03-13",
@@ -1073,7 +4707,125 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "b971983",
+        "type": "commit"
+      },
+      {
+        "text": "clean: remove stale comments/docs 2026-03-12 [skip ci]",
+        "type": "file"
+      },
+      {
+        "text": "ojfbot-clean[bot]",
+        "type": "config"
+      },
+      {
+        "text": "118e76b",
+        "type": "commit"
+      },
+      {
+        "text": "cv_builder",
+        "type": "config"
+      },
+      {
+        "text": "VITE_REMOTE_CV_BUILDER",
+        "type": "env"
+      },
+      {
+        "text": "09cd939",
+        "type": "commit"
+      },
+      {
+        "text": "blog: 2026-03-12 [skip ci]",
+        "type": "config"
+      },
+      {
+        "text": "MetaOrchestratorAgent",
+        "type": "component"
+      },
+      {
+        "text": "frame-agent",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-agent"
+      },
+      {
+        "text": "handle()",
+        "type": "config"
+      },
+      {
+        "text": "/api/tools",
+        "type": "command"
+      },
+      {
+        "text": "POST /api/tools",
+        "type": "endpoint"
+      },
+      {
+        "text": "POST /api/resumption",
+        "type": "endpoint"
+      },
+      {
+        "text": "HeaderConnected",
+        "type": "component"
+      },
+      {
+        "text": "HomeScreenConnected",
+        "type": "component"
+      },
+      {
+        "text": "shell-app",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell-app"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "packages/ui",
+        "type": "file"
+      },
+      {
+        "text": "Header.tsx",
+        "type": "file"
+      },
+      {
+        "text": "HomeScreen.tsx",
+        "type": "file"
+      },
+      {
+        "text": "Header",
+        "type": "config"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      },
+      {
+        "text": "/pr-review shell #31",
+        "type": "config"
+      },
+      {
+        "text": "grep -r \"from 'react-redux'\" packages/ui/src/",
+        "type": "file"
+      },
+      {
+        "text": "grep -r \"from '@reduxjs'\" packages/ui/src/",
+        "type": "file"
+      },
+      {
+        "text": "AppSwitcher",
+        "type": "component"
+      },
+      {
+        "text": "HomeScreen",
+        "type": "component"
+      }
+    ]
   },
   {
     "date": "2026-03-12",
@@ -1134,7 +4886,326 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "cv-builder",
+        "type": "directory",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder"
+      },
+      {
+        "text": "resume-builder",
+        "type": "package",
+        "url": "https://github.com/ojfbot/resume-builder"
+      },
+      {
+        "text": "Header",
+        "type": "config"
+      },
+      {
+        "text": "HomeScreen",
+        "type": "component"
+      },
+      {
+        "text": "packages/ui",
+        "type": "file"
+      },
+      {
+        "text": "POST /api/resumption",
+        "type": "endpoint"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "6d4595a",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/6d4595a"
+      },
+      {
+        "text": "ShellHeader",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "packages/ui/src/components/Header.tsx",
+        "type": "file",
+        "repo": "shell",
+        "path": "packages/ui/src/components/Header.tsx",
+        "url": "https://github.com/ojfbot/shell/blob/main/packages/ui/src/components/Header.tsx"
+      },
+      {
+        "text": "53758df",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/53758df"
+      },
+      {
+        "text": "shell-app",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell-app"
+      },
+      {
+        "text": "packages/ui/src/components/HomeScreen.tsx",
+        "type": "file",
+        "repo": "shell",
+        "path": "packages/ui/src/components/HomeScreen.tsx",
+        "url": "https://github.com/ojfbot/shell/blob/main/packages/ui/src/components/HomeScreen.tsx"
+      },
+      {
+        "text": "HeaderConnected",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "HomeScreenConnected",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "86a76f2",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/86a76f2"
+      },
+      {
+        "text": "shell-app/src/components/HeaderConnected.tsx",
+        "type": "file",
+        "repo": "shell",
+        "path": "shell-app/src/components/HeaderConnected.tsx",
+        "url": "https://github.com/ojfbot/shell/blob/main/shell-app/src/components/HeaderConnected.tsx"
+      },
+      {
+        "text": "c22922e",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/c22922e"
+      },
+      {
+        "text": "frame-agent",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-agent"
+      },
+      {
+        "text": "9c5a455",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/9c5a455"
+      },
+      {
+        "text": "min(2)",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "max(4000)",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "b499305",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/b499305"
+      },
+      {
+        "text": "localStorage",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "ojfbot:appRegistry",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "appType",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "VITE_REMOTE_CV_BUILDER",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": "VITE_REMOTE_RESUME_BUILDER",
+        "type": "env",
+        "repo": "shell"
+      },
+      {
+        "text": ".env.production",
+        "type": "file",
+        "repo": "shell",
+        "path": ".env.production",
+        "url": "https://github.com/ojfbot/shell/blob/main/.env.production"
+      },
+      {
+        "text": "a282020",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/a282020"
+      },
+      {
+        "text": "37caa37",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/37caa37"
+      },
+      {
+        "text": "undefined",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": ".env.local",
+        "type": "file",
+        "repo": "shell",
+        "path": ".env.local",
+        "url": "https://github.com/ojfbot/shell/blob/main/.env.local"
+      },
+      {
+        "text": "define",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "ChunkLoadError",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "cv_builder",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "resume_builder",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "fc7cb2d",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/fc7cb2d"
+      },
+      {
+        "text": "exposes",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "@cv-builder/agent-core",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@cv-builder/agent-core"
+      },
+      {
+        "text": "@resume-builder/agent-core",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@resume-builder/agent-core"
+      },
+      {
+        "text": "225aec2",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/225aec2"
+      },
+      {
+        "text": "type/created_at/updated_at/sourceApp",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": "type/created_at/updated_at/sourceApp",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/type/created_at/updated_at/sourceApp"
+      },
+      {
+        "text": "mapJobToBead",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "21f065f",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/21f065f"
+      },
+      {
+        "text": "FrameBead",
+        "type": "component",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "GET /api/tools",
+        "type": "endpoint",
+        "repo": "TripPlanner"
+      },
+      {
+        "text": "3788f16",
+        "type": "commit",
+        "repo": "TripPlanner",
+        "url": "https://github.com/ojfbot/TripPlanner/commit/3788f16"
+      },
+      {
+        "text": "dataEndpoints",
+        "type": "config",
+        "repo": "TripPlanner"
+      },
+      {
+        "text": "96ba599",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/96ba599"
+      },
+      {
+        "text": "Header.tsx",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "Header.tsx",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/Header.tsx"
+      },
+      {
+        "text": "packages/ui/src/components/",
+        "type": "directory",
+        "repo": "daily-logger",
+        "path": "packages/ui/src/components/",
+        "url": "https://github.com/ojfbot/daily-logger/tree/main/packages/ui/src/components/"
+      },
+      {
+        "text": "#31",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "/investigate",
+        "type": "command"
+      },
+      {
+        "text": "feat(frame-agent): cross-domain fan-out + isolated synthesis",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "MetaOrchestratorAgent",
+        "type": "component",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "/scaffold",
+        "type": "command"
+      },
+      {
+        "text": "packages/ui/src/components/AppSwitcher.tsx",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "packages/ui/src/components/AppSwitcher.tsx",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/packages/ui/src/components/AppSwitcher.tsx"
+      }
+    ]
   },
   {
     "date": "2026-03-11",
@@ -1202,7 +5273,476 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "@resume-builder/*",
+        "type": "file"
+      },
+      {
+        "text": "FrameBeadLike",
+        "type": "component"
+      },
+      {
+        "text": "packages/ui/",
+        "type": "directory"
+      },
+      {
+        "text": "GET /api/beads",
+        "type": "endpoint"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "shell-app",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell-app"
+      },
+      {
+        "text": "@ojfbot",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "c81c19e",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/c81c19e"
+      },
+      {
+        "text": "AppSwitcher",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "f02743c",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/f02743c"
+      },
+      {
+        "text": "Header.tsx",
+        "type": "file",
+        "repo": "shell",
+        "path": "Header.tsx",
+        "url": "https://github.com/ojfbot/shell/blob/main/Header.tsx"
+      },
+      {
+        "text": "packages/ui/src/components/",
+        "type": "directory",
+        "repo": "shell",
+        "path": "packages/ui/src/components/",
+        "url": "https://github.com/ojfbot/shell/tree/main/packages/ui/src/components/"
+      },
+      {
+        "text": "785a3af",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/785a3af"
+      },
+      {
+        "text": "2c865a1",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/2c865a1"
+      },
+      {
+        "text": "HomeScreen",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "appRegistrySlice",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "hasCrossDomainSignal()",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "\"and also\"",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "\"I'm applying for Berlin jobs, how does this compare\"",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "6d88ac1",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/6d88ac1"
+      },
+      {
+        "text": "fix/cross-domain-keyword-detection",
+        "type": "file",
+        "repo": "shell",
+        "path": "fix/cross-domain-keyword-detection",
+        "url": "https://github.com/ojfbot/shell/blob/main/fix/cross-domain-keyword-detection"
+      },
+      {
+        "text": "c2fb056",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/c2fb056"
+      },
+      {
+        "text": "@storybook",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "@carbon",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "node_modules",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "viteFinal",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "70f7256",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/70f7256"
+      },
+      {
+        "text": "ca0c2ce",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/ca0c2ce"
+      },
+      {
+        "text": "@cv-builder/*",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": "@cv-builder/*",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/@cv-builder/*"
+      },
+      {
+        "text": "cv-builder",
+        "type": "directory",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder"
+      },
+      {
+        "text": "dc90ae8",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/dc90ae8"
+      },
+      {
+        "text": "ba4e469",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/ba4e469"
+      },
+      {
+        "text": "JobListing",
+        "type": "component",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "mapJobToBead()",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "mapJobToBead.test.ts",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": "mapJobToBead.test.ts",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/mapJobToBead.test.ts"
+      },
+      {
+        "text": "f8c00dc",
+        "type": "commit",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader/commit/f8c00dc"
+      },
+      {
+        "text": "GET /api/beads?type=adr&status=live&prefix=core",
+        "type": "endpoint",
+        "repo": "core-reader"
+      },
+      {
+        "text": "parseADRsAsBeads()",
+        "type": "config",
+        "repo": "core-reader"
+      },
+      {
+        "text": "core-adr-NNNN",
+        "type": "package",
+        "url": "https://github.com/ojfbot/core-adr-NNNN"
+      },
+      {
+        "text": "/api/beads",
+        "type": "command"
+      },
+      {
+        "text": "34e172a",
+        "type": "commit",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader/commit/34e172a"
+      },
+      {
+        "text": "b106e1d",
+        "type": "commit",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader/commit/b106e1d"
+      },
+      {
+        "text": "functions.includeFiles",
+        "type": "config",
+        "repo": "core-reader"
+      },
+      {
+        "text": "api/[...slug].js",
+        "type": "file",
+        "repo": "core-reader",
+        "path": "api/[...slug].js",
+        "url": "https://github.com/ojfbot/core-reader/blob/main/api/[...slug].js"
+      },
+      {
+        "text": "decisions/adr/",
+        "type": "directory",
+        "repo": "core-reader",
+        "path": "decisions/adr/",
+        "url": "https://github.com/ojfbot/core-reader/tree/main/decisions/adr/"
+      },
+      {
+        "text": "26f2630",
+        "type": "commit",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader/commit/26f2630"
+      },
+      {
+        "text": "includeFiles",
+        "type": "config",
+        "repo": "core-reader"
+      },
+      {
+        "text": "decisions/adr/**",
+        "type": "file",
+        "repo": "core-reader",
+        "path": "decisions/adr/**",
+        "url": "https://github.com/ojfbot/core-reader/blob/main/decisions/adr/**"
+      },
+      {
+        "text": "vercel dev",
+        "type": "config",
+        "repo": "core-reader"
+      },
+      {
+        "text": "4ca0504",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/4ca0504"
+      },
+      {
+        "text": "decisions/adr/0016-framebead-work-primitive.md",
+        "type": "file",
+        "repo": "core",
+        "path": "decisions/adr/0016-framebead-work-primitive.md",
+        "url": "https://github.com/ojfbot/core/blob/main/decisions/adr/0016-framebead-work-primitive.md"
+      },
+      {
+        "text": "/frame-standup",
+        "type": "command"
+      },
+      {
+        "text": "a43535f",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/a43535f"
+      },
+      {
+        "text": "89698cc",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/89698cc"
+      },
+      {
+        "text": "Complete",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "Partial",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "Resume Builder",
+        "type": "config",
+        "repo": "core"
+      },
+      {
+        "text": "a5e4a0b",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/a5e4a0b"
+      },
+      {
+        "text": "67c4b63",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/67c4b63"
+      },
+      {
+        "text": "[skip ci]",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "id",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "core-adr-0016",
+        "type": "package",
+        "url": "https://github.com/ojfbot/core-adr-0016"
+      },
+      {
+        "text": "type",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "status",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "label",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "ADR-0016",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "0016-framebead-work-primitive.md",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "0016-framebead-work-primitive.md",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/0016-framebead-work-primitive.md"
+      },
+      {
+        "text": "Header",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "useSelector",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "useDispatch",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "packages/ui/src/",
+        "type": "directory",
+        "repo": "daily-logger",
+        "path": "packages/ui/src/",
+        "url": "https://github.com/ojfbot/daily-logger/tree/main/packages/ui/src/"
+      },
+      {
+        "text": "components/AppSwitcher.tsx",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "components/AppSwitcher.tsx",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/components/AppSwitcher.tsx"
+      },
+      {
+        "text": "components/Header.tsx",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "components/Header.tsx",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/components/Header.tsx"
+      },
+      {
+        "text": "index.ts",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "index.ts",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/index.ts"
+      },
+      {
+        "text": "vercel.json",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "vercel.json",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/vercel.json"
+      },
+      {
+        "text": "fs",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "functions",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "vercel build",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "curl https://<core-reader-url>/api/beads?type=adr&status=live&prefix=core",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "curl https://<core-reader-url>/api/beads?type=adr&status=live&prefix=core",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/curl https://<core-reader-url>/api/beads?type=adr&status=live&prefix=core"
+      },
+      {
+        "text": "/plan-feature",
+        "type": "command"
+      },
+      {
+        "text": "AppSwitcher.stories.tsx",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "AppSwitcher.stories.tsx",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/AppSwitcher.stories.tsx"
+      },
+      {
+        "text": "/scaffold packages/ui/src/components/Header.tsx",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "/scaffold packages/ui/src/components/Header.tsx",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main//scaffold packages/ui/src/components/Header.tsx"
+      },
+      {
+        "text": "/scaffold packages/ui/src/components/Header.stories.tsx",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "/scaffold packages/ui/src/components/Header.stories.tsx",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main//scaffold packages/ui/src/components/Header.stories.tsx"
+      }
+    ]
   },
   {
     "date": "2026-03-10",
@@ -1277,7 +5817,182 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "a277015",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/a277015"
+      },
+      {
+        "text": "fix(article): correct MrPlug Phase 5B status",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "daily-cleaner",
+        "type": "package",
+        "url": "https://github.com/ojfbot/daily-cleaner"
+      },
+      {
+        "text": "09e6fd1",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/09e6fd1"
+      },
+      {
+        "text": "clean: remove stale comments/docs 2026-03-09 [skip ci]",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "clean: remove stale comments/docs 2026-03-09 [skip ci]",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/clean: remove stale comments/docs 2026-03-09 [skip ci]"
+      },
+      {
+        "text": "1a64777",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/1a64777"
+      },
+      {
+        "text": "ffbccbf",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/ffbccbf"
+      },
+      {
+        "text": "[skip ci]",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "9caf17e",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/9caf17e"
+      },
+      {
+        "text": "blog: 2026-03-09 [skip ci]",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "AppSwitcher",
+        "type": "component",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "shell-app",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell-app"
+      },
+      {
+        "text": "packages/ui/",
+        "type": "directory",
+        "repo": "daily-logger",
+        "path": "packages/ui/",
+        "url": "https://github.com/ojfbot/daily-logger/tree/main/packages/ui/"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "exposes",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "currentDispatcher",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "adr/",
+        "type": "directory",
+        "repo": "daily-logger",
+        "path": "adr/",
+        "url": "https://github.com/ojfbot/daily-logger/tree/main/adr/"
+      },
+      {
+        "text": "[core]",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "cv-",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "shell-",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "core-",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "FrameBeadLike",
+        "type": "component",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "id",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "status",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "sourceApp",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "payload",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "[core]/adr/",
+        "type": "directory",
+        "repo": "daily-logger",
+        "path": "[core]/adr/",
+        "url": "https://github.com/ojfbot/daily-logger/tree/main/[core]/adr/"
+      },
+      {
+        "text": "/frame-standup",
+        "type": "command"
+      },
+      {
+        "text": "GET /api/beads",
+        "type": "endpoint",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "parseADRsAsBeads()",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "id: \"core-adr-{number}\"",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "sourceApp: \"core-reader\"",
+        "type": "config",
+        "repo": "daily-logger"
+      }
+    ]
   },
   {
     "date": "2026-03-09",
@@ -1339,7 +6054,349 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "resolveProjectMapping",
+        "type": "config"
+      },
+      {
+        "text": "mousedown",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "click",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "bb8b693",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/bb8b693"
+      },
+      {
+        "text": "a87d1e6",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/a87d1e6"
+      },
+      {
+        "text": "0d1a75b",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/0d1a75b"
+      },
+      {
+        "text": "7e5a0e1",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/7e5a0e1"
+      },
+      {
+        "text": "dc8091d",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/dc8091d"
+      },
+      {
+        "text": "c21c986",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/c21c986"
+      },
+      {
+        "text": "/hardening",
+        "type": "command"
+      },
+      {
+        "text": "29f99b3",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/29f99b3"
+      },
+      {
+        "text": "76153b0",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/76153b0"
+      },
+      {
+        "text": "b25bc3c",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/b25bc3c"
+      },
+      {
+        "text": "github-issue",
+        "type": "package",
+        "url": "https://github.com/ojfbot/github-issue"
+      },
+      {
+        "text": "claude-code",
+        "type": "package",
+        "url": "https://github.com/ojfbot/claude-code"
+      },
+      {
+        "text": "258621c",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/258621c"
+      },
+      {
+        "text": "mouseup",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "preventDefault",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "56f5e9f",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/56f5e9f"
+      },
+      {
+        "text": "461bac2",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/461bac2"
+      },
+      {
+        "text": "handleSubmit",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "7cd8397",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/7cd8397"
+      },
+      {
+        "text": "cdbf12d",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/cdbf12d"
+      },
+      {
+        "text": "5a3873a",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/5a3873a"
+      },
+      {
+        "text": "+New",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "e910836",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/e910836"
+      },
+      {
+        "text": "1eb22ed",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/1eb22ed"
+      },
+      {
+        "text": "data-mf-remote=\"[app-name]\"",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "AppFrame",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "fb2dee5",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/fb2dee5"
+      },
+      {
+        "text": "686543b",
+        "type": "commit",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell/commit/686543b"
+      },
+      {
+        "text": "frame-agent",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-agent"
+      },
+      {
+        "text": "NODE_OPTIONS --env-file",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "--env-file",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "sh -c dotenv",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "/gastown",
+        "type": "command"
+      },
+      {
+        "text": "6f7a2a2",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/6f7a2a2"
+      },
+      {
+        "text": "79cec41",
+        "type": "commit",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core/commit/79cec41"
+      },
+      {
+        "text": "9acbc55",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/9acbc55"
+      },
+      {
+        "text": "gh auth setup-git",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "daily-cleaner",
+        "type": "package",
+        "url": "https://github.com/ojfbot/daily-cleaner"
+      },
+      {
+        "text": "5e9a5e",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "fad8fa5",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/fad8fa5"
+      },
+      {
+        "text": "5143b75",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/5143b75"
+      },
+      {
+        "text": "createdAt OR updatedAt",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "026c056",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/026c056"
+      },
+      {
+        "text": "291baae",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/291baae"
+      },
+      {
+        "text": "personal-knowledge",
+        "type": "package",
+        "url": "https://github.com/ojfbot/personal-knowledge"
+      },
+      {
+        "text": "agents",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": ".gitignore",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": ".gitignore",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/.gitignore"
+      },
+      {
+        "text": "frame.jim.software",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "frame.jim.software",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/frame.jim.software"
+      },
+      {
+        "text": "frame.jim.software/cv-builder",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "frame.jim.software/cv-builder",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/frame.jim.software/cv-builder"
+      },
+      {
+        "text": "data-mf-remote",
+        "type": "package",
+        "url": "https://github.com/ojfbot/data-mf-remote"
+      },
+      {
+        "text": "onClick",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "classify()",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "sling()",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "@originjs/vite-plugin-federation",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@originjs/vite-plugin-federation"
+      },
+      {
+        "text": "AgentBead { role: 'mayor' }",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "FrameBead",
+        "type": "component",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "cv-tailoring",
+        "type": "package",
+        "url": "https://github.com/ojfbot/cv-tailoring"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "/scaffold [shell]",
+        "type": "config",
+        "repo": "shell"
+      }
+    ]
   },
   {
     "date": "2026-03-08",
@@ -1394,7 +6451,107 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "frame.jim.software",
+        "type": "file"
+      },
+      {
+        "text": "AppInstance",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "AppType → AppInstance → AppThread",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "Authorization",
+        "type": "config",
+        "repo": "shell"
+      },
+      {
+        "text": "*.jim.software",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "*.jim.software",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/*.jim.software"
+      },
+      {
+        "text": "remoteEntry.js",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "remoteEntry.js",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/remoteEntry.js"
+      },
+      {
+        "text": "shell",
+        "type": "directory",
+        "repo": "shell",
+        "url": "https://github.com/ojfbot/shell"
+      },
+      {
+        "text": "/hardening",
+        "type": "command"
+      },
+      {
+        "text": "cv-builder",
+        "type": "directory",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder"
+      },
+      {
+        "text": "BlogEngine",
+        "type": "component",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "AppType",
+        "type": "component",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "AppInstance[]",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "Record<AppType, AppInstance>",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "instances",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "store/",
+        "type": "directory",
+        "repo": "MrPlug",
+        "path": "store/",
+        "url": "https://github.com/ojfbot/MrPlug/tree/main/store/"
+      },
+      {
+        "text": "/investigate",
+        "type": "command"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "frame-dev.sh",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "frame-dev.sh",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/frame-dev.sh"
+      }
+    ]
   },
   {
     "date": "2026-03-07",
@@ -1460,7 +6617,75 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "*.jim.software",
+        "type": "file"
+      },
+      {
+        "text": "f8ef9ae",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/f8ef9ae"
+      },
+      {
+        "text": "blog: 2026-03-06 [skip ci]",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "AppType → AppInstance → AppThread",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "getAppType()",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "getAppInstance()",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "/pr-review",
+        "type": "command"
+      },
+      {
+        "text": "window.__webpack_remotes__",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "/remotes.json",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "/remotes.json",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main//remotes.json"
+      },
+      {
+        "text": ".claude/context.json",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": ".claude/context.json",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/.claude/context.json"
+      },
+      {
+        "text": "/hardening",
+        "type": "command"
+      },
+      {
+        "text": "AppInstance",
+        "type": "component",
+        "repo": "shell"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      }
+    ]
   },
   {
     "date": "2026-03-06",
@@ -1529,7 +6754,162 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "8c6c7f3",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/8c6c7f3"
+      },
+      {
+        "text": "nohup",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "disown",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "screen",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "tmux",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "10ed1c4",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/10ed1c4"
+      },
+      {
+        "text": "custom.py",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "custom.py",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/custom.py"
+      },
+      {
+        "text": "hf_hub_download",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "d158eb7",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/d158eb7"
+      },
+      {
+        "text": "3a43e93",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/3a43e93"
+      },
+      {
+        "text": "sys.modules",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "sys.modules",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/sys.modules"
+      },
+      {
+        "text": "conftest.py",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "conftest.py",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/conftest.py"
+      },
+      {
+        "text": "pytest --collect-only",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "7275d0f",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/7275d0f"
+      },
+      {
+        "text": "background.ts",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "background.ts",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/background.ts"
+      },
+      {
+        "text": "0802e4f",
+        "type": "commit",
+        "repo": "cv-builder",
+        "url": "https://github.com/ojfbot/cv-builder/commit/0802e4f"
+      },
+      {
+        "text": "immutable",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "package.json",
+        "type": "file",
+        "repo": "cv-builder",
+        "path": "package.json",
+        "url": "https://github.com/ojfbot/cv-builder/blob/main/package.json"
+      },
+      {
+        "text": "resolutions",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "overrides",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "pytest -x",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "npm audit --audit-level=moderate",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "if TYPE_CHECKING",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "AppInstance",
+        "type": "component",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "AppType → AppInstance → AppThread",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": ":3015",
+        "type": "config",
+        "repo": "cv-builder"
+      },
+      {
+        "text": "transcript/runs/{run_id}/",
+        "type": "directory",
+        "repo": "purefoy",
+        "path": "transcript/runs/{run_id}/",
+        "url": "https://github.com/ojfbot/purefoy/tree/main/transcript/runs/{run_id}/"
+      }
+    ]
   },
   {
     "date": "2026-03-05",
@@ -1597,7 +6977,240 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "transcribe_episodes.py",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "transcribe_episodes.py",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/transcribe_episodes.py"
+      },
+      {
+        "text": "aws_runner.py",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "aws_runner.py",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/aws_runner.py"
+      },
+      {
+        "text": "transcript/runs/{run_id}/",
+        "type": "directory",
+        "repo": "purefoy",
+        "path": "transcript/runs/{run_id}/",
+        "url": "https://github.com/ojfbot/purefoy/tree/main/transcript/runs/{run_id}/"
+      },
+      {
+        "text": "run_manifest.json",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "run_manifest.json",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/run_manifest.json"
+      },
+      {
+        "text": "canonical",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "requirements-transcription.txt",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "requirements-transcription.txt",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/requirements-transcription.txt"
+      },
+      {
+        "text": "31236b7",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/31236b7"
+      },
+      {
+        "text": "230389d",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/230389d"
+      },
+      {
+        "text": "--limit",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "5eaf75e",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/5eaf75e"
+      },
+      {
+        "text": "0c4f019",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/0c4f019"
+      },
+      {
+        "text": "docs/",
+        "type": "directory",
+        "repo": "purefoy",
+        "path": "docs/",
+        "url": "https://github.com/ojfbot/purefoy/tree/main/docs/"
+      },
+      {
+        "text": "SPEAKER_00",
+        "type": "env",
+        "repo": "purefoy"
+      },
+      {
+        "text": "SPEAKER_UNRESOLVED",
+        "type": "env",
+        "repo": "purefoy"
+      },
+      {
+        "text": "c2c89be",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/c2c89be"
+      },
+      {
+        "text": "GITHUB_TOKEN",
+        "type": "env",
+        "repo": "purefoy"
+      },
+      {
+        "text": "CLAUDE_CODE_OAUTH_TOKEN",
+        "type": "env",
+        "repo": "purefoy"
+      },
+      {
+        "text": "afe737b",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/afe737b"
+      },
+      {
+        "text": "allowed-tools: Write,Read",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": ".github/workflows/claude-review.yml",
+        "type": "file",
+        "repo": "purefoy",
+        "path": ".github/workflows/claude-review.yml",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/.github/workflows/claude-review.yml"
+      },
+      {
+        "text": "3d1c793",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/3d1c793"
+      },
+      {
+        "text": "Write",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "Read",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "permissions: contents: write",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "allowed-tools",
+        "type": "package",
+        "url": "https://github.com/ojfbot/allowed-tools"
+      },
+      {
+        "text": "permissions",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "f70ca05",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/f70ca05"
+      },
+      {
+        "text": "main",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "26784c6",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/26784c6"
+      },
+      {
+        "text": "4e6b684",
+        "type": "commit",
+        "repo": "purefoy",
+        "url": "https://github.com/ojfbot/purefoy/commit/4e6b684"
+      },
+      {
+        "text": "terminate_instances",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "run_id",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "pyannote==4.0.4",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "pyannote==4.0.4",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/pyannote==4.0.4"
+      },
+      {
+        "text": "speechbrain==1.0.3",
+        "type": "file",
+        "repo": "purefoy",
+        "path": "speechbrain==1.0.3",
+        "url": "https://github.com/ojfbot/purefoy/blob/main/speechbrain==1.0.3"
+      },
+      {
+        "text": "requeue_log",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "terminate_instances()",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "/investigate",
+        "type": "command"
+      },
+      {
+        "text": "/techdebt",
+        "type": "command"
+      },
+      {
+        "text": "/scaffold purefoy",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": ":3015",
+        "type": "config",
+        "repo": "purefoy"
+      },
+      {
+        "text": "/techdebt purefoy",
+        "type": "config",
+        "repo": "purefoy"
+      }
+    ]
   },
   {
     "date": "2026-03-04",
@@ -1672,7 +7285,294 @@
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "POST /api/inspect",
+        "type": "endpoint",
+        "repo": "MrPlug"
+      },
+      {
+        "text": ":4001",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "chrome-extension://",
+        "type": "directory",
+        "repo": "MrPlug",
+        "path": "chrome-extension://",
+        "url": "https://github.com/ojfbot/MrPlug/tree/main/chrome-extension://"
+      },
+      {
+        "text": "settingsSlice",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "a233fc0",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/a233fc0"
+      },
+      {
+        "text": "core-reader",
+        "type": "directory",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader"
+      },
+      {
+        "text": "3c3b0d2",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/3c3b0d2"
+      },
+      {
+        "text": "ace970d",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/ace970d"
+      },
+      {
+        "text": "apiBaseUrl",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "state.settings.apps['cv-builder']",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "61ef60a",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/61ef60a"
+      },
+      {
+        "text": "notionApiUrl",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "defaultAuthor",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "autoPublish",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "autoSave",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "seoSuggestions",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": "settings/updateTripPlannerSettings",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "settings/updateTripPlannerSettings",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/settings/updateTripPlannerSettings"
+      },
+      {
+        "text": "@carbon/react",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@carbon/react"
+      },
+      {
+        "text": "1b3ba48",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/1b3ba48"
+      },
+      {
+        "text": "2035b25",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/2035b25"
+      },
+      {
+        "text": "remoteEntry.js",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "remoteEntry.js",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/remoteEntry.js"
+      },
+      {
+        "text": "1e73bc8",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/1e73bc8"
+      },
+      {
+        "text": "6351155",
+        "type": "commit",
+        "repo": "MrPlug",
+        "url": "https://github.com/ojfbot/MrPlug/commit/6351155"
+      },
+      {
+        "text": "underscore",
+        "type": "config",
+        "repo": "MrPlug"
+      },
+      {
+        "text": ">=1.13.8",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": ">=1.13.8",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/>=1.13.8"
+      },
+      {
+        "text": "CLAUDE.md",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "CLAUDE.md",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/CLAUDE.md"
+      },
+      {
+        "text": "./Dashboard",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "./Dashboard",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/./Dashboard"
+      },
+      {
+        "text": "./Settings",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "./Settings",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/./Settings"
+      },
+      {
+        "text": "vite.config.ts",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "vite.config.ts",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/vite.config.ts"
+      },
+      {
+        "text": "frame-os-context.md",
+        "type": "file",
+        "repo": "MrPlug",
+        "path": "frame-os-context.md",
+        "url": "https://github.com/ojfbot/MrPlug/blob/main/frame-os-context.md"
+      },
+      {
+        "text": "decisions/core",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "decisions/core",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/decisions/core"
+      },
+      {
+        "text": "../../core/decisions",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "../../core/decisions",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/../../core/decisions"
+      },
+      {
+        "text": "pr-check",
+        "type": "package",
+        "url": "https://github.com/ojfbot/pr-check"
+      },
+      {
+        "text": "decisions/",
+        "type": "directory",
+        "repo": "daily-logger",
+        "path": "decisions/",
+        "url": "https://github.com/ojfbot/daily-logger/tree/main/decisions/"
+      },
+      {
+        "text": "find decisions/ -xtype l",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "find decisions/ -xtype l",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/find decisions/ -xtype l"
+      },
+      {
+        "text": "d5ea4a5",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/d5ea4a5"
+      },
+      {
+        "text": "state.blogengine.anthropicApiKey",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "apps/BlogEngine/src/settings/",
+        "type": "directory",
+        "repo": "daily-logger",
+        "path": "apps/BlogEngine/src/settings/",
+        "url": "https://github.com/ojfbot/daily-logger/tree/main/apps/BlogEngine/src/settings/"
+      },
+      {
+        "text": "SettingsPanel",
+        "type": "component",
+        "repo": "daily-logger"
+      },
+      {
+        "text": ":3001",
+        "type": "config",
+        "repo": "daily-logger"
+      },
+      {
+        "text": "settings/updateCvBuilderSettings({ apiBaseUrl: '...' })",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "settings/updateCvBuilderSettings({ apiBaseUrl: '...' })",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/settings/updateCvBuilderSettings({ apiBaseUrl: '...' })"
+      },
+      {
+        "text": "core",
+        "type": "directory",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "5a6a36c",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/5a6a36c"
+      },
+      {
+        "text": "f424a1c",
+        "type": "commit",
+        "repo": "daily-logger",
+        "url": "https://github.com/ojfbot/daily-logger/commit/f424a1c"
+      },
+      {
+        "text": "@originjs/vite-plugin-federation",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@originjs/vite-plugin-federation"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      },
+      {
+        "text": "apps/BlogEngine/src/settings/SettingsPanel",
+        "type": "file",
+        "repo": "daily-logger",
+        "path": "apps/BlogEngine/src/settings/SettingsPanel",
+        "url": "https://github.com/ojfbot/daily-logger/blob/main/apps/BlogEngine/src/settings/SettingsPanel"
+      }
+    ]
   },
   {
     "date": "2026-03-03",
@@ -1719,7 +7619,179 @@
     "activityType": "rest",
     "schemaVersion": 2,
     "decisions": [],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "main",
+        "type": "config"
+      },
+      {
+        "text": "frame.jim.software",
+        "type": "file"
+      },
+      {
+        "text": "cv.jim.software",
+        "type": "file"
+      },
+      {
+        "text": "trips.jim.software",
+        "type": "file"
+      },
+      {
+        "text": "blog.jim.software",
+        "type": "file"
+      },
+      {
+        "text": "reader.jim.software",
+        "type": "file"
+      },
+      {
+        "text": "vercel.json",
+        "type": "file"
+      },
+      {
+        "text": "/assets/*",
+        "type": "command"
+      },
+      {
+        "text": "remoteEntry.js",
+        "type": "file"
+      },
+      {
+        "text": ".github/workflows/deploy.yml",
+        "type": "file"
+      },
+      {
+        "text": "pull → build → deploy",
+        "type": "config"
+      },
+      {
+        "text": "loadEnv",
+        "type": "config"
+      },
+      {
+        "text": ".env.production",
+        "type": "file"
+      },
+      {
+        "text": "import.meta.env",
+        "type": "file"
+      },
+      {
+        "text": "https://frame.jim.software/undefined/remoteEntry.js",
+        "type": "file"
+      },
+      {
+        "text": "loadEnv()",
+        "type": "config"
+      },
+      {
+        "text": "vite.config.ts",
+        "type": "file"
+      },
+      {
+        "text": "axios",
+        "type": "config"
+      },
+      {
+        "text": "/api/trips",
+        "type": "command"
+      },
+      {
+        "text": "src/api/client.ts",
+        "type": "file"
+      },
+      {
+        "text": "VITE_API_URL",
+        "type": "env"
+      },
+      {
+        "text": "baseURL",
+        "type": "config"
+      },
+      {
+        "text": "contents:read",
+        "type": "config"
+      },
+      {
+        "text": "actions/checkout",
+        "type": "file"
+      },
+      {
+        "text": "checkout",
+        "type": "config"
+      },
+      {
+        "text": "pull-requests:write",
+        "type": "config"
+      },
+      {
+        "text": "VITE_IBM_TELEMETRY_DISABLED=true",
+        "type": "config"
+      },
+      {
+        "text": "packageManager",
+        "type": "config"
+      },
+      {
+        "text": "package.json",
+        "type": "file"
+      },
+      {
+        "text": "VITE_FRAME_AGENT_URL",
+        "type": "env"
+      },
+      {
+        "text": "ShellHeader",
+        "type": "component"
+      },
+      {
+        "text": "agentAvailable",
+        "type": "config"
+      },
+      {
+        "text": "setup-vercel-ci.sh",
+        "type": "file"
+      },
+      {
+        "text": "./setup-vercel-ci.sh",
+        "type": "file"
+      },
+      {
+        "text": "VERCEL_TOKEN",
+        "type": "env"
+      },
+      {
+        "text": "gh",
+        "type": "config"
+      },
+      {
+        "text": "gh auth login",
+        "type": "config"
+      },
+      {
+        "text": "Access-Control-Allow-Origin: *",
+        "type": "config"
+      },
+      {
+        "text": "/assets/",
+        "type": "command"
+      },
+      {
+        "text": "\"\"",
+        "type": "config"
+      },
+      {
+        "text": "core-reader",
+        "type": "directory",
+        "repo": "core-reader",
+        "url": "https://github.com/ojfbot/core-reader"
+      },
+      {
+        "text": "SettingsPanel",
+        "type": "component"
+      }
+    ]
   },
   {
     "date": "2026-03-02",
@@ -1817,6 +7889,120 @@
         "repo": "daily-logger",
         "status": "open",
         "sourceDate": "2026-03-02"
+      }
+    ],
+    "codeReferences": [
+      {
+        "text": "3c00db4",
+        "type": "commit"
+      },
+      {
+        "text": "vite-plugin-css-injected-by-js",
+        "type": "package",
+        "url": "https://github.com/ojfbot/vite-plugin-css-injected-by-js"
+      },
+      {
+        "text": "__federation_expose_Dashboard",
+        "type": "config"
+      },
+      {
+        "text": "shellMode",
+        "type": "config"
+      },
+      {
+        "text": "transition: all",
+        "type": "config"
+      },
+      {
+        "text": "right 0.2s cubic-bezier(0.4,0,0.2,1)",
+        "type": "config"
+      },
+      {
+        "text": ".condensed-chat",
+        "type": "config"
+      },
+      {
+        "text": "core_reader",
+        "type": "config"
+      },
+      {
+        "text": ":3015",
+        "type": "config"
+      },
+      {
+        "text": "expanded",
+        "type": "config"
+      },
+      {
+        "text": "@carbon/react",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@carbon/react"
+      },
+      {
+        "text": "workflow_dispatch",
+        "type": "config"
+      },
+      {
+        "text": "scripts/frame-dev.sh",
+        "type": "file"
+      },
+      {
+        "text": "/frame-dev",
+        "type": "command"
+      },
+      {
+        "text": ":3000",
+        "type": "config"
+      },
+      {
+        "text": ":3001",
+        "type": "config"
+      },
+      {
+        "text": ":3002",
+        "type": "config"
+      },
+      {
+        "text": ":3003",
+        "type": "config"
+      },
+      {
+        "text": "068350e",
+        "type": "commit"
+      },
+      {
+        "text": "65f3e4a",
+        "type": "commit"
+      },
+      {
+        "text": "cfc649f",
+        "type": "commit"
+      },
+      {
+        "text": "/pr-review",
+        "type": "command"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "frame-dev.sh",
+        "type": "file"
+      },
+      {
+        "text": "/roadmap",
+        "type": "command"
+      },
+      {
+        "text": "'./Settings'",
+        "type": "file"
       }
     ]
   },
@@ -1924,6 +8110,132 @@
         "status": "open",
         "sourceDate": "2026-03-01"
       }
+    ],
+    "codeReferences": [
+      {
+        "text": "<Modal>",
+        "type": "config"
+      },
+      {
+        "text": "<Suspense>",
+        "type": "config"
+      },
+      {
+        "text": "ErrorBoundary",
+        "type": "component"
+      },
+      {
+        "text": "SettingsPanel",
+        "type": "component"
+      },
+      {
+        "text": "'./Settings'",
+        "type": "file"
+      },
+      {
+        "text": "SettingsPanel.tsx",
+        "type": "file"
+      },
+      {
+        "text": "!important",
+        "type": "config"
+      },
+      {
+        "text": "showSettings",
+        "type": "config"
+      },
+      {
+        "text": "componentStack",
+        "type": "config"
+      },
+      {
+        "text": "APP_CONFIG",
+        "type": "env"
+      },
+      {
+        "text": "bffbfab",
+        "type": "commit"
+      },
+      {
+        "text": "APP_LABELS",
+        "type": "env"
+      },
+      {
+        "text": "scripts/tools/",
+        "type": "directory"
+      },
+      {
+        "text": "transcript.json",
+        "type": "file"
+      },
+      {
+        "text": "transcript.txt",
+        "type": "file"
+      },
+      {
+        "text": "transcript_segments.jsonl",
+        "type": "file"
+      },
+      {
+        "text": "ruff",
+        "type": "config"
+      },
+      {
+        "text": "deakins_forums/",
+        "type": "directory"
+      },
+      {
+        "text": "/frame-dev",
+        "type": "command"
+      },
+      {
+        "text": "node-template",
+        "type": "package",
+        "url": "https://github.com/ojfbot/node-template"
+      },
+      {
+        "text": "core",
+        "type": "directory",
+        "repo": "core",
+        "url": "https://github.com/ojfbot/core"
+      },
+      {
+        "text": "scripts/frame-dev.sh",
+        "type": "file"
+      },
+      {
+        "text": ":4000/:4001",
+        "type": "file"
+      },
+      {
+        "text": "decisions/",
+        "type": "directory"
+      },
+      {
+        "text": "frame-os-context",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-os-context"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      },
+      {
+        "text": "/investigate",
+        "type": "command"
+      },
+      {
+        "text": "feat: migrate sub-app settings modals into the shell (ADR-0011)",
+        "type": "config"
+      },
+      {
+        "text": "/pr-review",
+        "type": "command"
+      },
+      {
+        "text": "/roadmap",
+        "type": "command"
+      }
     ]
   },
   {
@@ -2023,6 +8335,150 @@
         "repo": "daily-logger",
         "status": "open",
         "sourceDate": "2026-02-28"
+      }
+    ],
+    "codeReferences": [
+      {
+        "text": "feat(generate): deterministic article structure",
+        "type": "config"
+      },
+      {
+        "text": "> **Suggested actions**",
+        "type": "config"
+      },
+      {
+        "text": "assembleBody()",
+        "type": "config"
+      },
+      {
+        "text": "getOpenPRs()",
+        "type": "config"
+      },
+      {
+        "text": "## Open PRs — in-flight work",
+        "type": "config"
+      },
+      {
+        "text": "pnpm test",
+        "type": "config"
+      },
+      {
+        "text": "pnpm install",
+        "type": "config"
+      },
+      {
+        "text": "vitest: not found",
+        "type": "config"
+      },
+      {
+        "text": "domain-knowledge/",
+        "type": "directory"
+      },
+      {
+        "text": "realpath()",
+        "type": "config"
+      },
+      {
+        "text": "browser-app",
+        "type": "package",
+        "url": "https://github.com/ojfbot/browser-app"
+      },
+      {
+        "text": "@originjs/vite-plugin-federation ^1.3.5",
+        "type": "file"
+      },
+      {
+        "text": "./Dashboard",
+        "type": "file"
+      },
+      {
+        "text": "shared",
+        "type": "config"
+      },
+      {
+        "text": "singleton: true",
+        "type": "config"
+      },
+      {
+        "text": "requiredVersion",
+        "type": "config"
+      },
+      {
+        "text": "package.json",
+        "type": "file"
+      },
+      {
+        "text": "TD-001",
+        "type": "config"
+      },
+      {
+        "text": "VITE_SHELL_ORIGIN",
+        "type": "env"
+      },
+      {
+        "text": "GET /api/tools",
+        "type": "endpoint"
+      },
+      {
+        "text": "/shell",
+        "type": "command"
+      },
+      {
+        "text": "/spec-review",
+        "type": "command"
+      },
+      {
+        "text": "/skill-create",
+        "type": "command"
+      },
+      {
+        "text": "packages/api",
+        "type": "file"
+      },
+      {
+        "text": "library/",
+        "type": "directory"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      },
+      {
+        "text": "/techdebt",
+        "type": "command"
+      },
+      {
+        "text": "whatShipped",
+        "type": "config"
+      },
+      {
+        "text": "theDecisions",
+        "type": "config"
+      },
+      {
+        "text": "roadmapPulse",
+        "type": "config"
+      },
+      {
+        "text": "whatsNext",
+        "type": "config"
+      },
+      {
+        "text": "actions",
+        "type": "config"
+      },
+      {
+        "text": "@originjs/vite-plugin-federation",
+        "type": "package",
+        "url": "https://www.npmjs.com/package/@originjs/vite-plugin-federation"
+      },
+      {
+        "text": "/pr-review",
+        "type": "command"
+      },
+      {
+        "text": "/roadmap",
+        "type": "command"
       }
     ]
   },
@@ -2141,6 +8597,137 @@
         "status": "open",
         "sourceDate": "2026-02-27"
       }
+    ],
+    "codeReferences": [
+      {
+        "text": "GET /api/tools",
+        "type": "endpoint"
+      },
+      {
+        "text": "9fa8c8f",
+        "type": "commit"
+      },
+      {
+        "text": "70613ee",
+        "type": "commit"
+      },
+      {
+        "text": "3fbb23e",
+        "type": "commit"
+      },
+      {
+        "text": "---\\n*🤖 Claude Code*",
+        "type": "config"
+      },
+      {
+        "text": "decisions/adr/",
+        "type": "directory"
+      },
+      {
+        "text": "decisions/README.md",
+        "type": "file"
+      },
+      {
+        "text": "/adr publish",
+        "type": "config"
+      },
+      {
+        "text": "a113f72",
+        "type": "commit"
+      },
+      {
+        "text": "plan-feature",
+        "type": "package",
+        "url": "https://github.com/ojfbot/plan-feature"
+      },
+      {
+        "text": "72f4a34",
+        "type": "commit"
+      },
+      {
+        "text": "905ce6e",
+        "type": "commit"
+      },
+      {
+        "text": ".claude/commands/*.md",
+        "type": "file"
+      },
+      {
+        "text": "knowledge/",
+        "type": "directory"
+      },
+      {
+        "text": "scripts/",
+        "type": "directory"
+      },
+      {
+        "text": "657fa04",
+        "type": "commit"
+      },
+      {
+        "text": "themeSlice",
+        "type": "config"
+      },
+      {
+        "text": "6071725",
+        "type": "commit"
+      },
+      {
+        "text": "@carbon/styles/css/styles.css",
+        "type": "file"
+      },
+      {
+        "text": "pull-requests: write",
+        "type": "config"
+      },
+      {
+        "text": "5b024b4",
+        "type": "commit"
+      },
+      {
+        "text": "/shell",
+        "type": "command"
+      },
+      {
+        "text": "/adr",
+        "type": "command"
+      },
+      {
+        "text": "/plan-feature",
+        "type": "command"
+      },
+      {
+        "text": "/techdebt",
+        "type": "command"
+      },
+      {
+        "text": "manifest.json",
+        "type": "file"
+      },
+      {
+        "text": "workflow_dispatch",
+        "type": "config"
+      },
+      {
+        "text": "/scaffold",
+        "type": "command"
+      },
+      {
+        "text": "daily-logger/src/",
+        "type": "directory"
+      },
+      {
+        "text": "/roadmap",
+        "type": "command"
+      },
+      {
+        "text": "/validate",
+        "type": "command"
+      },
+      {
+        "text": "src/post-to-blogengine.ts",
+        "type": "file"
+      }
     ]
   },
   {
@@ -2180,7 +8767,55 @@
     "activityType": "rest",
     "schemaVersion": 2,
     "decisions": [],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "feat(dashboard): Pages-first data fetch + run selector",
+        "type": "config"
+      },
+      {
+        "text": "CanvasRunNavigator",
+        "type": "component"
+      },
+      {
+        "text": "runs-index.json",
+        "type": "file"
+      },
+      {
+        "text": "pipeline-result.json",
+        "type": "file"
+      },
+      {
+        "text": "feat(ci-pipeline): add per-screenshot comparison data",
+        "type": "config"
+      },
+      {
+        "text": "personas/*.md",
+        "type": "file"
+      },
+      {
+        "text": "fix: migrate articles/ to _articles/ and harden Jekyll config",
+        "type": "file"
+      },
+      {
+        "text": "docs(blog): add blog post proposal for PR #97",
+        "type": "config"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "Cache-Control",
+        "type": "config"
+      },
+      {
+        "text": "feat: add variant flag to baseline pipeline",
+        "type": "config"
+      }
+    ]
   },
   {
     "date": "2026-02-25",
@@ -2219,7 +8854,81 @@
     "activityType": "build",
     "schemaVersion": 2,
     "decisions": [],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "d5d4384",
+        "type": "commit"
+      },
+      {
+        "text": "App.tsx",
+        "type": "file"
+      },
+      {
+        "text": "main.tsx",
+        "type": "file"
+      },
+      {
+        "text": "index.html",
+        "type": "file"
+      },
+      {
+        "text": "1d672ea",
+        "type": "commit"
+      },
+      {
+        "text": "8db86f5",
+        "type": "commit"
+      },
+      {
+        "text": "080011f",
+        "type": "commit"
+      },
+      {
+        "text": "2ad9c46",
+        "type": "commit"
+      },
+      {
+        "text": "gh",
+        "type": "config"
+      },
+      {
+        "text": "5baf6df",
+        "type": "commit"
+      },
+      {
+        "text": "DATE_OVERRIDE",
+        "type": "env"
+      },
+      {
+        "text": "articles/.md",
+        "type": "file"
+      },
+      {
+        "text": "data-element",
+        "type": "package",
+        "url": "https://github.com/ojfbot/data-element"
+      },
+      {
+        "text": "z.record",
+        "type": "file"
+      },
+      {
+        "text": "frame-agent",
+        "type": "package",
+        "url": "https://github.com/ojfbot/frame-agent"
+      },
+      {
+        "text": "@ojfbot/shell",
+        "type": "package",
+        "url": "https://github.com/ojfbot/shell",
+        "repo": "shell"
+      },
+      {
+        "text": "b541fdc",
+        "type": "commit"
+      }
+    ]
   },
   {
     "date": "2026-02-24",
@@ -2258,6 +8967,65 @@
     "activityType": "build",
     "schemaVersion": 2,
     "decisions": [],
-    "actions": []
+    "actions": [],
+    "codeReferences": [
+      {
+        "text": "CanvasRunNavigator",
+        "type": "component"
+      },
+      {
+        "text": "DiagramViewer",
+        "type": "component"
+      },
+      {
+        "text": "4ca68d1",
+        "type": "commit"
+      },
+      {
+        "text": "5000af9",
+        "type": "commit"
+      },
+      {
+        "text": "data-element",
+        "type": "package",
+        "url": "https://github.com/ojfbot/data-element"
+      },
+      {
+        "text": "7701c43",
+        "type": "commit"
+      },
+      {
+        "text": "cc56c6f",
+        "type": "commit"
+      },
+      {
+        "text": "050d776",
+        "type": "commit"
+      },
+      {
+        "text": "z.record",
+        "type": "file"
+      },
+      {
+        "text": "8db86f5",
+        "type": "commit"
+      },
+      {
+        "text": "080011f",
+        "type": "commit"
+      },
+      {
+        "text": "GET /api/tools",
+        "type": "endpoint"
+      },
+      {
+        "text": "f2987e5",
+        "type": "commit"
+      },
+      {
+        "text": "{ name, description, inputSchema }",
+        "type": "config"
+      }
+    ]
   }
 ]
