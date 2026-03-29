@@ -2,17 +2,22 @@
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 18
+    "count": 19
   },
   {
     "name": "shell",
     "type": "repo",
-    "count": 15
+    "count": 16
   },
   {
     "name": "phase-1",
     "type": "phase",
-    "count": 9
+    "count": 10
+  },
+  {
+    "name": "cv-builder",
+    "type": "repo",
+    "count": 8
   },
   {
     "name": "ci-cd",
@@ -35,19 +40,14 @@
     "count": 7
   },
   {
-    "name": "cv-builder",
-    "type": "repo",
-    "count": 7
-  },
-  {
     "name": "daily-logger",
     "type": "repo",
-    "count": 5
+    "count": 6
   },
   {
     "name": "adr",
     "type": "practice",
-    "count": 5
+    "count": 6
   },
   {
     "name": "purefoy",
@@ -105,6 +105,16 @@
     "count": 3
   },
   {
+    "name": "core",
+    "type": "repo",
+    "count": 2
+  },
+  {
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "tooling",
     "type": "concept",
     "count": 2
@@ -158,6 +168,26 @@
     "name": "visual-regression",
     "type": "practice",
     "count": 2
+  },
+  {
+    "name": "MrPlug",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "landing",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "security-as-emergent-ux",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "sprint",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "groupthing",
@@ -315,11 +345,6 @@
     "count": 1
   },
   {
-    "name": "core",
-    "type": "repo",
-    "count": 1
-  },
-  {
     "name": "github-integration",
     "type": "concept",
     "count": 1
@@ -367,11 +392,6 @@
   {
     "name": "vercel",
     "type": "infra",
-    "count": 1
-  },
-  {
-    "name": "tooling-for-iteration",
-    "type": "concept",
     "count": 1
   },
   {

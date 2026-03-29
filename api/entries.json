@@ -1,5 +1,129 @@
 [
   {
+    "date": "2026-03-29",
+    "title": "Saturday sprint: actions board zeroed, ADRs landed, MrPlug hardened",
+    "summary": "Forty-four commits Saturday closed the actions board to zero, merged three ADRs, fixed the landing nav, hardened MrPlug's relay security, and formally named the Module Federation minification regression.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "MrPlug",
+        "type": "concept"
+      },
+      {
+        "name": "landing",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "core",
+      "landing",
+      "MrPlug",
+      "GroupThink",
+      "seh-study",
+      "cv-builder",
+      "daily-logger"
+    ],
+    "commitCount": 31,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "ADR-0034: Isolated Redux stores per remote, coordinated via FrameBus",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0033: Three-tier confidence threshold for daily-cleaner bot",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0036: Structured decision output drives rich UI",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Filing cv-builder #99: name the minification workaround before it compounds",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "MrPlug relay security hardening before Phase 5 promotion",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/investigate",
+        "description": "Check @originjs/vite-plugin-federation versions > 1.4.1 for per-chunk minification support; test upgrade path in packages/browser-app/vite.config.ts before scoping a custom chunk workaround for #99. Goal: re-enable minification for the production bundle without the full bundle-scope flag.",
+        "repo": "cv-builder",
+        "status": "open",
+        "sourceDate": "2026-03-29"
+      },
+      {
+        "command": "/adr",
+        "description": "Formalise the cross-domain fanout plan document added in b2330d7 as ADR-0037, or close it as a resolved design note. The document proposes a peer-to-peer FrameBus fanout topology; the open question (shell-owned vs. peer-negotiated event schemas) must be resolved before Phase 1 federation spikes begin.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-03-29"
+      },
+      {
+        "command": "/validate",
+        "description": "Wire the first FrameBus proof-of-concept per ADR-0034: one event published from cv-builder, one subscriber in shell, typed event catalog committed to the shell repo. ADR-0034 is a closed decision but has no running implementation — produce the stub before the pattern spreads to shell #83–#86.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-03-29"
+      }
+    ]
+  },
+  {
     "date": "2026-03-28",
     "title": "Friday cleanup: GroupThink sheds stale docs as the fleet idles before the weekend",
     "summary": "Friday was a light day — one automated cleanup PR in GroupThink and the daily blog commit, both bot-authored, holding the line before the weekend.",
