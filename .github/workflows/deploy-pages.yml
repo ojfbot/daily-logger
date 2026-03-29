@@ -44,6 +44,9 @@ jobs:
       - name: Build static JSON API
         run: pnpm build:api
 
+      - name: Build frontend
+        run: pnpm build:frontend
+
       - name: Setup Ruby (Jekyll)
         uses: ruby/setup-ruby@v1
         with:

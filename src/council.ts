@@ -19,7 +19,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { BlogContext, GeneratedArticle, Persona, CouncilNote, StructuredArticle } from './types.js'
+import type { BlogContext, GeneratedArticle, Persona, CouncilNote } from './types.js'
 import { assembleBody } from './generate-article.js'
 import { validateArticleOutput } from './schema.js'
 
