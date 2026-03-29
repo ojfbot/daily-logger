@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams, Link } from 'react-router-dom'
 import { useEntries } from '../hooks/useEntries.ts'
@@ -7,16 +7,18 @@ import { fetchArticle } from '../store/articlesSlice.ts'
 import { useArticlePopovers } from '../hooks/useArticlePopovers.ts'
 import { useSectionContent } from '../hooks/useSectionContent.ts'
 import { Popover } from './Popover.tsx'
-import { ChatSidebar } from './ChatSidebar.tsx'
 import { SectionChatButton } from './SectionChatButton.tsx'
+import { SectionChatZone } from './SectionChatZone.tsx'
+import { SubmitAllFeedback } from './SubmitAllFeedback.tsx'
 
 export function ArticlePage() {
   const { date } = useParams<{ date: string }>()
   const { entries } = useEntries()
   const dispatch = useAppDispatch()
   const { articleCache, articleLoading } = useAppSelector((s) => s.articles)
-  const activeSection = useAppSelector((s) => s.chat.activeSection)
+  const { threads, threadOrder } = useAppSelector((s) => s.chat)
   const contentRef = useRef<HTMLDivElement>(null)
+  const [sectionHeadings, setSectionHeadings] = useState<string[]>([])
 
   const entry = entries.find((e) => e.date === date)
   const article = date ? articleCache[date] : undefined
@@ -35,55 +37,66 @@ export function ArticlePage() {
 
   const displayEntry = article ?? entry
 
-  // Inject chat buttons next to h2 headings after article renders
+  // Inject chat buttons into h2 headings
   useEffect(() => {
     const container = contentRef.current
     if (!container || !date) return
 
     const h2s = container.querySelectorAll('h2')
-    const wrappers: HTMLSpanElement[] = []
+    const wrappers: HTMLElement[] = []
+    const headings: string[] = []
 
     for (const h2 of h2s) {
-      // Skip if already has a chat button wrapper
       if (h2.querySelector('.section-chat-wrapper')) continue
 
-      const wrapper = document.createElement('span')
-      wrapper.className = 'section-chat-wrapper'
-      h2.style.position = 'relative'
-      h2.appendChild(wrapper)
-      wrappers.push(wrapper)
+      const btnWrapper = document.createElement('span')
+      btnWrapper.className = 'section-chat-wrapper'
+      h2.appendChild(btnWrapper)
+      wrappers.push(btnWrapper)
+
+      headings.push(h2.textContent?.replace('+', '').trim() ?? '')
     }
+
+    setSectionHeadings(headings)
 
     return () => {
       for (const w of wrappers) w.remove()
+      setSectionHeadings([])
     }
   }, [article?.bodyHtml, date])
 
-  // Render chat buttons into the wrapper spans via portals
-  const chatButtonPortals = useMemo(() => {
+  // Render chat buttons via portals into h2 elements
+  const buttonPortals = useMemo(() => {
     const container = contentRef.current
     if (!container || !date) return null
 
-    const wrappers = container.querySelectorAll('.section-chat-wrapper')
-    const portals: React.ReactPortal[] = []
-
-    for (const wrapper of wrappers) {
+    const result: React.ReactPortal[] = []
+    const btnWrappers = container.querySelectorAll('.section-chat-wrapper')
+    for (const wrapper of btnWrappers) {
       const h2 = wrapper.parentElement
-      const heading = h2?.textContent?.replace('›', '').trim()
+      const heading = h2?.textContent?.replace('+', '').trim()
       if (!heading) continue
 
-      portals.push(
+      result.push(
         createPortal(
           <SectionChatButton section={heading} date={date} />,
           wrapper,
-          `chat-btn-${heading}`,
+          `btn-${heading}`,
         ),
       )
     }
 
-    return portals
+    return result
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [article?.bodyHtml, date, activeSection])
+  }, [article?.bodyHtml, date, sectionHeadings])
+
+  // Check if any threads exist for this article
+  const hasThreads = useMemo(() => {
+    return threadOrder.some((id) => {
+      const t = threads[id]
+      return t && t.date === date
+    })
+  }, [threads, threadOrder, date])
 
   // Related articles (share 2+ tags)
   const related = useMemo(() => {
@@ -99,11 +112,6 @@ export function ArticlePage() {
       .sort((a, b) => b.overlap - a.overlap)
       .slice(0, 5)
   }, [displayEntry, entries, date])
-
-  const handleExtractSection = useCallback(
-    (heading: string) => extractSection(heading),
-    [extractSection],
-  )
 
   if (articleLoading && !article) return <div className="loading">Loading article...</div>
 
@@ -131,7 +139,7 @@ export function ArticlePage() {
         </div>
       )}
 
-      <div className={`article-layout ${activeSection ? 'chat-open' : ''}`}>
+      <div className={`article-layout${hasThreads ? ' chat-open' : ''}`}>
         <div className="article-main">
           {article?.bodyHtml ? (
             <article
@@ -143,7 +151,7 @@ export function ArticlePage() {
             !articleLoading && <article className="article-content"><p>Article not found.</p></article>
           )}
 
-          {chatButtonPortals}
+          {buttonPortals}
 
           <Popover state={popoverState} />
 
@@ -160,11 +168,22 @@ export function ArticlePage() {
           )}
         </div>
 
-        <ChatSidebar
-          articleTitle={displayEntry?.title ?? ''}
-          extractSection={handleExtractSection}
-        />
+        {hasThreads && date && (
+          <div className="chat-column">
+            {sectionHeadings.map((heading) => (
+              <SectionChatZone
+                key={heading}
+                section={heading}
+                date={date}
+                articleTitle={displayEntry?.title ?? ''}
+                extractSection={extractSection}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      <SubmitAllFeedback />
     </>
   )
 }
