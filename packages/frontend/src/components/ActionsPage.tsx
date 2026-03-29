@@ -76,9 +76,10 @@ export function ActionsPage() {
     const doneItem = doneMap.get(actionHash(a))
     if (!doneItem?.resolution && !doneItem?.closedDate) return
 
+    const target = e.currentTarget as HTMLElement
     window.clearTimeout(hoverTimer.current)
     hoverTimer.current = window.setTimeout(() => {
-      setPopover({ anchor: e.currentTarget as HTMLElement, item: doneItem })
+      setPopover({ anchor: target, item: doneItem })
     }, SHOW_DELAY)
   }, [doneMap])
 
