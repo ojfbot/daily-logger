@@ -1,5 +1,5 @@
 import { useAppDispatch } from '../store/hooks.ts'
-import { openChat } from '../store/chatSlice.ts'
+import { createThread } from '../store/chatSlice.ts'
 
 interface Props {
   section: string
@@ -12,11 +12,11 @@ export function SectionChatButton({ section, date }: Props) {
   return (
     <button
       className="section-chat-btn"
-      title={`Chat about "${section}"`}
-      onClick={() => dispatch(openChat({ section, date }))}
-      aria-label={`Open chat for ${section}`}
+      title={`Start chat thread about "${section}"`}
+      onClick={() => dispatch(createThread({ section, date }))}
+      aria-label={`New chat thread for ${section}`}
     >
-      ›
+      +
     </button>
   )
 }
