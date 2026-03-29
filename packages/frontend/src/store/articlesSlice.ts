@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import type { EntryData, TagCount, RepoStats, ActionItem } from './types.ts'
 
-const BASE = '/daily-logger'
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
 
 async function fetchJSON<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`)

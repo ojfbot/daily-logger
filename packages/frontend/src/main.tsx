@@ -9,7 +9,7 @@ import { App } from './App.tsx'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-      <BrowserRouter basename="/daily-logger">
+      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
         <App />
       </BrowserRouter>
     </Provider>

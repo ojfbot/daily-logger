@@ -1,14 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm build:api && cd packages/frontend && pnpm build",
+  "buildCommand": "VITE_BASE_PATH=/ pnpm build:api && cd packages/frontend && VITE_BASE_PATH=/ pnpm build",
   "outputDirectory": "packages/frontend/dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/daily-logger/(.*)", "destination": "/daily-logger/index.html" }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
-      "source": "/daily-logger/api/(.*)",
+      "source": "/api/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=60" }
       ]
