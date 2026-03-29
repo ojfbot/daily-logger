@@ -239,8 +239,9 @@ Your job is to produce the final, polished version of this article. Incorporate 
 3. **Sharpening the framing** based on what the reviewers said landed well — if something worked, make sure it's prominent.
 4. **Deepening the didactic layer**: if a reviewer asked a question that the article doesn't answer, and the answer is knowable, answer it. Explain it as if teaching a developer who is returning to this codebase after two weeks away.
 5. **Preserving structure** — the final article must have four sections: What shipped, The decisions, Roadmap pulse, What's next.
-6. **Preserving action items** — include 1-3 slash-command action items per section in the \`actions\` field. These must be specific to today's work, not generic filler.
-7. **Do not add marketing language or fluff** to compensate for gaps. Honest and direct always wins.
+6. **Identifying the headline**: Before restructuring, identify the 1-2 headline stories of the day — the work that represents a phase transition or new capability, not just the highest volume. Ensure headline stories are prominent in the lede and lead the whatShipped section. If the draft buries the headline story among incremental changes, promote it. If a reviewer's feedback reveals a more significant narrative than the draft chose, follow that signal.
+7. **Preserving action items** — include 1-3 slash-command action items per section in the \`actions\` field. These must be specific to today's work, not generic filler.
+8. **Do not add marketing language or fluff** to compensate for gaps. Honest and direct always wins.
 
 The audience for this article is a technical reader who is also evaluating the author as an engineer and systems thinker. Every word should earn its place.
 

@@ -79,6 +79,17 @@ All three TypeScript apps share an identical extracted shell:
 - No marketing language, no hype, no "exciting new features"
 - Aware that this blog is itself a demonstration of AI-native development
 
+## Narrative priority
+
+Before writing anything, identify the 1-2 headline stories of the day. A headline story is work that represents a phase transition, a new capability, or a major architectural shift — not just the highest commit count. Ask: "If I had to tell another engineer one thing about what changed today, what would it be?"
+
+Rules:
+- **Lead the lede with the headline story.** The opening paragraph must name the biggest capability change or phase transition, not a commit count or a list of repos.
+- **Distinguish "the big thing" from "also shipped."** In whatShipped, the repo section(s) containing the headline story should lead with significance framing — what capability exists now that didn't exist yesterday? — before listing commits. Other repo sections are "also shipped" and should be shorter and factual.
+- **Clusters over counts.** When 5+ commits in one repo all contribute to a single feature (e.g., accordion UI + popover + schema extension + ADR = "daily-logger became a dashboard"), treat the cluster as one story, not five separate items. Name the capability the cluster creates.
+- **Volume is not significance.** 35 commits closing housekeeping items is less significant than 4 commits that add a new interactive UI capability. Never let commit count determine narrative weight.
+- **The title must name the headline story.** A title like "Saturday sprint: 44 commits across 6 repos" is a changelog header. A title like "Saturday: daily-logger becomes an interactive dashboard" is a narrative.
+
 ## Action item standards
 
 Action items in the \`actions\` fields must be:
@@ -483,6 +494,24 @@ export function buildUserPrompt(ctx: BlogContext): string {
     zeroCommit ? `This is a **rest/reading day** — no commits in the window. Follow the Rest days guidelines from the system prompt.` : '',
     '',
   ].filter((l) => l !== undefined)
+
+  // ── Significance framing ──
+  // Help the model identify feature clusters before seeing raw commit data.
+  if (!zeroCommit) {
+    parts.push(
+      `## Narrative framing instruction`,
+      ``,
+      `Before processing the raw data below, scan for **feature clusters**: groups of 3+ commits in the same repo that together represent a single new capability, UI transformation, or architectural shift. These clusters — not individual commits — are likely the headline stories of the day.`,
+      ``,
+      `Signals that commits form a feature cluster:`,
+      `- Sequential commits in the same repo with related scope (e.g., UI + schema + ADR + bugfix all touching the same feature)`,
+      `- A commit type sequence like feat → feat → fix → docs in the same area`,
+      `- PR(s) that bundle multiple commits toward one goal`,
+      ``,
+      `When you find a cluster, name the capability it creates (e.g., "daily-logger gained an interactive dashboard") rather than listing commits individually. Lead your article with the most significant cluster.`,
+      ``
+    )
+  }
 
   if (ctx.commits.length > 0) {
     const total = ctx.commits.length
