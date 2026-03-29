@@ -13,6 +13,7 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { marked } from 'marked'
 import type { CodeReference } from './schema.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -288,6 +289,25 @@ export function buildApi() {
       }
     }
   }
+
+  // Write per-article JSON files with rendered HTML body
+  const articlesApiDir = join(API_DIR, 'articles')
+  if (!existsSync(articlesApiDir)) mkdirSync(articlesApiDir, { recursive: true })
+
+  for (const file of files) {
+    const content = readFileSync(join(ARTICLES_DIR, file), 'utf-8')
+    const body = content.replace(/^---[\s\S]*?---\n/, '')
+    const date = file.replace('.md', '')
+    const entry = entries.find((e) => e.date === date)
+    if (!entry) continue
+
+    const bodyHtml = marked.parse(body) as string
+    writeFileSync(
+      join(articlesApiDir, `${date}.json`),
+      JSON.stringify({ ...entry, bodyHtml }, null, 2),
+    )
+  }
+  console.log(`  articles/    — ${files.length} per-article JSON files`)
 
   // Write entries.json
   writeFileSync(join(API_DIR, 'entries.json'), JSON.stringify(entries, null, 2))
