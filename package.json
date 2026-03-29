@@ -12,8 +12,11 @@
     "clean:dry": "DRY_RUN=true tsx src/clean.ts",
     "backfill": "tsx src/backfill-tags.ts",
     "build:api": "tsx src/build-api.ts",
-    "dev": "tsx src/build-api.ts && jekyll serve --livereload --port 4040",
-    "dev:build": "tsx src/build-api.ts && jekyll build --destination _site",
+    "build:frontend": "tsx src/build-frontend.ts",
+    "type-check": "tsc --noEmit && tsc --noEmit -p tsconfig.frontend.json",
+    "lint": "eslint 'src/**/*.ts'",
+    "dev": "tsx src/build-frontend.ts && tsx src/build-api.ts && jekyll serve --livereload --port 4040",
+    "dev:build": "tsx src/build-frontend.ts && tsx src/build-api.ts && jekyll build --destination _site",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -23,8 +26,11 @@
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
+    "esbuild": "^0.27.4",
+    "eslint": "^10.1.0",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.57.2",
     "vitest": "^4.0.18"
   },
   "engines": {
