@@ -42,12 +42,27 @@ export interface OpenPRInfo {
   draft: boolean
 }
 
+export interface RecentPRInfo {
+  number: number
+  title: string
+  repo: string
+  url: string
+  body?: string
+  state: 'open' | 'closed'
+  createdAt: string
+  updatedAt: string
+  mergedAt?: string
+  draft: boolean
+}
+
 export interface BlogContext {
   date: string
   repos: string[]
   commits: CommitInfo[]
   mergedPRs: PRInfo[]
   openPRs: OpenPRInfo[]
+  /** All PRs (open + closed) created or updated in the last 24h */
+  recentPRs: RecentPRInfo[]
   closedIssues: IssueInfo[]
   openIssues: IssueInfo[]
   projectVision: string

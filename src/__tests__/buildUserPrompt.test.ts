@@ -8,6 +8,7 @@ const emptyCtx: BlogContext = {
   commits: [],
   mergedPRs: [],
   openPRs: [],
+  recentPRs: [],
   closedIssues: [],
   openIssues: [],
   projectVision: '',
