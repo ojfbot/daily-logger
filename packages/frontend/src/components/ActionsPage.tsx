@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useCallback } from 'react'
 import { useEntries } from '../hooks/useEntries.ts'
+import { ActionPopover } from './ActionPopover.tsx'
 import type { ActionItem } from '../store/types.ts'
 
 const STALE_DAYS = 14
+const SHOW_DELAY = 200
 
 function daysSince(dateStr: string): number {
   const d = new Date(dateStr + 'T00:00:00Z')
@@ -29,11 +31,19 @@ function ActionItemRow({ a, extraClass = '' }: { a: ActionItem; extraClass?: str
 export function ActionsPage() {
   const { actions, doneActions, loading } = useEntries()
   const [filter, setFilter] = useState<string | null>(null)
+  const [popover, setPopover] = useState<{ anchor: HTMLElement | null; item: ActionItem | null }>({ anchor: null, item: null })
+  const hoverTimer = useRef<number>(0)
 
   const doneSet = useMemo(() => {
     const s = new Set<string>()
     for (const a of doneActions) s.add(actionHash(a))
     return s
+  }, [doneActions])
+
+  const doneMap = useMemo(() => {
+    const m = new Map<string, ActionItem>()
+    for (const a of doneActions) m.set(actionHash(a), a)
+    return m
   }, [doneActions])
 
   const commands = useMemo(() => {
@@ -61,6 +71,21 @@ export function ActionsPage() {
     }
     return { open, stale, done }
   }, [actions, doneSet, filter])
+
+  const handleDoneEnter = useCallback((e: React.MouseEvent, a: ActionItem) => {
+    const doneItem = doneMap.get(actionHash(a))
+    if (!doneItem?.resolution && !doneItem?.closedDate) return
+
+    window.clearTimeout(hoverTimer.current)
+    hoverTimer.current = window.setTimeout(() => {
+      setPopover({ anchor: e.currentTarget as HTMLElement, item: doneItem })
+    }, SHOW_DELAY)
+  }, [doneMap])
+
+  const handleDoneLeave = useCallback(() => {
+    window.clearTimeout(hoverTimer.current)
+    setPopover({ anchor: null, item: null })
+  }, [])
 
   if (loading) return <div className="loading">Loading actions...</div>
 
@@ -117,10 +142,25 @@ export function ActionsPage() {
           <div id="actions-done">
             {done.length === 0
               ? <p className="entry-stat">No completed items.</p>
-              : done.map((a, i) => <ActionItemRow key={`done-${i}`} a={a} extraClass="action-done" />)}
+              : done.map((a, i) => (
+                <div
+                  key={`done-${i}`}
+                  onMouseEnter={(e) => handleDoneEnter(e, a)}
+                  onMouseLeave={handleDoneLeave}
+                >
+                  <ActionItemRow a={a} extraClass="action-done" />
+                </div>
+              ))}
           </div>
         </div>
       </div>
+
+      <ActionPopover
+        visible={!!popover.anchor}
+        anchor={popover.anchor}
+        resolution={popover.item?.resolution}
+        closedDate={popover.item?.closedDate}
+      />
     </div>
   )
 }

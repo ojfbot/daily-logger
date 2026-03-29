@@ -4,28 +4,36 @@
     "description": "close TripPlanner #9 (opened 2025-12-15) with a reference to #11; confirm nothing unshipped remains before closing",
     "repo": "daily-logger",
     "status": "done",
-    "sourceDate": "2026-03-02"
+    "sourceDate": "2026-03-02",
+    "closedDate": "2026-03-03",
+    "resolution": "TripPlanner #9 closed with reference to #11. Confirmed no unshipped work remained."
   },
   {
     "command": "/adr",
     "description": "document the three-step MF remote integration contract (shellMode + vite-plugin-css-injected-by-js chunk scope + frame-dev.sh entry) before CoreReader UI work begins; the pattern has run across four remotes without a canonical spec",
     "repo": "daily-logger",
     "status": "done",
-    "sourceDate": "2026-03-02"
+    "sourceDate": "2026-03-02",
+    "closedDate": "2026-03-04",
+    "resolution": "Covered in ADR-0012 — shellMode interface contract with MF entry point convention."
   },
   {
     "command": "/adr",
     "description": "write ADR-0012 covering the shellMode interface contract; the pattern is running across four remotes but no canonical spec exists",
     "repo": "daily-logger",
     "status": "done",
-    "sourceDate": "2026-03-02"
+    "sourceDate": "2026-03-02",
+    "closedDate": "2026-03-04",
+    "resolution": "ADR-0012 written and merged via shell PR #6."
   },
   {
     "command": "/adr",
     "description": "document the vite-plugin-css-injected-by-js chunk scoping constraint as a prerequisite for CoreReader UI onboarding; rationale currently lives only in commit history",
     "repo": "daily-logger",
     "status": "done",
-    "sourceDate": "2026-03-02"
+    "sourceDate": "2026-03-02",
+    "closedDate": "2026-03-04",
+    "resolution": "Documented as part of ADR-0012 MF integration contract."
   },
   {
     "command": "/pr-review",
