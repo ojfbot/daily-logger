@@ -173,5 +173,82 @@
     "repo": "daily-logger",
     "status": "done",
     "sourceDate": "2026-02-27"
+  },
+  {
+    "command": "/techdebt",
+    "description": "audit remaining `shared` string shorthand usages across all Frame app vite configs and convert to explicit object form",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-02-28"
+  },
+  {
+    "command": "/plan-feature",
+    "description": "spec the frame-agent routing logic that consumes `GET /api/tools` responses; this is the piece that's explicitly not wired yet",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-02-27"
+  },
+  {
+    "command": "/adr",
+    "description": "document the structured JSON output contract for daily-logger as an ADR; the schema is load-bearing and currently undocumented",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-02-28"
+  },
+  {
+    "command": "/adr",
+    "description": "document the structured JSON output schema for daily-logger before the schema drifts from the prompt",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-02-28"
+  },
+  {
+    "command": "/scaffold",
+    "description": "stub the Phase 9 POST pipeline in `daily-logger/src/` (client, retry logic, error handling) now that BlogEngine's API is ready to receive",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-02-27"
+  },
+  {
+    "command": "/scaffold",
+    "description": "generate the `src/post-to-blogengine.ts` stub with typed request/response shapes against BlogEngine's agent graph API",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-02-27"
+  },
+  {
+    "command": "/plan-feature",
+    "description": "write the full Phase 9 spec including auth flow, retry semantics, dry-run flag, and rollback if BlogEngine rejects the article",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-02-27"
+  },
+  {
+    "command": "/investigate",
+    "description": "evaluate whether the `APP_CONFIG` registry can drive Phase 2 Figma MCP token generation directly",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-03-01"
+  },
+  {
+    "command": "/techdebt",
+    "description": "implement a config lint rule catching `shared` string shorthand across all Frame vite configs; `TD-001` is flagged but not yet enforced",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-02-28"
+  },
+  {
+    "command": "/techdebt",
+    "description": "add a daily-cleaner inference budget cap before repo count exceeds 10 active apps",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-02-27"
+  },
+  {
+    "command": "/plan-feature",
+    "description": "spec the \"stale because shipped\" vs \"stale because abandoned\" distinction for the daily-cleaner eval loop; this is the gap that limits it as a production tool",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-02-27"
   }
 ]
