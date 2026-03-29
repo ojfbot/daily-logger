@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, nanoid } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
 export interface ChatMessage {
@@ -6,34 +6,33 @@ export interface ChatMessage {
   content: string
 }
 
-interface ChatState {
-  activeSection: string | null
-  activeDate: string | null
-  conversations: Record<string, ChatMessage[]>
+export interface ChatThread {
+  id: string
+  section: string
+  date: string
+  messages: ChatMessage[]
+  isCollapsed: boolean
   isStreaming: boolean
   streamingContent: string
+}
+
+interface ChatState {
+  threads: Record<string, ChatThread>
+  threadOrder: string[] // insertion order
   error: string | null
 }
 
 const initialState: ChatState = {
-  activeSection: null,
-  activeDate: null,
-  conversations: {},
-  isStreaming: false,
-  streamingContent: '',
+  threads: {},
+  threadOrder: [],
   error: null,
-}
-
-function conversationKey(date: string, section: string): string {
-  return `${date}:${section}`
 }
 
 export const sendMessage = createAsyncThunk(
   'chat/sendMessage',
   async (
     payload: {
-      date: string
-      section: string
+      threadId: string
       sectionContent: string
       articleTitle: string
       codeReferences: string[]
@@ -43,20 +42,19 @@ export const sendMessage = createAsyncThunk(
   ) => {
     const apiKey = localStorage.getItem('dl-anthropic-key')
     if (!apiKey) {
-      throw new Error('No API key configured. Click the key icon in the chat sidebar to set one.')
+      throw new Error('No API key configured. Click the key icon to set one.')
     }
 
-    const key = conversationKey(payload.date, payload.section)
     const state = getState() as { chat: ChatState }
-    const history = state.chat.conversations[key] ?? []
+    const thread = state.chat.threads[payload.threadId]
+    if (!thread) throw new Error('Thread not found')
 
     const systemPrompt = [
       `You are a knowledgeable assistant helping a developer review a daily development article.`,
       ``,
       `## Current context`,
-      `- Article date: ${payload.date}`,
       `- Article title: ${payload.articleTitle}`,
-      `- Section: ${payload.section}`,
+      `- Section: ${thread.section}`,
       ``,
       `## Section content`,
       payload.sectionContent,
@@ -71,12 +69,12 @@ export const sendMessage = createAsyncThunk(
     ].join('\n')
 
     const messages = [
-      ...history.map((m) => ({ role: m.role, content: m.content })),
+      ...thread.messages.map((m) => ({ role: m.role, content: m.content })),
       { role: 'user' as const, content: payload.message },
     ]
 
-    dispatch(chatSlice.actions.addUserMessage({ key, content: payload.message }))
-    dispatch(chatSlice.actions.startStreaming())
+    dispatch(chatSlice.actions.addUserMessage({ threadId: payload.threadId, content: payload.message }))
+    dispatch(chatSlice.actions.startStreaming(payload.threadId))
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -122,7 +120,7 @@ export const sendMessage = createAsyncThunk(
         try {
           const event = JSON.parse(data)
           if (event.type === 'content_block_delta' && event.delta?.text) {
-            dispatch(chatSlice.actions.appendStreamChunk(event.delta.text))
+            dispatch(chatSlice.actions.appendStreamChunk({ threadId: payload.threadId, text: event.delta.text }))
           }
         } catch {
           // skip malformed SSE lines
@@ -130,7 +128,7 @@ export const sendMessage = createAsyncThunk(
       }
     }
 
-    dispatch(chatSlice.actions.finishStreaming({ key }))
+    dispatch(chatSlice.actions.finishStreaming(payload.threadId))
   },
 )
 
@@ -138,46 +136,71 @@ const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
-    openChat(state, action: PayloadAction<{ section: string; date: string }>) {
-      state.activeSection = action.payload.section
-      state.activeDate = action.payload.date
-      state.error = null
-    },
-    closeChat(state) {
-      state.activeSection = null
-      state.activeDate = null
-    },
-    addUserMessage(state, action: PayloadAction<{ key: string; content: string }>) {
-      const { key, content } = action.payload
-      if (!state.conversations[key]) state.conversations[key] = []
-      state.conversations[key].push({ role: 'user', content })
-    },
-    startStreaming(state) {
-      state.isStreaming = true
-      state.streamingContent = ''
-      state.error = null
-    },
-    appendStreamChunk(state, action: PayloadAction<string>) {
-      state.streamingContent += action.payload
-    },
-    finishStreaming(state, action: PayloadAction<{ key: string }>) {
-      const { key } = action.payload
-      if (!state.conversations[key]) state.conversations[key] = []
-      if (state.streamingContent) {
-        state.conversations[key].push({ role: 'assistant', content: state.streamingContent })
+    createThread(state, action: PayloadAction<{ section: string; date: string }>) {
+      const id = nanoid()
+      state.threads[id] = {
+        id,
+        section: action.payload.section,
+        date: action.payload.date,
+        messages: [],
+        isCollapsed: false,
+        isStreaming: false,
+        streamingContent: '',
       }
-      state.isStreaming = false
-      state.streamingContent = ''
+      state.threadOrder.push(id)
+    },
+    collapseThread(state, action: PayloadAction<string>) {
+      const thread = state.threads[action.payload]
+      if (thread) thread.isCollapsed = true
+    },
+    expandThread(state, action: PayloadAction<string>) {
+      const thread = state.threads[action.payload]
+      if (thread) thread.isCollapsed = false
+    },
+    removeThread(state, action: PayloadAction<string>) {
+      delete state.threads[action.payload]
+      state.threadOrder = state.threadOrder.filter((id) => id !== action.payload)
+    },
+    addUserMessage(state, action: PayloadAction<{ threadId: string; content: string }>) {
+      const thread = state.threads[action.payload.threadId]
+      if (thread) thread.messages.push({ role: 'user', content: action.payload.content })
+    },
+    startStreaming(state, action: PayloadAction<string>) {
+      const thread = state.threads[action.payload]
+      if (thread) {
+        thread.isStreaming = true
+        thread.streamingContent = ''
+        state.error = null
+      }
+    },
+    appendStreamChunk(state, action: PayloadAction<{ threadId: string; text: string }>) {
+      const thread = state.threads[action.payload.threadId]
+      if (thread) thread.streamingContent += action.payload.text
+    },
+    finishStreaming(state, action: PayloadAction<string>) {
+      const thread = state.threads[action.payload]
+      if (thread) {
+        if (thread.streamingContent) {
+          thread.messages.push({ role: 'assistant', content: thread.streamingContent })
+        }
+        thread.isStreaming = false
+        thread.streamingContent = ''
+      }
     },
   },
   extraReducers: (builder) => {
     builder.addCase(sendMessage.rejected, (state, action) => {
-      state.isStreaming = false
-      state.streamingContent = ''
       state.error = action.error.message ?? 'Failed to send message'
+      // Find the thread that was streaming and stop it
+      for (const thread of Object.values(state.threads)) {
+        if (thread.isStreaming) {
+          thread.isStreaming = false
+          thread.streamingContent = ''
+        }
+      }
     })
   },
 })
 
-export const { openChat, closeChat } = chatSlice.actions
+export const { createThread, collapseThread, expandThread, removeThread } = chatSlice.actions
 export default chatSlice.reducer
