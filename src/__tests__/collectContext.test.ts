@@ -185,7 +185,7 @@ describe('collectContext — resilience', () => {
   })
 
   it('returns empty arrays when API returns malformed JSON', async () => {
-    vi.mocked(execSync).mockReturnValue('not valid json' as unknown as Buffer)
+    vi.mocked(execSync).mockReturnValue(Buffer.from('not valid json'))
     const ctx = await collectContext('2026-02-28')
     expect(ctx.openPRs).toEqual([])
   })
