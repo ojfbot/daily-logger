@@ -377,8 +377,44 @@ function assembleBodyV1(s: StructuredArticle): string {
   return parts.join('\n').trimEnd()
 }
 
+// ─── PR linkification helpers ─────────────────────────────────────────────────
+
+const GITHUB_ORG = 'ojfbot'
+
+/** Convert "#42" (or "42") to markdown link `[#42](https://github.com/ojfbot/{repo}/pull/42)` */
+function linkifyPR(ref: string, repo: string): string {
+  const num = ref.replace(/^#/, '')
+  const display = ref.startsWith('#') ? ref : `#${ref}`
+  return `[${display}](https://github.com/${GITHUB_ORG}/${repo}/pull/${num})`
+}
+
+/** Convert `[repo] #N` patterns in free-text GFM to markdown links. */
+function linkifyPRRefs(text: string, knownRepos: string[]): string {
+  const repoSet = new Set(knownRepos)
+  return text.replace(
+    /\[(\w[\w-]*)\]\s*#(\d+)/g,
+    (match, repo: string, num: string) => {
+      if (!repoSet.has(repo)) return match
+      return `[${repo}] [#${num}](https://github.com/${GITHUB_ORG}/${repo}/pull/${num})`
+    },
+  )
+}
+
+/** Convert bare `#N` in text to a markdown link using a known repo. */
+function linkifyBarePRs(text: string, repo: string): string {
+  return text.replace(
+    /(?<!\[)#(\d+)(?!\])/g,
+    (_m, num: string) => `[#${num}](https://github.com/${GITHUB_ORG}/${repo}/pull/${num})`,
+  )
+}
+
 function assembleBodyV2(s: ArticleDataV2): string {
   const parts: string[] = []
+
+  const knownRepos = [...new Set([
+    ...s.whatShipped.map((sh) => sh.repo),
+    ...(s.reposActive ?? []),
+  ])]
 
   if (s.lede?.trim()) {
     parts.push(s.lede.trim(), '')
@@ -390,9 +426,11 @@ function assembleBodyV2(s: ArticleDataV2): string {
     parts.push('No code committed today. What follows is an audit of in-flight work.', '')
   } else {
     for (const ship of s.whatShipped) {
-      const prRefs = ship.prs?.length ? ` (${ship.prs.join(', ')})` : ''
+      const prRefs = ship.prs?.length
+        ? ` (${ship.prs.map((pr) => linkifyPR(pr, ship.repo)).join(', ')})`
+        : ''
       parts.push(`### ${ship.repo}${prRefs}`, '')
-      parts.push(ship.description.trim(), '')
+      parts.push(linkifyBarePRs(ship.description.trim(), ship.repo), '')
       if (ship.commits.length > 0) {
         parts.push(ship.commits.map((c) => `- \`${c}\``).join('\n'), '')
       }
@@ -407,7 +445,7 @@ function assembleBodyV2(s: ArticleDataV2): string {
     for (const dec of s.decisions) {
       const pillarBadge = dec.pillar ? ` — *${dec.pillar}*` : ''
       parts.push(`### ${dec.title}${pillarBadge}`, '')
-      parts.push(dec.summary.trim(), '')
+      parts.push(linkifyPRRefs(dec.summary.trim(), knownRepos), '')
       if (dec.relatedTags.length > 0) {
         parts.push(`Tags: ${dec.relatedTags.map((t) => `\`${t}\``).join(', ')}`, '')
       }
@@ -416,11 +454,11 @@ function assembleBodyV2(s: ArticleDataV2): string {
 
   // ── Roadmap pulse ──
   parts.push('## Roadmap pulse', '')
-  parts.push((s.roadmapPulse ?? 'No roadmap update today.').trim(), '')
+  parts.push(linkifyPRRefs((s.roadmapPulse ?? 'No roadmap update today.').trim(), knownRepos), '')
 
   // ── What's next ──
   parts.push("## What's next", '')
-  parts.push((s.whatsNext ?? 'Review the roadmap and queue the next action.').trim(), '')
+  parts.push(linkifyPRRefs((s.whatsNext ?? 'Review the roadmap and queue the next action.').trim(), knownRepos), '')
 
   // ── Suggested actions (unified from suggestedActions array) ──
   const actionLines = s.suggestedActions.length > 0

@@ -190,13 +190,12 @@ describe('assembleBody — v2 schema', () => {
     expect(body).toContain("## What's next")
   })
 
-  it('renders shipment entries grouped by repo', () => {
+  it('renders shipment entries grouped by repo with linked PRs', () => {
     const body = assembleBody(baseV2)
-    expect(body).toContain('### daily-logger')
+    expect(body).toContain('### daily-logger ([#42](https://github.com/ojfbot/daily-logger/pull/42))')
     expect(body).toContain('### shell')
     expect(body).toContain('Added Zod schema validation')
     expect(body).toContain('`abc1234`')
-    expect(body).toContain('#42')
   })
 
   it('renders decision entries with pillar badges', () => {
@@ -250,5 +249,80 @@ describe('assembleBody — v2 schema', () => {
     const body = assembleBody(base)
     expect(body).toContain('## What shipped')
     expect(body).toContain('Something shipped.')
+  })
+})
+
+describe('assembleBody — PR linkification', () => {
+  it('linkifies [repo] #N in roadmapPulse', () => {
+    const body = assembleBody({
+      ...baseV2,
+      roadmapPulse: '[daily-logger] #10 is in-flight.',
+    })
+    expect(body).toContain('[daily-logger] [#10](https://github.com/ojfbot/daily-logger/pull/10)')
+  })
+
+  it('linkifies [repo] #N in whatsNext', () => {
+    const body = assembleBody({
+      ...baseV2,
+      whatsNext: 'Merge [shell] #5 and follow up.',
+    })
+    expect(body).toContain('[shell] [#5](https://github.com/ojfbot/shell/pull/5)')
+  })
+
+  it('leaves unknown repos in [repo] #N unlinked', () => {
+    const body = assembleBody({
+      ...baseV2,
+      roadmapPulse: '[unknown-repo] #99 is open.',
+    })
+    expect(body).toContain('[unknown-repo] #99')
+    expect(body).not.toContain('github.com/ojfbot/unknown-repo')
+  })
+
+  it('linkifies bare #N in shipment descriptions using ship repo', () => {
+    const body = assembleBody({
+      ...baseV2,
+      whatShipped: [
+        {
+          repo: 'core',
+          description: 'Three commits merged via PRs #34, #35, and #36.',
+          commits: ['abc1234'],
+        },
+      ],
+      reposActive: ['core'],
+    })
+    expect(body).toContain('[#34](https://github.com/ojfbot/core/pull/34)')
+    expect(body).toContain('[#35](https://github.com/ojfbot/core/pull/35)')
+    expect(body).toContain('[#36](https://github.com/ojfbot/core/pull/36)')
+  })
+
+  it('linkifies PR refs without # prefix in prs array', () => {
+    const body = assembleBody({
+      ...baseV2,
+      whatShipped: [
+        {
+          repo: 'shell',
+          description: 'Bug fix.',
+          commits: ['aaa1111'],
+          prs: ['42'],
+        },
+      ],
+      reposActive: ['shell'],
+    })
+    expect(body).toContain('[#42](https://github.com/ojfbot/shell/pull/42)')
+  })
+
+  it('linkifies decisions summary with [repo] #N pattern', () => {
+    const body = assembleBody({
+      ...baseV2,
+      decisions: [
+        {
+          title: 'Test decision',
+          summary: 'Resolved by [daily-logger] #76 merge.',
+          repo: 'daily-logger',
+          relatedTags: ['ci-cd'],
+        },
+      ],
+    })
+    expect(body).toContain('[daily-logger] [#76](https://github.com/ojfbot/daily-logger/pull/76)')
   })
 })
