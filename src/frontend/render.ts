@@ -1,8 +1,10 @@
 // DOM builders for dashboard components
 
-const BASE = document.querySelector('meta[name="baseurl"]')?.content ?? '/daily-logger'
+import type { EntryData, TagCount, RepoStats, FilterCallbacks } from './types'
 
-export function renderMetrics(container, entries) {
+const BASE = (document.querySelector('meta[name="baseurl"]') as HTMLMetaElement | null)?.content ?? '/daily-logger'
+
+export function renderMetrics(container: HTMLElement, entries: EntryData[]): void {
   const totalEntries = entries.length
   const allRepos = new Set(entries.flatMap(e => e.reposActive ?? []))
   const allActions = entries.reduce((sum, e) => sum + (e.actions?.length ?? 0), 0)
@@ -15,7 +17,7 @@ export function renderMetrics(container, entries) {
 
     for (const entry of sorted) {
       const entryDate = new Date(entry.date + 'T12:00:00Z')
-      const diff = Math.round((checkDate - entryDate) / (1000 * 60 * 60 * 24))
+      const diff = Math.round((checkDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24))
       if (diff <= 1) {
         streak++
         checkDate = entryDate
@@ -33,7 +35,13 @@ export function renderMetrics(container, entries) {
   `
 }
 
-export function renderFilterBar(container, tags, { toggleFilter, isFilterActive, clearFilters, hasActiveFilters, getActiveFilters, filteredCount, totalCount }) {
+interface FilterBarOptions extends FilterCallbacks {
+  filteredCount: number
+  totalCount: number
+}
+
+export function renderFilterBar(container: HTMLElement, tags: TagCount[], options: FilterBarOptions): void {
+  const { toggleFilter, clearFilters, hasActiveFilters, getActiveFilters, filteredCount, totalCount } = options
   container.innerHTML = ''
 
   const isFiltering = hasActiveFilters()
@@ -44,7 +52,7 @@ export function renderFilterBar(container, tags, { toggleFilter, isFilterActive,
     banner.className = 'filter-active-banner'
 
     const activeFilters = getActiveFilters()
-    const chips = []
+    const chips: string[] = []
     for (const [type, names] of activeFilters) {
       for (const name of names) {
         chips.push(`<span class="filter-active-chip" data-type="${type}" data-name="${name}">${name} <span class="filter-chip-x">&times;</span></span>`)
@@ -59,9 +67,10 @@ export function renderFilterBar(container, tags, { toggleFilter, isFilterActive,
 
     // Bind remove on each chip
     banner.querySelectorAll('.filter-active-chip').forEach(chip => {
-      chip.addEventListener('click', () => toggleFilter(chip.dataset.type, chip.dataset.name))
+      const el = chip as HTMLElement
+      el.addEventListener('click', () => toggleFilter(el.dataset.type!, el.dataset.name!))
     })
-    banner.querySelector('.filter-clear').addEventListener('click', clearFilters)
+    banner.querySelector('.filter-clear')!.addEventListener('click', clearFilters)
 
     container.appendChild(banner)
     return // Don't show the full tag cloud when filtering — the banner is enough
@@ -85,7 +94,7 @@ export function renderFilterBar(container, tags, { toggleFilter, isFilterActive,
   }
 }
 
-export function renderEntryList(container, entries) {
+export function renderEntryList(container: HTMLElement, entries: EntryData[]): void {
   container.innerHTML = ''
 
   if (entries.length === 0) {
@@ -120,10 +129,18 @@ export function renderEntryList(container, entries) {
   }
 }
 
-export function renderSidebar(container, { repos, tags, toggleFilter, isFilterActive }) {
+interface SidebarOptions {
+  repos: RepoStats[]
+  tags: TagCount[]
+  toggleFilter: (type: string, name: string) => void
+  isFilterActive: (type: string, name: string) => boolean
+}
+
+export function renderSidebar(container: HTMLElement, options: SidebarOptions): void {
+  const { repos, tags, toggleFilter, isFilterActive } = options
   container.innerHTML = ''
 
-  function addSection(heading, items, type) {
+  function addSection(heading: string, items: Array<{ name: string; count: number }>, type: string): void {
     const section = document.createElement('div')
     section.className = 'sidebar-section'
     section.innerHTML = `<div class="sidebar-heading">${heading}</div>`
