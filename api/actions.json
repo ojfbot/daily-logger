@@ -1,5 +1,26 @@
 [
   {
+    "command": "/investigate",
+    "description": "Check @originjs/vite-plugin-federation versions > 1.4.1 for per-chunk minification support; test upgrade path in packages/browser-app/vite.config.ts before scoping a custom chunk workaround for #99. Goal: re-enable minification for the production bundle without the full bundle-scope flag.",
+    "repo": "cv-builder",
+    "status": "open",
+    "sourceDate": "2026-03-29"
+  },
+  {
+    "command": "/adr",
+    "description": "Formalise the cross-domain fanout plan document added in b2330d7 as ADR-0037, or close it as a resolved design note. The document proposes a peer-to-peer FrameBus fanout topology; the open question (shell-owned vs. peer-negotiated event schemas) must be resolved before Phase 1 federation spikes begin.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-03-29"
+  },
+  {
+    "command": "/validate",
+    "description": "Wire the first FrameBus proof-of-concept per ADR-0034: one event published from cv-builder, one subscriber in shell, typed event catalog committed to the shell repo. ADR-0034 is a closed decision but has no running implementation — produce the stub before the pattern spreads to shell #83–#86.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-03-29"
+  },
+  {
     "command": "/pr-review",
     "description": "close TripPlanner #9 (opened 2025-12-15) with a reference to #11; confirm nothing unshipped remains before closing",
     "repo": "daily-logger",
