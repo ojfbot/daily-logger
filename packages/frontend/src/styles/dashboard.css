@@ -521,24 +521,99 @@ a:hover { border-bottom-color: var(--text); }
 .article-content a { color: var(--blue); }
 .article-content a:hover { border-bottom-color: var(--blue); }
 
-/* ─── Decision card ──────────────────────────────────────────────────────── */
+/* ─── Decision card (accordion) ──────────────────────────────────────────── */
 
 .decision-card {
   border: 1px solid var(--border);
-  padding: 0.75rem 1rem;
   margin-bottom: 0.5rem;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.decision-card.decision-open {
+  border-left: 3px solid var(--accent);
+}
+
+.decision-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.decision-card-header:hover {
+  background: var(--bg-alt);
+}
+
+.decision-expand {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  transition: transform 150ms;
+}
+
+.decision-expand-open {
+  transform: rotate(90deg);
 }
 
 .decision-title {
   font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.decision-date-badge {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.decision-repo {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--blue);
+}
+
+.decision-card-body {
+  padding: 0 0.75rem 0.75rem;
+  border-top: 1px solid var(--border);
 }
 
 .decision-summary {
   font-size: 0.8rem;
   color: var(--text-secondary);
-  margin-top: 0.25rem;
+  margin: 0.5rem 0 0;
+  line-height: 1.5;
+}
+
+.decision-summary-empty {
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.decision-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.decision-article-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--blue);
+}
+
+.decision-article-link:hover {
+  border-bottom-color: var(--blue);
 }
 
 .pillar-badge {
@@ -550,7 +625,6 @@ a:hover { border-bottom-color: var(--text); }
   padding: 0.1rem 0.4rem;
   border: 1px solid var(--amber);
   color: var(--amber);
-  margin-left: 0.5rem;
 }
 
 /* ─── Action items ───────────────────────────────────────────────────────── */
