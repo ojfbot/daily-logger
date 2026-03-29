@@ -39,6 +39,7 @@ export interface EntryData {
   commitCount: number
   activityType: string
   schemaVersion: number
+  status?: 'draft' | 'accepted' | 'rejected'
   decisions?: DecisionEntry[]
   actions?: ActionItem[]
   codeReferences?: CodeReference[]

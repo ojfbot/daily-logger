@@ -50,7 +50,14 @@ export function ArticlePage() {
     <>
       {displayEntry && (
         <div className="article-header">
-          <div className="entry-date">{displayEntry.date}</div>
+          <div className="entry-date">
+            {displayEntry.date}
+            {displayEntry.status && displayEntry.status !== 'accepted' && (
+              <span className={`article-status status-${displayEntry.status}`}>
+                {displayEntry.status.toUpperCase()}
+              </span>
+            )}
+          </div>
           <h1 className="article-title">{displayEntry.title}</h1>
           <div className="article-meta">
             <div className="entry-tags">

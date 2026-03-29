@@ -750,6 +750,8 @@ export function toMarkdown(article: GeneratedArticle & { schemaVersion?: number 
     `summary: "${esc(article.summary)}"`,
   ]
 
+  lines.push(`status: "draft"`)
+
   if (article.schemaVersion) {
     lines.push(`schemaVersion: ${article.schemaVersion}`)
   }
