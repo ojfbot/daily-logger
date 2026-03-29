@@ -76,6 +76,10 @@ jobs:
         if: github.event.inputs.dry_run != 'true'
         run: pnpm build:api
 
+      - name: Build frontend
+        if: github.event.inputs.dry_run != 'true'
+        run: pnpm build:frontend
+
       - name: Upload article artifact
         if: always()
         uses: actions/upload-artifact@v4

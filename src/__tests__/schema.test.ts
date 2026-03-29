@@ -79,7 +79,7 @@ describe('ArticleDataSchema (v2)', () => {
   })
 
   it('accepts v2 with optional fields omitted', () => {
-    const { lede, roadmapPulse, whatsNext, ...required } = VALID_V2
+    const { lede: _lede, roadmapPulse: _rp, whatsNext: _wn, ...required } = VALID_V2
     // Also strip optional pillar from decisions and prs from shipments
     const minimal = {
       ...required,
@@ -91,7 +91,7 @@ describe('ArticleDataSchema (v2)', () => {
   })
 
   it('rejects missing required fields', () => {
-    const { title, ...rest } = VALID_V2
+    const { title: _title, ...rest } = VALID_V2
     const result = ArticleDataSchema.safeParse(rest)
     expect(result.success).toBe(false)
   })
@@ -136,7 +136,7 @@ describe('StructuredArticleSchema (v1)', () => {
   })
 
   it('accepts v1 without optional actions', () => {
-    const { actions, ...rest } = VALID_V1
+    const { actions: _actions, ...rest } = VALID_V1
     const result = StructuredArticleSchema.safeParse(rest)
     expect(result.success).toBe(true)
   })
