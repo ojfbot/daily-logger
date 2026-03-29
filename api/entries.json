@@ -43,6 +43,7 @@
     "commitCount": 3,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "The bot-first maintenance model: why it holds up under low-velocity days",
@@ -159,6 +160,7 @@
     "commitCount": 17,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: `LLMClient` interface in GroupThink — provider abstraction before you need it",
@@ -401,6 +403,7 @@
     "commitCount": 20,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: Remove automatic LLM calls — explicit over ambient",
@@ -678,6 +681,7 @@
     "commitCount": 56,
     "activityType": "sprint",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Why `file:` links require special CI treatment — and why we chose them anyway",
@@ -1311,6 +1315,7 @@
     "commitCount": 34,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: `pnpm audit` runs non-blocking in CI",
@@ -1752,6 +1757,7 @@
     "commitCount": 33,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: Flask reference implementation before TypeScript client (purefoy #13 → #14)",
@@ -2277,6 +2283,7 @@
     "commitCount": 0,
     "activityType": "rest",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "ADR-0029: the prop-only boundary and why it matters for Module Federation",
@@ -2527,6 +2534,7 @@
     "commitCount": 20,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "ADR-0029: why prop-only is a hard rule, not a guideline",
@@ -2882,6 +2890,7 @@
     "commitCount": 14,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision: container/presenter as the extraction boundary for `@ojfbot/shell`",
@@ -3306,6 +3315,7 @@
     "commitCount": 15,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: `remoteEntry.js` must be `no-store`, everything else `immutable`",
@@ -3695,6 +3705,7 @@
     "commitCount": 12,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: NL spawning via ShellAgent, not a sidebar affordance",
@@ -3861,6 +3872,7 @@
     "commitCount": 31,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: Per-domain history scoping in `fanOut()` (ADR-0019)",
@@ -4258,6 +4270,7 @@
     "commitCount": 0,
     "activityType": "rest",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Merge order: [shell] #31 must land before [shell] #32",
@@ -4433,6 +4446,7 @@
     "commitCount": 0,
     "activityType": "rest",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [],
     "actions": [],
     "codeReferences": [
@@ -4531,6 +4545,7 @@
     "commitCount": 0,
     "activityType": "rest",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "The open PR stack — merge order is a hard constraint",
@@ -4687,6 +4702,7 @@
     "commitCount": 3,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Priority stack for this session",
@@ -4866,6 +4882,7 @@
     "commitCount": 16,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: Four rename-fix PRs merged before new feature work resumed",
@@ -5247,6 +5264,7 @@
     "commitCount": 27,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: Rename cv-builder → Resume Builder now, not later",
@@ -5785,6 +5803,7 @@
     "commitCount": 8,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Priority order for this week's merge window",
@@ -6034,6 +6053,7 @@
     "commitCount": 35,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: Page URL checked before remoteEntry origins in `resolveProjectMapping`",
@@ -6437,6 +6457,7 @@
     "commitCount": 0,
     "activityType": "rest",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Why MF-aware routing is the right abstraction for the issue-creation write path",
@@ -6591,6 +6612,7 @@
     "commitCount": 1,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "The dependency that makes #19 the critical path",
@@ -6728,6 +6750,7 @@
     "commitCount": 12,
     "activityType": "hardening",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: Detached execution as an operability primitive, not a deployment concern",
@@ -6951,6 +6974,7 @@
     "commitCount": 19,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: Multi-run layout over overwrite-in-place",
@@ -7253,6 +7277,7 @@
     "commitCount": 11,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [
       {
         "title": "Decision 1: frame-agent as the CORS trust boundary for MrPlug",
@@ -7618,6 +7643,7 @@
     "commitCount": 0,
     "activityType": "rest",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [],
     "actions": [],
     "codeReferences": [
@@ -7832,6 +7858,7 @@
     "commitCount": 5,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [],
     "actions": [
       {
@@ -8045,6 +8072,7 @@
     "commitCount": 1,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [],
     "actions": [
       {
@@ -8278,6 +8306,7 @@
     "commitCount": 0,
     "activityType": "rest",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [],
     "actions": [
       {
@@ -8518,6 +8547,7 @@
     "commitCount": 9,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [],
     "actions": [
       {
@@ -8766,6 +8796,7 @@
     "commitCount": 0,
     "activityType": "rest",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [],
     "actions": [],
     "codeReferences": [
@@ -8853,6 +8884,7 @@
     "commitCount": 7,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [],
     "actions": [],
     "codeReferences": [
@@ -8966,6 +8998,7 @@
     "commitCount": 10,
     "activityType": "build",
     "schemaVersion": 2,
+    "status": "accepted",
     "decisions": [],
     "actions": [],
     "codeReferences": [

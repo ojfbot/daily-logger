@@ -11,3 +11,4 @@ personal-knowledge/
 api/articles/
 # Symlinks to sibling repos — targets don't exist in CI; Jekyll realpath() crashes on them
 decisions/core
+.vercel
