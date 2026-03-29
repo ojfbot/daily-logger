@@ -15,6 +15,15 @@ export function ActionPopover({ visible, anchor, resolution, closedDate }: Props
     if (!visible || !anchor || !popoverRef.current) return
 
     const el = popoverRef.current
+    const isMobile = window.innerWidth < 600
+
+    // On mobile, CSS handles positioning as a bottom sheet
+    if (isMobile) {
+      el.style.left = ''
+      el.style.top = ''
+      return
+    }
+
     const rect = anchor.getBoundingClientRect()
     const popW = el.offsetWidth
     const popH = el.offsetHeight
@@ -24,11 +33,11 @@ export function ActionPopover({ visible, anchor, resolution, closedDate }: Props
     const leftX = rect.left - popW - gap
     if (leftX >= 12) {
       el.style.left = `${leftX}px`
-      el.style.top = `${rect.top + rect.height / 2 - popH / 2}px`
+      el.style.top = `${Math.max(12, Math.min(rect.top + rect.height / 2 - popH / 2, window.innerHeight - popH - 12))}px`
     } else {
       // Fallback: above, centered
-      el.style.left = `${Math.max(12, rect.left + rect.width / 2 - popW / 2)}px`
-      el.style.top = `${rect.top - popH - gap}px`
+      el.style.left = `${Math.max(12, Math.min(rect.left + rect.width / 2 - popW / 2, window.innerWidth - popW - 12))}px`
+      el.style.top = `${Math.max(12, rect.top - popH - gap)}px`
     }
   }, [visible, anchor])
 
