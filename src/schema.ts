@@ -43,12 +43,16 @@ export const DecisionEntrySchema = z.object({
   relatedTags: z.array(z.string()),
 })
 
+export const ACTION_STATUSES = ['open', 'done'] as const
+
 export const ActionItemSchema = z.object({
   command: z.string(),
   description: z.string(),
   repo: z.string(),
-  status: z.literal('open'),
+  status: z.enum(ACTION_STATUSES),
   sourceDate: z.string(),
+  closedDate: z.string().optional(),
+  resolution: z.string().optional(),
 })
 
 export const ARTICLE_STATUSES = ['draft', 'accepted', 'rejected'] as const

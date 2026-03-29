@@ -573,6 +573,45 @@ a:hover { border-bottom-color: var(--text); }
 
 .action-stale { opacity: 0.6; }
 .action-done { text-decoration: line-through; opacity: 0.5; }
+.action-done:hover { opacity: 0.8; }
+
+/* Action resolution popover — left-positioned on done items */
+
+.action-popover {
+  position: fixed;
+  z-index: 200;
+  max-width: 320px;
+  min-width: 200px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  border-radius: 6px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  pointer-events: none;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.action-popover-type {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+
+.action-popover-resolution {
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.action-popover-date {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+}
 
 /* ─── Related articles ───────────────────────────────────────────────────── */
 

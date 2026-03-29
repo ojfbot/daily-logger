@@ -28,6 +28,8 @@ export interface ActionItem {
   repo: string
   status: string
   sourceDate: string
+  closedDate?: string
+  resolution?: string
 }
 
 export interface EntryData {
