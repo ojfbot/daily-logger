@@ -51,6 +51,8 @@ export const ActionItemSchema = z.object({
   sourceDate: z.string(),
 })
 
+export const ARTICLE_STATUSES = ['draft', 'accepted', 'rejected'] as const
+
 export const ACTIVITY_TYPES = ['build', 'rest', 'audit', 'hardening', 'cleanup', 'sprint'] as const
 
 // ─── Code references (ADR-0031) ─────────────────────────────────────────────
@@ -92,6 +94,8 @@ export const ArticleDataSchema = z.object({
   activityType: z.enum(ACTIVITY_TYPES),
 
   codeReferences: z.array(CodeReferenceSchema).optional(),
+
+  status: z.enum(ARTICLE_STATUSES).default('draft').optional(),
 })
 
 // ─── v1 schema (for fallback detection) ──────────────────────────────────────

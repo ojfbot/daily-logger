@@ -45,6 +45,7 @@ interface EntryData {
   commitCount: number
   activityType: string
   schemaVersion: number
+  status?: 'draft' | 'accepted' | 'rejected'
   // Body sections for detail pages (not included in index to keep payload small)
   decisions?: Array<{ title: string; summary: string; repo: string; pillar?: string; relatedTags: string[] }>
   actions?: ActionItem[]
@@ -89,6 +90,9 @@ function parseFrontmatter(content: string): Record<string, unknown> {
 
   const svMatch = raw.match(/^schemaVersion:\s*(\d+)$/m)
   if (svMatch) fm.schemaVersion = parseInt(svMatch[1], 10)
+
+  const statusMatch = raw.match(/^status:\s*"?(\w+)"?$/m)
+  if (statusMatch) fm.status = statusMatch[1]
 
   return fm
 }
@@ -248,6 +252,7 @@ export function buildApi() {
     else if (tags.some((t) => t.name.includes('audit'))) activityType = 'audit'
     else if (commitCount > 40) activityType = 'sprint'
 
+    const status = (fm.status as string) ?? 'accepted' // older articles without status are implicitly accepted
     const entry: EntryData = {
       date,
       title: (fm.title as string) ?? `Dev log — ${date}`,
@@ -257,6 +262,7 @@ export function buildApi() {
       commitCount,
       activityType,
       schemaVersion: (fm.schemaVersion as number) ?? 1,
+      status: status as EntryData['status'],
       decisions,
       actions,
       codeReferences: codeRefsByDate[date],
