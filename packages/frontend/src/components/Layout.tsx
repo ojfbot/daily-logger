@@ -1,5 +1,5 @@
 import { type ReactNode, useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
 import { toggleTheme } from '../store/themeSlice.ts'
 import { SearchOverlay } from './SearchOverlay.tsx'
@@ -12,6 +12,7 @@ export function Layout({ children }: LayoutProps) {
   const dispatch = useAppDispatch()
   const theme = useAppSelector((s) => s.theme.mode)
   const [searchOpen, setSearchOpen] = useState(false)
+  const location = useLocation()
 
   const closeSearch = useCallback(() => setSearchOpen(false), [])
 
@@ -26,36 +27,31 @@ export function Layout({ children }: LayoutProps) {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  const isActive = (path: string) => location.pathname === path || location.pathname === path + '/'
+
   return (
-    <div className="dashboard-layout">
+    <>
       <header className="site-header">
-        <div className="header-inner">
-          <Link to="/" className="site-title">daily-logger</Link>
-          <nav className="header-nav">
-            <Link to="/">Index</Link>
-            <Link to="/decisions">Decisions</Link>
-            <Link to="/actions">Actions</Link>
-            <button
-              className="search-trigger"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search"
-            >
-              Search
-            </button>
-            <button
-              className="theme-toggle"
-              onClick={() => dispatch(toggleTheme())}
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? '☀' : '☾'}
-            </button>
-          </nav>
-        </div>
+        <Link to="/" className="site-title">ojfbot/dev-log</Link>
+        <nav className="site-nav">
+          <Link to="/" className={isActive('/') ? 'active' : ''}>Index</Link>
+          <Link to="/decisions" className={isActive('/decisions') ? 'active' : ''}>Decisions</Link>
+          <Link to="/actions" className={isActive('/actions') ? 'active' : ''}>Actions</Link>
+          <button
+            className="theme-toggle"
+            onClick={() => dispatch(toggleTheme())}
+          >
+            {theme === 'dark' ? 'LIGHT' : 'DARK'}
+          </button>
+        </nav>
       </header>
-      <main className="site-main">
+      <div className="container">
         {children}
-      </main>
+      </div>
+      <footer className="site-footer">
+        <a href="https://github.com/ojfbot/daily-logger">ojfbot/daily-logger</a> — self-documenting development system
+      </footer>
       <SearchOverlay open={searchOpen} onClose={closeSearch} />
-    </div>
+    </>
   )
 }

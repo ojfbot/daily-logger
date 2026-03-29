@@ -15,8 +15,10 @@ export function DecisionsPage() {
 
   return (
     <div className="decisions-page">
-      <h1>Decisions</h1>
-      <p className="page-subtitle">{decisions.length} architectural decisions across {entries.length} articles</p>
+      <div className="article-header">
+        <h1 className="article-title">Decisions</h1>
+        <p className="entry-summary">{decisions.length} architectural decisions across {entries.length} articles</p>
+      </div>
       <div className="decisions-list">
         {decisions.map((d, i) => (
           <div key={`${d.date}-${i}`} className="decision-card">
