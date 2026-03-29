@@ -76,9 +76,21 @@ async function initArticleDetail(): Promise<void> {
   `
 }
 
+function initMobileNav(): void {
+  const toggle = document.querySelector<HTMLButtonElement>('.nav-toggle')
+  const nav = document.querySelector<HTMLElement>('.site-nav')
+  if (!toggle || !nav) return
+  toggle.addEventListener('click', () => {
+    const expanded = nav.classList.toggle('open')
+    toggle.setAttribute('aria-expanded', String(expanded))
+    toggle.textContent = expanded ? '\u2715' : '\u2630'
+  })
+}
+
 // Init based on what's on the page
 document.addEventListener('DOMContentLoaded', () => {
   initTheme()
+  initMobileNav()
   initIndex()
   initArticleDetail()
   initCommitPopovers()

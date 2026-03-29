@@ -856,8 +856,19 @@ async function initArticleDetail() {
     `).join("")}
   `;
 }
+function initMobileNav() {
+  const toggle = document.querySelector(".nav-toggle");
+  const nav = document.querySelector(".site-nav");
+  if (!toggle || !nav) return;
+  toggle.addEventListener("click", () => {
+    const expanded = nav.classList.toggle("open");
+    toggle.setAttribute("aria-expanded", String(expanded));
+    toggle.textContent = expanded ? "\u2715" : "\u2630";
+  });
+}
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
+  initMobileNav();
   initIndex();
   initArticleDetail();
   initCommitPopovers();
