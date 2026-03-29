@@ -1,12 +1,14 @@
 // Cmd+K search overlay — client-side substring search
 
-const BASE = document.querySelector('meta[name="baseurl"]')?.content ?? '/daily-logger'
-let entries = []
-let overlay = null
-let input = null
-let resultsList = null
+import type { EntryData } from './types'
 
-export function initSearch(entriesData) {
+const BASE = (document.querySelector('meta[name="baseurl"]') as HTMLMetaElement | null)?.content ?? '/daily-logger'
+let entries: EntryData[] = []
+let overlay: HTMLElement | null = null
+let input: HTMLInputElement | null = null
+let resultsList: HTMLElement | null = null
+
+export function initSearch(entriesData: EntryData[]): void {
   entries = entriesData
   overlay = document.querySelector('.search-overlay')
   input = document.querySelector('.search-input')
@@ -18,7 +20,7 @@ export function initSearch(entriesData) {
       e.preventDefault()
       openSearch()
     }
-    if (e.key === 'Escape' && overlay.classList.contains('open')) {
+    if (e.key === 'Escape' && overlay!.classList.contains('open')) {
       closeSearch()
     }
   })
@@ -28,27 +30,27 @@ export function initSearch(entriesData) {
   })
 
   input.addEventListener('input', () => {
-    render(input.value.trim().toLowerCase())
+    renderResults(input!.value.trim().toLowerCase())
   })
 }
 
-function openSearch() {
-  overlay.classList.add('open')
-  input.value = ''
-  input.focus()
-  render('')
+function openSearch(): void {
+  overlay!.classList.add('open')
+  input!.value = ''
+  input!.focus()
+  renderResults('')
 }
 
-function closeSearch() {
-  overlay.classList.remove('open')
+function closeSearch(): void {
+  overlay!.classList.remove('open')
 }
 
-function render(query) {
-  resultsList.innerHTML = ''
+function renderResults(query: string): void {
+  resultsList!.innerHTML = ''
   if (!query) {
     // Show recent 5
     for (const entry of entries.slice(0, 5)) {
-      resultsList.appendChild(makeResult(entry))
+      resultsList!.appendChild(makeResult(entry))
     }
     return
   }
@@ -64,16 +66,16 @@ function render(query) {
   })
 
   if (matches.length === 0) {
-    resultsList.innerHTML = '<div class="search-result" style="color:var(--text-secondary)">No results</div>'
+    resultsList!.innerHTML = '<div class="search-result" style="color:var(--text-secondary)">No results</div>'
     return
   }
 
   for (const entry of matches.slice(0, 10)) {
-    resultsList.appendChild(makeResult(entry))
+    resultsList!.appendChild(makeResult(entry))
   }
 }
 
-function makeResult(entry) {
+function makeResult(entry: EntryData): HTMLDivElement {
   const div = document.createElement('div')
   div.className = 'search-result'
   div.innerHTML = `<div class="search-result-date">${entry.date}</div><div>${entry.title}</div>`
