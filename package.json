@@ -11,6 +11,7 @@
     "clean": "tsx src/clean.ts",
     "clean:dry": "DRY_RUN=true tsx src/clean.ts",
     "backfill": "tsx src/backfill-tags.ts",
+    "backfill:refs": "tsx src/backfill-code-refs.ts",
     "build:api": "tsx src/build-api.ts",
     "build:frontend": "tsx src/build-frontend.ts",
     "type-check": "tsc --noEmit && tsc --noEmit -p tsconfig.frontend.json",
