@@ -40,11 +40,11 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 | `src/index.ts` | Entry point — orchestrates collect → generate → write |
 | `src/collect-context.ts` | GitHub API sweep via `gh` CLI |
 | `src/generate-article.ts` | Claude API call + prompt, JSON → markdown |
-| `src/schema.ts` | Zod schemas (ArticleDataV2, CodeReferenceSchema, TypedTag, etc.) |
+| `src/schema.ts` | Zod schemas (ArticleDataV2, ActionItem, CodeReferenceSchema, TypedTag, etc.) |
 | `src/types.ts` | Shared TypeScript types |
 | `src/build-api.ts` | Generates static JSON API (`api/*.json`) from articles |
 | `src/build-frontend.ts` | esbuild bundler for frontend TypeScript → `assets/js/app.js` |
-| `src/frontend/` | Client-side TypeScript (app, data, filter, render, search, theme, popover) |
+| `src/frontend/` | Client-side TypeScript (app, data, filter, render, search, theme, popover, chat) |
 | `assets/css/dashboard.css` | Dashboard + popover styles |
 | `decisions/adr/` | Architecture Decision Records (local to this repo) |
 
@@ -52,6 +52,8 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 
 - **ADR-0031** (`decisions/adr/0031-universal-code-reference-popovers.md`) — Extend popover system to all inline code references with structured data model
 - **ADR-0032** (`core/decisions/adr/0032-daily-logger-react-vercel-migration.md`) — Migrate frontend to React + Vercel, keep GitHub Pages as fallback
+- **ADR-0035** — Article status lifecycle and auto-merge overnight PRs
+- **ADR-0036** (`decisions/adr/0036-structured-decision-output-for-rich-ui.md`) — Structured decision output for rich UI
 
 ## Adding new repos to the sweep
 
@@ -73,6 +75,7 @@ title: "..."
 date: YYYY-MM-DD
 tags: ["tag1", "tag2"]
 summary: "One sentence preview."
+status: "draft" | "published"
 ---
 ```
 

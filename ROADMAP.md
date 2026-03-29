@@ -28,10 +28,15 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 
 **Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning**
 
+- **Actions board**: fully resolved — all 36 actions closed (2026-03-29). Board at zero is the Phase 2 planning gate.
+- **ADRs landed**: ADR-0033 (daily-cleaner confidence threshold), ADR-0034 (Frame-wide Redux store strategy, resolves shell #5), ADR-0036 (structured decision output for rich UI).
+- **Landing**: Log nav link now points to `log.jim.software` (Vercel subdomain), old GitHub Pages URL retired.
+
 - **Phase 5 (Phase 5B merged)**: MrPlug Phase 5B fully merged — GitHub issue creation,
   Claude Code relay, Module Federation-aware project routing, confirmation UX.
-  S3 screenshot upload + rich issue bodies landed. Open: S3 cost model docs, injection
-  failure hardening.
+  S3 screenshot upload + rich issue bodies landed. PR #32 merged — relay error handling hardened,
+  missing origin validation added to extension message-passing path, unhandled error branches fixed.
+  Open: S3 cost model docs.
 - **Phase 4 (shipped)**: shell multi-instance UI landed 2026-03-09.
 - **Phase 6 (~70%)**: visual regression landed (PR #93 — CanvasRunNavigator, S3,
   draw.io canvas, rich PR comments with thumbnails). Missing: run-history + diff
@@ -58,6 +63,10 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
    `/scaffold-frame-app` codified as a 28-item validation skill for creating new Frame sub-apps.
 - **Phase 9 (live)**: daily-logger running. Editorial UI (draft-PR + GitHub Pages SPA)
   is the next step. Progressive disclosure for new issues shipped. Rest-day handling added.
+  Article status lifecycle and auto-merge overnight PRs shipped (`8c4a75a`). Two-column article layout
+  with Lois design system integration landed. Inline section chat system with multi-thread support added.
+  Collapsible accordion UI for decisions page and done-action resolution popover shipped.
+  ADR-0035 (article status lifecycle) and ADR-0036 (structured decision output) ratified.
 
 ---
 
@@ -107,7 +116,7 @@ The pitch: "building what Concur would build if it started over in 2025."
 2. Figma design system with MCP — **not started**
 3. Header chat bar / ShellAgent — **not started**
 4. Multi-instance app launching — **shipped** (shell multi-instance UI, 2026-03-09)
-5. MrPlug as `ojf inspect` dev companion — **Phase 5B merged** (GitHub issue creation, Claude Code relay, MF-aware routing, `file-techdebt` handler — AI-spotted debt files directly to `TECHDEBT.md`)
+5. MrPlug as `ojf inspect` dev companion — **Phase 5B merged + security hardened** (GitHub issue creation, Claude Code relay, MF-aware routing, `file-techdebt` handler — AI-spotted debt files directly to `TECHDEBT.md`; PR #32 — relay error handling hardened, origin validation added to message-passing path)
 6. Visual regression CI as A/B foundation — **~70%** (issue #94)
 7. purefoy as podcast AI agent in Frame — **corpus complete; frame-ui-components migration complete** ([purefoy] #9–#14 merged — 348/348 episodes transcribed, AWS runner retired, typed transcript editing UI in Frame, standalone Flask reference UI at localhost:5050, ADR-006–009; [purefoy] #17 + #18 merged — local components replaced with `@ojfbot/frame-ui-components` wrappers, `DashboardLayout` adopted, Vercel deployment wired)
 8. App definition from UI (ShellAgent scaffolds apps) — **not started**
@@ -137,7 +146,7 @@ cron fires
 
 - Hosted at `https://ojfbot.github.io/daily-logger/editor`
 - GitHub API calls direct from browser; PAT in `localStorage` (solo tool, acceptable)
-- GitHub OAuth PKCE flow as an upgrade path
+- GitHub OAuth PKCE flow — ADR-0034 ratified (see core PR #35)
 
 ### Key screens
 
