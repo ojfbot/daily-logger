@@ -440,8 +440,11 @@ function resolveRef(ref) {
       }
       return { ref, url: pkgUrl, label: ref.text, detail: ref.repo ? `${ref.repo} package` : "package" };
     }
-    case "command":
-      return { ref, url: null, label: ref.text, detail: "CLI command" };
+    case "command": {
+      let cmdUrl = ref.url ?? null;
+      if (!cmdUrl && ref.text === "/adr") cmdUrl = `${base}/core/tree/main/decisions/adr`;
+      return { ref, url: cmdUrl, label: ref.text, detail: "CLI command" };
+    }
     case "config":
       return { ref, url: null, label: ref.text, detail: ref.repo ? `config in ${ref.repo}` : "config key" };
     case "env":
