@@ -12,9 +12,13 @@ export function Layout({ children }: LayoutProps) {
   const dispatch = useAppDispatch()
   const theme = useAppSelector((s) => s.theme.mode)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
 
   const closeSearch = useCallback(() => setSearchOpen(false), [])
+
+  // Close mobile menu on route change
+  useEffect(() => { setMenuOpen(false) }, [location.pathname])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -33,7 +37,15 @@ export function Layout({ children }: LayoutProps) {
     <>
       <header className="site-header">
         <Link to="/" className="site-title">ojfbot/dev-log</Link>
-        <nav className="site-nav">
+        <button
+          className="nav-toggle"
+          aria-label="Menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          {menuOpen ? '\u2715' : '\u2630'}
+        </button>
+        <nav className={menuOpen ? 'site-nav open' : 'site-nav'}>
           <Link to="/" className={isActive('/') ? 'active' : ''}>Index</Link>
           <Link to="/decisions" className={isActive('/decisions') ? 'active' : ''}>Decisions</Link>
           <Link to="/actions" className={isActive('/actions') ? 'active' : ''}>Actions</Link>

@@ -37,7 +37,7 @@ export function ArticlePage() {
 
   const displayEntry = article ?? entry
 
-  // Inject chat buttons into h2 headings
+  // Inject chat buttons into h2 headings + chat zone wrappers after each h2
   useEffect(() => {
     const container = contentRef.current
     if (!container || !date) return
@@ -54,6 +54,12 @@ export function ArticlePage() {
       h2.appendChild(btnWrapper)
       wrappers.push(btnWrapper)
 
+      // Insert a chat zone container right after the h2
+      const zoneWrapper = document.createElement('div')
+      zoneWrapper.className = 'section-chat-zone-portal'
+      h2.insertAdjacentElement('afterend', zoneWrapper)
+      wrappers.push(zoneWrapper)
+
       headings.push(h2.textContent?.replace('+', '').trim() ?? '')
     }
 
@@ -65,12 +71,14 @@ export function ArticlePage() {
     }
   }, [article?.bodyHtml, date])
 
-  // Render chat buttons via portals into h2 elements
-  const buttonPortals = useMemo(() => {
+  // Render chat buttons + inline chat zones via portals
+  const portals = useMemo(() => {
     const container = contentRef.current
     if (!container || !date) return null
 
     const result: React.ReactPortal[] = []
+
+    // Button portals into h2 elements
     const btnWrappers = container.querySelectorAll('.section-chat-wrapper')
     for (const wrapper of btnWrappers) {
       const h2 = wrapper.parentElement
@@ -86,17 +94,29 @@ export function ArticlePage() {
       )
     }
 
+    // Chat zone portals inline after each h2
+    const zoneWrappers = container.querySelectorAll('.section-chat-zone-portal')
+    for (const [i, wrapper] of zoneWrappers.entries()) {
+      const heading = sectionHeadings[i]
+      if (!heading) continue
+
+      result.push(
+        createPortal(
+          <SectionChatZone
+            section={heading}
+            date={date}
+            articleTitle={displayEntry?.title ?? ''}
+            extractSection={extractSection}
+          />,
+          wrapper,
+          `zone-${heading}`,
+        ),
+      )
+    }
+
     return result
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [article?.bodyHtml, date, sectionHeadings])
-
-  // Check if any threads exist for this article
-  const hasThreads = useMemo(() => {
-    return threadOrder.some((id) => {
-      const t = threads[id]
-      return t && t.date === date
-    })
-  }, [threads, threadOrder, date])
+  }, [article?.bodyHtml, date, sectionHeadings, threads, threadOrder, displayEntry?.title])
 
   // Related articles (share 2+ tags)
   const related = useMemo(() => {
@@ -139,7 +159,7 @@ export function ArticlePage() {
         </div>
       )}
 
-      <div className={`article-layout${hasThreads ? ' chat-open' : ''}`}>
+      <div className="article-layout">
         <div className="article-main">
           {article?.bodyHtml ? (
             <article
@@ -151,7 +171,7 @@ export function ArticlePage() {
             !articleLoading && <article className="article-content"><p>Article not found.</p></article>
           )}
 
-          {buttonPortals}
+          {portals}
 
           <Popover state={popoverState} />
 
@@ -167,20 +187,6 @@ export function ArticlePage() {
             </div>
           )}
         </div>
-
-        {hasThreads && date && (
-          <div className="chat-column">
-            {sectionHeadings.map((heading) => (
-              <SectionChatZone
-                key={heading}
-                section={heading}
-                date={date}
-                articleTitle={displayEntry?.title ?? ''}
-                extractSection={extractSection}
-              />
-            ))}
-          </div>
-        )}
       </div>
 
       <SubmitAllFeedback />

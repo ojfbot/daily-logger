@@ -71,6 +71,10 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
+  overflow-x: hidden;
+}
+
+body {
   font-family: var(--font-mono);
   font-size: 14px;
   line-height: 1.6;
@@ -448,6 +452,8 @@ a:hover { border-bottom-color: var(--text); }
   margin: 2.5rem 0 0.75rem;
   padding-bottom: 0.25rem;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
 }
 
 .article-content h3 {
@@ -781,6 +787,34 @@ a:hover { border-bottom-color: var(--text); }
 }
 .theme-toggle:hover { color: var(--text); border-color: var(--text); }
 
+/* ── hamburger toggle (hidden on desktop) ── */
+.nav-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 1.25rem;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 600px) {
+  .site-header { flex-wrap: wrap; }
+  .site-title { font-size: 0.85rem; }
+  .nav-toggle { display: block; }
+  .site-nav {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    margin-top: 0.75rem;
+  }
+  .site-nav.open { display: flex; }
+}
+
 /* ─── Page-specific: decisions table ─────────────────────────────────────── */
 
 .decisions-table {
@@ -895,34 +929,18 @@ a:hover { border-bottom-color: var(--text); }
 /* Two-column layout: article left, chat column right */
 
 .article-layout {
-  display: flex;
-  gap: 0;
+  display: block;
 }
 
 .article-layout .article-main {
-  flex: 1;
   min-width: 0;
 }
 
-.chat-column {
-  width: 380px;
-  flex-shrink: 0;
-  padding-left: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  position: sticky;
-  top: 24px;
-  align-self: flex-start;
-  max-height: calc(100vh - 48px);
-  overflow-y: auto;
-}
+/* H2 chat button wrapper floats right via flex (set on .article-content h2 above) */
 
-/* H2 headings get flex layout so button floats right */
-
-.article-content h2 {
-  display: flex;
-  align-items: center;
+/* Inline thread zones sit between heading and section body */
+.section-chat-zone-portal {
+  margin-bottom: 1rem;
 }
 
 .section-chat-wrapper {
