@@ -77,6 +77,14 @@ export const CodeReferenceSchema = z.object({
 
 // ─── Full article schema (v2) ────────────────────────────────────────────────
 
+export const ClosedActionSchema = z.object({
+  command: z.string(),
+  description: z.string(),
+  repo: z.string(),
+  sourceDate: z.string(),
+  resolution: z.string(),
+})
+
 export const ArticleDataSchema = z.object({
   schemaVersion: z.literal(2),
   date: z.string(),
@@ -92,6 +100,7 @@ export const ArticleDataSchema = z.object({
   whatsNext: z.string().optional(),
 
   suggestedActions: z.array(ActionItemSchema),
+  closedActions: z.array(ClosedActionSchema).optional(),
 
   commitCount: z.number(),
   reposActive: z.array(z.string()),
@@ -127,6 +136,7 @@ export type TypedTag = z.infer<typeof TypedTagSchema>
 export type ShipmentEntry = z.infer<typeof ShipmentEntrySchema>
 export type DecisionEntry = z.infer<typeof DecisionEntrySchema>
 export type ActionItem = z.infer<typeof ActionItemSchema>
+export type ClosedAction = z.infer<typeof ClosedActionSchema>
 export type CodeReference = z.infer<typeof CodeReferenceSchema>
 export type CodeReferenceType = z.infer<typeof CodeReferenceSchema>['type']
 export type ArticleDataV2 = z.infer<typeof ArticleDataSchema>

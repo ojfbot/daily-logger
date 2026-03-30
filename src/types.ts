@@ -1,3 +1,5 @@
+import type { ActionItem as ActionItemType, ClosedAction as ClosedActionType } from './schema.js'
+
 export interface CommitInfo {
   hash: string
   message: string
@@ -65,6 +67,8 @@ export interface BlogContext {
   recentPRs: RecentPRInfo[]
   closedIssues: IssueInfo[]
   openIssues: IssueInfo[]
+  /** Open actions from previous articles, filtered against done-actions.json */
+  openActions: ActionItemType[]
   projectVision: string
   previousArticles: Array<{ date: string; excerpt: string }>
 }
@@ -75,6 +79,7 @@ export interface GeneratedArticle {
   tags: string[]
   summary: string
   body: string
+  closedActions?: ClosedActionType[]
 }
 
 export interface Persona {
@@ -122,6 +127,7 @@ export type {
   ShipmentEntry,
   DecisionEntry,
   ActionItem,
+  ClosedAction,
   ArticleDataV2,
   ActivityType,
   StubArticle,
