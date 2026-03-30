@@ -32,7 +32,7 @@ Each article lives at `/articles/YYYY-MM-DD/`.
   → deploy-pages.yml     fires on push to main → Jekyll build → GitHub Pages
 ```
 
-Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `node-template`, `MrPlug`, `purefoy`, `daily-logger`, `GroupThink`, `lean-canvas`, `seh-study`.
+Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`.
 
 ---
 
@@ -44,12 +44,14 @@ Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `node-template`
 | [cv-builder](https://github.com/ojfbot/cv-builder) | Multi-agent resume builder; CI/CD flagship with visual regression pipeline |
 | [BlogEngine](https://github.com/ojfbot/BlogEngine) | AI blog platform; daily-logger publishes here |
 | [TripPlanner](https://github.com/ojfbot/TripPlanner) | AI trip planning |
-| [node-template](https://github.com/ojfbot/node-template) | Dev environment as a product — 23 Claude Code slash commands |
+| [core](https://github.com/ojfbot/core) | Workflow framework — 30+ Claude Code slash commands + TypeScript engine |
 | [MrPlug](https://github.com/ojfbot/MrPlug) | Chrome extension for AI UI/UX feedback; Frame dev companion |
 | [purefoy](https://github.com/ojfbot/purefoy) | Roger Deakins knowledge base; roadmap: podcast AI agent in Frame |
-| [GroupThink](https://github.com/ojfbot/GroupThink) | Chrome extension — AI-powered tab grouping and management |
 | [lean-canvas](https://github.com/ojfbot/lean-canvas) | Lean canvas tool |
 | [seh-study](https://github.com/ojfbot/seh-study) | SEH study resource |
+| [core-reader](https://github.com/ojfbot/core-reader) | Documentation viewer for the core workflow framework |
+| [gastown-pilot](https://github.com/ojfbot/gastown-pilot) | Multi-agent coordination dashboard |
+| [frame-ui-components](https://github.com/ojfbot/frame-ui-components) | Shared UI component library (Carbon DS) |
 | **daily-logger** | This repo — self-documenting dev system |
 ---
 
@@ -138,3 +140,27 @@ Required body sections: `## What shipped`, `## The decisions`, `## Roadmap pulse
 |---|---|
 | `date_override` | Generate for a past date (`YYYY-MM-DD`) |
 | `dry_run` | Print article to logs without writing, committing, or opening a PR |
+
+## License
+
+MIT
+
+## Frame OS Ecosystem
+
+Part of [Frame OS](https://github.com/ojfbot/shell) — an AI-native application OS.
+
+| Repo | Description |
+|------|-------------|
+| [shell](https://github.com/ojfbot/shell) | Module Federation host + frame-agent LLM gateway |
+| [core](https://github.com/ojfbot/core) | Workflow framework — 30+ slash commands + TypeScript engine |
+| [cv-builder](https://github.com/ojfbot/cv-builder) | AI-powered resume builder with LangGraph agents |
+| [blogengine](https://github.com/ojfbot/BlogEngine) | AI blog content creation platform |
+| [TripPlanner](https://github.com/ojfbot/TripPlanner) | AI trip planner with 11-phase pipeline |
+| [core-reader](https://github.com/ojfbot/core-reader) | Documentation viewer for the core framework |
+| [lean-canvas](https://github.com/ojfbot/lean-canvas) | AI-powered lean canvas business model tool |
+| [gastown-pilot](https://github.com/ojfbot/gastown-pilot) | Multi-agent coordination dashboard |
+| [seh-study](https://github.com/ojfbot/seh-study) | NASA SEH spaced repetition study tool |
+| **daily-logger** | **Automated daily dev blog pipeline (this repo)** |
+| [purefoy](https://github.com/ojfbot/purefoy) | Roger Deakins cinematography knowledge base |
+| [MrPlug](https://github.com/ojfbot/MrPlug) | Chrome extension for AI UI feedback |
+| [frame-ui-components](https://github.com/ojfbot/frame-ui-components) | Shared component library (Carbon DS) |
