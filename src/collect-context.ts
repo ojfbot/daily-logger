@@ -259,6 +259,38 @@ function getPreviousArticles(): Array<{ date: string; excerpt: string }> {
   }
 }
 
+// ─── Open actions from previous articles ─────────────────────────────────────
+
+interface RawAction {
+  command: string
+  description: string
+  repo: string
+  status: 'open' | 'done'
+  sourceDate: string
+}
+
+function getOpenActions(): RawAction[] {
+  const actionsPath = join(REPO_ROOT, 'api/actions.json')
+  const donePath = join(REPO_ROOT, 'api/done-actions.json')
+  if (!existsSync(actionsPath)) return []
+  try {
+    const all: RawAction[] = JSON.parse(readFileSync(actionsPath, 'utf-8'))
+    const done: RawAction[] = existsSync(donePath)
+      ? JSON.parse(readFileSync(donePath, 'utf-8'))
+      : []
+    const doneKeys = new Set(
+      done.map((d) => `${d.command}|${d.sourceDate}|${d.description.slice(0, 50)}`),
+    )
+    return all.filter(
+      (a) =>
+        a.status === 'open' &&
+        !doneKeys.has(`${a.command}|${a.sourceDate}|${a.description.slice(0, 50)}`),
+    )
+  } catch {
+    return []
+  }
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export async function collectContext(date: string): Promise<BlogContext> {
@@ -303,6 +335,8 @@ export async function collectContext(date: string): Promise<BlogContext> {
     })
     .slice(0, 40)
 
+  const openActions = getOpenActions()
+
   const ctx: BlogContext = {
     date,
     repos: REPOS,
@@ -312,6 +346,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
     recentPRs: dedup(allRecentPRs).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
     closedIssues: dedup(allClosed),
     openIssues: sortedOpen,
+    openActions,
     projectVision: getProjectVision(),
     previousArticles: getPreviousArticles(),
   }

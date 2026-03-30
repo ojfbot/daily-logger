@@ -11,6 +11,7 @@ const emptyCtx: BlogContext = {
   recentPRs: [],
   closedIssues: [],
   openIssues: [],
+  openActions: [],
   projectVision: '',
   previousArticles: [],
 }

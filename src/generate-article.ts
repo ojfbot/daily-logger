@@ -87,6 +87,15 @@ Action items in the \`actions\` fields must be:
 - **Command-linked**: prefer \`/plan-feature\`, \`/techdebt\`, \`/investigate\`, \`/validate\`, \`/adr\`, \`/hardening\`, \`/pr-review\`, \`/roadmap\`, \`/scaffold\`, \`/sweep\` when applicable. Use plain imperative when no skill fits.
 - Never filler. If you can't find a specific action, name the concrete next step in plain English.
 
+## Action triage
+
+You will receive a list of open actions from previous runs. For each:
+1. Check if today's commits, merged PRs, or closed issues address it
+2. If resolved: add to \`closedActions\` with a one-sentence \`resolution\` explaining what was done
+3. If still open: do NOT re-emit it in \`suggestedActions\` — it carries forward automatically
+4. Only emit NEW actions in \`suggestedActions\` — actions specific to today's work
+5. Be aggressive about closing stale actions (>7 days old) that are no longer relevant
+
 ## Output
 
 Call the \`write_article\` tool with all required fields. Do not add preamble or explanation.
@@ -162,9 +171,15 @@ For every backtick-wrapped token in the article body, add a corresponding entry 
 For each reference, include:
 - \`text\`: exact string as it appears in backticks
 - \`type\`: one of the 9 types above
-- \`repo\`: which ojfbot repo this belongs to (omit if ambiguous)
+- \`repo\`: which ojfbot repo this belongs to — REQUIRED for commit, file, directory, component types
 - \`path\`: file path within repo (for file/component/directory types)
-- \`url\`: resolved GitHub URL if known (commits, files, packages)
+- \`url\`: resolved GitHub URL — REQUIRED for all types except config, env, endpoint. Use these patterns:
+  - commit: \`https://github.com/ojfbot/{repo}/commit/{hash}\`
+  - file: \`https://github.com/ojfbot/{repo}/blob/main/{path}\`
+  - directory: \`https://github.com/ojfbot/{repo}/tree/main/{path}\`
+  - component: \`https://github.com/ojfbot/{repo}/blob/main/{path}\`
+  - package: \`https://github.com/ojfbot/{name}\` for @ojfbot/ packages; npm URL otherwise
+  - command: \`https://github.com/ojfbot/core/blob/main/.claude/skills/{cmd}/{cmd}.md\` (strip leading /)
 - \`meta\`: type-specific metadata (e.g. \`{"pr": "42"}\` for commits with associated PRs)`
 
 // ─── Tool schema (write_article) ─────────────────────────────────────────────
@@ -281,6 +296,21 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
             sourceDate: { type: 'string', description: 'Today\'s date YYYY-MM-DD.' },
           },
           required: ['command', 'description', 'repo', 'status', 'sourceDate'],
+        },
+      },
+      closedActions: {
+        type: 'array',
+        description: 'Actions from previous runs that today\'s work resolved. Include resolution text.',
+        items: {
+          type: 'object',
+          properties: {
+            command: { type: 'string', description: 'Original slash command.' },
+            description: { type: 'string', description: 'Original action description.' },
+            repo: { type: 'string', description: 'Original target repo.' },
+            sourceDate: { type: 'string', description: 'Original date YYYY-MM-DD.' },
+            resolution: { type: 'string', description: 'One sentence: what was done to resolve this.' },
+          },
+          required: ['command', 'description', 'repo', 'sourceDate', 'resolution'],
         },
       },
       commitCount: {
@@ -611,6 +641,15 @@ export function buildUserPrompt(ctx: BlogContext): string {
     }
   }
 
+  if (ctx.openActions.length > 0) {
+    parts.push(`## Open actions from previous runs (${ctx.openActions.length})`)
+    parts.push('_Review each action against today\'s commits, merged PRs, and closed issues. If today\'s work addressed it, include it in `closedActions` with a resolution. If not, leave it open — it carries forward automatically. Do NOT re-emit open actions in `suggestedActions`._')
+    ctx.openActions.forEach((a) => {
+      parts.push(`- [${a.sourceDate}] [${a.repo}] \`${a.command}\` — ${a.description}`)
+    })
+    parts.push('')
+  }
+
   if (ctx.projectVision) {
     parts.push('## Project context (ROADMAP.md / CLAUDE.md excerpt)')
     parts.push(ctx.projectVision.slice(0, 1500))
@@ -741,6 +780,7 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
       tags: result.data.tags.map((t) => t.name),
       summary: result.data.summary,
       body: assembleBody(result.data),
+      closedActions: result.data.closedActions,
     }
   }
 

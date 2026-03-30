@@ -20,12 +20,13 @@
  *   BLOGENGINE_API_URL   optional: POST to BlogEngine on completion
  */
 
-import { writeFileSync, mkdirSync, existsSync } from 'fs'
+import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
 import { generateArticle, toMarkdown } from './generate-article.js'
 import { loadPersonas, reviewDraft, synthesizeWithCouncil } from './council.js'
+import type { ClosedAction } from './schema.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -33,6 +34,37 @@ const ARTICLES_DIR = join(REPO_ROOT, '_articles')
 
 function todayUTC(): string {
   return new Date().toISOString().slice(0, 10)
+}
+
+function persistClosedActions(closed: ClosedAction[], date: string): void {
+  if (closed.length === 0) return
+  const apiDir = join(REPO_ROOT, 'api')
+  const donePath = join(apiDir, 'done-actions.json')
+  const actionsPath = join(apiDir, 'actions.json')
+
+  // Append to done-actions.json
+  const done: Record<string, unknown>[] = existsSync(donePath)
+    ? JSON.parse(readFileSync(donePath, 'utf-8'))
+    : []
+  for (const c of closed) {
+    done.push({ ...c, status: 'done', closedDate: date })
+  }
+  writeFileSync(donePath, JSON.stringify(done, null, 2) + '\n', 'utf-8')
+
+  // Remove from actions.json
+  if (existsSync(actionsPath)) {
+    const actions: Record<string, unknown>[] = JSON.parse(readFileSync(actionsPath, 'utf-8'))
+    const closedKeys = new Set(
+      closed.map((c) => `${c.command}|${c.sourceDate}|${c.description.slice(0, 50)}`),
+    )
+    const remaining = actions.filter((a) => {
+      const key = `${a.command}|${a.sourceDate}|${String(a.description ?? '').slice(0, 50)}`
+      return !closedKeys.has(key)
+    })
+    writeFileSync(actionsPath, JSON.stringify(remaining, null, 2) + '\n', 'utf-8')
+  }
+
+  console.log(`     ✓ Closed ${closed.length} action(s) → done-actions.json`)
 }
 
 async function postToBlogEngine(markdown: string, apiUrl: string): Promise<void> {
@@ -131,6 +163,11 @@ async function main() {
   const outPath = join(ARTICLES_DIR, `${date}.md`)
   writeFileSync(outPath, markdown, 'utf-8')
   console.log(`     Written: _articles/${date}.md`)
+
+  // Persist closed actions from the article generation
+  if (article.closedActions && article.closedActions.length > 0) {
+    persistClosedActions(article.closedActions, date)
+  }
 
   if (blogEngineUrl) {
     console.log('     Posting to BlogEngine...')
