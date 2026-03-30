@@ -1,5 +1,26 @@
 [
   {
+    "command": "/document",
+    "description": "Locate the canonical source of the 13-repo ecosystem table — if it is a snippet in CLAUDE.md, confirm it. If it is manual copy-paste, create a canonical template file and document in CLAUDE.md that all 13 READMEs must be updated from it whenever a repo is added or a port changes. This is a single-task action: find or create the source of truth, then document the update protocol. Do not conflate with a staleness audit — that is a separate pass.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-03-30"
+  },
+  {
+    "command": "/validate",
+    "description": "On a clean install of cv-builder (delete node_modules and package-lock.json, then npm install), run npm audit --audit-level=high. Confirm zero findings. If any new peer-dependency conflicts were introduced by ab7ce82, document the specific packages and whether overrides or a version pin is needed. Record the result — pass or fail — in a commit comment on ab7ce82 or a follow-up commit. The cv-builder repo is now externally visible; this needs to be confirmed, not aspirational.",
+    "repo": "cv-builder",
+    "status": "open",
+    "sourceDate": "2026-03-30"
+  },
+  {
+    "command": "/investigate",
+    "description": "Open the ProjectPopover component and confirm what is actually rendering in the screenshot slot: static image assets checked into the repo, a URL pointing to a hosted screenshot service, or a live iframe/render. Document the answer as a comment in the component and file a GitHub issue in landing with acceptance criteria for a screenshot refresh pipeline if the source is static. The popovers are live and publicly visible — their content dependency needs to be documented before it silently goes stale.",
+    "repo": "landing",
+    "status": "open",
+    "sourceDate": "2026-03-30"
+  },
+  {
     "command": "/investigate",
     "description": "Check @originjs/vite-plugin-federation versions > 1.4.1 for per-chunk minification support; test upgrade path in packages/browser-app/vite.config.ts before scoping a custom chunk workaround for #99. Goal: re-enable minification for the production bundle without the full bundle-scope flag.",
     "repo": "cv-builder",

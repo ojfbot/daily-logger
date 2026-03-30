@@ -7,7 +7,7 @@
   {
     "name": "shell",
     "type": "repo",
-    "count": 16
+    "count": 17
   },
   {
     "name": "phase-1",
@@ -17,12 +17,17 @@
   {
     "name": "cv-builder",
     "type": "repo",
-    "count": 8
+    "count": 9
   },
   {
     "name": "ci-cd",
     "type": "practice",
     "count": 8
+  },
+  {
+    "name": "daily-logger",
+    "type": "repo",
+    "count": 7
   },
   {
     "name": "security",
@@ -40,11 +45,6 @@
     "count": 7
   },
   {
-    "name": "daily-logger",
-    "type": "repo",
-    "count": 6
-  },
-  {
     "name": "adr",
     "type": "practice",
     "count": 6
@@ -60,6 +60,11 @@
     "count": 5
   },
   {
+    "name": "assistant-centric",
+    "type": "concept",
+    "count": 4
+  },
+  {
     "name": "core-reader",
     "type": "repo",
     "count": 4
@@ -73,11 +78,6 @@
     "name": "node-template",
     "type": "repo",
     "count": 4
-  },
-  {
-    "name": "assistant-centric",
-    "type": "concept",
-    "count": 3
   },
   {
     "name": "groupthink",
@@ -103,6 +103,16 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "landing",
+    "type": "repo",
+    "count": 2
+  },
+  {
+    "name": "security-scanning",
+    "type": "practice",
+    "count": 2
   },
   {
     "name": "core",
@@ -170,13 +180,23 @@
     "count": 2
   },
   {
-    "name": "MrPlug",
+    "name": "documentation",
     "type": "concept",
     "count": 1
   },
   {
-    "name": "landing",
-    "type": "repo",
+    "name": "portfolio-presentation",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "cleanup",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "MrPlug",
+    "type": "concept",
     "count": 1
   },
   {
@@ -242,11 +262,6 @@
   {
     "name": "fleet-wide",
     "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "security-scanning",
-    "type": "practice",
     "count": 1
   },
   {

@@ -1,5 +1,115 @@
 [
   {
+    "date": "2026-03-30",
+    "title": "Sunday's documentation sweep: 13 READMEs, a security fix, and a landing page that can finally do its job",
+    "summary": "Sunday swept 23 commits across 10 repos — standardising ecosystem READMEs fleet-wide, patching 7 high/critical cv-builder vulnerabilities, and shipping popover preview cards on the landing page ahead of job applications.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "landing",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "security-scanning",
+        "type": "practice"
+      },
+      {
+        "name": "documentation",
+        "type": "concept"
+      },
+      {
+        "name": "portfolio-presentation",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "MrPlug",
+      "core",
+      "cv-builder",
+      "landing",
+      "daily-logger",
+      "core-reader",
+      "lean-canvas",
+      "seh-study",
+      "purefoy",
+      "TripPlanner",
+      "BlogEngine"
+    ],
+    "commitCount": 19,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Standardise the ecosystem table across all 13 repos rather than per-repo cross-links",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Portal-based ProjectPopover with viewport clamping over a simple tooltip",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fix dependency vulnerabilities in cv-builder before external portfolio exposure",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Scrape both open and closed PRs from the 24h window in the daily-logger pipeline",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/document",
+        "description": "Locate the canonical source of the 13-repo ecosystem table — if it is a snippet in CLAUDE.md, confirm it. If it is manual copy-paste, create a canonical template file and document in CLAUDE.md that all 13 READMEs must be updated from it whenever a repo is added or a port changes. This is a single-task action: find or create the source of truth, then document the update protocol. Do not conflate with a staleness audit — that is a separate pass.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-03-30"
+      },
+      {
+        "command": "/validate",
+        "description": "On a clean install of cv-builder (delete node_modules and package-lock.json, then npm install), run npm audit --audit-level=high. Confirm zero findings. If any new peer-dependency conflicts were introduced by ab7ce82, document the specific packages and whether overrides or a version pin is needed. Record the result — pass or fail — in a commit comment on ab7ce82 or a follow-up commit. The cv-builder repo is now externally visible; this needs to be confirmed, not aspirational.",
+        "repo": "cv-builder",
+        "status": "open",
+        "sourceDate": "2026-03-30"
+      },
+      {
+        "command": "/investigate",
+        "description": "Open the ProjectPopover component and confirm what is actually rendering in the screenshot slot: static image assets checked into the repo, a URL pointing to a hosted screenshot service, or a live iframe/render. Document the answer as a comment in the component and file a GitHub issue in landing with acceptance criteria for a screenshot refresh pipeline if the source is static. The popovers are live and publicly visible — their content dependency needs to be documented before it silently goes stale.",
+        "repo": "landing",
+        "status": "open",
+        "sourceDate": "2026-03-30"
+      }
+    ]
+  },
+  {
     "date": "2026-03-29",
     "title": "Saturday sprint: actions board zeroed, ADRs landed, MrPlug hardened",
     "summary": "Forty-four commits Saturday closed the actions board to zero, merged three ADRs, fixed the landing nav, hardened MrPlug's relay security, and formally named the Module Federation minification regression.",
