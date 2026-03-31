@@ -1,5 +1,156 @@
 [
   {
+    "date": "2026-03-31",
+    "title": "Monday sprint: SidebarToggle lands fleet-wide, Frame gets deep-linking, and daily-logger grows an editorial sidebar",
+    "summary": "Fifty-eight commits Monday pushed shared component adoption across all seven sub-apps, wired deep-link routing into the shell, and shipped an editorial revision sidebar in daily-logger.",
+    "tags": [
+      {
+        "name": "frame-ui-components",
+        "type": "infra"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "landing",
+        "type": "repo"
+      },
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "shared-component-adoption",
+        "type": "concept"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "storybook",
+        "type": "infra"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "shell",
+      "landing",
+      "lean-canvas",
+      "purefoy",
+      "cv-builder",
+      "TripPlanner",
+      "BlogEngine",
+      "seh-study",
+      "core-reader",
+      "core"
+    ],
+    "commitCount": 39,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Fleet-wide SidebarToggle adoption in a single sprint",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "CLAUDE.md deployment guardrail as security-emergent UX",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Shell ?app= deep-linking: URL as the navigation contract between landing and Frame",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Removing CSS transform from frame-fade-in to fix position:fixed stacking context",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "daily-logger editorial sidebar and ADR-0038: the blog edits itself",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "purefoy ADR-010: S3 + CloudFront for transcript serving",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/test-expand",
+        "description": "Add a Playwright smoke test for the ?app= deep-link feature: navigate to frame.jim.software?app=blogengine and assert the BlogEngine panel is active. Shell #54 shipped the feature with no automated coverage; landing #6 is already live with deep-link cards against this untested path.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-03-31"
+      },
+      {
+        "command": "/sweep",
+        "description": "Audit all sub-app repos for remaining bespoke sidebar toggle buttons or custom chat-panel components not yet migrated to @ojfbot/frame-ui-components. SidebarToggle is fleet-wide; ThreadSidebarConnected and CondensedChat are in the shared layer but not yet swept fleet-wide.",
+        "repo": "frame-ui-components",
+        "status": "open",
+        "sourceDate": "2026-03-31"
+      },
+      {
+        "command": "/adr",
+        "description": "Formalise purefoy ADR-010 as a versioned decision record in the purefoy repo. The rationale currently lives only in the PR description. Include: export script invocation, S3 bucket structure, CloudFront config, back-of-napkin cost estimate at current and 10x request volume, and the profession-grouping rationale.",
+        "repo": "purefoy",
+        "status": "open",
+        "sourceDate": "2026-03-31"
+      },
+      {
+        "command": "/investigate",
+        "description": "Confirm whether the Playwright screenshot capture script added in landing commit 944659d is wired to a deploy trigger or remains a manual tool. Document the answer in the ProjectPopover component and update landing issue #2 with the finding.",
+        "repo": "landing",
+        "status": "open",
+        "sourceDate": "2026-03-31"
+      },
+      {
+        "command": "/validate",
+        "description": "Confirm the ADR-0038 editorial revision CI workflow passes end-to-end: trigger the workflow, verify the feedback parameter reaches stampDraft, confirm the editorial sidebar renders the returned threads inline, and document the exact trigger event (merge, dispatch, or cron) in the ADR record.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-03-31"
+      }
+    ]
+  },
+  {
     "date": "2026-03-30",
     "title": "Sunday's documentation sweep: 13 READMEs, a security fix, and a landing page that can finally do its job",
     "summary": "Sunday swept 23 commits across 10 repos — standardising ecosystem READMEs fleet-wide, patching 7 high/critical cv-builder vulnerabilities, and shipping popover preview cards on the landing page ahead of job applications.",

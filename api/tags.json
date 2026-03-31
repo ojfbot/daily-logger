@@ -2,17 +2,22 @@
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 19
+    "count": 20
   },
   {
     "name": "shell",
     "type": "repo",
-    "count": 17
+    "count": 18
   },
   {
     "name": "phase-1",
     "type": "phase",
-    "count": 10
+    "count": 11
+  },
+  {
+    "name": "ci-cd",
+    "type": "practice",
+    "count": 9
   },
   {
     "name": "cv-builder",
@@ -20,14 +25,9 @@
     "count": 9
   },
   {
-    "name": "ci-cd",
-    "type": "practice",
-    "count": 8
-  },
-  {
     "name": "daily-logger",
     "type": "repo",
-    "count": 7
+    "count": 8
   },
   {
     "name": "security",
@@ -45,19 +45,24 @@
     "count": 7
   },
   {
+    "name": "purefoy",
+    "type": "repo",
+    "count": 6
+  },
+  {
     "name": "adr",
     "type": "practice",
     "count": 6
   },
   {
-    "name": "purefoy",
-    "type": "repo",
-    "count": 5
-  },
-  {
     "name": "gas-town",
     "type": "phase",
     "count": 5
+  },
+  {
+    "name": "storybook",
+    "type": "infra",
+    "count": 4
   },
   {
     "name": "assistant-centric",
@@ -80,13 +85,23 @@
     "count": 4
   },
   {
-    "name": "groupthink",
+    "name": "frame-ui-components",
+    "type": "infra",
+    "count": 3
+  },
+  {
+    "name": "landing",
     "type": "repo",
     "count": 3
   },
   {
-    "name": "storybook",
-    "type": "infra",
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 3
+  },
+  {
+    "name": "groupthink",
+    "type": "repo",
     "count": 3
   },
   {
@@ -105,8 +120,13 @@
     "count": 3
   },
   {
-    "name": "landing",
-    "type": "repo",
+    "name": "security-as-emergent-ux",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "sprint",
+    "type": "concept",
     "count": 2
   },
   {
@@ -117,11 +137,6 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 2
-  },
-  {
-    "name": "tooling-for-iteration",
-    "type": "concept",
     "count": 2
   },
   {
@@ -137,11 +152,6 @@
   {
     "name": "scaffold-app",
     "type": "practice",
-    "count": 2
-  },
-  {
-    "name": "frame-ui-components",
-    "type": "infra",
     "count": 2
   },
   {
@@ -180,6 +190,11 @@
     "count": 2
   },
   {
+    "name": "shared-component-adoption",
+    "type": "concept",
+    "count": 1
+  },
+  {
     "name": "documentation",
     "type": "concept",
     "count": 1
@@ -196,16 +211,6 @@
   },
   {
     "name": "MrPlug",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "sprint",
     "type": "concept",
     "count": 1
   },
