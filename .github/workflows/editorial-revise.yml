@@ -1,0 +1,189 @@
+name: Editorial Revision
+
+# Triggered when an editorial accept PR is opened or its body is edited.
+# Extracts feedback from the PR body, calls Claude to revise the article,
+# and pushes the result back to the PR branch.
+
+on:
+  pull_request:
+    types: [opened, edited]
+    branches: [main]
+
+concurrency:
+  group: editorial-revise-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  revise:
+    name: Apply editorial revisions
+    if: >-
+      startsWith(github.head_ref, 'accept/') &&
+      contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_START')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Guard — skip if last commit was by bot
+        id: guard
+        run: |
+          AUTHOR=$(git log -1 --format='%an')
+          if [[ "$AUTHOR" == *"[bot]"* ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "⏭ Last commit by bot ($AUTHOR) — skipping to prevent loop"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract editorial feedback from PR body
+        if: steps.guard.outputs.skip != 'true'
+        id: feedback
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+            const startMarker = '<!-- EDITORIAL_FEEDBACK_START -->';
+            const endMarker = '<!-- EDITORIAL_FEEDBACK_END -->';
+            const startIdx = body.indexOf(startMarker);
+            const endIdx = body.indexOf(endMarker);
+            if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) {
+              core.setOutput('feedback', '');
+              core.info('No valid feedback markers found');
+              return;
+            }
+            const feedback = body.slice(startIdx + startMarker.length, endIdx).trim();
+            core.setOutput('feedback', feedback);
+            core.info(`Extracted ${feedback.length} chars of feedback`);
+
+      - name: Guard — feedback non-empty
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback == ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: '⚠️ Editorial feedback markers found but no actionable feedback extracted.\n\nPlease edit the PR body with revision instructions between the `EDITORIAL_FEEDBACK_START` and `EDITORIAL_FEEDBACK_END` markers.',
+            });
+            core.setFailed('No feedback content between markers');
+
+      - name: Extract article date from branch name
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        id: date
+        run: |
+          DATE="${GITHUB_HEAD_REF#accept/}"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "article_path=_articles/${DATE}.md" >> "$GITHUB_OUTPUT"
+          echo "📅 Article date: $DATE"
+
+      - name: Setup pnpm
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+
+      - name: Setup Node.js
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        run: pnpm install --frozen-lockfile
+
+      - name: Run editorial revision
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        id: revise
+        env:
+          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+          EDITORIAL_FEEDBACK: ${{ steps.feedback.outputs.feedback }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          tsx src/revise-article.ts > /tmp/revision-result.json
+          echo "changed=$(jq -r '.changed' /tmp/revision-result.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Commit revised article
+        if: steps.guard.outputs.skip != 'true' && steps.revise.outputs.changed == 'true'
+        run: |
+          git config user.name "ojfbot-blog[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${{ steps.date.outputs.article_path }}"
+          git commit -m "editorial: revise ${{ steps.date.outputs.date }} per feedback"
+          git push
+
+      - name: Post revision summary on PR
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let result;
+            try {
+              result = JSON.parse(fs.readFileSync('/tmp/revision-result.json', 'utf-8'));
+            } catch {
+              return; // revision step failed, no result to post
+            }
+
+            const changes = (result.changesSummary || [])
+              .map(c => `- ${c}`)
+              .join('\n');
+
+            const status = result.changed
+              ? '✅ **Revision applied** — changes committed to this branch.'
+              : 'ℹ️ **No changes needed** — the article already reflects the feedback.';
+
+            const sha = result.changed
+              ? `\nCommit: \`${process.env.GITHUB_SHA?.slice(0, 7) ?? 'pending'}\``
+              : '';
+
+            const body = [
+              '## Editorial Revision',
+              '',
+              status,
+              '',
+              '### Changes',
+              '',
+              changes || '- No changes applied',
+              '',
+              '<details><summary>Details</summary>',
+              '',
+              `Model: \`claude-sonnet-4-6\`${sha}`,
+              `Feedback items: ${(result.changesSummary || []).length}`,
+              '',
+              '</details>',
+            ].join('\n');
+
+            // Update existing bot comment or create new one
+            const { data: comments } = await github.rest.issues.listComments({
+              ...context.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c =>
+              c.body?.includes('## Editorial Revision') &&
+              c.user?.login === 'github-actions[bot]'
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...context.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
