@@ -94,3 +94,10 @@ Set these in the repo's GitHub Settings → Secrets and variables → Actions:
 | `ANTHROPIC_API_KEY` | Yes | Claude API key |
 | `GITHUB_TOKEN` | Auto | Provided by Actions; use a PAT for private repos |
 | `BLOGENGINE_API_URL` | No | e.g. `https://blog.ojfbot.dev` — enables live publish |
+
+## Deployment
+
+**NEVER deploy directly to production** via CLI (`vercel deploy --prod`, `vercel promote`, etc.).
+All production deployments go through the GitHub PR → CI → merge → automated deploy pipeline.
+The only exception is `workflow_dispatch` for manual CI triggers.
+Local Vercel CLI usage is restricted to preview deploys only.
