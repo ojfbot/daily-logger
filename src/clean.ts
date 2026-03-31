@@ -17,7 +17,7 @@
 
 import { collectContext } from './collect-context.js'
 import {
-  readTodayArticle,
+  loadStructuredContext,
   sweepForCandidates,
   validateCandidates,
   openCleanPRs,
@@ -64,13 +64,15 @@ async function main() {
     return
   }
 
-  // Read today's article — the authoritative synthesized summary of what shipped.
-  // Tries the draft PR branch (article/YYYY-MM-DD) first, falls back to main.
-  const todayArticle = readTodayArticle(org, date)
-  if (todayArticle) {
-    console.log(`     Today's article: loaded (${todayArticle.length} chars)`)
+  // Load structured context from api/ files (entries, actions, done-actions).
+  // Falls back to raw article via GitHub API if structured data is unavailable.
+  const cleanCtx = loadStructuredContext(date, org)
+  if (cleanCtx.recentEntries.length > 0) {
+    console.log(`     Structured context: ${cleanCtx.recentEntries.length} entries, ${cleanCtx.openActions.length} open actions, ${cleanCtx.doneActions.length} done actions`)
+  } else if (cleanCtx.rawArticleFallback) {
+    console.log(`     Fallback: raw article loaded (${cleanCtx.rawArticleFallback.length} chars)`)
   } else {
-    console.log('     Today\'s article: not found — validation will rely on commits only')
+    console.log('     No structured context or article found — validation will rely on commits only')
   }
   console.log()
 
@@ -88,7 +90,7 @@ async function main() {
   // ── 3. Validate ───────────────────────────────────────────────────────────────
   console.log(`3/3  Validating ${candidates.length} candidate(s) with Claude Opus...`)
   console.log('     (This is the slow phase — each call is rigorous.)')
-  const proposals = await validateCandidates(candidates, todayArticle)
+  const proposals = await validateCandidates(candidates, cleanCtx)
   console.log()
 
   if (proposals.length === 0) {
