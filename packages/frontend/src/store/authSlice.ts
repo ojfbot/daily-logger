@@ -24,6 +24,11 @@ const initialState: AuthState = {
  * The token lives in an httpOnly cookie — this endpoint reads it server-side.
  */
 export const checkAuth = createAsyncThunk('auth/checkAuth', async () => {
+  // Dev mode: simulate authenticated user (Vite dev server only, never in production builds)
+  if (import.meta.env.DEV) {
+    return { login: 'dev', avatarUrl: '', name: 'Dev Mode', authorized: true } as AuthUser
+  }
+
   const res = await fetch('/api/auth/me', { credentials: 'same-origin' })
   if (!res.ok) return null
   return res.json() as Promise<AuthUser>
