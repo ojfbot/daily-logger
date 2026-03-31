@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import crypto from 'crypto'
+import { extractToken } from '../_lib/cookies.js'
 
-const AUTH_COOKIE_SECRET = process.env.AUTH_COOKIE_SECRET ?? ''
 const ALLOWED_USERS = (process.env.ALLOWED_USERS ?? '')
   .split(',')
   .map((u) => u.trim().toLowerCase())
@@ -19,7 +18,7 @@ const ALLOWED_REPO_PREFIX = '/repos/ojfbot/daily-logger/'
  * Security layers:
  * 1. Token extracted from httpOnly cookie (no XSS token theft)
  * 2. Mutating requests require X-Requested-With header (CSRF prevention)
- * 3. ALLOWED_USERS gate for write operations
+ * 3. ALLOWED_USERS gate for write operations (fail-closed if empty)
  * 4. Request path restricted to ojfbot/daily-logger repo only
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -52,12 +51,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ── Authorization check for write operations ─────────────────────────────
+  // Fail-closed: if ALLOWED_USERS is not configured, deny all writes
   if (method !== 'GET' && method !== 'HEAD') {
+    if (ALLOWED_USERS.length === 0) {
+      return res.status(403).json({ error: 'ALLOWED_USERS not configured — write operations disabled' })
+    }
+
     const userLogin = await getAuthenticatedLogin(token)
     if (!userLogin) {
       return res.status(401).json({ error: 'Could not verify GitHub identity' })
     }
-    if (ALLOWED_USERS.length > 0 && !ALLOWED_USERS.includes(userLogin.toLowerCase())) {
+    if (!ALLOWED_USERS.includes(userLogin.toLowerCase())) {
       return res.status(403).json({ error: 'User not authorized for write operations' })
     }
   }
@@ -105,18 +109,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function extractToken(req: VercelRequest): string | null {
-  const cookies = parseCookies(req.headers.cookie ?? '')
-  const encrypted = cookies['gh_token']
-  if (!encrypted || !AUTH_COOKIE_SECRET) return null
-
-  try {
-    return decrypt(encrypted, AUTH_COOKIE_SECRET)
-  } catch {
-    return null
-  }
-}
-
 async function getAuthenticatedLogin(token: string): Promise<string | null> {
   try {
     const resp = await fetch('https://api.github.com/user', {
@@ -132,29 +124,4 @@ async function getAuthenticatedLogin(token: string): Promise<string | null> {
   } catch {
     return null
   }
-}
-
-function parseCookies(cookieHeader: string): Record<string, string> {
-  const cookies: Record<string, string> = {}
-  for (const pair of cookieHeader.split(';')) {
-    const [key, ...rest] = pair.trim().split('=')
-    if (key) cookies[key] = rest.join('=')
-  }
-  return cookies
-}
-
-function decrypt(encryptedStr: string, secret: string): string {
-  const [ivHex, authTagHex, ciphertext] = encryptedStr.split(':')
-  if (!ivHex || !authTagHex || !ciphertext) throw new Error('Invalid encrypted format')
-
-  const key = crypto.createHash('sha256').update(secret).digest()
-  const iv = Buffer.from(ivHex, 'hex')
-  const authTag = Buffer.from(authTagHex, 'hex')
-
-  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv)
-  decipher.setAuthTag(authTag)
-
-  let decrypted = decipher.update(ciphertext, 'hex', 'utf8')
-  decrypted += decipher.final('utf8')
-  return decrypted
 }

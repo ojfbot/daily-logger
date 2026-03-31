@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { safeReturnTo } from '../_lib/security.js'
 
 const COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN ?? ''
 const IS_PROD = process.env.NODE_ENV === 'production'
@@ -24,7 +25,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     COOKIE_DOMAIN ? `Domain=${COOKIE_DOMAIN}` : '',
   ].filter(Boolean).join('; ')
 
-  const returnTo = typeof req.query.returnTo === 'string' ? req.query.returnTo : '/'
+  const returnTo = safeReturnTo(typeof req.query.returnTo === 'string' ? req.query.returnTo : '/')
 
   res.setHeader('Set-Cookie', clearCookie)
   res.redirect(302, returnTo)
