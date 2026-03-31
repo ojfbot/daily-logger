@@ -318,8 +318,18 @@ export function buildApi() {
   // Write entries.json
   writeFileSync(join(API_DIR, 'entries.json'), JSON.stringify(entries, null, 2))
 
-  // Write actions.json
-  writeFileSync(join(API_DIR, 'actions.json'), JSON.stringify(allActions, null, 2))
+  // Write actions.json — filter out actions already marked done
+  const donePath = join(API_DIR, 'done-actions.json')
+  const doneItems: Array<{ command: string; sourceDate: string; description: string }> = existsSync(donePath)
+    ? JSON.parse(readFileSync(donePath, 'utf-8'))
+    : []
+  const doneKeys = new Set(
+    doneItems.map((d) => `${d.command}|${d.sourceDate}|${d.description.slice(0, 50)}`),
+  )
+  const openActions = allActions.filter(
+    (a) => !doneKeys.has(`${a.command}|${a.sourceDate}|${a.description.slice(0, 50)}`),
+  )
+  writeFileSync(join(API_DIR, 'actions.json'), JSON.stringify(openActions, null, 2))
 
   // Write tags.json
   const tagsArr: TagCount[] = [...tagCounts.entries()]
@@ -340,7 +350,7 @@ export function buildApi() {
 
   console.log(`API built:`)
   console.log(`  entries.json — ${entries.length} articles`)
-  console.log(`  actions.json — ${allActions.length} actions`)
+  console.log(`  actions.json — ${openActions.length} open actions (${allActions.length - openActions.length} filtered as done)`)
   console.log(`  tags.json    — ${tagsArr.length} unique tags`)
   console.log(`  repos.json   — ${reposArr.length} repos`)
 }
