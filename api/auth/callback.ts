@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import crypto from 'crypto'
+import { parseCookies } from '../_lib/cookies.js'
+import { encrypt } from '../_lib/crypto.js'
+import { safeReturnTo, timingSafeEqual } from '../_lib/security.js'
 
 const CLIENT_ID = process.env.GITHUB_CLIENT_ID ?? ''
 const CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET ?? ''
@@ -76,44 +78,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const clearState = 'oauth_state=; HttpOnly; Path=/api/auth; Max-Age=0'
   const clearReturn = 'oauth_return=; HttpOnly; Path=/api/auth; Max-Age=0'
 
-  // Determine redirect target
-  const returnTo = cookies['oauth_return']
-    ? decodeURIComponent(cookies['oauth_return'])
-    : '/'
+  // Determine redirect target — validated against open redirect
+  const returnTo = safeReturnTo(
+    cookies['oauth_return'] ? decodeURIComponent(cookies['oauth_return']) : '/',
+  )
 
   res.setHeader('Set-Cookie', [authCookie, clearState, clearReturn])
   res.redirect(302, returnTo)
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function parseCookies(cookieHeader: string): Record<string, string> {
-  const cookies: Record<string, string> = {}
-  for (const pair of cookieHeader.split(';')) {
-    const [key, ...rest] = pair.trim().split('=')
-    if (key) cookies[key] = rest.join('=')
-  }
-  return cookies
-}
-
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
-  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
-}
-
-/**
- * AES-256-GCM encryption for the access token.
- * Format: iv:authTag:ciphertext (all hex-encoded)
- */
-function encrypt(plaintext: string, secret: string): string {
-  // Derive a 32-byte key from the secret
-  const key = crypto.createHash('sha256').update(secret).digest()
-  const iv = crypto.randomBytes(16)
-  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv)
-
-  let encrypted = cipher.update(plaintext, 'utf8', 'hex')
-  encrypted += cipher.final('hex')
-  const authTag = cipher.getAuthTag().toString('hex')
-
-  return `${iv.toString('hex')}:${authTag}:${encrypted}`
 }

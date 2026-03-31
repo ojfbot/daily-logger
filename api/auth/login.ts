@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import crypto from 'crypto'
+import { safeReturnTo } from '../_lib/security.js'
 
 const CLIENT_ID = process.env.GITHUB_CLIENT_ID ?? ''
 const COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN ?? ''
@@ -35,10 +36,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     COOKIE_DOMAIN ? `Domain=${COOKIE_DOMAIN}` : '',
   ].filter(Boolean).join('; ')
 
-  res.setHeader('Set-Cookie', stateCookieFlags)
-
-  // Where to send the user after OAuth completes
-  const returnTo = typeof req.query.returnTo === 'string' ? req.query.returnTo : '/'
+  // Where to send the user after OAuth completes — validated against open redirect
+  const returnTo = safeReturnTo(typeof req.query.returnTo === 'string' ? req.query.returnTo : '/')
 
   // Store returnTo in a separate cookie so callback can redirect properly
   const returnCookieFlags = [
