@@ -23,7 +23,7 @@ async function initIndex(): Promise<void> {
 
   function renderAll(): void {
     const filtered = entries.filter(matchesFilters)
-    if (metricsEl) renderMetrics(metricsEl, entries)
+    if (metricsEl) renderMetrics(metricsEl, entries, repos)
     if (filterEl) renderFilterBar(filterEl, tags, { toggleFilter, isFilterActive, clearFilters, hasActiveFilters, getActiveFilters, filteredCount: filtered.length, totalCount: entries.length })
     renderEntryList(listEl!, filtered)
     if (sidebarEl) renderSidebar(sidebarEl, { repos, tags, toggleFilter, isFilterActive })

@@ -4,35 +4,161 @@ import type { EntryData, TagCount, RepoStats, FilterCallbacks } from './types'
 
 const BASE = (document.querySelector('meta[name="baseurl"]') as HTMLMetaElement | null)?.content ?? '/daily-logger'
 
-export function renderMetrics(container: HTMLElement, entries: EntryData[]): void {
+// ─── Metric popover helpers ─────────────────────────────────────────────────
+
+let metricPopoverEl: HTMLElement | null = null
+let metricPopoverTimer: ReturnType<typeof setTimeout> | null = null
+
+function getMetricPopover(): HTMLElement {
+  if (!metricPopoverEl) {
+    metricPopoverEl = document.createElement('div')
+    metricPopoverEl.className = 'metric-popover'
+    document.body.appendChild(metricPopoverEl)
+  }
+  return metricPopoverEl
+}
+
+function showMetricPopover(cell: HTMLElement, html: string): void {
+  if (metricPopoverTimer) clearTimeout(metricPopoverTimer)
+  metricPopoverTimer = setTimeout(() => {
+    const pop = getMetricPopover()
+    pop.innerHTML = html
+    pop.classList.add('visible')
+
+    const rect = cell.getBoundingClientRect()
+    const popWidth = pop.offsetWidth
+    let left = rect.left + rect.width / 2 - popWidth / 2
+    if (left < 8) left = 8
+    if (left + popWidth > window.innerWidth - 8) left = window.innerWidth - 8 - popWidth
+    pop.style.left = `${left}px`
+    pop.style.top = `${rect.bottom + 6}px`
+  }, 200)
+}
+
+function hideMetricPopover(): void {
+  if (metricPopoverTimer) { clearTimeout(metricPopoverTimer); metricPopoverTimer = null }
+  metricPopoverEl?.classList.remove('visible')
+}
+
+function popRow(label: string, value: string | number): string {
+  return `<div class="metric-popover-row"><span class="mp-label">${label}</span><span class="mp-value">${value}</span></div>`
+}
+
+// ─── Popover content builders ───────────────────────────────────────────────
+
+function buildEntriesPopover(entries: EntryData[]): string {
+  const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date))
+  const last7 = sorted.filter(e => {
+    const d = new Date(e.date + 'T12:00:00Z')
+    return Date.now() - d.getTime() < 7 * 24 * 60 * 60 * 1000
+  }).length
+
+  const types: Record<string, number> = {}
+  for (const e of entries) {
+    const t = e.activityType || 'build'
+    types[t] = (types[t] ?? 0) + 1
+  }
+  const typeStr = Object.entries(types)
+    .sort((a, b) => b[1] - a[1])
+    .map(([t, n]) => `${n} ${t}`)
+    .join(', ')
+
+  const latest = sorted[0]
+  const latestLine = latest
+    ? `<div class="metric-popover-latest">Latest: "${latest.title}" (${latest.date})</div>`
+    : ''
+
+  return `<div class="metric-popover-title">Entries</div>`
+    + popRow('Last 7 days', last7)
+    + popRow('Activity types', typeStr)
+    + latestLine
+}
+
+function buildReposPopover(repos: RepoStats[]): string {
+  const top5 = repos.slice(0, 5)
+  const rows = top5
+    .map(r => popRow(r.name, `${r.articleCount} articles, ${r.totalCommits} commits`))
+    .join('')
+
+  return `<div class="metric-popover-title">Top repos by coverage</div>` + rows
+}
+
+function buildActionsPopover(entries: EntryData[]): string {
+  const allActions = entries.flatMap(e => e.actions ?? [])
+  const open = allActions.filter(a => a.status === 'open')
+  const cmdCounts: Record<string, number> = {}
+  for (const a of open) {
+    cmdCounts[a.command] = (cmdCounts[a.command] ?? 0) + 1
+  }
+  const cmdStr = Object.entries(cmdCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([cmd, n]) => `${cmd}: ${n}`)
+    .join(', ')
+
+  const oldest = open.sort((a, b) => a.sourceDate.localeCompare(b.sourceDate))[0]
+  const oldestLine = oldest
+    ? `<div class="metric-popover-latest">Oldest: "${oldest.description.slice(0, 60)}..." (${oldest.sourceDate})</div>`
+    : ''
+
+  return `<div class="metric-popover-title">Action items</div>`
+    + popRow('Open', open.length)
+    + popRow('Closed', allActions.length - open.length)
+    + (cmdStr ? popRow('By type', cmdStr) : '')
+    + oldestLine
+}
+
+function buildCommitsPopover(entries: EntryData[], repos: RepoStats[]): string {
+  const totalCommits = entries.reduce((sum, e) => sum + (e.commitCount ?? 0), 0)
+  const avg = entries.length > 0 ? Math.round(totalCommits / entries.length) : 0
+
+  const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date))
+  const last7 = sorted
+    .filter(e => Date.now() - new Date(e.date + 'T12:00:00Z').getTime() < 7 * 24 * 60 * 60 * 1000)
+    .reduce((sum, e) => sum + (e.commitCount ?? 0), 0)
+
+  const topRepo = repos[0]
+  const topLine = topRepo
+    ? popRow('Top repo', `${topRepo.name} (${topRepo.totalCommits})`)
+    : ''
+
+  return `<div class="metric-popover-title">Commit volume</div>`
+    + popRow('Average', `${avg} / day`)
+    + popRow('This week', last7)
+    + topLine
+}
+
+// ─── Main metrics render ────────────────────────────────────────────────────
+
+export function renderMetrics(container: HTMLElement, entries: EntryData[], repos: RepoStats[]): void {
   const totalEntries = entries.length
   const allRepos = new Set(entries.flatMap(e => e.reposActive ?? []))
   const allActions = entries.reduce((sum, e) => sum + (e.actions?.length ?? 0), 0)
-
-  // Calculate streak (consecutive days from most recent)
-  let streak = 0
-  if (entries.length > 0) {
-    const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date))
-    let checkDate = new Date(sorted[0].date + 'T12:00:00Z')
-
-    for (const entry of sorted) {
-      const entryDate = new Date(entry.date + 'T12:00:00Z')
-      const diff = Math.round((checkDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24))
-      if (diff <= 1) {
-        streak++
-        checkDate = entryDate
-      } else {
-        break
-      }
-    }
-  }
+  const totalCommits = entries.reduce((sum, e) => sum + (e.commitCount ?? 0), 0)
 
   container.innerHTML = `
-    <div class="metric-cell"><div class="metric-value">${totalEntries}</div><div class="metric-label">ENTRIES</div></div>
-    <div class="metric-cell"><div class="metric-value">${allRepos.size}</div><div class="metric-label">ACTIVE REPOS</div></div>
-    <div class="metric-cell"><div class="metric-value">${allActions}</div><div class="metric-label">ACTIONS</div></div>
-    <div class="metric-cell"><div class="metric-value">${streak}</div><div class="metric-label">DAY STREAK</div></div>
+    <div class="metric-cell" data-metric="entries"><div class="metric-value">${totalEntries}</div><div class="metric-label">ENTRIES</div></div>
+    <div class="metric-cell" data-metric="repos"><div class="metric-value">${allRepos.size}</div><div class="metric-label">ACTIVE REPOS</div></div>
+    <div class="metric-cell" data-metric="actions"><div class="metric-value">${allActions}</div><div class="metric-label">ACTIONS</div></div>
+    <div class="metric-cell" data-metric="commits"><div class="metric-value">${totalCommits.toLocaleString()}</div><div class="metric-label">TOTAL COMMITS</div></div>
   `
+
+  // Pre-build popover content
+  const popovers: Record<string, string> = {
+    entries: buildEntriesPopover(entries),
+    repos: buildReposPopover(repos),
+    actions: buildActionsPopover(entries),
+    commits: buildCommitsPopover(entries, repos),
+  }
+
+  // Attach hover handlers
+  container.querySelectorAll('.metric-cell').forEach(cell => {
+    const el = cell as HTMLElement
+    const key = el.dataset.metric
+    if (!key || !popovers[key]) return
+    el.addEventListener('mouseenter', () => showMetricPopover(el, popovers[key]))
+    el.addEventListener('mouseleave', hideMetricPopover)
+  })
 }
 
 interface FilterBarOptions extends FilterCallbacks {
