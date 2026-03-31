@@ -196,31 +196,107 @@ function makeResult(entry) {
 
 // src/frontend/render.ts
 var BASE3 = document.querySelector('meta[name="baseurl"]')?.content ?? "/daily-logger";
-function renderMetrics(container, entries2) {
+var metricPopoverEl = null;
+var metricPopoverTimer = null;
+function getMetricPopover() {
+  if (!metricPopoverEl) {
+    metricPopoverEl = document.createElement("div");
+    metricPopoverEl.className = "metric-popover";
+    document.body.appendChild(metricPopoverEl);
+  }
+  return metricPopoverEl;
+}
+function showMetricPopover(cell, html) {
+  if (metricPopoverTimer) clearTimeout(metricPopoverTimer);
+  metricPopoverTimer = setTimeout(() => {
+    const pop = getMetricPopover();
+    pop.innerHTML = html;
+    pop.classList.add("visible");
+    const rect = cell.getBoundingClientRect();
+    const popWidth = pop.offsetWidth;
+    let left = rect.left + rect.width / 2 - popWidth / 2;
+    if (left < 8) left = 8;
+    if (left + popWidth > window.innerWidth - 8) left = window.innerWidth - 8 - popWidth;
+    pop.style.left = `${left}px`;
+    pop.style.top = `${rect.bottom + 6}px`;
+  }, 200);
+}
+function hideMetricPopover() {
+  if (metricPopoverTimer) {
+    clearTimeout(metricPopoverTimer);
+    metricPopoverTimer = null;
+  }
+  metricPopoverEl?.classList.remove("visible");
+}
+function popRow(label, value) {
+  return `<div class="metric-popover-row"><span class="mp-label">${label}</span><span class="mp-value">${value}</span></div>`;
+}
+function buildEntriesPopover(entries2) {
+  const sorted = [...entries2].sort((a, b) => b.date.localeCompare(a.date));
+  const last7 = sorted.filter((e) => {
+    const d = /* @__PURE__ */ new Date(e.date + "T12:00:00Z");
+    return Date.now() - d.getTime() < 7 * 24 * 60 * 60 * 1e3;
+  }).length;
+  const types = {};
+  for (const e of entries2) {
+    const t = e.activityType || "build";
+    types[t] = (types[t] ?? 0) + 1;
+  }
+  const typeStr = Object.entries(types).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${n} ${t}`).join(", ");
+  const latest = sorted[0];
+  const latestLine = latest ? `<div class="metric-popover-latest">Latest: "${latest.title}" (${latest.date})</div>` : "";
+  return `<div class="metric-popover-title">Entries</div>` + popRow("Last 7 days", last7) + popRow("Activity types", typeStr) + latestLine;
+}
+function buildReposPopover(repos) {
+  const top5 = repos.slice(0, 5);
+  const rows = top5.map((r) => popRow(r.name, `${r.articleCount} articles, ${r.totalCommits} commits`)).join("");
+  return `<div class="metric-popover-title">Top repos by coverage</div>` + rows;
+}
+function buildActionsPopover(entries2) {
+  const allActions = entries2.flatMap((e) => e.actions ?? []);
+  const open = allActions.filter((a) => a.status === "open");
+  const cmdCounts = {};
+  for (const a of open) {
+    cmdCounts[a.command] = (cmdCounts[a.command] ?? 0) + 1;
+  }
+  const cmdStr = Object.entries(cmdCounts).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([cmd, n]) => `${cmd}: ${n}`).join(", ");
+  const oldest = open.sort((a, b) => a.sourceDate.localeCompare(b.sourceDate))[0];
+  const oldestLine = oldest ? `<div class="metric-popover-latest">Oldest: "${oldest.description.slice(0, 60)}..." (${oldest.sourceDate})</div>` : "";
+  return `<div class="metric-popover-title">Action items</div>` + popRow("Open", open.length) + popRow("Closed", allActions.length - open.length) + (cmdStr ? popRow("By type", cmdStr) : "") + oldestLine;
+}
+function buildCommitsPopover(entries2, repos) {
+  const totalCommits = entries2.reduce((sum, e) => sum + (e.commitCount ?? 0), 0);
+  const avg = entries2.length > 0 ? Math.round(totalCommits / entries2.length) : 0;
+  const sorted = [...entries2].sort((a, b) => b.date.localeCompare(a.date));
+  const last7 = sorted.filter((e) => Date.now() - (/* @__PURE__ */ new Date(e.date + "T12:00:00Z")).getTime() < 7 * 24 * 60 * 60 * 1e3).reduce((sum, e) => sum + (e.commitCount ?? 0), 0);
+  const topRepo = repos[0];
+  const topLine = topRepo ? popRow("Top repo", `${topRepo.name} (${topRepo.totalCommits})`) : "";
+  return `<div class="metric-popover-title">Commit volume</div>` + popRow("Average", `${avg} / day`) + popRow("This week", last7) + topLine;
+}
+function renderMetrics(container, entries2, repos) {
   const totalEntries = entries2.length;
   const allRepos = new Set(entries2.flatMap((e) => e.reposActive ?? []));
   const allActions = entries2.reduce((sum, e) => sum + (e.actions?.length ?? 0), 0);
-  let streak = 0;
-  if (entries2.length > 0) {
-    const sorted = [...entries2].sort((a, b) => b.date.localeCompare(a.date));
-    let checkDate = /* @__PURE__ */ new Date(sorted[0].date + "T12:00:00Z");
-    for (const entry of sorted) {
-      const entryDate = /* @__PURE__ */ new Date(entry.date + "T12:00:00Z");
-      const diff = Math.round((checkDate.getTime() - entryDate.getTime()) / (1e3 * 60 * 60 * 24));
-      if (diff <= 1) {
-        streak++;
-        checkDate = entryDate;
-      } else {
-        break;
-      }
-    }
-  }
+  const totalCommits = entries2.reduce((sum, e) => sum + (e.commitCount ?? 0), 0);
   container.innerHTML = `
-    <div class="metric-cell"><div class="metric-value">${totalEntries}</div><div class="metric-label">ENTRIES</div></div>
-    <div class="metric-cell"><div class="metric-value">${allRepos.size}</div><div class="metric-label">ACTIVE REPOS</div></div>
-    <div class="metric-cell"><div class="metric-value">${allActions}</div><div class="metric-label">ACTIONS</div></div>
-    <div class="metric-cell"><div class="metric-value">${streak}</div><div class="metric-label">DAY STREAK</div></div>
+    <div class="metric-cell" data-metric="entries"><div class="metric-value">${totalEntries}</div><div class="metric-label">ENTRIES</div></div>
+    <div class="metric-cell" data-metric="repos"><div class="metric-value">${allRepos.size}</div><div class="metric-label">ACTIVE REPOS</div></div>
+    <div class="metric-cell" data-metric="actions"><div class="metric-value">${allActions}</div><div class="metric-label">ACTIONS</div></div>
+    <div class="metric-cell" data-metric="commits"><div class="metric-value">${totalCommits.toLocaleString()}</div><div class="metric-label">TOTAL COMMITS</div></div>
   `;
+  const popovers = {
+    entries: buildEntriesPopover(entries2),
+    repos: buildReposPopover(repos),
+    actions: buildActionsPopover(entries2),
+    commits: buildCommitsPopover(entries2, repos)
+  };
+  container.querySelectorAll(".metric-cell").forEach((cell) => {
+    const el = cell;
+    const key = el.dataset.metric;
+    if (!key || !popovers[key]) return;
+    el.addEventListener("mouseenter", () => showMetricPopover(el, popovers[key]));
+    el.addEventListener("mouseleave", hideMetricPopover);
+  });
 }
 function renderFilterBar(container, tags, options) {
   const { toggleFilter: toggleFilter2, clearFilters: clearFilters2, hasActiveFilters: hasActiveFilters2, getActiveFilters: getActiveFilters2, filteredCount, totalCount } = options;
@@ -818,7 +894,7 @@ async function initIndex() {
   ]);
   function renderAll() {
     const filtered = entries2.filter(matchesFilters);
-    if (metricsEl) renderMetrics(metricsEl, entries2);
+    if (metricsEl) renderMetrics(metricsEl, entries2, repos);
     if (filterEl) renderFilterBar(filterEl, tags, { toggleFilter, isFilterActive, clearFilters, hasActiveFilters, getActiveFilters, filteredCount: filtered.length, totalCount: entries2.length });
     renderEntryList(listEl, filtered);
     if (sidebarEl) renderSidebar(sidebarEl, { repos, tags, toggleFilter, isFilterActive });
