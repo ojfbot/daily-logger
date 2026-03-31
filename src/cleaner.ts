@@ -17,10 +17,23 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { execSync } from 'child_process'
-import { mkdtempSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
-import { join } from 'path'
-import type { BlogContext, CleanCandidate, CleanProposal } from './types.js'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
+import type {
+  BlogContext,
+  CleanCandidate,
+  CleanDoneAction,
+  CleanEntryData,
+  CleanOpenAction,
+  CleanProposal,
+  StructuredCleanContext,
+} from './types.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const REPO_ROOT = join(__dirname, '..')
+const API_DIR = join(REPO_ROOT, 'api')
 
 const MODEL = 'claude-opus-4-6'  // rigorous — overnight run, quality over speed
 
@@ -87,6 +100,102 @@ export function readTodayArticle(org: string, date: string): string {
   if (fromBranch) return fromBranch
   const fromMain = readRemoteFile(org, 'daily-logger', path)
   return fromMain ?? ''
+}
+
+// ─── Structured context loader ────────────────────────────────────────────────
+
+export function loadStructuredContext(date: string, org: string): StructuredCleanContext {
+  const empty: StructuredCleanContext = {
+    todaySummary: '',
+    recentEntries: [],
+    openActions: [],
+    doneActions: [],
+    rawArticleFallback: '',
+  }
+
+  // Read entries.json — last 3 days of article data
+  const entriesPath = join(API_DIR, 'entries.json')
+  let entries: CleanEntryData[] = []
+  if (existsSync(entriesPath)) {
+    try {
+      const all = JSON.parse(readFileSync(entriesPath, 'utf-8')) as CleanEntryData[]
+      entries = all.slice(0, 3) // newest first, take last 3 days
+    } catch { /* ignore corrupt file */ }
+  }
+
+  // Read open actions
+  const actionsPath = join(API_DIR, 'actions.json')
+  let openActions: CleanOpenAction[] = []
+  if (existsSync(actionsPath)) {
+    try {
+      openActions = JSON.parse(readFileSync(actionsPath, 'utf-8'))
+    } catch { /* ignore */ }
+  }
+
+  // Read done actions
+  const donePath = join(API_DIR, 'done-actions.json')
+  let doneActions: CleanDoneAction[] = []
+  if (existsSync(donePath)) {
+    try {
+      doneActions = JSON.parse(readFileSync(donePath, 'utf-8'))
+    } catch { /* ignore */ }
+  }
+
+  const todayEntry = entries.find((e) => e.date === date)
+  if (!todayEntry && entries.length === 0) {
+    // No structured data available — fall back to raw article via GitHub API
+    console.log('     Structured API data not available — falling back to raw article')
+    return { ...empty, rawArticleFallback: readTodayArticle(org, date) }
+  }
+
+  return {
+    todaySummary: todayEntry?.summary ?? entries[0]?.summary ?? '',
+    recentEntries: entries,
+    openActions,
+    doneActions,
+    rawArticleFallback: '',
+  }
+}
+
+// ─── Prompt formatting helpers ───────────────────────────────────────────────
+
+function formatDecisions(entries: CleanEntryData[], repo?: string): string {
+  const decisions = entries.flatMap((e) =>
+    (e.decisions ?? [])
+      .filter((d) => !repo || d.repo === repo || e.reposActive?.includes(repo))
+      .map((d) => {
+        const pillar = d.pillar ? ` — pillar: ${d.pillar}` : ''
+        return `- "${d.title}" (${d.repo})${pillar}`
+      }),
+  )
+  return decisions.length > 0 ? decisions.join('\n') : '(none)'
+}
+
+function formatActions(
+  actions: Array<CleanOpenAction | CleanDoneAction>,
+  repo: string,
+  kind: 'open' | 'done',
+): string {
+  const filtered = actions.filter((a) => a.repo === repo)
+  if (filtered.length === 0) return '(none for this repo)'
+
+  return filtered
+    .map((a) => {
+      if (kind === 'done' && 'resolution' in a && a.resolution) {
+        return `- ${a.command} — "${a.description.slice(0, 80)}" — resolved ${a.closedDate}: "${a.resolution}"`
+      }
+      return `- ${a.command} — "${a.description.slice(0, 100)}"`
+    })
+    .join('\n')
+}
+
+function formatShipments(entries: CleanEntryData[], repo: string): string {
+  const relevant = entries.filter((e) => e.reposActive?.includes(repo))
+  if (relevant.length === 0) return '(no recent activity in this repo)'
+
+  return relevant
+    .map((e) => `**${e.date}:** ${e.summary}`)
+    .join('\n\n')
 }
 
 // ─── Phase 1: Sweep ───────────────────────────────────────────────────────────
@@ -202,7 +311,7 @@ export async function sweepForCandidates(ctx: BlogContext): Promise<CleanCandida
 
 async function validateDocCandidate(
   candidate: CleanCandidate,
-  todayArticle: string,
+  ctx: StructuredCleanContext,
 ): Promise<CleanProposal[]> {
   const client = new Anthropic()
 
@@ -210,12 +319,11 @@ async function validateDocCandidate(
 
 You will receive:
 - The full content of a documentation file (with line numbers)
+- Structured context from the daily-logger pipeline: recent summaries, decisions,
+  completed actions with resolutions, and open actions still pending
 - Recent git commits from the repo
-- Today's synthesized daily-logger article, which is the authoritative human-readable
-  summary of what actually shipped — written after a 4-phase Claude pipeline including
-  a council review. This is your strongest signal.
 
-Identify sections that have become inaccurate or outdated based on this evidence.
+Use this evidence to identify sections that have become inaccurate or outdated.
 For each stale section, produce an exact edit — either a replacement or a deletion.
 
 Return a JSON array. Each element describes one edit:
@@ -229,17 +337,29 @@ Return a JSON array. Each element describes one edit:
 }
 
 Rules:
-- "high" = the doc directly contradicts what the article or commits show shipped.
+- "high" = the doc directly contradicts what commits, decisions, or completed actions show shipped.
 - "medium" = the doc is likely outdated but you can't be 100% certain from the evidence.
+- If a section references work described in an open action, it may be forward-looking
+  and correct — do not flag it as stale.
 - If nothing is stale, return [].
 - Raw JSON array only — no fences, no commentary.`
 
+  const repo = candidate.repo
   const userPrompt = [
-    `**Repo:** ojfbot/${candidate.repo}`,
+    `**Repo:** ojfbot/${repo}`,
     `**File:** ${candidate.filePath}`,
     '',
-    '## Today\'s daily-logger article (authoritative — what actually shipped)',
-    todayArticle ? todayArticle.slice(0, 3000) : '(not available)',
+    '## What shipped recently (last 3 days)',
+    formatShipments(ctx.recentEntries, repo),
+    '',
+    '## Decisions',
+    formatDecisions(ctx.recentEntries),
+    '',
+    `## Completed actions (${repo})`,
+    formatActions(ctx.doneActions, repo, 'done'),
+    '',
+    `## Open actions (${repo}) — NOT yet resolved, referenced work is still pending`,
+    formatActions(ctx.openActions, repo, 'open'),
     '',
     '## Recent commits (last 48h)',
     candidate.recentCommits || '(none)',
@@ -290,7 +410,7 @@ Rules:
 
 async function validateTodoCandidate(
   candidate: CleanCandidate,
-  todayArticle: string,
+  ctx: StructuredCleanContext,
 ): Promise<CleanProposal | null> {
   const client = new Anthropic()
 
@@ -298,35 +418,43 @@ async function validateTodoCandidate(
 
 You will receive:
 - The comment in its surrounding code context
+- Structured context: recent article summaries, completed actions with resolutions,
+  and open actions still pending for this repo
 - Recent git commits from the repo
-- Today's synthesized daily-logger article — the authoritative summary of what actually
-  shipped, written after a 4-phase pipeline including council review. If the article
-  explicitly mentions the feature or fix the TODO asked for, treat that as strong evidence.
 
 Determine if the thing the TODO/FIXME asked for has been shipped or is no longer relevant.
 
 Return a JSON object:
 {
   "resolved": true | false,
-  "evidence": "<one sentence: what shipped that resolved it, citing article or commit>",
+  "evidence": "<one sentence: what shipped that resolved it, citing a decision, action resolution, or commit>",
   "replacement": "<updated comment if partially addressed, or empty string to delete>",
   "confidence": "high" | "medium" | "low"
 }
 
 Rules:
-- resolved=true only with clear evidence from commits or the article.
+- resolved=true only with clear evidence from commits, completed actions, or decisions.
+- If the TODO matches an open action (same repo, related description), this is evidence
+  the TODO is still relevant — do NOT mark it as resolved.
 - If resolved=true and replacement is empty, the line will be deleted.
 - If resolved=true and replacement is non-empty, the line is updated.
 - "low" confidence findings are ignored.
 - Raw JSON only — no fences.`
 
+  const repo = candidate.repo
   const userPrompt = [
-    `**Repo:** ojfbot/${candidate.repo}`,
+    `**Repo:** ojfbot/${repo}`,
     `**File:** ${candidate.filePath}:${candidate.startLine}`,
     `**Kind:** ${candidate.kind.toUpperCase()}`,
     '',
-    '## Today\'s daily-logger article (authoritative — what actually shipped)',
-    todayArticle ? todayArticle.slice(0, 2000) : '(not available)',
+    '## What shipped recently (last 3 days)',
+    formatShipments(ctx.recentEntries, repo),
+    '',
+    `## Completed actions (${repo})`,
+    formatActions(ctx.doneActions, repo, 'done'),
+    '',
+    `## Open actions (${repo}) — work still pending, NOT yet resolved`,
+    formatActions(ctx.openActions, repo, 'open'),
     '',
     '## Recent commits to this repo',
     candidate.recentCommits || '(none)',
@@ -372,7 +500,7 @@ Rules:
 
 export async function validateCandidates(
   candidates: CleanCandidate[],
-  todayArticle: string,
+  ctx: StructuredCleanContext,
 ): Promise<CleanProposal[]> {
   const proposals: CleanProposal[] = []
 
@@ -384,10 +512,10 @@ export async function validateCandidates(
     console.log(`  Validating ${tag}...`)
 
     if (candidate.kind === 'doc-file') {
-      const edits = await validateDocCandidate(candidate, todayArticle)
+      const edits = await validateDocCandidate(candidate, ctx)
       proposals.push(...edits)
     } else {
-      const proposal = await validateTodoCandidate(candidate, todayArticle)
+      const proposal = await validateTodoCandidate(candidate, ctx)
       if (proposal) proposals.push(proposal)
     }
   }
