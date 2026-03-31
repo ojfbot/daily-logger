@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { articlesSlice } from './articlesSlice.ts'
+import { authSlice } from './authSlice.ts'
 import { filterSlice } from './filterSlice.ts'
 import { themeSlice } from './themeSlice.ts'
 import chatReducer from './chatSlice.ts'
@@ -7,6 +8,7 @@ import chatReducer from './chatSlice.ts'
 export const store = configureStore({
   reducer: {
     articles: articlesSlice.reducer,
+    auth: authSlice.reducer,
     filters: filterSlice.reducer,
     theme: themeSlice.reducer,
     chat: chatReducer,

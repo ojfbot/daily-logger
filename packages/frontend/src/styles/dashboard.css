@@ -121,6 +121,11 @@ a:hover { border-bottom-color: var(--text); }
 }
 .site-nav a:hover,
 .site-nav a.active { color: var(--text); border-bottom: 2px solid var(--text); }
+.site-nav .auth-login-btn,
+.site-nav .auth-login-btn:hover,
+.site-nav .auth-login-btn:focus { border-bottom: 1px solid var(--border); }
+.site-nav .auth-login-btn:hover,
+.site-nav .auth-login-btn:focus { border-color: var(--text); }
 
 .container {
   max-width: var(--max-width);
@@ -1486,6 +1491,13 @@ a:hover { border-bottom-color: var(--text); }
   color: var(--text-secondary);
   font-style: italic;
 }
+.commit-popover-private {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+.commit-popover-private::before {
+  content: "\1F512 ";
+}
 
 /* ─── Empty state ────────────────────────────────────────────────────────── */
 
@@ -1640,4 +1652,119 @@ a:hover { border-bottom-color: var(--text); }
     max-width: none;
     width: calc(100% - 1rem);
   }
+}
+
+/* ─── Auth UI ───────────────────────────────────────────────────────────── */
+
+.auth-login-btn {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  padding: 0.2rem 0.6rem;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition: color 0.1s, border-color 0.1s;
+}
+.auth-login-btn:hover,
+.auth-login-btn:focus {
+  color: var(--text);
+  border-color: var(--text);
+}
+
+.auth-user {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.auth-avatar {
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+.auth-username {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.auth-logout-link {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  border-bottom: none;
+  margin-left: 0.25rem;
+}
+.auth-logout-link:hover {
+  color: var(--red);
+}
+
+/* ─── Stamp Draft Button ────────────────────────────────────────────────── */
+
+.stamp-draft-container {
+  margin-top: 1rem;
+}
+
+.stamp-draft-btn {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--green);
+  border: 2px solid var(--green);
+  padding: 0.5rem 1.5rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.stamp-draft-btn:hover {
+  background: #1b5e20;
+  border-color: #1b5e20;
+}
+.stamp-draft-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.stamp-draft-btn.stamp-error {
+  border-color: var(--red);
+}
+
+.stamp-error-msg {
+  font-size: 0.75rem;
+  color: var(--red);
+  margin-top: 0.5rem;
+}
+
+.stamp-draft-result {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+}
+
+.stamp-draft-result.stamp-success {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.stamp-check {
+  font-size: 1rem;
+  margin-right: 0.35rem;
+}
+
+.stamp-draft-result a {
+  color: var(--green);
+  font-weight: 700;
+  border-bottom: 1px solid var(--green);
+}
+.stamp-draft-result a:hover {
+  opacity: 0.8;
 }
