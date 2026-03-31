@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useAppDispatch } from '../store/hooks.ts'
+import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
 import { sendMessage, collapseThread, expandThread, removeThread } from '../store/chatSlice.ts'
 import type { ChatThread } from '../store/chatSlice.ts'
 import { ChatMessage } from './ChatMessage.tsx'
@@ -17,6 +17,8 @@ export function InlineChatThread({ thread, articleTitle, extractSection }: Props
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  const { user } = useAppSelector((s) => s.auth)
+  const canEdit = !!user?.authorized
   const hasApiKey = !!localStorage.getItem('dl-anthropic-key')
   const threadNum = thread.messages.filter((m) => m.role === 'user').length
 
@@ -104,7 +106,9 @@ export function InlineChatThread({ thread, articleTitle, extractSection }: Props
       <div className="chat-thread-messages">
         {thread.messages.length === 0 && !thread.isStreaming && (
           <div className="chat-empty">
-            Ask about this section — Claude has the full content as context.
+            {canEdit
+              ? 'Ask about this section or discuss changes — feedback here feeds into editorial revisions.'
+              : 'Ask about this section — Claude has the full content as context.'}
           </div>
         )}
 
@@ -136,7 +140,9 @@ export function InlineChatThread({ thread, articleTitle, extractSection }: Props
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={hasApiKey ? 'Ask about this section...' : 'Set API key first →'}
+            placeholder={hasApiKey
+              ? (canEdit ? 'Ask or suggest changes...' : 'Ask about this section...')
+              : 'Set API key first →'}
             disabled={thread.isStreaming}
             rows={2}
           />
