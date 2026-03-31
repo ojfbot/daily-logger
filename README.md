@@ -8,9 +8,9 @@ daily-logger generates one markdown blog article per day by sweeping the last 24
 
 ## Reading the blog
 
-**https://ojfbot.github.io/daily-logger/**
+**https://log.jim.software/**
 
-Each article lives at `/articles/YYYY-MM-DD/`.
+Each article lives at `/articles/YYYY-MM-DD`. GitHub Pages fallback: `https://ojfbot.github.io/daily-logger/`
 
 ---
 

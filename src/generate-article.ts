@@ -142,7 +142,7 @@ Every tag MUST have a \`type\` field. The 7 tag types:
 \`decisions\` is an ARRAY of objects, each with: \`title\` (heading), \`summary\` (1-2 sentences), \`repo\` (primary repo), optional \`pillar\` (one of: "assistant-centric", "tooling-for-iteration", "model-behavior-as-design", "security-as-emergent-ux"), \`relatedTags\` (array of tag name strings).
 
 ### Structured action items
-\`suggestedActions\` is an ARRAY of objects, each with: \`command\` (slash command like /adr, /test, /validate, /document, /techdebt, /hardening, /investigate, /sweep), \`description\` (what to do), \`repo\` (where), \`status\` (always "open"), \`sourceDate\` (today's date YYYY-MM-DD).
+\`suggestedActions\` is an ARRAY of objects, each with: \`command\` (slash command like /adr, /test-expand, /validate, /doc-refactor, /techdebt, /hardening, /investigate, /sweep, /roadmap, /scaffold, /pr-review), \`description\` (what to do), \`repo\` (where), \`status\` (always "open"), \`sourceDate\` (today's date YYYY-MM-DD).
 
 ### Activity type
 Classify the day as one of: \`build\` (normal development), \`rest\` (zero/very few commits), \`audit\` (review/audit focus), \`hardening\` (stability/security focus), \`cleanup\` (refactoring/debt), \`sprint\` (high-volume feature work).
@@ -288,7 +288,7 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
           properties: {
             command: {
               type: 'string',
-              description: 'Slash command: /adr, /test, /validate, /document, /techdebt, /hardening, /investigate, /sweep, /roadmap, /scaffold, /pr-review',
+              description: 'Slash command: /adr, /test-expand, /validate, /doc-refactor, /techdebt, /hardening, /investigate, /sweep, /roadmap, /scaffold, /pr-review',
             },
             description: { type: 'string', description: 'What needs to be done.' },
             repo: { type: 'string', description: 'Target repo.' },
