@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams, Link } from 'react-router-dom'
 import { useEntries } from '../hooks/useEntries.ts'
+import { useIsMobile } from '../hooks/useIsMobile.ts'
 import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
 import { fetchArticle } from '../store/articlesSlice.ts'
 import { useArticlePopovers } from '../hooks/useArticlePopovers.ts'
@@ -9,7 +10,7 @@ import { useSectionContent } from '../hooks/useSectionContent.ts'
 import { Popover } from './Popover.tsx'
 import { SectionChatButton } from './SectionChatButton.tsx'
 import { SectionChatZone } from './SectionChatZone.tsx'
-import { StampDraftButton } from './StampDraftButton.tsx'
+import { EditorialSidebar } from './EditorialSidebar.tsx'
 import { SubmitAllFeedback } from './SubmitAllFeedback.tsx'
 
 export function ArticlePage() {
@@ -20,6 +21,7 @@ export function ArticlePage() {
   const { threads, threadOrder } = useAppSelector((s) => s.chat)
   const contentRef = useRef<HTMLDivElement>(null)
   const [sectionHeadings, setSectionHeadings] = useState<string[]>([])
+  const isMobile = useIsMobile()
 
   const entry = entries.find((e) => e.date === date)
   const article = date ? articleCache[date] : undefined
@@ -38,30 +40,40 @@ export function ArticlePage() {
 
   const displayEntry = article ?? entry
 
-  // Inject chat buttons into h2 headings
+  // Inject chat buttons into h2 headings + section-end portal targets for inline threads
   useEffect(() => {
     const container = contentRef.current
     if (!container || !date) return
 
-    const h2s = container.querySelectorAll('h2')
-    const wrappers: HTMLElement[] = []
+    const h2s = Array.from(container.querySelectorAll('h2'))
+    const injected: HTMLElement[] = []
     const headings: string[] = []
 
-    for (const h2 of h2s) {
+    for (let i = 0; i < h2s.length; i++) {
+      const h2 = h2s[i]
       if (h2.querySelector('.section-chat-wrapper')) continue
 
+      // Button wrapper inside h2
       const btnWrapper = document.createElement('span')
       btnWrapper.className = 'section-chat-wrapper'
       h2.appendChild(btnWrapper)
-      wrappers.push(btnWrapper)
+      injected.push(btnWrapper)
 
-      headings.push(h2.textContent?.replace('+', '').trim() ?? '')
+      const heading = h2.textContent?.replace('+', '').trim() ?? ''
+      headings.push(heading)
+
+      // Section-start portal target: insert right after the h2
+      const sectionStart = document.createElement('div')
+      sectionStart.className = 'section-chat-inline-portal'
+      sectionStart.dataset.section = heading
+      h2.insertAdjacentElement('afterend', sectionStart)
+      injected.push(sectionStart)
     }
 
     setSectionHeadings(headings)
 
     return () => {
-      for (const w of wrappers) w.remove()
+      for (const el of injected) el.remove()
       setSectionHeadings([])
     }
   }, [article?.bodyHtml, date])
@@ -91,6 +103,35 @@ export function ArticlePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article?.bodyHtml, date, sectionHeadings])
 
+  // On mobile, portal section threads inline after their sections
+  const inlineThreadPortals = useMemo(() => {
+    const container = contentRef.current
+    if (!isMobile || !container || !date) return null
+
+    const portals: React.ReactPortal[] = []
+    const targets = container.querySelectorAll('.section-chat-inline-portal')
+    for (const target of targets) {
+      const heading = (target as HTMLElement).dataset.section
+      if (!heading) continue
+      portals.push(
+        createPortal(
+          <SectionChatZone
+            section={heading}
+            date={date}
+            articleTitle={displayEntry?.title ?? ''}
+            extractSection={extractSection}
+          />,
+          target,
+          `inline-chat-${heading}`,
+        ),
+      )
+    }
+    return portals
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile, article?.bodyHtml, date, sectionHeadings, displayEntry?.title, extractSection])
+
+  const isDraft = displayEntry?.status === 'draft'
+
   // Check if any threads exist for this article
   const hasThreads = useMemo(() => {
     return threadOrder.some((id) => {
@@ -98,6 +139,8 @@ export function ArticlePage() {
       return t && t.date === date
     })
   }, [threads, threadOrder, date])
+
+  const showSidebar = hasThreads || isDraft
 
   // Related articles (share 2+ tags)
   const related = useMemo(() => {
@@ -137,13 +180,10 @@ export function ArticlePage() {
             </div>
           </div>
           <p className="entry-summary">{displayEntry.summary}</p>
-          {displayEntry.status === 'draft' && (
-            <StampDraftButton date={displayEntry.date} articleTitle={displayEntry.title} />
-          )}
         </div>
       )}
 
-      <div className={`article-layout${hasThreads ? ' chat-open' : ''}`}>
+      <div className={`article-layout${showSidebar ? ' chat-open' : ''}`}>
         <div className="article-main">
           {article?.bodyHtml ? (
             <article
@@ -156,6 +196,7 @@ export function ArticlePage() {
           )}
 
           {buttonPortals}
+          {inlineThreadPortals}
 
           <Popover state={popoverState} />
 
@@ -172,9 +213,9 @@ export function ArticlePage() {
           )}
         </div>
 
-        {hasThreads && date && (
+        {showSidebar && date && (
           <div className="chat-column">
-            {sectionHeadings.map((heading) => (
+            {!isMobile && sectionHeadings.map((heading) => (
               <SectionChatZone
                 key={heading}
                 section={heading}
@@ -183,6 +224,9 @@ export function ArticlePage() {
                 extractSection={extractSection}
               />
             ))}
+            {isDraft && (
+              <EditorialSidebar date={date} articleTitle={displayEntry?.title ?? ''} />
+            )}
           </div>
         )}
       </div>
