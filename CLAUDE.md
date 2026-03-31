@@ -4,7 +4,7 @@
 
 `daily-logger` generates one markdown blog article per day by:
 
-1. Sweeping the last 24 h of commits (and 7 days of PRs/issues) across all ojfbot repos via the GitHub API
+1. Sweeping the last 24 h of commits and PRs (both open and closed) across all ojfbot repos via the GitHub API
 2. Feeding that context to Claude Sonnet with a project-aware system prompt
 3. Committing the resulting article to `articles/YYYY-MM-DD.md`
 4. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
@@ -44,16 +44,17 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 | `src/types.ts` | Shared TypeScript types |
 | `src/build-api.ts` | Generates static JSON API (`api/*.json`) from articles |
 | `src/build-frontend.ts` | esbuild bundler for frontend TypeScript → `assets/js/app.js` |
-| `src/frontend/` | Client-side TypeScript (app, data, filter, render, search, theme, popover, chat) |
+| `src/frontend/` | Client-side TypeScript (app, data, filter, render, search, theme, popover, chat, editorial) |
 | `assets/css/dashboard.css` | Dashboard + popover styles |
 | `decisions/adr/` | Architecture Decision Records (local to this repo) |
 
-## Decisions
-
 - **ADR-0031** (`decisions/adr/0031-universal-code-reference-popovers.md`) — Extend popover system to all inline code references with structured data model
 - **ADR-0032** (`core/decisions/adr/0032-daily-logger-react-vercel-migration.md`) — Migrate frontend to React + Vercel, keep GitHub Pages as fallback
+- **ADR-0033** — Three-tier confidence threshold for daily-cleaner bot
+- **ADR-0034** — Isolated Redux stores per remote, coordinated via FrameBus
 - **ADR-0035** — Article status lifecycle and auto-merge overnight PRs
 - **ADR-0036** (`decisions/adr/0036-structured-decision-output-for-rich-ui.md`) — Structured decision output for rich UI
+- **ADR-0038** — Editorial revision CI workflow
 
 ## Adding new repos to the sweep
 

@@ -16,8 +16,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 1. **Assistant-centric** — ShellAgent orchestrates apps; Resume Builder/BlogEngine/TripPlanner
    are what it hosts. Same bet as Dia's AI address bar orchestrating web content.
    Resume Builder eval/visual regression loop. Prompts + evals are versioned artifacts.
-3. **Model behavior as design** — behavior specs, evals, per-skill prompt requirements
-3. **Model behavior as design** — behavior specs, evals, per-skill prompt requirements
+2. **Model behavior as design** — behavior specs, evals, per-skill prompt requirements
    are first-class design work. Resume Builder's Claude Code review loop IS this.
 4. **Security as emergent UX** — tool-use confirmations, trusted/untrusted content
    separation. Every high-impact agent action shows a summary before firing.
@@ -29,7 +28,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 **Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning**
 
 - **Actions board**: fully resolved — all 36 actions closed (2026-03-29). Board at zero is the Phase 2 planning gate.
-- **ADRs landed**: ADR-0033 (daily-cleaner confidence threshold), ADR-0034 (Frame-wide Redux store strategy, resolves shell #5), ADR-0036 (structured decision output for rich UI).
+- **ADRs landed**: ADR-0033 (daily-cleaner confidence threshold), ADR-0034 (Frame-wide Redux store strategy, resolves shell #5), ADR-0036 (structured decision output for rich UI), ADR-0038 (editorial revision CI workflow).
 - **Landing**: Log nav link now points to `log.jim.software` (Vercel subdomain), old GitHub Pages URL retired.
 
 - **Phase 5 (Phase 5B merged)**: MrPlug Phase 5B fully merged — GitHub issue creation,
@@ -55,17 +54,18 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
   Display label rename ("CV Builder" → "Resume Builder") shipped in #26/#27; four rename regression fixes merged.
   Resume Builder default label renamed 'My Resume' → 'Start Fresh'.
   Cross-domain signal detection fix landed. Storybook hoisting fix merged.
-  Core tension: can't build ShellAgent (Pillar 1) without the shell first.
-  Core tension: can't build ShellAgent (Pillar 1) without the shell first.
+   Core tension: can't build ShellAgent (Pillar 1) without the shell first.
 - **Gas Town Sprint 1 (active)**: FrameBead (`FrameBeadLike`) has two live implementations
    (cv-builder and core-reader). ADR-0016 ratified. `@resume-builder/*` is the new module namespace.
    gastown-pilot now registered in shell ([shell] #39) — `AppType` union, `APP_CONFIG`, Storybook stories.
    `/scaffold-frame-app` codified as a 28-item validation skill for creating new Frame sub-apps.
-- **Phase 9 (live)**: daily-logger running. Editorial UI (draft-PR + GitHub Pages SPA)
-  is the next step. Progressive disclosure for new issues shipped. Rest-day handling added.
-  Article status lifecycle and auto-merge overnight PRs shipped (`8c4a75a`). Two-column article layout
-  with Lois design system integration landed. Inline section chat system with multi-thread support added.
-  Collapsible accordion UI for decisions page and done-action resolution popover shipped.
+- **Phase 9 (live)**: daily-logger running. Editorial UI shipped — GitHub OAuth login,
+   draft-PR stamp workflow, editorial sidebar with responsive inline section threads,
+   editorial revision CI workflow (ADR-0038). Progressive disclosure for new issues shipped.
+   Rest-day handling added. Article status lifecycle and auto-merge overnight PRs shipped (`8c4a75a`).
+   Two-column article layout with Lois design system integration landed.
+   Collapsible accordion UI for decisions page and done-action resolution popover shipped.
+   Metric hover popovers and TOTAL COMMITS stat card landed. Dev mode auth bypass for editorial testing added.
   ADR-0035 (article status lifecycle) and ADR-0036 (structured decision output) ratified.
 
 ---
@@ -145,8 +145,7 @@ cron fires
 ### SPA architecture (static, no backend)
 
 - Hosted at `https://ojfbot.github.io/daily-logger/editor`
-- GitHub API calls direct from browser; PAT in `localStorage` (solo tool, acceptable)
-- GitHub OAuth PKCE flow — ADR-0034 ratified (see core PR #35)
+- GitHub OAuth PKCE flow — ADR-0034 ratified (see core PR #35); OAuth login shipped (commit `7a01021`)
 
 ### Key screens
 
