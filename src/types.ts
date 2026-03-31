@@ -157,3 +157,37 @@ export interface CleanProposal {
   rationale: string    // one sentence: what made this stale
   confidence: 'high' | 'medium'
 }
+
+// ─── Structured clean context (feeds rich API data into cleaner prompts) ─────
+
+export interface CleanEntryData {
+  date: string
+  summary: string
+  reposActive: string[]
+  decisions: Array<{ title: string; summary: string; repo: string; pillar?: string }>
+  actions: Array<{ command: string; description: string; repo: string }>
+}
+
+export interface CleanDoneAction {
+  command: string
+  description: string
+  repo: string
+  sourceDate: string
+  closedDate: string
+  resolution: string
+}
+
+export interface CleanOpenAction {
+  command: string
+  description: string
+  repo: string
+  sourceDate: string
+}
+
+export interface StructuredCleanContext {
+  todaySummary: string
+  recentEntries: CleanEntryData[]      // last 3 days from entries.json
+  openActions: CleanOpenAction[]
+  doneActions: CleanDoneAction[]
+  rawArticleFallback: string           // GitHub API fallback if structured data unavailable
+}
