@@ -40,9 +40,8 @@ function persistClosedActions(closed: ClosedAction[], date: string): void {
   if (closed.length === 0) return
   const apiDir = join(REPO_ROOT, 'api')
   const donePath = join(apiDir, 'done-actions.json')
-  const actionsPath = join(apiDir, 'actions.json')
 
-  // Append to done-actions.json
+  // Append to done-actions.json (build-api.ts handles filtering actions.json)
   const done: Record<string, unknown>[] = existsSync(donePath)
     ? JSON.parse(readFileSync(donePath, 'utf-8'))
     : []
@@ -50,19 +49,6 @@ function persistClosedActions(closed: ClosedAction[], date: string): void {
     done.push({ ...c, status: 'done', closedDate: date })
   }
   writeFileSync(donePath, JSON.stringify(done, null, 2) + '\n', 'utf-8')
-
-  // Remove from actions.json
-  if (existsSync(actionsPath)) {
-    const actions: Record<string, unknown>[] = JSON.parse(readFileSync(actionsPath, 'utf-8'))
-    const closedKeys = new Set(
-      closed.map((c) => `${c.command}|${c.sourceDate}|${c.description.slice(0, 50)}`),
-    )
-    const remaining = actions.filter((a) => {
-      const key = `${a.command}|${a.sourceDate}|${String(a.description ?? '').slice(0, 50)}`
-      return !closedKeys.has(key)
-    })
-    writeFileSync(actionsPath, JSON.stringify(remaining, null, 2) + '\n', 'utf-8')
-  }
 
   console.log(`     ✓ Closed ${closed.length} action(s) → done-actions.json`)
 }
