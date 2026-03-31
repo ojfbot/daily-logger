@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
 import { toggleTheme } from '../store/themeSlice.ts'
 import { SearchOverlay } from './SearchOverlay.tsx'
+import { AuthButton } from './AuthButton.tsx'
 
 interface LayoutProps {
   children: ReactNode
@@ -55,6 +56,7 @@ export function Layout({ children }: LayoutProps) {
           >
             {theme === 'dark' ? 'LIGHT' : 'DARK'}
           </button>
+          <AuthButton />
         </nav>
       </header>
       <div className="container">

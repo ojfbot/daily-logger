@@ -9,6 +9,7 @@ import { useSectionContent } from '../hooks/useSectionContent.ts'
 import { Popover } from './Popover.tsx'
 import { SectionChatButton } from './SectionChatButton.tsx'
 import { SectionChatZone } from './SectionChatZone.tsx'
+import { StampDraftButton } from './StampDraftButton.tsx'
 import { SubmitAllFeedback } from './SubmitAllFeedback.tsx'
 
 export function ArticlePage() {
@@ -136,6 +137,9 @@ export function ArticlePage() {
             </div>
           </div>
           <p className="entry-summary">{displayEntry.summary}</p>
+          {displayEntry.status === 'draft' && (
+            <StampDraftButton date={displayEntry.date} articleTitle={displayEntry.title} />
+          )}
         </div>
       )}
 
