@@ -1,9 +1,9 @@
 name: Daily Dev Blog
 
-# Two responsibilities:
-#   generate  — sweeps GitHub activity, calls Claude, commits the article to a
-#               branch article/YYYY-MM-DD, and opens a draft PR for editorial review.
-#   deploy    — lives in deploy-pages.yml; fires on push to main (PR merge).
+# Sweeps GitHub activity, calls Claude, commits the article to a branch
+# article/YYYY-MM-DD, and opens a PR for editorial review. The PR stays
+# open until accepted via the editorial UI or merged manually.
+# Deploy lives in deploy-vercel.yml; fires on push to main (PR merge).
 #
 # Required secrets:
 #   ANTHROPIC_API_KEY   — Claude API key
@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   generate:
-    name: Generate & open draft PR
+    name: Generate & open PR
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -121,13 +121,15 @@ jobs:
           echo "date=${DATE}" >> "$GITHUB_OUTPUT"
           echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
 
-      # ── Draft PR ────────────────────────────────────────────────────────────
-      # Opens a structured draft PR using the article frontmatter.
+      # ── Open PR for editorial review ────────────────────────────────────────
+      # Opens a ready-for-review PR using the article frontmatter.
       # PR body is built by .github/scripts/build_pr_body.py (avoids YAML/heredoc issues).
       # Uses GH_PAT — GITHUB_TOKEN cannot create PRs without org-level settings.
       # Only runs when the commit step actually pushed a new branch.
+      # The PR stays open for editorial review — merge manually or via the
+      # editorial UI's "Accept Draft" / "Accept with Revisions" flow.
 
-      - name: Open PR and auto-merge
+      - name: Open PR for editorial review
         if: steps.commit.outputs.date != ''
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -144,5 +146,3 @@ jobs:
             --body-file /tmp/pr-body.md \
             --base main \
             --head "${BRANCH}"
-
-          gh pr merge "${BRANCH}" --merge --delete-branch
