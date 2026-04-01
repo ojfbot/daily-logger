@@ -101,6 +101,7 @@ You will receive a list of open actions from previous runs. For each:
 Call the \`write_article\` tool with all required fields. Do not add preamble or explanation.
 
 Field rules:
+- \`summary\` and \`lede\`: CRITICAL — any commit count or repo count mentioned in these fields MUST exactly match the \`commitCount\` and \`reposActive.length\` values you output in the same tool call. Never round, estimate, or recount — use the exact numbers from your structured fields. If you say "N commits across M repos" then N === commitCount and M === reposActive.length.
 - \`whatShipped\`: GFM markdown. Name specific PRs (#number), commits (7-char hash), files. ONLY reference merged/committed work here — open/in-flight PRs must go in roadmapPulse.
 - \`theDecisions\`: The most important section. Explain WHY each architectural choice was made, what alternatives were considered, and what would break if the decision were different. Name which TBCoNY/Samir pillar this demonstrates.
 - \`roadmapPulse\`: MUST explicitly reference every open PR from the Open PRs context by [repo] #number as in-flight work — do not omit any.
@@ -205,11 +206,11 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
       },
       summary: {
         type: 'string',
-        description: 'One sentence, 15–25 words, plain text for preview cards.',
+        description: 'One sentence, 15–25 words, plain text for preview cards. Any commit/repo counts MUST exactly match commitCount and reposActive.length.',
       },
       lede: {
         type: 'string',
-        description: '1–3 sentence opening paragraph setting the day\'s narrative theme. Empty string on zero-commit days.',
+        description: '1–3 sentence opening paragraph setting the day\'s narrative theme. Empty string on zero-commit days. Any commit/repo counts MUST exactly match commitCount and reposActive.length.',
       },
       tags: {
         type: 'array',
@@ -371,6 +372,89 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
  *
  * Handles both v1 (StructuredArticle) and v2 (ArticleDataV2) inputs.
  */
+
+// ─── Count mismatch fixer ────────────────────────────────────────────────────
+// The LLM sometimes hallucinates commit/repo counts in summary/lede prose that
+// differ from its own structured commitCount/reposActive fields. This fixes it.
+
+const ONES: Record<string, number> = {
+  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7,
+  eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13,
+  fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18,
+  nineteen: 19,
+}
+const TENS: Record<string, number> = {
+  twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70,
+  eighty: 80, ninety: 90,
+}
+
+/** Parse "39", "Fifty-eight", "twenty-nine", "one hundred" → number | null */
+function parseWrittenNumber(s: string): number | null {
+  // Digit string
+  const n = Number(s)
+  if (!Number.isNaN(n) && Number.isFinite(n)) return n
+
+  const lower = s.toLowerCase().trim()
+
+  // Single word: "thirteen", "fifty"
+  if (ONES[lower] !== undefined) return ONES[lower]
+  if (TENS[lower] !== undefined) return TENS[lower]
+
+  // Hyphenated: "fifty-eight"
+  const hyphen = lower.split('-')
+  if (hyphen.length === 2 && TENS[hyphen[0]] !== undefined && ONES[hyphen[1]] !== undefined) {
+    return TENS[hyphen[0]] + ONES[hyphen[1]]
+  }
+
+  // "one hundred", "two hundred thirty-four" — rare but possible
+  const parts = lower.split(/[\s-]+/)
+  if (parts.includes('hundred')) {
+    const hi = parts.indexOf('hundred')
+    const hundreds = hi > 0 ? (ONES[parts[hi - 1]] ?? 1) : 1
+    const rest = parts.slice(hi + 1).join('-')
+    const restVal = rest ? parseWrittenNumber(rest) : 0
+    return hundreds * 100 + (restVal ?? 0)
+  }
+
+  return null
+}
+
+/**
+ * Replace mismatched commit/repo counts in prose text with correct values.
+ * E.g. "Fifty-eight commits across 11 repos" → "39 commits across 13 repos"
+ */
+export function fixCountMismatch(text: string, commitCount: number, repoCount: number): string {
+  let fixed = text
+
+  // Fix commit counts: "N commits" or "Written-number commits"
+  fixed = fixed.replace(
+    /\b(\w+(?:-\w+)*)\s+commits?\b/gi,
+    (match, num) => {
+      const parsed = parseWrittenNumber(num)
+      if (parsed !== null && parsed !== commitCount) {
+        const suffix = match.endsWith('s') ? 'commits' : 'commit'
+        return `${commitCount} ${suffix}`
+      }
+      return match
+    },
+  )
+
+  // Fix repo counts: "N repos" or "across [all] N repos"
+  fixed = fixed.replace(
+    /\b(\w+(?:-\w+)*)\s+repos?\b/gi,
+    (match, num) => {
+      const parsed = parseWrittenNumber(num)
+      if (parsed !== null && parsed !== repoCount) {
+        const suffix = match.endsWith('s') ? 'repos' : 'repo'
+        return `${repoCount} ${suffix}`
+      }
+      return match
+    },
+  )
+
+  return fixed
+}
+
 export function assembleBody(s: StructuredArticle | ArticleDataV2): string {
   if ('schemaVersion' in s && s.schemaVersion === 2) {
     return assembleBodyV2(s as ArticleDataV2)
@@ -774,6 +858,12 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
 
   // ── Build GeneratedArticle from validation result ──
   if (result.version === 2) {
+    // Fix hallucinated commit/repo counts in prose to match structured fields
+    const cc = result.data.commitCount ?? 0
+    const rc = (result.data.reposActive ?? []).length
+    result.data.summary = fixCountMismatch(result.data.summary, cc, rc)
+    if (result.data.lede) result.data.lede = fixCountMismatch(result.data.lede, cc, rc)
+
     return {
       title: result.data.title,
       date: ctx.date,

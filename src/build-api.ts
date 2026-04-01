@@ -15,6 +15,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { marked } from 'marked'
 import type { CodeReference } from './schema.js'
+import { fixCountMismatch } from './generate-article.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
@@ -234,9 +235,13 @@ export function buildApi() {
       tags = []
     }
 
-    // Repos and commits
-    const reposActive = extractReposFromBody(body)
-    const commitCount = countCommitsInBody(body)
+    // Repos and commits — prefer frontmatter (structured tool output) over body regex recount
+    const reposActive = Array.isArray(fm.reposActive) && (fm.reposActive as string[]).length > 0
+      ? fm.reposActive as string[]
+      : extractReposFromBody(body)
+    const commitCount = typeof fm.commitCount === 'number' && fm.commitCount > 0
+      ? fm.commitCount as number
+      : countCommitsInBody(body)
 
     // Actions
     const actions = extractActionsFromBody(body, date)
@@ -253,10 +258,13 @@ export function buildApi() {
     else if (commitCount > 40) activityType = 'sprint'
 
     const status = (fm.status as string) ?? 'accepted' // older articles without status are implicitly accepted
+    // Fix hallucinated commit/repo counts in summary text to match structured data
+    const rawSummary = (fm.summary as string) ?? ''
+    const summary = fixCountMismatch(rawSummary, commitCount, reposActive.length)
     const entry: EntryData = {
       date,
       title: (fm.title as string) ?? `Dev log — ${date}`,
-      summary: (fm.summary as string) ?? '',
+      summary,
       tags,
       reposActive,
       commitCount,
