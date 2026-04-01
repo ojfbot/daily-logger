@@ -110,7 +110,7 @@ jobs:
           EDITORIAL_FEEDBACK: ${{ steps.feedback.outputs.feedback }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          tsx src/revise-article.ts > /tmp/revision-result.json
+          pnpm exec tsx src/revise-article.ts > /tmp/revision-result.json
           echo "changed=$(jq -r '.changed' /tmp/revision-result.json)" >> "$GITHUB_OUTPUT"
 
       - name: Commit revised article
