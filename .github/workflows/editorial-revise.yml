@@ -125,6 +125,8 @@ jobs:
       - name: Post revision summary on PR
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
         uses: actions/github-script@v7
+        env:
+          FEEDBACK: ${{ steps.feedback.outputs.feedback }}
         with:
           script: |
             const fs = require('fs');
@@ -147,6 +149,8 @@ jobs:
               ? `\nCommit: \`${process.env.GITHUB_SHA?.slice(0, 7) ?? 'pending'}\``
               : '';
 
+            const feedback = process.env.FEEDBACK || '';
+
             const body = [
               '## Editorial Revision',
               '',
@@ -157,6 +161,12 @@ jobs:
               changes || '- No changes applied',
               '',
               '<details><summary>Details</summary>',
+              '',
+              '**Request for revision:**',
+              '',
+              '```',
+              feedback,
+              '```',
               '',
               `Model: \`claude-sonnet-4-6\`${sha}`,
               `Feedback items: ${(result.changesSummary || []).length}`,
