@@ -1,5 +1,26 @@
 [
   {
+    "command": "/validate",
+    "description": "Confirm fleet-wide lock file rebuilds closed all transitive CVE findings: run `pnpm audit --audit-level=high` in shell, cv-builder, and MrPlug. For MrPlug specifically, confirm the `resolutions` field in `package.json` pins `@langchain/core` to `0.3.80` and that `pnpm audit` reports zero high-severity findings. Record pass/fail as a commit comment on 0091121.",
+    "repo": "MrPlug",
+    "status": "open",
+    "sourceDate": "2026-04-01"
+  },
+  {
+    "command": "/investigate",
+    "description": "Verify the static-file-shadowing fix in `4ac70e0`: deploy to Vercel preview and confirm that hitting the editorial revision API route returns JSON (not an HTML static page). The routing rule to enforce: no static output file should share a path with an `api/` function route. Document this rule in CLAUDE.md if it isn't already there.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-04-01"
+  },
+  {
+    "command": "/sweep",
+    "description": "Confirm the GroupThink build and extension package step pass on the new pnpm v9 lock file format (`a6edb57` is already merged to main). CI covered the standard build; this action validates the extension packaging step specifically, which is not in the current CI matrix. If it fails, the pnpm v6→v9 format upgrade is the likely cause.",
+    "repo": "GroupThink",
+    "status": "open",
+    "sourceDate": "2026-04-01"
+  },
+  {
     "command": "/test-expand",
     "description": "Add a Playwright smoke test for the ?app= deep-link feature: navigate to frame.jim.software?app=blogengine and assert the BlogEngine panel is active. Shell #54 shipped the feature with no automated coverage; landing #6 is already live with deep-link cards against this untested path.",
     "repo": "shell",

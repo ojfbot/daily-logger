@@ -1,5 +1,130 @@
 [
   {
+    "date": "2026-04-01",
+    "title": "Tuesday's sweep: fleet-wide CVE remediation and daily-logger's Vercel migration",
+    "summary": "Twenty-nine commits Tuesday patched transitive dependency vulnerabilities across all 11 repos, resolved CVE-2025-68665 in MrPlug with an explicit version pin, and completed daily-logger's migration from Jekyll to Vercel serverless.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "MrPlug",
+        "type": "concept"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "GroupThink",
+        "type": "concept"
+      },
+      {
+        "name": "security-scanning",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "vercel",
+        "type": "infra"
+      },
+      {
+        "name": "component-extraction",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core-reader",
+      "lean-canvas",
+      "purefoy",
+      "daily-logger",
+      "shell",
+      "MrPlug",
+      "landing",
+      "cv-builder",
+      "core",
+      "BlogEngine",
+      "TripPlanner",
+      "seh-study",
+      "GroupThink"
+    ],
+    "commitCount": 37,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Separate CVE for MrPlug: named vulnerability requires explicit version pin, not just lock file refresh",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Jekyll removed entirely; Vercel serverless is now the only deployment target for daily-logger",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Editorial revision CI: `pnpm exec tsx` over bare `tsx` invocation",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet-wide lock file hardening as a single coordinated pass",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "MetricsBar extracted as a standalone component with hover popovers",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Confirm fleet-wide lock file rebuilds closed all transitive CVE findings: run `pnpm audit --audit-level=high` in shell, cv-builder, and MrPlug. For MrPlug specifically, confirm the `resolutions` field in `package.json` pins `@langchain/core` to `0.3.80` and that `pnpm audit` reports zero high-severity findings. Record pass/fail as a commit comment on 0091121.",
+        "repo": "MrPlug",
+        "status": "open",
+        "sourceDate": "2026-04-01"
+      },
+      {
+        "command": "/investigate",
+        "description": "Verify the static-file-shadowing fix in `4ac70e0`: deploy to Vercel preview and confirm that hitting the editorial revision API route returns JSON (not an HTML static page). The routing rule to enforce: no static output file should share a path with an `api/` function route. Document this rule in CLAUDE.md if it isn't already there.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-04-01"
+      },
+      {
+        "command": "/sweep",
+        "description": "Confirm the GroupThink build and extension package step pass on the new pnpm v9 lock file format (`a6edb57` is already merged to main). CI covered the standard build; this action validates the extension packaging step specifically, which is not in the current CI matrix. If it fails, the pnpm v6→v9 format upgrade is the likely cause.",
+        "repo": "GroupThink",
+        "status": "open",
+        "sourceDate": "2026-04-01"
+      }
+    ]
+  },
+  {
     "date": "2026-03-31",
     "title": "Monday sprint: SidebarToggle lands fleet-wide, Frame gets deep-linking, and daily-logger grows an editorial sidebar",
     "summary": "Fifty-eight commits Monday pushed shared component adoption across all seven sub-apps, wired deep-link routing into the shell, and shipped an editorial revision sidebar in daily-logger.",
@@ -73,7 +198,7 @@
     "commitCount": 39,
     "activityType": "build",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
     "decisions": [
       {
         "title": "Fleet-wide SidebarToggle adoption in a single sprint",
@@ -209,10 +334,16 @@
     "commitCount": 19,
     "activityType": "build",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
     "decisions": [
       {
         "title": "Standardise the ecosystem table across all 13 repos rather than per-repo cross-links",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "First responsive UIs in landing and daily-logger",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
@@ -327,7 +458,7 @@
     "commitCount": 31,
     "activityType": "build",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
     "decisions": [
       {
         "title": "ADR-0034: Isolated Redux stores per remote, coordinated via FrameBus",
