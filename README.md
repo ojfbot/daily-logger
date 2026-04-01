@@ -2,7 +2,7 @@
 
 Part of the [ojfbot](https://github.com/ojfbot) org — building **Frame**, an AI App OS that hosts Claude-powered applications inside a unified, natural-language shell. This repo is Phase 9 of the Frame roadmap: the self-documenting development system.
 
-daily-logger generates one markdown blog article per day by sweeping the last 24 h of commits (and 7 days of PRs/issues) across all Frame stack repos, feeding that context to Claude Sonnet, and opening a draft PR for editorial review. Merging the PR publishes the article to GitHub Pages via Jekyll.
+daily-logger generates one markdown blog article per day by sweeping the last 24 h of commits (and 7 days of PRs/issues) across all Frame stack repos, feeding that context to Claude Sonnet, and opening a draft PR for editorial review. Merging the PR deploys the article to Vercel.
 
 ---
 
@@ -10,7 +10,7 @@ daily-logger generates one markdown blog article per day by sweeping the last 24
 
 **https://log.jim.software/**
 
-Each article lives at `/articles/YYYY-MM-DD`. GitHub Pages fallback: `https://ojfbot.github.io/daily-logger/`
+Each article lives at `/articles/YYYY-MM-DD`.
 
 ---
 
@@ -29,7 +29,7 @@ Each article lives at `/articles/YYYY-MM-DD`. GitHub Pages fallback: `https://oj
 
   → you: review draft PR, edit on the branch if needed, merge to publish
 
-  → deploy-pages.yml     fires on push to main → Jekyll build → GitHub Pages
+  → deploy-vercel.yml    fires on push to main → Vercel build + deploy
 ```
 
 Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`.
@@ -113,11 +113,11 @@ Required body sections: `## What shipped`, `## The decisions`, `## Roadmap pulse
 
 ---
 
-## GitHub Pages setup
+## Deployment
 
-- Source: **GitHub Actions** (Settings → Pages → Source → GitHub Actions)
-- [`deploy-pages.yml`](.github/workflows/deploy-pages.yml) fires on every push to `main`
-- Articles are a Jekyll collection in `articles/`; config in [`_config.yml`](_config.yml)
+- Deployed via **Vercel** at [log.jim.software](https://log.jim.software)
+- [`deploy-vercel.yml`](.github/workflows/deploy-vercel.yml) fires on push to `main`
+- Frontend is a React SPA built with Vite (`packages/frontend/`)
 
 ---
 
