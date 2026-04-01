@@ -183,15 +183,6 @@ a:hover { border-bottom-color: var(--text); }
   margin-top: 0.25rem;
 }
 
-.metric-sparkline {
-  display: block;
-  width: 80%;
-  height: 28px;
-  margin: 0.35rem auto 0;
-  opacity: 0.5;
-  color: var(--accent);
-}
-
 /* ─── Metric popover ────────────────────────────────────────────────────── */
 
 .metric-popover {

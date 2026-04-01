@@ -9,22 +9,7 @@ export interface PopoverSection {
 export interface MetricCardData {
   value: number
   label: string
-  sparkline: number[]
   popover: PopoverSection[]
-}
-
-/** Build cumulative sparkline from sorted entries — always trends up */
-function cumulativeSparkline(sorted: EntryData[], valueFn: (e: EntryData) => number): number[] {
-  if (sorted.length === 0) return []
-  // Take up to last 14 entries, accumulate
-  const tail = sorted.slice(-14)
-  const points: number[] = []
-  let sum = 0
-  for (const e of tail) {
-    sum += valueFn(e)
-    points.push(sum)
-  }
-  return points
 }
 
 export function useMetrics(
@@ -61,7 +46,7 @@ export function useMetrics(
     const entriesCard: MetricCardData = {
       value: entries.length,
       label: 'ENTRIES',
-      sparkline: cumulativeSparkline(sorted, () => 1),
+
       popover: [{
         lines: [
           `${firstDate} → ${lastDate}`,
@@ -83,7 +68,7 @@ export function useMetrics(
     const reposCard: MetricCardData = {
       value: allRepos.size,
       label: 'ACTIVE REPOS',
-      sparkline: cumulativeSparkline(sorted, (e) => new Set(e.reposActive ?? []).size),
+
       popover: [{ heading: 'Top repos', lines: topRepos }],
     }
 
@@ -102,7 +87,7 @@ export function useMetrics(
     const commitsCard: MetricCardData = {
       value: totalCommits,
       label: 'TOTAL COMMITS',
-      sparkline: cumulativeSparkline(sorted, (e) => e.commitCount),
+
       popover: [{
         lines: [
           `${avgCommits} commits/day avg`,
@@ -132,7 +117,7 @@ export function useMetrics(
     const actionsCard: MetricCardData = {
       value: totalActions,
       label: 'ACTIONS',
-      sparkline: cumulativeSparkline(sorted, (e) => e.actions?.length ?? 0),
+
       popover: [{
         lines: [
           `${openCount} open · ${doneCount} closed`,
@@ -159,7 +144,7 @@ export function useMetrics(
     const decisionsCard: MetricCardData = {
       value: totalDecisions,
       label: 'DECISIONS',
-      sparkline: cumulativeSparkline(sorted, (e) => e.decisions?.length ?? 0),
+
       popover: [
         ...(pillarLines.length > 0 ? [{ heading: 'By pillar', lines: pillarLines }] : []),
         ...(pillarLines.length === 0 ? [{ lines: ['No structured decisions yet'] }] : []),
