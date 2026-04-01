@@ -5,7 +5,7 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/api/auth/:path*", "destination": "/api/auth/:path*" },
-    { "source": "/api/github/:path*", "destination": "/api/github/:path*" },
+    { "source": "/api/github/:path*", "destination": "/api/github?path=:path*" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],

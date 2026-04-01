@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { extractToken } from '../_lib/cookies.js'
+import { extractToken } from './_lib/cookies.js'
 
 const ALLOWED_USERS = (process.env.ALLOWED_USERS ?? '')
   .split(',')
@@ -10,10 +10,15 @@ const ALLOWED_USERS = (process.env.ALLOWED_USERS ?? '')
 const ALLOWED_REPO_PREFIX = '/repos/ojfbot/daily-logger/'
 
 /**
- * /api/github/[...path]
+ * /api/github
  *
  * Proxies authenticated requests to the GitHub API. The access token is
  * read from the encrypted httpOnly cookie — it never touches the browser.
+ *
+ * The sub-path is passed via a `path` query parameter, set by a Vercel
+ * rewrite in vercel.json:
+ *   /api/github/repos/ojfbot/daily-logger/pulls
+ *   → /api/github?path=repos/ojfbot/daily-logger/pulls
  *
  * Security layers:
  * 1. Token extracted from httpOnly cookie (no XSS token theft)
@@ -22,19 +27,20 @@ const ALLOWED_REPO_PREFIX = '/repos/ojfbot/daily-logger/'
  * 4. Request path restricted to ojfbot/daily-logger repo only
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // ── Health check (no auth required) ─────────────────────────────────────
+  if (!req.query.path) {
+    return res.status(200).json({ ok: true, fn: 'github-proxy' })
+  }
+
   // ── Extract and validate token ───────────────────────────────────────────
   const token = extractToken(req)
   if (!token) {
     return res.status(401).json({ error: 'Not authenticated' })
   }
 
-  // ── Construct GitHub API path ────────────────────────────────────────────
-  const pathSegments = req.query.path
-  if (!pathSegments || !Array.isArray(pathSegments)) {
-    return res.status(400).json({ error: 'Missing path' })
-  }
-
-  const githubPath = '/' + pathSegments.join('/')
+  // ── Construct GitHub API path from query parameter ──────────────────────
+  const rawPath = req.query.path!
+  const githubPath = '/' + (Array.isArray(rawPath) ? rawPath.join('/') : rawPath)
 
   // ── Path restriction: only allow requests to our repo ────────────────────
   if (!githubPath.startsWith(ALLOWED_REPO_PREFIX)) {
