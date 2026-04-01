@@ -3,12 +3,10 @@ dist/
 .env
 .env.local
 pnpm-debug.log*
-_site/
-_site_preview/
 domain-knowledge/
 personal-knowledge/
 .claude/settings.json
 api/articles/
-# Symlinks to sibling repos — targets don't exist in CI; Jekyll realpath() crashes on them
+# Symlink to sibling repo — target doesn't exist in CI
 decisions/core
 .vercel
