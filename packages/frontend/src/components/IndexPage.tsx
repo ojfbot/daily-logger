@@ -2,36 +2,8 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useEntries } from '../hooks/useEntries.ts'
 import { useFilters } from '../hooks/useFilters.ts'
+import { MetricsBar } from './MetricsBar.tsx'
 import type { EntryData } from '../store/types.ts'
-
-function MetricsBar({ entries }: { entries: EntryData[] }) {
-  const stats = useMemo(() => {
-    const allRepos = new Set(entries.flatMap((e) => e.reposActive ?? []))
-    const allActions = entries.reduce((sum, e) => sum + (e.actions?.length ?? 0), 0)
-
-    let streak = 0
-    if (entries.length > 0) {
-      const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date))
-      let checkDate = new Date(sorted[0].date + 'T12:00:00Z')
-      for (const entry of sorted) {
-        const entryDate = new Date(entry.date + 'T12:00:00Z')
-        const diff = Math.round((checkDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24))
-        if (diff <= 1) { streak++; checkDate = entryDate } else break
-      }
-    }
-
-    return { total: entries.length, repos: allRepos.size, actions: allActions, streak }
-  }, [entries])
-
-  return (
-    <div className="metrics-bar">
-      <div className="metric-cell"><div className="metric-value">{stats.total}</div><div className="metric-label">ENTRIES</div></div>
-      <div className="metric-cell"><div className="metric-value">{stats.repos}</div><div className="metric-label">ACTIVE REPOS</div></div>
-      <div className="metric-cell"><div className="metric-value">{stats.actions}</div><div className="metric-label">ACTIONS</div></div>
-      <div className="metric-cell"><div className="metric-value">{stats.streak}</div><div className="metric-label">DAY STREAK</div></div>
-    </div>
-  )
-}
 
 function FilterBar({ tags, filtered, total }: { tags: { name: string; type: string; count: number }[]; filtered: number; total: number }) {
   const { active, toggleFilter, clearFilters, hasActiveFilters } = useFilters()
@@ -160,7 +132,7 @@ function Sidebar() {
 }
 
 export function IndexPage() {
-  const { entries, tags, loading, error } = useEntries()
+  const { entries, tags, repos, actions, doneActions, loading, error } = useEntries()
   const { matchesFilters } = useFilters()
 
   const filtered = useMemo(() => entries.filter(matchesFilters), [entries, matchesFilters])
@@ -170,7 +142,7 @@ export function IndexPage() {
 
   return (
     <>
-      <MetricsBar entries={entries} />
+      <MetricsBar entries={entries} repos={repos} actions={actions} doneActions={doneActions} />
       <FilterBar tags={tags} filtered={filtered.length} total={entries.length} />
       <div className="layout-with-sidebar">
         <div className="entry-list">
