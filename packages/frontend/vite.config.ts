@@ -42,7 +42,10 @@ export default defineConfig({
     react(),
     serveApiPlugin(),
     viteStaticCopy({
-      targets: [{ src: resolve(__dirname, '../../api'), dest: '.' }],
+      targets: [
+        { src: resolve(__dirname, '../../api/*.json'), dest: '.' },
+        { src: resolve(__dirname, '../../api/articles'), dest: '.' },
+      ],
     }),
   ],
   base: process.env.VITE_BASE_PATH || '/daily-logger/',
