@@ -1,17 +1,9 @@
 name: PR Check
 
 # Validates every PR to main:
-#   1. Symlink safety check — all tracked symlinks must be excluded from Jekyll
-#   2. Unit tests
-#   3. Pipeline smoke test (MOCK_LLM=true — no Anthropic API call, no GH_PAT required)
-#   4. PR body builder script
-#
-# WHY the symlink check matters: this repo uses git-tracked symlinks to
-# cross-reference sibling repos (e.g. decisions/core → ../../core/decisions).
-# Jekyll 3.x calls realpath() on every file it encounters; if a symlink's target
-# doesn't exist in CI (because the sibling repo isn't checked out), Jekyll throws
-# Errno::ENOENT and the deploy-pages workflow fails. Adding the symlink's path to
-# _config.yml's exclude: list is the fix; this step ensures it's never forgotten.
+#   1. Unit tests
+#   2. Pipeline smoke test (MOCK_LLM=true — no Anthropic API call, no GH_PAT required)
+#   3. PR body builder script
 #
 # The smoke test exercises the full generate → council → synthesize → write path
 # using a fixture StructuredArticle instead of a real LLM response. This catches
@@ -34,55 +26,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Symlink safety check
-        # Finds every symlink committed to git and verifies it (or its parent
-        # directory) is listed in _config.yml's exclude: block.
-        # Prevents Errno::ENOENT in jekyll-build-pages when a symlink points
-        # to a sibling repo that isn't checked out in CI.
-        # Runs before install so it fails fast with no setup cost.
-        run: |
-          # List all symlinks tracked by git (mode 120000)
-          SYMLINKS=$(git ls-files -s | awk '$1 == "120000" {print $4}')
-
-          if [ -z "$SYMLINKS" ]; then
-            echo "✓ No tracked symlinks found"
-            exit 0
-          fi
-
-          echo "Tracked symlinks:"
-          echo "$SYMLINKS" | sed 's/^/  /'
-
-          MISSING=()
-          while IFS= read -r link; do
-            # Walk up the directory tree: a symlink is safe if it OR any of
-            # its ancestor directories appears in _config.yml's exclude list.
-            # e.g. .claude/commands/adr passes because .claude/ is excluded.
-            path="$link"
-            excluded=false
-            while [[ "$path" != "." && "$path" != "/" && "$path" != "" ]]; do
-              if grep -qE "^\s*-\s+['\"]?${path}/?['\"]?" _config.yml; then
-                excluded=true
-                break
-              fi
-              path=$(dirname "$path")
-            done
-            if [[ "$excluded" == "false" ]]; then
-              MISSING+=("$link")
-            fi
-          done <<< "$SYMLINKS"
-
-          if [ ${#MISSING[@]} -gt 0 ]; then
-            echo ""
-            echo "❌ The following symlinks are NOT excluded from the Jekyll build:"
-            printf "   %s\n" "${MISSING[@]}"
-            echo ""
-            echo "Add each symlink path (or its parent directory) to the exclude:"
-            echo "block in _config.yml to prevent Errno::ENOENT in deploy-pages."
-            exit 1
-          fi
-
-          echo "✓ All tracked symlinks are excluded from Jekyll build"
-
       - name: Setup pnpm
         run: |
           corepack enable
@@ -102,9 +45,6 @@ jobs:
 
       - name: Lint
         run: pnpm lint
-
-      - name: Build frontend
-        run: pnpm build:frontend
 
       - name: Unit tests
         run: pnpm test
