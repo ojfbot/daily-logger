@@ -27,7 +27,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 
 **Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning**
 
-- **Actions board**: fully resolved — all 36 actions closed (2026-03-29). Board at zero is the Phase 2 planning gate.
+- **Actions board**: fully resolved — all 36 actions closed (2026-03-29). Board at zero is the Phase 2 planning gate. One open action remains: validate ADR-0038 editorial revision CI end-to-end.
 - **ADRs landed**: ADR-0033 (daily-cleaner confidence threshold), ADR-0034 (Frame-wide Redux store strategy, resolves shell #5), ADR-0036 (structured decision output for rich UI), ADR-0038 (editorial revision CI workflow).
 - **Landing**: Log nav link now points to `log.jim.software` (Vercel subdomain), old GitHub Pages URL retired.
 
@@ -64,8 +64,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
    editorial revision CI workflow (ADR-0038). Progressive disclosure for new issues shipped.
    Rest-day handling added. Article status lifecycle and auto-merge overnight PRs shipped (`8c4a75a`).
    Two-column article layout with Lois design system integration landed.
-   Collapsible accordion UI for decisions page and done-action resolution popover shipped.
-   Metric hover popovers and TOTAL COMMITS stat card landed. Dev mode auth bypass for editorial testing added.
+    MetricsBar extracted with hover popovers and 5 stat cards landed (commit `2520988`). Done actions page now shows recent/archived tiers (commit `449e321`). Sparkline dead code removed (commit `3d5e4dd`). Dev mode auth bypass for editorial testing added. Editorial revision sidebar includes feedback quote in revision comment; auto-merge disabled (commit `84aec32`).
   ADR-0035 (article status lifecycle) and ADR-0036 (structured decision output) ratified.
 
 ---
@@ -124,7 +123,7 @@ The pitch: "building what Concur would build if it started over in 2025."
 
 ---
 
-## Phase 9 detail: Editorial UI on GitHub Pages
+## Phase 9 detail: Editorial UI on Vercel
 
 **Goal:** Review, edit, annotate, and approve/reject each daily draft before it
 publishes. Feedback persists and seeds the next day's generation.
@@ -141,11 +140,11 @@ cron fires
   → feedback notes written to feedback/YYYY-MM-DD.json
   → next day's collect-context.ts reads feedback/ and injects into prompt
 ```
+### SPA architecture (Vercel)
 
-### SPA architecture (static, no backend)
-
+- Hosted at `log.jim.software` (Vercel subdomain)
 - Hosted at `https://ojfbot.github.io/daily-logger/editor`
-- GitHub OAuth PKCE flow — ADR-0034 ratified (see core PR #35); OAuth login shipped (commit `7a01021`)
+- GitHub OAuth PKCE flow — ADR-0034 ratified (see core PR #35); OAuth login shipped (commit `7a01021`). Editorial revision CI workflow shipped (ADR-0038); catch-all route replaced with single function + rewrite (commit `735939c`).
 
 ### Key screens
 
@@ -166,7 +165,7 @@ cron fires
 - Open draft PR (`gh pr create --draft`)
 - Remove current direct-commit-to-main behavior
 
-Pages deploy job unchanged — fires on PR merge to main.
+Vercel deploy fires on PR merge to main.
 
 ### Feedback injection in collect-context.ts
 
