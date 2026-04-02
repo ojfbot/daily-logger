@@ -10,19 +10,19 @@
     "count": 19
   },
   {
+    "name": "ci-cd",
+    "type": "practice",
+    "count": 11
+  },
+  {
     "name": "phase-1",
     "type": "phase",
     "count": 11
   },
   {
-    "name": "ci-cd",
-    "type": "practice",
-    "count": 10
-  },
-  {
     "name": "daily-logger",
     "type": "repo",
-    "count": 9
+    "count": 10
   },
   {
     "name": "cv-builder",
@@ -60,6 +60,16 @@
     "count": 5
   },
   {
+    "name": "security-scanning",
+    "type": "practice",
+    "count": 4
+  },
+  {
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 4
+  },
+  {
     "name": "storybook",
     "type": "infra",
     "count": 4
@@ -85,13 +95,13 @@
     "count": 4
   },
   {
-    "name": "core",
-    "type": "repo",
+    "name": "hardening",
+    "type": "practice",
     "count": 3
   },
   {
-    "name": "security-scanning",
-    "type": "practice",
+    "name": "core",
+    "type": "repo",
     "count": 3
   },
   {
@@ -107,11 +117,6 @@
   {
     "name": "landing",
     "type": "repo",
-    "count": 3
-  },
-  {
-    "name": "tooling-for-iteration",
-    "type": "concept",
     "count": 3
   },
   {
@@ -137,11 +142,6 @@
   {
     "name": "MrPlug",
     "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "hardening",
-    "type": "practice",
     "count": 2
   },
   {
@@ -203,6 +203,21 @@
     "name": "visual-regression",
     "type": "practice",
     "count": 2
+  },
+  {
+    "name": "trip-planner",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "blog-engine",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "express-5",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "GroupThink",

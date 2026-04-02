@@ -1,5 +1,26 @@
 [
   {
+    "command": "/hardening",
+    "description": "Audit all 13 fleet repos for Express usage, then wire `tsc --noEmit` as a required CI job in each Express-backed repo. The job runs after lint, blocks merge on failure, and is separate from the build step. TripPlanner and BlogEngine are confirmed first targets. The Express 5 param-typing failures (TripPlanner #42 and BlogEngine #43) were only caught post-merge because this step was absent. Wire it before the next dependency update cycle.",
+    "repo": "TripPlanner",
+    "status": "open",
+    "sourceDate": "2026-04-02"
+  },
+  {
+    "command": "/adr",
+    "description": "Write ADR-0001 (or next in sequence) in core: the lock-file-rebuild protocol. Content is already drafted in today's decision log — lock file rebuilds touching `@types/*` or framework packages require `pnpm exec tsc --noEmit` and `pnpm audit --audit-level=high` as passing CI steps before merge. Name the owner, assign an ADR number, open the PR to core. This is the first standing ADR for the fleet; its absence is a credibility gap for a 13-repo project in its hardening phase.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-02"
+  },
+  {
+    "command": "/merge",
+    "description": "Merge [core] #42 — daily-cleaner stale-docs cleanup PR, open since 2026-04-01. Unblocked, validated by Claude Opus, no conflicts expected, no human review required.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-02"
+  },
+  {
     "command": "/validate",
     "description": "Confirm fleet-wide lock file rebuilds closed all transitive CVE findings: run `pnpm audit --audit-level=high` in shell, cv-builder, and MrPlug. For MrPlug specifically, confirm the `resolutions` field in `package.json` pins `@langchain/core` to `0.3.80` and that `pnpm audit` reports zero high-severity findings. Record pass/fail as a commit comment on 0091121.",
     "repo": "MrPlug",
