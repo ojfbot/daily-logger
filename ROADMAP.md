@@ -25,9 +25,9 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 
 ## Where we are now (update this section weekly)
 
-**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning**
+**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning + fleet-wide dependency hardening**
 
-- **Actions board**: fully resolved — all 36 actions closed (2026-03-29). Board at zero is the Phase 2 planning gate. One open action remains: validate ADR-0038 editorial revision CI end-to-end.
+- **Actions board**: fully resolved — all 36 actions closed (2026-03-29). Board at zero is the Phase 2 planning gate. Two open actions remain: validate ADR-0038 editorial revision CI end-to-end; verify static-file-shadowing fix deployment on Vercel preview.
 - **ADRs landed**: ADR-0033 (daily-cleaner confidence threshold), ADR-0034 (Frame-wide Redux store strategy, resolves shell #5), ADR-0036 (structured decision output for rich UI), ADR-0038 (editorial revision CI workflow).
 - **Landing**: Log nav link now points to `log.jim.software` (Vercel subdomain), old GitHub Pages URL retired.
 
@@ -59,7 +59,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
    (cv-builder and core-reader). ADR-0016 ratified. `@resume-builder/*` is the new module namespace.
    gastown-pilot now registered in shell ([shell] #39) — `AppType` union, `APP_CONFIG`, Storybook stories.
    `/scaffold-frame-app` codified as a 28-item validation skill for creating new Frame sub-apps.
-- **Phase 9 (live)**: daily-logger running. Editorial UI shipped — GitHub OAuth login,
+- **Phase 9 (live)**: daily-logger running. **Jekyll removed; Vercel serverless is now the only deployment target.** Editorial UI shipped — GitHub OAuth login,
    draft-PR stamp workflow, editorial sidebar with responsive inline section threads,
    editorial revision CI workflow (ADR-0038). Progressive disclosure for new issues shipped.
    Rest-day handling added. Article status lifecycle and auto-merge overnight PRs shipped (`8c4a75a`).
@@ -134,16 +134,15 @@ publishes. Feedback persists and seeds the next day's generation.
 cron fires
   → CI generates article to branch: article/YYYY-MM-DD
   → opens draft PR against main
-  → GitHub Pages editorial SPA detects open draft PRs via GitHub API
+   → Vercel editorial SPA detects open draft PRs via GitHub API
   → you open the editor, edit markdown, add feedback notes
-  → click Approve → CI merges PR + Pages rebuilds
+   → click Approve → CI merges PR + Vercel rebuilds
   → feedback notes written to feedback/YYYY-MM-DD.json
   → next day's collect-context.ts reads feedback/ and injects into prompt
 ```
 ### SPA architecture (Vercel)
 
 - Hosted at `log.jim.software` (Vercel subdomain)
-- Hosted at `https://ojfbot.github.io/daily-logger/editor`
 - GitHub OAuth PKCE flow — ADR-0034 ratified (see core PR #35); OAuth login shipped (commit `7a01021`). Editorial revision CI workflow shipped (ADR-0038); catch-all route replaced with single function + rewrite (commit `735939c`).
 
 ### Key screens

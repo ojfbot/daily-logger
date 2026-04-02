@@ -2,7 +2,7 @@
 
 Part of the [ojfbot](https://github.com/ojfbot) org — building **Frame**, an AI App OS that hosts Claude-powered applications inside a unified, natural-language shell. This repo is Phase 9 of the Frame roadmap: the self-documenting development system.
 
-daily-logger generates one markdown blog article per day by sweeping the last 24 h of commits (and 7 days of PRs/issues) across all Frame stack repos, feeding that context to Claude Sonnet, and opening a draft PR for editorial review. Merging the PR deploys the article to Vercel.
+daily-logger generates one markdown blog article per day by sweeping the last 24 h of commits (and 7 days of PRs/issues, both open and closed) across all Frame stack repos, feeding that context to Claude Sonnet, and opening a draft PR for editorial review. An editorial revision CI workflow then self-reviews the draft. Merging the PR deploys the article to Vercel.
 
 ---
 
@@ -18,7 +18,7 @@ Each article lives at `/articles/YYYY-MM-DD`.
 
 ```
 09:00 UTC cron (or manual dispatch)
-  → collect-context.ts   sweeps: commits (24 h), PRs/issues (7 d) across all Frame repos
+  → collect-context.ts   sweeps: commits (24 h), PRs/issues (7 d, open + closed) across all Frame repos
                          injects ROADMAP.md context (~2500 chars) into the prompt
   → generate-article.ts  Claude Sonnet → JSON → markdown
   → index.ts             writes articles/YYYY-MM-DD.md
@@ -26,10 +26,11 @@ Each article lives at `/articles/YYYY-MM-DD`.
   → CI: git checkout -b article/YYYY-MM-DD
         git commit + push
         gh pr create --draft  ← structured PR template for editorial review
+        editorial revision CI (`pnpm exec tsx`) self-reviews the draft
 
-  → you: review draft PR, edit on the branch if needed, merge to publish
+  → you: review draft PR + editorial suggestions, edit on the branch if needed, merge to publish
 
-  → deploy-vercel.yml    fires on push to main → Vercel build + deploy
+  → deploy-vercel.yml    fires on push to main → Vercel serverless build + deploy
 ```
 
 Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`.
@@ -117,7 +118,7 @@ Required body sections: `## What shipped`, `## The decisions`, `## Roadmap pulse
 
 - Deployed via **Vercel** at [log.jim.software](https://log.jim.software)
 - [`deploy-vercel.yml`](.github/workflows/deploy-vercel.yml) fires on push to `main`
-- Frontend is a React SPA built with Vite (`packages/frontend/`)
+- Frontend is a Vercel serverless app
 
 ---
 
