@@ -1,5 +1,77 @@
 [
   {
+    "date": "2026-04-03",
+    "title": "Thursday housekeeping: daily-logger runs clean, fleet security hardening closes out",
+    "summary": "Thursday's two bot commits are the trailing exhale of a 15-PR fleet hardening sprint; the only open structural risk is a missing tsc --noEmit CI gate.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "security-scanning",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "dependency-management",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "daily-logger"
+    ],
+    "commitCount": 2,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "What a two-commit Thursday actually signals",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The structural gap the hardening sprint exposed: tsc --noEmit is not a required CI step",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Bot commit authorship as a legibility signal across a 13-repo fleet",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-04-02",
     "title": "Wednesday's Express 5 type fix: what `Request<{ param: string }>` tells you about downstream breakage",
     "summary": "Five commits closed the last CI failures from last week's lock file sweep: two Express 5 route-param type fixes in TripPlanner and BlogEngine, one editorial accept, two bot housekeeping commits.",
