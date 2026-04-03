@@ -27,7 +27,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 
 **Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning + fleet-wide dependency hardening**
 
-- **Actions board**: fully resolved — all 36 actions closed (2026-03-29). Board at zero is the Phase 2 planning gate. Two open actions remain: validate ADR-0038 editorial revision CI end-to-end; verify static-file-shadowing fix deployment on Vercel preview.
+- **Actions board**: all 36 actions closed (2026-03-29). Two open actions remain: validate ADR-0038 editorial revision CI end-to-end; verify static-file-shadowing fix deployment on Vercel preview.
 - **ADRs landed**: ADR-0033 (daily-cleaner confidence threshold), ADR-0034 (Frame-wide Redux store strategy, resolves shell #5), ADR-0036 (structured decision output for rich UI), ADR-0038 (editorial revision CI workflow).
 - **Landing**: Log nav link now points to `log.jim.software` (Vercel subdomain), old GitHub Pages URL retired.
 
@@ -143,7 +143,7 @@ cron fires
 ### SPA architecture (Vercel)
 
 - Hosted at `log.jim.software` (Vercel subdomain)
-- GitHub OAuth PKCE flow — ADR-0034 ratified (see core PR #35); OAuth login shipped (commit `7a01021`). Editorial revision CI workflow shipped (ADR-0038); catch-all route replaced with single function + rewrite (commit `735939c`).
+- GitHub OAuth PKCE flow — OAuth login shipped (commit `7a01021`). Editorial revision CI workflow shipped (ADR-0038); catch-all route replaced with single function + rewrite (commit `735939c`).
 
 ### Key screens
 
