@@ -1,5 +1,26 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Merge landing #13 (Hailstone wreck diving map). Screenshots captured, Playwright pipeline confirmed dark-mode-correct after #9. Review popover copy and 3D render, then merge. This is the only open PR in the fleet and it has been ready since April 3rd.",
+    "repo": "landing",
+    "status": "open",
+    "sourceDate": "2026-04-04"
+  },
+  {
+    "command": "/ci-gate",
+    "description": "Add tsc --noEmit as a required CI job to TripPlanner and BlogEngine. Express 5 param-type failures are already fixed in both repos — this is purely the gate addition. Target: typecheck job in CI config + branch protection rule set to required. Estimate: 30 minutes per repo.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-04"
+  },
+  {
+    "command": "/doc-refactor",
+    "description": "Add a canonical ecosystem table to CLAUDE.md. Schema: repo name | local port | one-line description | phase | status. Seed from the 8 repos touched Friday (cv-builder, landing, shell, core, GroupThink, MrPlug, purefoy, daily-logger), then fill remaining 5. Done means: CLAUDE.md has a complete table, every row has a value in every column, and the table is the single source referenced in the README sweep instructions.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-04"
+  },
+  {
     "command": "/hardening",
     "description": "Audit all 13 fleet repos for Express usage, then wire `tsc --noEmit` as a required CI job in each Express-backed repo. The job runs after lint, blocks merge on failure, and is separate from the build step. TripPlanner and BlogEngine are confirmed first targets. The Express 5 param-typing failures (TripPlanner #42 and BlogEngine #43) were only caught post-merge because this step was absent. Wire it before the next dependency update cycle.",
     "repo": "TripPlanner",
