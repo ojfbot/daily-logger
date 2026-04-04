@@ -1,6 +1,7 @@
 # ojfbot — Living Roadmap
 
 > First ~2500 chars injected into every daily-logger Claude prompt.
+> Jekyll removed; Vercel serverless is now the only deployment target.
 > Reorder sections if priorities shift. Update "Where we are now" weekly.
 
 ---
@@ -28,6 +29,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
 **Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning + fleet-wide dependency hardening**
 
 - **Actions board**: all 36 actions closed (2026-03-29). Two open actions remain: validate ADR-0038 editorial revision CI end-to-end; verify static-file-shadowing fix deployment on Vercel preview.
+- **Fleet hardening sprint complete**: 15-PR fleet hardening sprint closed — transitive dependency vulnerabilities patched across all 11 repos, CVE-2025-68665 resolved in MrPlug with explicit version pin, Express 5 route-param type fixes shipped in TripPlanner and BlogEngine. Structural gap identified: `tsc --noEmit` is not yet a required CI step for lock-file PRs touching `@types/*` or framework packages.
 - **ADRs landed**: ADR-0033 (daily-cleaner confidence threshold), ADR-0034 (Frame-wide Redux store strategy, resolves shell #5), ADR-0036 (structured decision output for rich UI), ADR-0038 (editorial revision CI workflow).
 - **Landing**: Log nav link now points to `log.jim.software` (Vercel subdomain), old GitHub Pages URL retired.
 
