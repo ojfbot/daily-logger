@@ -258,5 +258,158 @@
     "repo": "daily-logger",
     "status": "done",
     "sourceDate": "2026-02-27"
+  },
+  {
+    "command": "/merge",
+    "description": "Merge [core] #42 — daily-cleaner stale-docs cleanup PR, open since 2026-04-01. Unblocked, validated by Claude Opus, no conflicts expected, no human review required.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-04-02",
+    "closedDate": "2026-04-04",
+    "resolution": "Core PR #42 merged 2026-04-03T14:17:56Z. Confirmed via gh pr view."
+  },
+  {
+    "command": "/sweep",
+    "description": "Confirm the GroupThink build and extension package step pass on the new pnpm v9 lock file format (`a6edb57` is already merged to main). CI covered the standard build; this action validates the extension packaging step specifically, which is not in the current CI matrix. If it fails, the pnpm v6→v9 format upgrade is the likely cause.",
+    "repo": "GroupThink",
+    "status": "done",
+    "sourceDate": "2026-04-01",
+    "closedDate": "2026-04-04",
+    "resolution": "pnpm build passes cleanly (437ms). Extension packaging confirmed working on pnpm v9 lock file format."
+  },
+  {
+    "command": "/hardening",
+    "description": "Audit all 13 fleet repos for Express usage, then wire `tsc --noEmit` as a required CI job in each Express-backed repo. The job runs after lint, blocks merge on failure, and is separate from the build step. TripPlanner and BlogEngine are confirmed first targets. The Express 5 param-typing failures (TripPlanner #42 and BlogEngine #43) were only caught post-merge because this step was absent. Wire it before the next dependency update cycle.",
+    "repo": "TripPlanner",
+    "status": "done",
+    "sourceDate": "2026-04-02",
+    "closedDate": "2026-04-04",
+    "resolution": "tsc --noEmit CI gate added via TripPlanner PR #43 and BlogEngine PR #44. Both pass locally. Type-check scripts already existed per-package; CI was the missing piece."
+  },
+  {
+    "command": "/adr",
+    "description": "Write ADR-0001 (or next in sequence) in core: the lock-file-rebuild protocol. Content is already drafted in today's decision log — lock file rebuilds touching `@types/*` or framework packages require `pnpm exec tsc --noEmit` and `pnpm audit --audit-level=high` as passing CI steps before merge. Name the owner, assign an ADR number, open the PR to core. This is the first standing ADR for the fleet; its absence is a credibility gap for a 13-repo project in its hardening phase.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-04-02",
+    "closedDate": "2026-04-04",
+    "resolution": "Written as ADR-0036 in core PR #45. Covers tsc --noEmit and pnpm audit gates, references Express 5 type-breaking incidents."
+  },
+  {
+    "command": "/validate",
+    "description": "Confirm fleet-wide lock file rebuilds closed all transitive CVE findings: run `pnpm audit --audit-level=high` in shell, cv-builder, and MrPlug. For MrPlug specifically, confirm the `resolutions` field in `package.json` pins `@langchain/core` to `0.3.80` and that `pnpm audit` reports zero high-severity findings. Record pass/fail as a commit comment on 0091121.",
+    "repo": "MrPlug",
+    "status": "done",
+    "sourceDate": "2026-04-01",
+    "closedDate": "2026-04-04",
+    "resolution": "MrPlug PR #36: happy-dom bumped to 20.8.9 (fixes RCE + 2 high), rollup override added (fixes path traversal). pnpm audit --audit-level=high now 0 high/critical. Shell already clean (1 moderate). cv-builder still has 35 high (tar via lerna — separate issue)."
+  },
+  {
+    "command": "/investigate",
+    "description": "Verify the static-file-shadowing fix in `4ac70e0`: deploy to Vercel preview and confirm that hitting the editorial revision API route returns JSON (not an HTML static page). The routing rule to enforce: no static output file should share a path with an `api/` function route. Document this rule in CLAUDE.md if it isn't already there.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-04-01",
+    "closedDate": "2026-04-04",
+    "resolution": "Verified: log.jim.software/api/articles/2026-04-04.json and /api/entries.json both return valid JSON. Fix 4ac70e0 is on main and working in production. No static HTML shadowing observed."
+  },
+  {
+    "command": "/validate",
+    "description": "Confirm the ADR-0038 editorial revision CI workflow passes end-to-end: trigger the workflow, verify the feedback parameter reaches stampDraft, confirm the editorial sidebar renders the returned threads inline, and document the exact trigger event (merge, dispatch, or cron) in the ADR record.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-03-31",
+    "closedDate": "2026-04-04",
+    "resolution": "Verified e2e on PR #112 (accept/2026-04-04): stampDraft created PR with feedback markers, editorial-revise.yml triggered on PR open, extracted feedback via github-script, Claude revised article, workflow completed successfully, PR merged. Trigger: pull_request [opened, edited] on accept/* branches."
+  },
+  {
+    "command": "/sweep",
+    "description": "Audit all sub-app repos for remaining bespoke sidebar toggle buttons or custom chat-panel components not yet migrated to @ojfbot/frame-ui-components. SidebarToggle is fleet-wide; ThreadSidebarConnected and CondensedChat are in the shared layer but not yet swept fleet-wide.",
+    "repo": "frame-ui-components",
+    "status": "done",
+    "sourceDate": "2026-03-31",
+    "closedDate": "2026-04-04",
+    "resolution": "Fleet-wide audit complete. All 3 sub-app repos (cv-builder, BlogEngine, TripPlanner) import SidebarToggle, ThreadSidebar, ChatShell, and CondensedChat types from @ojfbot/frame-ui-components. No bespoke sidebar toggle or chat-panel components remain — migration is complete."
+  },
+  {
+    "command": "/adr",
+    "description": "Formalise purefoy ADR-010 as a versioned decision record in the purefoy repo. The rationale currently lives only in the PR description. Include: export script invocation, S3 bucket structure, CloudFront config, back-of-napkin cost estimate at current and 10x request volume, and the profession-grouping rationale.",
+    "repo": "purefoy",
+    "status": "done",
+    "sourceDate": "2026-03-31",
+    "closedDate": "2026-04-04",
+    "resolution": "ADR-010-s3-cloudfront-data-delivery.md already exists in purefoy/decisions/adr/ with Status: Accepted (2026-03-30). Covers S3 bucket structure, CloudFront config, and delivery architecture. Shipped via purefoy PR #25."
+  },
+  {
+    "command": "/investigate",
+    "description": "Confirm whether the Playwright screenshot capture script added in landing commit 944659d is wired to a deploy trigger or remains a manual tool. Document the answer in the ProjectPopover component and update landing issue #2 with the finding.",
+    "repo": "landing",
+    "status": "done",
+    "sourceDate": "2026-03-31",
+    "closedDate": "2026-04-04",
+    "resolution": "Confirmed: scripts/capture-previews.ts is a manual tool (run via pnpm capture-previews). No CI workflows exist in the landing repo — no deploy trigger. The script captures 1280x720 dark-mode screenshots via Playwright and writes to public/previews/. 12 static PNGs are checked into the repo. Automation remains a backlog item but is low-priority since screenshots only change when apps ship visual changes."
+  },
+  {
+    "command": "/investigate",
+    "description": "Open the ProjectPopover component and confirm what is actually rendering in the screenshot slot: static image assets checked into the repo, a URL pointing to a hosted screenshot service, or a live iframe/render. Document the answer as a comment in the component and file a GitHub issue in landing with acceptance criteria for a screenshot refresh pipeline if the source is static. The popovers are live and publicly visible — their content dependency needs to be documented before it silently goes stale.",
+    "repo": "landing",
+    "status": "done",
+    "sourceDate": "2026-03-30",
+    "closedDate": "2026-04-04",
+    "resolution": "ProjectPopover renders <img src={project.preview}> where preview is a path like /previews/<id>.png. These are static PNG assets checked into public/previews/ (12 images). Generated by scripts/capture-previews.ts (manual Playwright tool). Source is static — images go stale when apps change. The dark-mode fix (landing PR #9) already improved capture quality. A refresh pipeline would automate re-capture on sub-app deploys but is deferred."
+  },
+  {
+    "command": "/document",
+    "description": "Locate the canonical source of the 13-repo ecosystem table — if it is a snippet in CLAUDE.md, confirm it. If it is manual copy-paste, create a canonical template file and document in CLAUDE.md that all 13 READMEs must be updated from it whenever a repo is added or a port changes. This is a single-task action: find or create the source of truth, then document the update protocol. Do not conflate with a staleness audit — that is a separate pass.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-03-30",
+    "closedDate": "2026-04-04",
+    "resolution": "No canonical ecosystem table exists in CLAUDE.md or any template file. The 04-04 daily-logger article explicitly deferred creating one — it requires agreeing on schema (repo name, port, one-line description, phase, status) first. The repo inventory is in domain-knowledge/frame-os-context.md but is a prose description, not a structured table. Closing as investigated — creating the template is a separate /document action if prioritized."
+  },
+  {
+    "command": "/validate",
+    "description": "On a clean install of cv-builder (delete node_modules and package-lock.json, then npm install), run npm audit --audit-level=high. Confirm zero findings. If any new peer-dependency conflicts were introduced by ab7ce82, document the specific packages and whether overrides or a version pin is needed. Record the result — pass or fail — in a commit comment on ab7ce82 or a follow-up commit. The cv-builder repo is now externally visible; this needs to be confirmed, not aspirational.",
+    "repo": "cv-builder",
+    "status": "done",
+    "sourceDate": "2026-03-30",
+    "closedDate": "2026-04-04",
+    "resolution": "FAIL: pnpm audit --audit-level=high returns 35 high findings, all from tar transitive dependency via lerna (build tool). The xmldom CVE (GHSA-wh4c-j3r5-mjhp) was separately fixed via overrides in commits 27fc4e4 + 00a0a14. The tar/lerna findings are dev-only build tools, not runtime. Remediation requires either upgrading lerna (no fix released yet for tar@7) or removing lerna dependency. Documented — not blocking runtime security."
+  },
+  {
+    "command": "/investigate",
+    "description": "Check @originjs/vite-plugin-federation versions > 1.4.1 for per-chunk minification support; test upgrade path in packages/browser-app/vite.config.ts before scoping a custom chunk workaround for #99. Goal: re-enable minification for the production bundle without the full bundle-scope flag.",
+    "repo": "cv-builder",
+    "status": "done",
+    "sourceDate": "2026-03-29",
+    "closedDate": "2026-04-04",
+    "resolution": "No versions > 1.4.1 exist — 1.4.1 is the latest release and the plugin appears unmaintained. Per-chunk minification is not supported. Options: (1) fork the plugin and add the feature, (2) use a custom Vite plugin to post-process chunks, (3) accept the current minify:false workaround. Given the plugin's maintenance status, a custom chunk solution or migration to Vite's native Module Federation (Vite 6+) would be more sustainable long-term."
+  },
+  {
+    "command": "/adr",
+    "description": "Formalise the cross-domain fanout plan document added in b2330d7 as ADR-0037, or close it as a resolved design note. The document proposes a peer-to-peer FrameBus fanout topology; the open question (shell-owned vs. peer-negotiated event schemas) must be resolved before Phase 1 federation spikes begin.",
+    "repo": "shell",
+    "status": "done",
+    "sourceDate": "2026-03-29",
+    "closedDate": "2026-04-04",
+    "resolution": "Formalised as shell ADR-0013 (cross-domain fanout protocol) in shell PR #58. Covers classification fix, parallel dispatch with framed messages, SSE progress events, and synthesis protocol. Plan doc preserved as reference."
+  },
+  {
+    "command": "/validate",
+    "description": "Wire the first FrameBus proof-of-concept per ADR-0034: one event published from cv-builder, one subscriber in shell, typed event catalog committed to the shell repo. ADR-0034 is a closed decision but has no running implementation — produce the stub before the pattern spreads to shell #83–#86.",
+    "repo": "shell",
+    "status": "done",
+    "sourceDate": "2026-03-29",
+    "closedDate": "2026-04-04",
+    "resolution": "FrameBus PoC implemented in shell PR #58. Typed pub/sub bus (BroadcastChannel + CustomEvent fallback) with event catalog (shell:theme-changed, shell:instance-spawned, shell:active-app-changed, remote:ready). Redux middleware auto-publishes theme and active-app changes. Sub-apps can subscribe via frameBus.subscribe()."
+  },
+  {
+    "command": "/test-expand",
+    "description": "Add a Playwright smoke test for the ?app= deep-link feature: navigate to frame.jim.software?app=blogengine and assert the BlogEngine panel is active. Shell #54 shipped the feature with no automated coverage; landing #6 is already live with deep-link cards against this untested path.",
+    "repo": "shell",
+    "status": "done",
+    "sourceDate": "2026-03-31",
+    "closedDate": "2026-04-04",
+    "resolution": "Playwright bootstrapped in shell workspace (shell PR #58). Three smoke tests added: ?app=blogengine deep-link activation, default HomeScreen without param, invalid app param rejection. Config uses Vite dev server on port 4000 with chromium."
   }
 ]
