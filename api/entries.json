@@ -1,5 +1,127 @@
 [
   {
+    "date": "2026-04-04",
+    "title": "Friday documentation sweep: writing the pitch into every README across 11 repos",
+    "summary": "Friday coordinated 21 commits across 11 repos: every public README sharpened, a live CVE patched and verified, and an expandable BioCard shipped to the landing page.",
+    "tags": [
+      {
+        "name": "landing",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "GroupThink",
+        "type": "concept"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "cv-builder",
+      "landing",
+      "shell",
+      "core",
+      "GroupThink",
+      "MrPlug",
+      "purefoy"
+    ],
+    "commitCount": 21,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Patch @xmldom/xmldom via npm overrides, not a direct version bump — and verify before calling it closed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Separate the security pin commit from the type-fix commit",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Force dark colour scheme in Playwright screenshot capture",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "BioCard as a separate component between hero and portfolio, not inline bio text",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "READMEs as first-class design artifacts — lead with the problem, not the implementation",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Module Federation rationale lives in the README — ADR is the acknowledged gap",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge landing #13 (Hailstone wreck diving map). Screenshots captured, Playwright pipeline confirmed dark-mode-correct after #9. Review popover copy and 3D render, then merge. This is the only open PR in the fleet and it has been ready since April 3rd.",
+        "repo": "landing",
+        "status": "open",
+        "sourceDate": "2026-04-04"
+      },
+      {
+        "command": "/ci-gate",
+        "description": "Add tsc --noEmit as a required CI job to TripPlanner and BlogEngine. Express 5 param-type failures are already fixed in both repos — this is purely the gate addition. Target: typecheck job in CI config + branch protection rule set to required. Estimate: 30 minutes per repo.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-04"
+      },
+      {
+        "command": "/doc-refactor",
+        "description": "Add a canonical ecosystem table to CLAUDE.md. Schema: repo name | local port | one-line description | phase | status. Seed from the 8 repos touched Friday (cv-builder, landing, shell, core, GroupThink, MrPlug, purefoy, daily-logger), then fill remaining 5. Done means: CLAUDE.md has a complete table, every row has a value in every column, and the table is the single source referenced in the README sweep instructions.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-04"
+      }
+    ]
+  },
+  {
     "date": "2026-04-03",
     "title": "Thursday housekeeping: daily-logger runs clean, fleet security hardening closes out",
     "summary": "Thursday's two bot commits are the trailing exhale of a 15-PR fleet hardening sprint; the only open structural risk is a missing tsc --noEmit CI gate.",

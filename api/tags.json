@@ -2,12 +2,12 @@
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 20
+    "count": 21
   },
   {
     "name": "shell",
     "type": "repo",
-    "count": 19
+    "count": 20
   },
   {
     "name": "ci-cd",
@@ -27,7 +27,7 @@
   {
     "name": "cv-builder",
     "type": "repo",
-    "count": 9
+    "count": 10
   },
   {
     "name": "adr",
@@ -55,6 +55,21 @@
     "count": 6
   },
   {
+    "name": "core",
+    "type": "repo",
+    "count": 5
+  },
+  {
+    "name": "hardening",
+    "type": "practice",
+    "count": 5
+  },
+  {
+    "name": "assistant-centric",
+    "type": "concept",
+    "count": 5
+  },
+  {
     "name": "security-scanning",
     "type": "practice",
     "count": 5
@@ -70,8 +85,13 @@
     "count": 5
   },
   {
-    "name": "core",
+    "name": "landing",
     "type": "repo",
+    "count": 4
+  },
+  {
+    "name": "security-as-emergent-ux",
+    "type": "concept",
     "count": 4
   },
   {
@@ -80,18 +100,8 @@
     "count": 4
   },
   {
-    "name": "hardening",
-    "type": "practice",
-    "count": 4
-  },
-  {
     "name": "storybook",
     "type": "infra",
-    "count": 4
-  },
-  {
-    "name": "assistant-centric",
-    "type": "concept",
     "count": 4
   },
   {
@@ -110,18 +120,8 @@
     "count": 4
   },
   {
-    "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 3
-  },
-  {
     "name": "frame-ui-components",
     "type": "infra",
-    "count": 3
-  },
-  {
-    "name": "landing",
-    "type": "repo",
     "count": 3
   },
   {
@@ -138,6 +138,16 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "GroupThink",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 2
   },
   {
     "name": "MrPlug",
@@ -221,11 +231,6 @@
   },
   {
     "name": "express-5",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "GroupThink",
     "type": "concept",
     "count": 1
   },
@@ -426,11 +431,6 @@
   },
   {
     "name": "claude-code",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "model-behavior-as-design",
     "type": "concept",
     "count": 1
   },
