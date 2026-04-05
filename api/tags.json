@@ -2,27 +2,27 @@
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 21
+    "count": 22
   },
   {
     "name": "shell",
     "type": "repo",
-    "count": 20
+    "count": 21
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 12
+    "count": 13
   },
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 11
+    "count": 12
   },
   {
     "name": "phase-1",
     "type": "phase",
-    "count": 11
+    "count": 12
   },
   {
     "name": "cv-builder",
@@ -50,23 +50,28 @@
     "count": 7
   },
   {
+    "name": "core",
+    "type": "repo",
+    "count": 6
+  },
+  {
+    "name": "assistant-centric",
+    "type": "concept",
+    "count": 6
+  },
+  {
     "name": "purefoy",
     "type": "repo",
     "count": 6
   },
   {
-    "name": "core",
+    "name": "landing",
     "type": "repo",
     "count": 5
   },
   {
     "name": "hardening",
     "type": "practice",
-    "count": 5
-  },
-  {
-    "name": "assistant-centric",
-    "type": "concept",
     "count": 5
   },
   {
@@ -83,11 +88,6 @@
     "name": "gas-town",
     "type": "phase",
     "count": 5
-  },
-  {
-    "name": "landing",
-    "type": "repo",
-    "count": 4
   },
   {
     "name": "security-as-emergent-ux",
@@ -120,6 +120,11 @@
     "count": 4
   },
   {
+    "name": "MrPlug",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "frame-ui-components",
     "type": "infra",
     "count": 3
@@ -140,17 +145,27 @@
     "count": 3
   },
   {
+    "name": "cross-app-orchestration",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "cleanup",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "github-integration",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "GroupThink",
     "type": "concept",
     "count": 2
   },
   {
     "name": "model-behavior-as-design",
-    "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "MrPlug",
     "type": "concept",
     "count": 2
   },
@@ -251,11 +266,6 @@
   },
   {
     "name": "portfolio-presentation",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "cleanup",
     "type": "concept",
     "count": 1
   },
@@ -400,17 +410,7 @@
     "count": 1
   },
   {
-    "name": "cross-app-orchestration",
-    "type": "concept",
-    "count": 1
-  },
-  {
     "name": "rename",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "github-integration",
     "type": "concept",
     "count": 1
   },

@@ -1,5 +1,112 @@
 [
   {
+    "date": "2026-04-05",
+    "title": "Saturday housekeeping: Hailstone on the portfolio, FrameBus PoC lands in shell, and the actions backlog hits zero",
+    "summary": "Saturday closed the Hailstone portfolio item, opened the FrameBus cross-domain fanout PoC in shell, and cleared the 17-item open-actions backlog in one batch PR.",
+    "tags": [
+      {
+        "name": "landing",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "MrPlug",
+        "type": "concept"
+      },
+      {
+        "name": "cross-app-orchestration",
+        "type": "concept"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "github-integration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "landing",
+      "core"
+    ],
+    "commitCount": 6,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "FrameBus PoC scoped as ADR-0013 + Playwright e2e in a single PR",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "CI review workflow switched to manual trigger in MrPlug",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Actions backlog batch-closed via daily-logger PR #113 — pending merge",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge MrPlug #36 (happy-dom 15.x → 20.8.9, rollup path-traversal override). After merge, run `pnpm audit --audit-level=high` inside the MrPlug repo and confirm zero high/critical findings. Post output as a comment on the merge commit. MrPlug is publicly visible; this is not aspirational.",
+        "repo": "MrPlug",
+        "status": "open",
+        "sourceDate": "2026-04-05"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Review and merge shell #58 (ADR-0013 + FrameBus PoC + Playwright e2e). Local setup: shell on :3000, cv-builder on :3001. Check: (1) PoC implements broadcast fanout + async delivery per ADR-0013; (2) typed event catalog committed at packages/framebus/src/events.ts (or equivalent); (3) `pnpm playwright test` passes. This is the gate for all Phase 1 federation work. Merge or close before opening new Phase 1 tickets.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-04-05"
+      },
+      {
+        "command": "/validate",
+        "description": "Before merging daily-logger #113, audit done-actions.json: for each of the 17 closed entries, confirm a corresponding merged PR exists. Move any aspirationally-closed items back to open. The actions board is only authoritative if this check passes.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-04-05"
+      }
+    ]
+  },
+  {
     "date": "2026-04-04",
     "title": "Friday documentation sweep: writing the pitch into every README across 11 repos",
     "summary": "Friday coordinated 21 commits across 11 repos: every public README sharpened, a live CVE patched and verified, and an expandable BioCard shipped to the landing page.",
@@ -58,7 +165,7 @@
     "commitCount": 21,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
     "decisions": [
       {
         "title": "Patch @xmldom/xmldom via npm overrides, not a direct version bump — and verify before calling it closed",
@@ -99,16 +206,16 @@
     ],
     "actions": [
       {
-        "command": "/pr-review",
-        "description": "Merge landing #13 (Hailstone wreck diving map). Screenshots captured, Playwright pipeline confirmed dark-mode-correct after #9. Review popover copy and 3D render, then merge. This is the only open PR in the fleet and it has been ready since April 3rd.",
-        "repo": "landing",
+        "command": "/ci-gate",
+        "description": "Add tsc --noEmit as a required CI job to TripPlanner and BlogEngine. Express 5 param-type failures are already fixed in both repos — this is purely the gate addition. Target: typecheck job in CI config + branch protection rule set to required. Estimate: 30 minutes per repo.",
+        "repo": "core",
         "status": "open",
         "sourceDate": "2026-04-04"
       },
       {
-        "command": "/ci-gate",
-        "description": "Add tsc --noEmit as a required CI job to TripPlanner and BlogEngine. Express 5 param-type failures are already fixed in both repos — this is purely the gate addition. Target: typecheck job in CI config + branch protection rule set to required. Estimate: 30 minutes per repo.",
-        "repo": "core",
+        "command": "/roadmap",
+        "description": "Scope the Hailstone migration. Define what moves, what gets rebuilt, and the target architecture inside the portfolio. Produce a short migration plan before any code is written.",
+        "repo": "landing",
         "status": "open",
         "sourceDate": "2026-04-04"
       },
