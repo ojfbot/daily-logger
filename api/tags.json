@@ -2,22 +2,22 @@
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 22
+    "count": 23
   },
   {
     "name": "shell",
     "type": "repo",
-    "count": 21
+    "count": 22
+  },
+  {
+    "name": "daily-logger",
+    "type": "repo",
+    "count": 13
   },
   {
     "name": "ci-cd",
     "type": "practice",
     "count": 13
-  },
-  {
-    "name": "daily-logger",
-    "type": "repo",
-    "count": 12
   },
   {
     "name": "phase-1",
@@ -28,6 +28,11 @@
     "name": "cv-builder",
     "type": "repo",
     "count": 10
+  },
+  {
+    "name": "core",
+    "type": "repo",
+    "count": 7
   },
   {
     "name": "adr",
@@ -50,8 +55,13 @@
     "count": 7
   },
   {
-    "name": "core",
-    "type": "repo",
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 6
+  },
+  {
+    "name": "hardening",
+    "type": "practice",
     "count": 6
   },
   {
@@ -65,13 +75,13 @@
     "count": 6
   },
   {
-    "name": "landing",
-    "type": "repo",
+    "name": "rest-day",
+    "type": "activity",
     "count": 5
   },
   {
-    "name": "hardening",
-    "type": "practice",
+    "name": "landing",
+    "type": "repo",
     "count": 5
   },
   {
@@ -80,23 +90,18 @@
     "count": 5
   },
   {
-    "name": "tooling-for-iteration",
-    "type": "concept",
-    "count": 5
-  },
-  {
     "name": "gas-town",
     "type": "phase",
     "count": 5
   },
   {
-    "name": "security-as-emergent-ux",
+    "name": "MrPlug",
     "type": "concept",
     "count": 4
   },
   {
-    "name": "rest-day",
-    "type": "activity",
+    "name": "security-as-emergent-ux",
+    "type": "concept",
     "count": 4
   },
   {
@@ -120,7 +125,7 @@
     "count": 4
   },
   {
-    "name": "MrPlug",
+    "name": "cross-app-orchestration",
     "type": "concept",
     "count": 3
   },
@@ -143,11 +148,6 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
-  },
-  {
-    "name": "cross-app-orchestration",
-    "type": "concept",
-    "count": 2
   },
   {
     "name": "cleanup",

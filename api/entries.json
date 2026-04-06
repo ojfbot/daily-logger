@@ -1,5 +1,83 @@
 [
   {
+    "date": "2026-04-06",
+    "title": "Sunday reading: nine open PRs, one critical-path question, and what FrameBus means for Phase 1",
+    "summary": "A no-commit reading day audited nine in-flight PRs, identified FrameBus (shell #58) as the Phase 1 critical-path unblock, and ordered the Monday merge queue.",
+    "tags": [
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "MrPlug",
+        "type": "concept"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "cross-app-orchestration",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "MrPlug"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "FrameBus (shell #58) is the Phase 1 critical-path item — everything else queues behind it",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "tsc --noEmit CI gates in BlogEngine #44 and TripPlanner #43 close the structural gap that let Express 5 failures slip past",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0036 (core #45) codifies the lock-file-rebuild protocol — an unmerged ADR is just a PR description",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "MrPlug #36 (CVE remediation) must merge before #37 (CI trigger change) — order is a security invariant",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-04-05",
     "title": "Saturday housekeeping: Hailstone on the portfolio, FrameBus PoC lands in shell, and the actions backlog hits zero",
     "summary": "Saturday closed the Hailstone portfolio item, opened the FrameBus cross-domain fanout PoC in shell, and cleared the 17-item open-actions backlog in one batch PR.",
