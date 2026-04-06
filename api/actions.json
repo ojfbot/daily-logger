@@ -1,33 +1,5 @@
 [
   {
-    "command": "/pr-review",
-    "description": "Merge MrPlug #36 (happy-dom 15.x → 20.8.9, rollup path-traversal override). After merge, run `pnpm audit --audit-level=high` inside the MrPlug repo and confirm zero high/critical findings. Post output as a comment on the merge commit. MrPlug is publicly visible; this is not aspirational.",
-    "repo": "MrPlug",
-    "status": "open",
-    "sourceDate": "2026-04-05"
-  },
-  {
-    "command": "/pr-review",
-    "description": "Review and merge shell #58 (ADR-0013 + FrameBus PoC + Playwright e2e). Local setup: shell on :3000, cv-builder on :3001. Check: (1) PoC implements broadcast fanout + async delivery per ADR-0013; (2) typed event catalog committed at packages/framebus/src/events.ts (or equivalent); (3) `pnpm playwright test` passes. This is the gate for all Phase 1 federation work. Merge or close before opening new Phase 1 tickets.",
-    "repo": "shell",
-    "status": "open",
-    "sourceDate": "2026-04-05"
-  },
-  {
-    "command": "/validate",
-    "description": "Before merging daily-logger #113, audit done-actions.json: for each of the 17 closed entries, confirm a corresponding merged PR exists. Move any aspirationally-closed items back to open. The actions board is only authoritative if this check passes.",
-    "repo": "daily-logger",
-    "status": "open",
-    "sourceDate": "2026-04-05"
-  },
-  {
-    "command": "/ci-gate",
-    "description": "Add tsc --noEmit as a required CI job to TripPlanner and BlogEngine. Express 5 param-type failures are already fixed in both repos — this is purely the gate addition. Target: typecheck job in CI config + branch protection rule set to required. Estimate: 30 minutes per repo.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-04-04"
-  },
-  {
     "command": "/roadmap",
     "description": "Scope the Hailstone migration. Define what moves, what gets rebuilt, and the target architecture inside the portfolio. Produce a short migration plan before any code is written.",
     "repo": "landing",
