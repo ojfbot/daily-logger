@@ -411,5 +411,41 @@
     "sourceDate": "2026-03-31",
     "closedDate": "2026-04-04",
     "resolution": "Playwright bootstrapped in shell workspace (shell PR #58). Three smoke tests added: ?app=blogengine deep-link activation, default HomeScreen without param, invalid app param rejection. Config uses Vite dev server on port 4000 with chromium."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge MrPlug #36 (happy-dom 15.x → 20.8.9, rollup path-traversal override). After merge, verify pnpm audit --audit-level=high returns zero high/critical findings on main.",
+    "repo": "MrPlug",
+    "status": "done",
+    "sourceDate": "2026-04-05",
+    "closedDate": "2026-04-06",
+    "resolution": "MrPlug #36 merged 2026-04-04. pnpm audit --audit-level=high confirmed 0 high/critical on main."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review and merge shell #58 (ADR-0013 + FrameBus PoC + Playwright e2e). Local set of changes verified.",
+    "repo": "shell",
+    "status": "done",
+    "sourceDate": "2026-04-05",
+    "closedDate": "2026-04-06",
+    "resolution": "Shell #58 merged via rebase 2026-04-06. ADR-0013 formalised, FrameBus PoC with typed event catalog, 3 Playwright smoke tests."
+  },
+  {
+    "command": "/validate",
+    "description": "Before merging daily-logger #113, audit done-actions.json: for each of the 17 closed actions verify resolution accuracy.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-04-05",
+    "closedDate": "2026-04-06",
+    "resolution": "daily-logger #113 merged 2026-04-04. All 17 done-actions entries verified against git state and live APIs before merge."
+  },
+  {
+    "command": "/ci-gate",
+    "description": "Add tsc --noEmit as a required CI job to TripPlanner and BlogEngine. Express 5 param-typing failures were only caught post-merge because this step was absent.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-04-04",
+    "closedDate": "2026-04-06",
+    "resolution": "Already completed 2026-04-04 via TripPlanner PR #43 and BlogEngine PR #44. Both repos have tsc --noEmit in CI and pass on main."
   }
 ]
