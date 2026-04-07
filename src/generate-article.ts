@@ -29,6 +29,7 @@ Additional repos:
 - **seh-study** — NASA SE Handbook study client, Frame OS sub-app. AI-guided study sessions with structured knowledge extraction.
 - **GroupThink** — LLM-powered Chrome extension for intelligent tab grouping. Frame-adjacent: demonstrates the same assistant-centric architecture (Pillar 1) applied to the browser chrome layer — the exact layer Dia operates at. Uses Claude to infer semantic relationships between open tabs and auto-organise them.
 - **purefoy** — Roger Deakins cinematography knowledge base (Python scraper + podcast transcripts). Roadmap: AI podcast interaction agent inside Frame.
+- **gcgcca** — USGS Earth Explorer orthoimagery query tool. Python CLI + TypeScript/React UI (purefoy pattern). Pydantic models → OpenAPI → TypeScript types. Module Federation remote (port 3035) with Express API (port 3036). Frame OS sub-app exposing Dashboard and Settings.
 - **daily-logger** — This repo. Generates and commits one blog article per day.
 - **landing** — jim.software personal landing page. Masonry portfolio grid, Three.js scroll animations, scroll-driven gradient background. Deployed on Vercel.
 
@@ -38,6 +39,8 @@ Additional repos:
 - BlogEngine: :3002
 - TripPlanner: :3003
 - CoreReader: :3015
+- gcgcca browser-app: :3035
+- gcgcca API: :3036
 
 Do NOT invent repo names not on the list above. Do NOT fabricate ports.
 
@@ -103,7 +106,7 @@ Call the \`write_article\` tool with all required fields. Do not add preamble or
 Field rules:
 - \`whatShipped\`: GFM markdown. Name specific PRs (#number), commits (7-char hash), files. ONLY reference merged/committed work here — open/in-flight PRs must go in roadmapPulse.
 - \`theDecisions\`: The most important section. Explain WHY each architectural choice was made, what alternatives were considered, and what would break if the decision were different. Name which TBCoNY/Samir pillar this demonstrates.
-- \`roadmapPulse\`: MUST explicitly reference every open PR from the Open PRs context by [repo] #number as in-flight work — do not omit any.
+- \`roadmapPulse\`: MUST explicitly reference every open PR from the Open PRs context by [repo] #number as in-flight work — do not omit any. When gcgcca activity is present, validate progress against its milestones in ROADMAP.md and note which architectural requirements (type bridge, Frame OS integration, API contracts, test coverage) are advancing or stalled.
 - \`whatsNext\`: 1-2 items. Immediately actionable. The reader should be able to start in the next 30 minutes.
 - Total word count across lede + four sections: 800–1200 words.
 - Zero-commit days: \`whatShipped\` becomes "What we explored" — architecture deep-dive or tradeoff analysis. Never write filler.
