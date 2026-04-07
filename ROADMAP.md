@@ -68,6 +68,7 @@ Samir Mody (TBCoNY CTO, "From Arc to Dia") — 4 pillars every article must thre
    Two-column article layout with Lois design system integration landed.
     MetricsBar extracted with hover popovers and 5 stat cards landed (commit `2520988`). Done actions page now shows recent/archived tiers (commit `449e321`). Sparkline dead code removed (commit `3d5e4dd`). Dev mode auth bypass for editorial testing added. Editorial revision sidebar includes feedback quote in revision comment; auto-merge disabled (commit `84aec32`).
   ADR-0035 (article status lifecycle) and ADR-0036 (structured decision output) ratified.
+- **gcgcca (bootstrapping)**: Python CLI complete (47 pytest tests passing). Type bridge wired (Pydantic → OpenAPI → TS). Milestones: [ ] Express API serving scene data on :3036, [ ] browser-app registered in shell as MF remote, [ ] Frame agent tools manifest at GET /api/tools, [ ] end-to-end KML → UI coverage display.
 
 ---
 
@@ -122,6 +123,7 @@ The pitch: "building what Concur would build if it started over in 2025."
 7. purefoy as podcast AI agent in Frame — **corpus complete; frame-ui-components migration complete** ([purefoy] #9–#14 merged — 348/348 episodes transcribed, AWS runner retired, typed transcript editing UI in Frame, standalone Flask reference UI at localhost:5050, ADR-006–009; [purefoy] #17 + #18 merged — local components replaced with `@ojfbot/frame-ui-components` wrappers, `DashboardLayout` adopted, Vercel deployment wired)
 8. App definition from UI (ShellAgent scaffolds apps) — **not started**
 9. daily-logger → BlogEngine + editorial UI — **live / in progress**
+10. gcgcca as Frame OS geospatial sub-app — **bootstrapping** (Python CLI complete, type bridge wired, browser-app skeleton + Express API scaffolded, not yet registered in shell)
 
 ---
 
