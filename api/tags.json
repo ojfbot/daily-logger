@@ -2,17 +2,17 @@
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 23
+    "count": 24
   },
   {
     "name": "shell",
     "type": "repo",
-    "count": 22
+    "count": 23
   },
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 13
+    "count": 14
   },
   {
     "name": "ci-cd",
@@ -27,11 +27,16 @@
   {
     "name": "cv-builder",
     "type": "repo",
-    "count": 10
+    "count": 11
   },
   {
     "name": "core",
     "type": "repo",
+    "count": 8
+  },
+  {
+    "name": "tooling-for-iteration",
+    "type": "concept",
     "count": 7
   },
   {
@@ -55,11 +60,6 @@
     "count": 7
   },
   {
-    "name": "tooling-for-iteration",
-    "type": "concept",
-    "count": 6
-  },
-  {
     "name": "hardening",
     "type": "practice",
     "count": 6
@@ -73,6 +73,16 @@
     "name": "purefoy",
     "type": "repo",
     "count": 6
+  },
+  {
+    "name": "MrPlug",
+    "type": "concept",
+    "count": 5
+  },
+  {
+    "name": "security-as-emergent-ux",
+    "type": "concept",
+    "count": 5
   },
   {
     "name": "rest-day",
@@ -95,12 +105,7 @@
     "count": 5
   },
   {
-    "name": "MrPlug",
-    "type": "concept",
-    "count": 4
-  },
-  {
-    "name": "security-as-emergent-ux",
+    "name": "cross-app-orchestration",
     "type": "concept",
     "count": 4
   },
@@ -125,7 +130,12 @@
     "count": 4
   },
   {
-    "name": "cross-app-orchestration",
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 3
+  },
+  {
+    "name": "sprint",
     "type": "concept",
     "count": 3
   },
@@ -165,18 +175,8 @@
     "count": 2
   },
   {
-    "name": "model-behavior-as-design",
-    "type": "concept",
-    "count": 2
-  },
-  {
     "name": "vercel",
     "type": "infra",
-    "count": 2
-  },
-  {
-    "name": "sprint",
-    "type": "concept",
     "count": 2
   },
   {
@@ -228,6 +228,36 @@
     "name": "visual-regression",
     "type": "practice",
     "count": 2
+  },
+  {
+    "name": "gcgcca",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "BlogEngine",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "TripPlanner",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "framebus",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "type-bridge",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "skill-flywheel",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "dependency-management",

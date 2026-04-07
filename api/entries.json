@@ -1,5 +1,174 @@
 [
   {
+    "date": "2026-04-07",
+    "title": "Monday's 52-commit sprint: FrameBus lands, gcgcca gets typed, and core grows a skill flywheel",
+    "summary": "Monday closed 25 PRs across 13 repos: FrameBus merged with ADR-0013, gcgcca got a full Pydantic+TypeScript type bridge, and core's skill ecosystem gained cross-references, telemetry, and a new /resume-audit skill.",
+    "tags": [
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "gcgcca",
+        "type": "concept"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "MrPlug",
+        "type": "concept"
+      },
+      {
+        "name": "BlogEngine",
+        "type": "concept"
+      },
+      {
+        "name": "TripPlanner",
+        "type": "concept"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "cross-app-orchestration",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "framebus",
+        "type": "concept"
+      },
+      {
+        "name": "type-bridge",
+        "type": "concept"
+      },
+      {
+        "name": "skill-flywheel",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "shell",
+      "core",
+      "cv-builder",
+      "MrPlug",
+      "BlogEngine",
+      "TripPlanner",
+      "landing",
+      "core-reader",
+      "seh-study",
+      "lean-canvas",
+      "purefoy",
+      "GroupThink"
+    ],
+    "commitCount": 40,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "FrameBus ships as a bundle: ADR-0013 + implementation + Playwright e2e in one PR",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "gcgcca adopts Pydantic → OpenAPI → TypeScript as the canonical cross-language type bridge",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Skill ## See Also sections create a distributed activation graph, not a central dispatch table",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "@frame/tsconfig and @frame/eslint-plugin as cross-repo shared presets",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Claude Code review switched to workflow_dispatch in MrPlug",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0036 codifies lock-file-rebuild as a two-gate CI requirement",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge shell #62 (lockfile regeneration for ESLint deps). No logic changes. Run `gh pr merge 62 --squash --repo ojfbot/shell` if CI is green. If CI is red, treat as a blocker — something introduced in #60 or #61 is breaking the lockfile integrity check. This unblocks all subsequent shell CI work.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-04-07"
+      },
+      {
+        "command": "/scaffold",
+        "description": "Scaffold a Storybook workspace in a new @ojfbot/shell package. Import existing Carbon components from cv-builder, BlogEngine, and TripPlanner. @frame/tsconfig and @frame/eslint-plugin are live — this is the next concrete Phase 1 deliverable and the gap analysis that determines what actually needs extracting into the shared shell.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-04-07"
+      },
+      {
+        "command": "/adr",
+        "description": "Write ADR for the Pydantic → OpenAPI → TypeScript codegen pattern established in gcgcca PRs #1 and #2. Document the invocation (python scripts/generate_schema.py, venv required, output to src/generated/types.ts), the known failure mode (custom validators and Union discriminators may not map cleanly to OpenAPI), and the purefoy CLI+UI reference. This pattern will apply to every future Python-backed Frame sub-app.",
+        "repo": "gcgcca",
+        "status": "open",
+        "sourceDate": "2026-04-07"
+      },
+      {
+        "command": "/validate",
+        "description": "Run tsc --noEmit across all four shell packages after #62 merges to confirm zero errors before adding more consumers to @frame/tsconfig. PR #59 passed CI clean, but forward validation before the next consumer onboards is the guard against silent drift.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-04-07"
+      },
+      {
+        "command": "/roadmap",
+        "description": "Register gcgcca as a live Module Federation remote in the shell host config at :3035. Wire it into frame-dev.sh and confirm hot-reload works in the dev environment. Type bridge is complete, MF scaffold exists — this is the milestone that makes gcgcca visible inside the Frame shell for the first time.",
+        "repo": "gcgcca",
+        "status": "open",
+        "sourceDate": "2026-04-07"
+      }
+    ]
+  },
+  {
     "date": "2026-04-06",
     "title": "Sunday reading: nine open PRs, one critical-path question, and what FrameBus means for Phase 1",
     "summary": "A no-commit reading day audited nine in-flight PRs, identified FrameBus (shell #58) as the Phase 1 critical-path unblock, and ordered the Monday merge queue.",
