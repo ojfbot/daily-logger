@@ -19,6 +19,7 @@ interface ToolEntry {
   tool_name?: string
   skill?: string
   repo?: string
+  session_id?: string
   violations_fixed?: number
   new_violations?: number
 }
@@ -122,7 +123,7 @@ export function collectTelemetry(since: string): TelemetrySummary | null {
   const qualitySessions = new Set<string>()
 
   for (const e of toolEntries) {
-    const sid = (e as Record<string, unknown>).session_id as string | undefined
+    const sid = e.session_id
     if (!sid) continue
     if (e.tool_name === 'Edit' || e.tool_name === 'Write') {
       editSessions.add(sid)
