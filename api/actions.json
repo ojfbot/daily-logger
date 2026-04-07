@@ -1,5 +1,40 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Merge shell #62 (lockfile regeneration for ESLint deps). No logic changes. Run `gh pr merge 62 --squash --repo ojfbot/shell` if CI is green. If CI is red, treat as a blocker — something introduced in #60 or #61 is breaking the lockfile integrity check. This unblocks all subsequent shell CI work.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-04-07"
+  },
+  {
+    "command": "/scaffold",
+    "description": "Scaffold a Storybook workspace in a new @ojfbot/shell package. Import existing Carbon components from cv-builder, BlogEngine, and TripPlanner. @frame/tsconfig and @frame/eslint-plugin are live — this is the next concrete Phase 1 deliverable and the gap analysis that determines what actually needs extracting into the shared shell.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-04-07"
+  },
+  {
+    "command": "/adr",
+    "description": "Write ADR for the Pydantic → OpenAPI → TypeScript codegen pattern established in gcgcca PRs #1 and #2. Document the invocation (python scripts/generate_schema.py, venv required, output to src/generated/types.ts), the known failure mode (custom validators and Union discriminators may not map cleanly to OpenAPI), and the purefoy CLI+UI reference. This pattern will apply to every future Python-backed Frame sub-app.",
+    "repo": "gcgcca",
+    "status": "open",
+    "sourceDate": "2026-04-07"
+  },
+  {
+    "command": "/validate",
+    "description": "Run tsc --noEmit across all four shell packages after #62 merges to confirm zero errors before adding more consumers to @frame/tsconfig. PR #59 passed CI clean, but forward validation before the next consumer onboards is the guard against silent drift.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-04-07"
+  },
+  {
+    "command": "/roadmap",
+    "description": "Register gcgcca as a live Module Federation remote in the shell host config at :3035. Wire it into frame-dev.sh and confirm hot-reload works in the dev environment. Type bridge is complete, MF scaffold exists — this is the milestone that makes gcgcca visible inside the Frame shell for the first time.",
+    "repo": "gcgcca",
+    "status": "open",
+    "sourceDate": "2026-04-07"
+  },
+  {
     "command": "/roadmap",
     "description": "Scope the Hailstone migration. Define what moves, what gets rebuilt, and the target architecture inside the portfolio. Produce a short migration plan before any code is written.",
     "repo": "landing",
