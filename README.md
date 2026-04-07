@@ -37,6 +37,39 @@ Each article lives at `/articles/YYYY-MM-DD`.
 
 Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`.
 
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Phase 1: Collect Context                                        │
+│  collect-context.ts — GitHub API sweep across 13 repos           │
+│  Commits (24h) + PRs/Issues (7d) + ROADMAP.md injection         │
+│  + Claude Code telemetry aggregation (skill/tool usage)          │
+└──────────────┬───────────────────────────────────────────────────┘
+               ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  Phase 2: Draft Article                                          │
+│  generate-article.ts — Claude API (Sonnet, 8192 max tokens)     │
+│  Structured prompt: 4 required sections + frontmatter            │
+│  Telemetry woven into narrative (skills, quality coverage)       │
+└──────────────┬───────────────────────────────────────────────────┘
+               ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  Phase 3: Editorial Council                                      │
+│  4 editorial personas review the draft independently             │
+│  Each persona: Claude API call (2048 tokens), domain-specific    │
+│  critique + structured feedback                                  │
+└──────────────┬───────────────────────────────────────────────────┘
+               ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  Phase 4: Synthesis + Publish                                    │
+│  Final article synthesized from council feedback (8192 tokens)   │
+│  PR created → editorial revision CI → merge → Vercel deploy     │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Telemetry integration:** The pipeline reads skill and tool telemetry from `~/.claude/*.jsonl` (synced to a `telemetry/daily` branch via `core/scripts/sync-telemetry.sh`). Skill usage, quality coverage, and lint activity are woven into the article narrative — not a separate section.
+
 ---
 
 ## What this demonstrates
