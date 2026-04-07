@@ -1,4 +1,6 @@
 import type { ActionItem as ActionItemType, ClosedAction as ClosedActionType } from './schema.js'
+import type { TelemetrySummary } from './collect-telemetry.js'
+export type { TelemetrySummary }
 
 export interface CommitInfo {
   hash: string
@@ -71,6 +73,8 @@ export interface BlogContext {
   openActions: ActionItemType[]
   projectVision: string
   previousArticles: Array<{ date: string; excerpt: string }>
+  /** Claude Code tool/skill telemetry for the 24h window. Null if unavailable. */
+  telemetry?: TelemetrySummary | null
 }
 
 export interface GeneratedArticle {
