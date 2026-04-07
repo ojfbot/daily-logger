@@ -5,10 +5,10 @@
 `daily-logger` generates one markdown blog article per day by:
 
 1. Sweeping the last 24 h of commits and PRs (both open and closed) across all ojfbot repos via the GitHub API
-2. Feeding that context to Claude Sonnet with a project-aware system prompt
-3. Committing the resulting article to `articles/YYYY-MM-DD.md`
-4. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
-
+2. Aggregating Claude Code skill telemetry alongside commit/PR data
+3. Feeding that context to Claude Sonnet with a project-aware system prompt
+4. Committing the resulting article to `articles/YYYY-MM-DD.md`
+5. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
 The workflow runs on a daily cron at 09:00 UTC and can also be triggered manually with a date override or dry-run flag.
 
 ## Project context
@@ -40,8 +40,8 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 | `src/index.ts` | Entry point — orchestrates collect → generate → write |
 | `src/collect-context.ts` | GitHub API sweep via `gh` CLI |
 | `src/generate-article.ts` | Claude API call + prompt, JSON → markdown |
-| `src/schema.ts` | Zod schemas (ArticleDataV2, ActionItem, CodeReferenceSchema, TypedTag, etc.) |
-| `src/types.ts` | Shared TypeScript types |
+| `src/schema.ts` | Zod schemas (ArticleDataV2, ActionItem, CodeReferenceSchema, TypedTag, ToolEntry, etc.) |
+| `src/types.ts` | Shared TypeScript types (includes `session_id` on ToolEntry) |
 | `src/build-api.ts` | Generates static JSON API (`api/*.json`) from articles |
 | `packages/frontend/` | React SPA (Vite + Redux Toolkit), deployed to Vercel |
 | `api/auth/`, `api/github/` | Vercel serverless functions (OAuth, GitHub API proxy) |
