@@ -182,6 +182,19 @@ For each reference, include:
   - command: \`https://github.com/ojfbot/core/blob/main/.claude/skills/{cmd}/{cmd}.md\` (strip leading /)
 - \`meta\`: type-specific metadata (e.g. \`{"pr": "42"}\` for commits with associated PRs)`
 
+// ─── Telemetry instructions (appended to system prompt when data available) ──
+
+const TELEMETRY_SYSTEM_ADDENDUM = `
+
+## Claude Code telemetry
+
+When telemetry data is provided in the context, weave it naturally into existing sections:
+- In "What shipped": mention which skills assisted the work (e.g., "/validate ran 3 times during the PR")
+- In "The decisions": note if quality coverage was high or low and what that signals about the development process
+- In "What's next": suggest skill usage improvements if quality coverage was below 50%
+Do NOT create a separate telemetry section — integrate metrics into the narrative.
+If no telemetry data is provided, do not mention it at all.`
+
 // ─── Tool schema (write_article) ─────────────────────────────────────────────
 //
 // Using tool_use instead of raw JSON prompting guarantees structured output:
@@ -663,6 +676,29 @@ export function buildUserPrompt(ctx: BlogContext): string {
     })
   }
 
+  if (ctx.telemetry) {
+    const t = ctx.telemetry
+    parts.push('## Claude Code Skill Usage (24h)')
+    parts.push(`Sessions: ${t.totalSessions}`)
+    if (t.skillsInvoked.length > 0) {
+      parts.push(`Skills invoked: ${t.skillsInvoked.map((s) => `/${s.name}(${s.count})`).join(', ')}`)
+    } else {
+      parts.push('No skills invoked in this window.')
+    }
+    if (t.lintFixed > 0 || t.lintRegressions > 0) {
+      parts.push(`Lint: ${t.lintFixed} violations fixed, ${t.lintRegressions} regressions`)
+    }
+    parts.push(`Quality skill coverage: ${t.qualityCoverage}%`)
+    const repoActivity = Object.entries(t.repoBreakdown)
+      .sort((a, b) => b[1] - a[1])
+      .map(([repo]) => repo)
+      .join(', ')
+    if (repoActivity) {
+      parts.push(`Active repos: ${repoActivity}`)
+    }
+    parts.push('')
+  }
+
   return parts.join('\n')
 }
 
@@ -745,7 +781,7 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
 
   // ── First attempt ──
   console.log('  Calling Claude (tool_use, v2 schema)...')
-  let raw = await callClaudeForArticle(client, userPrompt)
+  let raw = await callClaudeForArticle(client, userPrompt, !!ctx.telemetry)
 
   // Inject date and schemaVersion if Claude omitted them
   if (raw && typeof raw === 'object') {
@@ -810,12 +846,16 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
 async function callClaudeForArticle(
   client: Anthropic,
   userPrompt: string,
+  hasTelemetry = false,
 ): Promise<unknown> {
   try {
+    const systemPrompt = hasTelemetry
+      ? SYSTEM_PROMPT + TELEMETRY_SYSTEM_ADDENDUM
+      : SYSTEM_PROMPT
     const message = await client.messages.create({
       model: MODEL,
       max_tokens: MAX_TOKENS,
-      system: SYSTEM_PROMPT,
+      system: systemPrompt,
       tools: [ARTICLE_TOOL_V2],
       tool_choice: { type: 'tool', name: 'write_article' },
       messages: [{ role: 'user', content: userPrompt }],

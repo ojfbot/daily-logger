@@ -3,6 +3,7 @@ import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo, RecentPRInfo } from './types.js'
+import { collectTelemetry } from './collect-telemetry.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -337,6 +338,15 @@ export async function collectContext(date: string): Promise<BlogContext> {
 
   const openActions = getOpenActions()
 
+  // ── Claude Code telemetry (optional) ──────────────────────────────────────
+  const telemetry = collectTelemetry(since24h)
+  if (telemetry) {
+    console.log(
+      `  → telemetry: ${telemetry.totalToolCalls} tool calls · ` +
+        `${telemetry.skillsInvoked.length} skills · ${telemetry.totalSessions} sessions`
+    )
+  }
+
   const ctx: BlogContext = {
     date,
     repos: REPOS,
@@ -349,6 +359,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
     openActions,
     projectVision: getProjectVision(),
     previousArticles: getPreviousArticles(),
+    telemetry,
   }
 
   console.log(
