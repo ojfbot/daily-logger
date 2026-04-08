@@ -48,11 +48,12 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 | `decisions/adr/` | Architecture Decision Records (local to this repo) |
 
 - **ADR-0031** (`decisions/adr/0031-universal-code-reference-popovers.md`) — Extend popover system to all inline code references with structured data model
-- **ADR-0032** (`core/decisions/adr/0032-daily-logger-react-vercel-migration.md`) — Migrate frontend to React + Vercel
+- **ADR-0032** (`decisions/adr/0032-daily-logger-react-vercel-migration.md`) — Migrate frontend to React + Vercel
 - **ADR-0033** — Three-tier confidence threshold for daily-cleaner bot
 - **ADR-0034** — Isolated Redux stores per remote, coordinated via FrameBus
+- **ADR-0013** — FrameBus cross-domain event fanout (shipped with implementation + Playwright e2e)
 - **ADR-0035** — Article status lifecycle and auto-merge overnight PRs
-- **ADR-0036** (`decisions/adr/0036-structured-decision-output-for-rich-ui.md`) — Structured decision output for rich UI
+- **ADR-0036** (`decisions/adr/0036-structured-decision-output-for-rich-ui.md`) — Structured decision output for rich UI; also codifies lock-file-rebuild as a two-gate CI requirement
 - **ADR-0038** — Editorial revision CI workflow
 
 ## Adding new repos to the sweep
