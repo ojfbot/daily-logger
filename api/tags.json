@@ -1,23 +1,28 @@
 [
   {
+    "name": "shell",
+    "type": "repo",
+    "count": 24
+  },
+  {
     "name": "module-federation",
     "type": "arch",
     "count": 24
   },
   {
-    "name": "shell",
-    "type": "repo",
-    "count": 23
-  },
-  {
     "name": "daily-logger",
     "type": "repo",
-    "count": 14
+    "count": 15
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 13
+    "count": 14
+  },
+  {
+    "name": "cv-builder",
+    "type": "repo",
+    "count": 12
   },
   {
     "name": "phase-1",
@@ -25,18 +30,18 @@
     "count": 12
   },
   {
-    "name": "cv-builder",
-    "type": "repo",
-    "count": 11
-  },
-  {
     "name": "core",
     "type": "repo",
-    "count": 8
+    "count": 9
   },
   {
     "name": "tooling-for-iteration",
     "type": "concept",
+    "count": 8
+  },
+  {
+    "name": "hardening",
+    "type": "practice",
     "count": 7
   },
   {
@@ -60,8 +65,13 @@
     "count": 7
   },
   {
-    "name": "hardening",
-    "type": "practice",
+    "name": "MrPlug",
+    "type": "concept",
+    "count": 6
+  },
+  {
+    "name": "security-as-emergent-ux",
+    "type": "concept",
     "count": 6
   },
   {
@@ -73,16 +83,6 @@
     "name": "purefoy",
     "type": "repo",
     "count": 6
-  },
-  {
-    "name": "MrPlug",
-    "type": "concept",
-    "count": 5
-  },
-  {
-    "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 5
   },
   {
     "name": "rest-day",
@@ -158,6 +158,16 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "TripPlanner",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "phase-5",
+    "type": "phase",
+    "count": 2
   },
   {
     "name": "cleanup",
@@ -236,11 +246,6 @@
   },
   {
     "name": "BlogEngine",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "TripPlanner",
     "type": "concept",
     "count": 1
   },
@@ -467,11 +472,6 @@
   {
     "name": "settings",
     "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "phase-5",
-    "type": "phase",
     "count": 1
   },
   {
