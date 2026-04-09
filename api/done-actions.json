@@ -447,5 +447,14 @@
     "sourceDate": "2026-04-04",
     "closedDate": "2026-04-06",
     "resolution": "Already completed 2026-04-04 via TripPlanner PR #43 and BlogEngine PR #44. Both repos have tsc --noEmit in CI and pass on main."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge shell #62 (lockfile regeneration for ESLint deps). No logic changes. Run `gh pr merge 62 --squash --repo ojfbot/shell` if CI is green.",
+    "repo": "shell",
+    "sourceDate": "2026-04-07",
+    "resolution": "shell #62 merged earlier in the week — lockfile regenerated, CI green, ESLint dependency chain unblocked.",
+    "status": "done",
+    "closedDate": "2026-04-09"
   }
 ]

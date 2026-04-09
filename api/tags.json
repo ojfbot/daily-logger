@@ -1,12 +1,12 @@
 [
   {
-    "name": "module-federation",
-    "type": "arch",
-    "count": 25
-  },
-  {
     "name": "shell",
     "type": "repo",
+    "count": 24
+  },
+  {
+    "name": "module-federation",
+    "type": "arch",
     "count": 24
   },
   {
@@ -35,11 +35,6 @@
     "count": 9
   },
   {
-    "name": "hardening",
-    "type": "practice",
-    "count": 8
-  },
-  {
     "name": "tooling-for-iteration",
     "type": "concept",
     "count": 8
@@ -50,8 +45,8 @@
     "count": 7
   },
   {
-    "name": "assistant-centric",
-    "type": "concept",
+    "name": "hardening",
+    "type": "practice",
     "count": 7
   },
   {
@@ -81,6 +76,11 @@
   },
   {
     "name": "security-as-emergent-ux",
+    "type": "concept",
+    "count": 6
+  },
+  {
+    "name": "assistant-centric",
     "type": "concept",
     "count": 6
   },
@@ -238,6 +238,16 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "portfolio-polish",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "playwright",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "gcgcca",

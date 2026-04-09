@@ -2,7 +2,7 @@
   {
     "date": "2026-04-09",
     "title": "Wednesday portfolio polish: Frame shell screenshots land on jim.software",
-    "summary": "Wednesday fixed Playwright's screenshot timing for Module Federation remotes and deployed an updated résumé PDF — small surface area, high signal for interviewers.",
+    "summary": "Wednesday closed two landing page fixes — correct Frame shell screenshots and an updated résumé PDF — turning a silent visual regression into an accurate portfolio first impression.",
     "tags": [
       {
         "name": "landing",
@@ -29,43 +29,47 @@
         "type": "practice"
       },
       {
-        "name": "assistant-centric",
+        "name": "portfolio-polish",
         "type": "concept"
       },
       {
-        "name": "hardening",
-        "type": "practice"
-      },
-      {
-        "name": "module-federation",
-        "type": "arch"
+        "name": "playwright",
+        "type": "concept"
       }
     ],
     "reposActive": [
       "daily-logger",
       "landing",
-      "cv-builder",
-      "MrPlug"
+      "MrPlug",
+      "cv-builder"
     ],
     "commitCount": 8,
-    "activityType": "hardening",
+    "activityType": "build",
     "schemaVersion": 1,
     "status": "draft",
     "decisions": [
       {
-        "title": "Wait for a DOM sentinel before capturing screenshots — not networkidle",
+        "title": "Wait for a Frame sentinel, not networkidle, before screenshot capture",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Portfolio screenshots as a correctness signal, not aesthetics",
+        "title": "Portfolio screenshots must show the composed shell, not standalone apps",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       }
     ],
-    "actions": []
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Add an explicit wait-for-sentinel pattern to the Playwright screenshot test and confirm it survives a cold Module Federation boot — i.e., clear the Vite cache and re-run the capture script end-to-end to verify the fix holds under slow-network conditions.",
+        "repo": "landing",
+        "status": "open",
+        "sourceDate": "2026-04-09"
+      }
+    ]
   },
   {
     "date": "2026-04-08",

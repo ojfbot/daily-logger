@@ -1,10 +1,10 @@
 [
   {
-    "command": "/pr-review",
-    "description": "Merge shell #62 (lockfile regeneration for ESLint deps). No logic changes. Run `gh pr merge 62 --squash --repo ojfbot/shell` if CI is green. If CI is red, treat as a blocker — something introduced in #60 or #61 is breaking the lockfile integrity check. This unblocks all subsequent shell CI work.",
-    "repo": "shell",
+    "command": "/validate",
+    "description": "Add an explicit wait-for-sentinel pattern to the Playwright screenshot test and confirm it survives a cold Module Federation boot — i.e., clear the Vite cache and re-run the capture script end-to-end to verify the fix holds under slow-network conditions.",
+    "repo": "landing",
     "status": "open",
-    "sourceDate": "2026-04-07"
+    "sourceDate": "2026-04-09"
   },
   {
     "command": "/scaffold",
