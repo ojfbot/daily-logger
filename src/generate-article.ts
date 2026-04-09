@@ -27,7 +27,7 @@ Additional repos:
 - **MrPlug** — Chrome extension for AI UI/UX feedback on localhost pages.
 - **lean-canvas** — Frame OS sub-app for AI-assisted Lean Canvas business model design. Registered as a remote at :3004.
 - **seh-study** — NASA SE Handbook study client, Frame OS sub-app. AI-guided study sessions with structured knowledge extraction.
-- **GroupThink** — LLM-powered Chrome extension for intelligent tab grouping. Frame-adjacent: demonstrates the same assistant-centric architecture (Pillar 1) applied to the browser chrome layer — the exact layer Dia operates at. Uses Claude to infer semantic relationships between open tabs and auto-organise them.
+- **GroupThink** — LLM-powered Chrome extension for intelligent tab grouping. Frame-adjacent: demonstrates the same assistant-centric architecture applied to the browser chrome layer. Uses Claude to infer semantic relationships between open tabs and auto-organise them.
 - **purefoy** — Roger Deakins cinematography knowledge base (Python scraper + podcast transcripts). Roadmap: AI podcast interaction agent inside Frame.
 - **gcgcca** — USGS Earth Explorer orthoimagery query tool. Python CLI + TypeScript/React UI (purefoy pattern). Pydantic models → OpenAPI → TypeScript types. Module Federation remote (port 3035) with Express API (port 3036). Frame OS sub-app exposing Dashboard and Settings.
 - **daily-logger** — This repo. Generates and commits one blog article per day.
@@ -44,15 +44,16 @@ Additional repos:
 
 Do NOT invent repo names not on the list above. Do NOT fabricate ports.
 
-## The bigger pitch
+## Engineering-quality focus areas
 
-The goal is to pitch for a Design Engineer role at The Browser Company (building Dia, an AI-first browser). The argument: "We're building the same thing you're building, one layer down." Dia controls the web through natural language. Frame controls applications through natural language.
+When commit volume is low (fewer than 5 commits), prioritize depth over breadth:
+1. **Architecture deep-dives** — trace a data flow end-to-end, explain a non-obvious coupling, or document why a module boundary exists where it does
+2. **Dependency and CI health** — audit open Dependabot PRs, flag stale lockfiles, surface test coverage gaps or CI pipeline improvements
+3. **Open PR triage** — summarize every in-flight PR's status, blockers, and what merging it would unblock
+4. **Roadmap critical path** — identify the single decision or PR blocking the most downstream work
+5. **Tech debt spotlight** — pick one item from TECHDEBT.md or open issues and explain its impact and remediation path
 
-The four Samir/TBCoNY pillars — name one in every article:
-1. **Assistant-centric architecture** (ShellAgent as organizing primitive)
-2. **Tooling for fast iteration** (node-template/core slash commands, daily-logger, cv-builder eval loop)
-3. **Model behavior as design discipline** (evals, prompt versioning as first-class artifacts)
-4. **Security as emergent UX** (tool-use confirmations, trusted/untrusted separation)
+Content updates (README changes, repo count bumps, doc fixes) should be noted briefly — a single sentence is enough. Do not expand minor housekeeping into a feature narrative.
 
 ## Architecture snapshot
 
@@ -105,7 +106,7 @@ Call the \`write_article\` tool with all required fields. Do not add preamble or
 
 Field rules:
 - \`whatShipped\`: GFM markdown. Name specific PRs (#number), commits (7-char hash), files. ONLY reference merged/committed work here — open/in-flight PRs must go in roadmapPulse.
-- \`theDecisions\`: The most important section. Explain WHY each architectural choice was made, what alternatives were considered, and what would break if the decision were different. Name which TBCoNY/Samir pillar this demonstrates.
+- \`theDecisions\`: The most important section. Explain WHY each architectural choice was made, what alternatives were considered, and what would break if the decision were different. If applicable, tag the engineering concern area.
 - \`roadmapPulse\`: MUST explicitly reference every open PR from the Open PRs context by [repo] #number as in-flight work — do not omit any. When gcgcca activity is present, validate progress against its milestones in ROADMAP.md and note which architectural requirements (type bridge, Frame OS integration, API contracts, test coverage) are advancing or stalled.
 - \`whatsNext\`: 1-2 items. Immediately actionable. The reader should be able to start in the next 30 minutes.
 - Total word count across lede + four sections: 800–1200 words.
@@ -142,7 +143,7 @@ Every tag MUST have a \`type\` field. The 7 tag types:
 \`whatShipped\` is an ARRAY of objects, each with: \`repo\` (string), \`description\` (1-3 sentences), \`commits\` (array of 7-char SHAs or short descriptions), optional \`prs\` (array of "#number" strings). Group by repo.
 
 ### Structured decisions
-\`decisions\` is an ARRAY of objects, each with: \`title\` (heading), \`summary\` (1-2 sentences), \`repo\` (primary repo), optional \`pillar\` (one of: "assistant-centric", "tooling-for-iteration", "model-behavior-as-design", "security-as-emergent-ux"), \`relatedTags\` (array of tag name strings).
+\`decisions\` is an ARRAY of objects, each with: \`title\` (heading), \`summary\` (1-2 sentences), \`repo\` (primary repo), optional \`pillar\` classifying the engineering concern area, \`relatedTags\` (array of tag name strings).
 
 ### Structured action items
 \`suggestedActions\` is an ARRAY of objects, each with: \`command\` (slash command like /adr, /test-expand, /validate, /doc-refactor, /techdebt, /hardening, /investigate, /sweep, /roadmap, /scaffold, /pr-review), \`description\` (what to do), \`repo\` (where), \`status\` (always "open"), \`sourceDate\` (today's date YYYY-MM-DD).
@@ -277,7 +278,7 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
             pillar: {
               type: 'string',
               enum: ['assistant-centric', 'tooling-for-iteration', 'model-behavior-as-design', 'security-as-emergent-ux'],
-              description: 'Which TBCoNY/Samir pillar this demonstrates. Optional.',
+              description: 'Engineering concern area this decision relates to. Optional.',
             },
             relatedTags: {
               type: 'array',

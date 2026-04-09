@@ -18,7 +18,7 @@ ${persona.content}
 
 ## Project context: Frame OS
 
-Frame is a shared shell framework hosting multiple Claude-powered AI applications inside a unified, browser-like interface. Strategic target: Design Engineer role at The Browser Company (building Dia, an AI-first browser). Core argument: Frame is Dia one layer down — Dia controls the web through natural language, Frame controls applications through natural language.
+Frame is a shared shell framework hosting multiple Claude-powered AI applications inside a unified, browser-like interface with a shared shell, Redux store, and AI gateway.
 
 Active repos: shell (Frame OS — Vite Module Federation host + frame-agent LLM gateway + K8s manifests), cv-builder (AI resume builder — production CI flagship with visual regression pipeline), BlogEngine, TripPlanner, node-template (23 Claude Code slash commands backed by a TypeScript engine), MrPlug (Chrome extension for AI UI/UX feedback), purefoy (Roger Deakins knowledge base), daily-logger (generates this report).
 
@@ -27,7 +27,7 @@ Key architectural decisions already locked:
 - Single frame-agent gateway: cost control, one billing surface, one rate limiter, one observability point
 - K8s over serverless: agents hold conversation history in memory + stream SSE; cold start breaks both
 - Carbon Design System: mature, accessible, dark-theme ready, IBM-supported — boring by design so design energy goes to the AI layer
-- App → Instance → Thread model: mirrors Dia's session model for how people multitask
+- App → Instance → Thread model: mirrors how people multitask across applications
 
 ## Project vision
 
