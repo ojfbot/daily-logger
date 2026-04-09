@@ -1,28 +1,28 @@
 [
   {
+    "name": "module-federation",
+    "type": "arch",
+    "count": 25
+  },
+  {
     "name": "shell",
     "type": "repo",
     "count": 24
   },
   {
-    "name": "module-federation",
-    "type": "arch",
-    "count": 24
-  },
-  {
     "name": "daily-logger",
     "type": "repo",
-    "count": 15
+    "count": 16
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 14
+    "count": 15
   },
   {
     "name": "cv-builder",
     "type": "repo",
-    "count": 12
+    "count": 13
   },
   {
     "name": "phase-1",
@@ -35,13 +35,23 @@
     "count": 9
   },
   {
+    "name": "hardening",
+    "type": "practice",
+    "count": 8
+  },
+  {
     "name": "tooling-for-iteration",
     "type": "concept",
     "count": 8
   },
   {
-    "name": "hardening",
-    "type": "practice",
+    "name": "MrPlug",
+    "type": "concept",
+    "count": 7
+  },
+  {
+    "name": "assistant-centric",
+    "type": "concept",
     "count": 7
   },
   {
@@ -65,17 +75,12 @@
     "count": 7
   },
   {
-    "name": "MrPlug",
-    "type": "concept",
+    "name": "landing",
+    "type": "repo",
     "count": 6
   },
   {
     "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 6
-  },
-  {
-    "name": "assistant-centric",
     "type": "concept",
     "count": 6
   },
@@ -87,11 +92,6 @@
   {
     "name": "rest-day",
     "type": "activity",
-    "count": 5
-  },
-  {
-    "name": "landing",
-    "type": "repo",
     "count": 5
   },
   {
@@ -128,6 +128,11 @@
     "name": "node-template",
     "type": "repo",
     "count": 4
+  },
+  {
+    "name": "visual-regression",
+    "type": "practice",
+    "count": 3
   },
   {
     "name": "model-behavior-as-design",
@@ -232,11 +237,6 @@
   {
     "name": "blogengine",
     "type": "repo",
-    "count": 2
-  },
-  {
-    "name": "visual-regression",
-    "type": "practice",
     "count": 2
   },
   {
