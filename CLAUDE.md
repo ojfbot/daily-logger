@@ -53,7 +53,8 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 - **ADR-0034** — Isolated Redux stores per remote, coordinated via FrameBus
 - **ADR-0013** — FrameBus cross-domain event fanout (shipped with implementation + Playwright e2e)
 - **ADR-0035** — Article status lifecycle and auto-merge overnight PRs
-- **ADR-0036** (`decisions/adr/0036-structured-decision-output-for-rich-ui.md`) — Structured decision output for rich UI; also codifies lock-file-rebuild as a two-gate CI requirement
+- **ADR-0036** (`decisions/adr/0036-structured-decision-output-for-rich-ui.md`) — Structured decision output for rich UI
+- **ADR-0036** (core #45) — Also codifies the lock-file-rebuild protocol as a two-gate CI requirement (unmerged — still a PR in core)
 - **ADR-0038** — Editorial revision CI workflow
 
 ## Adding new repos to the sweep
