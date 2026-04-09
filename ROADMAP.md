@@ -54,13 +54,13 @@
 
 ---
 
-## Article focus areas (name at least one per article)
+## Narrative threads (name at least one per article)
 
-1. **Architecture decision** — explain a tradeoff, a module boundary choice, or a coupling risk
-2. **CI/build pipeline** — visual regression loop, test coverage, lint, dependency health
-3. **Critical path blocker** — name the single decision or PR blocking the most downstream work
-4. **Tech debt** — surface a debt item from issues or TECHDEBT.md and explain its remediation
-5. **Open PR audit** — summarize status, blockers, and downstream impact of all in-flight PRs
+1. **Shell extraction → ShellAgent dependency** — Phase 1 extraction is well advanced (10+ PRs merged, six components decomposed) but ShellAgent still can't exist without the shell it lives in. Name this tension when discussing roadmap sequencing.
+2. **Visual regression as eval infrastructure** — the Playwright → pixelmatch → draw.io → S3 pipeline is the closest thing to a production eval loop. When CI or testing work ships, connect it to this thread.
+3. **Module Federation composition contracts** — `data-frame-composed`, cross-domain signal detection, `REMOTE_LOADERS` registration. The boundary between host and remotes is where most bugs hide. When integration work ships, trace the contract.
+4. **Bot fleet as infrastructure** — daily-logger, daily-cleaner, editorial revision CI. The overnight pipeline is itself a product. When pipeline changes ship, explain what the bots do and why.
+5. **Self-documenting system** — this blog generates articles about its own generation pipeline. When daily-logger or editorial UI changes ship, name the recursion explicitly.
 
 ---
 
