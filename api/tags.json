@@ -2,7 +2,7 @@
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 23
+    "count": 24
   },
   {
     "name": "shell",
@@ -12,22 +12,22 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 13
+    "count": 14
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 13
+    "count": 14
   },
   {
     "name": "phase-1",
     "type": "phase",
-    "count": 12
+    "count": 13
   },
   {
     "name": "cv-builder",
     "type": "repo",
-    "count": 10
+    "count": 11
   },
   {
     "name": "core",
@@ -55,6 +55,11 @@
     "count": 7
   },
   {
+    "name": "landing",
+    "type": "repo",
+    "count": 6
+  },
+  {
     "name": "tooling-for-iteration",
     "type": "concept",
     "count": 6
@@ -75,13 +80,13 @@
     "count": 6
   },
   {
-    "name": "rest-day",
-    "type": "activity",
+    "name": "MrPlug",
+    "type": "concept",
     "count": 5
   },
   {
-    "name": "landing",
-    "type": "repo",
+    "name": "rest-day",
+    "type": "activity",
     "count": 5
   },
   {
@@ -93,11 +98,6 @@
     "name": "gas-town",
     "type": "phase",
     "count": 5
-  },
-  {
-    "name": "MrPlug",
-    "type": "concept",
-    "count": 4
   },
   {
     "name": "security-as-emergent-ux",
@@ -123,6 +123,11 @@
     "name": "node-template",
     "type": "repo",
     "count": 4
+  },
+  {
+    "name": "visual-regression",
+    "type": "practice",
+    "count": 3
   },
   {
     "name": "cross-app-orchestration",
@@ -225,9 +230,14 @@
     "count": 2
   },
   {
-    "name": "visual-regression",
-    "type": "practice",
-    "count": 2
+    "name": "portfolio-polish",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "build",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "dependency-management",

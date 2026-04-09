@@ -1,5 +1,111 @@
 [
   {
+    "date": "2026-04-09",
+    "title": "Wednesday portfolio polish: Frame shell screenshots land on jim.software",
+    "summary": "Landing page screenshots now capture apps inside the Frame shell, résumé PDF updated, and a fleet-wide pnpm version drift pattern was fixed.",
+    "tags": [
+      {
+        "name": "landing",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "MrPlug",
+        "type": "concept"
+      },
+      {
+        "name": "visual-regression",
+        "type": "practice"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "portfolio-polish",
+        "type": "concept"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "build",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "landing",
+      "cv-builder",
+      "MrPlug"
+    ],
+    "commitCount": 8,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Wait for shell render, not networkidle",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Let packageManager field drive CI pnpm version",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Bot commits carry [skip ci] by convention",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Portfolio screenshots as architectural proof",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/hardening",
+        "description": "Add `tsc --noEmit` as a required CI step in cv-builder's `.github/workflows/ci.yml`. Exact addition: a new step after `pnpm install` with `run: pnpm tsc --noEmit`. Use this as the template for fleet-wide rollout. This has been open since April 2 with no technical blocker.",
+        "repo": "cv-builder",
+        "status": "open",
+        "sourceDate": "2026-04-09"
+      },
+      {
+        "command": "/sweep",
+        "description": "Audit all repos for hardcoded pnpm versions in GitHub Actions (`pnpm/action-setup` with explicit `version` parameter). Apply the MrPlug PR #38 pattern: remove the explicit version param, let `packageManager` field in `package.json` be the single source of truth. Check: landing, shell, cv-builder, TripPlanner, daily-logger.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-09"
+      },
+      {
+        "command": "/decide",
+        "description": "Check out `feat/framebus-poc` in shell. Add a third remote stub to the fanout dispatch. Run `pnpm playwright test` against the e2e suite. If tests pass and dispatch logic stays readable, merge the fanout approach. If not, reshape to pub/sub. Document the decision as an ADR. This is the Phase 1 critical path blocker — four days and counting.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-04-09"
+      }
+    ]
+  },
+  {
     "date": "2026-04-06",
     "title": "Sunday reading: nine open PRs, one critical-path question, and what FrameBus means for Phase 1",
     "summary": "A no-commit reading day audited nine in-flight PRs, identified FrameBus (shell #58) as the Phase 1 critical-path unblock, and ordered the Monday merge queue.",

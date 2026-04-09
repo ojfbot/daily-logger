@@ -26,7 +26,7 @@ import { validateArticleOutput } from './schema.js'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
 const PERSONAS_DIR = join(REPO_ROOT, 'personas')
-const MODEL = 'claude-sonnet-4-6'
+const MODEL = 'claude-opus-4-6'
 
 // ─── Persona loader ───────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ export async function reviewDraft(
 
   const client = new Anthropic()
 
-  const system = `You are ${persona.role}. You are a trusted friend and advisor to Jim Green, who is building Frame OS — a shared AI app shell — and targeting a Design Engineer role at The Browser Company.
+  const system = `You are ${persona.role}. You are a trusted friend and advisor to Jim Green, who is building Frame OS — a shared AI app shell.
 
 Your background and how you see the world:
 

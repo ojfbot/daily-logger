@@ -1,5 +1,26 @@
 [
   {
+    "command": "/hardening",
+    "description": "Add `tsc --noEmit` as a required CI step in cv-builder's `.github/workflows/ci.yml`. Exact addition: a new step after `pnpm install` with `run: pnpm tsc --noEmit`. Use this as the template for fleet-wide rollout. This has been open since April 2 with no technical blocker.",
+    "repo": "cv-builder",
+    "status": "open",
+    "sourceDate": "2026-04-09"
+  },
+  {
+    "command": "/sweep",
+    "description": "Audit all repos for hardcoded pnpm versions in GitHub Actions (`pnpm/action-setup` with explicit `version` parameter). Apply the MrPlug PR #38 pattern: remove the explicit version param, let `packageManager` field in `package.json` be the single source of truth. Check: landing, shell, cv-builder, TripPlanner, daily-logger.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-09"
+  },
+  {
+    "command": "/decide",
+    "description": "Check out `feat/framebus-poc` in shell. Add a third remote stub to the fanout dispatch. Run `pnpm playwright test` against the e2e suite. If tests pass and dispatch logic stays readable, merge the fanout approach. If not, reshape to pub/sub. Document the decision as an ADR. This is the Phase 1 critical path blocker — four days and counting.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-04-09"
+  },
+  {
     "command": "/roadmap",
     "description": "Scope the Hailstone migration. Define what moves, what gets rebuilt, and the target architecture inside the portfolio. Produce a short migration plan before any code is written.",
     "repo": "landing",
