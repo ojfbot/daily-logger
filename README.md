@@ -35,14 +35,14 @@ Each article lives at `/articles/YYYY-MM-DD`.
   → deploy-vercel.yml    fires on push to main → Vercel serverless build + deploy
 ```
 
-Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`.
+Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`, `gcgcca`.
 
 ## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │  Phase 1: Collect Context                                        │
-│  collect-context.ts — GitHub API sweep across 13 repos           │
+│  collect-context.ts — GitHub API sweep across 14 repos           │
 │  Commits (24h) + PRs/Issues (7d) + ROADMAP.md injection         │
 │  + Claude Code telemetry aggregation (skill/tool usage)          │
 └──────────────┬───────────────────────────────────────────────────┘
@@ -76,7 +76,7 @@ Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug
 
 - **Automated content pipeline** — cron trigger, cross-repo context sweep via GitHub API, Claude generation, PR-based editorial review, Vercel deploy on merge
 - **Structured AI prompting** — ROADMAP.md context injection (~2500 chars), enforced article schema (frontmatter + 4 required sections), deterministic PR template
-- **Observable development** — every day's work across 13 repos is public at [log.jim.software](https://log.jim.software)
+- **Observable development** — every day's work across 14 repos is public at [log.jim.software](https://log.jim.software)
 
 ---
 
@@ -208,3 +208,4 @@ Part of [Frame OS](https://github.com/ojfbot/shell) — an AI-native application
 | [purefoy](https://github.com/ojfbot/purefoy) | Roger Deakins cinematography knowledge base |
 | [MrPlug](https://github.com/ojfbot/MrPlug) | Chrome extension for AI UI feedback |
 | [frame-ui-components](https://github.com/ojfbot/frame-ui-components) | Shared component library (Carbon DS) |
+| [gcgcca](https://github.com/ojfbot/gcgcca) | Pydantic + TypeScript cross-language type bridge |
