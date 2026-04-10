@@ -2,12 +2,17 @@
   {
     "name": "shell",
     "type": "repo",
-    "count": 24
+    "count": 25
   },
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 24
+    "count": 25
+  },
+  {
+    "name": "ci-cd",
+    "type": "practice",
+    "count": 16
   },
   {
     "name": "daily-logger",
@@ -15,19 +20,14 @@
     "count": 16
   },
   {
-    "name": "ci-cd",
-    "type": "practice",
-    "count": 15
-  },
-  {
     "name": "cv-builder",
     "type": "repo",
-    "count": 13
+    "count": 14
   },
   {
     "name": "phase-1",
     "type": "phase",
-    "count": 12
+    "count": 13
   },
   {
     "name": "core",
@@ -90,6 +90,11 @@
     "count": 6
   },
   {
+    "name": "storybook",
+    "type": "infra",
+    "count": 5
+  },
+  {
     "name": "rest-day",
     "type": "activity",
     "count": 5
@@ -105,13 +110,23 @@
     "count": 5
   },
   {
-    "name": "cross-app-orchestration",
+    "name": "frame-ui-components",
+    "type": "infra",
+    "count": 4
+  },
+  {
+    "name": "container-presenter",
+    "type": "arch",
+    "count": 4
+  },
+  {
+    "name": "sprint",
     "type": "concept",
     "count": 4
   },
   {
-    "name": "storybook",
-    "type": "infra",
+    "name": "cross-app-orchestration",
+    "type": "concept",
     "count": 4
   },
   {
@@ -130,6 +145,11 @@
     "count": 4
   },
   {
+    "name": "TripPlanner",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "visual-regression",
     "type": "practice",
     "count": 3
@@ -140,23 +160,8 @@
     "count": 3
   },
   {
-    "name": "sprint",
-    "type": "concept",
-    "count": 3
-  },
-  {
-    "name": "frame-ui-components",
-    "type": "infra",
-    "count": 3
-  },
-  {
     "name": "groupthink",
     "type": "repo",
-    "count": 3
-  },
-  {
-    "name": "container-presenter",
-    "type": "arch",
     "count": 3
   },
   {
@@ -165,7 +170,7 @@
     "count": 3
   },
   {
-    "name": "TripPlanner",
+    "name": "BlogEngine",
     "type": "concept",
     "count": 2
   },
@@ -240,6 +245,11 @@
     "count": 2
   },
   {
+    "name": "npm",
+    "type": "concept",
+    "count": 1
+  },
+  {
     "name": "portfolio-polish",
     "type": "concept",
     "count": 1
@@ -251,11 +261,6 @@
   },
   {
     "name": "gcgcca",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "BlogEngine",
     "type": "concept",
     "count": 1
   },

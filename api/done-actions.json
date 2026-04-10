@@ -456,5 +456,14 @@
     "resolution": "shell #62 merged earlier in the week — lockfile regenerated, CI green, ESLint dependency chain unblocked.",
     "status": "done",
     "closedDate": "2026-04-09"
+  },
+  {
+    "command": "/scaffold",
+    "description": "Scaffold a Storybook workspace in a new @ojfbot/shell package. Import existing Carbon components from cv-builder, BlogEngine, and TripPlanner.",
+    "repo": "shell",
+    "sourceDate": "2026-04-07",
+    "resolution": "Shell PR #66 (cross-repo Storybook composition dashboard) merged earlier this week, establishing the shell as the composition hub for all Frame OS component stories.",
+    "status": "done",
+    "closedDate": "2026-04-10"
   }
 ]
