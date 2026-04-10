@@ -33,6 +33,8 @@ jobs:
     name: Generate & open PR
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      date: ${{ steps.commit.outputs.date }}
     permissions:
       contents: write
       issues: read
@@ -154,3 +156,43 @@ jobs:
             --body-file /tmp/pr-body.md \
             --base main \
             --head "${BRANCH}"
+
+  # ── Auto-merge ──────────────────────────────────────────────────────────────
+  # Enables auto-merge on the article PR so the draft is visible on
+  # log.jim.software when JFO wakes up, without manual PR merge.
+  # Uses --auto --rebase: GitHub merges once all required checks pass.
+  # If CI fails, the PR stays open for manual review.
+  # See ADR-0038 for rationale and safety analysis.
+
+  auto-merge:
+    name: Auto-merge draft article
+    needs: generate
+    if: needs.generate.outputs.date != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          DATE="${{ needs.generate.outputs.date }}"
+          BRANCH="article/${DATE}"
+
+          # Find the PR for this branch
+          PR=$(gh pr list --head "${BRANCH}" --json number --jq '.[0].number')
+
+          if [[ -z "$PR" ]]; then
+            echo "::warning::No PR found for branch ${BRANCH}"
+            exit 0
+          fi
+
+          echo "Enabling auto-merge for PR #${PR}..."
+          gh pr merge "${PR}" --auto --rebase
+          echo "Auto-merge enabled. PR will merge when all checks pass."
