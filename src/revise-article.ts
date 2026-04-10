@@ -14,7 +14,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 
-const MODEL = 'claude-sonnet-4-6'
+const MODEL = 'claude-opus-4-6'
 const MAX_TOKENS = 8192
 
 const SYSTEM_PROMPT = `You are a careful editor revising a daily development blog article for the ojfbot project.
