@@ -10,7 +10,7 @@
 
 **Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning + fleet-wide dependency hardening**
 
-- **Actions board**: all 36 actions closed (2026-03-29). Two open actions remain: validate ADR-0038 editorial revision CI end-to-end; verify static-file-shadowing fix deployment on Vercel preview. Fleet-wide README sharpening complete across all public repos (2026-04-04); live CVE patched and verified; expandable BioCard shipped to landing page.
+- **Actions board**: all actions closed. Fleet-wide README sharpening complete across all public repos (2026-04-04); live CVE patched and verified; expandable BioCard shipped to landing page.
 - **Fleet hardening sprint complete**: 15-PR fleet hardening sprint closed — transitive dependency vulnerabilities patched across all 11 repos, CVE-2025-68665 resolved in MrPlug with explicit version pin, Express 5 route-param type fixes shipped in TripPlanner and BlogEngine. Every public README sharpened (2026-04-04). Structural gap identified: `tsc --noEmit` is not yet a required CI step for lock-file PRs touching `@types/*` or framework packages.
 - **ADRs landed**: ADR-0033 (daily-cleaner confidence threshold), ADR-0034 (Frame-wide Redux store strategy, resolves shell #5), ADR-0036 (structured decision output for rich UI), ADR-0038 (editorial revision CI workflow).
 - **Landing**: Log nav link now points to `log.jim.software` (Vercel subdomain), old GitHub Pages URL retired.
@@ -56,11 +56,9 @@
 
 ## Narrative threads (name at least one per article)
 
-1. **Shell extraction → ShellAgent dependency** — Phase 1 extraction is well advanced (10+ PRs merged, six components decomposed) but ShellAgent still can't exist without the shell it lives in. Name this tension when discussing roadmap sequencing.
-2. **Visual regression as eval infrastructure** — the Playwright → pixelmatch → draw.io → S3 pipeline is the closest thing to a production eval loop. When CI or testing work ships, connect it to this thread.
-3. **Module Federation composition contracts** — `data-frame-composed`, cross-domain signal detection, `REMOTE_LOADERS` registration. The boundary between host and remotes is where most bugs hide. When integration work ships, trace the contract.
-4. **Bot fleet as infrastructure** — daily-logger, daily-cleaner, editorial revision CI. The overnight pipeline is itself a product. When pipeline changes ship, explain what the bots do and why.
-5. **Self-documenting system** — this blog generates articles about its own generation pipeline. When daily-logger or editorial UI changes ship, name the recursion explicitly.
+See the current thread definitions in the article-generation prompt. Threads are
+rewritten as project maturity changes; the canonical list lives in the generation
+pipeline, not here.
 
 ---
 
