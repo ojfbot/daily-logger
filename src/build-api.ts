@@ -94,6 +94,14 @@ function parseFrontmatter(content: string): Record<string, unknown> {
   const statusMatch = raw.match(/^status:\s*"?(\w+)"?$/m)
   if (statusMatch) fm.status = statusMatch[1]
 
+  const ccMatch = raw.match(/^commitCount:\s*(\d+)$/m)
+  if (ccMatch) fm.commitCount = parseInt(ccMatch[1], 10)
+
+  const raMatch = raw.match(/^reposActive:\s*\[(.+)\]$/m)
+  if (raMatch) {
+    fm.reposActive = raMatch[1].split(',').map((r) => r.trim().replace(/^"|"$/g, ''))
+  }
+
   return fm
 }
 
@@ -234,9 +242,13 @@ export function buildApi() {
       tags = []
     }
 
-    // Repos and commits
-    const reposActive = extractReposFromBody(body)
-    const commitCount = countCommitsInBody(body)
+    // Repos and commits — prefer frontmatter (LLM-provided) over body heuristic
+    const reposActive = Array.isArray(fm.reposActive)
+      ? fm.reposActive as string[]
+      : extractReposFromBody(body)
+    const commitCount = typeof fm.commitCount === 'number'
+      ? fm.commitCount as number
+      : countCommitsInBody(body)
 
     // Actions
     const actions = extractActionsFromBody(body, date)

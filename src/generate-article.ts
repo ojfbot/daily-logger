@@ -332,12 +332,12 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
       },
       commitCount: {
         type: 'number',
-        description: 'Total commits across all repos for this day.',
+        description: 'Total number of commits listed in the "Commits in last 24h" section of the context. Count the actual commit entries provided — do not estimate or round. Must match the number used in the summary sentence.',
       },
       reposActive: {
         type: 'array',
         items: { type: 'string' },
-        description: 'Repo names that had commits today.',
+        description: 'Array of repo names that appear in the "Commits in last 24h" section. List every distinct [repo] prefix from the commit list. Must match the repo count used in the summary sentence.',
       },
       activityType: {
         type: 'string',
@@ -821,6 +821,8 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
       summary: result.data.summary,
       body: assembleBody(result.data),
       closedActions: result.data.closedActions,
+      commitCount: result.data.commitCount,
+      reposActive: result.data.reposActive,
     }
   }
 
@@ -888,6 +890,13 @@ export function toMarkdown(article: GeneratedArticle & { schemaVersion?: number 
 
   if (article.schemaVersion) {
     lines.push(`schemaVersion: ${article.schemaVersion}`)
+  }
+
+  if (article.commitCount !== undefined) {
+    lines.push(`commitCount: ${article.commitCount}`)
+  }
+  if (article.reposActive?.length) {
+    lines.push(`reposActive: [${article.reposActive.map((r) => `"${r}"`).join(', ')}]`)
   }
 
   lines.push(
