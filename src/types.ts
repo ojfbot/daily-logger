@@ -84,6 +84,8 @@ export interface GeneratedArticle {
   summary: string
   body: string
   closedActions?: ClosedActionType[]
+  commitCount?: number
+  reposActive?: string[]
 }
 
 export interface Persona {

@@ -52,9 +52,6 @@ function FilterBar({ tags, filtered, total }: { tags: { name: string; type: stri
 }
 
 function EntryCard({ entry }: { entry: EntryData }) {
-  const reposCount = entry.reposActive?.length ?? 0
-  const commitStr = entry.commitCount > 0 ? `${entry.commitCount} commits` : 'rest day'
-
   return (
     <div className="entry-card">
       <Link to={`/articles/${entry.date}`}>
@@ -67,8 +64,6 @@ function EntryCard({ entry }: { entry: EntryData }) {
               <span key={t.name} className="tag" data-type={t.type}>{t.name}</span>
             ))}
           </div>
-          <span className="entry-stat">{reposCount} repos</span>
-          <span className="entry-stat">{commitStr}</span>
         </div>
       </Link>
     </div>
