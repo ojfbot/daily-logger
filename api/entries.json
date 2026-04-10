@@ -1,5 +1,147 @@
 [
   {
+    "date": "2026-04-10",
+    "title": "Thursday's fleet migration: @ojfbot/frame-ui-components graduates from file: path to npm ^1.0.1",
+    "summary": "Thirty-nine commits across ten repos completed the fleet-wide migration of @ojfbot/frame-ui-components from local file: references to a published npm package, while a sweep of component decomposition reduced several 400–800 line files to under 120.",
+    "tags": [
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "BlogEngine",
+        "type": "concept"
+      },
+      {
+        "name": "TripPlanner",
+        "type": "concept"
+      },
+      {
+        "name": "frame-ui-components",
+        "type": "infra"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "container-presenter",
+        "type": "arch"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "storybook",
+        "type": "infra"
+      },
+      {
+        "name": "npm",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "daily-logger",
+      "MrPlug",
+      "shell",
+      "cv-builder",
+      "BlogEngine",
+      "TripPlanner",
+      "seh-study",
+      "purefoy",
+      "lean-canvas",
+      "core-reader",
+      "landing"
+    ],
+    "commitCount": 32,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Publish @ojfbot/frame-ui-components to npm instead of relying on file: paths",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Vite alias as the bridge between npm resolution and local source development",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Container-presenter decomposition as a fleet-wide practice, not a one-off refactor",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Awaiting watcher.close() in bead-store teardown to prevent test race conditions",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Runtime type guard on Chrome extension onMessage listener instead of a cast",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Review [daily-logger] #133 (auto-merge daily article PRs): verify the auto-merge job correctly references the date output from the generation step and that --rebase is the right merge strategy for sequential article commits.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-04-10"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Review [core] #59 (morning workflow orchestration): validate the /diagram-intake skill's repo-name mapping logic and the /orchestrate 4-layer progressive output format against a real morning photo before merging.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-10"
+      },
+      {
+        "command": "/validate",
+        "description": "Confirm the Vite alias for @ojfbot/frame-ui-components resolves from source correctly during local development after the npm migration — run the shell dev server, import a component from frame-ui-components, and verify hot-reload reflects source edits without a publish step.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-04-10"
+      },
+      {
+        "command": "/validate",
+        "description": "Run the Storybook composition dashboard (shell #66) after the npm migration to confirm all fleet repos' component stories still resolve correctly — the file: → npm change may break story resolution if the Storybook config references local paths.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-04-10"
+      },
+      {
+        "command": "/techdebt",
+        "description": "cv-builder BioDashboard is now 373 lines after the decomposition — still above the container-presenter 100-line orchestrator target. Identify the next extraction candidates and open a follow-up decomposition PR.",
+        "repo": "cv-builder",
+        "status": "open",
+        "sourceDate": "2026-04-10"
+      }
+    ]
+  },
+  {
     "date": "2026-04-09",
     "title": "Wednesday portfolio polish: Frame shell screenshots land on jim.software",
     "summary": "Wednesday closed two landing page fixes — correct Frame shell screenshots and an updated résumé PDF — turning a silent visual regression into an accurate portfolio first impression.",
@@ -46,7 +188,7 @@
     "commitCount": 8,
     "activityType": "build",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
     "decisions": [
       {
         "title": "Wait for a Frame sentinel, not networkidle, before screenshot capture",
