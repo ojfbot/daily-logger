@@ -5,7 +5,7 @@
 `daily-logger` generates one markdown blog article per day by:
 
 1. Sweeping the last 24 h of commits and PRs (both open and closed) across all ojfbot repos via the GitHub API
-2. Aggregating Claude Code skill telemetry alongside commit/PR data
+2. Aggregating Claude Code skill telemetry and AgentBead session data alongside commit/PR data
 3. Feeding that context to Claude Sonnet with a project-aware system prompt
 4. Committing the resulting article to `articles/YYYY-MM-DD.md`
 5. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
@@ -40,9 +40,11 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 | `src/index.ts` | Entry point — orchestrates collect → generate → write |
 | `src/collect-context.ts` | GitHub API sweep via `gh` CLI |
 | `src/generate-article.ts` | Claude API call + prompt, JSON → markdown |
-| `src/schema.ts` | Zod schemas (ArticleDataV2, ActionItem, CodeReferenceSchema, TypedTag, ToolEntry, etc.) |
+| `src/schema.ts` | Zod schemas (ArticleDataV2, ActionItem, CodeReferenceSchema, TypedTag, ToolEntry, BeadSchema, etc.) |
 | `src/types.ts` | Shared TypeScript types (includes `session_id` on ToolEntry) |
 | `src/build-api.ts` | Generates static JSON API (`api/*.json`) from articles |
+| `src/bead-store.ts` | AgentBead persistence with filesystem-fallback (ADR-0043) |
+| `skills/` | Claude Code skill definitions (previously `commands/`) |
 | `packages/frontend/` | React SPA (Vite + Redux Toolkit), deployed to Vercel |
 | `api/auth/`, `api/github/` | Vercel serverless functions (OAuth, GitHub API proxy) |
 | `decisions/adr/` | Architecture Decision Records (local to this repo) |
@@ -52,10 +54,11 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 - **ADR-0033** — Three-tier confidence threshold for daily-cleaner bot
 - **ADR-0034** — Isolated Redux stores per remote, coordinated via FrameBus
 - **ADR-0013** — FrameBus cross-domain event fanout (shipped with implementation + Playwright e2e)
-- **ADR-0035** — Article status lifecycle and auto-merge overnight PRs
+- **ADR-0035** — Article status lifecycle and auto-merge overnight PRs (implemented in commit `7482a30`)
 - **ADR-0036** (`decisions/adr/0036-structured-decision-output-for-rich-ui.md`) — Structured decision output for rich UI
 - **ADR-0036** (core #45) — Also codifies the lock-file-rebuild protocol as a two-gate CI requirement (unmerged — still a PR in core)
-- **ADR-0038** — Editorial revision CI workflow
+- **ADR-0038** — Editorial revision CI workflow (verified end-to-end on PR #112)
+- **ADR-0043** (`decisions/adr/0043-agentbead-bridge.md`) — AgentBead bridge mapping Claude Code lifecycle to bead emissions
 
 ## Adding new repos to the sweep
 
