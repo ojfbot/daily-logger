@@ -2,7 +2,7 @@
   {
     "name": "shell",
     "type": "repo",
-    "count": 25
+    "count": 26
   },
   {
     "name": "module-federation",
@@ -10,19 +10,19 @@
     "count": 25
   },
   {
+    "name": "daily-logger",
+    "type": "repo",
+    "count": 17
+  },
+  {
     "name": "ci-cd",
     "type": "practice",
     "count": 16
   },
   {
-    "name": "daily-logger",
-    "type": "repo",
-    "count": 16
-  },
-  {
     "name": "cv-builder",
     "type": "repo",
-    "count": 14
+    "count": 15
   },
   {
     "name": "phase-1",
@@ -32,7 +32,17 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 9
+    "count": 10
+  },
+  {
+    "name": "MrPlug",
+    "type": "concept",
+    "count": 8
+  },
+  {
+    "name": "adr",
+    "type": "practice",
+    "count": 8
   },
   {
     "name": "tooling-for-iteration",
@@ -40,17 +50,22 @@
     "count": 8
   },
   {
-    "name": "MrPlug",
+    "name": "purefoy",
+    "type": "repo",
+    "count": 7
+  },
+  {
+    "name": "landing",
+    "type": "repo",
+    "count": 7
+  },
+  {
+    "name": "assistant-centric",
     "type": "concept",
     "count": 7
   },
   {
     "name": "hardening",
-    "type": "practice",
-    "count": 7
-  },
-  {
-    "name": "adr",
     "type": "practice",
     "count": 7
   },
@@ -70,8 +85,8 @@
     "count": 7
   },
   {
-    "name": "landing",
-    "type": "repo",
+    "name": "gas-town",
+    "type": "phase",
     "count": 6
   },
   {
@@ -80,14 +95,19 @@
     "count": 6
   },
   {
-    "name": "assistant-centric",
-    "type": "concept",
-    "count": 6
+    "name": "core-reader",
+    "type": "repo",
+    "count": 5
   },
   {
-    "name": "purefoy",
-    "type": "repo",
-    "count": 6
+    "name": "container-presenter",
+    "type": "arch",
+    "count": 5
+  },
+  {
+    "name": "sprint",
+    "type": "concept",
+    "count": 5
   },
   {
     "name": "storybook",
@@ -105,9 +125,14 @@
     "count": 5
   },
   {
-    "name": "gas-town",
-    "type": "phase",
-    "count": 5
+    "name": "TripPlanner",
+    "type": "concept",
+    "count": 4
+  },
+  {
+    "name": "visual-regression",
+    "type": "practice",
+    "count": 4
   },
   {
     "name": "frame-ui-components",
@@ -115,23 +140,8 @@
     "count": 4
   },
   {
-    "name": "container-presenter",
-    "type": "arch",
-    "count": 4
-  },
-  {
-    "name": "sprint",
-    "type": "concept",
-    "count": 4
-  },
-  {
     "name": "cross-app-orchestration",
     "type": "concept",
-    "count": 4
-  },
-  {
-    "name": "core-reader",
-    "type": "repo",
     "count": 4
   },
   {
@@ -145,13 +155,13 @@
     "count": 4
   },
   {
-    "name": "TripPlanner",
+    "name": "BlogEngine",
     "type": "concept",
     "count": 3
   },
   {
-    "name": "visual-regression",
-    "type": "practice",
+    "name": "lean-canvas",
+    "type": "repo",
     "count": 3
   },
   {
@@ -170,8 +180,8 @@
     "count": 3
   },
   {
-    "name": "BlogEngine",
-    "type": "concept",
+    "name": "seh-study",
+    "type": "repo",
     "count": 2
   },
   {
@@ -225,11 +235,6 @@
     "count": 2
   },
   {
-    "name": "lean-canvas",
-    "type": "repo",
-    "count": 2
-  },
-  {
     "name": "architecture",
     "type": "arch",
     "count": 2
@@ -243,6 +248,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "phase-7",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "npm",
@@ -377,11 +387,6 @@
   {
     "name": "fleet-ops",
     "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "seh-study",
-    "type": "repo",
     "count": 1
   },
   {

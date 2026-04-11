@@ -1,5 +1,174 @@
 [
   {
+    "date": "2026-04-11",
+    "title": "Friday's bead fleet: ADR-0043, the AgentBead bridge, and 75 commits across 12 repos",
+    "summary": "Friday was a fleet-wide sprint: the AgentBead bridge landed in core, GET /api/beads rolled out to every sub-app, and browser-automation visual regression arrived across 8 repos in a single coordinated push.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "seh-study",
+        "type": "repo"
+      },
+      {
+        "name": "core-reader",
+        "type": "repo"
+      },
+      {
+        "name": "TripPlanner",
+        "type": "concept"
+      },
+      {
+        "name": "BlogEngine",
+        "type": "concept"
+      },
+      {
+        "name": "lean-canvas",
+        "type": "repo"
+      },
+      {
+        "name": "MrPlug",
+        "type": "concept"
+      },
+      {
+        "name": "landing",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "container-presenter",
+        "type": "arch"
+      },
+      {
+        "name": "visual-regression",
+        "type": "practice"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "gas-town",
+        "type": "phase"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "phase-7",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "shell",
+      "purefoy",
+      "seh-study",
+      "core-reader",
+      "TripPlanner",
+      "BlogEngine",
+      "lean-canvas",
+      "MrPlug",
+      "landing",
+      "cv-builder"
+    ],
+    "commitCount": 55,
+    "activityType": "sprint",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "ADR-0043: AgentBead bridge — mapping Claude Code lifecycle to Gas Town bead emissions",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Dolt-first with filesystem fallback for shell's /api/beads aggregation",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "GET /api/beads as a fleet-wide ADR-0016 contract, not a per-app feature",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Silent mock fallback removal in TripPlanner's modify-prompt flow",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Container-presenter decomposition applied uniformly across StudyPanel, ChangesTab, and TranscriptViewer",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "browser-automation package deployed fleet-wide as a structural prerequisite for visual regression CI",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Verify shell's Dolt-first /api/beads aggregation falls back correctly to filesystem bead files when Dolt is unavailable. Start the shell dev server, hit the endpoint, confirm it returns beads from at least two sub-apps using the filesystem path at {repo}/.beads/{session-id}/{event-type}.json, and document the bead file location convention in shell's README. This is a prerequisite for the core-reader scaffold action.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-04-11"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Review purefoy #39 (real-time GPU transcription observability). This is merge-pending-review — not blocked on an open design question. Validate the 8-stage progress.json schema, confirm ProgressReporter doesn't block the transcription hot path, and check that the preflight() GPU metric fields include memory utilization in addition to compute utilization. Merge once confirmed.",
+        "repo": "purefoy",
+        "status": "open",
+        "sourceDate": "2026-04-11"
+      },
+      {
+        "command": "/adr",
+        "description": "Write the fleet-wide GET /api/beads ADR. ADR-0016 already exists and governs the per-app projection pattern. This new ADR documents the fleet extension: the FrameBeadLike type (defined in core/packages/types/src/bead.ts), the app-specific prefix convention (pure-, blog-, trip-, seh-, lean-), the empty-return-until-storage pattern, the shell Mayor aggregation strategy, and the Dolt migration path for filesystem beads. Eight repos implement this contract today without a durable decision record.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-11"
+      },
+      {
+        "command": "/scaffold",
+        "description": "Scaffold the bead consumption view in core-reader after /validate confirms the filesystem fallback path works. Read aggregated beads from shell's /api/beads endpoint, render a raw timeline list in one of core-reader's existing tabs. Use the filesystem-fallback path — do not wait for Dolt. This is the first visible Gas Town UI and the proof that the Mayor aggregation layer works end-to-end.",
+        "repo": "core-reader",
+        "status": "open",
+        "sourceDate": "2026-04-11"
+      }
+    ]
+  },
+  {
     "date": "2026-04-10",
     "title": "Thursday's fleet migration: @ojfbot/frame-ui-components graduates from file: path to npm ^1.0.1",
     "summary": "Thirty-nine commits across ten repos completed the fleet-wide migration of @ojfbot/frame-ui-components from local file: references to a published npm package, while a sweep of component decomposition reduced several 400–800 line files to under 120.",
@@ -70,7 +239,7 @@
     "commitCount": 32,
     "activityType": "build",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
     "decisions": [
       {
         "title": "Publish @ojfbot/frame-ui-components to npm instead of relying on file: paths",
