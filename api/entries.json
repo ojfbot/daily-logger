@@ -1,5 +1,110 @@
 [
   {
+    "date": "2026-04-12",
+    "title": "Saturday: closing the telemetry loop — skill observability lands in core and daily-logger",
+    "summary": "Saturday wired skill telemetry end-to-end: core gained suggestion tracking, PR comment hooks, and an adoption report script, while daily-logger learned to read and publish the resulting data.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "skill-telemetry",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "core-reader",
+      "seh-study",
+      "lean-canvas",
+      "TripPlanner",
+      "purefoy",
+      "MrPlug",
+      "landing",
+      "shell",
+      "daily-logger",
+      "cv-builder",
+      "core"
+    ],
+    "commitCount": 15,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Suggestion follow-through as a first-class telemetry event",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Post skill usage directly on the PR, not just in a log file",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Telemetry feeds the article generator directly, not a dashboard",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "purefoy ProgressReporter as a non-blocking side-channel",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Run quality gates against the four core telemetry commits (9e4449f, ab561c8, a7caa41, 13c4977) — suggest-skill, log-skill, and pr-skill-audit. Saturday's session showed 0% quality coverage on the code that now instruments all other skill usage. Do this before the investigation — the investigation tooling is untrusted until this passes.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-12"
+      },
+      {
+        "command": "/validate",
+        "description": "Run /validate on shell's /api/beads filesystem fallback to unblock Gas Town Sprint 1. This is not blocked by MrPlug #28 and has no active owner. It is the first gate before the core-reader bead consumption scaffold can proceed.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-04-12"
+      },
+      {
+        "command": "/investigate",
+        "description": "Read ~/.claude/suggestion-log.jsonl for Saturday's two suggestion entries. Confirm the skill IDs exist in the catalog (expected: yes, already verified). Then evaluate whether the suggestion timing was reasonable — were they surfaced mid-flow when action wasn't possible? This is a product question about suggestion UX, not a bug hunt.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-12"
+      }
+    ]
+  },
+  {
     "date": "2026-04-11",
     "title": "Friday's bead fleet: ADR-0043, the AgentBead bridge, and 75 commits across 12 repos",
     "summary": "Friday was a fleet-wide sprint: the AgentBead bridge landed in core, GET /api/beads rolled out to every sub-app, and browser-automation visual regression arrived across 8 repos in a single coordinated push.",

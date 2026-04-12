@@ -1,6 +1,27 @@
 [
   {
     "command": "/validate",
+    "description": "Run quality gates against the four core telemetry commits (9e4449f, ab561c8, a7caa41, 13c4977) — suggest-skill, log-skill, and pr-skill-audit. Saturday's session showed 0% quality coverage on the code that now instruments all other skill usage. Do this before the investigation — the investigation tooling is untrusted until this passes.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-12"
+  },
+  {
+    "command": "/validate",
+    "description": "Run /validate on shell's /api/beads filesystem fallback to unblock Gas Town Sprint 1. This is not blocked by MrPlug #28 and has no active owner. It is the first gate before the core-reader bead consumption scaffold can proceed.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-04-12"
+  },
+  {
+    "command": "/investigate",
+    "description": "Read ~/.claude/suggestion-log.jsonl for Saturday's two suggestion entries. Confirm the skill IDs exist in the catalog (expected: yes, already verified). Then evaluate whether the suggestion timing was reasonable — were they surfaced mid-flow when action wasn't possible? This is a product question about suggestion UX, not a bug hunt.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-12"
+  },
+  {
+    "command": "/validate",
     "description": "Verify shell's Dolt-first /api/beads aggregation falls back correctly to filesystem bead files when Dolt is unavailable. Start the shell dev server, hit the endpoint, confirm it returns beads from at least two sub-apps using the filesystem path at {repo}/.beads/{session-id}/{event-type}.json, and document the bead file location convention in shell's README. This is a prerequisite for the core-reader scaffold action.",
     "repo": "shell",
     "status": "open",
