@@ -190,13 +190,24 @@ For each reference, include:
 
 const TELEMETRY_SYSTEM_ADDENDUM = `
 
-## Claude Code telemetry
+## Claude Code skill telemetry
 
-When telemetry data is provided in the context, weave it naturally into existing sections:
-- In "What shipped": mention which skills assisted the work (e.g., "/validate ran 3 times during the PR")
+Telemetry data is provided in the context. Use it in TWO ways:
+
+### 1. Weave into existing sections (contextual mentions)
+- In "What shipped": when a PR had skill usage comments, mention which skills assisted the work (e.g., "/validate ran 3 times during this PR")
 - In "The decisions": note if quality coverage was high or low and what that signals about the development process
-- In "What's next": suggest skill usage improvements if quality coverage was below 50%
-Do NOT create a separate telemetry section — integrate metrics into the narrative.
+
+### 2. Produce a dedicated "Skill Telemetry" section in the article body
+Include a **## Skill Telemetry** section after "Roadmap pulse" with:
+- **Adoption summary**: X of Y skills invoked today across N sessions
+- **Per-PR skill usage**: list each PR that had skill-usage comments, noting which skills were involved
+- **Suggestion funnel**: X suggested → Y followed → Z% conversion rate
+- **Quality gate coverage**: what percentage of edit sessions ran quality skills (/validate, /hardening, /lint-audit, /test-expand)
+- **Dead skill callout**: if provided, name skills that have never been invoked
+- Use your judgment on emphasis — a 0% quality coverage day is a red flag; a day with multiple skills across multiple PRs is worth celebrating
+- Keep the section concise (3-8 sentences) and analytical, not just a data dump
+
 If no telemetry data is provided, do not mention it at all.`
 
 // ─── Tool schema (write_article) ─────────────────────────────────────────────
@@ -368,6 +379,31 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
           required: ['text', 'type'],
         },
       },
+      skillTelemetry: {
+        type: 'object',
+        description: 'Skill telemetry aggregation for the day. Only include when telemetry data was provided in context.',
+        properties: {
+          adoptionSummary: { type: 'string', description: 'One-line summary like "3 of 35 catalog skills invoked across 5 sessions"' },
+          qualityCoverage: { type: 'number', description: 'Percentage of edit sessions with quality skills (0-100)' },
+          suggestionsGiven: { type: 'number', description: 'Number of skill suggestions the system offered' },
+          suggestionsFollowed: { type: 'number', description: 'Number of suggestions that led to actual skill invocations' },
+          prSkillReports: {
+            type: 'array',
+            description: 'PRs that had skill-usage comments, with the skills used',
+            items: {
+              type: 'object',
+              properties: {
+                repo: { type: 'string' },
+                pr: { type: 'number' },
+                skills: { type: 'array', items: { type: 'string' } },
+              },
+              required: ['repo', 'pr', 'skills'],
+            },
+          },
+          narrative: { type: 'string', description: 'Analytical paragraph (3-8 sentences) on skill adoption trends, quality gate usage, and areas for improvement' },
+        },
+        required: ['adoptionSummary', 'qualityCoverage', 'narrative'],
+      },
     },
     required: [
       'schemaVersion', 'title', 'summary', 'tags', 'whatShipped', 'decisions',
@@ -502,6 +538,27 @@ function assembleBodyV2(s: ArticleDataV2): string {
   // ── Roadmap pulse ──
   parts.push('## Roadmap pulse', '')
   parts.push(linkifyPRRefs((s.roadmapPulse ?? 'No roadmap update today.').trim(), knownRepos), '')
+
+  // ── Skill Telemetry ──
+  if (s.skillTelemetry) {
+    const st = s.skillTelemetry
+    parts.push('## Skill telemetry', '')
+    parts.push(st.adoptionSummary, '')
+    if (st.prSkillReports && st.prSkillReports.length > 0) {
+      for (const report of st.prSkillReports) {
+        parts.push(`- **${report.repo}#${report.pr}**: ${report.skills.map((s) => `\`/${s}\``).join(', ')}`)
+      }
+      parts.push('')
+    }
+    if (st.suggestionsGiven && st.suggestionsGiven > 0) {
+      const conversion = st.suggestionsGiven > 0
+        ? Math.round(((st.suggestionsFollowed ?? 0) / st.suggestionsGiven) * 100)
+        : 0
+      parts.push(`Suggestion funnel: ${st.suggestionsGiven} offered, ${st.suggestionsFollowed ?? 0} followed (${conversion}% conversion).`, '')
+    }
+    parts.push(`Quality gate coverage: ${st.qualityCoverage}%`, '')
+    parts.push(st.narrative.trim(), '')
+  }
 
   // ── What's next ──
   parts.push("## What's next", '')
@@ -682,7 +739,7 @@ export function buildUserPrompt(ctx: BlogContext): string {
 
   if (ctx.telemetry) {
     const t = ctx.telemetry
-    parts.push('## Claude Code Skill Usage (24h)')
+    parts.push('## Claude Code Skill Telemetry (24h)')
     parts.push(`Sessions: ${t.totalSessions}`)
     if (t.skillsInvoked.length > 0) {
       parts.push(`Skills invoked: ${t.skillsInvoked.map((s) => `/${s.name}(${s.count})`).join(', ')}`)
@@ -693,6 +750,14 @@ export function buildUserPrompt(ctx: BlogContext): string {
       parts.push(`Lint: ${t.lintFixed} violations fixed, ${t.lintRegressions} regressions`)
     }
     parts.push(`Quality skill coverage: ${t.qualityCoverage}%`)
+    // Suggestion funnel
+    if (t.suggestionsGiven > 0) {
+      parts.push(`Suggestion funnel: ${t.suggestionsGiven} suggested → ${t.suggestionsFollowed} followed (${t.suggestionConversion}% conversion)`)
+    }
+    // PR skill comments
+    if (t.prSkillComments > 0) {
+      parts.push(`PR skill usage comments posted: ${t.prSkillComments}`)
+    }
     const repoActivity = Object.entries(t.repoBreakdown)
       .sort((a, b) => b[1] - a[1])
       .map(([repo]) => repo)
@@ -701,6 +766,19 @@ export function buildUserPrompt(ctx: BlogContext): string {
       parts.push(`Active repos: ${repoActivity}`)
     }
     parts.push('')
+
+    // Per-PR skill usage from scraped comments
+    const prsWithSkills = ctx.recentPRs.filter((pr) => pr.skillUsage && pr.skillUsage.skills.length > 0)
+    if (prsWithSkills.length > 0) {
+      parts.push('### Per-PR skill usage (from PR comments)')
+      for (const pr of prsWithSkills) {
+        const su = pr.skillUsage!
+        const skillList = su.skills.map((s) => `/${s}`).join(', ')
+        const gates = su.qualityGates.length > 0 ? ` | quality gates: ${su.qualityGates.map((g) => `/${g}`).join(', ')}` : ''
+        parts.push(`- **${pr.repo}#${pr.number}** ${pr.title}: ${skillList}${gates}`)
+      }
+      parts.push('')
+    }
   }
 
   return parts.join('\n')
