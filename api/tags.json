@@ -12,12 +12,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 17
+    "count": 18
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 16
+    "count": 17
   },
   {
     "name": "cv-builder",
@@ -32,7 +32,22 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 10
+    "count": 11
+  },
+  {
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 9
+  },
+  {
+    "name": "purefoy",
+    "type": "repo",
+    "count": 8
+  },
+  {
+    "name": "assistant-centric",
+    "type": "concept",
+    "count": 8
   },
   {
     "name": "MrPlug",
@@ -45,23 +60,8 @@
     "count": 8
   },
   {
-    "name": "tooling-for-iteration",
-    "type": "concept",
-    "count": 8
-  },
-  {
-    "name": "purefoy",
-    "type": "repo",
-    "count": 7
-  },
-  {
     "name": "landing",
     "type": "repo",
-    "count": 7
-  },
-  {
-    "name": "assistant-centric",
-    "type": "concept",
     "count": 7
   },
   {
@@ -125,6 +125,11 @@
     "count": 5
   },
   {
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 4
+  },
+  {
     "name": "TripPlanner",
     "type": "concept",
     "count": 4
@@ -162,11 +167,6 @@
   {
     "name": "lean-canvas",
     "type": "repo",
-    "count": 3
-  },
-  {
-    "name": "model-behavior-as-design",
-    "type": "concept",
     "count": 3
   },
   {
@@ -248,6 +248,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "skill-telemetry",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "phase-7",
