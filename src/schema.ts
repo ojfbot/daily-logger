@@ -108,6 +108,19 @@ export const ArticleDataSchema = z.object({
 
   codeReferences: z.array(CodeReferenceSchema).optional(),
 
+  skillTelemetry: z.object({
+    adoptionSummary: z.string(),
+    qualityCoverage: z.number(),
+    suggestionsGiven: z.number(),
+    suggestionsFollowed: z.number(),
+    prSkillReports: z.array(z.object({
+      repo: z.string(),
+      pr: z.number(),
+      skills: z.array(z.string()),
+    })),
+    narrative: z.string(),
+  }).optional(),
+
   status: z.enum(ARTICLE_STATUSES).default('draft').optional(),
 })
 
