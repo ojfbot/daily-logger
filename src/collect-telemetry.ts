@@ -11,6 +11,10 @@ export interface TelemetrySummary {
   lintFixed: number
   lintRegressions: number
   qualityCoverage: number
+  suggestionsGiven: number
+  suggestionsFollowed: number
+  suggestionConversion: number
+  prSkillComments: number
 }
 
 interface ToolEntry {
@@ -28,6 +32,25 @@ interface SessionEntry {
   ts: string
   session_id: string
   repo?: string
+}
+
+interface SkillEntry {
+  ts: string
+  event: string
+  skill?: string
+  repo?: string
+  session_id?: string
+  suggested_at?: string
+  pr?: string
+}
+
+interface SuggestionEntry {
+  ts: string
+  event: string
+  skill?: string
+  prompt_prefix?: string
+  repo?: string
+  session_id?: string
 }
 
 function readJsonl<T>(path: string): T[] {
@@ -67,11 +90,15 @@ export function collectTelemetry(since: string): TelemetrySummary | null {
 
   const toolPath = join(telemetryDir, 'tool-telemetry.jsonl')
   const sessionPath = join(telemetryDir, 'session-telemetry.jsonl')
+  const skillPath = join(telemetryDir, 'skill-telemetry.jsonl')
+  const suggestionPath = join(telemetryDir, 'suggestion-telemetry.jsonl')
 
   const toolEntries = filterBySince(readJsonl<ToolEntry>(toolPath), since)
   const sessionEntries = filterBySince(readJsonl<SessionEntry>(sessionPath), since)
+  const skillEntries = filterBySince(readJsonl<SkillEntry>(skillPath), since)
+  const suggestionEntries = filterBySince(readJsonl<SuggestionEntry>(suggestionPath), since)
 
-  if (toolEntries.length === 0 && sessionEntries.length === 0) {
+  if (toolEntries.length === 0 && sessionEntries.length === 0 && skillEntries.length === 0) {
     return null
   }
 
@@ -83,11 +110,21 @@ export function collectTelemetry(since: string): TelemetrySummary | null {
     }
   }
 
-  // Skills invoked (from tool telemetry's skill field)
+  // Skills invoked — prefer skill-telemetry.jsonl (richer data), fall back to tool telemetry
   const skillCounts: Record<string, number> = {}
-  for (const e of toolEntries) {
-    if (e.skill) {
-      skillCounts[e.skill] = (skillCounts[e.skill] || 0) + 1
+  const skillInvocations = skillEntries.filter((e) => e.event === 'skill:invoked')
+  if (skillInvocations.length > 0) {
+    for (const e of skillInvocations) {
+      if (e.skill) {
+        skillCounts[e.skill] = (skillCounts[e.skill] || 0) + 1
+      }
+    }
+  } else {
+    // Fallback: extract skills from tool-telemetry.jsonl
+    for (const e of toolEntries) {
+      if (e.skill) {
+        skillCounts[e.skill] = (skillCounts[e.skill] || 0) + 1
+      }
     }
   }
   const skillsInvoked = Object.entries(skillCounts)
@@ -132,10 +169,26 @@ export function collectTelemetry(since: string): TelemetrySummary | null {
       qualitySessions.add(sid)
     }
   }
+  // Also check skill-telemetry for quality skill invocations
+  for (const e of skillEntries) {
+    if (e.event === 'skill:invoked' && e.skill && qualitySkills.has(e.skill) && e.session_id) {
+      qualitySessions.add(e.session_id)
+    }
+  }
 
   const qualityCoverage = editSessions.size > 0
     ? Math.round((qualitySessions.size / editSessions.size) * 100)
     : 100
+
+  // Suggestion funnel
+  const suggestionsGiven = suggestionEntries.filter((e) => e.event === 'skill:suggested').length
+  const suggestionsFollowed = skillEntries.filter((e) => e.event === 'skill:suggestion-followed').length
+  const suggestionConversion = suggestionsGiven > 0
+    ? Math.round((suggestionsFollowed / suggestionsGiven) * 100)
+    : 0
+
+  // PR skill comments posted
+  const prSkillComments = skillEntries.filter((e) => e.event === 'skill:pr-commented').length
 
   return {
     totalToolCalls: toolEntries.filter((e) => e.event === 'tool:used').length,
@@ -146,5 +199,9 @@ export function collectTelemetry(since: string): TelemetrySummary | null {
     lintFixed,
     lintRegressions,
     qualityCoverage,
+    suggestionsGiven,
+    suggestionsFollowed,
+    suggestionConversion,
+    prSkillComments,
   }
 }

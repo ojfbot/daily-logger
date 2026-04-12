@@ -46,6 +46,14 @@ export interface OpenPRInfo {
   draft: boolean
 }
 
+export interface PRSkillUsage {
+  skills: string[]
+  qualityGates: string[]
+  suggestionsGiven: number
+  suggestionsFollowed: number
+  commentCount: number
+}
+
 export interface RecentPRInfo {
   number: number
   title: string
@@ -57,6 +65,7 @@ export interface RecentPRInfo {
   updatedAt: string
   mergedAt?: string
   draft: boolean
+  skillUsage?: PRSkillUsage
 }
 
 export interface BlogContext {
