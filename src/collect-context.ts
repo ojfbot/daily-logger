@@ -2,7 +2,7 @@ import { execSync } from 'child_process'
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo, RecentPRInfo } from './types.js'
+import type { BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo, PRSkillUsage, RecentPRInfo } from './types.js'
 import { collectTelemetry } from './collect-telemetry.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -293,6 +293,57 @@ function getOpenActions(): RawAction[] {
   }
 }
 
+// ─── PR skill comment scraping ──────────────────────────────────────────���────
+
+const SKILL_COMMENT_MARKER = '<!-- skill-usage-report -->'
+const SKILL_UPDATE_MARKER = '<!-- skill-usage-update'
+
+function getSkillUsageFromPRComments(org: string, repo: string, prNumber: number): PRSkillUsage | undefined {
+  type GHComment = { body: string }
+  const comments = ghApi<GHComment[]>(`repos/${org}/${repo}/issues/${prNumber}/comments`)
+  if (!comments) return undefined
+
+  const skillComments = comments.filter(
+    (c) => c.body.includes(SKILL_COMMENT_MARKER) || c.body.includes(SKILL_UPDATE_MARKER)
+  )
+  if (skillComments.length === 0) return undefined
+
+  // Parse skill names from all skill usage comments
+  const skills = new Set<string>()
+  const qualityGates = new Set<string>()
+  let suggestionsGiven = 0
+  let suggestionsFollowed = 0
+
+  for (const comment of skillComments) {
+    // Extract skills from lines like: - `/validate` (2x)
+    const skillMatches = comment.body.matchAll(/`\/([a-z-]+)`/g)
+    for (const m of skillMatches) {
+      skills.add(m[1])
+    }
+
+    // Extract quality gate status from lines like: `/validate` ran
+    const gateRan = comment.body.matchAll(/`\/([a-z-]+)` ran/g)
+    for (const m of gateRan) {
+      qualityGates.add(m[1])
+    }
+
+    // Extract suggestion funnel from: N offered, M followed
+    const funnelMatch = comment.body.match(/(\d+) offered, (\d+) followed/)
+    if (funnelMatch) {
+      suggestionsGiven += parseInt(funnelMatch[1], 10)
+      suggestionsFollowed += parseInt(funnelMatch[2], 10)
+    }
+  }
+
+  return {
+    skills: [...skills],
+    qualityGates: [...qualityGates],
+    suggestionsGiven,
+    suggestionsFollowed,
+    commentCount: skillComments.length,
+  }
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export async function collectContext(date: string): Promise<BlogContext> {
@@ -318,7 +369,12 @@ export async function collectContext(date: string): Promise<BlogContext> {
     allCommits.push(...getCommits(org, repo, since24h))
     allPRs.push(...getMergedPRs(org, repo, since7d))
     allOpenPRs.push(...getOpenPRs(org, repo))
-    allRecentPRs.push(...getRecentPRs(org, repo, since24h))
+    const recentPRs = getRecentPRs(org, repo, since24h)
+    // Scrape skill usage comments from recent PRs
+    for (const pr of recentPRs) {
+      pr.skillUsage = getSkillUsageFromPRComments(org, repo, pr.number)
+    }
+    allRecentPRs.push(...recentPRs)
     allClosed.push(...getClosedIssues(org, repo, since7d))
     allOpen.push(...getOpenIssues(org, repo, since24h))
   }
