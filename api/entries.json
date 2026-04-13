@@ -1,5 +1,110 @@
 [
   {
+    "date": "2026-04-13",
+    "title": "Sunday's fleet-wide hook symlink rollout and the suggest-skills engine: how core learns to teach itself",
+    "summary": "Sunday delivered a fleet-wide session-init.sh symlink rollout across 10 repos and a new suggest-skills engine in core that wires skill-catalog affinity into the orchestration hook layer.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "skill-catalog",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-hardening",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "lean-canvas",
+      "TripPlanner",
+      "BlogEngine",
+      "cv-builder",
+      "shell",
+      "MrPlug",
+      "core-reader",
+      "seh-study",
+      "purefoy"
+    ],
+    "commitCount": 19,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "suggested_after and layer_affinity as first-class fields in the skill catalog",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "suggest-skills.mjs as a reusable engine, not inline hook logic",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet-wide session-init.sh symlink tracked in git to survive clone and branch-switch",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "JSONL truncation bug fix accepted with ADR-0037",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Confirm suggest-skills.mjs correctly matches suggested_after catalog entries against Sunday's hook invocations. Read ~/.claude/suggestion-log.jsonl (first clean data after ADR-0037 fix), cross-reference skill IDs against catalog suggested_after fields, verify no suggestions fire for skills with no catalog entry, and confirm no-match produces a silent no-op rather than a throw.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-13"
+      },
+      {
+        "command": "/adr",
+        "description": "Write the ADR for the suggested_after and layer_affinity fields added to the skill catalog on Sunday. Document: field definitions, how suggest-skills.mjs reads them (lookup direction), runtime behavior on no-match, layer_affinity filter semantics, relationship to shell's App → Instance → Thread model, and the catalog governance model (who can write to it). This is the decision record for the forward half of the telemetry feedback loop.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-13"
+      },
+      {
+        "command": "/review",
+        "description": "Review purefoy #39 (GPU transcription observability / ProgressReporter). Validate the 8-stage progress.json schema, confirm ProgressReporter does not block the transcription hot path, and merge. PR has been open since at least 2026-04-11 and is merge-pending-review with no named reviewer.",
+        "repo": "purefoy",
+        "status": "open",
+        "sourceDate": "2026-04-13"
+      }
+    ]
+  },
+  {
     "date": "2026-04-12",
     "title": "Saturday: closing the telemetry loop — skill observability lands in core and daily-logger",
     "summary": "Saturday wired skill telemetry end-to-end: core gained suggestion tracking, PR comment hooks, and an adoption report script, while daily-logger learned to read and publish the resulting data.",

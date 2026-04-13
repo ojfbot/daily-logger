@@ -1,6 +1,27 @@
 [
   {
     "command": "/validate",
+    "description": "Confirm suggest-skills.mjs correctly matches suggested_after catalog entries against Sunday's hook invocations. Read ~/.claude/suggestion-log.jsonl (first clean data after ADR-0037 fix), cross-reference skill IDs against catalog suggested_after fields, verify no suggestions fire for skills with no catalog entry, and confirm no-match produces a silent no-op rather than a throw.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-13"
+  },
+  {
+    "command": "/adr",
+    "description": "Write the ADR for the suggested_after and layer_affinity fields added to the skill catalog on Sunday. Document: field definitions, how suggest-skills.mjs reads them (lookup direction), runtime behavior on no-match, layer_affinity filter semantics, relationship to shell's App → Instance → Thread model, and the catalog governance model (who can write to it). This is the decision record for the forward half of the telemetry feedback loop.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-13"
+  },
+  {
+    "command": "/review",
+    "description": "Review purefoy #39 (GPU transcription observability / ProgressReporter). Validate the 8-stage progress.json schema, confirm ProgressReporter does not block the transcription hot path, and merge. PR has been open since at least 2026-04-11 and is merge-pending-review with no named reviewer.",
+    "repo": "purefoy",
+    "status": "open",
+    "sourceDate": "2026-04-13"
+  },
+  {
+    "command": "/validate",
     "description": "Run quality gates against the four core telemetry commits (9e4449f, ab561c8, a7caa41, 13c4977) — suggest-skill, log-skill, and pr-skill-audit. Saturday's session showed 0% quality coverage on the code that now instruments all other skill usage. Do this before the investigation — the investigation tooling is untrusted until this passes.",
     "repo": "core",
     "status": "open",
