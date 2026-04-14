@@ -1,6 +1,30 @@
 [
   {
     "command": "/validate",
+    "description": "End-to-end test the suggestion-ignored telemetry: trigger a skill suggestion in a dev session, decline it, and verify an `ignored` disposition entry appears in `~/.claude/suggestion-log.jsonl` with the correct skill ID and timestamp. Confirm the `followed` path still fires on invocation. This is the first full-loop verification of the completed feedback system.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-14",
+    "id": "act-2026-04-14-validate-6ac692"
+  },
+  {
+    "command": "/techdebt",
+    "description": "Audit the approximately 16 open actions generated before commit `9c17d7f` for ID correctness: re-run the content hash (command + description + repo + date, whitespace-normalized) against each stored ID. Any mismatch means the action will not close in the next closure pipeline run. Remediate by re-generating the ID and updating the action file, or manually verifying the action is still open and re-writing with the correct hash. Complete before the next sprint closure run.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-04-14",
+    "id": "act-2026-04-14-techdebt-0b58d9"
+  },
+  {
+    "command": "/adr",
+    "description": "Write two ADRs in one session: (1) the `suggested_after` / `layer_affinity` catalog governance ADR (`act-2026-04-13-adr-2d947c`) — all prerequisites are now in place; (2) the content-hash action ID scheme ADR — this foundational decision just touched the entire closure pipeline and has no written rationale. Document the hash function, collision surface, and the intentional behavior when action content changes before resolution.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-04-14",
+    "id": "act-2026-04-14-adr-fc73ff"
+  },
+  {
+    "command": "/validate",
     "description": "Confirm suggest-skills.mjs correctly matches suggested_after catalog entries against Sunday's hook invocations. Read ~/.claude/suggestion-log.jsonl (first clean data after ADR-0037 fix), cross-reference skill IDs against catalog suggested_after fields, verify no suggestions fire for skills with no catalog entry, and confirm no-match produces a silent no-op rather than a throw.",
     "repo": "core",
     "status": "open",
