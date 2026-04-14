@@ -14,7 +14,7 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { marked } from 'marked'
-import type { CodeReference } from './schema.js'
+import { actionId, type CodeReference } from './schema.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
@@ -29,6 +29,7 @@ interface TypedTag {
 }
 
 interface ActionItem {
+  id?: string
   command: string
   description: string
   repo: string
@@ -137,13 +138,14 @@ function extractActionsFromBody(body: string, date: string): ActionItem[] {
   for (const line of actionLines) {
     const m = line.match(/^> - `(\/\w[\w-]*)` — (.+?)(?:\s*\((\w[\w-]*)\))?$/)
     if (m) {
-      actions.push({
+      const action = {
         command: m[1],
         description: m[2].trim(),
         repo: m[3] ?? 'daily-logger',
-        status: 'open',
+        status: 'open' as const,
         sourceDate: date,
-      })
+      }
+      actions.push({ ...action, id: actionId(action) })
     }
   }
   return actions
@@ -332,14 +334,20 @@ export function buildApi() {
 
   // Write actions.json — filter out actions already marked done
   const donePath = join(API_DIR, 'done-actions.json')
-  const doneItems: Array<{ command: string; sourceDate: string; description: string }> = existsSync(donePath)
+  const doneItems: Array<{ id?: string; command: string; sourceDate: string; description: string }> = existsSync(donePath)
     ? JSON.parse(readFileSync(donePath, 'utf-8'))
     : []
-  const doneKeys = new Set(
+  // Match by id (preferred) or legacy 50-char key (backward compat)
+  const doneIds = new Set(
+    doneItems.filter((d) => d.id).map((d) => d.id),
+  )
+  const doneLegacyKeys = new Set(
     doneItems.map((d) => `${d.command}|${d.sourceDate}|${d.description.slice(0, 50)}`),
   )
   const openActions = allActions.filter(
-    (a) => !doneKeys.has(`${a.command}|${a.sourceDate}|${a.description.slice(0, 50)}`),
+    (a) =>
+      !(a.id && doneIds.has(a.id)) &&
+      !doneLegacyKeys.has(`${a.command}|${a.sourceDate}|${a.description.slice(0, 50)}`),
   )
   writeFileSync(join(API_DIR, 'actions.json'), JSON.stringify(openActions, null, 2))
 

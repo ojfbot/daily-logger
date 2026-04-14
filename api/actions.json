@@ -4,111 +4,127 @@
     "description": "Confirm suggest-skills.mjs correctly matches suggested_after catalog entries against Sunday's hook invocations. Read ~/.claude/suggestion-log.jsonl (first clean data after ADR-0037 fix), cross-reference skill IDs against catalog suggested_after fields, verify no suggestions fire for skills with no catalog entry, and confirm no-match produces a silent no-op rather than a throw.",
     "repo": "core",
     "status": "open",
-    "sourceDate": "2026-04-13"
+    "sourceDate": "2026-04-13",
+    "id": "act-2026-04-13-validate-f1f33f"
   },
   {
     "command": "/adr",
     "description": "Write the ADR for the suggested_after and layer_affinity fields added to the skill catalog on Sunday. Document: field definitions, how suggest-skills.mjs reads them (lookup direction), runtime behavior on no-match, layer_affinity filter semantics, relationship to shell's App → Instance → Thread model, and the catalog governance model (who can write to it). This is the decision record for the forward half of the telemetry feedback loop.",
     "repo": "core",
     "status": "open",
-    "sourceDate": "2026-04-13"
+    "sourceDate": "2026-04-13",
+    "id": "act-2026-04-13-adr-2d947c"
   },
   {
     "command": "/review",
     "description": "Review purefoy #39 (GPU transcription observability / ProgressReporter). Validate the 8-stage progress.json schema, confirm ProgressReporter does not block the transcription hot path, and merge. PR has been open since at least 2026-04-11 and is merge-pending-review with no named reviewer.",
     "repo": "purefoy",
     "status": "open",
-    "sourceDate": "2026-04-13"
+    "sourceDate": "2026-04-13",
+    "id": "act-2026-04-13-review-8dbb2d"
   },
   {
     "command": "/validate",
     "description": "Run quality gates against the four core telemetry commits (9e4449f, ab561c8, a7caa41, 13c4977) — suggest-skill, log-skill, and pr-skill-audit. Saturday's session showed 0% quality coverage on the code that now instruments all other skill usage. Do this before the investigation — the investigation tooling is untrusted until this passes.",
     "repo": "core",
     "status": "open",
-    "sourceDate": "2026-04-12"
+    "sourceDate": "2026-04-12",
+    "id": "act-2026-04-12-validate-c53d7a"
   },
   {
     "command": "/validate",
     "description": "Run /validate on shell's /api/beads filesystem fallback to unblock Gas Town Sprint 1. This is not blocked by MrPlug #28 and has no active owner. It is the first gate before the core-reader bead consumption scaffold can proceed.",
     "repo": "shell",
     "status": "open",
-    "sourceDate": "2026-04-12"
+    "sourceDate": "2026-04-12",
+    "id": "act-2026-04-12-validate-010163"
   },
   {
     "command": "/investigate",
     "description": "Read ~/.claude/suggestion-log.jsonl for Saturday's two suggestion entries. Confirm the skill IDs exist in the catalog (expected: yes, already verified). Then evaluate whether the suggestion timing was reasonable — were they surfaced mid-flow when action wasn't possible? This is a product question about suggestion UX, not a bug hunt.",
     "repo": "core",
     "status": "open",
-    "sourceDate": "2026-04-12"
+    "sourceDate": "2026-04-12",
+    "id": "act-2026-04-12-investigate-b73cd2"
   },
   {
     "command": "/validate",
     "description": "Verify shell's Dolt-first /api/beads aggregation falls back correctly to filesystem bead files when Dolt is unavailable. Start the shell dev server, hit the endpoint, confirm it returns beads from at least two sub-apps using the filesystem path at {repo}/.beads/{session-id}/{event-type}.json, and document the bead file location convention in shell's README. This is a prerequisite for the core-reader scaffold action.",
     "repo": "shell",
     "status": "open",
-    "sourceDate": "2026-04-11"
+    "sourceDate": "2026-04-11",
+    "id": "act-2026-04-11-validate-a35e60"
   },
   {
     "command": "/adr",
     "description": "Write the fleet-wide GET /api/beads ADR. ADR-0016 already exists and governs the per-app projection pattern. This new ADR documents the fleet extension: the FrameBeadLike type (defined in core/packages/types/src/bead.ts), the app-specific prefix convention (pure-, blog-, trip-, seh-, lean-), the empty-return-until-storage pattern, the shell Mayor aggregation strategy, and the Dolt migration path for filesystem beads. Eight repos implement this contract today without a durable decision record.",
     "repo": "core",
     "status": "open",
-    "sourceDate": "2026-04-11"
+    "sourceDate": "2026-04-11",
+    "id": "act-2026-04-11-adr-60a0d9"
   },
   {
     "command": "/scaffold",
     "description": "Scaffold the bead consumption view in core-reader after /validate confirms the filesystem fallback path works. Read aggregated beads from shell's /api/beads endpoint, render a raw timeline list in one of core-reader's existing tabs. Use the filesystem-fallback path — do not wait for Dolt. This is the first visible Gas Town UI and the proof that the Mayor aggregation layer works end-to-end.",
     "repo": "core-reader",
     "status": "open",
-    "sourceDate": "2026-04-11"
+    "sourceDate": "2026-04-11",
+    "id": "act-2026-04-11-scaffold-644aa7"
   },
   {
     "command": "/validate",
     "description": "Confirm the Vite alias for @ojfbot/frame-ui-components resolves from source correctly during local development after the npm migration — run the shell dev server, import a component from frame-ui-components, and verify hot-reload reflects source edits without a publish step.",
     "repo": "shell",
     "status": "open",
-    "sourceDate": "2026-04-10"
+    "sourceDate": "2026-04-10",
+    "id": "act-2026-04-10-validate-8bf819"
   },
   {
     "command": "/validate",
     "description": "Run the Storybook composition dashboard (shell #66) after the npm migration to confirm all fleet repos' component stories still resolve correctly — the file: → npm change may break story resolution if the Storybook config references local paths.",
     "repo": "shell",
     "status": "open",
-    "sourceDate": "2026-04-10"
+    "sourceDate": "2026-04-10",
+    "id": "act-2026-04-10-validate-f882ab"
   },
   {
     "command": "/techdebt",
     "description": "cv-builder BioDashboard is now 373 lines after the decomposition — still above the container-presenter 100-line orchestrator target. Identify the next extraction candidates and open a follow-up decomposition PR.",
     "repo": "cv-builder",
     "status": "open",
-    "sourceDate": "2026-04-10"
+    "sourceDate": "2026-04-10",
+    "id": "act-2026-04-10-techdebt-4627c3"
   },
   {
     "command": "/validate",
     "description": "Add an explicit wait-for-sentinel pattern to the Playwright screenshot test and confirm it survives a cold Module Federation boot — i.e., clear the Vite cache and re-run the capture script end-to-end to verify the fix holds under slow-network conditions.",
     "repo": "landing",
     "status": "open",
-    "sourceDate": "2026-04-09"
+    "sourceDate": "2026-04-09",
+    "id": "act-2026-04-09-validate-b01dbb"
   },
   {
     "command": "/adr",
     "description": "Write ADR for the Pydantic → OpenAPI → TypeScript codegen pattern established in gcgcca PRs #1 and #2. Document the invocation (python scripts/generate_schema.py, venv required, output to src/generated/types.ts), the known failure mode (custom validators and Union discriminators may not map cleanly to OpenAPI), and the purefoy CLI+UI reference. This pattern will apply to every future Python-backed Frame sub-app.",
     "repo": "gcgcca",
     "status": "open",
-    "sourceDate": "2026-04-07"
+    "sourceDate": "2026-04-07",
+    "id": "act-2026-04-07-adr-daa2ca"
   },
   {
     "command": "/roadmap",
     "description": "Register gcgcca as a live Module Federation remote in the shell host config at :3035. Wire it into frame-dev.sh and confirm hot-reload works in the dev environment. Type bridge is complete, MF scaffold exists — this is the milestone that makes gcgcca visible inside the Frame shell for the first time.",
     "repo": "gcgcca",
     "status": "open",
-    "sourceDate": "2026-04-07"
+    "sourceDate": "2026-04-07",
+    "id": "act-2026-04-07-roadmap-6f4599"
   },
   {
     "command": "/roadmap",
     "description": "Scope the Hailstone migration. Define what moves, what gets rebuilt, and the target architecture inside the portfolio. Produce a short migration plan before any code is written.",
     "repo": "landing",
     "status": "open",
-    "sourceDate": "2026-04-04"
+    "sourceDate": "2026-04-04",
+    "id": "act-2026-04-04-roadmap-e9a078"
   }
 ]

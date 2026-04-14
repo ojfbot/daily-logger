@@ -86,21 +86,24 @@
         "description": "Confirm suggest-skills.mjs correctly matches suggested_after catalog entries against Sunday's hook invocations. Read ~/.claude/suggestion-log.jsonl (first clean data after ADR-0037 fix), cross-reference skill IDs against catalog suggested_after fields, verify no suggestions fire for skills with no catalog entry, and confirm no-match produces a silent no-op rather than a throw.",
         "repo": "core",
         "status": "open",
-        "sourceDate": "2026-04-13"
+        "sourceDate": "2026-04-13",
+        "id": "act-2026-04-13-validate-f1f33f"
       },
       {
         "command": "/adr",
         "description": "Write the ADR for the suggested_after and layer_affinity fields added to the skill catalog on Sunday. Document: field definitions, how suggest-skills.mjs reads them (lookup direction), runtime behavior on no-match, layer_affinity filter semantics, relationship to shell's App → Instance → Thread model, and the catalog governance model (who can write to it). This is the decision record for the forward half of the telemetry feedback loop.",
         "repo": "core",
         "status": "open",
-        "sourceDate": "2026-04-13"
+        "sourceDate": "2026-04-13",
+        "id": "act-2026-04-13-adr-2d947c"
       },
       {
         "command": "/review",
         "description": "Review purefoy #39 (GPU transcription observability / ProgressReporter). Validate the 8-stage progress.json schema, confirm ProgressReporter does not block the transcription hot path, and merge. PR has been open since at least 2026-04-11 and is merge-pending-review with no named reviewer.",
         "repo": "purefoy",
         "status": "open",
-        "sourceDate": "2026-04-13"
+        "sourceDate": "2026-04-13",
+        "id": "act-2026-04-13-review-8dbb2d"
       }
     ]
   },
@@ -158,7 +161,7 @@
     "commitCount": 15,
     "activityType": "build",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
     "decisions": [
       {
         "title": "Suggestion follow-through as a first-class telemetry event",
@@ -191,21 +194,24 @@
         "description": "Run quality gates against the four core telemetry commits (9e4449f, ab561c8, a7caa41, 13c4977) — suggest-skill, log-skill, and pr-skill-audit. Saturday's session showed 0% quality coverage on the code that now instruments all other skill usage. Do this before the investigation — the investigation tooling is untrusted until this passes.",
         "repo": "core",
         "status": "open",
-        "sourceDate": "2026-04-12"
+        "sourceDate": "2026-04-12",
+        "id": "act-2026-04-12-validate-c53d7a"
       },
       {
         "command": "/validate",
         "description": "Run /validate on shell's /api/beads filesystem fallback to unblock Gas Town Sprint 1. This is not blocked by MrPlug #28 and has no active owner. It is the first gate before the core-reader bead consumption scaffold can proceed.",
         "repo": "shell",
         "status": "open",
-        "sourceDate": "2026-04-12"
+        "sourceDate": "2026-04-12",
+        "id": "act-2026-04-12-validate-010163"
       },
       {
         "command": "/investigate",
         "description": "Read ~/.claude/suggestion-log.jsonl for Saturday's two suggestion entries. Confirm the skill IDs exist in the catalog (expected: yes, already verified). Then evaluate whether the suggestion timing was reasonable — were they surfaced mid-flow when action wasn't possible? This is a product question about suggestion UX, not a bug hunt.",
         "repo": "core",
         "status": "open",
-        "sourceDate": "2026-04-12"
+        "sourceDate": "2026-04-12",
+        "id": "act-2026-04-12-investigate-b73cd2"
       }
     ]
   },
@@ -353,28 +359,32 @@
         "description": "Verify shell's Dolt-first /api/beads aggregation falls back correctly to filesystem bead files when Dolt is unavailable. Start the shell dev server, hit the endpoint, confirm it returns beads from at least two sub-apps using the filesystem path at {repo}/.beads/{session-id}/{event-type}.json, and document the bead file location convention in shell's README. This is a prerequisite for the core-reader scaffold action.",
         "repo": "shell",
         "status": "open",
-        "sourceDate": "2026-04-11"
+        "sourceDate": "2026-04-11",
+        "id": "act-2026-04-11-validate-a35e60"
       },
       {
         "command": "/pr-review",
         "description": "Review purefoy #39 (real-time GPU transcription observability). This is merge-pending-review — not blocked on an open design question. Validate the 8-stage progress.json schema, confirm ProgressReporter doesn't block the transcription hot path, and check that the preflight() GPU metric fields include memory utilization in addition to compute utilization. Merge once confirmed.",
         "repo": "purefoy",
         "status": "open",
-        "sourceDate": "2026-04-11"
+        "sourceDate": "2026-04-11",
+        "id": "act-2026-04-11-pr-review-258b93"
       },
       {
         "command": "/adr",
         "description": "Write the fleet-wide GET /api/beads ADR. ADR-0016 already exists and governs the per-app projection pattern. This new ADR documents the fleet extension: the FrameBeadLike type (defined in core/packages/types/src/bead.ts), the app-specific prefix convention (pure-, blog-, trip-, seh-, lean-), the empty-return-until-storage pattern, the shell Mayor aggregation strategy, and the Dolt migration path for filesystem beads. Eight repos implement this contract today without a durable decision record.",
         "repo": "core",
         "status": "open",
-        "sourceDate": "2026-04-11"
+        "sourceDate": "2026-04-11",
+        "id": "act-2026-04-11-adr-60a0d9"
       },
       {
         "command": "/scaffold",
         "description": "Scaffold the bead consumption view in core-reader after /validate confirms the filesystem fallback path works. Read aggregated beads from shell's /api/beads endpoint, render a raw timeline list in one of core-reader's existing tabs. Use the filesystem-fallback path — do not wait for Dolt. This is the first visible Gas Town UI and the proof that the Mayor aggregation layer works end-to-end.",
         "repo": "core-reader",
         "status": "open",
-        "sourceDate": "2026-04-11"
+        "sourceDate": "2026-04-11",
+        "id": "act-2026-04-11-scaffold-644aa7"
       }
     ]
   },
@@ -488,35 +498,40 @@
         "description": "Review [daily-logger] #133 (auto-merge daily article PRs): verify the auto-merge job correctly references the date output from the generation step and that --rebase is the right merge strategy for sequential article commits.",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-04-10"
+        "sourceDate": "2026-04-10",
+        "id": "act-2026-04-10-pr-review-cd64dc"
       },
       {
         "command": "/pr-review",
         "description": "Review [core] #59 (morning workflow orchestration): validate the /diagram-intake skill's repo-name mapping logic and the /orchestrate 4-layer progressive output format against a real morning photo before merging.",
         "repo": "core",
         "status": "open",
-        "sourceDate": "2026-04-10"
+        "sourceDate": "2026-04-10",
+        "id": "act-2026-04-10-pr-review-47badf"
       },
       {
         "command": "/validate",
         "description": "Confirm the Vite alias for @ojfbot/frame-ui-components resolves from source correctly during local development after the npm migration — run the shell dev server, import a component from frame-ui-components, and verify hot-reload reflects source edits without a publish step.",
         "repo": "shell",
         "status": "open",
-        "sourceDate": "2026-04-10"
+        "sourceDate": "2026-04-10",
+        "id": "act-2026-04-10-validate-8bf819"
       },
       {
         "command": "/validate",
         "description": "Run the Storybook composition dashboard (shell #66) after the npm migration to confirm all fleet repos' component stories still resolve correctly — the file: → npm change may break story resolution if the Storybook config references local paths.",
         "repo": "shell",
         "status": "open",
-        "sourceDate": "2026-04-10"
+        "sourceDate": "2026-04-10",
+        "id": "act-2026-04-10-validate-f882ab"
       },
       {
         "command": "/techdebt",
         "description": "cv-builder BioDashboard is now 373 lines after the decomposition — still above the container-presenter 100-line orchestrator target. Identify the next extraction candidates and open a follow-up decomposition PR.",
         "repo": "cv-builder",
         "status": "open",
-        "sourceDate": "2026-04-10"
+        "sourceDate": "2026-04-10",
+        "id": "act-2026-04-10-techdebt-4627c3"
       }
     ]
   },
@@ -588,7 +603,8 @@
         "description": "Add an explicit wait-for-sentinel pattern to the Playwright screenshot test and confirm it survives a cold Module Federation boot — i.e., clear the Vite cache and re-run the capture script end-to-end to verify the fix holds under slow-network conditions.",
         "repo": "landing",
         "status": "open",
-        "sourceDate": "2026-04-09"
+        "sourceDate": "2026-04-09",
+        "id": "act-2026-04-09-validate-b01dbb"
       }
     ]
   },
@@ -825,35 +841,40 @@
         "description": "Merge shell #62 (lockfile regeneration for ESLint deps). No logic changes. Run `gh pr merge 62 --squash --repo ojfbot/shell` if CI is green. If CI is red, treat as a blocker — something introduced in #60 or #61 is breaking the lockfile integrity check. This unblocks all subsequent shell CI work.",
         "repo": "shell",
         "status": "open",
-        "sourceDate": "2026-04-07"
+        "sourceDate": "2026-04-07",
+        "id": "act-2026-04-07-pr-review-cc2ee0"
       },
       {
         "command": "/scaffold",
         "description": "Scaffold a Storybook workspace in a new @ojfbot/shell package. Import existing Carbon components from cv-builder, BlogEngine, and TripPlanner. @frame/tsconfig and @frame/eslint-plugin are live — this is the next concrete Phase 1 deliverable and the gap analysis that determines what actually needs extracting into the shared shell.",
         "repo": "shell",
         "status": "open",
-        "sourceDate": "2026-04-07"
+        "sourceDate": "2026-04-07",
+        "id": "act-2026-04-07-scaffold-2f79ac"
       },
       {
         "command": "/adr",
         "description": "Write ADR for the Pydantic → OpenAPI → TypeScript codegen pattern established in gcgcca PRs #1 and #2. Document the invocation (python scripts/generate_schema.py, venv required, output to src/generated/types.ts), the known failure mode (custom validators and Union discriminators may not map cleanly to OpenAPI), and the purefoy CLI+UI reference. This pattern will apply to every future Python-backed Frame sub-app.",
         "repo": "gcgcca",
         "status": "open",
-        "sourceDate": "2026-04-07"
+        "sourceDate": "2026-04-07",
+        "id": "act-2026-04-07-adr-daa2ca"
       },
       {
         "command": "/validate",
         "description": "Run tsc --noEmit across all four shell packages after #62 merges to confirm zero errors before adding more consumers to @frame/tsconfig. PR #59 passed CI clean, but forward validation before the next consumer onboards is the guard against silent drift.",
         "repo": "shell",
         "status": "open",
-        "sourceDate": "2026-04-07"
+        "sourceDate": "2026-04-07",
+        "id": "act-2026-04-07-validate-238c81"
       },
       {
         "command": "/roadmap",
         "description": "Register gcgcca as a live Module Federation remote in the shell host config at :3035. Wire it into frame-dev.sh and confirm hot-reload works in the dev environment. Type bridge is complete, MF scaffold exists — this is the milestone that makes gcgcca visible inside the Frame shell for the first time.",
         "repo": "gcgcca",
         "status": "open",
-        "sourceDate": "2026-04-07"
+        "sourceDate": "2026-04-07",
+        "id": "act-2026-04-07-roadmap-6f4599"
       }
     ]
   },
@@ -1024,21 +1045,24 @@
         "description": "Merge MrPlug #36 (happy-dom 15.x → 20.8.9, rollup path-traversal override). After merge, run `pnpm audit --audit-level=high` inside the MrPlug repo and confirm zero high/critical findings. Post output as a comment on the merge commit. MrPlug is publicly visible; this is not aspirational.",
         "repo": "MrPlug",
         "status": "open",
-        "sourceDate": "2026-04-05"
+        "sourceDate": "2026-04-05",
+        "id": "act-2026-04-05-pr-review-b2dc11"
       },
       {
         "command": "/pr-review",
         "description": "Review and merge shell #58 (ADR-0013 + FrameBus PoC + Playwright e2e). Local setup: shell on :3000, cv-builder on :3001. Check: (1) PoC implements broadcast fanout + async delivery per ADR-0013; (2) typed event catalog committed at packages/framebus/src/events.ts (or equivalent); (3) `pnpm playwright test` passes. This is the gate for all Phase 1 federation work. Merge or close before opening new Phase 1 tickets.",
         "repo": "shell",
         "status": "open",
-        "sourceDate": "2026-04-05"
+        "sourceDate": "2026-04-05",
+        "id": "act-2026-04-05-pr-review-7922fa"
       },
       {
         "command": "/validate",
         "description": "Before merging daily-logger #113, audit done-actions.json: for each of the 17 closed entries, confirm a corresponding merged PR exists. Move any aspirationally-closed items back to open. The actions board is only authoritative if this check passes.",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-04-05"
+        "sourceDate": "2026-04-05",
+        "id": "act-2026-04-05-validate-c7e47c"
       }
     ]
   },
@@ -1146,21 +1170,24 @@
         "description": "Add tsc --noEmit as a required CI job to TripPlanner and BlogEngine. Express 5 param-type failures are already fixed in both repos — this is purely the gate addition. Target: typecheck job in CI config + branch protection rule set to required. Estimate: 30 minutes per repo.",
         "repo": "core",
         "status": "open",
-        "sourceDate": "2026-04-04"
+        "sourceDate": "2026-04-04",
+        "id": "act-2026-04-04-ci-gate-415842"
       },
       {
         "command": "/roadmap",
         "description": "Scope the Hailstone migration. Define what moves, what gets rebuilt, and the target architecture inside the portfolio. Produce a short migration plan before any code is written.",
         "repo": "landing",
         "status": "open",
-        "sourceDate": "2026-04-04"
+        "sourceDate": "2026-04-04",
+        "id": "act-2026-04-04-roadmap-e9a078"
       },
       {
         "command": "/doc-refactor",
         "description": "Add a canonical ecosystem table to CLAUDE.md. Schema: repo name | local port | one-line description | phase | status. Seed from the 8 repos touched Friday (cv-builder, landing, shell, core, GroupThink, MrPlug, purefoy, daily-logger), then fill remaining 5. Done means: CLAUDE.md has a complete table, every row has a value in every column, and the table is the single source referenced in the README sweep instructions.",
         "repo": "core",
         "status": "open",
-        "sourceDate": "2026-04-04"
+        "sourceDate": "2026-04-04",
+        "id": "act-2026-04-04-doc-refactor-97da5a"
       }
     ]
   },
@@ -1312,21 +1339,24 @@
         "description": "Audit all 13 fleet repos for Express usage, then wire `tsc --noEmit` as a required CI job in each Express-backed repo. The job runs after lint, blocks merge on failure, and is separate from the build step. TripPlanner and BlogEngine are confirmed first targets. The Express 5 param-typing failures (TripPlanner #42 and BlogEngine #43) were only caught post-merge because this step was absent. Wire it before the next dependency update cycle.",
         "repo": "TripPlanner",
         "status": "open",
-        "sourceDate": "2026-04-02"
+        "sourceDate": "2026-04-02",
+        "id": "act-2026-04-02-hardening-9ebf00"
       },
       {
         "command": "/adr",
         "description": "Write ADR-0001 (or next in sequence) in core: the lock-file-rebuild protocol. Content is already drafted in today's decision log — lock file rebuilds touching `@types/*` or framework packages require `pnpm exec tsc --noEmit` and `pnpm audit --audit-level=high` as passing CI steps before merge. Name the owner, assign an ADR number, open the PR to core. This is the first standing ADR for the fleet; its absence is a credibility gap for a 13-repo project in its hardening phase.",
         "repo": "core",
         "status": "open",
-        "sourceDate": "2026-04-02"
+        "sourceDate": "2026-04-02",
+        "id": "act-2026-04-02-adr-20bd77"
       },
       {
         "command": "/merge",
         "description": "Merge [core] #42 — daily-cleaner stale-docs cleanup PR, open since 2026-04-01. Unblocked, validated by Claude Opus, no conflicts expected, no human review required.",
         "repo": "core",
         "status": "open",
-        "sourceDate": "2026-04-02"
+        "sourceDate": "2026-04-02",
+        "id": "act-2026-04-02-merge-ade10a"
       }
     ]
   },
@@ -1437,21 +1467,24 @@
         "description": "Confirm fleet-wide lock file rebuilds closed all transitive CVE findings: run `pnpm audit --audit-level=high` in shell, cv-builder, and MrPlug. For MrPlug specifically, confirm the `resolutions` field in `package.json` pins `@langchain/core` to `0.3.80` and that `pnpm audit` reports zero high-severity findings. Record pass/fail as a commit comment on 0091121.",
         "repo": "MrPlug",
         "status": "open",
-        "sourceDate": "2026-04-01"
+        "sourceDate": "2026-04-01",
+        "id": "act-2026-04-01-validate-9c18dc"
       },
       {
         "command": "/investigate",
         "description": "Verify the static-file-shadowing fix in `4ac70e0`: deploy to Vercel preview and confirm that hitting the editorial revision API route returns JSON (not an HTML static page). The routing rule to enforce: no static output file should share a path with an `api/` function route. Document this rule in CLAUDE.md if it isn't already there.",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-04-01"
+        "sourceDate": "2026-04-01",
+        "id": "act-2026-04-01-investigate-a68d91"
       },
       {
         "command": "/sweep",
         "description": "Confirm the GroupThink build and extension package step pass on the new pnpm v9 lock file format (`a6edb57` is already merged to main). CI covered the standard build; this action validates the extension packaging step specifically, which is not in the current CI matrix. If it fails, the pnpm v6→v9 format upgrade is the likely cause.",
         "repo": "GroupThink",
         "status": "open",
-        "sourceDate": "2026-04-01"
+        "sourceDate": "2026-04-01",
+        "id": "act-2026-04-01-sweep-94b330"
       }
     ]
   },
@@ -1574,35 +1607,40 @@
         "description": "Add a Playwright smoke test for the ?app= deep-link feature: navigate to frame.jim.software?app=blogengine and assert the BlogEngine panel is active. Shell #54 shipped the feature with no automated coverage; landing #6 is already live with deep-link cards against this untested path.",
         "repo": "shell",
         "status": "open",
-        "sourceDate": "2026-03-31"
+        "sourceDate": "2026-03-31",
+        "id": "act-2026-03-31-test-expand-ed8254"
       },
       {
         "command": "/sweep",
         "description": "Audit all sub-app repos for remaining bespoke sidebar toggle buttons or custom chat-panel components not yet migrated to @ojfbot/frame-ui-components. SidebarToggle is fleet-wide; ThreadSidebarConnected and CondensedChat are in the shared layer but not yet swept fleet-wide.",
         "repo": "frame-ui-components",
         "status": "open",
-        "sourceDate": "2026-03-31"
+        "sourceDate": "2026-03-31",
+        "id": "act-2026-03-31-sweep-30023b"
       },
       {
         "command": "/adr",
         "description": "Formalise purefoy ADR-010 as a versioned decision record in the purefoy repo. The rationale currently lives only in the PR description. Include: export script invocation, S3 bucket structure, CloudFront config, back-of-napkin cost estimate at current and 10x request volume, and the profession-grouping rationale.",
         "repo": "purefoy",
         "status": "open",
-        "sourceDate": "2026-03-31"
+        "sourceDate": "2026-03-31",
+        "id": "act-2026-03-31-adr-9ba2c1"
       },
       {
         "command": "/investigate",
         "description": "Confirm whether the Playwright screenshot capture script added in landing commit 944659d is wired to a deploy trigger or remains a manual tool. Document the answer in the ProjectPopover component and update landing issue #2 with the finding.",
         "repo": "landing",
         "status": "open",
-        "sourceDate": "2026-03-31"
+        "sourceDate": "2026-03-31",
+        "id": "act-2026-03-31-investigate-0562e9"
       },
       {
         "command": "/validate",
         "description": "Confirm the ADR-0038 editorial revision CI workflow passes end-to-end: trigger the workflow, verify the feedback parameter reaches stampDraft, confirm the editorial sidebar renders the returned threads inline, and document the exact trigger event (merge, dispatch, or cron) in the ADR record.",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-31"
+        "sourceDate": "2026-03-31",
+        "id": "act-2026-03-31-validate-b08a98"
       }
     ]
   },
@@ -1704,21 +1742,24 @@
         "description": "Locate the canonical source of the 13-repo ecosystem table — if it is a snippet in CLAUDE.md, confirm it. If it is manual copy-paste, create a canonical template file and document in CLAUDE.md that all 13 READMEs must be updated from it whenever a repo is added or a port changes. This is a single-task action: find or create the source of truth, then document the update protocol. Do not conflate with a staleness audit — that is a separate pass.",
         "repo": "core",
         "status": "open",
-        "sourceDate": "2026-03-30"
+        "sourceDate": "2026-03-30",
+        "id": "act-2026-03-30-document-929254"
       },
       {
         "command": "/validate",
         "description": "On a clean install of cv-builder (delete node_modules and package-lock.json, then npm install), run npm audit --audit-level=high. Confirm zero findings. If any new peer-dependency conflicts were introduced by ab7ce82, document the specific packages and whether overrides or a version pin is needed. Record the result — pass or fail — in a commit comment on ab7ce82 or a follow-up commit. The cv-builder repo is now externally visible; this needs to be confirmed, not aspirational.",
         "repo": "cv-builder",
         "status": "open",
-        "sourceDate": "2026-03-30"
+        "sourceDate": "2026-03-30",
+        "id": "act-2026-03-30-validate-1c1664"
       },
       {
         "command": "/investigate",
         "description": "Open the ProjectPopover component and confirm what is actually rendering in the screenshot slot: static image assets checked into the repo, a URL pointing to a hosted screenshot service, or a live iframe/render. Document the answer as a comment in the component and file a GitHub issue in landing with acceptance criteria for a screenshot refresh pipeline if the source is static. The popovers are live and publicly visible — their content dependency needs to be documented before it silently goes stale.",
         "repo": "landing",
         "status": "open",
-        "sourceDate": "2026-03-30"
+        "sourceDate": "2026-03-30",
+        "id": "act-2026-03-30-investigate-42dc87"
       }
     ]
   },
@@ -1828,21 +1869,24 @@
         "description": "Check @originjs/vite-plugin-federation versions > 1.4.1 for per-chunk minification support; test upgrade path in packages/browser-app/vite.config.ts before scoping a custom chunk workaround for #99. Goal: re-enable minification for the production bundle without the full bundle-scope flag.",
         "repo": "cv-builder",
         "status": "open",
-        "sourceDate": "2026-03-29"
+        "sourceDate": "2026-03-29",
+        "id": "act-2026-03-29-investigate-603cde"
       },
       {
         "command": "/adr",
         "description": "Formalise the cross-domain fanout plan document added in b2330d7 as ADR-0037, or close it as a resolved design note. The document proposes a peer-to-peer FrameBus fanout topology; the open question (shell-owned vs. peer-negotiated event schemas) must be resolved before Phase 1 federation spikes begin.",
         "repo": "shell",
         "status": "open",
-        "sourceDate": "2026-03-29"
+        "sourceDate": "2026-03-29",
+        "id": "act-2026-03-29-adr-0d263f"
       },
       {
         "command": "/validate",
         "description": "Wire the first FrameBus proof-of-concept per ADR-0034: one event published from cv-builder, one subscriber in shell, typed event catalog committed to the shell repo. ADR-0034 is a closed decision but has no running implementation — produce the stub before the pattern spreads to shell #83–#86.",
         "repo": "shell",
         "status": "open",
-        "sourceDate": "2026-03-29"
+        "sourceDate": "2026-03-29",
+        "id": "act-2026-03-29-validate-89720b"
       }
     ]
   },
@@ -9713,56 +9757,64 @@
         "description": "close TripPlanner #9 (opened 2025-12-15) with a reference to #11; confirm nothing unshipped remains before closing",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-02"
+        "sourceDate": "2026-03-02",
+        "id": "act-2026-03-02-pr-review-949800"
       },
       {
         "command": "/adr",
         "description": "document the three-step MF remote integration contract (shellMode + vite-plugin-css-injected-by-js chunk scope + frame-dev.sh entry) before CoreReader UI work begins; the pattern has run across four remotes without a canonical spec",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-02"
+        "sourceDate": "2026-03-02",
+        "id": "act-2026-03-02-adr-45771b"
       },
       {
         "command": "/adr",
         "description": "write ADR-0012 covering the shellMode interface contract; the pattern is running across four remotes but no canonical spec exists",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-02"
+        "sourceDate": "2026-03-02",
+        "id": "act-2026-03-02-adr-d656c4"
       },
       {
         "command": "/adr",
         "description": "document the vite-plugin-css-injected-by-js chunk scoping constraint as a prerequisite for CoreReader UI onboarding; rationale currently lives only in commit history",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-02"
+        "sourceDate": "2026-03-02",
+        "id": "act-2026-03-02-adr-aacb78"
       },
       {
         "command": "/pr-review",
         "description": "focused review on shell #6 with shellMode contract stable; move off DRAFT and finalize ADR-0011",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-02"
+        "sourceDate": "2026-03-02",
+        "id": "act-2026-03-02-pr-review-2cee95"
       },
       {
         "command": "/roadmap",
         "description": "set a concrete CoreReader UI milestone now that registration infrastructure and ADR-0010 are both resolved; name a Phase 1 target date before the stall compounds further",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-02"
+        "sourceDate": "2026-03-02",
+        "id": "act-2026-03-02-roadmap-034556"
       },
       {
         "command": "/adr",
         "description": "promote shell #6 from DRAFT by completing ADR-0011 with shellMode contract, always-mounted modal pattern, EB reset behavior, and enforcement mechanism",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-02"
+        "sourceDate": "2026-03-02",
+        "id": "act-2026-03-02-adr-fb7c06"
       },
       {
         "command": "/adr",
         "description": "write the MF remote integration contract ADR before CoreReader UI begins; this is the first implementation that can be built against a spec rather than reverse-engineered from three prior remotes",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-02"
+        "sourceDate": "2026-03-02",
+        "id": "act-2026-03-02-adr-35040a"
       }
     ],
     "codeReferences": [
@@ -9927,63 +9979,72 @@
         "description": "document the shell chrome ownership contract (modal, Suspense, ErrorBoundary) as a reusable pattern for the command bar surface",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-01"
+        "sourceDate": "2026-03-01",
+        "id": "act-2026-03-01-adr-57b479"
       },
       {
         "command": "/adr",
         "description": "write ADR-0011 covering the `'./Settings'` MF entry point convention and always-mounted modal + EB reset pattern before shell #6 leaves draft",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-01"
+        "sourceDate": "2026-03-01",
+        "id": "act-2026-03-01-adr-cfb4a5"
       },
       {
         "command": "/investigate",
         "description": "evaluate whether the `APP_CONFIG` registry can drive Phase 2 Figma MCP token generation directly",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-01"
+        "sourceDate": "2026-03-01",
+        "id": "act-2026-03-01-investigate-84a4ba"
       },
       {
         "command": "/investigate",
         "description": "document the per-transcript EC2 cost and Fargate comparison in ADR-004 before closing the infrastructure decision",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-01"
+        "sourceDate": "2026-03-01",
+        "id": "act-2026-03-01-investigate-8ee578"
       },
       {
         "command": "/pr-review",
         "description": "do a focused review pass on TripPlanner #11's MF remote integration section now that #12 has proven the Federation plumbing against the shell host",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-01"
+        "sourceDate": "2026-03-01",
+        "id": "act-2026-03-01-pr-review-3c91a8"
       },
       {
         "command": "/roadmap",
         "description": "set a concrete milestone for CoreReader implementation now that ADR-0010 is resolved and issue #8 is closed",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-01"
+        "sourceDate": "2026-03-01",
+        "id": "act-2026-03-01-roadmap-51382e"
       },
       {
         "command": "/adr",
         "description": "add CI enforcement mechanism for the shell chrome ownership contract to ADR-0011",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-01"
+        "sourceDate": "2026-03-01",
+        "id": "act-2026-03-01-adr-9d2a20"
       },
       {
         "command": "/adr",
         "description": "promote shell #6 from draft by completing ADR-0011 with chrome ownership contract, MF convention, EB reset pattern, and enforcement mechanism",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-01"
+        "sourceDate": "2026-03-01",
+        "id": "act-2026-03-01-adr-91712a"
       },
       {
         "command": "/adr",
         "description": "add per-transcript cost figures to ADR-004 to close the infrastructure decision",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-03-01"
+        "sourceDate": "2026-03-01",
+        "id": "act-2026-03-01-adr-c3c210"
       }
     ],
     "codeReferences": [
@@ -10161,56 +10222,64 @@
         "description": "document the structured JSON output contract for daily-logger as an ADR; the schema is load-bearing and currently undocumented",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-28"
+        "sourceDate": "2026-02-28",
+        "id": "act-2026-02-28-adr-1a6757"
       },
       {
         "command": "/techdebt",
         "description": "implement a config lint rule catching `shared` string shorthand across all Frame vite configs; `TD-001` is flagged but not yet enforced",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-28"
+        "sourceDate": "2026-02-28",
+        "id": "act-2026-02-28-techdebt-46f955"
       },
       {
         "command": "/adr",
         "description": "write the Redux store composition ADR for [shell] #5 before any code touches cross-boundary state in the Module Federation setup",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-28"
+        "sourceDate": "2026-02-28",
+        "id": "act-2026-02-28-adr-4ce4e6"
       },
       {
         "command": "/techdebt",
         "description": "audit remaining `shared` string shorthand usages across all Frame app vite configs and convert to explicit object form",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-28"
+        "sourceDate": "2026-02-28",
+        "id": "act-2026-02-28-techdebt-6f0b83"
       },
       {
         "command": "/pr-review",
         "description": "review [node-template] #6 (ADR-0007) so TripPlanner #11 and BlogEngine's endpoint have a ratified contract to implement against",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-28"
+        "sourceDate": "2026-02-28",
+        "id": "act-2026-02-28-pr-review-4f59f3"
       },
       {
         "command": "/roadmap",
         "description": "update Phase 6 progress to reflect issues #90 and #94 closed; capture what the diff timeline would take to complete",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-28"
+        "sourceDate": "2026-02-28",
+        "id": "act-2026-02-28-roadmap-de2dc0"
       },
       {
         "command": "/adr",
         "description": "draft the Frame-wide Redux store strategy decision captured in [shell] #5 before Module Federation remote integration proceeds further",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-28"
+        "sourceDate": "2026-02-28",
+        "id": "act-2026-02-28-adr-056aa2"
       },
       {
         "command": "/adr",
         "description": "document the structured JSON output schema for daily-logger before the schema drifts from the prompt",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-28"
+        "sourceDate": "2026-02-28",
+        "id": "act-2026-02-28-adr-baff6a"
       }
     ],
     "codeReferences": [
@@ -10402,77 +10471,88 @@
         "description": "write ADR-006 for the `GET /api/tools` capability manifest contract in node-template before a second Frame app implements it independently",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-27"
+        "sourceDate": "2026-02-27",
+        "id": "act-2026-02-27-adr-5c9532"
       },
       {
         "command": "/plan-feature",
         "description": "spec the frame-agent routing logic that consumes `GET /api/tools` responses; this is the piece that's explicitly not wired yet",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-27"
+        "sourceDate": "2026-02-27",
+        "id": "act-2026-02-27-plan-feature-9305df"
       },
       {
         "command": "/techdebt",
         "description": "add a daily-cleaner inference budget cap before repo count exceeds 10 active apps",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-27"
+        "sourceDate": "2026-02-27",
+        "id": "act-2026-02-27-techdebt-e302a0"
       },
       {
         "command": "/adr",
         "description": "write prospective ADR-007 for the ShellAgent routing protocol; the chat command bar (Phase 3) shouldn't be built before this contract is owned",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-27"
+        "sourceDate": "2026-02-27",
+        "id": "act-2026-02-27-adr-22df39"
       },
       {
         "command": "/plan-feature",
         "description": "spec the \"stale because shipped\" vs \"stale because abandoned\" distinction for the daily-cleaner eval loop; this is the gap that limits it as a production tool",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-27"
+        "sourceDate": "2026-02-27",
+        "id": "act-2026-02-27-plan-feature-1d57c1"
       },
       {
         "command": "/scaffold",
         "description": "stub the Phase 9 POST pipeline in `daily-logger/src/` (client, retry logic, error handling) now that BlogEngine's API is ready to receive",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-27"
+        "sourceDate": "2026-02-27",
+        "id": "act-2026-02-27-scaffold-fa91f0"
       },
       {
         "command": "/roadmap",
         "description": "update Phase 3 shell entry with the ShellAgent routing ADR as a prerequisite gate before the chat command bar build starts",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-27"
+        "sourceDate": "2026-02-27",
+        "id": "act-2026-02-27-roadmap-10a9fa"
       },
       {
         "command": "/validate",
         "description": "run a cross-repo invariant check: every active Frame app should expose `GET /api/tools`; BlogEngine does, cv-builder and TripPlanner do not yet",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-27"
+        "sourceDate": "2026-02-27",
+        "id": "act-2026-02-27-validate-d54ff1"
       },
       {
         "command": "/scaffold",
         "description": "generate the `src/post-to-blogengine.ts` stub with typed request/response shapes against BlogEngine's agent graph API",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-27"
+        "sourceDate": "2026-02-27",
+        "id": "act-2026-02-27-scaffold-1c807c"
       },
       {
         "command": "/plan-feature",
         "description": "write the full Phase 9 spec including auth flow, retry semantics, dry-run flag, and rollback if BlogEngine rejects the article",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-27"
+        "sourceDate": "2026-02-27",
+        "id": "act-2026-02-27-plan-feature-cbe663"
       },
       {
         "command": "/adr",
         "description": "write ADR-006 for the capability manifest contract today, before starting the POST pipeline work; the pipeline will depend on it",
         "repo": "daily-logger",
         "status": "open",
-        "sourceDate": "2026-02-27"
+        "sourceDate": "2026-02-27",
+        "id": "act-2026-02-27-adr-2c2861"
       }
     ],
     "codeReferences": [
