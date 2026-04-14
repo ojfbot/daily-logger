@@ -7,13 +7,6 @@
     "sourceDate": "2026-04-11"
   },
   {
-    "command": "/pr-review",
-    "description": "Review purefoy #39 (real-time GPU transcription observability). This is merge-pending-review — not blocked on an open design question. Validate the 8-stage progress.json schema, confirm ProgressReporter doesn't block the transcription hot path, and check that the preflight() GPU metric fields include memory utilization in addition to compute utilization. Merge once confirmed.",
-    "repo": "purefoy",
-    "status": "open",
-    "sourceDate": "2026-04-11"
-  },
-  {
     "command": "/adr",
     "description": "Write the fleet-wide GET /api/beads ADR. ADR-0016 already exists and governs the per-app projection pattern. This new ADR documents the fleet extension: the FrameBeadLike type (defined in core/packages/types/src/bead.ts), the app-specific prefix convention (pure-, blog-, trip-, seh-, lean-), the empty-return-until-storage pattern, the shell Mayor aggregation strategy, and the Dolt migration path for filesystem beads. Eight repos implement this contract today without a durable decision record.",
     "repo": "core",
@@ -26,20 +19,6 @@
     "repo": "core-reader",
     "status": "open",
     "sourceDate": "2026-04-11"
-  },
-  {
-    "command": "/pr-review",
-    "description": "Review [daily-logger] #133 (auto-merge daily article PRs): verify the auto-merge job correctly references the date output from the generation step and that --rebase is the right merge strategy for sequential article commits.",
-    "repo": "daily-logger",
-    "status": "open",
-    "sourceDate": "2026-04-10"
-  },
-  {
-    "command": "/pr-review",
-    "description": "Review [core] #59 (morning workflow orchestration): validate the /diagram-intake skill's repo-name mapping logic and the /orchestrate 4-layer progressive output format against a real morning photo before merging.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-04-10"
   },
   {
     "command": "/validate",
@@ -77,13 +56,6 @@
     "sourceDate": "2026-04-07"
   },
   {
-    "command": "/validate",
-    "description": "Run tsc --noEmit across all four shell packages after #62 merges to confirm zero errors before adding more consumers to @frame/tsconfig. PR #59 passed CI clean, but forward validation before the next consumer onboards is the guard against silent drift.",
-    "repo": "shell",
-    "status": "open",
-    "sourceDate": "2026-04-07"
-  },
-  {
     "command": "/roadmap",
     "description": "Register gcgcca as a live Module Federation remote in the shell host config at :3035. Wire it into frame-dev.sh and confirm hot-reload works in the dev environment. Type bridge is complete, MF scaffold exists — this is the milestone that makes gcgcca visible inside the Frame shell for the first time.",
     "repo": "gcgcca",
@@ -94,13 +66,6 @@
     "command": "/roadmap",
     "description": "Scope the Hailstone migration. Define what moves, what gets rebuilt, and the target architecture inside the portfolio. Produce a short migration plan before any code is written.",
     "repo": "landing",
-    "status": "open",
-    "sourceDate": "2026-04-04"
-  },
-  {
-    "command": "/doc-refactor",
-    "description": "Add a canonical ecosystem table to CLAUDE.md. Schema: repo name | local port | one-line description | phase | status. Seed from the 8 repos touched Friday (cv-builder, landing, shell, core, GroupThink, MrPlug, purefoy, daily-logger), then fill remaining 5. Done means: CLAUDE.md has a complete table, every row has a value in every column, and the table is the single source referenced in the README sweep instructions.",
-    "repo": "core",
     "status": "open",
     "sourceDate": "2026-04-04"
   }

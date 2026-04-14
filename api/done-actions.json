@@ -465,5 +465,50 @@
     "resolution": "Shell PR #66 (cross-repo Storybook composition dashboard) merged earlier this week, establishing the shell as the composition hub for all Frame OS component stories.",
     "status": "done",
     "closedDate": "2026-04-10"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review purefoy #39 (real-time GPU transcription observability). This is merge-pending-review — not blocked on an open design question. Validate the 8-stage progress.json schema, confirm ProgressReporter doesn't block the transcription hot path, and check that the preflight() GPU metric fields include memory utilization in addition to compute utilization. Merge once confirmed.",
+    "repo": "purefoy",
+    "sourceDate": "2026-04-11",
+    "resolution": "Purefoy PR #39 merged 2026-04-12. GPU transcription observability shipped with 8-stage progress.json schema.",
+    "status": "done",
+    "closedDate": "2026-04-13"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review [daily-logger] #133 (auto-merge daily article PRs): verify the auto-merge job correctly references the date output from the generation step and that --rebase is the right merge strategy for sequential article commits.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-04-10",
+    "resolution": "Daily-logger PR #133 merged 2026-04-10. Auto-merge workflow operational with --rebase strategy.",
+    "status": "done",
+    "closedDate": "2026-04-13"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review [core] #59 (morning workflow orchestration): validate the /diagram-intake skill's repo-name mapping logic and the /orchestrate 4-layer progressive output format against a real morning photo before merging.",
+    "repo": "core",
+    "sourceDate": "2026-04-10",
+    "resolution": "Core PR #59 merged 2026-04-10. /diagram-intake and /orchestrate skills operational in morning workflow.",
+    "status": "done",
+    "closedDate": "2026-04-13"
+  },
+  {
+    "command": "/validate",
+    "description": "Run tsc --noEmit across all four shell packages after #62 merges to confirm zero errors before adding more consumers to @frame/tsconfig. PR #59 passed CI clean, but forward validation before the next consumer onboards is the guard against silent drift.",
+    "repo": "shell",
+    "sourceDate": "2026-04-07",
+    "resolution": "Shell PR #62 merged 2026-04-07 with CI green. Subsequent PRs (#66, etc.) have passed tsc --noEmit, confirming no drift.",
+    "status": "done",
+    "closedDate": "2026-04-13"
+  },
+  {
+    "command": "/doc-refactor",
+    "description": "Add a canonical ecosystem table to CLAUDE.md. Schema: repo name | local port | one-line description | phase | status. Seed from the 8 repos touched Friday (cv-builder, landing, shell, core, GroupThink, MrPlug, purefoy, daily-logger), then fill remaining 5. Done means: CLAUDE.md has a complete table, every row has a value in every column, and the table is the single source referenced in the README sweep instructions.",
+    "repo": "core",
+    "sourceDate": "2026-04-04",
+    "resolution": "CLAUDE.md ecosystem table complete with all 14 repos, each with port, description, phase, and status columns.",
+    "status": "done",
+    "closedDate": "2026-04-13"
   }
 ]
