@@ -4,6 +4,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo, PRSkillUsage, RecentPRInfo } from './types.js'
 import { collectTelemetry } from './collect-telemetry.js'
+import { actionId } from './schema.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -264,6 +265,7 @@ function getPreviousArticles(): Array<{ date: string; excerpt: string }> {
 // ─── Open actions from previous articles ─────────────────────────────────────
 
 interface RawAction {
+  id?: string
   command: string
   description: string
   repo: string
@@ -280,13 +282,18 @@ function getOpenActions(): RawAction[] {
     const done: RawAction[] = existsSync(donePath)
       ? JSON.parse(readFileSync(donePath, 'utf-8'))
       : []
-    const doneKeys = new Set(
+    // Match by id (preferred) or legacy 50-char key (backward compat)
+    const doneIds = new Set(
+      done.filter((d) => d.id).map((d) => d.id),
+    )
+    const doneLegacyKeys = new Set(
       done.map((d) => `${d.command}|${d.sourceDate}|${d.description.slice(0, 50)}`),
     )
     return all.filter(
       (a) =>
         a.status === 'open' &&
-        !doneKeys.has(`${a.command}|${a.sourceDate}|${a.description.slice(0, 50)}`),
+        !(a.id && doneIds.has(a.id)) &&
+        !doneLegacyKeys.has(`${a.command}|${a.sourceDate}|${a.description.slice(0, 50)}`),
     )
   } catch {
     return []

@@ -26,7 +26,7 @@ import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
 import { generateArticle, toMarkdown } from './generate-article.js'
 import { loadPersonas, reviewDraft, synthesizeWithCouncil } from './council.js'
-import type { ClosedAction } from './schema.js'
+import { actionId, type ClosedAction } from './schema.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -40,17 +40,37 @@ function persistClosedActions(closed: ClosedAction[], date: string): void {
   if (closed.length === 0) return
   const apiDir = join(REPO_ROOT, 'api')
   const donePath = join(apiDir, 'done-actions.json')
+  const actionsPath = join(apiDir, 'actions.json')
+
+  // Load current open actions to validate matches
+  const openActions: Array<{ id?: string; command: string; sourceDate: string; description: string }> = existsSync(actionsPath)
+    ? JSON.parse(readFileSync(actionsPath, 'utf-8'))
+    : []
+  const openIds = new Set(openActions.map((a) => a.id ?? actionId(a)))
+  const openLegacyKeys = new Set(
+    openActions.map((a) => `${a.command}|${a.sourceDate}|${a.description.slice(0, 50)}`),
+  )
 
   // Append to done-actions.json (build-api.ts handles filtering actions.json)
   const done: Record<string, unknown>[] = existsSync(donePath)
     ? JSON.parse(readFileSync(donePath, 'utf-8'))
     : []
+  let matched = 0
   for (const c of closed) {
-    done.push({ ...c, status: 'done', closedDate: date })
+    // Stamp id if missing
+    const id = c.id ?? actionId(c)
+    const legacyKey = `${c.command}|${c.sourceDate}|${c.description.slice(0, 50)}`
+    const isMatch = openIds.has(id) || openLegacyKeys.has(legacyKey)
+    if (!isMatch) {
+      console.warn(`     ⚠ closedAction does not match any open action: ${id} (${c.command} ${c.sourceDate})`)
+    } else {
+      matched++
+    }
+    done.push({ ...c, id, status: 'done', closedDate: date })
   }
   writeFileSync(donePath, JSON.stringify(done, null, 2) + '\n', 'utf-8')
 
-  console.log(`     ✓ Closed ${closed.length} action(s) → done-actions.json`)
+  console.log(`     ✓ Closed ${closed.length} action(s) → done-actions.json (${matched} matched, ${closed.length - matched} orphaned)`)
 }
 
 async function postToBlogEngine(markdown: string, apiUrl: string): Promise<void> {

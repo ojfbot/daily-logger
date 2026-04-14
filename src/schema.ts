@@ -8,6 +8,7 @@
  * try v2 → fall back to v1 → produce stub article.
  */
 
+import { createHash } from 'crypto'
 import { z } from 'zod'
 
 // ─── Tag types ───────────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ export const DecisionEntrySchema = z.object({
 export const ACTION_STATUSES = ['open', 'done'] as const
 
 export const ActionItemSchema = z.object({
+  id: z.string().optional(),
   command: z.string(),
   description: z.string(),
   repo: z.string(),
@@ -54,6 +56,20 @@ export const ActionItemSchema = z.object({
   closedDate: z.string().optional(),
   resolution: z.string().optional(),
 })
+
+/**
+ * Generate a deterministic action ID from its fields.
+ * Format: `act-{sourceDate}-{command}-{6-char hash of description}`
+ * Used for matching closedActions to open actions without relying on
+ * exact description text (which Claude may paraphrase).
+ */
+export function actionId(a: { command: string; sourceDate: string; description: string }): string {
+  const hash = createHash('sha256')
+    .update(a.description)
+    .digest('hex')
+    .slice(0, 6)
+  return `act-${a.sourceDate}-${a.command.replace(/^\//, '')}-${hash}`
+}
 
 export const ARTICLE_STATUSES = ['draft', 'accepted', 'rejected'] as const
 
@@ -78,6 +94,7 @@ export const CodeReferenceSchema = z.object({
 // ─── Full article schema (v2) ────────────────────────────────────────────────
 
 export const ClosedActionSchema = z.object({
+  id: z.string().optional(),
   command: z.string(),
   description: z.string(),
   repo: z.string(),

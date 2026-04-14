@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { BlogContext, GeneratedArticle, StructuredArticle } from './types.js'
 import type { ArticleDataV2 } from './schema.js'
-import { validateArticleOutput, getValidationErrors } from './schema.js'
+import { validateArticleOutput, getValidationErrors, actionId } from './schema.js'
 
 const MODEL = 'claude-sonnet-4-6'
 // 8 k output budget — enough headroom on high-activity days (64+ commits) to
@@ -93,12 +93,16 @@ Action items in the \`actions\` fields must be:
 
 ## Action triage
 
-You will receive a list of open actions from previous runs. For each:
+You will receive a list of open actions from previous runs, each with an \`id\`. For each:
 1. Check if today's commits, merged PRs, or closed issues address it
-2. If resolved: add to \`closedActions\` with a one-sentence \`resolution\` explaining what was done
+2. If resolved: add to \`closedActions\` with:
+   - The \`id\` field — copy the exact ID string from the open action list (e.g. \`act-2026-04-11-validate-a1b2c3\`)
+   - The \`command\`, \`repo\`, \`sourceDate\` — copy verbatim from the open action
+   - A one-sentence \`resolution\` explaining what was done
+   - The \`description\` — copy the EXACT text from the open action. Do NOT paraphrase, shorten, or rephrase. The system matches on description text; any deviation breaks the match and the action stays open forever.
 3. If still open: do NOT re-emit it in \`suggestedActions\` — it carries forward automatically
 4. Only emit NEW actions in \`suggestedActions\` — actions specific to today's work
-5. Be aggressive about closing stale actions (>7 days old) that are no longer relevant
+5. Be aggressive about closing: if a PR was merged, an ADR was written, or a validation passed, close it. Check merged PRs carefully — a merged PR often resolves an action even if the action predates it by days.
 
 ## Output
 
@@ -328,17 +332,18 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
       },
       closedActions: {
         type: 'array',
-        description: 'Actions from previous runs that today\'s work resolved. Include resolution text.',
+        description: 'Actions from previous runs that today\'s work resolved. Copy id, command, description, repo, sourceDate EXACTLY from the open action list — do not paraphrase the description.',
         items: {
           type: 'object',
           properties: {
-            command: { type: 'string', description: 'Original slash command.' },
-            description: { type: 'string', description: 'Original action description.' },
-            repo: { type: 'string', description: 'Original target repo.' },
-            sourceDate: { type: 'string', description: 'Original date YYYY-MM-DD.' },
+            id: { type: 'string', description: 'The action ID from the open actions list (e.g. act-2026-04-11-validate-a1b2c3). Copy exactly.' },
+            command: { type: 'string', description: 'Original slash command. Copy exactly from open action.' },
+            description: { type: 'string', description: 'EXACT original description text. Copy verbatim — do not paraphrase.' },
+            repo: { type: 'string', description: 'Original target repo. Copy exactly.' },
+            sourceDate: { type: 'string', description: 'Original date YYYY-MM-DD. Copy exactly.' },
             resolution: { type: 'string', description: 'One sentence: what was done to resolve this.' },
           },
-          required: ['command', 'description', 'repo', 'sourceDate', 'resolution'],
+          required: ['id', 'command', 'description', 'repo', 'sourceDate', 'resolution'],
         },
       },
       commitCount: {
@@ -717,9 +722,10 @@ export function buildUserPrompt(ctx: BlogContext): string {
 
   if (ctx.openActions.length > 0) {
     parts.push(`## Open actions from previous runs (${ctx.openActions.length})`)
-    parts.push('_Review each action against today\'s commits, merged PRs, and closed issues. If today\'s work addressed it, include it in `closedActions` with a resolution. If not, leave it open — it carries forward automatically. Do NOT re-emit open actions in `suggestedActions`._')
+    parts.push('_Review each action against today\'s commits, merged PRs, and closed issues. If today\'s work addressed it, include it in `closedActions` — copy the `id`, `command`, `repo`, `sourceDate`, and `description` EXACTLY as shown below. Do NOT re-emit open actions in `suggestedActions`._')
     ctx.openActions.forEach((a) => {
-      parts.push(`- [${a.sourceDate}] [${a.repo}] \`${a.command}\` — ${a.description}`)
+      const id = a.id ?? actionId(a)
+      parts.push(`- **id:** \`${id}\` | [${a.sourceDate}] [${a.repo}] \`${a.command}\` — ${a.description}`)
     })
     parts.push('')
   }
