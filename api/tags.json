@@ -12,12 +12,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 19
+    "count": 20
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 17
+    "count": 18
   },
   {
     "name": "cv-builder",
@@ -25,14 +25,19 @@
     "count": 15
   },
   {
+    "name": "core",
+    "type": "repo",
+    "count": 13
+  },
+  {
     "name": "phase-1",
     "type": "phase",
     "count": 13
   },
   {
-    "name": "core",
-    "type": "repo",
-    "count": 12
+    "name": "assistant-centric",
+    "type": "concept",
+    "count": 10
   },
   {
     "name": "tooling-for-iteration",
@@ -40,9 +45,14 @@
     "count": 10
   },
   {
-    "name": "assistant-centric",
-    "type": "concept",
+    "name": "adr",
+    "type": "practice",
     "count": 9
+  },
+  {
+    "name": "hardening",
+    "type": "practice",
+    "count": 8
   },
   {
     "name": "purefoy",
@@ -55,18 +65,8 @@
     "count": 8
   },
   {
-    "name": "adr",
-    "type": "practice",
-    "count": 8
-  },
-  {
     "name": "landing",
     "type": "repo",
-    "count": 7
-  },
-  {
-    "name": "hardening",
-    "type": "practice",
     "count": 7
   },
   {
@@ -85,6 +85,11 @@
     "count": 7
   },
   {
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 6
+  },
+  {
     "name": "gas-town",
     "type": "phase",
     "count": 6
@@ -93,11 +98,6 @@
     "name": "security-as-emergent-ux",
     "type": "concept",
     "count": 6
-  },
-  {
-    "name": "model-behavior-as-design",
-    "type": "concept",
-    "count": 5
   },
   {
     "name": "core-reader",
@@ -248,6 +248,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "phase-9",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "skill-catalog",
