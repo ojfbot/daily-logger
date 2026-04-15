@@ -1,5 +1,86 @@
 [
   {
+    "date": "2026-04-15",
+    "title": "Tuesday quiet: the session-init.sh fleet merge and what a single blog commit reveals",
+    "summary": "One daily-logger commit on Tuesday while 15 merged PRs complete the fleet-wide session-init.sh symlink rollout and purefoy GPU observability.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "fleet-wide-session-init",
+        "type": "concept"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "purefoy",
+      "core-reader",
+      "lean-canvas",
+      "TripPlanner",
+      "BlogEngine",
+      "MrPlug",
+      "seh-study",
+      "core"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "session-init.sh symlink tracked in version control across all repos",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "daily-cleaner uses Claude Opus with confidence thresholds — no human review required for doc cleanup PRs",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "core #77: migrate skill distribution from symlinks to npm package (@ojfbot/core-skills)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "purefoy ProgressReporter: structured JSON at pipeline stage boundaries, not log lines",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-04-14",
     "title": "Monday's action closure pipeline: deterministic IDs, suggestion-ignored telemetry, and five verified-done actions closed",
     "summary": "Monday fixed the action closure pipeline root-to-tip with deterministic content-hash IDs, closed five ghost actions, and completed the suggestion feedback loop with ignored-disposition telemetry.",
