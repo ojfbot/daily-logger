@@ -12,12 +12,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 20
+    "count": 21
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 18
+    "count": 19
   },
   {
     "name": "cv-builder",
@@ -27,22 +27,27 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 13
+    "count": 14
   },
   {
     "name": "phase-1",
     "type": "phase",
-    "count": 13
+    "count": 14
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 10
+    "count": 11
   },
   {
     "name": "tooling-for-iteration",
     "type": "concept",
     "count": 10
+  },
+  {
+    "name": "purefoy",
+    "type": "repo",
+    "count": 9
   },
   {
     "name": "adr",
@@ -52,11 +57,6 @@
   {
     "name": "hardening",
     "type": "practice",
-    "count": 8
-  },
-  {
-    "name": "purefoy",
-    "type": "repo",
     "count": 8
   },
   {
@@ -83,6 +83,11 @@
     "name": "frame-agent",
     "type": "arch",
     "count": 7
+  },
+  {
+    "name": "rest-day",
+    "type": "activity",
+    "count": 6
   },
   {
     "name": "model-behavior-as-design",
@@ -117,11 +122,6 @@
   {
     "name": "storybook",
     "type": "infra",
-    "count": 5
-  },
-  {
-    "name": "rest-day",
-    "type": "activity",
     "count": 5
   },
   {
@@ -248,6 +248,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "fleet-wide-session-init",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "phase-9",
