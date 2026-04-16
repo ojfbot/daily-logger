@@ -36,7 +36,7 @@ Each article lives at `/articles/YYYY-MM-DD`.
   → deploy-vercel.yml    fires on push to main → Vercel serverless build + deploy
 ```
 
-Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`, `gcgcca`, `browser-automation`.
+Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`, `gcgcca`, `browser-automation`, `suggest-skills`.
 
 ## Architecture
 
@@ -89,9 +89,9 @@ Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug
 | [cv-builder](https://github.com/ojfbot/cv-builder) | Multi-agent resume builder; CI/CD flagship with visual regression pipeline |
 | [BlogEngine](https://github.com/ojfbot/BlogEngine) | AI blog platform; daily-logger publishes here |
 | [TripPlanner](https://github.com/ojfbot/TripPlanner) | AI trip planning |
-| [core](https://github.com/ojfbot/core) | Workflow framework — 30+ Claude Code skills + TypeScript engine |
+| [core](https://github.com/ojfbot/core) | Workflow framework — 30+ Claude Code skills + TypeScript engine; suggest-skills engine + skill catalog |
 | [MrPlug](https://github.com/ojfbot/MrPlug) | Chrome extension for AI UI/UX feedback; Frame dev companion |
-| [purefoy](https://github.com/ojfbot/purefoy) | Roger Deakins knowledge base; roadmap: podcast AI agent in Frame |
+| [purefoy](https://github.com/ojfbot/purefoy) | Roger Deakins knowledge base; GPU observability + structured JSON progress reporting |
 | [lean-canvas](https://github.com/ojfbot/lean-canvas) | Lean canvas tool |
 | [seh-study](https://github.com/ojfbot/seh-study) | SEH study resource |
 | [core-reader](https://github.com/ojfbot/core-reader) | Documentation viewer for the core workflow framework |

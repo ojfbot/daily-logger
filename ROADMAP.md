@@ -10,7 +10,7 @@
 
 **Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning + fleet-wide dependency hardening + skill-catalog + fleet-wide session-init**
 
-- **Actions board**: one action open (PR #133 review). Fleet-wide README sharpening complete across all public repos (2026-04-04); live CVE patched and verified; expandable BioCard shipped to landing page.
+- **Actions board**: two actions open (pre-`9c17d7f` ID audit, two-ADR session). PR #133 review completed (2026-04-13, auto-merge workflow operational). Fleet-wide README sharpening complete across all public repos (2026-04-04); live CVE patched and verified; expandable BioCard shipped to landing page.
 - **Fleet hardening sprint complete**: 15-PR fleet hardening sprint closed — transitive dependency vulnerabilities patched across all 11 repos, CVE-2025-68665 resolved in MrPlug with explicit version pin, Express 5 route-param type fixes shipped in TripPlanner and BlogEngine. Every public README sharpened (2026-04-04). Structural gap identified: `tsc --noEmit` is not yet a required CI step for lock-file PRs touching `@types/*` or framework packages.
 - **ADRs landed**: ADR-0033 (daily-cleaner confidence threshold), ADR-0034 (Frame-wide Redux store strategy, resolves shell #5), ADR-0036 (structured decision output for rich UI), ADR-0037 (JSONL truncation bug fix), ADR-0038 (editorial revision CI workflow), ADR-0043 (AgentBead bridge — Claude Code lifecycle to Gas Town bead emissions).
 - **Landing**: Log nav link now points to `log.jim.software` (Vercel subdomain), old GitHub Pages URL retired.
@@ -50,7 +50,7 @@
    Rest-day handling added. Article status lifecycle and auto-merge overnight PRs shipped (`8c4a75a`).
    Two-column article layout with Lois design system integration landed.
     MetricsBar extracted with hover popovers and 5 stat cards landed (commit `2520988`). Done actions page now shows recent/archived tiers (commit `449e321`). Sparkline dead code removed (commit `3d5e4dd`). Dev mode auth bypass for editorial testing added. Editorial revision sidebar includes feedback quote in revision comment; auto-merge disabled (commit `84aec32`).
-   Skill telemetry wired end-to-end: suggestion tracking, PR comment hooks, adoption report script; daily-logger reads and publishes telemetry data. Suggest-skills engine (`suggest-skills.mjs`) landed in core with skill-catalog affinity and orchestration hook integration. Fleet-wide `session-init.sh` symlink tracked in git across 10 repos.
+   Skill telemetry wired end-to-end: suggestion tracking, PR comment hooks, adoption report script; daily-logger reads and publishes telemetry data. Suggest-skills engine (`suggest-skills.mjs`) landed in core with skill-catalog affinity and orchestration hook integration. Fleet-wide `session-init.sh` symlink tracked in git across 10 repos. Action closure pipeline uses deterministic content-hash IDs (not wall-clock timestamps). Suggestion-ignored telemetry closes the feedback loop forward half. `suggested_after` and `layer_affinity` are first-class fields in the skill catalog.
   ADR-0035 (article status lifecycle) and ADR-0036 (structured decision output) ratified.
 - **gcgcca (bootstrapping)**: Python CLI complete (47 pytest tests passing). Type bridge wired (Pydantic → OpenAPI → TS). Milestones: [ ] Express API serving scene data on :3036, [ ] browser-app registered in shell as MF remote, [ ] Frame agent tools manifest at GET /api/tools, [ ] end-to-end KML → UI coverage display.
 
@@ -72,7 +72,7 @@ pipeline, not here.
 4. Multi-instance app launching — **shipped** (shell multi-instance UI, 2026-03-09)
 5. MrPlug as `ojf inspect` dev companion — **Phase 5B merged + security hardened** (GitHub issue creation, Claude Code relay, MF-aware routing, `file-techdebt` handler — AI-spotted debt files directly to `TECHDEBT.md`; PR #32 — relay error handling hardened, origin validation added to message-passing path)
 6. Visual regression CI as A/B foundation — **~70%** (issue #94)
-7. purefoy as podcast AI agent in Frame — **corpus complete; frame-ui-components migration complete** ([purefoy] #9–#14 merged — 348/348 episodes transcribed, AWS runner retired, typed transcript editing UI in Frame, standalone Flask reference UI at localhost:5050, ADR-006–009; [purefoy] #17 + #18 merged — local components replaced with `@ojfbot/frame-ui-components` wrappers, `DashboardLayout` adopted, Vercel deployment wired)
+7. purefoy as podcast AI agent in Frame — **corpus complete; frame-ui-components migration complete; GPU observability added** ([purefoy] #9–#14 merged — 348/348 episodes transcribed, AWS runner retired, typed transcript editing UI in Frame, standalone Flask reference UI at localhost:5050, ADR-006–009; [purefoy] #17 + #18 merged — local components replaced with `@ojfbot/frame-ui-components` wrappers, `DashboardLayout` adopted, Vercel deployment wired; ProgressReporter uses structured JSON at pipeline stage boundaries)
 8. App definition from UI (ShellAgent scaffolds apps) — **not started**
 9. daily-logger → BlogEngine + editorial UI — **live / in progress**
 10. gcgcca as Frame OS geospatial sub-app — **bootstrapping** (Python CLI complete, type bridge wired, browser-app skeleton + Express API scaffolded, not yet registered in shell)
