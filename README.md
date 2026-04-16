@@ -29,7 +29,7 @@ Each article lives at `/articles/YYYY-MM-DD`.
         git commit + push
         gh pr create --draft  ← structured PR template for editorial review
         editorial revision CI (`pnpm exec tsx`) self-reviews the draft
-        auto-merge job merges accepted article PRs for morning draft visibility
+        auto-merge job merges accepted article PRs (--rebase strategy) for morning draft visibility
 
   → you: review draft PR + editorial suggestions, edit on the branch if needed, merge to publish
 
@@ -38,12 +38,14 @@ Each article lives at `/articles/YYYY-MM-DD`.
 
 Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`, `gcgcca`, `browser-automation`.
 
+> **Note:** Skill distribution is migrating from symlinks to an npm package (`@ojfbot/core-skills`) — see core #77.
+
 ## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │  Phase 1: Collect Context                                        │
-│  collect-context.ts — GitHub API sweep across 15 repos           │
+│  collect-context.ts — GitHub API sweep across 15+ repos          │
 │  Commits (24h) + PRs/Issues (7d) + ROADMAP.md injection         │
 │  + Claude Code telemetry aggregation (skill/tool usage)          │
 └──────────────┬───────────────────────────────────────────────────┘
@@ -77,7 +79,7 @@ Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug
 
 - **Automated content pipeline** — cron trigger, cross-repo context sweep via GitHub API, Claude generation, PR-based editorial review, Vercel deploy on merge
 - **Structured AI prompting** — ROADMAP.md context injection (~2500 chars), enforced article schema (frontmatter + 4 required sections), deterministic PR template
-- **Observable development** — every day's work across 15 repos is public at [log.jim.software](https://log.jim.software)
+- **Observable development** — every day's work across 15+ repos is public at [log.jim.software](https://log.jim.software)
 
 ---
 
@@ -89,7 +91,7 @@ Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug
 | [cv-builder](https://github.com/ojfbot/cv-builder) | Multi-agent resume builder; CI/CD flagship with visual regression pipeline |
 | [BlogEngine](https://github.com/ojfbot/BlogEngine) | AI blog platform; daily-logger publishes here |
 | [TripPlanner](https://github.com/ojfbot/TripPlanner) | AI trip planning |
-| [core](https://github.com/ojfbot/core) | Workflow framework — 30+ Claude Code skills + TypeScript engine |
+| [core](https://github.com/ojfbot/core) | Workflow framework — 30+ Claude Code skills + TypeScript engine (migrating to `@ojfbot/core-skills` npm package) |
 | [MrPlug](https://github.com/ojfbot/MrPlug) | Chrome extension for AI UI/UX feedback; Frame dev companion |
 | [purefoy](https://github.com/ojfbot/purefoy) | Roger Deakins knowledge base; roadmap: podcast AI agent in Frame |
 | [lean-canvas](https://github.com/ojfbot/lean-canvas) | Lean canvas tool |
