@@ -2,7 +2,7 @@
   {
     "name": "shell",
     "type": "repo",
-    "count": 27
+    "count": 28
   },
   {
     "name": "module-federation",
@@ -12,22 +12,22 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 21
+    "count": 22
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 19
+    "count": 20
+  },
+  {
+    "name": "core",
+    "type": "repo",
+    "count": 15
   },
   {
     "name": "cv-builder",
     "type": "repo",
     "count": 15
-  },
-  {
-    "name": "core",
-    "type": "repo",
-    "count": 14
   },
   {
     "name": "phase-1",
@@ -37,17 +37,17 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 11
+    "count": 12
   },
   {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 10
+    "count": 11
   },
   {
     "name": "purefoy",
     "type": "repo",
-    "count": 9
+    "count": 10
   },
   {
     "name": "adr",
@@ -63,6 +63,21 @@
     "name": "MrPlug",
     "type": "concept",
     "count": 8
+  },
+  {
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 7
+  },
+  {
+    "name": "gas-town",
+    "type": "phase",
+    "count": 7
+  },
+  {
+    "name": "rest-day",
+    "type": "activity",
+    "count": 7
   },
   {
     "name": "landing",
@@ -83,21 +98,6 @@
     "name": "frame-agent",
     "type": "arch",
     "count": 7
-  },
-  {
-    "name": "rest-day",
-    "type": "activity",
-    "count": 6
-  },
-  {
-    "name": "model-behavior-as-design",
-    "type": "concept",
-    "count": 6
-  },
-  {
-    "name": "gas-town",
-    "type": "phase",
-    "count": 6
   },
   {
     "name": "security-as-emergent-ux",
@@ -180,6 +180,16 @@
     "count": 3
   },
   {
+    "name": "gcgcca",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "skill-catalog",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "seh-study",
     "type": "repo",
     "count": 2
@@ -260,11 +270,6 @@
     "count": 1
   },
   {
-    "name": "skill-catalog",
-    "type": "concept",
-    "count": 1
-  },
-  {
     "name": "fleet-hardening",
     "type": "concept",
     "count": 1
@@ -291,11 +296,6 @@
   },
   {
     "name": "playwright",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "gcgcca",
     "type": "concept",
     "count": 1
   },
