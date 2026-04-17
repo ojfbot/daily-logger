@@ -1,5 +1,85 @@
 [
   {
+    "date": "2026-04-17",
+    "title": "Thursday's single commit: what the merged PR flood from earlier this week actually means",
+    "summary": "One automated commit on Thursday; 15 PRs merged in seven days completed fleet-wide session-init rollout and purefoy GPU observability.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "phase-9",
+        "type": "concept"
+      },
+      {
+        "name": "security-scanning",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "purefoy",
+      "core-reader",
+      "lean-canvas",
+      "TripPlanner",
+      "BlogEngine",
+      "MrPlug",
+      "seh-study"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "session-init.sh symlink tracked in version control across all repos",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet-wide daily-cleaner PRs as a continuous hygiene signal",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ProgressReporter writes structured JSON, not log lines",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "22 issues closed without a dedicated cleanup sprint",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-04-16",
     "title": "Wednesday's single commit: reading the signal in the silence",
     "summary": "One automated commit on Wednesday surfaces 19 open actions, a stalled Gas Town critical path, and a foundational architectural fork in skill distribution.",
