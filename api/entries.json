@@ -1,5 +1,107 @@
 [
   {
+    "date": "2026-04-18",
+    "title": "Friday's one commit: reading the accumulated signal in 15 merged PRs",
+    "summary": "One automated commit Friday; 15 merged PRs close session-init propagation, stale-doc cleanup, and purefoy GPU observability — but the consolidation trough now has a cost.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "core-reader",
+        "type": "repo"
+      },
+      {
+        "name": "lean-canvas",
+        "type": "repo"
+      },
+      {
+        "name": "TripPlanner",
+        "type": "concept"
+      },
+      {
+        "name": "BlogEngine",
+        "type": "concept"
+      },
+      {
+        "name": "seh-study",
+        "type": "repo"
+      },
+      {
+        "name": "MrPlug",
+        "type": "concept"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "phase-7",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "session-init",
+        "type": "concept"
+      },
+      {
+        "name": "gas-town",
+        "type": "phase"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "purefoy",
+      "core-reader",
+      "lean-canvas",
+      "TripPlanner",
+      "BlogEngine",
+      "seh-study",
+      "MrPlug"
+    ],
+    "commitCount": 2,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "session-init.sh symlink tracking is now fleet-complete",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "purefoy #39: ProgressReporter does not block the transcription hot path",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "19 open actions is a queue depth that needs triage, not accumulation",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-04-17",
     "title": "Thursday's single commit: what the merged PR flood from earlier this week actually means",
     "summary": "One automated commit on Thursday; 15 PRs merged in seven days completed fleet-wide session-init rollout and purefoy GPU observability.",
