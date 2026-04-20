@@ -7,7 +7,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 25
+    "count": 26
   },
   {
     "name": "module-federation",
@@ -17,7 +17,7 @@
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 23
+    "count": 24
   },
   {
     "name": "core",
@@ -25,14 +25,14 @@
     "count": 16
   },
   {
-    "name": "cv-builder",
-    "type": "repo",
+    "name": "assistant-centric",
+    "type": "concept",
     "count": 15
   },
   {
-    "name": "assistant-centric",
-    "type": "concept",
-    "count": 14
+    "name": "cv-builder",
+    "type": "repo",
+    "count": 15
   },
   {
     "name": "phase-1",
@@ -45,19 +45,19 @@
     "count": 13
   },
   {
-    "name": "tooling-for-iteration",
-    "type": "concept",
-    "count": 11
-  },
-  {
     "name": "rest-day",
     "type": "activity",
-    "count": 10
+    "count": 11
   },
   {
     "name": "adr",
     "type": "practice",
-    "count": 10
+    "count": 11
+  },
+  {
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 11
   },
   {
     "name": "gas-town",
@@ -135,6 +135,11 @@
     "count": 5
   },
   {
+    "name": "cleanup",
+    "type": "concept",
+    "count": 4
+  },
+  {
     "name": "lean-canvas",
     "type": "repo",
     "count": 4
@@ -170,7 +175,7 @@
     "count": 4
   },
   {
-    "name": "cleanup",
+    "name": "phase-9",
     "type": "concept",
     "count": 3
   },
@@ -201,11 +206,6 @@
   },
   {
     "name": "phase-7",
-    "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "phase-9",
     "type": "concept",
     "count": 2
   },
