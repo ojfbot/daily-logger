@@ -1,5 +1,21 @@
 [
   {
+    "command": "/sweep",
+    "description": "Batch-merge daily-cleaner PRs #155, #157, #159, #161, #163, #165, #167 in sequence — rebase any that have conflicts, verify Opus-validation comment is present on each, and merge. The queue is 7 PRs deep and growing a conflict risk with each passing day.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-04-21",
+    "id": "act-2026-04-21-sweep-914db8"
+  },
+  {
+    "command": "/roadmap",
+    "description": "Triage the 19 open actions: explicitly defer any action older than 14 days that has not been touched (act-2026-04-04-roadmap-e9a078, act-2026-04-07-adr-daa2ca, act-2026-04-07-roadmap-6f4599) — either close with a deferral note or assign a target date. An action board with 19 items is a backlog, not a queue.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-21",
+    "id": "act-2026-04-21-roadmap-7d796f"
+  },
+  {
     "command": "/validate",
     "description": "End-to-end test the suggestion-ignored telemetry: trigger a skill suggestion in a dev session, decline it, and verify an `ignored` disposition entry appears in `~/.claude/suggestion-log.jsonl` with the correct skill ID and timestamp. Confirm the `followed` path still fires on invocation. This is the first full-loop verification of the completed feedback system.",
     "repo": "core",

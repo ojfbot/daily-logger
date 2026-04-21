@@ -7,7 +7,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 26
+    "count": 27
+  },
+  {
+    "name": "ci-cd",
+    "type": "practice",
+    "count": 25
   },
   {
     "name": "module-federation",
@@ -15,9 +20,9 @@
     "count": 25
   },
   {
-    "name": "ci-cd",
-    "type": "practice",
-    "count": 24
+    "name": "assistant-centric",
+    "type": "concept",
+    "count": 16
   },
   {
     "name": "core",
@@ -25,19 +30,14 @@
     "count": 16
   },
   {
-    "name": "assistant-centric",
-    "type": "concept",
+    "name": "phase-1",
+    "type": "phase",
     "count": 15
   },
   {
     "name": "cv-builder",
     "type": "repo",
     "count": 15
-  },
-  {
-    "name": "phase-1",
-    "type": "phase",
-    "count": 14
   },
   {
     "name": "purefoy",
@@ -47,12 +47,12 @@
   {
     "name": "rest-day",
     "type": "activity",
-    "count": 11
+    "count": 12
   },
   {
     "name": "adr",
     "type": "practice",
-    "count": 11
+    "count": 12
   },
   {
     "name": "tooling-for-iteration",
@@ -62,7 +62,7 @@
   {
     "name": "gas-town",
     "type": "phase",
-    "count": 9
+    "count": 10
   },
   {
     "name": "MrPlug",
@@ -100,6 +100,11 @@
     "count": 7
   },
   {
+    "name": "storybook",
+    "type": "infra",
+    "count": 6
+  },
+  {
     "name": "core-reader",
     "type": "repo",
     "count": 6
@@ -127,11 +132,6 @@
   {
     "name": "sprint",
     "type": "concept",
-    "count": 5
-  },
-  {
-    "name": "storybook",
-    "type": "infra",
     "count": 5
   },
   {
