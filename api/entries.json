@@ -1,5 +1,89 @@
 [
   {
+    "date": "2026-04-21",
+    "title": "Monday's single commit and seven stale PRs: the daily-cleaner queue is now a liability",
+    "summary": "One automated commit Monday, seven daily-cleaner PRs unreviewed — the oldest from April 14 — while 19 open actions and the first Gas Town UI wait.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "gas-town",
+        "type": "phase"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "storybook",
+        "type": "infra"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "The daily-cleaner PR queue has crossed a structural threshold",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Gas Town Sprint 1 remains gated on a single shell /validate action",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "19 open actions is above the useful threshold for an action board",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/sweep",
+        "description": "Batch-merge daily-cleaner PRs #155, #157, #159, #161, #163, #165, #167 in sequence — rebase any that have conflicts, verify Opus-validation comment is present on each, and merge. The queue is 7 PRs deep and growing a conflict risk with each passing day.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-04-21",
+        "id": "act-2026-04-21-sweep-914db8"
+      },
+      {
+        "command": "/roadmap",
+        "description": "Triage the 19 open actions: explicitly defer any action older than 14 days that has not been touched (act-2026-04-04-roadmap-e9a078, act-2026-04-07-adr-daa2ca, act-2026-04-07-roadmap-6f4599) — either close with a deferral note or assign a target date. An action board with 19 items is a backlog, not a queue.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-21",
+        "id": "act-2026-04-21-roadmap-7d796f"
+      }
+    ]
+  },
+  {
     "date": "2026-04-20",
     "title": "Sunday hold: six stale-doc PRs queued, one commit shipped, and the daily-cleaner backlog that keeps growing",
     "summary": "Sunday produced one automated commit while six daily-cleaner PRs sit unreviewed — the queue is now a week deep and blocking the cleaner's own credibility.",
