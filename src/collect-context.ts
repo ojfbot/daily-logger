@@ -26,6 +26,8 @@ const REPOS = [
   'GroupThink',       // GroupThink — LLM-powered tab grouping Chrome extension
   'landing',           // jim.software — personal landing page
   'gcgcca',            // GCGCCA — USGS Earth Explorer orthoimagery query tool, Python+TS hybrid (purefoy pattern)
+  'beaverGame',        // Cozy Beaver — 3D beaver simulator (Three.js client)
+  'asset-foundry',     // AI-driven Blender asset pipeline consumed by beaverGame
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
