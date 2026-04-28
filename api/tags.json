@@ -1,33 +1,33 @@
 [
   {
+    "name": "daily-logger",
+    "type": "repo",
+    "count": 28
+  },
+  {
     "name": "shell",
     "type": "repo",
     "count": 28
   },
   {
-    "name": "daily-logger",
-    "type": "repo",
-    "count": 27
+    "name": "module-federation",
+    "type": "arch",
+    "count": 26
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 25
-  },
-  {
-    "name": "module-federation",
-    "type": "arch",
-    "count": 25
-  },
-  {
-    "name": "assistant-centric",
-    "type": "concept",
-    "count": 16
+    "count": 26
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 16
+    "count": 17
+  },
+  {
+    "name": "assistant-centric",
+    "type": "concept",
+    "count": 17
   },
   {
     "name": "phase-1",
@@ -100,6 +100,11 @@
     "count": 7
   },
   {
+    "name": "sprint",
+    "type": "concept",
+    "count": 6
+  },
+  {
     "name": "storybook",
     "type": "infra",
     "count": 6
@@ -127,11 +132,6 @@
   {
     "name": "container-presenter",
     "type": "arch",
-    "count": 5
-  },
-  {
-    "name": "sprint",
-    "type": "concept",
     "count": 5
   },
   {
@@ -278,6 +278,16 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "beaverGame",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "asset-foundry",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "fleet-wide-session-init",
