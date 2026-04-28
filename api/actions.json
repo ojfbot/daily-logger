@@ -1,5 +1,37 @@
 [
   {
+    "command": "/test-expand",
+    "description": "Write Vitest tests for beaverGame's load-glb.ts validation tripwire covering all four rejection paths: missing validation.json, rejected status field, malformed JSON, and schema mismatch. The tripwire is the gate that prevents a malformed or unvalidated .glb from being loaded into the scene — if it passes something it shouldn't, a corrupted or oversized asset silently enters the render pipeline. This is BG-004 and the highest-leverage untested code in the loader. The four paths map directly to the four branches in the validation check function.",
+    "repo": "beaverGame",
+    "status": "open",
+    "sourceDate": "2026-04-28",
+    "id": "act-2026-04-28-test-expand-71bde1"
+  },
+  {
+    "command": "/hardening",
+    "description": "Add the snap-and-diff CI step to beaverGame's .github/workflows/ci.yml. The snap step runs pnpm tsx scripts/snap.ts to render a headless screenshot of the full scene in its default initial state (terrain loaded, no player actions taken), uploads the result as a workflow artifact, and diffs it against the committed baseline at tests/baselines/scene-snap.png using SSIM ≥ 0.98 as the pass threshold. On the first run, if no baseline exists, the step should write the baseline and pass — subsequent runs enforce the diff. This is BG-003 and the prerequisite for visual regression as a CI gate.",
+    "repo": "beaverGame",
+    "status": "open",
+    "sourceDate": "2026-04-28",
+    "id": "act-2026-04-28-hardening-096117"
+  },
+  {
+    "command": "/validate",
+    "description": "Verify the asset-foundry → beaverGame asset sync end-to-end: with both repos checked out as siblings (../beaverGame and ../asset-foundry), run pnpm gen-asset birch_sapling in asset-foundry and confirm that birch_sapling.glb and birch_sapling.validation.json land in beaverGame/public/assets/. Document the expected sibling-directory layout in asset-foundry's CLAUDE.md. This is the manual precursor to AF-013 CI automation and currently the highest-risk undocumented path in the ecosystem — the Phase 0 spike was developed in isolation and this sync has never been verified against a real beaverGame checkout.",
+    "repo": "asset-foundry",
+    "status": "open",
+    "sourceDate": "2026-04-28",
+    "id": "act-2026-04-28-validate-7e7216"
+  },
+  {
+    "command": "/sweep",
+    "description": "Verify conflict state of daily-logger daily-cleaner PRs #155, #157, #159, #161 (opened April 14–17) before touching #163–#169. Open each PR in the GitHub UI, check for conflict markers, and manually resolve any conflicts on the affected branches. Once the oldest four are clean, run act-2026-04-21-sweep-914db8 to batch-merge all eight. Do not invoke the batch-merge action until conflict state is verified — the queue is 8 PRs deep and a single conflicted branch will block the entire batch.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-04-28",
+    "id": "act-2026-04-28-sweep-e4f372"
+  },
+  {
     "command": "/sweep",
     "description": "Batch-merge daily-cleaner PRs #155, #157, #159, #161, #163, #165, #167 in sequence — rebase any that have conflicts, verify Opus-validation comment is present on each, and merge. The queue is 7 PRs deep and growing a conflict risk with each passing day.",
     "repo": "daily-logger",
