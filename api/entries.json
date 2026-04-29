@@ -1,5 +1,129 @@
 [
   {
+    "date": "2026-04-29",
+    "title": "Tuesday's pivot: beaverGame ships Phase 0 gameplay then discards its engine",
+    "summary": "Tuesday closed ten PRs completing beaverGame's Phase 0 vertical slice, then immediately opened a Babylon.js migration after a core research spike recommended discarding all ~2,500 lines of Three.js code.",
+    "tags": [
+      {
+        "name": "beaverGame",
+        "type": "concept"
+      },
+      {
+        "name": "asset-foundry",
+        "type": "concept"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "game-engine-migration",
+        "type": "concept"
+      },
+      {
+        "name": "cross-repo-contracts",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "shell",
+      "daily-logger"
+    ],
+    "commitCount": 13,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Discard ~2,500 lines of Three.js and migrate to Babylon.js",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Treat the existing Three.js scene as a test oracle, not legacy code",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Gate window.__beaver debug rigs behind import.meta.env.DEV",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Extract gateValidation as a pure function for direct unit testing",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "asset-foundry evolves from build script to portable MCP platform (PR #16)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Cross-repo asset imports: sibling-repo path dependency, not a package",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge core #94 (game-engine architecture spike — Babylon.js recommended). This is the decision record that justifies discarding beaverGame's entire Three.js codebase. Draft PR #28 is already open; without #94 merged, the rationale exists only in a PR description and will be re-litigated in future sessions.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-29",
+        "id": "act-2026-04-29-pr-review-c0e169"
+      },
+      {
+        "command": "/roadmap",
+        "description": "Name a disposition for beaverGame #27 (Three.js playability pass) before #28 advances past the Babylon bootstrap. The heightAt(x,z) bilinear-blend fix is a correctness issue — leaving #27 open creates ambiguity about what the snap-rig oracle actually certifies. Merge it as spec, or close it as superseded. Do not leave it in an undecided state.",
+        "repo": "beaverGame",
+        "status": "open",
+        "sourceDate": "2026-04-29",
+        "id": "act-2026-04-29-roadmap-9d7534"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Merge shell #76 (register asset_foundry MF remote at :3035). One-line host config addition, zero risk surface, prerequisite for the asset-foundry Frame MF front door being visible in the dev environment. Can close in under ten minutes and unblocks the asset-foundry platform roadmap.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-04-29",
+        "id": "act-2026-04-29-pr-review-e613c0"
+      }
+    ]
+  },
+  {
     "date": "2026-04-28",
     "title": "Monday launch: beaverGame + asset-foundry enter the ecosystem with five playable milestones",
     "summary": "Two new repos bootstrap from zero to playable vertical slice Monday — beaverGame ships a terrain-to-dam sandbox loop and asset-foundry stands up an AI-driven Blender pipeline.",
