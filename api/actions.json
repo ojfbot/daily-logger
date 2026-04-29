@@ -1,5 +1,29 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Merge core #94 (game-engine architecture spike — Babylon.js recommended). This is the decision record that justifies discarding beaverGame's entire Three.js codebase. Draft PR #28 is already open; without #94 merged, the rationale exists only in a PR description and will be re-litigated in future sessions.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-29",
+    "id": "act-2026-04-29-pr-review-c0e169"
+  },
+  {
+    "command": "/roadmap",
+    "description": "Name a disposition for beaverGame #27 (Three.js playability pass) before #28 advances past the Babylon bootstrap. The heightAt(x,z) bilinear-blend fix is a correctness issue — leaving #27 open creates ambiguity about what the snap-rig oracle actually certifies. Merge it as spec, or close it as superseded. Do not leave it in an undecided state.",
+    "repo": "beaverGame",
+    "status": "open",
+    "sourceDate": "2026-04-29",
+    "id": "act-2026-04-29-roadmap-9d7534"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge shell #76 (register asset_foundry MF remote at :3035). One-line host config addition, zero risk surface, prerequisite for the asset-foundry Frame MF front door being visible in the dev environment. Can close in under ten minutes and unblocks the asset-foundry platform roadmap.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-04-29",
+    "id": "act-2026-04-29-pr-review-e613c0"
+  },
+  {
     "command": "/test-expand",
     "description": "Write Vitest tests for beaverGame's load-glb.ts validation tripwire covering all four rejection paths: missing validation.json, rejected status field, malformed JSON, and schema mismatch. The tripwire is the gate that prevents a malformed or unvalidated .glb from being loaded into the scene — if it passes something it shouldn't, a corrupted or oversized asset silently enters the render pipeline. This is BG-004 and the highest-leverage untested code in the loader. The four paths map directly to the four branches in the validation check function.",
     "repo": "beaverGame",
