@@ -8,9 +8,9 @@
 
 ## Where we are now (update this section weekly)
 
-**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning + fleet-wide dependency hardening + skill-catalog + fleet-wide session-init**
+**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning + fleet-wide dependency hardening + skill-catalog + fleet-wide session-init + beaverGame + asset-foundry**
 
-- **Actions board**: one action open (PR #133 review). Fleet-wide README sharpening complete across all public repos (2026-04-04); live CVE patched and verified; expandable BioCard shipped to landing page.
+- **Actions board**: four actions open (daily-cleaner PR sweep, open-action ID audit, two pending ADRs). Fleet-wide README sharpening complete across all public repos (2026-04-04); live CVE patched and verified; expandable BioCard shipped to landing page.
 - **Fleet hardening sprint complete**: 15-PR fleet hardening sprint closed — transitive dependency vulnerabilities patched across all 11 repos, CVE-2025-68665 resolved in MrPlug with explicit version pin, Express 5 route-param type fixes shipped in TripPlanner and BlogEngine. Every public README sharpened (2026-04-04). Structural gap identified: `tsc --noEmit` is not yet a required CI step for lock-file PRs touching `@types/*` or framework packages.
 - **ADRs landed**: ADR-0033 (daily-cleaner confidence threshold), ADR-0034 (Frame-wide Redux store strategy, resolves shell #5), ADR-0036 (structured decision output for rich UI), ADR-0037 (JSONL truncation bug fix), ADR-0038 (editorial revision CI workflow), ADR-0043 (AgentBead bridge — Claude Code lifecycle to Gas Town bead emissions).
 - **Landing**: Log nav link now points to `log.jim.software` (Vercel subdomain), old GitHub Pages URL retired.
@@ -53,6 +53,8 @@
    Skill telemetry wired end-to-end: suggestion tracking, PR comment hooks, adoption report script; daily-logger reads and publishes telemetry data. Suggest-skills engine (`suggest-skills.mjs`) landed in core with skill-catalog affinity and orchestration hook integration. Fleet-wide `session-init.sh` symlink tracked in git across 10 repos.
   ADR-0035 (article status lifecycle) and ADR-0036 (structured decision output) ratified.
 - **gcgcca (bootstrapping)**: Python CLI complete (47 pytest tests passing). Type bridge wired (Pydantic → OpenAPI → TS). Milestones: [ ] Express API serving scene data on :3036, [ ] browser-app registered in shell as MF remote, [ ] Frame agent tools manifest at GET /api/tools, [ ] end-to-end KML → UI coverage display.
+- **beaverGame (Phase 0 complete, Babylon.js migration started)**: Phase 0 vertical slice shipped — terrain-to-dam sandbox loop playable. Ten PRs closed 2026-04-29 completing the vertical slice. Core research spike recommended discarding ~2,500 lines of Three.js code; Babylon.js migration opened.
+- **asset-foundry (bootstrapping)**: AI-driven Blender pipeline stood up 2026-04-28. Evolving from build script to portable MCP platform (PR #16).
 
 ---
 
