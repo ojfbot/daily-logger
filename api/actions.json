@@ -1,5 +1,29 @@
 [
   {
+    "command": "/roadmap",
+    "description": "Audit the :3035 port collision between asset-foundry and gcgcca. Open frame-dev.sh and shell's remoteBase map side by side, assign a distinct port to each remote, and update both files in a single PR. Shell #76 must not merge until this is resolved — merging it as-is bakes the collision into the host config. The fix is mechanical: pick a free port for asset-foundry (e.g. :3036), update frame-dev.sh and remoteBase in one commit, then amend #76 or open a follow-on PR.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-04-30",
+    "id": "act-2026-04-30-roadmap-640008"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Disposition beaverGame #27 (Three.js playability pass). Open the PR and decide: merge-as-spec or close-as-superseded. If closing, extract the heightAt(x,z) bilinear-blend fix into #28's behavioral-spec checklist before deleting the branch — that logic is the terrain-sampling spec the Babylon migration must satisfy. Leave a comment in #28 linking to the decision. This takes under 15 minutes and is the single action that unblocks Babylon bootstrap.",
+    "repo": "beaverGame",
+    "status": "open",
+    "sourceDate": "2026-04-30",
+    "id": "act-2026-04-30-pr-review-8f36f1"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Begin the Pocock skills adoption triage with core #81 only. #81 (foundation: /grill-with-docs, CONTEXT.md, agent defaults) is the prerequisite for all subsequent phases (#82–#85). Review and merge #81 before opening #82 for review. Merging out of order produces skill catalog phase-registry inconsistencies where later commands reference skill entries that do not yet exist. Do not batch-review all five — proceed one PR at a time in phase order.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-30",
+    "id": "act-2026-04-30-pr-review-bce0db"
+  },
+  {
     "command": "/pr-review",
     "description": "Merge core #94 (game-engine architecture spike — Babylon.js recommended). This is the decision record that justifies discarding beaverGame's entire Three.js codebase. Draft PR #28 is already open; without #94 merged, the rationale exists only in a PR description and will be re-litigated in future sessions.",
     "repo": "core",
