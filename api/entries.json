@@ -1,5 +1,105 @@
 [
   {
+    "date": "2026-04-30",
+    "title": "Wednesday audit: beaverGame Phase 0 closed, Babylon migration queued, and 31 in-flight PRs awaiting triage",
+    "summary": "Ten PRs in seven days closed every Phase 0 issue across beaverGame and asset-foundry; one automated commit Wednesday; 31 open PRs need triage before Babylon migration advances.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "beaverGame",
+        "type": "concept"
+      },
+      {
+        "name": "asset-foundry",
+        "type": "concept"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "cross-repo-contract",
+        "type": "concept"
+      },
+      {
+        "name": "audit",
+        "type": "concept"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "core",
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "audit",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Phase 0 is fully closed — beaverGame and asset-foundry both reached test-covered vertical-slice status",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Debug-rig methods gated behind import.meta.env.DEV — shipping test scaffolds in production builds is a security surface",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Babylon.js migration opens as a draft against a fully-closed Three.js Phase 0 — the existing src/scene/ files become behavioral specs, not migration targets",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "asset-foundry registered as a Frame MF remote at :3035 — one-line shell host config addition that unblocks the dev-environment front door",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/roadmap",
+        "description": "Audit the :3035 port collision between asset-foundry and gcgcca. Open frame-dev.sh and shell's remoteBase map side by side, assign a distinct port to each remote, and update both files in a single PR. Shell #76 must not merge until this is resolved — merging it as-is bakes the collision into the host config. The fix is mechanical: pick a free port for asset-foundry (e.g. :3036), update frame-dev.sh and remoteBase in one commit, then amend #76 or open a follow-on PR.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-04-30",
+        "id": "act-2026-04-30-roadmap-640008"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Disposition beaverGame #27 (Three.js playability pass). Open the PR and decide: merge-as-spec or close-as-superseded. If closing, extract the heightAt(x,z) bilinear-blend fix into #28's behavioral-spec checklist before deleting the branch — that logic is the terrain-sampling spec the Babylon migration must satisfy. Leave a comment in #28 linking to the decision. This takes under 15 minutes and is the single action that unblocks Babylon bootstrap.",
+        "repo": "beaverGame",
+        "status": "open",
+        "sourceDate": "2026-04-30",
+        "id": "act-2026-04-30-pr-review-8f36f1"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Begin the Pocock skills adoption triage with core #81 only. #81 (foundation: /grill-with-docs, CONTEXT.md, agent defaults) is the prerequisite for all subsequent phases (#82–#85). Review and merge #81 before opening #82 for review. Merging out of order produces skill catalog phase-registry inconsistencies where later commands reference skill entries that do not yet exist. Do not batch-review all five — proceed one PR at a time in phase order.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-04-30",
+        "id": "act-2026-04-30-pr-review-bce0db"
+      }
+    ]
+  },
+  {
     "date": "2026-04-29",
     "title": "Tuesday's pivot: beaverGame ships Phase 0 gameplay then discards its engine",
     "summary": "Tuesday closed ten PRs completing beaverGame's Phase 0 vertical slice, then immediately opened a Babylon.js migration after a core research spike recommended discarding all ~2,500 lines of Three.js code.",
