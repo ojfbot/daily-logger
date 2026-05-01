@@ -1,5 +1,87 @@
 [
   {
+    "date": "2026-05-01",
+    "title": "Thursday: core's skill catalog grows up — standup funnel, adoption metrics, and the Pocock suite",
+    "summary": "Thursday landed nine core commits across the Pocock skill suite, standup funnel, skill-metrics ADR, and plan-feature extensions, turning the skill catalog from a toolbox into a measured system.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "asset-foundry",
+        "type": "concept"
+      },
+      {
+        "name": "beaverGame",
+        "type": "concept"
+      },
+      {
+        "name": "skill-catalog",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "pocock",
+        "type": "concept"
+      },
+      {
+        "name": "bead-ledger",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "daily-logger"
+    ],
+    "commitCount": 25,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Standup funnel as a first-class skill consumer (ADR-0054)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Skill adoption measurement as a catalog responsibility (ADR-0050)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Pocock suite: full skill bodies before integration (ADR-0047, 0048, 0049)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Bead prefix reservations prevent namespace collisions (ADR-0054 companion)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-04-30",
     "title": "Wednesday audit: beaverGame Phase 0 closed, Babylon migration queued, and 31 in-flight PRs awaiting triage",
     "summary": "Ten PRs in seven days closed every Phase 0 issue across beaverGame and asset-foundry; one automated commit Wednesday; 31 open PRs need triage before Babylon migration advances.",
