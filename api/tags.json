@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 30
+    "count": 31
   },
   {
     "name": "shell",
@@ -22,12 +22,12 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 19
+    "count": 20
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 18
+    "count": 19
   },
   {
     "name": "phase-1",
@@ -40,6 +40,16 @@
     "count": 15
   },
   {
+    "name": "adr",
+    "type": "practice",
+    "count": 13
+  },
+  {
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 13
+  },
+  {
     "name": "rest-day",
     "type": "activity",
     "count": 13
@@ -48,16 +58,6 @@
     "name": "purefoy",
     "type": "repo",
     "count": 13
-  },
-  {
-    "name": "tooling-for-iteration",
-    "type": "concept",
-    "count": 12
-  },
-  {
-    "name": "adr",
-    "type": "practice",
-    "count": 12
   },
   {
     "name": "gas-town",
@@ -135,6 +135,16 @@
     "count": 5
   },
   {
+    "name": "asset-foundry",
+    "type": "concept",
+    "count": 4
+  },
+  {
+    "name": "beaverGame",
+    "type": "concept",
+    "count": 4
+  },
+  {
     "name": "cleanup",
     "type": "concept",
     "count": 4
@@ -175,12 +185,7 @@
     "count": 4
   },
   {
-    "name": "beaverGame",
-    "type": "concept",
-    "count": 3
-  },
-  {
-    "name": "asset-foundry",
+    "name": "skill-catalog",
     "type": "concept",
     "count": 3
   },
@@ -221,11 +226,6 @@
   },
   {
     "name": "gcgcca",
-    "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "skill-catalog",
     "type": "concept",
     "count": 2
   },
@@ -288,6 +288,16 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "pocock",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "bead-ledger",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "cross-repo-contract",
