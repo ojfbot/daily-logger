@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 31
+    "count": 32
   },
   {
     "name": "shell",
@@ -10,13 +10,13 @@
     "count": 29
   },
   {
-    "name": "module-federation",
-    "type": "arch",
-    "count": 26
-  },
-  {
     "name": "ci-cd",
     "type": "practice",
+    "count": 27
+  },
+  {
+    "name": "module-federation",
+    "type": "arch",
     "count": 26
   },
   {
@@ -32,7 +32,7 @@
   {
     "name": "phase-1",
     "type": "phase",
-    "count": 15
+    "count": 16
   },
   {
     "name": "cv-builder",
@@ -65,19 +65,19 @@
     "count": 10
   },
   {
-    "name": "MrPlug",
-    "type": "concept",
+    "name": "hardening",
+    "type": "practice",
     "count": 9
   },
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 8
+    "count": 9
   },
   {
-    "name": "hardening",
-    "type": "practice",
-    "count": 8
+    "name": "MrPlug",
+    "type": "concept",
+    "count": 9
   },
   {
     "name": "sprint",
@@ -125,6 +125,16 @@
     "count": 6
   },
   {
+    "name": "beaverGame",
+    "type": "concept",
+    "count": 5
+  },
+  {
+    "name": "asset-foundry",
+    "type": "concept",
+    "count": 5
+  },
+  {
     "name": "TripPlanner",
     "type": "concept",
     "count": 5
@@ -133,16 +143,6 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
-  },
-  {
-    "name": "asset-foundry",
-    "type": "concept",
-    "count": 4
-  },
-  {
-    "name": "beaverGame",
-    "type": "concept",
-    "count": 4
   },
   {
     "name": "cleanup",
@@ -208,6 +208,11 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "cross-repo-contract",
+    "type": "concept",
+    "count": 2
   },
   {
     "name": "session-init",
@@ -296,11 +301,6 @@
   },
   {
     "name": "bead-ledger",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "cross-repo-contract",
     "type": "concept",
     "count": 1
   },
