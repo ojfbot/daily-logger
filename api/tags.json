@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 33
+    "count": 34
   },
   {
     "name": "shell",
@@ -12,17 +12,17 @@
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 28
+    "count": 29
   },
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 27
+    "count": 28
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 21
+    "count": 22
   },
   {
     "name": "assistant-centric",
@@ -35,14 +35,14 @@
     "count": 16
   },
   {
-    "name": "cv-builder",
-    "type": "repo",
+    "name": "rest-day",
+    "type": "activity",
     "count": 15
   },
   {
-    "name": "rest-day",
-    "type": "activity",
-    "count": 14
+    "name": "cv-builder",
+    "type": "repo",
+    "count": 15
   },
   {
     "name": "adr",
@@ -80,6 +80,16 @@
     "count": 9
   },
   {
+    "name": "beaverGame",
+    "type": "concept",
+    "count": 7
+  },
+  {
+    "name": "asset-foundry",
+    "type": "concept",
+    "count": 7
+  },
+  {
     "name": "sprint",
     "type": "concept",
     "count": 7
@@ -108,16 +118,6 @@
     "name": "frame-agent",
     "type": "arch",
     "count": 7
-  },
-  {
-    "name": "beaverGame",
-    "type": "concept",
-    "count": 6
-  },
-  {
-    "name": "asset-foundry",
-    "type": "concept",
-    "count": 6
   },
   {
     "name": "storybook",
@@ -210,6 +210,16 @@
     "count": 3
   },
   {
+    "name": "babylon-migration",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "critical-path",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "cross-repo-contract",
     "type": "concept",
     "count": 2
@@ -293,16 +303,6 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
-  },
-  {
-    "name": "critical-path",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "babylon-migration",
-    "type": "concept",
-    "count": 1
   },
   {
     "name": "action-board",
