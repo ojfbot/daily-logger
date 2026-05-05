@@ -22,6 +22,7 @@ const ORG = 'ojfbot'
 const KNOWN_REPOS = new Set([
   'shell', 'cv-builder', 'BlogEngine', 'TripPlanner', 'core', 'core-reader',
   'MrPlug', 'purefoy', 'daily-logger', 'lean-canvas', 'seh-study', 'GroupThink', 'landing',
+  'github-actions',
 ])
 
 // ─── Classification rules (priority order) ─────────────────────────────────

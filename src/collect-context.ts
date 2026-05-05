@@ -28,6 +28,7 @@ const REPOS = [
   'gcgcca',            // GCGCCA — USGS Earth Explorer orthoimagery query tool, Python+TS hybrid (purefoy pattern)
   'beaverGame',        // Cozy Beaver — 3D beaver simulator (Three.js client)
   'asset-foundry',     // AI-driven Blender asset pipeline consumed by beaverGame
+  'github-actions',    // Shared GitHub Actions + reusable workflows for the fleet (ADR-0067)
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────

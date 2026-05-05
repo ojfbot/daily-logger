@@ -33,6 +33,7 @@ const TAG_MAP: Record<string, TagType> = {
   'groupthink': 'repo',
   'landing': 'repo',
   'node-template': 'repo',
+  'github-actions': 'repo',
 
   // architecture
   'module-federation': 'arch',

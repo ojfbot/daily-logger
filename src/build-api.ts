@@ -178,6 +178,7 @@ function extractDecisionsFromBody(body: string): Array<{ title: string; summary:
 const KNOWN_REPOS = new Set([
   'shell', 'cv-builder', 'BlogEngine', 'TripPlanner', 'core', 'core-reader',
   'MrPlug', 'purefoy', 'daily-logger', 'lean-canvas', 'seh-study', 'GroupThink', 'landing',
+  'github-actions',
 ])
 
 // ─── Tag type inference for v1 articles ─────────────────────────────────────
@@ -186,7 +187,7 @@ const TAG_TYPE_MAP: Record<string, string> = {
   'shell': 'repo', 'cv-builder': 'repo', 'blogengine': 'repo', 'tripplanner': 'repo',
   'daily-logger': 'repo', 'mrplug': 'repo', 'purefoy': 'repo', 'core': 'repo',
   'core-reader': 'repo', 'lean-canvas': 'repo', 'seh-study': 'repo', 'groupthink': 'repo',
-  'landing': 'repo', 'node-template': 'repo',
+  'landing': 'repo', 'node-template': 'repo', 'github-actions': 'repo',
   'module-federation': 'arch', 'container-presenter': 'arch', 'frame-agent': 'arch',
   'frame-os': 'arch', 'architecture': 'arch',
   'ci-cd': 'practice', 'visual-regression': 'practice', 'adr': 'practice',
