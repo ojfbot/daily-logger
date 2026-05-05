@@ -9,11 +9,11 @@
   },
   {
     "command": "/validate",
-    "description": "Resolve the :3035 port collision and run the first end-to-end test of the asset-foundry Frame remote in the same session. Open frame-dev.sh and the shell remoteBase map, assign gcgcca a distinct port, update both files in a single commit (closes act-2026-04-30-roadmap-640008), then run frame-dev.sh and confirm asset-foundry loads at :3035 without a federation error. Also verify shell PR #76 disposition — if it is still open after dbce227 landed to main directly, close it.",
+    "description": "Resolve the :3035 port collision and run the first end-to-end test of the asset-foundry Frame remote in the same session. Open frame-dev.sh and the shell remoteBase map, assign gcgcca a distinct port, update both files in a single commit (closes act-2026-04-30-roadmap-640008), then run frame-dev.sh and confirm asset-foundry loads at :3035 without a federation error.",
     "repo": "shell",
     "status": "open",
     "sourceDate": "2026-05-05",
-    "id": "act-2026-05-05-validate-c9bd6b"
+    "id": "act-2026-05-05-validate-0baa3c"
   },
   {
     "command": "/investigate",
@@ -24,12 +24,12 @@
     "id": "act-2026-05-05-investigate-f18cb5"
   },
   {
-    "command": "/adr",
-    "description": "Write ADR-0067 for the ojfbot/github-actions shared composite action. The document does not currently exist but is cited in multiple PRs and in this article's Decisions section. Cover: the DRY extraction rationale, the zero-width PR window bug and fix, the PR-comment marker credit mechanism, the fleet adoption model (6 of N active repos on day one), and the branch-referencing pattern for safely testing action changes before rolling to @v1 consumers (`ojfbot/github-actions/.github/actions/skill-audit@your-branch`).",
-    "repo": "github-actions",
+    "command": "/style-rule",
+    "description": "Add a precision-over-reach rule to the daily-logger style guardrails: when describing partial rollouts or adoption, state the explicit count (e.g. \"across 6 repos\") rather than using totalising language like 'fleet-wide', 'all', or 'every' unless 100% coverage is verified. This prevents future articles from overstating scope the way this article's original summary did.",
+    "repo": "daily-logger",
     "status": "open",
     "sourceDate": "2026-05-05",
-    "id": "act-2026-05-05-adr-df19c8"
+    "id": "act-2026-05-05-style-rule-102013"
   },
   {
     "command": "/roadmap",
@@ -112,60 +112,12 @@
     "id": "act-2026-04-28-sweep-e4f372"
   },
   {
-    "command": "/sweep",
-    "description": "Batch-merge daily-cleaner PRs #155, #157, #159, #161, #163, #165, #167 in sequence — rebase any that have conflicts, verify Opus-validation comment is present on each, and merge. The queue is 7 PRs deep and growing a conflict risk with each passing day.",
-    "repo": "daily-logger",
-    "status": "open",
-    "sourceDate": "2026-04-21",
-    "id": "act-2026-04-21-sweep-914db8"
-  },
-  {
-    "command": "/roadmap",
-    "description": "Triage the 19 open actions: explicitly defer any action older than 14 days that has not been touched (act-2026-04-04-roadmap-e9a078, act-2026-04-07-adr-daa2ca, act-2026-04-07-roadmap-6f4599) — either close with a deferral note or assign a target date. An action board with 19 items is a backlog, not a queue.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-04-21",
-    "id": "act-2026-04-21-roadmap-7d796f"
-  },
-  {
-    "command": "/validate",
-    "description": "End-to-end test the suggestion-ignored telemetry: trigger a skill suggestion in a dev session, decline it, and verify an `ignored` disposition entry appears in `~/.claude/suggestion-log.jsonl` with the correct skill ID and timestamp. Confirm the `followed` path still fires on invocation. This is the first full-loop verification of the completed feedback system.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-04-14",
-    "id": "act-2026-04-14-validate-6ac692"
-  },
-  {
     "command": "/techdebt",
     "description": "Audit the approximately 16 open actions generated before commit `9c17d7f` for ID correctness: re-run the content hash (command + description + repo + date, whitespace-normalized) against each stored ID. Any mismatch means the action will not close in the next closure pipeline run. Remediate by re-generating the ID and updating the action file, or manually verifying the action is still open and re-writing with the correct hash. Complete before the next sprint closure run.",
     "repo": "daily-logger",
     "status": "open",
     "sourceDate": "2026-04-14",
     "id": "act-2026-04-14-techdebt-0b58d9"
-  },
-  {
-    "command": "/adr",
-    "description": "Write two ADRs in one session: (1) the `suggested_after` / `layer_affinity` catalog governance ADR (`act-2026-04-13-adr-2d947c`) — all prerequisites are now in place; (2) the content-hash action ID scheme ADR — this foundational decision just touched the entire closure pipeline and has no written rationale. Document the hash function, collision surface, and the intentional behavior when action content changes before resolution.",
-    "repo": "daily-logger",
-    "status": "open",
-    "sourceDate": "2026-04-14",
-    "id": "act-2026-04-14-adr-fc73ff"
-  },
-  {
-    "command": "/validate",
-    "description": "Confirm suggest-skills.mjs correctly matches suggested_after catalog entries against Sunday's hook invocations. Read ~/.claude/suggestion-log.jsonl (first clean data after ADR-0037 fix), cross-reference skill IDs against catalog suggested_after fields, verify no suggestions fire for skills with no catalog entry, and confirm no-match produces a silent no-op rather than a throw.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-04-13",
-    "id": "act-2026-04-13-validate-f1f33f"
-  },
-  {
-    "command": "/adr",
-    "description": "Write the ADR for the suggested_after and layer_affinity fields added to the skill catalog on Sunday. Document: field definitions, how suggest-skills.mjs reads them (lookup direction), runtime behavior on no-match, layer_affinity filter semantics, relationship to shell's App → Instance → Thread model, and the catalog governance model (who can write to it). This is the decision record for the forward half of the telemetry feedback loop.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-04-13",
-    "id": "act-2026-04-13-adr-2d947c"
   },
   {
     "command": "/review",
@@ -177,27 +129,11 @@
   },
   {
     "command": "/validate",
-    "description": "Run quality gates against the four core telemetry commits (9e4449f, ab561c8, a7caa41, 13c4977) — suggest-skill, log-skill, and pr-skill-audit. Saturday's session showed 0% quality coverage on the code that now instruments all other skill usage. Do this before the investigation — the investigation tooling is untrusted until this passes.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-04-12",
-    "id": "act-2026-04-12-validate-c53d7a"
-  },
-  {
-    "command": "/validate",
     "description": "Run /validate on shell's /api/beads filesystem fallback to unblock Gas Town Sprint 1. This is not blocked by MrPlug #28 and has no active owner. It is the first gate before the core-reader bead consumption scaffold can proceed.",
     "repo": "shell",
     "status": "open",
     "sourceDate": "2026-04-12",
     "id": "act-2026-04-12-validate-010163"
-  },
-  {
-    "command": "/investigate",
-    "description": "Read ~/.claude/suggestion-log.jsonl for Saturday's two suggestion entries. Confirm the skill IDs exist in the catalog (expected: yes, already verified). Then evaluate whether the suggestion timing was reasonable — were they surfaced mid-flow when action wasn't possible? This is a product question about suggestion UX, not a bug hunt.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-04-12",
-    "id": "act-2026-04-12-investigate-b73cd2"
   },
   {
     "command": "/validate",
