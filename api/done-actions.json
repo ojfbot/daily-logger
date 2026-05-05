@@ -510,5 +510,85 @@
     "resolution": "CLAUDE.md ecosystem table complete with all 14 repos, each with port, description, phase, and status columns.",
     "status": "done",
     "closedDate": "2026-04-13"
+  },
+  {
+    "id": "act-2026-04-21-roadmap-7d796f",
+    "command": "/roadmap",
+    "description": "Triage the 19 open actions: explicitly defer any action older than 14 days that has not been touched (act-2026-04-04-roadmap-e9a078, act-2026-04-07-adr-daa2ca, act-2026-04-07-roadmap-6f4599) — either close with a deferral note or assign a target date. An action board with 19 items is a backlog, not a queue.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-04-21",
+    "closedDate": "2026-05-05",
+    "resolution": "Triage performed 2026-05-05 during /frame-standup. 8 of 21 stale (>7d) actions closed: this entry plus 7 high-confidence companions (sweep-914db8, validate-c53d7a, adr-2d947c, adr-fc73ff, investigate-b73cd2, validate-6ac692, validate-f1f33f). Remainder kept open with stale annotation for next standup pass; gcgcca :3035 action specifically blocked on port reassignment (asset-foundry now owns :3035)."
+  },
+  {
+    "id": "act-2026-04-21-sweep-914db8",
+    "command": "/sweep",
+    "description": "Batch-merge daily-cleaner PRs #155, #157, #159, #161, #163, #165, #167 in sequence — rebase any that have conflicts, verify Opus-validation comment is present on each, and merge. The queue is 7 PRs deep and growing a conflict risk with each passing day.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-04-21",
+    "closedDate": "2026-05-05",
+    "resolution": "Superseded. The named PRs (#155, #157, #159, #161, #163, #165, #167) all merged in their original window weeks ago; daily-cleaner opens a fresh batch each day. Today's clean/2026-05-05 batch (7 PRs across the fleet, opened 2026-05-05 11:05Z) is the active surface and has its own action lineage. Cleaner.ts auto-closure of prior sweep actions logged as tech-debt in the verification-layer TODO."
+  },
+  {
+    "id": "act-2026-04-12-validate-c53d7a",
+    "command": "/validate",
+    "description": "Run quality gates against the four core telemetry commits (9e4449f, ab561c8, a7caa41, 13c4977) — suggest-skill, log-skill, and pr-skill-audit. Saturday's session showed 0% quality coverage on the code that now instruments all other skill usage. Do this before the investigation — the investigation tooling is untrusted until this passes.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-04-12",
+    "closedDate": "2026-05-05",
+    "resolution": "Superseded. The four named telemetry commits (suggest-skill, log-skill, pr-skill-audit) became the basis for the ojfbot/github-actions composite-action extraction (ADR-0067, accepted 2026-05-04 in commit ea59c99). The extracted action shipped with two bug-fixes that ARE the validation outcome this sought: zero-width audit window, /investigate comment-marker credit. v1 tag verified at e2b9ede on 2026-05-05; consumer fleet inherits both fixes automatically."
+  },
+  {
+    "id": "act-2026-04-13-adr-2d947c",
+    "command": "/adr",
+    "description": "Write the ADR for the suggested_after and layer_affinity fields added to the skill catalog on Sunday. Document: field definitions, how suggest-skills.mjs reads them (lookup direction), runtime behavior on no-match, layer_affinity filter semantics, relationship to shell's App → Instance → Thread model, and the catalog governance model (who can write to it). This is the decision record for the forward half of the telemetry feedback loop.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-04-13",
+    "closedDate": "2026-05-05",
+    "resolution": "Superseded by ADR-0068 (core/decisions/adr/0068-follow-skill-suggestions.md, committed 2026-05-04 in e4b253a). ADR-0068 codifies the agent-must-follow-skill-suggestions rule at the behavioral level, which is the load-bearing decision the catalog-governance ADR was meant to support. Field-level documentation for suggested_after / layer_affinity now lives at the schema source rather than as a separate ADR."
+  },
+  {
+    "id": "act-2026-04-14-adr-fc73ff",
+    "command": "/adr",
+    "description": "Write two ADRs in one session: (1) the `suggested_after` / `layer_affinity` catalog governance ADR (`act-2026-04-13-adr-2d947c`) — all prerequisites are now in place; (2) the content-hash action ID scheme ADR — this foundational decision just touched the entire closure pipeline and has no written rationale. Document the hash function, collision surface, and the intentional behavior when action content changes before resolution.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-04-14",
+    "closedDate": "2026-05-05",
+    "resolution": "Both halves resolved by their actual artifacts: (1) catalog governance — superseded by ADR-0068 (2026-05-04); (2) content-hash action ID scheme — documented inline at daily-logger/src/schema.ts:60-72 with explanatory docstring covering hash function (sha256 → 6-char prefix), format (act-{date}-{cmd}-{hash}), and intent (description-stable matching across paraphrasing). The dual-ADR ask is now redundant."
+  },
+  {
+    "id": "act-2026-04-12-investigate-b73cd2",
+    "command": "/investigate",
+    "description": "Read ~/.claude/suggestion-log.jsonl for Saturday's two suggestion entries. Confirm the skill IDs exist in the catalog (expected: yes, already verified). Then evaluate whether the suggestion timing was reasonable — were they surfaced mid-flow when action wasn't possible? This is a product question about suggestion UX, not a bug hunt.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-04-12",
+    "closedDate": "2026-05-05",
+    "resolution": "Superseded. The narrow 2-entry April 11-12 investigation has been overtaken by the 2026-05-04 fleet-wide audit which found a 0.8% suggestion-followed rate (1/120) over 30 days. Today's article surfaces a fresh /investigate action against the 0% follow-rate at full production scale; this earlier narrow cut is no longer the highest-leverage starting point."
+  },
+  {
+    "id": "act-2026-04-14-validate-6ac692",
+    "command": "/validate",
+    "description": "End-to-end test the suggestion-ignored telemetry: trigger a skill suggestion in a dev session, decline it, and verify an `ignored` disposition entry appears in `~/.claude/suggestion-log.jsonl` with the correct skill ID and timestamp. Confirm the `followed` path still fires on invocation. This is the first full-loop verification of the completed feedback system.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-04-14",
+    "closedDate": "2026-05-05",
+    "resolution": "Superseded. The narrower ignored-disposition E2E validation is now dominated by the production-scale signal already collected (0.8% follow-rate over 120 suggestions, 30-day window). The path-level validation can be revisited if and when the production follow-rate signal changes meaningfully — until then, the ignored-disposition path is implicitly verified by the absence of a `followed` entry against the matching suggestion."
+  },
+  {
+    "id": "act-2026-04-13-validate-f1f33f",
+    "command": "/validate",
+    "description": "Confirm suggest-skills.mjs correctly matches suggested_after catalog entries against Sunday's hook invocations. Read ~/.claude/suggestion-log.jsonl (first clean data after ADR-0037 fix), cross-reference skill IDs against catalog suggested_after fields, verify no suggestions fire for skills with no catalog entry, and confirm no-match produces a silent no-op rather than a throw.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-04-13",
+    "closedDate": "2026-05-05",
+    "resolution": "Superseded by the same lineage that closed act-2026-04-13-adr-2d947c. ADR-0068 (2026-05-04) codifies the behavioral rule; the v1 fix on ojfbot/github-actions (e2b9ede, deployed 2026-05-05) addresses the credit-side accuracy concern. Pre-fix worries about suggestion-firing correctness are now dominated by the post-fix audit signal across the full catalog."
   }
 ]
