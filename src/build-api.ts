@@ -179,6 +179,10 @@ const KNOWN_REPOS = new Set([
   'shell', 'cv-builder', 'BlogEngine', 'TripPlanner', 'core', 'core-reader',
   'MrPlug', 'purefoy', 'daily-logger', 'lean-canvas', 'seh-study', 'GroupThink', 'landing',
   'github-actions',
+  // Added 2026-05-05: present in collect-context.ts REPOS but were missing here,
+  // causing extractReposFromBody() to silently drop them when articles lacked
+  // an explicit reposActive frontmatter entry.
+  'gcgcca', 'beaverGame', 'asset-foundry',
 ])
 
 // ─── Tag type inference for v1 articles ─────────────────────────────────────
@@ -188,6 +192,9 @@ const TAG_TYPE_MAP: Record<string, string> = {
   'daily-logger': 'repo', 'mrplug': 'repo', 'purefoy': 'repo', 'core': 'repo',
   'core-reader': 'repo', 'lean-canvas': 'repo', 'seh-study': 'repo', 'groupthink': 'repo',
   'landing': 'repo', 'node-template': 'repo', 'github-actions': 'repo',
+  // Added 2026-05-05 alongside KNOWN_REPOS additions. Both casings recorded
+  // because article tag arrays preserve original case (e.g. 'beaverGame').
+  'gcgcca': 'repo', 'beaverGame': 'repo', 'beavergame': 'repo', 'asset-foundry': 'repo',
   'module-federation': 'arch', 'container-presenter': 'arch', 'frame-agent': 'arch',
   'frame-os': 'arch', 'architecture': 'arch',
   'ci-cd': 'practice', 'visual-regression': 'practice', 'adr': 'practice',

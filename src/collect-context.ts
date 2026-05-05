@@ -2,7 +2,7 @@ import { execSync } from 'child_process'
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo, PRSkillUsage, RecentPRInfo } from './types.js'
+import type { ADRRegistryEntry, BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo, PRSkillUsage, RecentPRInfo } from './types.js'
 import { collectTelemetry } from './collect-telemetry.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -48,6 +48,66 @@ function ghApi<T>(endpoint: string): T | null {
 }
 
 // ─── Per-repo collectors ──────────────────────────────────────────────────────
+
+/**
+ * Cross-repo ADR registry. Returns every `decisions/adr/NNNN-*.md` file in
+ * `repo`'s default branch with parsed number, filename, and (best-effort)
+ * title + status. Single API call per repo. Used by the drafter to verify
+ * ADR existence claims; without this signal the drafter has hallucinated
+ * ADRs (asset-foundry ADR-0011 on 2026-05-05) and missed ADRs that
+ * landed late in the day (core ADR-0067 on the same article).
+ */
+function getADRRegistry(org: string, repo: string): ADRRegistryEntry[] {
+  type GHContent = {
+    name: string
+    path: string
+    type: 'file' | 'dir' | string
+    /** Set when type=file; base64-encoded body. Not requested by listing call. */
+    download_url: string | null
+  }
+  const listing = ghApi<GHContent[]>(
+    `repos/${org}/${repo}/contents/decisions/adr`
+  )
+  if (!Array.isArray(listing)) return []
+
+  const adrPattern = /^(\d{3,4})-[a-z0-9-]+\.md$/i
+  const entries: ADRRegistryEntry[] = []
+  for (const item of listing) {
+    if (item.type !== 'file') continue
+    const m = item.name.match(adrPattern)
+    if (!m) continue
+    entries.push({
+      repo,
+      path: item.path,
+      number: parseInt(m[1], 10),
+      name: item.name,
+    })
+  }
+
+  // Best-effort title/status enrichment — fetch each ADR's first 30 lines
+  // and parse. Capped at 5 enrichments per repo to bound API cost; the
+  // important signal (existence) comes from the listing alone.
+  const ENRICH_CAP = 5
+  const recentByNumber = entries.slice().sort((a, b) => b.number - a.number)
+  for (const e of recentByNumber.slice(0, ENRICH_CAP)) {
+    type GHFile = { content?: string; encoding?: string }
+    const file = ghApi<GHFile>(`repos/${org}/${repo}/contents/${e.path}`)
+    if (!file?.content) continue
+    let body: string
+    try {
+      body = Buffer.from(file.content, (file.encoding ?? 'base64') as BufferEncoding).toString('utf-8')
+    } catch {
+      continue
+    }
+    const head = body.split('\n').slice(0, 40).join('\n')
+    const titleMatch = head.match(/^#\s+(.+)$/m)
+    if (titleMatch) e.title = titleMatch[1].trim()
+    const statusMatch = head.match(/^(?:status|\*\*Status\*\*):\s*([A-Za-z][\w\s-]+)/im)
+    if (statusMatch) e.status = statusMatch[1].trim()
+  }
+
+  return entries
+}
 
 function getCommits(org: string, repo: string, since: string): CommitInfo[] {
   type GHCommit = {
@@ -372,6 +432,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
   const allRecentPRs: RecentPRInfo[] = []
   const allClosed: IssueInfo[] = []
   const allOpen: IssueInfo[] = []
+  const allADRs: ADRRegistryEntry[] = []
 
   for (const repo of REPOS) {
     console.log(`  ${repo}...`)
@@ -386,6 +447,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
     allRecentPRs.push(...recentPRs)
     allClosed.push(...getClosedIssues(org, repo, since7d))
     allOpen.push(...getOpenIssues(org, repo, since24h))
+    allADRs.push(...getADRRegistry(org, repo))
   }
 
   // Deduplicate by URL (org-level pagination can surface duplicates)
@@ -426,12 +488,16 @@ export async function collectContext(date: string): Promise<BlogContext> {
     projectVision: getProjectVision(),
     previousArticles: getPreviousArticles(),
     telemetry,
+    adrRegistry: allADRs.sort((a, b) =>
+      a.repo === b.repo ? a.number - b.number : a.repo.localeCompare(b.repo)
+    ),
   }
 
   console.log(
     `  → ${ctx.commits.length} commits · ${ctx.mergedPRs.length} merged PRs · ` +
       `${ctx.openPRs.length} open PRs · ${ctx.recentPRs.length} recent PRs (24h) · ` +
-      `${ctx.closedIssues.length} closed issues · ${ctx.openIssues.length} open issues`
+      `${ctx.closedIssues.length} closed issues · ${ctx.openIssues.length} open issues · ` +
+      `${(ctx.adrRegistry ?? []).length} ADRs`
   )
   return ctx
 }
