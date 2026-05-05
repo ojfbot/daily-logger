@@ -1,5 +1,144 @@
 [
   {
+    "date": "2026-05-05",
+    "title": "Monday's infrastructure sprint: ojfbot/github-actions lands, beaverGame goes full Babylon, and asset-foundry gets peer transports",
+    "summary": "Eighty-eight commits Monday across 15 repos: a new shared github-actions repo centralises skill-audit CI, beaverGame completes its Babylon migration with full dodge gameplay, and asset-foundry gains dual Blender transports.",
+    "tags": [
+      {
+        "name": "github-actions",
+        "type": "repo"
+      },
+      {
+        "name": "beaverGame",
+        "type": "concept"
+      },
+      {
+        "name": "asset-foundry",
+        "type": "concept"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "landing",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "skill-audit",
+        "type": "concept"
+      },
+      {
+        "name": "babylon-migration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "github-actions",
+      "core",
+      "landing",
+      "shell",
+      "cv-builder",
+      "core-reader",
+      "seh-study"
+    ],
+    "commitCount": 45,
+    "activityType": "audit",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Extract skill-audit CI into a shared composite action (ADR-0067 — pending)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Dual Blender transports behind a stable contract (ADR-0011)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Retire Three.js in favour of Babylon.js for beaverGame",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Codify 'agents must follow skill suggestions' as a durable rule (ADR-0068)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "asset-foundry registered as a Frame MF remote in shell at :3035",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/roadmap",
+        "description": "Close or re-scope beaverGame #29 (Babylon migration umbrella). All sprint PRs (#32, #37, #38, #39) are merged — post a completion summary on the issue and explicitly re-file BG-003 (snap CI), BG-005 (Poisson scatter), BG-001 (HDRI), BG-015 (material verification) as Phase 1 tracking items. This is the 10-minute action that makes 'migration complete' mean something on the roadmap.",
+        "repo": "beaverGame",
+        "status": "open",
+        "sourceDate": "2026-05-05",
+        "id": "act-2026-05-05-roadmap-0bad90"
+      },
+      {
+        "command": "/validate",
+        "description": "Resolve the :3035 port collision and run the first end-to-end test of the asset-foundry Frame remote in the same session. Open frame-dev.sh and the shell remoteBase map, assign gcgcca a distinct port, update both files in a single commit (closes act-2026-04-30-roadmap-640008), then run frame-dev.sh and confirm asset-foundry loads at :3035 without a federation error. Also verify shell PR #76 disposition — if it is still open after dbce227 landed to main directly, close it.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-05-05",
+        "id": "act-2026-05-05-validate-c9bd6b"
+      },
+      {
+        "command": "/investigate",
+        "description": "Diagnose the 46-suggested / 0-followed funnel from Monday's sessions before ADR-0068 is treated as enforceable. Read ~/.claude/suggestion-log.jsonl and classify at least 5 suggestion entries by reason-for-ignore: wrong context, wrong moment in session flow, genuinely ignorable, or agent non-compliance. Separately, confirm whether PR-comment marker credits are being counted as real-time skill invocations in the audit — if they are, the telemetry model needs correction before the compliance rule compounds further on synthetic data.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-05-05",
+        "id": "act-2026-05-05-investigate-f18cb5"
+      },
+      {
+        "command": "/adr",
+        "description": "Write ADR-0067 for the ojfbot/github-actions shared composite action. The document does not currently exist but is cited in multiple PRs and in this article's Decisions section. Cover: the DRY extraction rationale, the zero-width PR window bug and fix, the PR-comment marker credit mechanism, the fleet adoption model (6 of N active repos on day one), and the branch-referencing pattern for safely testing action changes before rolling to @v1 consumers (`ojfbot/github-actions/.github/actions/skill-audit@your-branch`).",
+        "repo": "github-actions",
+        "status": "open",
+        "sourceDate": "2026-05-05",
+        "id": "act-2026-05-05-adr-df19c8"
+      }
+    ]
+  },
+  {
     "date": "2026-05-04",
     "title": "Sunday pipeline warmth: one bot commit, thirty-one open actions, and the Babylon migration's critical path",
     "summary": "Sunday produced one automated blog commit; the real work is mapping the critical path through fourteen open PRs and the Babylon migration's four-gate sequence.",
@@ -679,6 +818,52 @@
         "id": "act-2026-04-28-sweep-e4f372"
       }
     ]
+  },
+  {
+    "date": "2026-04-27",
+    "title": "Returning from absence: the auto-blog pipeline broke on a credit balance, and the silence ran longer than it looked",
+    "summary": "Two-week intentional pause; the blog pipeline kept publishing for 8 of those days then silently failed on a depleted Anthropic API credit balance for the next 5 — burning failed CI runs daily without alerting anyone.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "absence-recovery",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "anthropic-api",
+        "type": "concept"
+      },
+      {
+        "name": "gas-town",
+        "type": "phase"
+      },
+      {
+        "name": "fleet-hardening",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [],
+    "actions": []
   },
   {
     "date": "2026-04-21",
