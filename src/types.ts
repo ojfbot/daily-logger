@@ -68,6 +68,20 @@ export interface RecentPRInfo {
   skillUsage?: PRSkillUsage
 }
 
+export interface ADRRegistryEntry {
+  repo: string
+  /** Path within the repo, e.g. "decisions/adr/0067-shared-github-actions-repo.md" */
+  path: string
+  /** Numeric ADR number parsed from the filename prefix (e.g. 67 for 0067-…). */
+  number: number
+  /** The full filename, e.g. "0067-shared-github-actions-repo.md". */
+  name: string
+  /** First-line title from the markdown body (best-effort; may be empty). */
+  title?: string
+  /** Optional `Status:` value parsed from frontmatter or first 30 lines. */
+  status?: string
+}
+
 export interface BlogContext {
   date: string
   repos: string[]
@@ -84,6 +98,13 @@ export interface BlogContext {
   previousArticles: Array<{ date: string; excerpt: string }>
   /** Claude Code tool/skill telemetry for the 24h window. Null if unavailable. */
   telemetry?: TelemetrySummary | null
+  /**
+   * Cross-repo ADR registry — every ADR file present in `decisions/adr/` of the
+   * repos swept. Surfaces ground truth so the drafter cannot claim an ADR
+   * "doesn't exist" when it does. Filed 2026-05-05 after the article missed
+   * ADR-0067 and hallucinated asset-foundry/ADR-0011.
+   */
+  adrRegistry?: ADRRegistryEntry[]
 }
 
 export interface GeneratedArticle {

@@ -160,6 +160,45 @@ Classify the day as one of: \`build\` (normal development), \`rest\` (zero/very 
 - \`reposActive\`: array of repo names that had commits
 - \`schemaVersion\`: always 2
 
+## Verification rules — do not speculate (added 2026-05-05)
+
+These rules exist because three factual errors shipped in 2026-05-05 that all
+shared a common pattern: the drafter speculated about repository state instead
+of consulting the ground-truth data already in the user prompt.
+
+### Rule 1 — ADR existence
+- The user prompt's **ADR REGISTRY** section is authoritative. Every ADR file
+  in every swept repo's \`decisions/adr/\` directory is listed there.
+- If an ADR appears in the registry, it EXISTS. Never write that an ADR is
+  "not yet written", "pending", "does not exist", "needs to be authored",
+  or "is a pending task" if it appears in the registry.
+- If you want to write about an ADR that is **not** in the registry, do not.
+  The drafter must not invent ADRs or describe ADRs that haven't been
+  authored. (Example failure mode: 2026-05-05 article claimed
+  "ADR-0011 formalised the dual Blender transport design" when no ADR-0011
+  existed in asset-foundry/decisions/adr/.)
+
+### Rule 2 — PR state
+- Every PR you reference must appear in exactly one of three buckets in the
+  user prompt: \`MERGED IN LAST 7D\`, \`OPEN\`, or \`RECENTLY CLOSED-WITHOUT-MERGE\`.
+- Never speculate that a PR "appears to have landed", "may be stale",
+  "could be open", or "should be closed" if you cannot identify its bucket
+  by number. Do not invert merged/open state by inference. (Example failure
+  mode: 2026-05-05 article said shell PR #76 "appears to have landed
+  directly to main rather than via #76" — but #76 was the PR that landed
+  the commit; it had merged 04:15Z that day.)
+- When in doubt, say "PR #N's state in this window is [bucket name]" or
+  omit the PR from the article entirely.
+
+### Rule 3 — cross-references
+- Before writing about an ADR mentioned in a commit message, confirm the
+  ADR file is in the registry. A commit can reference an ADR whose file
+  hasn't been committed yet — do not assume coexistence.
+- Before writing about a PR mentioned in a commit message, confirm the
+  PR appears in one of the three state buckets above.
+
+If a claim cannot be verified from the user prompt, do not make it.
+
 ## Code reference standards (ADR-0031)
 
 For every backtick-wrapped token in the article body, add a corresponding entry to \`codeReferences\`. Classify each token:
@@ -631,6 +670,41 @@ export function buildUserPrompt(ctx: BlogContext): string {
     '',
   ].filter((l) => l !== undefined)
 
+  // ADR REGISTRY — surfaced near the top so the drafter sees ground truth
+  // before reading commits/PRs that may *mention* ADRs. This is the
+  // verification layer's primary defence against hallucinated ADRs and
+  // missed-already-shipped ADRs (e.g. core/ADR-0067 on 2026-05-05).
+  if (ctx.adrRegistry && ctx.adrRegistry.length > 0) {
+    parts.push(
+      `## ADR REGISTRY — every ADR file in every swept repo (${ctx.adrRegistry.length} total)`
+    )
+    parts.push(
+      '_Authoritative ground truth. If you reference an ADR, it MUST appear here. Never claim an ADR is "pending", "not yet written", or "does not exist" if it appears below. See the system prompt\'s "Verification rules" section._'
+    )
+
+    // Group by repo for readability, then list ADRs by number desc
+    const byRepo = new Map<string, typeof ctx.adrRegistry>()
+    for (const a of ctx.adrRegistry) {
+      if (!byRepo.has(a.repo)) byRepo.set(a.repo, [])
+      byRepo.get(a.repo)!.push(a)
+    }
+    for (const [repo, adrs] of byRepo) {
+      parts.push(`### ${repo} — ${adrs.length} ADRs`)
+      adrs
+        .slice()
+        .sort((a, b) => b.number - a.number)
+        .slice(0, 25)
+        .forEach((a) => {
+          const num = String(a.number).padStart(4, '0')
+          const title = a.title ? ` — ${a.title}` : ''
+          const status = a.status ? ` [${a.status}]` : ''
+          parts.push(`- ADR-${num}${status}${title}  \`${a.path}\``)
+        })
+      if (adrs.length > 25) parts.push(`  …and ${adrs.length - 25} older ADRs in ${repo}`)
+    }
+    parts.push('')
+  }
+
   if (ctx.commits.length > 0) {
     const total = ctx.commits.length
     parts.push(`## Commits in last 24h (${total})`)
@@ -673,14 +747,58 @@ export function buildUserPrompt(ctx: BlogContext): string {
   }
 
   if (ctx.recentPRs.length > 0) {
-    parts.push(`## All PRs active in last 24h — open + closed (${ctx.recentPRs.length})`)
-    parts.push('_Comprehensive view: every PR created, updated, or merged in the last 24h across all repos._')
-    ctx.recentPRs.slice(0, 30).forEach((pr) => {
-      const status = pr.mergedAt ? 'MERGED' : pr.state.toUpperCase()
-      const draft = pr.draft ? ' [DRAFT]' : ''
-      parts.push(`- [${pr.repo}] #${pr.number} [${status}]${draft}: ${pr.title}`)
-      if (pr.body) parts.push(`  > ${pr.body.slice(0, 200).replace(/\n/g, ' ')}`)
-    })
+    // Split into three explicit state buckets per ADR-0068's adjacent
+    // verification-rules section (system prompt). The drafter MUST treat
+    // each bucket as authoritative and never speculate about a PR's state
+    // that conflicts with its bucket placement here.
+    const mergedRecent = ctx.recentPRs.filter((pr) => !!pr.mergedAt)
+    const openRecent = ctx.recentPRs.filter((pr) => !pr.mergedAt && pr.state === 'open')
+    const closedNotMergedRecent = ctx.recentPRs.filter(
+      (pr) => !pr.mergedAt && pr.state === 'closed'
+    )
+
+    parts.push(`## PR state buckets — last 24h (${ctx.recentPRs.length} total)`)
+    parts.push(
+      '_Three authoritative state buckets. Every PR mentioned in the article must appear in exactly one of these buckets — never speculate about state. See the system prompt\'s "Verification rules" section._'
+    )
+    parts.push('')
+
+    parts.push(`### MERGED IN LAST 24H (${mergedRecent.length})`)
+    if (mergedRecent.length === 0) {
+      parts.push('_(none)_')
+    } else {
+      mergedRecent.slice(0, 30).forEach((pr) => {
+        parts.push(
+          `- [${pr.repo}] #${pr.number} MERGED ${pr.mergedAt!.slice(0, 19)}: ${pr.title}`
+        )
+        if (pr.body) parts.push(`  > ${pr.body.slice(0, 200).replace(/\n/g, ' ')}`)
+      })
+    }
+    parts.push('')
+
+    parts.push(`### OPEN — last 24h (${openRecent.length})`)
+    if (openRecent.length === 0) {
+      parts.push('_(none)_')
+    } else {
+      openRecent.slice(0, 30).forEach((pr) => {
+        const draft = pr.draft ? ' [DRAFT]' : ''
+        parts.push(`- [${pr.repo}] #${pr.number} OPEN${draft}: ${pr.title}`)
+        if (pr.body) parts.push(`  > ${pr.body.slice(0, 200).replace(/\n/g, ' ')}`)
+      })
+    }
+    parts.push('')
+
+    parts.push(`### RECENTLY CLOSED-WITHOUT-MERGE — last 24h (${closedNotMergedRecent.length})`)
+    if (closedNotMergedRecent.length === 0) {
+      parts.push('_(none)_')
+    } else {
+      closedNotMergedRecent.slice(0, 20).forEach((pr) => {
+        parts.push(
+          `- [${pr.repo}] #${pr.number} CLOSED-WITHOUT-MERGE ${pr.updatedAt.slice(0, 19)}: ${pr.title}`
+        )
+        if (pr.body) parts.push(`  > ${pr.body.slice(0, 200).replace(/\n/g, ' ')}`)
+      })
+    }
     parts.push('')
   }
 
