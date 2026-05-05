@@ -2,37 +2,42 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 34
+    "count": 35
   },
   {
     "name": "shell",
     "type": "repo",
-    "count": 30
+    "count": 31
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 29
+    "count": 31
   },
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 28
+    "count": 29
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 22
+    "count": 23
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 19
+    "count": 21
   },
   {
     "name": "phase-1",
     "type": "phase",
     "count": 16
+  },
+  {
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 15
   },
   {
     "name": "rest-day",
@@ -50,11 +55,6 @@
     "count": 13
   },
   {
-    "name": "tooling-for-iteration",
-    "type": "concept",
-    "count": 13
-  },
-  {
     "name": "purefoy",
     "type": "repo",
     "count": 13
@@ -62,7 +62,7 @@
   {
     "name": "gas-town",
     "type": "phase",
-    "count": 10
+    "count": 11
   },
   {
     "name": "hardening",
@@ -82,26 +82,26 @@
   {
     "name": "beaverGame",
     "type": "concept",
-    "count": 7
+    "count": 8
   },
   {
     "name": "asset-foundry",
     "type": "concept",
-    "count": 7
-  },
-  {
-    "name": "sprint",
-    "type": "concept",
-    "count": 7
-  },
-  {
-    "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 7
+    "count": 8
   },
   {
     "name": "landing",
     "type": "repo",
+    "count": 8
+  },
+  {
+    "name": "sprint",
+    "type": "concept",
+    "count": 8
+  },
+  {
+    "name": "security-as-emergent-ux",
+    "type": "concept",
     "count": 7
   },
   {
@@ -185,7 +185,17 @@
     "count": 4
   },
   {
+    "name": "babylon-migration",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "skill-catalog",
+    "type": "concept",
+    "count": 3
+  },
+  {
+    "name": "fleet-hardening",
     "type": "concept",
     "count": 3
   },
@@ -210,11 +220,6 @@
     "count": 3
   },
   {
-    "name": "babylon-migration",
-    "type": "concept",
-    "count": 2
-  },
-  {
     "name": "critical-path",
     "type": "concept",
     "count": 2
@@ -226,11 +231,6 @@
   },
   {
     "name": "session-init",
-    "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "fleet-hardening",
     "type": "concept",
     "count": 2
   },
@@ -305,6 +305,16 @@
     "count": 2
   },
   {
+    "name": "github-actions",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "skill-audit",
+    "type": "concept",
+    "count": 1
+  },
+  {
     "name": "action-board",
     "type": "concept",
     "count": 1
@@ -331,6 +341,16 @@
   },
   {
     "name": "cross-repo-contracts",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "absence-recovery",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "anthropic-api",
     "type": "concept",
     "count": 1
   },

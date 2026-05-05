@@ -1,6 +1,38 @@
 [
   {
     "command": "/roadmap",
+    "description": "Close or re-scope beaverGame #29 (Babylon migration umbrella). All sprint PRs (#32, #37, #38, #39) are merged — post a completion summary on the issue and explicitly re-file BG-003 (snap CI), BG-005 (Poisson scatter), BG-001 (HDRI), BG-015 (material verification) as Phase 1 tracking items. This is the 10-minute action that makes 'migration complete' mean something on the roadmap.",
+    "repo": "beaverGame",
+    "status": "open",
+    "sourceDate": "2026-05-05",
+    "id": "act-2026-05-05-roadmap-0bad90"
+  },
+  {
+    "command": "/validate",
+    "description": "Resolve the :3035 port collision and run the first end-to-end test of the asset-foundry Frame remote in the same session. Open frame-dev.sh and the shell remoteBase map, assign gcgcca a distinct port, update both files in a single commit (closes act-2026-04-30-roadmap-640008), then run frame-dev.sh and confirm asset-foundry loads at :3035 without a federation error. Also verify shell PR #76 disposition — if it is still open after dbce227 landed to main directly, close it.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-05-05",
+    "id": "act-2026-05-05-validate-c9bd6b"
+  },
+  {
+    "command": "/investigate",
+    "description": "Diagnose the 46-suggested / 0-followed funnel from Monday's sessions before ADR-0068 is treated as enforceable. Read ~/.claude/suggestion-log.jsonl and classify at least 5 suggestion entries by reason-for-ignore: wrong context, wrong moment in session flow, genuinely ignorable, or agent non-compliance. Separately, confirm whether PR-comment marker credits are being counted as real-time skill invocations in the audit — if they are, the telemetry model needs correction before the compliance rule compounds further on synthetic data.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-05-05",
+    "id": "act-2026-05-05-investigate-f18cb5"
+  },
+  {
+    "command": "/adr",
+    "description": "Write ADR-0067 for the ojfbot/github-actions shared composite action. The document does not currently exist but is cited in multiple PRs and in this article's Decisions section. Cover: the DRY extraction rationale, the zero-width PR window bug and fix, the PR-comment marker credit mechanism, the fleet adoption model (6 of N active repos on day one), and the branch-referencing pattern for safely testing action changes before rolling to @v1 consumers (`ojfbot/github-actions/.github/actions/skill-audit@your-branch`).",
+    "repo": "github-actions",
+    "status": "open",
+    "sourceDate": "2026-05-05",
+    "id": "act-2026-05-05-adr-df19c8"
+  },
+  {
+    "command": "/roadmap",
     "description": "Audit the :3035 port collision between asset-foundry and gcgcca. Open frame-dev.sh and shell's remoteBase map side by side, assign a distinct port to each remote, and update both files in a single PR. Shell #76 must not merge until this is resolved — merging it as-is bakes the collision into the host config. The fix is mechanical: pick a free port for asset-foundry (e.g. :3036), update frame-dev.sh and remoteBase in one commit, then amend #76 or open a follow-on PR.",
     "repo": "shell",
     "status": "open",
