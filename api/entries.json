@@ -1,5 +1,119 @@
 [
   {
+    "date": "2026-05-06",
+    "title": "Tuesday cleanup: editorial corrections, ADR cross-links, and a verification layer that prevents future fact drift",
+    "summary": "Tuesday's 14 commits across 7 repos corrected Monday's errors, formalised ADR-0069, and shipped an article-quality verification layer to structurally prevent future fact drift.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "beaverGame",
+        "type": "repo"
+      },
+      {
+        "name": "core-reader",
+        "type": "repo"
+      },
+      {
+        "name": "BlogEngine",
+        "type": "concept"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "landing",
+        "type": "repo"
+      },
+      {
+        "name": "editorial-workflow",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "core-reader",
+      "beaverGame",
+      "shell",
+      "BlogEngine",
+      "landing"
+    ],
+    "commitCount": 27,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Article-quality verification layer: embed the ADR registry and PR state buckets into every generation prompt",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Cross-link ADRs as a fleet-visibility mechanism: ADR-0069 in core points to asset-foundry ADR-0011",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Stale-action triage as a hygiene gate: closing 8 actions older than 14 days prevents list rot",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Confirm the article-quality verification layer (5ab335f) catches a known-bad claim. Craft a test prompt referencing a non-existent ADR number, run it through the pre-generation step, and verify the layer produces a flagged placeholder rather than a confident assertion. If the layer passes the bad claim, Wednesday's article output cannot be treated as verified.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-05-06",
+        "id": "act-2026-05-06-validate-5694f0"
+      },
+      {
+        "command": "/investigate",
+        "description": "Audit the 2026-05-06 suggestion log to separate real-time credits from comment-marker credits. Run: grep '2026-05-06' ~/.claude/suggestion-log.jsonl. Classify each entry by source field (realtime vs pr-comment). Recompute the 3-suggested/0-followed funnel against real-time credits only. Determine whether the 0% follow rate is structurally guaranteed by comment-marker inflation or reflects actual non-compliance. This audit is the prerequisite before ADR-0068 can be treated as enforceable.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-05-06",
+        "id": "act-2026-05-06-investigate-159af4"
+      },
+      {
+        "command": "/frame-standup",
+        "description": "File BG-001 (HDRI), BG-003 (snap CI), BG-005 (Poisson scatter), and BG-015 (material verification) as tracked issues on the Babylon-era beaverGame codebase. The Babylon migration is complete and these Phase 1 items have no filed issue state. Assign an owner to each before the next standup.",
+        "repo": "beaverGame",
+        "status": "open",
+        "sourceDate": "2026-05-06",
+        "id": "act-2026-05-06-frame-standup-bbb3e2"
+      }
+    ]
+  },
+  {
     "date": "2026-05-05",
     "title": "Monday's infrastructure sprint: ojfbot/github-actions lands, beaverGame goes full Babylon, and asset-foundry gets peer transports",
     "summary": "Eighty-eight commits Monday across 15 repos: a new shared github-actions repo centralises skill-audit CI across six repos, beaverGame completes its Babylon migration with full dodge gameplay, and asset-foundry gains dual Blender transports.",
@@ -10,11 +124,11 @@
       },
       {
         "name": "beaverGame",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "asset-foundry",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "core",
@@ -60,6 +174,8 @@
     "reposActive": [
       "daily-logger",
       "github-actions",
+      "beaverGame",
+      "asset-foundry",
       "core",
       "landing",
       "shell",
@@ -149,11 +265,11 @@
       },
       {
         "name": "beaverGame",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "asset-foundry",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "core",
@@ -181,6 +297,7 @@
       }
     ],
     "reposActive": [
+      "beaverGame",
       "core",
       "shell",
       "daily-logger"
@@ -228,11 +345,11 @@
       },
       {
         "name": "beaverGame",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "asset-foundry",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "core",
@@ -338,11 +455,11 @@
       },
       {
         "name": "beaverGame",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "asset-foundry",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "cross-repo-contract",
@@ -366,7 +483,9 @@
       }
     ],
     "reposActive": [
-      "daily-logger"
+      "daily-logger",
+      "beaverGame",
+      "asset-foundry"
     ],
     "commitCount": 1,
     "activityType": "hardening",
@@ -415,11 +534,11 @@
       },
       {
         "name": "asset-foundry",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "beaverGame",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "skill-catalog",
@@ -447,8 +566,10 @@
       }
     ],
     "reposActive": [
+      "beaverGame",
       "core",
-      "daily-logger"
+      "daily-logger",
+      "asset-foundry"
     ],
     "commitCount": 25,
     "activityType": "build",
@@ -493,11 +614,11 @@
       },
       {
         "name": "beaverGame",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "asset-foundry",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "shell",
@@ -521,6 +642,8 @@
       }
     ],
     "reposActive": [
+      "beaverGame",
+      "asset-foundry",
       "shell",
       "core",
       "daily-logger"
@@ -589,11 +712,11 @@
     "tags": [
       {
         "name": "beaverGame",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "asset-foundry",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "core",
@@ -634,7 +757,9 @@
     ],
     "reposActive": [
       "core",
+      "beaverGame",
       "shell",
+      "asset-foundry",
       "daily-logger"
     ],
     "commitCount": 13,
@@ -713,11 +838,11 @@
     "tags": [
       {
         "name": "beaverGame",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "asset-foundry",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "core",
@@ -746,6 +871,8 @@
     ],
     "reposActive": [
       "daily-logger",
+      "beaverGame",
+      "asset-foundry",
       "core"
     ],
     "commitCount": 20,
@@ -1279,7 +1406,7 @@
       },
       {
         "name": "gcgcca",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "assistant-centric",
@@ -1983,6 +2110,7 @@
       "purefoy",
       "lean-canvas",
       "core-reader",
+      "gcgcca",
       "landing"
     ],
     "commitCount": 32,
@@ -2248,7 +2376,7 @@
       },
       {
         "name": "gcgcca",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "cv-builder",
@@ -2311,6 +2439,7 @@
       "daily-logger",
       "shell",
       "core",
+      "gcgcca",
       "cv-builder",
       "MrPlug",
       "BlogEngine",
