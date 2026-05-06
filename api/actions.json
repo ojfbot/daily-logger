@@ -1,5 +1,29 @@
 [
   {
+    "command": "/validate",
+    "description": "Confirm the article-quality verification layer (5ab335f) catches a known-bad claim. Craft a test prompt referencing a non-existent ADR number, run it through the pre-generation step, and verify the layer produces a flagged placeholder rather than a confident assertion. If the layer passes the bad claim, Wednesday's article output cannot be treated as verified.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-05-06",
+    "id": "act-2026-05-06-validate-5694f0"
+  },
+  {
+    "command": "/investigate",
+    "description": "Audit the 2026-05-06 suggestion log to separate real-time credits from comment-marker credits. Run: grep '2026-05-06' ~/.claude/suggestion-log.jsonl. Classify each entry by source field (realtime vs pr-comment). Recompute the 3-suggested/0-followed funnel against real-time credits only. Determine whether the 0% follow rate is structurally guaranteed by comment-marker inflation or reflects actual non-compliance. This audit is the prerequisite before ADR-0068 can be treated as enforceable.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-05-06",
+    "id": "act-2026-05-06-investigate-159af4"
+  },
+  {
+    "command": "/frame-standup",
+    "description": "File BG-001 (HDRI), BG-003 (snap CI), BG-005 (Poisson scatter), and BG-015 (material verification) as tracked issues on the Babylon-era beaverGame codebase. The Babylon migration is complete and these Phase 1 items have no filed issue state. Assign an owner to each before the next standup.",
+    "repo": "beaverGame",
+    "status": "open",
+    "sourceDate": "2026-05-06",
+    "id": "act-2026-05-06-frame-standup-bbb3e2"
+  },
+  {
     "command": "/roadmap",
     "description": "Close or re-scope beaverGame #29 (Babylon migration umbrella). All sprint PRs (#32, #37, #38, #39) are merged — post a completion summary on the issue and explicitly re-file BG-003 (snap CI), BG-005 (Poisson scatter), BG-001 (HDRI), BG-015 (material verification) as Phase 1 tracking items. This is the 10-minute action that makes 'migration complete' mean something on the roadmap.",
     "repo": "beaverGame",
