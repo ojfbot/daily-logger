@@ -2,22 +2,22 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 36
+    "count": 37
   },
   {
     "name": "shell",
     "type": "repo",
-    "count": 32
+    "count": 33
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 31
+    "count": 32
   },
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 29
+    "count": 30
   },
   {
     "name": "core",
@@ -27,7 +27,12 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 21
+    "count": 22
+  },
+  {
+    "name": "rest-day",
+    "type": "activity",
+    "count": 16
   },
   {
     "name": "tooling-for-iteration",
@@ -38,11 +43,6 @@
     "name": "phase-1",
     "type": "phase",
     "count": 16
-  },
-  {
-    "name": "rest-day",
-    "type": "activity",
-    "count": 15
   },
   {
     "name": "cv-builder",
@@ -65,12 +65,17 @@
     "count": 11
   },
   {
+    "name": "beaverGame",
+    "type": "repo",
+    "count": 10
+  },
+  {
     "name": "model-behavior-as-design",
     "type": "concept",
     "count": 10
   },
   {
-    "name": "beaverGame",
+    "name": "asset-foundry",
     "type": "repo",
     "count": 9
   },
@@ -88,11 +93,6 @@
     "name": "MrPlug",
     "type": "concept",
     "count": 9
-  },
-  {
-    "name": "asset-foundry",
-    "type": "repo",
-    "count": 8
   },
   {
     "name": "sprint",
