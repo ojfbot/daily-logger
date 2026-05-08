@@ -2,32 +2,37 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 37
+    "count": 38
   },
   {
     "name": "shell",
     "type": "repo",
-    "count": 33
+    "count": 34
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 32
+    "count": 33
   },
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 30
+    "count": 31
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 24
+    "count": 25
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 22
+    "count": 23
+  },
+  {
+    "name": "phase-1",
+    "type": "phase",
+    "count": 17
   },
   {
     "name": "rest-day",
@@ -40,9 +45,9 @@
     "count": 16
   },
   {
-    "name": "phase-1",
-    "type": "phase",
-    "count": 16
+    "name": "adr",
+    "type": "practice",
+    "count": 15
   },
   {
     "name": "cv-builder",
@@ -50,14 +55,14 @@
     "count": 15
   },
   {
-    "name": "adr",
-    "type": "practice",
-    "count": 14
-  },
-  {
     "name": "purefoy",
     "type": "repo",
     "count": 13
+  },
+  {
+    "name": "beaverGame",
+    "type": "repo",
+    "count": 11
   },
   {
     "name": "gas-town",
@@ -65,7 +70,12 @@
     "count": 11
   },
   {
-    "name": "beaverGame",
+    "name": "landing",
+    "type": "repo",
+    "count": 10
+  },
+  {
+    "name": "asset-foundry",
     "type": "repo",
     "count": 10
   },
@@ -73,16 +83,6 @@
     "name": "model-behavior-as-design",
     "type": "concept",
     "count": 10
-  },
-  {
-    "name": "asset-foundry",
-    "type": "repo",
-    "count": 9
-  },
-  {
-    "name": "landing",
-    "type": "repo",
-    "count": 9
   },
   {
     "name": "hardening",
@@ -95,14 +95,14 @@
     "count": 9
   },
   {
-    "name": "sprint",
-    "type": "concept",
+    "name": "core-reader",
+    "type": "repo",
     "count": 8
   },
   {
-    "name": "core-reader",
-    "type": "repo",
-    "count": 7
+    "name": "sprint",
+    "type": "concept",
+    "count": 8
   },
   {
     "name": "security-as-emergent-ux",
@@ -185,6 +185,11 @@
     "count": 4
   },
   {
+    "name": "github-integration",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "babylon-migration",
     "type": "concept",
     "count": 3
@@ -220,6 +225,11 @@
     "count": 3
   },
   {
+    "name": "audit",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "critical-path",
     "type": "concept",
     "count": 2
@@ -247,11 +257,6 @@
   {
     "name": "phase-5",
     "type": "phase",
-    "count": 2
-  },
-  {
-    "name": "github-integration",
-    "type": "concept",
     "count": 2
   },
   {
@@ -331,11 +336,6 @@
   },
   {
     "name": "bead-ledger",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "audit",
     "type": "concept",
     "count": 1
   },
