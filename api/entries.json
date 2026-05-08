@@ -1,5 +1,103 @@
 [
   {
+    "date": "2026-05-08",
+    "title": "Thursday audit: one commit, four open PRs, and the gate that keeps not closing",
+    "summary": "Thursday produced one automated commit — the daily blog entry — making it the fifth consecutive low-human-activity day and a natural audit window for four open stale-doc PRs and the deepest open action threads.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "beaverGame",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "core-reader",
+        "type": "repo"
+      },
+      {
+        "name": "landing",
+        "type": "repo"
+      },
+      {
+        "name": "asset-foundry",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "github-integration",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "audit",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "beaverGame"
+    ],
+    "commitCount": 1,
+    "activityType": "audit",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "ADR-0068 compliance is currently unenforceable — the telemetry audit is the highest-priority open action",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Four stale-doc PRs are merge-ready — batch-merge before the next substantive PR on any branch creates a conflict",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Port collision at :3035 remains unresolved after nine days — Frame is not end-to-end testable in the dev environment right now",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "beaverGame Phase 1 tracking issues are unowned — explicit disposition required before next session",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-05-07",
     "title": "Wednesday's single commit: reading the quiet between the sprints",
     "summary": "One bot commit Wednesday; we audit the port collision gate, four ready-to-merge PRs, and why ADR-0068 enforcement is formally suspended pending suggestion-log audit.",
