@@ -2,22 +2,22 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 38
+    "count": 39
   },
   {
     "name": "shell",
     "type": "repo",
-    "count": 34
+    "count": 35
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 33
+    "count": 34
   },
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 31
+    "count": 32
   },
   {
     "name": "core",
@@ -27,17 +27,17 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 23
+    "count": 24
+  },
+  {
+    "name": "rest-day",
+    "type": "activity",
+    "count": 17
   },
   {
     "name": "phase-1",
     "type": "phase",
     "count": 17
-  },
-  {
-    "name": "rest-day",
-    "type": "activity",
-    "count": 16
   },
   {
     "name": "tooling-for-iteration",
@@ -62,7 +62,7 @@
   {
     "name": "beaverGame",
     "type": "repo",
-    "count": 11
+    "count": 12
   },
   {
     "name": "gas-town",
@@ -125,6 +125,11 @@
     "count": 7
   },
   {
+    "name": "cleanup",
+    "type": "concept",
+    "count": 6
+  },
+  {
     "name": "storybook",
     "type": "infra",
     "count": 6
@@ -136,11 +141,6 @@
   },
   {
     "name": "BlogEngine",
-    "type": "concept",
-    "count": 5
-  },
-  {
-    "name": "cleanup",
     "type": "concept",
     "count": 5
   },
@@ -185,6 +185,11 @@
     "count": 4
   },
   {
+    "name": "audit",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "github-integration",
     "type": "concept",
     "count": 3
@@ -225,8 +230,8 @@
     "count": 3
   },
   {
-    "name": "audit",
-    "type": "concept",
+    "name": "github-actions",
+    "type": "repo",
     "count": 2
   },
   {
@@ -312,11 +317,6 @@
   {
     "name": "editorial-workflow",
     "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "github-actions",
-    "type": "repo",
     "count": 1
   },
   {
