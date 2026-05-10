@@ -1,5 +1,29 @@
 [
   {
+    "command": "/investigate",
+    "description": "Run the ADR-0068 telemetry audit now — this action has been open for five days and has no technical blocker. Grep the suggestion log for Saturday's four sessions across lofi-beaver, asset-foundry, core-library, and ojfbot. Classify each of the 4 suggestions by source: realtime vs pr-comment-marker. Determine whether the 0% follow rate reflects comment-marker inflation (instrumentation problem) or genuine agent non-compliance (ADR-0068 enforcement problem). Output: a classification table and a disposition — either 'telemetry fix needed' or 'agent behavior correction needed.' This is the prerequisite before ADR-0068 is enforceable.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-05-10",
+    "id": "act-2026-05-10-investigate-d5cfb2"
+  },
+  {
+    "command": "/adr",
+    "description": "Advance ADR-0012 or formally park it — 'Proposed with no named reviewer and no acceptance criteria' is a stale ADR by another name. Either: (a) write the acceptance criteria (interface contract schema between ResearchCurator and generation agents, sequencing rationale for introducing upstream agent before execution layer is visible in dev), assign a reviewer, and set a review window; or (b) explicitly park it with a stated reason and a condition under which it would be revisited. Do not leave it in the current state.",
+    "repo": "asset-foundry",
+    "status": "open",
+    "sourceDate": "2026-05-10",
+    "id": "act-2026-05-10-adr-89a9cc"
+  },
+  {
+    "command": "/fix",
+    "description": "Resolve the :3035 port collision in frame-dev.sh and the shell remoteBase map. Steps: (1) grep the full shell config for ':3037' to confirm it's unoccupied, (2) reassign asset-foundry from :3035 to :3037 in both files, (3) commit, (4) rebase the shell PR (act-2026-04-29-pr-review-e613c0) against main and merge. Closes act-2026-04-30-roadmap-640008 and act-2026-05-05-validate-0baa3c.",
+    "repo": "asset-foundry",
+    "status": "open",
+    "sourceDate": "2026-05-10",
+    "id": "act-2026-05-10-fix-a78f2f"
+  },
+  {
     "command": "/validate",
     "description": "Confirm the article-quality verification layer (5ab335f) catches a known-bad claim. Craft a test prompt referencing a non-existent ADR number, run it through the pre-generation step, and verify the layer produces a flagged placeholder rather than a confident assertion. If the layer passes the bad claim, Wednesday's article output cannot be treated as verified.",
     "repo": "daily-logger",

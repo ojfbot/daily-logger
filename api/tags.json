@@ -2,7 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 39
+    "count": 40
+  },
+  {
+    "name": "ci-cd",
+    "type": "practice",
+    "count": 35
   },
   {
     "name": "shell",
@@ -10,14 +15,14 @@
     "count": 35
   },
   {
-    "name": "ci-cd",
-    "type": "practice",
-    "count": 34
-  },
-  {
     "name": "module-federation",
     "type": "arch",
     "count": 32
+  },
+  {
+    "name": "assistant-centric",
+    "type": "concept",
+    "count": 25
   },
   {
     "name": "core",
@@ -25,14 +30,9 @@
     "count": 25
   },
   {
-    "name": "assistant-centric",
-    "type": "concept",
-    "count": 24
-  },
-  {
     "name": "rest-day",
     "type": "activity",
-    "count": 17
+    "count": 18
   },
   {
     "name": "phase-1",
@@ -40,14 +40,14 @@
     "count": 17
   },
   {
-    "name": "tooling-for-iteration",
-    "type": "concept",
+    "name": "adr",
+    "type": "practice",
     "count": 16
   },
   {
-    "name": "adr",
-    "type": "practice",
-    "count": 15
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 16
   },
   {
     "name": "cv-builder",
@@ -65,6 +65,16 @@
     "count": 12
   },
   {
+    "name": "asset-foundry",
+    "type": "repo",
+    "count": 11
+  },
+  {
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 11
+  },
+  {
     "name": "gas-town",
     "type": "phase",
     "count": 11
@@ -72,16 +82,6 @@
   {
     "name": "landing",
     "type": "repo",
-    "count": 10
-  },
-  {
-    "name": "asset-foundry",
-    "type": "repo",
-    "count": 10
-  },
-  {
-    "name": "model-behavior-as-design",
-    "type": "concept",
     "count": 10
   },
   {
@@ -313,6 +313,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "multi-agent",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "editorial-workflow",
