@@ -2,27 +2,27 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 40
-  },
-  {
-    "name": "ci-cd",
-    "type": "practice",
-    "count": 35
+    "count": 41
   },
   {
     "name": "shell",
     "type": "repo",
-    "count": 35
+    "count": 36
+  },
+  {
+    "name": "ci-cd",
+    "type": "practice",
+    "count": 36
   },
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 32
+    "count": 33
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 25
+    "count": 26
   },
   {
     "name": "core",
@@ -32,12 +32,12 @@
   {
     "name": "rest-day",
     "type": "activity",
-    "count": 18
+    "count": 19
   },
   {
     "name": "phase-1",
     "type": "phase",
-    "count": 17
+    "count": 18
   },
   {
     "name": "adr",
@@ -60,14 +60,14 @@
     "count": 13
   },
   {
-    "name": "beaverGame",
+    "name": "asset-foundry",
     "type": "repo",
     "count": 12
   },
   {
-    "name": "asset-foundry",
+    "name": "beaverGame",
     "type": "repo",
-    "count": 11
+    "count": 12
   },
   {
     "name": "model-behavior-as-design",
@@ -105,6 +105,11 @@
     "count": 8
   },
   {
+    "name": "cleanup",
+    "type": "concept",
+    "count": 7
+  },
+  {
     "name": "security-as-emergent-ux",
     "type": "concept",
     "count": 7
@@ -123,11 +128,6 @@
     "name": "frame-agent",
     "type": "arch",
     "count": 7
-  },
-  {
-    "name": "cleanup",
-    "type": "concept",
-    "count": 6
   },
   {
     "name": "storybook",
