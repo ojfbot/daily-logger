@@ -1,5 +1,88 @@
 [
   {
+    "date": "2026-05-11",
+    "title": "Sunday rest: seven days at low tide — what the open PR queue is telling us",
+    "summary": "One automated commit Sunday; seven consecutive low-activity days surface a clear pattern across the open PR queue, a compounding stale-action backlog, and two unresolved gates blocking the most downstream work.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "asset-foundry",
+        "type": "repo"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Seven low-activity days: what the pattern reveals about queue mechanics",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Six open stale-doc PRs: the daily-cleaner queue is not self-clearing",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Port collision remains the single highest-leverage unresolved mechanical task",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0068 enforcement remains suspended: telemetry audit still unactioned",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "BeaverGame Phase 1 punch list: unowned gates before Phase 2",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-05-10",
     "title": "Saturday's one commit: ADR-0012 names the ResearchCurator sub-agent and what it tells us about asset-foundry's design arc",
     "summary": "Saturday produced one human commit — ADR-0012 proposing a ResearchCurator vision-driven design brief sub-agent for asset-foundry — alongside four sessions with zero skill invocations.",
