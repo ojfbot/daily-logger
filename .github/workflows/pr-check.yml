@@ -63,6 +63,11 @@ jobs:
           # Fixed date so the output file is predictable for the PR body check below.
           DATE_OVERRIDE: "2026-01-01"
           DRY_RUN: "false"
+          # The bot-only-activity gate in src/should-skip-run.ts would otherwise
+          # short-circuit on this old date (sparse public-repo activity in the
+          # 24h window). FORCE_RUN=true signals "this is a synthetic test run,
+          # always exercise the full pipeline."
+          FORCE_RUN: "true"
         run: pnpm generate
 
       - name: Verify article was written
