@@ -1,5 +1,95 @@
 [
   {
+    "date": "2026-05-12",
+    "title": "Monday's one-commit signal: daily-logger gains a bot-activity skip guard",
+    "summary": "A skip-run guard for bot-only days shipped to daily-logger while the port-collision fix and ADR-0068 audit remain the two highest-priority unresolved mechanical tasks.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "daily-cleaner",
+        "type": "concept"
+      },
+      {
+        "name": "ADR-0068",
+        "type": "concept"
+      },
+      {
+        "name": "skill-catalog",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 4,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Skip generation when yesterday was bot-only activity",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Bot-only detection as a pipeline quality gate, not a content decision",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/fix-port-collision",
+        "description": "Open frame-dev.sh and shell's remoteBase map. Grep for :3037 to confirm it is unoccupied. Reassign asset-foundry from :3035 to :3037. Commit. Rebase Shell PR #76 (register asset-foundry MF remote). Closes act-2026-04-30-roadmap-640008, act-2026-05-05-validate-0baa3c, and act-2026-05-10-fix-a78f2f. Estimated time under 15 minutes. This is the first task in the next commit window.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-05-12",
+        "id": "act-2026-05-12-fix-port-collision-6a5916"
+      },
+      {
+        "command": "/investigate",
+        "description": "Pull raw session suggestion logs from today's three sessions across core, core-library, selfco, and related repos. Classify at least 5 suggestion entries by source (real-time surface vs. PR comment marker). Write one finding paragraph: which hypothesis the classification supports (instrumentation inflation or ADR-0068 non-compliance) and whether enforcement should proceed or instrumentation needs repair first. Expected time: 20-40 minutes. Output lands in the ADR-0068 audit record.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-05-12",
+        "id": "act-2026-05-12-investigate-be2f20"
+      },
+      {
+        "command": "/sweep",
+        "description": "Merge all seven open daily-cleaner PRs across four repos: beaverGame #42, core-reader #29, landing #23, daily-logger #191, asset-foundry #30, daily-logger #195, daily-logger #198. Before merging core-reader #29, confirm no conflict with in-flight feature branches — it has been open six days in an active repo. Target: queue resets to zero. Acceptable steady-state is zero PRs older than 72 hours.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-05-12",
+        "id": "act-2026-05-12-sweep-cf33c5"
+      }
+    ]
+  },
+  {
     "date": "2026-05-11",
     "title": "Sunday rest: seven days at low tide — what the open PR queue is telling us",
     "summary": "One automated commit Sunday; seven consecutive low-activity days surface a clear pattern across the open PR queue, a compounding stale-action backlog, and two unresolved gates blocking the most downstream work.",
