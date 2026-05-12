@@ -34,6 +34,7 @@ export interface PRInfo {
   url: string
   repo: string
   body?: string
+  author?: string
 }
 
 export interface OpenPRInfo {
@@ -66,6 +67,7 @@ export interface RecentPRInfo {
   mergedAt?: string
   draft: boolean
   skillUsage?: PRSkillUsage
+  author?: string
 }
 
 export interface ADRRegistryEntry {

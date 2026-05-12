@@ -142,6 +142,7 @@ function getMergedPRs(org: string, repo: string, since: string): PRInfo[] {
     deletions: number
     html_url: string
     body: string | null
+    user: { login: string } | null
   }
   const data = ghApi<GHPR[]>(
     `repos/${org}/${repo}/pulls?state=closed&sort=updated&direction=desc&per_page=30`
@@ -158,6 +159,7 @@ function getMergedPRs(org: string, repo: string, since: string): PRInfo[] {
       url: pr.html_url,
       repo,
       body: pr.body ? pr.body.slice(0, 400) : undefined,
+      author: pr.user?.login,
     }))
 }
 
@@ -264,6 +266,7 @@ function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo
     updated_at: string
     merged_at: string | null
     draft: boolean
+    user: { login: string } | null
   }
   // Fetch all PRs (open + closed) sorted by most recently updated
   const data = ghApi<GHPR[]>(
@@ -283,6 +286,7 @@ function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo
       updatedAt: pr.updated_at,
       mergedAt: pr.merged_at ?? undefined,
       draft: pr.draft,
+      author: pr.user?.login,
     }))
 }
 

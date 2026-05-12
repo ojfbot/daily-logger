@@ -27,6 +27,7 @@ import { collectContext } from './collect-context.js'
 import { generateArticle, toMarkdown } from './generate-article.js'
 import { loadPersonas, reviewDraft, synthesizeWithCouncil } from './council.js'
 import { actionId, type ClosedAction } from './schema.js'
+import { shouldSkipRun } from './should-skip-run.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -112,6 +113,19 @@ async function main() {
   console.log('1/4  Collecting GitHub context...')
   const ctx = await collectContext(date)
   console.log()
+
+  // ── Skip gate ──────────────────────────────────────────────────────────────
+  // If yesterday produced only bot-authored commits and PRs, there is no
+  // human signal worth narrating. Bypassed when DRY_RUN or FORCE_RUN is set.
+  const forceRun = process.env.FORCE_RUN === 'true'
+  if (!forceRun && !isDryRun) {
+    const decision = shouldSkipRun(ctx)
+    if (decision.skip) {
+      console.log(`⏭  Skipping run — ${decision.reason}.`)
+      console.log('   Set FORCE_RUN=true to override.')
+      return
+    }
+  }
 
   // ── 2. Draft ───────────────────────────────────────────────────────────────
   console.log('2/4  Generating draft article...')
