@@ -1,5 +1,29 @@
 [
   {
+    "command": "/fix-port-collision",
+    "description": "Open frame-dev.sh and shell's remoteBase map. Grep for :3037 to confirm it is unoccupied. Reassign asset-foundry from :3035 to :3037. Commit. Rebase Shell PR #76 (register asset-foundry MF remote). Closes act-2026-04-30-roadmap-640008, act-2026-05-05-validate-0baa3c, and act-2026-05-10-fix-a78f2f. Estimated time under 15 minutes. This is the first task in the next commit window.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-05-12",
+    "id": "act-2026-05-12-fix-port-collision-6a5916"
+  },
+  {
+    "command": "/investigate",
+    "description": "Pull raw session suggestion logs from today's three sessions across core, core-library, selfco, and related repos. Classify at least 5 suggestion entries by source (real-time surface vs. PR comment marker). Write one finding paragraph: which hypothesis the classification supports (instrumentation inflation or ADR-0068 non-compliance) and whether enforcement should proceed or instrumentation needs repair first. Expected time: 20-40 minutes. Output lands in the ADR-0068 audit record.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-05-12",
+    "id": "act-2026-05-12-investigate-be2f20"
+  },
+  {
+    "command": "/sweep",
+    "description": "Merge all seven open daily-cleaner PRs across four repos: beaverGame #42, core-reader #29, landing #23, daily-logger #191, asset-foundry #30, daily-logger #195, daily-logger #198. Before merging core-reader #29, confirm no conflict with in-flight feature branches — it has been open six days in an active repo. Target: queue resets to zero. Acceptable steady-state is zero PRs older than 72 hours.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-05-12",
+    "id": "act-2026-05-12-sweep-cf33c5"
+  },
+  {
     "command": "/investigate",
     "description": "Run the ADR-0068 telemetry audit now — this action has been open for five days and has no technical blocker. Grep the suggestion log for Saturday's four sessions across lofi-beaver, asset-foundry, core-library, and ojfbot. Classify each of the 4 suggestions by source: realtime vs pr-comment-marker. Determine whether the 0% follow rate reflects comment-marker inflation (instrumentation problem) or genuine agent non-compliance (ADR-0068 enforcement problem). Output: a classification table and a disposition — either 'telemetry fix needed' or 'agent behavior correction needed.' This is the prerequisite before ADR-0068 is enforceable.",
     "repo": "core",
