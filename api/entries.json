@@ -1,5 +1,92 @@
 [
   {
+    "date": "2026-05-17",
+    "title": "Saturday refactor: extracting Hammerspoon + app-bundle into workstation-yuri",
+    "summary": "One precise Saturday commit extracted Hammerspoon and app-bundle launcher concerns from core into workstation-yuri, restoring core's portability guarantee and establishing the extraction pattern for future fleet nodes.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "workstation-yuri",
+        "type": "concept"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core"
+    ],
+    "commitCount": 5,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Hammerspoon + app-bundle belong in workstation-yuri, not core",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Workstation modules are first-class citizens in the ojfbot fleet",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Review and merge core #117 (Pocock skill conventions: /prototype, /caveman, /zoom-out, writing pipeline, /git-guardrails). Open six days, no conflicts or CI failures noted. Solo project — the review gate is a habit gap, not a technical one. Prerequisite for expanding the active skill surface in all subsequent sessions. Do this first.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-05-17",
+        "id": "act-2026-05-17-pr-review-6a458b"
+      },
+      {
+        "command": "/adr",
+        "description": "Write a CLAUDE.md entry in workstation-yuri (not a full ADR — that's for core) codifying the boundary rule established by commit 1029c2b: 'Machine-specific, OS-specific, or hardware-tied concerns belong in workstation-yuri; portable skill catalog logic stays in core.' Also include the three-question test: Is it OS-specific? Is it tied to a display profile or hardware layout? Is it named after or configured for a single machine? Commit this before the next session adds something ambiguous.",
+        "repo": "workstation-yuri",
+        "status": "open",
+        "sourceDate": "2026-05-17",
+        "id": "act-2026-05-17-adr-97c404"
+      },
+      {
+        "command": "/audit",
+        "description": "Set a calendar date for the ADR-0068 compliance audit in the next session. The audit has been open since 2026-05-05 (twelve days). Investigation actions act-2026-05-05-investigate-f18cb5 and act-2026-05-10-investigate-d5cfb2 remain open. Until the audit runs, the nine-session 0% telemetry streak is uninterpretable — it cannot be distinguished from instrumentation failure. This needs a date, not another deferred action.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-05-17",
+        "id": "act-2026-05-17-audit-26b0a2"
+      }
+    ]
+  },
+  {
     "date": "2026-05-12",
     "title": "Monday's one-commit signal: daily-logger gains a bot-activity skip guard",
     "summary": "A skip-run guard for bot-only days shipped to daily-logger while the port-collision fix and ADR-0068 audit remain the two highest-priority unresolved mechanical tasks.",
