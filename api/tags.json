@@ -7,7 +7,7 @@
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 37
+    "count": 38
   },
   {
     "name": "shell",
@@ -17,17 +17,22 @@
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 33
+    "count": 34
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 27
+    "count": 28
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 25
+    "count": 26
+  },
+  {
+    "name": "phase-1",
+    "type": "phase",
+    "count": 19
   },
   {
     "name": "rest-day",
@@ -35,14 +40,9 @@
     "count": 19
   },
   {
-    "name": "phase-1",
-    "type": "phase",
-    "count": 18
-  },
-  {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 17
+    "count": 18
   },
   {
     "name": "adr",
@@ -85,6 +85,11 @@
     "count": 10
   },
   {
+    "name": "cleanup",
+    "type": "concept",
+    "count": 9
+  },
+  {
     "name": "hardening",
     "type": "practice",
     "count": 9
@@ -93,11 +98,6 @@
     "name": "MrPlug",
     "type": "concept",
     "count": 9
-  },
-  {
-    "name": "cleanup",
-    "type": "concept",
-    "count": 8
   },
   {
     "name": "core-reader",
@@ -318,6 +318,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "workstation-yuri",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "ADR-0068",
