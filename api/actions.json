@@ -1,6 +1,30 @@
 [
   {
     "command": "/pr-review",
+    "description": "Review and merge ADR-0079 (core #118, vault page-lifecycle policy). Filed 2026-05-16, currently Proposed. The /vault skill shipped Sunday has no staleness governance until this advances to Accepted — sessions reading from the vault via the planned obsidian-mcp transport will produce confidently-wrong answers from stale pages with no user-visible signal. This is the prerequisite gate for the transport upgrade. Accept or request changes; do not leave it in Proposed.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-05-18",
+    "id": "act-2026-05-18-pr-review-e902e3"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review ADR-0080 (core #121, vault staleness scanner). Depends on ADR-0079 (#118) — do not merge before #118 is Accepted. Opened 2026-05-18. Confirm the implementation decisions in #121 are consistent with the page-lifecycle policy in #118. Specifically: #121 refines mechanism (2) from #118; verify the scanner behavior aligns with whatever lifecycle boundaries ADR-0079 establishes.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-05-18",
+    "id": "act-2026-05-18-pr-review-42141c"
+  },
+  {
+    "command": "/investigate",
+    "description": "Audit the Sunday suggestion log: 5 suggestions offered, 0 followed, 0 sessions with quality skill coverage. Thirteenth consecutive day of 0% follow rate. Locate the raw suggestion log entries for the Sunday session window. Classify at least 5 entries by source: realtime suggestion (offered during an active session) vs. PR-comment-marker (comment-marker on a PR counted as a suggestion credit). Produce a single written disposition — instrumentation failure or agent non-compliance — and name the remediation path. This is the last reliable classification window; session context that disambiguates source attribution degrades beyond ~two weeks. Do not defer again.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-05-18",
+    "id": "act-2026-05-18-investigate-9a0199"
+  },
+  {
+    "command": "/pr-review",
     "description": "Review and merge core #117 (Pocock skill conventions: /prototype, /caveman, /zoom-out, writing pipeline, /git-guardrails). Open six days, no conflicts or CI failures noted. Solo project — the review gate is a habit gap, not a technical one. Prerequisite for expanding the active skill surface in all subsequent sessions. Do this first.",
     "repo": "core",
     "status": "open",
