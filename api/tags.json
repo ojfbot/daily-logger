@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 42
+    "count": 43
   },
   {
     "name": "ci-cd",
@@ -22,12 +22,12 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 28
+    "count": 29
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 26
+    "count": 27
   },
   {
     "name": "phase-1",
@@ -55,14 +55,14 @@
     "count": 15
   },
   {
-    "name": "purefoy",
-    "type": "repo",
+    "name": "model-behavior-as-design",
+    "type": "concept",
     "count": 13
   },
   {
-    "name": "model-behavior-as-design",
-    "type": "concept",
-    "count": 12
+    "name": "purefoy",
+    "type": "repo",
+    "count": 13
   },
   {
     "name": "asset-foundry",
@@ -100,6 +100,11 @@
     "count": 9
   },
   {
+    "name": "security-as-emergent-ux",
+    "type": "concept",
+    "count": 8
+  },
+  {
     "name": "core-reader",
     "type": "repo",
     "count": 8
@@ -108,11 +113,6 @@
     "name": "sprint",
     "type": "concept",
     "count": 8
-  },
-  {
-    "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 7
   },
   {
     "name": "security",
@@ -318,6 +318,21 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "knowledge-management",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "vault-integration",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "build",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "workstation-yuri",
