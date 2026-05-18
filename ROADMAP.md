@@ -8,7 +8,8 @@
 
 ## Where we are now (update this section weekly)
 
-**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning + fleet-wide dependency hardening + skill-catalog + fleet-wide session-init + beaverGame + asset-foundry + github-actions (shared CI)**
+**Active: Phase 1 + Phase 4 + Phase 5 + Phase 6 + Phase 7 + Phase 9 + Gas Town Sprint 1 + lean-canvas + /scaffold-frame-app + SEH Study + fleet-wide security scanning + fleet-wide dependency hardening + skill-catalog + fleet-wide session-init + beaverGame + asset-foundry + github-actions (shared CI) + selfco vault runner**
+- **selfco vault runner (live)**: `selfco-box` daemon ingests Notion/iOS/MCP captures into the personal `ojfbot/selfco` Obsidian vault via path-jailed Claude agent. Infrastructure commits to `selfco-box` are tracked in daily reports; the vault repo itself is intentionally not swept (content churn).
 - **Actions board**: two actions open (action-ID audit for pre-`9c17d7f` actions; two-ADR session for `suggested_after`/`layer_affinity` governance and content-hash action-ID scheme). Additionally, a sweep of daily-cleaner PRs #155–#167 is pending triage. PR #133 review completed (2026-04-13). Fleet-wide README sharpening complete across all public repos (2026-04-04); live CVE patched and verified; expandable BioCard shipped to landing page. Deterministic content-hash action IDs shipped (`9c17d7f`); five ghost actions closed (`c368b79`). Suggestion-ignored telemetry closes the feedback loop. Phase 0 fully closed for beaverGame and asset-foundry; beaverGame Babylon migration complete with full dodge gameplay; skill-audit CI extracted to shared `github-actions` repo. Pocock skill suite landed (ADR-0047, 0048, 0049); standup funnel wired as first-class skill consumer (ADR-0054); skill-metrics ADR (ADR-0050) ratified. asset-foundry gains dual Blender transports (ADR-0011).
 - **Fleet hardening sprint complete**: 15-PR fleet hardening sprint closed — transitive dependency vulnerabilities patched across all 11 repos, CVE-2025-68665 resolved in MrPlug with explicit version pin, Express 5 route-param type fixes shipped in TripPlanner and BlogEngine. Every public README sharpened (2026-04-04). Structural gap identified: `tsc --noEmit` is not yet a required CI step for lock-file PRs touching `@types/*` or framework packages.
 - **ADRs landed**: ADR-0033 (daily-cleaner confidence threshold), ADR-0034 (Frame-wide Redux store strategy, resolves shell #5), ADR-0036 (structured decision output for rich UI), ADR-0037 (JSONL truncation bug fix), ADR-0038 (editorial revision CI workflow), ADR-0043 (AgentBead bridge — Claude Code lifecycle to Gas Town bead emissions), ADR-0047/0048/0049 (Pocock skill suite — full skill bodies before integration), ADR-0050 (skill adoption measurement as catalog responsibility), ADR-0054 (standup funnel as first-class skill consumer; bead prefix reservations).
@@ -126,3 +127,15 @@ Vercel deploy fires on PR merge to main.
 // Read feedback/YYYY-MM-DD.json for last 5 days, append to prompt
 // Format: { date: string, notes: string, focusAreas: string[] }
 ```
+
+---
+
+## selfco vault runner (out-of-band)
+
+`selfco-box` is a durable Node.js daemon that ingests captures into the personal `ojfbot/selfco` vault (LLM-owned, Karpathy-style append-only `raw/` + LLM-maintained `wiki/`). It runs as a launchd job locally; capture sources are Notion polling, an iOS Shortcut hitting `/capture`, and MCP tools.
+
+**Tracked by daily-logger:** `ojfbot/selfco-box` (daemon source, ingest procedure prompt, config schema, README).
+
+**Intentionally NOT tracked:** `ojfbot/selfco` (the vault content repo). Vault writes happen many times per day and would drown daily reports in non-engineering churn. The `vault` skill source (which defines schema, templates, helper scripts) lives inside `ojfbot/core` at `.claude/skills/vault/` and is covered by the existing `core` sweep.
+
+Out-of-band: this is personal-knowledge infrastructure, not part of the Frame OS phase plan.

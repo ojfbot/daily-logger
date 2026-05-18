@@ -16,7 +16,7 @@ const REPOS = [
   'cv-builder',
   'BlogEngine',
   'TripPlanner',
-  'core',           // core (formerly node-template) — slash commands + TypeScript engine
+  'core',           // core (formerly node-template) — slash commands + TypeScript engine; hosts the selfco/vault skill (.claude/skills/vault/)
   'core-reader',    // CoreReader — metadata dashboard for core commands, ADRs, roadmap
   'MrPlug',
   'purefoy',
@@ -29,6 +29,7 @@ const REPOS = [
   'beaverGame',        // Cozy Beaver — 3D beaver simulator (Three.js client)
   'asset-foundry',     // AI-driven Blender asset pipeline consumed by beaverGame
   'github-actions',    // Shared GitHub Actions + reusable workflows for the fleet (ADR-0067)
+  'selfco-box',        // selfco vault runner — Notion/iOS/MCP capture daemon ingesting into the (untracked) ~/selfco vault
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
