@@ -183,6 +183,7 @@ const KNOWN_REPOS = new Set([
   // causing extractReposFromBody() to silently drop them when articles lacked
   // an explicit reposActive frontmatter entry.
   'gcgcca', 'beaverGame', 'asset-foundry',
+  'morning-cockpit',
 ])
 
 // ─── Tag type inference for v1 articles ─────────────────────────────────────
@@ -195,6 +196,7 @@ const TAG_TYPE_MAP: Record<string, string> = {
   // Added 2026-05-05 alongside KNOWN_REPOS additions. Both casings recorded
   // because article tag arrays preserve original case (e.g. 'beaverGame').
   'gcgcca': 'repo', 'beaverGame': 'repo', 'beavergame': 'repo', 'asset-foundry': 'repo',
+  'morning-cockpit': 'repo',
   'module-federation': 'arch', 'container-presenter': 'arch', 'frame-agent': 'arch',
   'frame-os': 'arch', 'architecture': 'arch',
   'ci-cd': 'practice', 'visual-regression': 'practice', 'adr': 'practice',
