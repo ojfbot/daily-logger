@@ -117,7 +117,7 @@ describe('collectContext — auth preflight', () => {
 
   it('throws when the gh token is rejected instead of returning an empty context', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
-      if (cmd.includes('gh api user')) throw new Error('HTTP 401: Bad credentials')
+      if (cmd.includes('gh api rate_limit')) throw new Error('HTTP 401: Bad credentials')
       return mockExecSync(cmd)
     })
     await expect(collectContext('2026-02-28')).rejects.toThrow(/auth preflight failed/)
@@ -194,7 +194,7 @@ describe('collectContext — resilience', () => {
   it('returns empty arrays when endpoint calls fail despite valid auth', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
       // Preflight passes (token is valid); per-endpoint calls fail.
-      if (cmd.includes('gh api user')) return 'ojfbot'
+      if (cmd.includes('gh api rate_limit')) return '{}'
       throw new Error('gh: HTTP 500')
     })
     const ctx = await collectContext('2026-02-28')
