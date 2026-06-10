@@ -30,6 +30,7 @@ const REPOS = [
   'asset-foundry',     // AI-driven Blender asset pipeline consumed by beaverGame
   'github-actions',    // Shared GitHub Actions + reusable workflows for the fleet (ADR-0067)
   'selfco-box',        // selfco vault runner — Notion/iOS/MCP capture daemon ingesting into the (untracked) ~/selfco vault
+  'morning-cockpit',   // local-first morning dashboard — beads + reading + research-paper explainers
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
