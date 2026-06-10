@@ -64,6 +64,17 @@ jobs:
       - name: Run unit tests
         run: pnpm test
 
+      # Fail fast on a dead GH_PAT (the cleaner has this check; the blog did
+      # not — an expired PAT produced empty sweeps and green no-op runs for
+      # three weeks, 2026-05-19 → 2026-06-09).
+      - name: Smoke test sweep auth
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          echo "Checking gh auth status..."
+          gh auth status
+          echo "✓ GH_PAT is valid — safe to proceed with the sweep"
+
       - name: Fetch telemetry snapshot
         continue-on-error: true
         run: |

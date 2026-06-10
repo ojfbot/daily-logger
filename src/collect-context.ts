@@ -424,6 +424,23 @@ function getSkillUsageFromPRComments(org: string, repo: string, prNumber: number
 export async function collectContext(date: string): Promise<BlogContext> {
   const org = process.env.OJFBOT_ORG ?? 'ojfbot'
 
+  // Auth preflight: an expired/invalid token makes every ghApi call fail
+  // "skipped", the sweep comes back empty, and shouldSkipRun retires the day
+  // as no-activity — green runs, zero articles (2026-05-19 → 2026-06-09 lapse).
+  // Abort instead so the workflow run goes red and the failure is visible.
+  try {
+    execSync('gh api user --jq .login 2>/dev/null', {
+      encoding: 'utf-8',
+      env: { ...process.env },
+      timeout: 30_000,
+    })
+  } catch {
+    throw new Error(
+      'GitHub auth preflight failed: `gh api user` rejected the token. ' +
+        'Check GH_PAT expiry in repo secrets before re-running the sweep.',
+    )
+  }
+
   // Anchor sweep windows to the article date at 09:00 UTC (cron fire time)
   // rather than Date.now(). This gives stable, predictable windows for both
   // cron runs and DATE_OVERRIDE re-generations, and makes tests deterministic

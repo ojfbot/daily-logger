@@ -110,6 +110,25 @@ describe('collectContext — open PR mapping', () => {
   })
 })
 
+describe('collectContext — auth preflight', () => {
+  afterEach(() => {
+    vi.mocked(execSync).mockImplementation(mockExecSync)
+  })
+
+  it('throws when the gh token is rejected instead of returning an empty context', async () => {
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('gh api user')) throw new Error('HTTP 401: Bad credentials')
+      return mockExecSync(cmd)
+    })
+    await expect(collectContext('2026-02-28')).rejects.toThrow(/auth preflight failed/)
+  })
+
+  it('proceeds with the sweep when the token is valid', async () => {
+    const ctx = await collectContext('2026-02-28')
+    expect(ctx.date).toBe('2026-02-28')
+  })
+})
+
 describe('collectContext — open issue createdAt mapping', () => {
   afterEach(() => {
     // Restore the default mock after any test that overrides it
@@ -172,9 +191,11 @@ describe('collectContext — open issue createdAt mapping', () => {
 })
 
 describe('collectContext — resilience', () => {
-  it('returns empty arrays when API calls fail', async () => {
-    vi.mocked(execSync).mockImplementation(() => {
-      throw new Error('gh: authentication required')
+  it('returns empty arrays when endpoint calls fail despite valid auth', async () => {
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      // Preflight passes (token is valid); per-endpoint calls fail.
+      if (cmd.includes('gh api user')) return 'ojfbot'
+      throw new Error('gh: HTTP 500')
     })
     const ctx = await collectContext('2026-02-28')
     expect(ctx.commits).toEqual([])
