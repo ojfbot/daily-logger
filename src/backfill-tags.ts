@@ -34,6 +34,18 @@ const TAG_MAP: Record<string, TagType> = {
   'landing': 'repo',
   'node-template': 'repo',
   'github-actions': 'repo',
+  // Added 2026-06-10: drift-heal vs collect-context.ts REPOS + the four repos
+  // registered after the outage audit. Both casings where articles vary.
+  'gcgcca': 'repo',
+  'beavergame': 'repo',
+  'beaverGame': 'repo',
+  'asset-foundry': 'repo',
+  'selfco-box': 'repo',
+  'morning-cockpit': 'repo',
+  'f1-pit-wall': 'repo',
+  'f1-substrate': 'repo',
+  'lofi-beaver': 'repo',
+  'golf-platform-scripts': 'repo',
 
   // architecture
   'module-federation': 'arch',

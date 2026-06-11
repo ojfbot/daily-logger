@@ -184,6 +184,10 @@ const KNOWN_REPOS = new Set([
   // an explicit reposActive frontmatter entry.
   'gcgcca', 'beaverGame', 'asset-foundry',
   'morning-cockpit',
+  // Added 2026-06-10: selfco-box drift-heal (swept since 05-17, missing here)
+  // + the four repos registered after the outage audit.
+  'selfco-box',
+  'f1-pit-wall', 'f1-substrate', 'lofi-beaver', 'golf-platform-scripts',
 ])
 
 // ─── Tag type inference for v1 articles ─────────────────────────────────────
@@ -197,6 +201,10 @@ const TAG_TYPE_MAP: Record<string, string> = {
   // because article tag arrays preserve original case (e.g. 'beaverGame').
   'gcgcca': 'repo', 'beaverGame': 'repo', 'beavergame': 'repo', 'asset-foundry': 'repo',
   'morning-cockpit': 'repo',
+  // Added 2026-06-10 alongside KNOWN_REPOS additions.
+  'selfco-box': 'repo',
+  'f1-pit-wall': 'repo', 'f1-substrate': 'repo', 'lofi-beaver': 'repo',
+  'golf-platform-scripts': 'repo',
   'module-federation': 'arch', 'container-presenter': 'arch', 'frame-agent': 'arch',
   'frame-os': 'arch', 'architecture': 'arch',
   'ci-cd': 'practice', 'visual-regression': 'practice', 'adr': 'practice',

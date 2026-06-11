@@ -23,6 +23,10 @@ const KNOWN_REPOS = new Set([
   'shell', 'cv-builder', 'BlogEngine', 'TripPlanner', 'core', 'core-reader',
   'MrPlug', 'purefoy', 'daily-logger', 'lean-canvas', 'seh-study', 'GroupThink', 'landing',
   'github-actions', 'morning-cockpit',
+  // Added 2026-06-10: drift-heal vs collect-context.ts REPOS (these were swept
+  // but unrecognized here) + the four repos registered after the outage audit.
+  'gcgcca', 'beaverGame', 'asset-foundry', 'selfco-box',
+  'f1-pit-wall', 'f1-substrate', 'lofi-beaver', 'golf-platform-scripts',
 ])
 
 // ─── Classification rules (priority order) ─────────────────────────────────
