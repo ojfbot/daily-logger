@@ -1,5 +1,115 @@
 [
   {
+    "date": "2026-06-11",
+    "title": "Wednesday vault hardening: lint gates, defuddle shadow mode, and semantic cultivate candidates land in selfco-box",
+    "summary": "Wednesday's 12 commits closed a vault best-practices audit loop, shipping lint gates, defuddle shadow comparison, and embedding-driven cultivate candidates across core and selfco-box.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "selfco-box",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "vault-tooling",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "landing",
+      "asset-foundry",
+      "selfco-box"
+    ],
+    "commitCount": 12,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Vault lint promoted from advisory to a commit gate (ADR-0089)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Defuddle ingest as shadow mode, not a replacement (ADR-0090)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Semantic link-suggester feeds cultivate as optional input, not a required step (ADR-0091)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "daily-logger collect step: preflight via rate_limit, fail loud on token rejection",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge daily-logger #210 (register f1-pit-wall, f1-substrate, lofi-beaver, golf-platform-scripts in the daily sweep). Four repos born during the outage window are producing commits that do not appear in daily articles. This is a live data-integrity gap. Merge this before #209.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-06-11",
+        "id": "act-2026-06-11-pr-review-24da3d"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Merge daily-logger #209 (backfill digest for 2026-05-19→06-09) after #210 lands. The backfill is reconstructed from git history and is independently mergeable, but sequencing it after #210 ensures the four dark repos are included. Done when the backfill articles are generated and the gap in the dev log is closed.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-06-11",
+        "id": "act-2026-06-11-pr-review-f028f2"
+      },
+      {
+        "command": "/validate",
+        "description": "Enable the defuddle shadow-compare step in selfco-box and run five real URL ingests. Review the comparison log in the selfco-box run directory. Promotion criterion: readability extraction is visibly cleaner than raw on noisy URL sources and does not drop source:: frontmatter or inline tags. Record the outcome as a note in the vault. Done when you have a written go/no-go on promoting the step to opt-in default.",
+        "repo": "selfco-box",
+        "status": "open",
+        "sourceDate": "2026-06-11",
+        "id": "act-2026-06-11-validate-f025ed"
+      },
+      {
+        "command": "/investigate",
+        "description": "Run semantic-suggest.py against the live selfco vault. Count how many suggested cross-cluster links survive manual review as genuinely non-obvious connections. Record the raw precision rate. Decision rule: below ~30%, tune threshold or model before promoting; above ~60%, candidate for opt-in default. This baseline measurement is the exit condition ADR-0091 requires.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-06-11",
+        "id": "act-2026-06-11-investigate-f14602"
+      }
+    ]
+  },
+  {
     "date": "2026-06-10",
     "title": "Twenty-two green runs, zero articles",
     "summary": "The blog pipeline ran green for 22 days and published nothing — here's why, and what the fleet shipped while nobody was watching.",
@@ -83,7 +193,8 @@
       "asset-foundry",
       "landing",
       "beaverGame",
-      "core-reader"
+      "core-reader",
+      "selfco-box"
     ],
     "commitCount": 5,
     "activityType": "build",
