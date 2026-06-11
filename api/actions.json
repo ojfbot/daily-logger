@@ -1,6 +1,38 @@
 [
   {
     "command": "/pr-review",
+    "description": "Merge daily-logger #210 (register f1-pit-wall, f1-substrate, lofi-beaver, golf-platform-scripts in the daily sweep). Four repos born during the outage window are producing commits that do not appear in daily articles. This is a live data-integrity gap. Merge this before #209.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-06-11",
+    "id": "act-2026-06-11-pr-review-24da3d"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge daily-logger #209 (backfill digest for 2026-05-19→06-09) after #210 lands. The backfill is reconstructed from git history and is independently mergeable, but sequencing it after #210 ensures the four dark repos are included. Done when the backfill articles are generated and the gap in the dev log is closed.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-06-11",
+    "id": "act-2026-06-11-pr-review-f028f2"
+  },
+  {
+    "command": "/validate",
+    "description": "Enable the defuddle shadow-compare step in selfco-box and run five real URL ingests. Review the comparison log in the selfco-box run directory. Promotion criterion: readability extraction is visibly cleaner than raw on noisy URL sources and does not drop source:: frontmatter or inline tags. Record the outcome as a note in the vault. Done when you have a written go/no-go on promoting the step to opt-in default.",
+    "repo": "selfco-box",
+    "status": "open",
+    "sourceDate": "2026-06-11",
+    "id": "act-2026-06-11-validate-f025ed"
+  },
+  {
+    "command": "/investigate",
+    "description": "Run semantic-suggest.py against the live selfco vault. Count how many suggested cross-cluster links survive manual review as genuinely non-obvious connections. Record the raw precision rate. Decision rule: below ~30%, tune threshold or model before promoting; above ~60%, candidate for opt-in default. This baseline measurement is the exit condition ADR-0091 requires.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-06-11",
+    "id": "act-2026-06-11-investigate-f14602"
+  },
+  {
+    "command": "/pr-review",
     "description": "Review and merge ADR-0079 (core #118, vault page-lifecycle policy). Filed 2026-05-16, currently Proposed. The /vault skill shipped Sunday has no staleness governance until this advances to Accepted — sessions reading from the vault via the planned obsidian-mcp transport will produce confidently-wrong answers from stale pages with no user-visible signal. This is the prerequisite gate for the transport upgrade. Accept or request changes; do not leave it in Proposed.",
     "repo": "core",
     "status": "open",
