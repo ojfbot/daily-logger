@@ -32,6 +32,15 @@ Additional repos:
 - **gcgcca** — USGS Earth Explorer orthoimagery query tool. Python CLI + TypeScript/React UI (purefoy pattern). Pydantic models → OpenAPI → TypeScript types. Module Federation remote (port 3035) with Express API (port 3036). Frame OS sub-app exposing Dashboard and Settings.
 - **daily-logger** — This repo. Generates and commits one blog article per day.
 - **landing** — jim.software personal landing page. Masonry portfolio grid, Three.js scroll animations, scroll-driven gradient background. Deployed on Vercel.
+- **beaverGame** — Cozy Beaver, 3D beaver simulator (Babylon.js client).
+- **asset-foundry** — AI-driven Blender asset pipeline consumed by beaverGame; growing a 1-bit isometric sprite output modality.
+- **github-actions** — Shared GitHub Actions + reusable workflows for the fleet (ADR-0067).
+- **selfco-box** — selfco vault runner: Notion/iOS/MCP capture daemon ingesting into the (untracked, intentionally unswept) ~/selfco vault.
+- **morning-cockpit** — Local-first morning dashboard monorepo: beads + reading + research-paper explainer pods across the fleet.
+- **f1-pit-wall** — F1 race-engineering dashboard with a telemetry literacy layer and claim-grounding test harness.
+- **f1-substrate** — F1 telemetry substrate: DuckDB store of FastF1 data, gap timing algorithm, FastAPI query layer.
+- **lofi-beaver** — Willow Bend story-world: 1-bit isometric game (Glagstone style), Blender sprite pipeline, sim-decided endings.
+- **golf-platform-scripts** — Golf platform automation scripts.
 
 ## Authoritative dev environment ports (frame-dev.sh)
 - shell: :3000

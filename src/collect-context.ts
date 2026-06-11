@@ -31,6 +31,12 @@ const REPOS = [
   'github-actions',    // Shared GitHub Actions + reusable workflows for the fleet (ADR-0067)
   'selfco-box',        // selfco vault runner — Notion/iOS/MCP capture daemon ingesting into the (untracked) ~/selfco vault
   'morning-cockpit',   // local-first morning dashboard — beads + reading + research-paper explainers
+  // Added 2026-06-10: created/first-pushed during the 05-19→06-09 outage window,
+  // discovered unregistered by the backfill audit (gh repo list ojfbot to re-audit).
+  'f1-pit-wall',       // F1 race-engineering dashboard — telemetry literacy layer + claim-grounding harness
+  'f1-substrate',      // F1 telemetry substrate — DuckDB FastF1 store, gap algorithm, FastAPI query layer
+  'lofi-beaver',       // Willow Bend story-world — 1-bit isometric game, Blender sprite pipeline
+  'golf-platform-scripts', // golf platform automation scripts
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
