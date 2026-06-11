@@ -55,6 +55,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      issues: write
 
     steps:
       - name: Checkout
@@ -139,3 +140,28 @@ jobs:
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
           TARGET_REPO: ${{ github.event.inputs.target_repo || '' }}
         run: pnpm clean
+
+      # Failure alert (roadmap A2) — same loop as daily-blog.yml: assigned
+      # `pipeline-alert` issue → GitHub mobile push → /disable to stop the cron.
+      - name: Alert on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW_FILE: daily-cleaner.yml
+          OWNER: ojfbot
+        run: |
+          TITLE="🔴 ${WORKFLOW_FILE} is failing"
+          EXISTING=$(gh issue list -R "$REPO" --label pipeline-alert --state open \
+            --search "in:title ${WORKFLOW_FILE}" --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" -R "$REPO" --body "Failed again: ${RUN_URL}"
+          else
+            gh issue create -R "$REPO" \
+              --title "$TITLE" \
+              --label pipeline-alert \
+              --assignee "$OWNER" \
+              --body "$(printf 'workflow-file: %s\n\nLatest failed run: %s\n\n@%s reply here:\n- `/disable` — stop the cron until further notice\n- `/enable` — turn it back on\n\n_Opened automatically; one issue per workflow, updated on repeat failures._' "$WORKFLOW_FILE" "$RUN_URL" "$OWNER")"
+          fi

@@ -1,0 +1,63 @@
+name: Pipeline Alert Commands
+
+# The actuator half of the failure-alert loop (roadmap slice A2):
+# alert jobs open a `pipeline-alert` issue assigned to the owner, which the
+# GitHub mobile app pushes. Replying here with a command acts on the pipeline:
+#
+#   /disable  — turn off the failing workflow's cron (gh workflow disable)
+#   /enable   — turn it back on
+#
+# Guards: only fires on issues labelled `pipeline-alert`, only for
+# owner/member/collaborator comments, and the target workflow file is read
+# from the issue body marker (`workflow-file: <name>.yml`), validated against
+# a strict pattern — never from the comment text.
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  actions: write
+  issues: write
+
+jobs:
+  handle:
+    if: >
+      contains(github.event.issue.labels.*.name, 'pipeline-alert') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+      startsWith(github.event.comment.body, '/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Execute command
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          CMD=$(printf '%s' "$COMMENT_BODY" | head -1 | tr -d '[:space:]')
+
+          # Target workflow comes from the bot-written issue body, and is
+          # validated to a bare workflow filename regardless.
+          WF=$(printf '%s' "$ISSUE_BODY" | grep -oE 'workflow-file: [A-Za-z0-9._-]+\.yml' | head -1 | cut -d' ' -f2)
+          if ! printf '%s' "$WF" | grep -qE '^[A-Za-z0-9._-]+\.yml$'; then
+            gh issue comment "$ISSUE_NUMBER" -R "$REPO" --body "⚠️ Could not determine the target workflow from this issue — no valid \`workflow-file:\` marker."
+            exit 0
+          fi
+
+          case "$CMD" in
+            /disable)
+              gh workflow disable "$WF" -R "$REPO"
+              gh issue comment "$ISSUE_NUMBER" -R "$REPO" --body "🛑 **\`$WF\` disabled** — the cron will not run again until re-enabled. Reply \`/enable\` here (the issue can stay closed) or run \`gh workflow enable $WF\`."
+              gh issue close "$ISSUE_NUMBER" -R "$REPO" --reason completed
+              ;;
+            /enable)
+              gh workflow enable "$WF" -R "$REPO"
+              gh issue comment "$ISSUE_NUMBER" -R "$REPO" --body "▶️ **\`$WF\` re-enabled** — next scheduled run will fire normally."
+              ;;
+            *)
+              gh issue comment "$ISSUE_NUMBER" -R "$REPO" --body "Unknown command \`$CMD\`. Available: \`/disable\`, \`/enable\`."
+              ;;
+          esac

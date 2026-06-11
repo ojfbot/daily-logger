@@ -227,3 +227,41 @@ jobs:
           echo "Enabling auto-merge for PR #${PR}..."
           gh pr merge "${PR}" --auto --rebase
           echo "Auto-merge enabled. PR will merge when all checks pass."
+
+  # ── Failure alert (roadmap A2) ──────────────────────────────────────────────
+  # On any job failure: open (or update) a single `pipeline-alert` issue
+  # assigned to the owner. Assignment makes the GitHub mobile app push it.
+  # Replying /disable on the issue turns the cron off — see
+  # pipeline-alert-commands.yml. Email proved ignorable across two outages;
+  # this is the surface that isn't.
+
+  alert-on-failure:
+    name: Alert on failure
+    needs: [generate, auto-merge]
+    if: always() && contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update pipeline-alert issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW_FILE: daily-blog.yml
+          OWNER: ojfbot
+        run: |
+          TITLE="🔴 ${WORKFLOW_FILE} is failing"
+          EXISTING=$(gh issue list -R "$REPO" --label pipeline-alert --state open \
+            --search "in:title ${WORKFLOW_FILE}" --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" -R "$REPO" --body "Failed again: ${RUN_URL}"
+          else
+            gh issue create -R "$REPO" \
+              --title "$TITLE" \
+              --label pipeline-alert \
+              --assignee "$OWNER" \
+              --body "$(printf 'workflow-file: %s\n\nLatest failed run: %s\n\n@%s reply here:\n- `/disable` — stop the cron until further notice\n- `/enable` — turn it back on\n\n_Opened automatically; one issue per workflow, updated on repeat failures._' "$WORKFLOW_FILE" "$RUN_URL" "$OWNER")"
+          fi
