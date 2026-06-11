@@ -70,7 +70,7 @@ regenerate `system.md` via core's `/opm render`). Shadow-mode only: nothing gate
 
 ## Adding new repos to the sweep
 
-Edit the `REPOS` array in `src/collect-context.ts`. The sweep is additive — adding a repo costs one batch of `gh api` calls per run.
+Edit the `REPOS` array in `src/collect-context.ts`. The sweep is additive — adding a repo costs one batch of `gh api` calls per run. Recent additions (f1-pit-wall, f1-substrate, lofi-beaver, golf-platform-scripts) were registered in commit `745beb2`; the registration PR is #210.
 
 ## Updating the system prompt / project vision
 
