@@ -109,6 +109,26 @@ jobs:
           git ls-remote https://github.com/ojfbot/daily-logger.git HEAD
           echo "✓ Git auth smoke test passed — safe to proceed with live run"
 
+      # On a depleted credit balance the cleaner previously no-opted GREEN
+      # (2026-06-11, audit finding A4) — the same silent-failure shape as the
+      # 04-22 and 05-19 outages. A 1-token call fails the run red instead.
+      - name: Smoke test Anthropic credits
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          echo "Checking Anthropic API credit access..."
+          HTTP=$(curl -s -o /tmp/anthropic-preflight.json -w '%{http_code}' \
+            https://api.anthropic.com/v1/messages \
+            -H "x-api-key: ${ANTHROPIC_API_KEY}" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d '{"model":"claude-haiku-4-5-20251001","max_tokens":1,"messages":[{"role":"user","content":"ping"}]}')
+          if [ "$HTTP" != "200" ]; then
+            echo "::error::Anthropic preflight failed (HTTP $HTTP): $(cat /tmp/anthropic-preflight.json)"
+            exit 1
+          fi
+          echo "✓ Anthropic API reachable and funded"
+
       - name: Run daily cleaner
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
