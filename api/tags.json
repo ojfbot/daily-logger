@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 43
+    "count": 44
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 38
+    "count": 39
   },
   {
     "name": "shell",
@@ -155,6 +155,11 @@
     "count": 5
   },
   {
+    "name": "fleet-hardening",
+    "type": "concept",
+    "count": 4
+  },
+  {
     "name": "skill-catalog",
     "type": "concept",
     "count": 4
@@ -201,11 +206,6 @@
   },
   {
     "name": "babylon-migration",
-    "type": "concept",
-    "count": 3
-  },
-  {
-    "name": "fleet-hardening",
     "type": "concept",
     "count": 3
   },
@@ -318,6 +318,21 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "returning-from-absence",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "adr-governance",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "f1-stack",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "knowledge-management",

@@ -1,5 +1,45 @@
 [
   {
+    "date": "2026-06-10",
+    "title": "Twenty-two green runs, zero articles",
+    "summary": "The blog pipeline ran green for 22 days and published nothing — here's why, and what the fleet shipped while nobody was watching.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "returning-from-absence",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "fleet-hardening",
+        "type": "concept"
+      },
+      {
+        "name": "adr-governance",
+        "type": "concept"
+      },
+      {
+        "name": "f1-stack",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [],
+    "actions": []
+  },
+  {
     "date": "2026-05-18",
     "title": "Sunday's vault work: /vault skill, selfco-box runner, and the knowledge pipeline taking shape",
     "summary": "Sunday shipped the /vault skill and selfco inbox documentation across core and daily-logger, wiring the personal knowledge vault into the Claude app ecosystem.",
