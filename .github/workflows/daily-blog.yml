@@ -75,6 +75,26 @@ jobs:
           gh auth status
           echo "✓ GH_PAT is valid — safe to proceed with the sweep"
 
+      # Outage 1 (2026-04-22) and the 2026-06-11 red run were both credit
+      # depletion discovered only at generation time. A 1-token call fails
+      # the run in seconds, before the sweep spends anything.
+      - name: Smoke test Anthropic credits
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          echo "Checking Anthropic API credit access..."
+          HTTP=$(curl -s -o /tmp/anthropic-preflight.json -w '%{http_code}' \
+            https://api.anthropic.com/v1/messages \
+            -H "x-api-key: ${ANTHROPIC_API_KEY}" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d '{"model":"claude-haiku-4-5-20251001","max_tokens":1,"messages":[{"role":"user","content":"ping"}]}')
+          if [ "$HTTP" != "200" ]; then
+            echo "::error::Anthropic preflight failed (HTTP $HTTP): $(cat /tmp/anthropic-preflight.json)"
+            exit 1
+          fi
+          echo "✓ Anthropic API reachable and funded"
+
       - name: Fetch telemetry snapshot
         continue-on-error: true
         run: |
