@@ -1,5 +1,131 @@
 [
   {
+    "date": "2026-06-12",
+    "title": "Thursday sprint: F1 race-engineer chat goes live, delta attribution lands in f1-substrate, and the pipeline gets an alert layer",
+    "summary": "Fifteen commits across five repos built the F1 race-engineer chat sidebar, per-corner delta attribution, replay sync, and a pipeline-alert issue-ops layer in daily-logger.",
+    "tags": [
+      {
+        "name": "f1-pit-wall",
+        "type": "repo"
+      },
+      {
+        "name": "f1-substrate",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "selfco-box",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "f1-pit-wall",
+      "f1-substrate",
+      "core",
+      "selfco-box"
+    ],
+    "commitCount": 29,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "ADR-0004's hybrid NL router: deterministic first, LLM slot-fill fallback",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Per-panel LIVE/pinned replay sync rather than global playhead",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Delta attribution pushed to f1-substrate, not computed in the UI layer",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Pipeline-alert issue-ops: failure surfaces as an assigned GitHub issue with push notification",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "CULTIVATE_MODEL tier: separating ingest model from synthesis model",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Scaffold skill registers new repos as vault entities at spawn time",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Run the f1-pit-wall corpus eval harness (committed in 1a59ff0) against POST /api/route with at least 10 labelled queries. Each label should specify the expected intent type (discriminated union variant) and expected slot values. Record the deterministic-first coverage rate and LLM fallback accuracy. This is the first-ever validation run — there is no baseline yet. The harness must pass before the C1 jargon-detection gate (ADR-0003) can be scoped.",
+        "repo": "f1-pit-wall",
+        "status": "open",
+        "sourceDate": "2026-06-12",
+        "id": "act-2026-06-12-validate-394776"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Review and merge Core #150 (add frame-standup to user-scope baseline install — one-file change to install-agents.sh and the managed user CLAUDE.md template) and Core #147 (vault canvas node sizing — one-line schema addition). Both are low-risk, have no stated blockers, and were skipped Thursday for lack of bandwidth. Merge #150 first; it is a fleet-wide behavioral change. Merge #147 second.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-06-12",
+        "id": "act-2026-06-12-pr-review-a7f71e"
+      },
+      {
+        "command": "/hardening",
+        "description": "Add a test for the pipeline-alert issue-ops layer (1d21c5d): simulate a workflow failure in dry-run mode and confirm (a) a GitHub issue is opened and assigned, (b) the push notification fires via the GitHub App, and (c) running /disable sets the suppression variable and prevents a second issue from being opened on the next failure. Then confirm the variable can be manually reset to restore alerting. No test currently covers the suppression path.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-06-12",
+        "id": "act-2026-06-12-hardening-3b0738"
+      }
+    ]
+  },
+  {
     "date": "2026-06-11",
     "title": "Wednesday vault hardening: lint gates, defuddle shadow mode, and semantic cultivate candidates land in selfco-box",
     "summary": "Wednesday's 12 commits closed a vault best-practices audit loop, shipping lint gates, defuddle shadow comparison, and embedding-driven cultivate candidates across core and selfco-box.",
