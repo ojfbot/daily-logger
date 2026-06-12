@@ -4,7 +4,7 @@
 
 `daily-logger` generates one markdown blog article per day by:
 
-1. Sweeping the last 24 h of commits and PRs (both open and closed) across all ojfbot repos via the GitHub API
+1. Sweeping the last 24 h of commits and PRs (both open and closed) across all ojfbot repos via the GitHub API, with a rate-limit preflight that fails loud on token rejection
 2. Aggregating Claude Code skill telemetry (including suggestion follow-through tracking and PR skill comments) and AgentBead session data alongside commit/PR data
 3. Feeding that context to Claude Sonnet with a project-aware system prompt
 4. Committing the resulting article to `articles/YYYY-MM-DD.md` (with a dedicated skill telemetry section)
@@ -38,7 +38,7 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 | File | Purpose |
 |---|---|
 | `src/index.ts` | Entry point — orchestrates collect → generate → write |
-| `src/collect-context.ts` | GitHub API sweep via `gh` CLI |
+| `src/collect-context.ts` | GitHub API sweep via `gh` CLI (with `rate_limit` preflight and fail-loud token rejection) |
 | `src/collect-telemetry.ts` | Reads skill and suggestion JSONL sources, scrapes PR skill comments |
 | `src/generate-article.ts` | Claude API call + prompt, JSON → markdown (includes dedicated skill telemetry section) |
 | `src/schema.ts` | Zod schemas (ArticleDataV2, ActionItem, CodeReferenceSchema, TypedTag, ToolEntry, BeadSchema, etc.) |
@@ -63,7 +63,7 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 
 ## Adding new repos to the sweep
 
-Edit the `REPOS` array in `src/collect-context.ts`. The sweep is additive — adding a repo costs one batch of `gh api` calls per run.
+Edit the `REPOS` array in `src/collect-context.ts`. The sweep is additive — adding a repo costs one batch of `gh api` calls per run. Recent additions (f1-pit-wall, f1-substrate, lofi-beaver, golf-platform-scripts) were registered in commit `745beb2`; the registration PR is #210.
 
 ## Updating the system prompt / project vision
 
