@@ -1,5 +1,29 @@
 [
   {
+    "command": "/validate",
+    "description": "Run the f1-pit-wall corpus eval harness (committed in 1a59ff0) against POST /api/route with at least 10 labelled queries. Each label should specify the expected intent type (discriminated union variant) and expected slot values. Record the deterministic-first coverage rate and LLM fallback accuracy. This is the first-ever validation run — there is no baseline yet. The harness must pass before the C1 jargon-detection gate (ADR-0003) can be scoped.",
+    "repo": "f1-pit-wall",
+    "status": "open",
+    "sourceDate": "2026-06-12",
+    "id": "act-2026-06-12-validate-394776"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review and merge Core #150 (add frame-standup to user-scope baseline install — one-file change to install-agents.sh and the managed user CLAUDE.md template) and Core #147 (vault canvas node sizing — one-line schema addition). Both are low-risk, have no stated blockers, and were skipped Thursday for lack of bandwidth. Merge #150 first; it is a fleet-wide behavioral change. Merge #147 second.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-06-12",
+    "id": "act-2026-06-12-pr-review-a7f71e"
+  },
+  {
+    "command": "/hardening",
+    "description": "Add a test for the pipeline-alert issue-ops layer (1d21c5d): simulate a workflow failure in dry-run mode and confirm (a) a GitHub issue is opened and assigned, (b) the push notification fires via the GitHub App, and (c) running /disable sets the suppression variable and prevents a second issue from being opened on the next failure. Then confirm the variable can be manually reset to restore alerting. No test currently covers the suppression path.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-06-12",
+    "id": "act-2026-06-12-hardening-3b0738"
+  },
+  {
     "command": "/pr-review",
     "description": "Merge daily-logger #210 (register f1-pit-wall, f1-substrate, lofi-beaver, golf-platform-scripts in the daily sweep). Four repos born during the outage window are producing commits that do not appear in daily articles. This is a live data-integrity gap. Merge this before #209.",
     "repo": "daily-logger",

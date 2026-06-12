@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 45
+    "count": 46
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 40
+    "count": 41
   },
   {
     "name": "shell",
@@ -22,12 +22,17 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 30
+    "count": 31
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 28
+    "count": 29
+  },
+  {
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 19
   },
   {
     "name": "phase-1",
@@ -40,24 +45,19 @@
     "count": 19
   },
   {
-    "name": "tooling-for-iteration",
-    "type": "concept",
-    "count": 18
-  },
-  {
     "name": "adr",
     "type": "practice",
     "count": 16
   },
   {
-    "name": "cv-builder",
-    "type": "repo",
+    "name": "model-behavior-as-design",
+    "type": "concept",
     "count": 15
   },
   {
-    "name": "model-behavior-as-design",
-    "type": "concept",
-    "count": 14
+    "name": "cv-builder",
+    "type": "repo",
+    "count": 15
   },
   {
     "name": "purefoy",
@@ -90,6 +90,16 @@
     "count": 10
   },
   {
+    "name": "security-as-emergent-ux",
+    "type": "concept",
+    "count": 9
+  },
+  {
+    "name": "sprint",
+    "type": "concept",
+    "count": 9
+  },
+  {
     "name": "cleanup",
     "type": "concept",
     "count": 9
@@ -100,18 +110,8 @@
     "count": 9
   },
   {
-    "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 8
-  },
-  {
     "name": "core-reader",
     "type": "repo",
-    "count": 8
-  },
-  {
-    "name": "sprint",
-    "type": "concept",
     "count": 8
   },
   {
@@ -230,6 +230,11 @@
     "count": 3
   },
   {
+    "name": "selfco-box",
+    "type": "repo",
+    "count": 2
+  },
+  {
     "name": "daily-cleaner",
     "type": "concept",
     "count": 2
@@ -320,7 +325,12 @@
     "count": 2
   },
   {
-    "name": "selfco-box",
+    "name": "f1-pit-wall",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "f1-substrate",
     "type": "repo",
     "count": 1
   },

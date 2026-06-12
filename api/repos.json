@@ -1,22 +1,26 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 76,
-    "totalCommits": 964,
+    "articleCount": 77,
+    "totalCommits": 993,
     "relatedTags": [
-      "core",
-      "selfco-box",
+      "f1-pit-wall",
+      "f1-substrate",
       "daily-logger",
-      "hardening",
-      "ci-cd",
-      "vault-tooling",
-      "model-behavior-as-design",
+      "selfco-box",
+      "core",
       "assistant-centric",
+      "model-behavior-as-design",
+      "security-as-emergent-ux",
+      "tooling-for-iteration",
+      "sprint",
+      "ci-cd",
+      "hardening",
+      "vault-tooling",
       "returning-from-absence",
       "fleet-hardening",
       "adr-governance",
       "f1-stack",
-      "security-as-emergent-ux",
       "knowledge-management",
       "vault-integration",
       "build",
@@ -24,7 +28,6 @@
       "module-federation",
       "cleanup",
       "phase-1",
-      "tooling-for-iteration",
       "daily-cleaner",
       "ADR-0068",
       "skill-catalog",
@@ -41,7 +44,6 @@
       "github-integration",
       "BlogEngine",
       "editorial-workflow",
-      "sprint",
       "skill-audit",
       "babylon-migration",
       "critical-path",
@@ -146,18 +148,22 @@
   },
   {
     "name": "core",
-    "articleCount": 46,
-    "totalCommits": 860,
+    "articleCount": 47,
+    "totalCommits": 889,
     "relatedTags": [
-      "core",
-      "selfco-box",
+      "f1-pit-wall",
+      "f1-substrate",
       "daily-logger",
-      "hardening",
-      "ci-cd",
-      "vault-tooling",
-      "model-behavior-as-design",
+      "selfco-box",
+      "core",
       "assistant-centric",
+      "model-behavior-as-design",
       "security-as-emergent-ux",
+      "tooling-for-iteration",
+      "sprint",
+      "ci-cd",
+      "hardening",
+      "vault-tooling",
       "knowledge-management",
       "vault-integration",
       "build",
@@ -165,7 +171,6 @@
       "module-federation",
       "cleanup",
       "phase-1",
-      "tooling-for-iteration",
       "beaverGame",
       "core-reader",
       "BlogEngine",
@@ -175,7 +180,6 @@
       "adr",
       "github-actions",
       "asset-foundry",
-      "sprint",
       "skill-audit",
       "babylon-migration",
       "rest-day",
@@ -1255,6 +1259,29 @@
     ]
   },
   {
+    "name": "selfco-box",
+    "articleCount": 3,
+    "totalCommits": 46,
+    "relatedTags": [
+      "f1-pit-wall",
+      "f1-substrate",
+      "daily-logger",
+      "selfco-box",
+      "core",
+      "assistant-centric",
+      "model-behavior-as-design",
+      "security-as-emergent-ux",
+      "tooling-for-iteration",
+      "sprint",
+      "ci-cd",
+      "hardening",
+      "vault-tooling",
+      "knowledge-management",
+      "vault-integration",
+      "build"
+    ]
+  },
+  {
     "name": "github-actions",
     "articleCount": 3,
     "totalCommits": 47,
@@ -1276,25 +1303,6 @@
       "tooling-for-iteration",
       "skill-audit",
       "babylon-migration"
-    ]
-  },
-  {
-    "name": "selfco-box",
-    "articleCount": 2,
-    "totalCommits": 17,
-    "relatedTags": [
-      "core",
-      "selfco-box",
-      "daily-logger",
-      "hardening",
-      "ci-cd",
-      "vault-tooling",
-      "model-behavior-as-design",
-      "assistant-centric",
-      "security-as-emergent-ux",
-      "knowledge-management",
-      "vault-integration",
-      "build"
     ]
   },
   {
@@ -1325,6 +1333,42 @@
       "framebus",
       "type-bridge",
       "skill-flywheel"
+    ]
+  },
+  {
+    "name": "f1-pit-wall",
+    "articleCount": 1,
+    "totalCommits": 29,
+    "relatedTags": [
+      "f1-pit-wall",
+      "f1-substrate",
+      "daily-logger",
+      "selfco-box",
+      "core",
+      "assistant-centric",
+      "model-behavior-as-design",
+      "security-as-emergent-ux",
+      "tooling-for-iteration",
+      "sprint",
+      "ci-cd"
+    ]
+  },
+  {
+    "name": "f1-substrate",
+    "articleCount": 1,
+    "totalCommits": 29,
+    "relatedTags": [
+      "f1-pit-wall",
+      "f1-substrate",
+      "daily-logger",
+      "selfco-box",
+      "core",
+      "assistant-centric",
+      "model-behavior-as-design",
+      "security-as-emergent-ux",
+      "tooling-for-iteration",
+      "sprint",
+      "ci-cd"
     ]
   }
 ]
