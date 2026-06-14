@@ -7,7 +7,7 @@
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 41
+    "count": 42
   },
   {
     "name": "shell",
@@ -22,17 +22,17 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 31
+    "count": 32
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 29
+    "count": 30
   },
   {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 19
+    "count": 20
   },
   {
     "name": "phase-1",
@@ -47,12 +47,12 @@
   {
     "name": "adr",
     "type": "practice",
-    "count": 16
+    "count": 17
   },
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 15
+    "count": 16
   },
   {
     "name": "cv-builder",
@@ -75,24 +75,24 @@
     "count": 12
   },
   {
+    "name": "hardening",
+    "type": "practice",
+    "count": 11
+  },
+  {
     "name": "gas-town",
     "type": "phase",
     "count": 11
   },
   {
-    "name": "hardening",
-    "type": "practice",
+    "name": "security-as-emergent-ux",
+    "type": "concept",
     "count": 10
   },
   {
     "name": "landing",
     "type": "repo",
     "count": 10
-  },
-  {
-    "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 9
   },
   {
     "name": "sprint",
@@ -140,6 +140,11 @@
     "count": 6
   },
   {
+    "name": "skill-catalog",
+    "type": "concept",
+    "count": 5
+  },
+  {
     "name": "BlogEngine",
     "type": "concept",
     "count": 5
@@ -156,11 +161,6 @@
   },
   {
     "name": "fleet-hardening",
-    "type": "concept",
-    "count": 4
-  },
-  {
-    "name": "skill-catalog",
     "type": "concept",
     "count": 4
   },
@@ -323,6 +323,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "vault",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "f1-pit-wall",
