@@ -1,5 +1,101 @@
 [
   {
+    "date": "2026-06-14",
+    "title": "Saturday: OPAV S0 closes — suggestion identity, deliverable tracking, and the vault's ADR-0088 enforcement",
+    "summary": "Twelve commits in core Saturday closed the OPAV S0 slice, shipping suggestion-ID minting, deliverable-tracking event spine, and ADR-0088 canvas enforcement.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "skill-catalog",
+        "type": "concept"
+      },
+      {
+        "name": "vault",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "BlogEngine",
+      "daily-logger",
+      "landing"
+    ],
+    "commitCount": 14,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Mint a SUGGESTION_ID to repair the suggestion-follow denominator (ADR-0093)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Strike the false 0.8% baseline in ADR-0068",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Deliverable-tracking event spine as a first-class observable (OPAV S1 foundation)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0088 rev B: canvas-fit gate enforcement for Obsidian canvas nodes",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Canonicalise selfco-ingest in core with tag-proposal discipline",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Make suggest-skill.sh tests CI-portable across BSD and GNU date",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-06-12",
     "title": "Thursday sprint: F1 race-engineer chat goes live, delta attribution lands in f1-substrate, and the pipeline gets an alert layer",
     "summary": "Fifteen commits across five repos built the F1 race-engineer chat sidebar, per-corner delta attribution, replay sync, and a pipeline-alert issue-ops layer in daily-logger.",
