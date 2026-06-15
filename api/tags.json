@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 46
+    "count": 47
   },
   {
     "name": "ci-cd",
@@ -22,17 +22,17 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 32
+    "count": 33
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 30
+    "count": 31
   },
   {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 20
+    "count": 21
   },
   {
     "name": "phase-1",
@@ -47,12 +47,12 @@
   {
     "name": "adr",
     "type": "practice",
-    "count": 17
+    "count": 18
   },
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 16
+    "count": 17
   },
   {
     "name": "cv-builder",
@@ -65,6 +65,11 @@
     "count": 13
   },
   {
+    "name": "hardening",
+    "type": "practice",
+    "count": 12
+  },
+  {
     "name": "asset-foundry",
     "type": "repo",
     "count": 12
@@ -73,11 +78,6 @@
     "name": "beaverGame",
     "type": "repo",
     "count": 12
-  },
-  {
-    "name": "hardening",
-    "type": "practice",
-    "count": 11
   },
   {
     "name": "gas-town",
@@ -130,6 +130,11 @@
     "count": 7
   },
   {
+    "name": "skill-catalog",
+    "type": "concept",
+    "count": 6
+  },
+  {
     "name": "storybook",
     "type": "infra",
     "count": 6
@@ -138,11 +143,6 @@
     "name": "security-scanning",
     "type": "practice",
     "count": 6
-  },
-  {
-    "name": "skill-catalog",
-    "type": "concept",
-    "count": 5
   },
   {
     "name": "BlogEngine",
@@ -323,6 +323,16 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "shadow-mode",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "instrumentation",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "vault",
