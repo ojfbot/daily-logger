@@ -7,7 +7,7 @@
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 42
+    "count": 43
   },
   {
     "name": "shell",
@@ -15,24 +15,29 @@
     "count": 36
   },
   {
+    "name": "assistant-centric",
+    "type": "concept",
+    "count": 34
+  },
+  {
     "name": "module-federation",
     "type": "arch",
     "count": 34
   },
   {
-    "name": "assistant-centric",
-    "type": "concept",
-    "count": 33
-  },
-  {
     "name": "core",
     "type": "repo",
-    "count": 31
+    "count": 32
   },
   {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 21
+    "count": 22
+  },
+  {
+    "name": "adr",
+    "type": "practice",
+    "count": 19
   },
   {
     "name": "phase-1",
@@ -45,14 +50,9 @@
     "count": 19
   },
   {
-    "name": "adr",
-    "type": "practice",
-    "count": 18
-  },
-  {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 17
+    "count": 18
   },
   {
     "name": "cv-builder",
@@ -60,14 +60,14 @@
     "count": 15
   },
   {
-    "name": "purefoy",
-    "type": "repo",
+    "name": "hardening",
+    "type": "practice",
     "count": 13
   },
   {
-    "name": "hardening",
-    "type": "practice",
-    "count": 12
+    "name": "purefoy",
+    "type": "repo",
+    "count": 13
   },
   {
     "name": "asset-foundry",
@@ -115,6 +115,11 @@
     "count": 8
   },
   {
+    "name": "skill-catalog",
+    "type": "concept",
+    "count": 7
+  },
+  {
     "name": "security",
     "type": "practice",
     "count": 7
@@ -128,11 +133,6 @@
     "name": "frame-agent",
     "type": "arch",
     "count": 7
-  },
-  {
-    "name": "skill-catalog",
-    "type": "concept",
-    "count": 6
   },
   {
     "name": "storybook",
