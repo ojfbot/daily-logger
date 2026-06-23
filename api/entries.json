@@ -1,5 +1,73 @@
 [
   {
+    "date": "2026-06-23",
+    "title": "Monday reading day: auditing the morning-cockpit seven-PR redesign stack",
+    "summary": "No commits landed Monday, but eight morning-cockpit PRs opened Sunday form a redesign stack worth mapping — and quality-gating — before the merge window opens.",
+    "tags": [
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "stacked-prs",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "audit",
+        "type": "concept"
+      },
+      {
+        "name": "phase-1",
+        "type": "phase"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "morning-cockpit"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Stacked PR strategy for morning-cockpit redesign: seven slices instead of one branch",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0006 chat discipline: local-first Ollama, not a cloud LLM call",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Control-Gated Slices planning doc (PR #8) is intentionally decoupled from the redesign stack",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-06-19",
     "title": "Thursday's OPAV-S1 C3: wiring the skill-action capture runtime and formalising the taxonomy",
     "summary": "Three commits to core advanced OPAV (Observed Practice and Verified-behavior) S1 C3: a live skill-action capture runtime, a launchd node-path fix, and the skill-architecture taxonomy ADR.",
