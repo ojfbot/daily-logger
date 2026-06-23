@@ -1,18 +1,23 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 80,
+    "articleCount": 81,
     "totalCommits": 1027,
     "relatedTags": [
+      "morning-cockpit",
+      "daily-logger",
       "core",
+      "stacked-prs",
       "assistant-centric",
+      "audit",
+      "phase-1",
+      "rest-day",
       "model-behavior-as-design",
       "skill-catalog",
       "ci-cd",
       "hardening",
       "adr",
       "tooling-for-iteration",
-      "daily-logger",
       "shadow-mode",
       "instrumentation",
       "vault",
@@ -32,16 +37,13 @@
       "workstation-yuri",
       "module-federation",
       "cleanup",
-      "phase-1",
       "daily-cleaner",
       "ADR-0068",
       "asset-foundry",
       "shell",
-      "rest-day",
       "multi-agent",
       "beaverGame",
       "github-actions",
-      "audit",
       "core-reader",
       "landing",
       "github-integration",
@@ -1342,6 +1344,21 @@
       "framebus",
       "type-bridge",
       "skill-flywheel"
+    ]
+  },
+  {
+    "name": "morning-cockpit",
+    "articleCount": 1,
+    "totalCommits": 0,
+    "relatedTags": [
+      "morning-cockpit",
+      "daily-logger",
+      "core",
+      "stacked-prs",
+      "assistant-centric",
+      "audit",
+      "phase-1",
+      "rest-day"
     ]
   },
   {

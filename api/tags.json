@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 47
+    "count": 48
   },
   {
     "name": "ci-cd",
@@ -17,7 +17,7 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 34
+    "count": 35
   },
   {
     "name": "module-federation",
@@ -27,7 +27,7 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 32
+    "count": 33
   },
   {
     "name": "tooling-for-iteration",
@@ -35,18 +35,18 @@
     "count": 22
   },
   {
-    "name": "adr",
-    "type": "practice",
-    "count": 19
-  },
-  {
     "name": "phase-1",
     "type": "phase",
-    "count": 19
+    "count": 20
   },
   {
     "name": "rest-day",
     "type": "activity",
+    "count": 20
+  },
+  {
+    "name": "adr",
+    "type": "practice",
     "count": 19
   },
   {
@@ -160,6 +160,11 @@
     "count": 5
   },
   {
+    "name": "audit",
+    "type": "concept",
+    "count": 4
+  },
+  {
     "name": "fleet-hardening",
     "type": "concept",
     "count": 4
@@ -193,11 +198,6 @@
     "name": "node-template",
     "type": "repo",
     "count": 4
-  },
-  {
-    "name": "audit",
-    "type": "concept",
-    "count": 3
   },
   {
     "name": "github-integration",
@@ -323,6 +323,16 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "morning-cockpit",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "stacked-prs",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "shadow-mode",
