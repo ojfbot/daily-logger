@@ -1,5 +1,69 @@
 [
   {
+    "date": "2026-07-03",
+    "title": "Pipeline failure postmortem — Thursday, 2026-07-03",
+    "summary": "Article generation for Thursday failed mid-pipeline; this postmortem documents the failure mode, the ADR registry gaps it exposed, and the fallback protocol now in place.",
+    "tags": [
+      {
+        "name": "ojfbot",
+        "type": "concept"
+      },
+      {
+        "name": "asset-foundry",
+        "type": "repo"
+      },
+      {
+        "name": "generation-failure",
+        "type": "concept"
+      },
+      {
+        "name": "adr-registry",
+        "type": "concept"
+      },
+      {
+        "name": "pipeline-hardening",
+        "type": "concept"
+      },
+      {
+        "name": "postmortem",
+        "type": "concept"
+      },
+      {
+        "name": "audit",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "asset-foundry"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Generation pipeline must validate output before treating it as publishable",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR registry injection strategy needs a retrieval filter, not a full-corpus dump",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0004 through ADR-0007 in asset-foundry have no titles or status in the registry — gap acknowledged",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-06-23",
     "title": "Monday reading day: auditing the morning-cockpit seven-PR redesign stack",
     "summary": "No commits landed Monday, but eight morning-cockpit PRs opened Sunday form a redesign stack worth mapping — and quality-gating — before the merge window opens.",
