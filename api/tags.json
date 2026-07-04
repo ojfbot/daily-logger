@@ -135,6 +135,11 @@
     "count": 7
   },
   {
+    "name": "audit",
+    "type": "concept",
+    "count": 6
+  },
+  {
     "name": "storybook",
     "type": "infra",
     "count": 6
@@ -143,11 +148,6 @@
     "name": "security-scanning",
     "type": "practice",
     "count": 6
-  },
-  {
-    "name": "audit",
-    "type": "concept",
-    "count": 5
   },
   {
     "name": "BlogEngine",
@@ -228,6 +228,21 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "ojfbot",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "adr-registry",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "pipeline",
+    "type": "concept",
+    "count": 2
   },
   {
     "name": "selfco-box",
@@ -325,17 +340,17 @@
     "count": 2
   },
   {
-    "name": "ojfbot",
+    "name": "generation-failed",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "incident",
     "type": "concept",
     "count": 1
   },
   {
     "name": "generation-failure",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "adr-registry",
     "type": "concept",
     "count": 1
   },
@@ -736,11 +751,6 @@
   },
   {
     "name": "langgraph",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "pipeline",
     "type": "concept",
     "count": 1
   },

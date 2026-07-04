@@ -1,16 +1,19 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 82,
+    "articleCount": 83,
     "totalCommits": 1027,
     "relatedTags": [
       "ojfbot",
+      "generation-failed",
+      "incident",
+      "adr-registry",
+      "pipeline",
+      "audit",
       "asset-foundry",
       "generation-failure",
-      "adr-registry",
       "pipeline-hardening",
       "postmortem",
-      "audit",
       "morning-cockpit",
       "daily-logger",
       "core",
@@ -150,7 +153,6 @@
       "blogengine",
       "structured-output",
       "langgraph",
-      "pipeline",
       "draw-io",
       "s3",
       "eval-loop"
