@@ -2,6 +2,14 @@ import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
 
+/**
+ * Which stream produced the skill-invocation counts:
+ * - 'dispositions'           — ~/selfco/tracking/skill-dispositions.jsonl (live, ADR-0095)
+ * - 'legacy-skill-telemetry' — ~/.claude/skill-telemetry.jsonl (frozen 2026-05-12)
+ * - 'none'                   — neither file exists
+ */
+export type SkillUsageSource = 'dispositions' | 'legacy-skill-telemetry' | 'none'
+
 export interface TelemetrySummary {
   totalToolCalls: number
   totalSessions: number
@@ -15,6 +23,10 @@ export interface TelemetrySummary {
   suggestionsFollowed: number
   suggestionConversion: number
   prSkillComments: number
+  /** Which stream the skillsInvoked counts came from — the article states its data source. */
+  skillSource: SkillUsageSource
+  /** Newest event timestamp in the skill-usage source (unwindowed) — freshness signal. Null when no source. */
+  skillSourceNewestTs: string | null
 }
 
 interface ToolEntry {
@@ -51,6 +63,21 @@ interface SuggestionEntry {
   prompt_prefix?: string
   repo?: string
   session_id?: string
+}
+
+/**
+ * One line of the OPAV-S1 disposition ledger (ADR-0095). A record with
+ * `event: "skill:disposition"` and `engaged: true` means the skill's SKILL.md
+ * was read in-session — the live "which skill ran" signal. Records without
+ * `engaged` are raw suggestion-scoped events, not user-facing invocations.
+ * (Schema mirrors core/scripts/skill-metrics.mjs @ 2026-07-04.)
+ */
+interface DispositionEntry {
+  ts: string
+  event: string
+  skill?: string
+  session_id?: string
+  engaged?: boolean
 }
 
 function readJsonl<T>(path: string): T[] {
@@ -93,14 +120,51 @@ export function collectTelemetry(since: string): TelemetrySummary | null {
   const skillPath = join(telemetryDir, 'skill-telemetry.jsonl')
   const suggestionPath = join(telemetryDir, 'suggestion-telemetry.jsonl')
 
+  // Live skill-usage source (ADR-0095): the skill-dispositions ledger. The legacy
+  // skill-telemetry.jsonl stream froze 2026-05-12 — Claude Code skills now execute
+  // via inline SKILL.md reads that bypass the PostToolUse hook — so counting from
+  // it silently reports ~0. The dispositions file is primary; the legacy file is an
+  // explicit fallback used only when the dispositions file is absent.
+  const dispositionsPath =
+    process.env.SKILL_DISPOSITIONS_PATH ||
+    join(homedir(), 'selfco', 'tracking', 'skill-dispositions.jsonl')
+
   const toolEntries = filterBySince(readJsonl<ToolEntry>(toolPath), since)
   const sessionEntries = filterBySince(readJsonl<SessionEntry>(sessionPath), since)
   const skillEntries = filterBySince(readJsonl<SkillEntry>(skillPath), since)
   const suggestionEntries = filterBySince(readJsonl<SuggestionEntry>(suggestionPath), since)
 
-  if (toolEntries.length === 0 && sessionEntries.length === 0 && skillEntries.length === 0) {
+  const allDispositionEntries = readJsonl<DispositionEntry>(dispositionsPath)
+  // A skill was USED when its disposition record has engaged:true — raw
+  // disposition events without engaged are not user-facing invocations.
+  const dispositionInvocations = filterBySince(allDispositionEntries, since).filter(
+    (e) => e.event === 'skill:disposition' && e.engaged === true,
+  )
+
+  if (
+    toolEntries.length === 0 &&
+    sessionEntries.length === 0 &&
+    skillEntries.length === 0 &&
+    dispositionInvocations.length === 0
+  ) {
     return null
   }
+
+  // Source selection + freshness — the article states where its skill data came from.
+  const useDispositions = existsSync(dispositionsPath)
+  const allLegacySkillEntries = readJsonl<SkillEntry>(skillPath)
+  const skillSource: SkillUsageSource = useDispositions
+    ? 'dispositions'
+    : existsSync(skillPath)
+      ? 'legacy-skill-telemetry'
+      : 'none'
+  const sourceEntries: Array<{ ts: string }> = useDispositions
+    ? allDispositionEntries
+    : allLegacySkillEntries
+  const skillSourceNewestTs = sourceEntries.reduce<string | null>(
+    (newest, e) => (e.ts && (!newest || e.ts > newest) ? e.ts : newest),
+    null,
+  )
 
   // Tool breakdown
   const toolBreakdown: Record<string, number> = {}
@@ -110,20 +174,30 @@ export function collectTelemetry(since: string): TelemetrySummary | null {
     }
   }
 
-  // Skills invoked — prefer skill-telemetry.jsonl (richer data), fall back to tool telemetry
+  // Skills invoked — primary: the dispositions ledger (engaged:true = invoked).
+  // Legacy fallback (dispositions file absent): skill-telemetry.jsonl, then
+  // tool-telemetry.jsonl — the pre-2026-05-12 counting path, kept verbatim.
   const skillCounts: Record<string, number> = {}
-  const skillInvocations = skillEntries.filter((e) => e.event === 'skill:invoked')
-  if (skillInvocations.length > 0) {
-    for (const e of skillInvocations) {
+  if (useDispositions) {
+    for (const e of dispositionInvocations) {
       if (e.skill) {
         skillCounts[e.skill] = (skillCounts[e.skill] || 0) + 1
       }
     }
   } else {
-    // Fallback: extract skills from tool-telemetry.jsonl
-    for (const e of toolEntries) {
-      if (e.skill) {
-        skillCounts[e.skill] = (skillCounts[e.skill] || 0) + 1
+    const skillInvocations = skillEntries.filter((e) => e.event === 'skill:invoked')
+    if (skillInvocations.length > 0) {
+      for (const e of skillInvocations) {
+        if (e.skill) {
+          skillCounts[e.skill] = (skillCounts[e.skill] || 0) + 1
+        }
+      }
+    } else {
+      // Fallback: extract skills from tool-telemetry.jsonl
+      for (const e of toolEntries) {
+        if (e.skill) {
+          skillCounts[e.skill] = (skillCounts[e.skill] || 0) + 1
+        }
       }
     }
   }
@@ -175,6 +249,12 @@ export function collectTelemetry(since: string): TelemetrySummary | null {
       qualitySessions.add(e.session_id)
     }
   }
+  // And the dispositions ledger (the live invocation signal)
+  for (const e of dispositionInvocations) {
+    if (e.skill && qualitySkills.has(e.skill) && e.session_id) {
+      qualitySessions.add(e.session_id)
+    }
+  }
 
   const qualityCoverage = editSessions.size > 0
     ? Math.round((qualitySessions.size / editSessions.size) * 100)
@@ -203,5 +283,7 @@ export function collectTelemetry(since: string): TelemetrySummary | null {
     suggestionsFollowed,
     suggestionConversion,
     prSkillComments,
+    skillSource,
+    skillSourceNewestTs,
   }
 }

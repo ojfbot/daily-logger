@@ -24,10 +24,11 @@ import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
-import { generateArticle, toMarkdown } from './generate-article.js'
+import { generateArticle, toMarkdown, buildUserPrompt } from './generate-article.js'
 import { loadPersonas, reviewDraft, synthesizeWithCouncil } from './council.js'
 import { actionId, type ClosedAction } from './schema.js'
 import { shouldSkipRun } from './should-skip-run.js'
+import { verifyFileExistenceClaims } from './verify-claims.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -160,6 +161,26 @@ async function main() {
     console.log(`     Title : "${article.title}"`)
     console.log(`     Words : ~${article.body.split(/\s+/).length}`)
     console.log()
+  }
+
+  // ── Deterministic fact-check (TD-001, shadow-stage: record, never gate) ────
+  // Every concrete claim in the final body (file paths, PR refs, commit SHAs)
+  // must appear in the raw collected context. Unverified claims keep the
+  // article in "draft" (toMarkdown always emits status: "draft"), add a
+  // "verification-flagged" tag, and leave an HTML-comment audit trail in the
+  // body — they never block the run.
+  const verification = verifyFileExistenceClaims(article.body, buildUserPrompt(ctx))
+  if (verification.unverified.length > 0) {
+    console.warn(
+      `     ⚠ ${verification.unverified.length} unverified claim(s) in article body:\n` +
+        verification.unverified.map((c) => `       - ${c}`).join('\n'),
+    )
+    if (!article.tags.includes('verification-flagged')) {
+      article.tags.push('verification-flagged')
+    }
+    article.body +=
+      `\n\n<!-- verification: ${verification.unverified.length} unverified claims: ` +
+      `${verification.unverified.join(', ')} -->`
   }
 
   const markdown = toMarkdown(article)

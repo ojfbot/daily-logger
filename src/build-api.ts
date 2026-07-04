@@ -284,7 +284,10 @@ export function buildApi() {
     else if (tags.some((t) => t.name.includes('audit'))) activityType = 'audit'
     else if (commitCount > 40) activityType = 'sprint'
 
-    const status = (fm.status as string) ?? 'accepted' // older articles without status are implicitly accepted
+    // A missing status means the article never passed editorial review — treat
+    // it as a draft, never publish by silent default. (Pre-2026-07 articles
+    // that were already displayed carry an explicit backfilled status.)
+    const status = (fm.status as string) ?? 'draft'
     const entry: EntryData = {
       date,
       title: (fm.title as string) ?? `Dev log — ${date}`,
