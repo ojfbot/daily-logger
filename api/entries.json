@@ -1,5 +1,64 @@
 [
   {
+    "date": "2026-07-04",
+    "title": "Pipeline failure — Friday, 2026-07-04",
+    "summary": "Friday's daily article generation failed mid-run; this post names what broke, what is known, and what changes next.",
+    "tags": [
+      {
+        "name": "ojfbot",
+        "type": "concept"
+      },
+      {
+        "name": "generation-failed",
+        "type": "concept"
+      },
+      {
+        "name": "incident",
+        "type": "concept"
+      },
+      {
+        "name": "adr-registry",
+        "type": "concept"
+      },
+      {
+        "name": "pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "audit",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Publishing a generation failure honestly is better than holding or silently retrying",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The ADR registry truncation is an upstream data problem, not an article problem",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0012 (ResearchCurator) sitting in Proposed with no visible owner or deadline is a governance gap",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-07-03",
     "title": "Pipeline failure postmortem — Thursday, 2026-07-03",
     "summary": "Article generation for Thursday failed mid-pipeline; this postmortem documents the failure mode, the ADR registry gaps it exposed, and the fallback protocol now in place.",
