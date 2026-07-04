@@ -5,7 +5,7 @@
 `daily-logger` generates one markdown blog article per day by:
 
 1. Sweeping the last 24 h of commits and PRs (both open and closed) across all ojfbot repos via the GitHub API
-2. Aggregating Claude Code skill telemetry (including suggestion follow-through tracking and PR skill comments) and AgentBead session data alongside commit/PR data
+2. Aggregating Claude Code skill telemetry (skill-dispositions ledger, suggestion follow-through tracking, and PR skill comments) alongside commit/PR data
 3. Feeding that context to Claude Sonnet with a project-aware system prompt
 4. Committing the resulting article to `articles/YYYY-MM-DD.md` (with a dedicated skill telemetry section)
 5. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
@@ -39,12 +39,12 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 |---|---|
 | `src/index.ts` | Entry point — orchestrates collect → generate → write |
 | `src/collect-context.ts` | GitHub API sweep via `gh` CLI |
-| `src/collect-telemetry.ts` | Reads skill and suggestion JSONL sources, scrapes PR skill comments |
+| `src/collect-telemetry.ts` | Aggregates skill usage from `~/selfco/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources |
 | `src/generate-article.ts` | Claude API call + prompt, JSON → markdown (includes dedicated skill telemetry section) |
-| `src/schema.ts` | Zod schemas (ArticleDataV2, ActionItem, CodeReferenceSchema, TypedTag, ToolEntry, BeadSchema, etc.) |
-| `src/types.ts` | Shared TypeScript types (includes `session_id` on ToolEntry) |
+| `src/schema.ts` | Zod schemas + validation (ArticleDataSchema/ArticleDataV2, TypedTagSchema, ShipmentEntrySchema, DecisionEntrySchema, ActionItemSchema, ClosedActionSchema, CodeReferenceSchema, StructuredArticleSchema; `actionId`, `validateArticleOutput`, `getValidationErrors`) |
+| `src/types.ts` | Shared TypeScript types (BlogContext, GeneratedArticle, CommitInfo, PR/issue infos, Persona, cleaner types) |
+| `src/verify-claims.ts` | Deterministic fact-checker — flags article claims (file paths, PR refs, SHAs) absent from the collected context (TD-001) |
 | `src/build-api.ts` | Generates static JSON API (`api/*.json`) from articles |
-| `src/bead-store.ts` | AgentBead persistence with filesystem-fallback (ADR-0043) |
 | `skills/` | Claude Code skill definitions (previously `commands/`) |
 | `packages/frontend/` | React SPA (Vite + Redux Toolkit), deployed to Vercel |
 | `api/auth/`, `api/github/` | Vercel serverless functions (OAuth, GitHub API proxy) |
@@ -59,7 +59,6 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 - **ADR-0036** (`decisions/adr/0036-structured-decision-output-for-rich-ui.md`) — Structured decision output for rich UI
 - **ADR-0036** (core #45) — Also codifies the lock-file-rebuild protocol as a two-gate CI requirement (unmerged — still a PR in core)
 - **ADR-0038** — Editorial revision CI workflow (verified end-to-end on PR #112)
-- **ADR-0043** (`decisions/adr/0043-agentbead-bridge.md`) — AgentBead bridge mapping Claude Code lifecycle to bead emissions
 
 ## Adding new repos to the sweep
 

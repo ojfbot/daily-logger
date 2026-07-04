@@ -873,6 +873,15 @@ export function buildUserPrompt(ctx: BlogContext): string {
   if (ctx.telemetry) {
     const t = ctx.telemetry
     parts.push('## Claude Code Skill Telemetry (24h)')
+    // Data-source provenance — the article should state where skill counts came from
+    const sourceLabel =
+      t.skillSource === 'dispositions'
+        ? 'skill-dispositions.jsonl (live disposition ledger, ADR-0095)'
+        : t.skillSource === 'legacy-skill-telemetry'
+          ? 'skill-telemetry.jsonl (LEGACY — stream frozen 2026-05-12; counts likely undercount)'
+          : 'none available'
+    const freshness = t.skillSourceNewestTs ? ` — newest event ${t.skillSourceNewestTs}` : ''
+    parts.push(`Skill-usage source: ${sourceLabel}${freshness}`)
     parts.push(`Sessions: ${t.totalSessions}`)
     if (t.skillsInvoked.length > 0) {
       parts.push(`Skills invoked: ${t.skillsInvoked.map((s) => `/${s.name}(${s.count})`).join(', ')}`)
