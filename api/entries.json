@@ -1,5 +1,64 @@
 [
   {
+    "date": "2026-07-05",
+    "title": "Pipeline failure, honest — 2026-07-05 (Saturday)",
+    "summary": "Saturday's article generation failed with invalid output; this post documents the failure honestly, names the known gaps, and records the pipeline decision surface for future hardening.",
+    "tags": [
+      {
+        "name": "ojfbot",
+        "type": "concept"
+      },
+      {
+        "name": "asset-foundry",
+        "type": "repo"
+      },
+      {
+        "name": "pipeline-failure",
+        "type": "concept"
+      },
+      {
+        "name": "adr-registry",
+        "type": "concept"
+      },
+      {
+        "name": "audit",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Fail loud, attach evidence — and then gate",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "162-ADR registry injected wholesale is almost certainly the overflow culprit",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0007 through ADR-0005 in asset-foundry are truncated — status unknown",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-07-04",
     "title": "Pipeline failure — Friday, 2026-07-04",
     "summary": "Friday's daily article generation failed mid-run; this post names what broke, what is known, and what changes next.",
