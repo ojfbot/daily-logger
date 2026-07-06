@@ -1,0 +1,70 @@
+{
+  "suite": "daily-logger-golden-v1",
+  "tasks": {
+    "asserted-not-verified/corpus-frontmatter-enums-valid": {
+      "cluster": "failure:asserted-not-verified",
+      "status": "pass",
+      "tests": 85,
+      "failedTests": []
+    },
+    "asserted-not-verified/uncorroborated-file-claims-flagged": {
+      "cluster": "failure:asserted-not-verified",
+      "status": "pass",
+      "tests": 3,
+      "failedTests": []
+    },
+    "blind-retry/failed-generation-yields-honest-stub": {
+      "cluster": "failure:blind-retry",
+      "status": "pass",
+      "tests": 3,
+      "failedTests": []
+    },
+    "blind-retry/retry-carries-diagnosis": {
+      "cluster": "failure:blind-retry",
+      "status": "pass",
+      "tests": 3,
+      "failedTests": []
+    },
+    "no-validation-gate/null-tool-output-yields-stub": {
+      "cluster": "failure:no-validation-gate",
+      "status": "pass",
+      "tests": 4,
+      "failedTests": []
+    },
+    "no-validation-gate/prompt-echo-string-never-salvaged": {
+      "cluster": "failure:no-validation-gate",
+      "status": "pass",
+      "tests": 4,
+      "failedTests": []
+    },
+    "no-validation-gate/published-corpus-has-no-prompt-fragments": {
+      "cluster": "failure:no-validation-gate",
+      "status": "pass",
+      "tests": 7,
+      "failedTests": []
+    },
+    "no-validation-gate/registry-renders-without-fabricated-titles": {
+      "cluster": "failure:no-validation-gate",
+      "status": "pass",
+      "tests": 5,
+      "failedTests": []
+    },
+    "no-validation-gate/salvage-keeps-honest-failure-title": {
+      "cluster": "failure:no-validation-gate",
+      "status": "pass",
+      "tests": 4,
+      "failedTests": []
+    },
+    "silent-stall/corpus-posts-exist-and-are-nondegenerate": {
+      "cluster": "failure:silent-stall",
+      "status": "pass",
+      "tests": 86,
+      "failedTests": []
+    }
+  },
+  "summary": {
+    "total": 10,
+    "pass": 10,
+    "fail": 0
+  }
+}

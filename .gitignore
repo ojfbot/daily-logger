@@ -10,3 +10,6 @@ api/articles/
 # Symlink to sibling repo — target doesn't exist in CI
 decisions/core
 .vercel
+
+# eval runner intermediate (snapshot lives at evals/results/latest.json)
+evals/results/raw.json

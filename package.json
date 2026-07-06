@@ -17,7 +17,9 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint 'src/**/*.ts'",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "eval": "tsx evals/run.ts",
+    "eval:test": "vitest run --config evals/vitest.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",

@@ -255,7 +255,9 @@ export function validateArticleOutput(
       title: `Generation failed — ${date}`,
       date,
       summary: `Article generation for ${date} produced invalid data. Raw context attached.`,
-      rawContext: rawContextSnippet ?? JSON.stringify(raw, null, 2).slice(0, 2000),
+      // JSON.stringify(undefined) is undefined — the last-resort stub must never
+      // itself throw (caught by golden task no-validation-gate/prompt-echo-…, S19)
+      rawContext: rawContextSnippet ?? (JSON.stringify(raw, null, 2) ?? String(raw)).slice(0, 2000),
     },
   }
 }

@@ -49,6 +49,34 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      # Golden eval suite (audit S19 / I4). ADVISORY ONLY — continue-on-error
+      # guarantees it never blocks a PR; it posts the pass/fail diff vs the
+      # committed snapshot (evals/results/latest.json) to the job summary.
+      # Promotion to a blocking gate is a later data-gated RIDM decision
+      # (S16 shadow→enforce pattern) — do not flip this without one.
+      # Runs BEFORE the smoke test: the smoke test writes a mock article into
+      # _articles/, which the corpus-scanning tasks must not see.
+      - name: Golden eval suite (advisory — never blocks)
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          pnpm eval 2>&1 | tee /tmp/eval-output.txt
+
+      - name: Eval diff → job summary (advisory)
+        if: always()
+        continue-on-error: true
+        run: |
+          {
+            echo '## Golden eval suite — advisory (audit S19 / I4)'
+            echo ''
+            echo 'Never blocks. Diff is against the committed snapshot `evals/results/latest.json`.'
+            echo ''
+            echo '```text'
+            sed -n '/── eval summary ──/,$p' /tmp/eval-output.txt 2>/dev/null \
+              || echo '(no eval output captured)'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Pipeline smoke test (mock LLM — no API call)
         env:
           # MOCK_LLM=true: generateArticle() and council calls return fixtures.
