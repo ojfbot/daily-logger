@@ -125,6 +125,19 @@ describe('ArticleDataSchema (v2)', () => {
     const result = ArticleDataSchema.safeParse(bad)
     expect(result.success).toBe(false)
   })
+
+  // S18 (audit I2): outcome — human editorial verdict, optional until a human touches the article
+  it('accepts each valid outcome value and its absence', () => {
+    for (const outcome of ['accepted', 'edited', 'rejected', 'abandoned']) {
+      expect(ArticleDataSchema.safeParse({ ...VALID_V2, outcome }).success).toBe(true)
+    }
+    expect(ArticleDataSchema.safeParse(VALID_V2).success).toBe(true)
+  })
+
+  it('rejects an outcome outside the enum', () => {
+    const bad = { ...VALID_V2, outcome: 'published' }
+    expect(ArticleDataSchema.safeParse(bad).success).toBe(false)
+  })
 })
 
 // ─── StructuredArticleSchema (v1) ────────────────────────────────────────────

@@ -13,6 +13,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { stampOutcome } from './stamp-outcome.js'
 
 const MODEL = 'claude-opus-4-6'
 const MAX_TOKENS = 8192
@@ -167,8 +168,11 @@ async function main() {
   }
 
   if (!isDryRun && result.changed) {
+    // S18 (audit I2): a human-driven revision IS the 'edited' outcome — stamp it mechanically
+    // (never via the LLM, whose prompt forbids touching frontmatter).
+    result.revisedMarkdown = stampOutcome(result.revisedMarkdown, 'edited')
     writeFileSync(articlePath, result.revisedMarkdown, 'utf-8')
-    console.error(`\n✓ Written to ${articlePath}`)
+    console.error(`\n✓ Written to ${articlePath} (outcome: edited)`)
   }
 
   console.log(JSON.stringify({

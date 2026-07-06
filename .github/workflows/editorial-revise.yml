@@ -14,6 +14,77 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # S18 (audit I2): outcome capture on the accept path. Opening an accept/<date> PR with no
+  # editorial feedback is the human's clean-accept action — stamp `outcome: accepted` on the
+  # PR branch. The stamp only reaches main when the human merges (gate-0 stays human), so a
+  # closed-unmerged PR never publishes a false verdict. A feedback-carrying PR takes the
+  # revise job below instead, whose script stamps `outcome: edited`.
+  stamp-accept:
+    name: Stamp accepted outcome
+    if: >-
+      github.event.action == 'opened' &&
+      startsWith(github.head_ref, 'accept/') &&
+      !contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_START')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract article date from branch name
+        id: date
+        run: |
+          # GITHUB_HEAD_REF via env (never ${{ }} in run:) + strict shape check — the branch
+          # name is user-controlled input.
+          DATE="${GITHUB_HEAD_REF#accept/}"
+          if [[ ! "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "::error::accept/ branch suffix is not a YYYY-MM-DD date: $DATE"
+            exit 1
+          fi
+          echo "article_path=_articles/${DATE}.md" >> "$GITHUB_OUTPUT"
+          echo "📅 Article date: $DATE"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Stamp outcome on article frontmatter
+        env:
+          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+          OUTCOME: accepted
+        run: pnpm exec tsx src/stamp-outcome.ts
+
+      - name: Commit stamped article
+        env:
+          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+        run: |
+          git config user.name "ojfbot-blog[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$ARTICLE_PATH"
+          if git diff --cached --quiet; then
+            echo "⏭ No outcome change to commit"
+          else
+            git commit -m "editorial: stamp outcome accepted [skip ci]"
+            git push
+          fi
+
   revise:
     name: Apply editorial revisions
     if: >-
