@@ -117,6 +117,24 @@ function getADRRegistry(org: string, repo: string): ADRRegistryEntry[] {
   return entries
 }
 
+// ─── Commit-trailer parsing (S21 trace identity — SHADOW) ────────────────────
+//
+// The Claude Code harness appends `Claude-Session: <url>` and `Co-Authored-By:`
+// trailers to every commit it makes; until now nothing parsed them. Extracting
+// them here lets an article join commits → sessions. Shadow discipline: the
+// fields are optional, absent trailers are a no-op, and downstream prose
+// generation may ignore them for now.
+
+export function parseCommitTrailers(message: string): Pick<CommitInfo, 'sessionUrl' | 'coAuthors'> {
+  // Fresh regexes per call — module-level /g regexes carry lastIndex state.
+  const sessionMatch = message.match(/^Claude-Session:\s*(\S+)\s*$/im)
+  const coAuthors = [...message.matchAll(/^Co-Authored-By:\s*(.+?)\s*$/gim)].map((m) => m[1])
+  return {
+    ...(sessionMatch ? { sessionUrl: sessionMatch[1] } : {}),
+    ...(coAuthors.length > 0 ? { coAuthors } : {}),
+  }
+}
+
 function getCommits(org: string, repo: string, since: string): CommitInfo[] {
   type GHCommit = {
     sha: string
@@ -138,6 +156,8 @@ function getCommits(org: string, repo: string, since: string): CommitInfo[] {
     date: c.commit.author.date,
     repo,
     url: c.html_url,
+    // Parsed from the FULL message before the first-line strip above (S21, shadow)
+    ...parseCommitTrailers(c.commit.message),
   }))
 }
 

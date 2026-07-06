@@ -9,6 +9,14 @@ export interface CommitInfo {
   date: string
   repo: string
   url: string
+  /**
+   * Claude-Session trailer URL the Claude Code harness appends to commits —
+   * joins this commit to the session that produced it (S21 trace identity,
+   * SHADOW: parsed and surfaced; prose generation may ignore it for now).
+   */
+  sessionUrl?: string
+  /** Co-Authored-By trailers (e.g. the Claude model line), verbatim. */
+  coAuthors?: string[]
 }
 
 export interface IssueInfo {
