@@ -14,7 +14,7 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { marked } from 'marked'
-import { actionId, type CodeReference } from './schema.js'
+import { ARTICLE_OUTCOMES, actionId, type CodeReference } from './schema.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
@@ -47,6 +47,8 @@ interface EntryData {
   activityType: string
   schemaVersion: number
   status?: 'draft' | 'accepted' | 'rejected'
+  // S18 (audit I2): human editorial verdict — stamped by the accept/revise paths, absent until then
+  outcome?: 'accepted' | 'edited' | 'rejected' | 'abandoned'
   // Body sections for detail pages (not included in index to keep payload small)
   decisions?: Array<{ title: string; summary: string; repo: string; pillar?: string; relatedTags: string[] }>
   actions?: ActionItem[]
@@ -94,6 +96,12 @@ function parseFrontmatter(content: string): Record<string, unknown> {
 
   const statusMatch = raw.match(/^status:\s*"?(\w+)"?$/m)
   if (statusMatch) fm.status = statusMatch[1]
+
+  // S18 (audit I2): only the closed enum passes — a junk value is dropped, not emitted
+  const outcomeMatch = raw.match(/^outcome:\s*"?(\w+)"?$/m)
+  if (outcomeMatch && (ARTICLE_OUTCOMES as readonly string[]).includes(outcomeMatch[1])) {
+    fm.outcome = outcomeMatch[1]
+  }
 
   const ccMatch = raw.match(/^commitCount:\s*(\d+)$/m)
   if (ccMatch) fm.commitCount = parseInt(ccMatch[1], 10)
@@ -298,6 +306,7 @@ export function buildApi() {
       activityType,
       schemaVersion: (fm.schemaVersion as number) ?? 1,
       status: status as EntryData['status'],
+      outcome: fm.outcome as EntryData['outcome'],
       decisions,
       actions,
       codeReferences: codeRefsByDate[date],

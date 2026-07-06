@@ -73,6 +73,11 @@ export function actionId(a: { command: string; sourceDate: string; description: 
 
 export const ARTICLE_STATUSES = ['draft', 'accepted', 'rejected'] as const
 
+// S18 (audit I2): the human editorial verdict on this agent-generated article — distinct from
+// `status` (the publication lane). Stamped mechanically where humans touch the output:
+// the editorial-accept path stamps 'accepted', the ADR-0038 revise path stamps 'edited'.
+export const ARTICLE_OUTCOMES = ['accepted', 'edited', 'rejected', 'abandoned'] as const
+
 export const ACTIVITY_TYPES = ['build', 'rest', 'audit', 'hardening', 'cleanup', 'sprint'] as const
 
 // ─── Code references (ADR-0031) ─────────────────────────────────────────────
@@ -139,6 +144,9 @@ export const ArticleDataSchema = z.object({
   }).optional(),
 
   status: z.enum(ARTICLE_STATUSES).default('draft').optional(),
+  // S18 (audit I2): human outcome capture — see ARTICLE_OUTCOMES above. Never set by the LLM;
+  // stamped by the accept/revise paths after a human touched the article.
+  outcome: z.enum(ARTICLE_OUTCOMES).optional(),
 })
 
 // ─── v1 schema (for fallback detection) ──────────────────────────────────────
