@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 48
+    "count": 49
   },
   {
     "name": "ci-cd",
@@ -55,6 +55,11 @@
     "count": 18
   },
   {
+    "name": "hardening",
+    "type": "practice",
+    "count": 15
+  },
+  {
     "name": "cv-builder",
     "type": "repo",
     "count": 15
@@ -62,11 +67,6 @@
   {
     "name": "asset-foundry",
     "type": "repo",
-    "count": 14
-  },
-  {
-    "name": "hardening",
-    "type": "practice",
     "count": 14
   },
   {
@@ -165,6 +165,16 @@
     "count": 5
   },
   {
+    "name": "ojfbot",
+    "type": "concept",
+    "count": 4
+  },
+  {
+    "name": "adr-registry",
+    "type": "concept",
+    "count": 4
+  },
+  {
     "name": "fleet-hardening",
     "type": "concept",
     "count": 4
@@ -200,16 +210,6 @@
     "count": 4
   },
   {
-    "name": "ojfbot",
-    "type": "concept",
-    "count": 3
-  },
-  {
-    "name": "adr-registry",
-    "type": "concept",
-    "count": 3
-  },
-  {
     "name": "github-integration",
     "type": "concept",
     "count": 3
@@ -238,6 +238,11 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "generation-failed",
+    "type": "concept",
+    "count": 2
   },
   {
     "name": "pipeline",
@@ -340,12 +345,12 @@
     "count": 2
   },
   {
-    "name": "pipeline-failure",
+    "name": "pipeline-incident",
     "type": "concept",
     "count": 1
   },
   {
-    "name": "generation-failed",
+    "name": "pipeline-failure",
     "type": "concept",
     "count": 1
   },
