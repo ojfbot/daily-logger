@@ -1,5 +1,64 @@
 [
   {
+    "date": "2026-07-07",
+    "title": "Pipeline failure — Monday, 2026-07-07",
+    "summary": "Article generation for Monday 2026-07-07 failed before producing content; this post is the incident note, not a development summary.",
+    "tags": [
+      {
+        "name": "ojfbot",
+        "type": "concept"
+      },
+      {
+        "name": "generation-failed",
+        "type": "concept"
+      },
+      {
+        "name": "pipeline-incident",
+        "type": "concept"
+      },
+      {
+        "name": "adr-registry",
+        "type": "concept"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Publishing the error as an incident note is strictly better than publishing the raw dump",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The silent degradation path ('emit the prompt on failure') must be replaced with a hard error and a defined fallback protocol",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The ADR registry truncation at 163 entries is a context-window signal, not a data-integrity failure",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-07-05",
     "title": "Pipeline failure, honest — 2026-07-05 (Saturday)",
     "summary": "Saturday's article generation failed with invalid output; this post documents the failure honestly, names the known gaps, and records the pipeline decision surface for future hardening.",
