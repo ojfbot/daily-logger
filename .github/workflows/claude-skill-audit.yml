@@ -17,15 +17,22 @@ jobs:
         with:
           fetch-depth: 1
 
+      # The telemetry branch lives on ojfbot/core (sync-telemetry.sh pushes
+      # there), NOT on this repo — the old `git fetch origin telemetry/daily`
+      # fetched from daily-logger's own origin, where the branch doesn't
+      # exist, and silently no-oped for every run (rm-l2-ojfbot#S24). Clone
+      # core's branch the way daily-blog.yml does.
       - name: Fetch telemetry snapshot
         id: telemetry
         continue-on-error: true
         run: |
-          git fetch origin telemetry/daily 2>/dev/null || exit 0
+          git clone --depth 1 --branch telemetry/daily \
+            https://x-access-token:${{ secrets.GH_PAT }}@github.com/ojfbot/core.git \
+            /tmp/telemetry-snapshot 2>/dev/null || exit 0
           mkdir -p /tmp/telemetry
-          git show origin/telemetry/daily:tool-telemetry.jsonl > /tmp/telemetry/tool-telemetry.jsonl 2>/dev/null || true
-          git show origin/telemetry/daily:skill-telemetry.jsonl > /tmp/telemetry/skill-telemetry.jsonl 2>/dev/null || true
-          git show origin/telemetry/daily:session-telemetry.jsonl > /tmp/telemetry/session-telemetry.jsonl 2>/dev/null || true
+          for f in skill-dispositions tool-telemetry skill-telemetry session-telemetry; do
+            cp "/tmp/telemetry-snapshot/${f}.jsonl" "/tmp/telemetry/${f}.jsonl" 2>/dev/null || true
+          done
           echo "available=true" >> "$GITHUB_OUTPUT"
 
       - name: Run skill audit
