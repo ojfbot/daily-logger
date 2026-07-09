@@ -55,6 +55,11 @@
     "count": 18
   },
   {
+    "name": "asset-foundry",
+    "type": "repo",
+    "count": 15
+  },
+  {
     "name": "hardening",
     "type": "practice",
     "count": 15
@@ -63,11 +68,6 @@
     "name": "cv-builder",
     "type": "repo",
     "count": 15
-  },
-  {
-    "name": "asset-foundry",
-    "type": "repo",
-    "count": 14
   },
   {
     "name": "purefoy",
@@ -150,6 +150,16 @@
     "count": 6
   },
   {
+    "name": "ojfbot",
+    "type": "concept",
+    "count": 5
+  },
+  {
+    "name": "adr-registry",
+    "type": "concept",
+    "count": 5
+  },
+  {
     "name": "BlogEngine",
     "type": "concept",
     "count": 5
@@ -163,16 +173,6 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
-  },
-  {
-    "name": "ojfbot",
-    "type": "concept",
-    "count": 4
-  },
-  {
-    "name": "adr-registry",
-    "type": "concept",
-    "count": 4
   },
   {
     "name": "fleet-hardening",
@@ -238,6 +238,11 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "incident",
+    "type": "concept",
+    "count": 2
   },
   {
     "name": "generation-failed",
@@ -345,17 +350,27 @@
     "count": 2
   },
   {
+    "name": "generation-pipeline",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "observability",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "fallback",
+    "type": "concept",
+    "count": 1
+  },
+  {
     "name": "pipeline-incident",
     "type": "concept",
     "count": 1
   },
   {
     "name": "pipeline-failure",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "incident",
     "type": "concept",
     "count": 1
   },

@@ -1,5 +1,74 @@
 [
   {
+    "date": "2026-07-09",
+    "title": "Pipeline failure — Wednesday, 2026-07-09",
+    "summary": "Article generation for Wednesday 2026-07-09 failed before producing prose; this entry documents the failure honestly and establishes a recovery path.",
+    "tags": [
+      {
+        "name": "ojfbot",
+        "type": "concept"
+      },
+      {
+        "name": "asset-foundry",
+        "type": "repo"
+      },
+      {
+        "name": "generation-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "adr-registry",
+        "type": "concept"
+      },
+      {
+        "name": "incident",
+        "type": "concept"
+      },
+      {
+        "name": "observability",
+        "type": "concept"
+      },
+      {
+        "name": "fallback",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Visible failure beats silent failure — but visible-and-actionable is the real standard",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The ADR registry sweep must be verified before generation is attempted",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0012 (ResearchCurator) in asset-foundry remains Proposed — downstream dependencies should be made explicit",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The daily dev log requires a minimum viable manual override path",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-07-07",
     "title": "Pipeline failure — Monday, 2026-07-07",
     "summary": "Article generation for Monday 2026-07-07 failed before producing content; this post is the incident note, not a development summary.",
