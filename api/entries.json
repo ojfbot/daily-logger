@@ -1,5 +1,91 @@
 [
   {
+    "date": "2026-07-10",
+    "title": "Pipeline incident — Thursday, 2026-07-10",
+    "summary": "Article generation for Thursday, 2026-07-10 failed before producing valid output; this entry is the honest incident record.",
+    "tags": [
+      {
+        "name": "ojfbot",
+        "type": "concept"
+      },
+      {
+        "name": "generation-failed",
+        "type": "concept"
+      },
+      {
+        "name": "pipeline-incident",
+        "type": "concept"
+      },
+      {
+        "name": "observability",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Publish an honest incident note rather than the raw error artifact",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The ADR registry truncation is a context-window signal, not a one-off",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The pipeline has no post-generation validation gate",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "No fallback or retry path is documented",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/add-validation-gate",
+        "description": "Add a post-generation check to the ojfbot publish pipeline: reject any output where the lede matches the known failure sentinel `_(Article generation` or where JSON schema parsing fails. Pipeline should halt and alert rather than publish.",
+        "repo": "ojfbot",
+        "status": "open",
+        "sourceDate": "2026-07-10",
+        "id": "act-2026-07-10-add-validation-gate-ee6f25"
+      },
+      {
+        "command": "/instrument-adr-payload-size",
+        "description": "Add payload-size logging to the ADR registry injection step. Log a warning when the serialized registry exceeds a configurable threshold. Use the 163-ADR truncation event as the baseline calibration point.",
+        "repo": "ojfbot",
+        "status": "open",
+        "sourceDate": "2026-07-10",
+        "id": "act-2026-07-10-instrument-adr-payload-size-d594cf"
+      },
+      {
+        "command": "/write-recovery-runbook",
+        "description": "Document the generation-failure recovery path as a first-class runbook: what to check, in what order, with the manual-stub entry as the explicit documented fallback. One page, plain markdown, lives in the ojfbot repo.",
+        "repo": "ojfbot",
+        "status": "open",
+        "sourceDate": "2026-07-10",
+        "id": "act-2026-07-10-write-recovery-runbook-362b2e"
+      }
+    ]
+  },
+  {
     "date": "2026-07-09",
     "title": "Pipeline failure — Wednesday, 2026-07-09",
     "summary": "Article generation for Wednesday 2026-07-09 failed before producing prose; this entry documents the failure honestly and establishes a recovery path.",
