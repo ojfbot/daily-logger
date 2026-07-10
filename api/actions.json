@@ -1,5 +1,29 @@
 [
   {
+    "command": "/add-validation-gate",
+    "description": "Add a post-generation check to the ojfbot publish pipeline: reject any output where the lede matches the known failure sentinel `_(Article generation` or where JSON schema parsing fails. Pipeline should halt and alert rather than publish.",
+    "repo": "ojfbot",
+    "status": "open",
+    "sourceDate": "2026-07-10",
+    "id": "act-2026-07-10-add-validation-gate-ee6f25"
+  },
+  {
+    "command": "/instrument-adr-payload-size",
+    "description": "Add payload-size logging to the ADR registry injection step. Log a warning when the serialized registry exceeds a configurable threshold. Use the 163-ADR truncation event as the baseline calibration point.",
+    "repo": "ojfbot",
+    "status": "open",
+    "sourceDate": "2026-07-10",
+    "id": "act-2026-07-10-instrument-adr-payload-size-d594cf"
+  },
+  {
+    "command": "/write-recovery-runbook",
+    "description": "Document the generation-failure recovery path as a first-class runbook: what to check, in what order, with the manual-stub entry as the explicit documented fallback. One page, plain markdown, lives in the ojfbot repo.",
+    "repo": "ojfbot",
+    "status": "open",
+    "sourceDate": "2026-07-10",
+    "id": "act-2026-07-10-write-recovery-runbook-362b2e"
+  },
+  {
     "command": "/validate",
     "description": "Trigger a session in core after the OPAV S1 C3 runtime merge and inspect the telemetry log for at least one skill:acted entry — one from the CLI recorder path (explicit /validate invocation) and one from the Stop-hook path (session end). Both must appear for C3 to close. If the Stop-hook path is silent, check the hook script's fnm default version pin — that's the first place to look after 1074243. This is the prerequisite before the suggestion-funnel numbers are trustworthy.",
     "repo": "core",

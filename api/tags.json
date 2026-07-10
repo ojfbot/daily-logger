@@ -55,13 +55,13 @@
     "count": 18
   },
   {
-    "name": "asset-foundry",
-    "type": "repo",
-    "count": 15
-  },
-  {
     "name": "hardening",
     "type": "practice",
+    "count": 16
+  },
+  {
+    "name": "asset-foundry",
+    "type": "repo",
     "count": 15
   },
   {
@@ -140,6 +140,11 @@
     "count": 7
   },
   {
+    "name": "ojfbot",
+    "type": "concept",
+    "count": 6
+  },
+  {
     "name": "storybook",
     "type": "infra",
     "count": 6
@@ -148,11 +153,6 @@
     "name": "security-scanning",
     "type": "practice",
     "count": 6
-  },
-  {
-    "name": "ojfbot",
-    "type": "concept",
-    "count": 5
   },
   {
     "name": "adr-registry",
@@ -210,6 +210,11 @@
     "count": 4
   },
   {
+    "name": "generation-failed",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "github-integration",
     "type": "concept",
     "count": 3
@@ -240,12 +245,17 @@
     "count": 3
   },
   {
-    "name": "incident",
+    "name": "pipeline-incident",
     "type": "concept",
     "count": 2
   },
   {
-    "name": "generation-failed",
+    "name": "observability",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "incident",
     "type": "concept",
     "count": 2
   },
@@ -355,17 +365,7 @@
     "count": 1
   },
   {
-    "name": "observability",
-    "type": "concept",
-    "count": 1
-  },
-  {
     "name": "fallback",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "pipeline-incident",
     "type": "concept",
     "count": 1
   },
