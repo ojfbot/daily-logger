@@ -12,12 +12,17 @@
   {
     "name": "shell",
     "type": "repo",
-    "count": 36
+    "count": 37
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 35
+    "count": 36
+  },
+  {
+    "name": "core",
+    "type": "repo",
+    "count": 34
   },
   {
     "name": "module-federation",
@@ -25,14 +30,9 @@
     "count": 34
   },
   {
-    "name": "core",
-    "type": "repo",
-    "count": 33
-  },
-  {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 22
+    "count": 23
   },
   {
     "name": "phase-1",
@@ -45,14 +45,14 @@
     "count": 20
   },
   {
-    "name": "adr",
-    "type": "practice",
+    "name": "model-behavior-as-design",
+    "type": "concept",
     "count": 19
   },
   {
-    "name": "model-behavior-as-design",
-    "type": "concept",
-    "count": 18
+    "name": "adr",
+    "type": "practice",
+    "count": 19
   },
   {
     "name": "hardening",
@@ -140,6 +140,11 @@
     "count": 7
   },
   {
+    "name": "BlogEngine",
+    "type": "concept",
+    "count": 6
+  },
+  {
     "name": "ojfbot",
     "type": "concept",
     "count": 6
@@ -156,11 +161,6 @@
   },
   {
     "name": "adr-registry",
-    "type": "concept",
-    "count": 5
-  },
-  {
-    "name": "BlogEngine",
     "type": "concept",
     "count": 5
   },
@@ -243,6 +243,21 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "morning-cockpit",
+    "type": "repo",
+    "count": 2
+  },
+  {
+    "name": "skill-telemetry",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "build",
+    "type": "concept",
+    "count": 2
   },
   {
     "name": "pipeline-incident",
@@ -360,6 +375,26 @@
     "count": 2
   },
   {
+    "name": "northstar-tracking",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "delivery-pane",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "OPAV",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "verification-flagged",
+    "type": "concept",
+    "count": 1
+  },
+  {
     "name": "generation-pipeline",
     "type": "concept",
     "count": 1
@@ -387,11 +422,6 @@
   {
     "name": "postmortem",
     "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "morning-cockpit",
-    "type": "repo",
     "count": 1
   },
   {
@@ -451,11 +481,6 @@
   },
   {
     "name": "vault-integration",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "build",
     "type": "concept",
     "count": 1
   },
@@ -521,11 +546,6 @@
   },
   {
     "name": "fleet-wide-session-init",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "skill-telemetry",
     "type": "concept",
     "count": 1
   },

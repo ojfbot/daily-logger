@@ -1,5 +1,109 @@
 [
   {
+    "date": "2026-07-14",
+    "title": "Monday's odometer turn: Delivery pane ships, northstar ladder advances to 66 points",
+    "summary": "Monday brought 11 commits across four repos, shipping morning-cockpit's Delivery pane, merging three PRs, and advancing the northstar P1 score from 60 to 66.",
+    "tags": [
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "BlogEngine",
+        "type": "concept"
+      },
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "northstar-tracking",
+        "type": "concept"
+      },
+      {
+        "name": "skill-telemetry",
+        "type": "concept"
+      },
+      {
+        "name": "delivery-pane",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "OPAV",
+        "type": "concept"
+      },
+      {
+        "name": "build",
+        "type": "concept"
+      },
+      {
+        "name": "verification-flagged",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "landing",
+      "BlogEngine",
+      "morning-cockpit",
+      "shell"
+    ],
+    "commitCount": 22,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Delivery pane as a read-only projection, not a mutable editor",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Two-commit strategy for the S5 odometer turn: canonical file + ledger append as separate PRs",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "OPAV S22(a): capture-quality verifier excludes maintenance traps by design",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "End-to-end skill-use capture wiring: honest PR audit trail as the acceptance criterion",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Orphaned northstar entries resolved by pickup PRs rather than backfill scripts",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-07-10",
     "title": "Pipeline incident — Thursday, 2026-07-10",
     "summary": "Article generation for Thursday, 2026-07-10 failed before producing valid output; this entry is the honest incident record.",
