@@ -2,22 +2,22 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 49
+    "count": 50
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 43
+    "count": 44
+  },
+  {
+    "name": "assistant-centric",
+    "type": "concept",
+    "count": 37
   },
   {
     "name": "shell",
     "type": "repo",
     "count": 37
-  },
-  {
-    "name": "assistant-centric",
-    "type": "concept",
-    "count": 36
   },
   {
     "name": "core",
@@ -35,13 +35,13 @@
     "count": 23
   },
   {
-    "name": "phase-1",
-    "type": "phase",
-    "count": 20
-  },
-  {
     "name": "rest-day",
     "type": "activity",
+    "count": 21
+  },
+  {
+    "name": "phase-1",
+    "type": "phase",
     "count": 20
   },
   {
@@ -115,6 +115,16 @@
     "count": 8
   },
   {
+    "name": "BlogEngine",
+    "type": "concept",
+    "count": 7
+  },
+  {
+    "name": "storybook",
+    "type": "infra",
+    "count": 7
+  },
+  {
     "name": "audit",
     "type": "concept",
     "count": 7
@@ -140,18 +150,8 @@
     "count": 7
   },
   {
-    "name": "BlogEngine",
-    "type": "concept",
-    "count": 6
-  },
-  {
     "name": "ojfbot",
     "type": "concept",
-    "count": 6
-  },
-  {
-    "name": "storybook",
-    "type": "infra",
     "count": 6
   },
   {
@@ -173,6 +173,11 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
+  },
+  {
+    "name": "phase-9",
+    "type": "concept",
+    "count": 4
   },
   {
     "name": "fleet-hardening",
@@ -210,6 +215,11 @@
     "count": 4
   },
   {
+    "name": "morning-cockpit",
+    "type": "repo",
+    "count": 3
+  },
+  {
     "name": "generation-failed",
     "type": "concept",
     "count": 3
@@ -221,11 +231,6 @@
   },
   {
     "name": "babylon-migration",
-    "type": "concept",
-    "count": 3
-  },
-  {
-    "name": "phase-9",
     "type": "concept",
     "count": 3
   },
@@ -243,11 +248,6 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
-  },
-  {
-    "name": "morning-cockpit",
-    "type": "repo",
-    "count": 2
   },
   {
     "name": "skill-telemetry",
