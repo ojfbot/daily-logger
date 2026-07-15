@@ -1,5 +1,21 @@
 [
   {
+    "command": "/investigate",
+    "description": "Audit the Notion relay handoff TTL for northstar confirmations: determine the maximum window between voice-confirmation and registry landing before an entry is at risk of being lost. BlogEngine #58's 17-day orphan window is the reference case. Document the safe window and whether an automated pickup exists.",
+    "repo": "BlogEngine",
+    "status": "open",
+    "sourceDate": "2026-07-15",
+    "id": "act-2026-07-15-investigate-1a9b5b"
+  },
+  {
+    "command": "/sweep",
+    "description": "Execute the core #150 → BlogEngine #57 → core #151 → oldest-first cleaner PR merge sequence. Do not batch core #150 or #151 with the cleaner PRs — they carry different review weight. Target: zero PRs older than 72 hours across all repos.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-07-15",
+    "id": "act-2026-07-15-sweep-bb70ae"
+  },
+  {
     "command": "/add-validation-gate",
     "description": "Add a post-generation check to the ojfbot publish pipeline: reject any output where the lede matches the known failure sentinel `_(Article generation` or where JSON schema parsing fails. Pipeline should halt and alert rather than publish.",
     "repo": "ojfbot",

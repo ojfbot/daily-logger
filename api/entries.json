@@ -1,5 +1,89 @@
 [
   {
+    "date": "2026-07-15",
+    "title": "Tuesday audit: morning-cockpit Delivery pane lands, BlogEngine northstar confirmed, stale-doc queue grows",
+    "summary": "One housekeeping commit on Tuesday; three PRs merged in the recent window cap a meaningful delivery-tracking sprint in morning-cockpit and BlogEngine.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "BlogEngine",
+        "type": "concept"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "phase-9",
+        "type": "concept"
+      },
+      {
+        "name": "storybook",
+        "type": "infra"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Two-PR sequence for northstar score movement (morning-cockpit)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "BlogEngine northstar orphan pickup — late landing is still a valid landing",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Stale-doc cleanup queue as a leading indicator of repo health",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/investigate",
+        "description": "Audit the Notion relay handoff TTL for northstar confirmations: determine the maximum window between voice-confirmation and registry landing before an entry is at risk of being lost. BlogEngine #58's 17-day orphan window is the reference case. Document the safe window and whether an automated pickup exists.",
+        "repo": "BlogEngine",
+        "status": "open",
+        "sourceDate": "2026-07-15",
+        "id": "act-2026-07-15-investigate-1a9b5b"
+      },
+      {
+        "command": "/sweep",
+        "description": "Execute the core #150 → BlogEngine #57 → core #151 → oldest-first cleaner PR merge sequence. Do not batch core #150 or #151 with the cleaner PRs — they carry different review weight. Target: zero PRs older than 72 hours across all repos.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-07-15",
+        "id": "act-2026-07-15-sweep-bb70ae"
+      }
+    ]
+  },
+  {
     "date": "2026-07-14",
     "title": "Monday's odometer turn: Delivery pane ships, northstar ladder advances to 66 points",
     "summary": "Monday brought 11 commits across four repos, shipping morning-cockpit's Delivery pane, merging three PRs, and advancing the northstar P1 score from 60 to 66.",
