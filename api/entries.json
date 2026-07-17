@@ -1,5 +1,63 @@
 [
   {
+    "date": "2026-07-17",
+    "title": "Thursday's one commit: fixing a Node floor so the morning-cockpit renderer can actually run tests",
+    "summary": "A single merged PR on Thursday unblocked morning-cockpit's renderer test suite by correcting the minimum Node version required by the jsdom environment.",
+    "tags": [
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "esm-compatibility",
+        "type": "concept"
+      },
+      {
+        "name": "vitest",
+        "type": "concept"
+      },
+      {
+        "name": "node-version",
+        "type": "concept"
+      },
+      {
+        "name": "verification-flagged",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "morning-cockpit"
+    ],
+    "commitCount": 1,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Correct the Node floor rather than loosen the ESM constraint",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Surface test infrastructure failures before feature verification, not after",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-07-15",
     "title": "Tuesday audit: morning-cockpit Delivery pane lands, BlogEngine northstar confirmed, stale-doc queue grows",
     "summary": "One housekeeping commit on Tuesday; three PRs merged in the recent window cap a meaningful delivery-tracking sprint in morning-cockpit and BlogEngine.",
