@@ -1,5 +1,123 @@
 [
   {
+    "date": "2026-07-18",
+    "title": "Friday's honest loop sprint: 17 core commits wire the OPAV measurement spine through S1–S17",
+    "summary": "Friday's 29-commit sprint bootstrapped the honest skill-telemetry loop S1–S17, shipped the Loop pane as a live read-model, and accepted ADR-0098 formalising two-track telemetry architecture.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "skill-telemetry",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "opav",
+        "type": "concept"
+      },
+      {
+        "name": "verification-flagged",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "morning-cockpit"
+    ],
+    "commitCount": 48,
+    "activityType": "sprint",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "ADR-0098 accepted: two-track skill telemetry — use-funnel and evolution stream never blend",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Population-tagged scoring: installed vs. uninstalled vs. legacy are never collapsed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Single reconciler writer declared: the duplicate-entry RCA",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The ruler fails loudly: S17 measurement-plumbing reliability",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Loop pane as independently-degradable read-model: three sources, none blocking",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Review and merge morning-cockpit #34 (S8 read-side: derive decided-in-flight from closes: refs). Run `pnpm test` first — this is the declared entrance check for the slice. The write-side (PRs #32, #33) is already merged; #34 completes the decision→delivery seam. Agent-eligible: no design judgment required, automated check is sufficient.",
+        "repo": "morning-cockpit",
+        "status": "open",
+        "sourceDate": "2026-07-18",
+        "id": "act-2026-07-18-pr-review-d12996"
+      },
+      {
+        "command": "/adr",
+        "description": "Write an ADR in core formalising the single-reconciler-writer pattern established in S4 (commit f501b25): declare that core's own reconciler is the only sanctioned writer to the northstar ledger, name the failure mode of dual writers (duplicate ledger entries), and specify the enforcement mechanism. S4's commit message documents the RCA; no durable ADR captures it. Without it, the next engineer to add a write path will repeat the same race condition.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-07-18",
+        "id": "act-2026-07-18-adr-6233b8"
+      },
+      {
+        "command": "/investigate",
+        "description": "Audit S10–S15 registration status: Friday committed S1–S9 and S16–S17 but six sequential steps are absent from the commit window. Determine whether S10–S15 were skipped intentionally, deferred, executed in a branch not yet merged, or are simply missing. The northstar P1 10→70 headline cannot be treated as complete until this is resolved. Name each step's current status and the next uncommissioned slice.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-07-18",
+        "id": "act-2026-07-18-investigate-5b273d"
+      }
+    ]
+  },
+  {
     "date": "2026-07-17",
     "title": "Thursday's one commit: fixing a Node floor so the morning-cockpit renderer can actually run tests",
     "summary": "A single merged PR on Thursday unblocked morning-cockpit's renderer test suite by correcting the minimum Node version required by the jsdom environment.",
