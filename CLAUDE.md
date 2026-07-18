@@ -59,6 +59,7 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 - **ADR-0036** (`decisions/adr/0036-structured-decision-output-for-rich-ui.md`) — Structured decision output for rich UI
 - **ADR-0036** (core #45) — Also codifies the lock-file-rebuild protocol as a two-gate CI requirement (unmerged — still a PR in core)
 - **ADR-0038** — Editorial revision CI workflow (verified end-to-end on PR #112)
+- **ADR-0098** — Two-track skill telemetry: use-funnel and evolution stream never blend (accepted 2026-07-18)
 
 ## System model (OPM pilot — ADR-0039)
 
