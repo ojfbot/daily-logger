@@ -1,5 +1,29 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Review and merge morning-cockpit #34 (S8 read-side: derive decided-in-flight from closes: refs). Run `pnpm test` first — this is the declared entrance check for the slice. The write-side (PRs #32, #33) is already merged; #34 completes the decision→delivery seam. Agent-eligible: no design judgment required, automated check is sufficient.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-07-18",
+    "id": "act-2026-07-18-pr-review-d12996"
+  },
+  {
+    "command": "/adr",
+    "description": "Write an ADR in core formalising the single-reconciler-writer pattern established in S4 (commit f501b25): declare that core's own reconciler is the only sanctioned writer to the northstar ledger, name the failure mode of dual writers (duplicate ledger entries), and specify the enforcement mechanism. S4's commit message documents the RCA; no durable ADR captures it. Without it, the next engineer to add a write path will repeat the same race condition.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-07-18",
+    "id": "act-2026-07-18-adr-6233b8"
+  },
+  {
+    "command": "/investigate",
+    "description": "Audit S10–S15 registration status: Friday committed S1–S9 and S16–S17 but six sequential steps are absent from the commit window. Determine whether S10–S15 were skipped intentionally, deferred, executed in a branch not yet merged, or are simply missing. The northstar P1 10→70 headline cannot be treated as complete until this is resolved. Name each step's current status and the next uncommissioned slice.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-07-18",
+    "id": "act-2026-07-18-investigate-5b273d"
+  },
+  {
     "command": "/investigate",
     "description": "Audit the Notion relay handoff TTL for northstar confirmations: determine the maximum window between voice-confirmation and registry landing before an entry is at risk of being lost. BlogEngine #58's 17-day orphan window is the reference case. Document the safe window and whether an automated pickup exists.",
     "repo": "BlogEngine",

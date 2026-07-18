@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 50
+    "count": 51
   },
   {
     "name": "ci-cd",
@@ -12,7 +12,7 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 37
+    "count": 38
   },
   {
     "name": "shell",
@@ -22,7 +22,7 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 34
+    "count": 35
   },
   {
     "name": "module-federation",
@@ -32,7 +32,7 @@
   {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 23
+    "count": 24
   },
   {
     "name": "rest-day",
@@ -40,19 +40,19 @@
     "count": 21
   },
   {
-    "name": "phase-1",
-    "type": "phase",
-    "count": 20
-  },
-  {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 19
+    "count": 20
   },
   {
     "name": "adr",
     "type": "practice",
-    "count": 19
+    "count": 20
+  },
+  {
+    "name": "phase-1",
+    "type": "phase",
+    "count": 20
   },
   {
     "name": "hardening",
@@ -85,6 +85,11 @@
     "count": 11
   },
   {
+    "name": "sprint",
+    "type": "concept",
+    "count": 10
+  },
+  {
     "name": "security-as-emergent-ux",
     "type": "concept",
     "count": 10
@@ -93,11 +98,6 @@
     "name": "landing",
     "type": "repo",
     "count": 10
-  },
-  {
-    "name": "sprint",
-    "type": "concept",
-    "count": 9
   },
   {
     "name": "cleanup",
@@ -160,6 +160,11 @@
     "count": 6
   },
   {
+    "name": "morning-cockpit",
+    "type": "repo",
+    "count": 5
+  },
+  {
     "name": "adr-registry",
     "type": "concept",
     "count": 5
@@ -173,11 +178,6 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
-  },
-  {
-    "name": "morning-cockpit",
-    "type": "repo",
-    "count": 4
   },
   {
     "name": "phase-9",
@@ -220,6 +220,16 @@
     "count": 4
   },
   {
+    "name": "skill-telemetry",
+    "type": "concept",
+    "count": 3
+  },
+  {
+    "name": "verification-flagged",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "generation-failed",
     "type": "concept",
     "count": 3
@@ -248,16 +258,6 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
-  },
-  {
-    "name": "verification-flagged",
-    "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "skill-telemetry",
-    "type": "concept",
-    "count": 2
   },
   {
     "name": "build",
@@ -378,6 +378,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "opav",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "esm-compatibility",
