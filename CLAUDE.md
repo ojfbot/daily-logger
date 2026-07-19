@@ -39,7 +39,7 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 |---|---|
 | `src/index.ts` | Entry point — orchestrates collect → generate → write |
 | `src/collect-context.ts` | GitHub API sweep via `gh` CLI |
-| `src/collect-telemetry.ts` | Aggregates skill usage from `~/selfco/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources |
+| `src/collect-telemetry.ts` | Aggregates skill usage from `~/selfco/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources; two-track architecture per ADR-0098 (use-funnel and evolution stream never blend) |
 | `src/generate-article.ts` | Claude API call + prompt, JSON → markdown (includes dedicated skill telemetry section) |
 | `src/schema.ts` | Zod schemas + validation (ArticleDataSchema/ArticleDataV2, TypedTagSchema, ShipmentEntrySchema, DecisionEntrySchema, ActionItemSchema, ClosedActionSchema, CodeReferenceSchema, StructuredArticleSchema; `actionId`, `validateArticleOutput`, `getValidationErrors`) |
 | `src/types.ts` | Shared TypeScript types (BlogContext, GeneratedArticle, CommitInfo, PR/issue infos, Persona, cleaner types) |
