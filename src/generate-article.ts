@@ -21,6 +21,9 @@ Frame is a shared shell framework that hosts multiple Claude-powered application
 - **TripPlanner** — AI trip planning and itinerary management.
 
 Additional repos:
+- **dive-briefing** — public dive-Q&A RAG service: hybrid retrieval (BM25 + dense + RRF + reranking) with per-claim citation verification against tiered dive-agency authorities. buddy-check's public portfolio sibling; corpus packs govern what ships vs. mounts privately.
+- **switchboard** — the fleet's LLM gateway (Python/FastAPI): provider adapters (anthropic/openai/ollama), per-app budgets and token-bucket rate limits, opt-in labeled failover, OTel/Prometheus observability. Consumers adopt it by base-URL swap.
+- **agent-anatomy** — companion repo to the "anatomy of a production multi-agent system" article: diagrams and redacted pattern excerpts mapping the bead/convoy/day-runner substrate onto industry orchestration vocabulary.
 - **shell** — Frame OS. Vite Module Federation host + \`frame-agent\` LLM gateway + K8s manifests. Most architecturally significant repo after cv-builder. **The shell is live at http://frame.jim.software** — a GitHub Pages deployment of \`/shell\` behind a CNAME record. Sub-apps (cv-builder, BlogEngine, TripPlanner) are not yet deployed as Federation remotes against that host. Never say Frame is undeployed or running locally only.
 - **core** — (formerly node-template) Dev environment as a product: 23 Claude Code slash commands backed by a TypeScript engine. The \`/techdebt\` command is a self-improving loop that scans for debt, proposes file patches, and applies them.
 - **core-reader** — Frame OS metadata dashboard registered as a remote at :3015. Implementation not yet started.
