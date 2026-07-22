@@ -13,23 +13,32 @@ Cron Firing triggers Article Generating. [src: .github/workflows/daily-blog.yml]
 Article Generating yields Article. [src: src/index.ts]
 
 Jim handles Editorial Accepting. [src: .github/workflows/editorial-revise.yml]
-Editorial Accepting changes Article from draft to accepted.
+Editorial Accepting changes Article from draft to accepted. [src: packages/frontend/src/utils/stampDraft.ts]
 
 API Building requires Article. [src: src/build-api.ts]
 API Building yields JSON API.
 
 Frontend Rendering requires JSON API. [src: packages/frontend]
+Frontend Rendering yields Rendered Site.
 
 ## SD1.1 — Article Generating in-zoom
 
-Article Generating zooms into Context Collecting, Telemetry Collecting, Drafting, and Claim Verifying. [src: src/index.ts]
+Article Generating zooms into Context Collecting, Drafting, Council Reviewing, Synthesizing, and Claim Verifying. [src: src/index.ts]
 Context Collecting requires GitHub. [src: src/collect-context.ts]
+Context Collecting invokes Telemetry Collecting. [src: src/collect-context.ts]
 Context Collecting yields Commit Context.
 Telemetry Collecting yields Telemetry Digest. [src: src/collect-telemetry.ts]
 Drafting requires Claude API. [src: src/generate-article.ts]
-Drafting consumes Commit Context.
-Drafting consumes Telemetry Digest.
+Drafting requires Commit Context.
+Drafting requires Telemetry Digest.
 Drafting yields Article.
+Council Reviewing requires Claude API. [src: src/index.ts]
+Council Reviewing requires Article.
+Council Reviewing yields Council Critiques.
+Synthesizing requires Claude API. [src: src/index.ts]
+Synthesizing consumes Council Critiques.
+Synthesizing affects Article.
 Claim Verifying requires Article. [src: src/verify-claims.ts]
 Claim Verifying requires Commit Context.
 Claim Verifying yields Claim Report.
+Claim Verifying affects Article. [src: src/index.ts]
