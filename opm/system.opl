@@ -1,0 +1,35 @@
+# daily-logger — Object-Process model (OJF-OPL v0.1, ADR-0039; profile: core domain-knowledge/opm-modeling.md)
+# Descriptive only. One fact per line. Regenerate system.md with /opm render after editing.
+
+## SD — daily-logger: one article per day
+
+Jim is physical.
+GitHub is environmental.
+Claude API is environmental.
+Article can be draft, accepted, or rejected. [src: src/schema.ts]
+Draft is initial.
+
+Cron Firing triggers Article Generating. [src: .github/workflows/daily-blog.yml]
+Article Generating yields Article. [src: src/index.ts]
+
+Jim handles Editorial Accepting. [src: .github/workflows/editorial-revise.yml]
+Editorial Accepting changes Article from draft to accepted.
+
+API Building requires Article. [src: src/build-api.ts]
+API Building yields JSON API.
+
+Frontend Rendering requires JSON API. [src: packages/frontend]
+
+## SD1.1 — Article Generating in-zoom
+
+Article Generating zooms into Context Collecting, Telemetry Collecting, Drafting, and Claim Verifying. [src: src/index.ts]
+Context Collecting requires GitHub. [src: src/collect-context.ts]
+Context Collecting yields Commit Context.
+Telemetry Collecting yields Telemetry Digest. [src: src/collect-telemetry.ts]
+Drafting requires Claude API. [src: src/generate-article.ts]
+Drafting consumes Commit Context.
+Drafting consumes Telemetry Digest.
+Drafting yields Article.
+Claim Verifying requires Article. [src: src/verify-claims.ts]
+Claim Verifying requires Commit Context.
+Claim Verifying yields Claim Report.
