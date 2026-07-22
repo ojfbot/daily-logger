@@ -60,6 +60,14 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 - **ADR-0036** (core #45) — Also codifies the lock-file-rebuild protocol as a two-gate CI requirement (unmerged — still a PR in core)
 - **ADR-0038** — Editorial revision CI workflow (verified end-to-end on PR #112)
 
+## System model (OPM pilot — ADR-0039)
+
+`opm/system.opl` is a controlled-English Object-Process model of the pipeline (OJF-OPL profile,
+defined in core `domain-knowledge/opm-modeling.md`), with a Mermaid rendering in `opm/system.md`.
+One fact per line, `[src:]`-anchored. If you change what a pipeline step consumes, yields, or
+requires — or add/remove a step — update the model in the same PR (edit `system.opl`, then
+regenerate `system.md` via core's `/opm render`). Shadow-mode only: nothing gates on it.
+
 ## Adding new repos to the sweep
 
 Edit the `REPOS` array in `src/collect-context.ts`. The sweep is additive — adding a repo costs one batch of `gh api` calls per run.
