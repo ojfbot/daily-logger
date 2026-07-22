@@ -196,6 +196,8 @@ const KNOWN_REPOS = new Set([
   // + the four repos registered after the outage audit.
   'selfco-box',
   'f1-pit-wall', 'f1-substrate', 'lofi-beaver', 'golf-platform-scripts',
+  // Added 2026-07-22: portfolio-first gap-closers (dive-briefing / switchboard / agent-anatomy).
+  'dive-briefing', 'switchboard', 'agent-anatomy',
 ])
 
 // ─── Tag type inference for v1 articles ─────────────────────────────────────
@@ -213,6 +215,8 @@ const TAG_TYPE_MAP: Record<string, string> = {
   'selfco-box': 'repo',
   'f1-pit-wall': 'repo', 'f1-substrate': 'repo', 'lofi-beaver': 'repo',
   'golf-platform-scripts': 'repo',
+  // Added 2026-07-22 alongside KNOWN_REPOS additions.
+  'dive-briefing': 'repo', 'switchboard': 'repo', 'agent-anatomy': 'repo',
   'module-federation': 'arch', 'container-presenter': 'arch', 'frame-agent': 'arch',
   'frame-os': 'arch', 'architecture': 'arch',
   'ci-cd': 'practice', 'visual-regression': 'practice', 'adr': 'practice',

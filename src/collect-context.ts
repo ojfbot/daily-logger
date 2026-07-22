@@ -37,6 +37,10 @@ const REPOS = [
   'f1-substrate',      // F1 telemetry substrate — DuckDB FastF1 store, gap algorithm, FastAPI query layer
   'lofi-beaver',       // Willow Bend story-world — 1-bit isometric game, Blender sprite pipeline
   'golf-platform-scripts', // golf platform automation scripts
+  // Added 2026-07-22: portfolio-first gap-closer repos (operator sitting; core PR #249).
+  'dive-briefing',     // public dive-Q&A RAG service — hybrid retrieval + citation verification (buddy-check's public sibling)
+  'switchboard',       // fleet LLM gateway — provider adapters, per-app budgets, opt-in labeled failover
+  'agent-anatomy',     // anatomy of the fleet's multi-agent system — diagrams + pattern excerpts (article companion)
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
