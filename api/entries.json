@@ -1,5 +1,146 @@
 [
   {
+    "date": "2026-07-23",
+    "title": "Wednesday's OPM pilot, /fleet-onboard, and the F1 learning studio wayfinder map",
+    "summary": "Twenty-eight commits across seven repos advanced the OPM inspectability layer, launched /fleet-onboard for fleet reconciliation, and chartered the F1 learning studio wayfinder map.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "switchboard",
+        "type": "repo"
+      },
+      {
+        "name": "dive-briefing",
+        "type": "repo"
+      },
+      {
+        "name": "agent-anatomy",
+        "type": "repo"
+      },
+      {
+        "name": "opm-inspectability",
+        "type": "concept"
+      },
+      {
+        "name": "wayfinder",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-onboard",
+        "type": "concept"
+      },
+      {
+        "name": "skill-telemetry",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "morning-cockpit",
+      "switchboard",
+      "dive-briefing",
+      "agent-anatomy"
+    ],
+    "commitCount": 28,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "OJF-OPL: process models as committed artifacts, not prose ADRs",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "/wayfinder: file-canonical decision maps upstream of the roadmap spine",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "/fleet-onboard: drift reconcile as a first-class slash command",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "OPM pilot in daily-logger: cross-repo evidence base for ADR-0102",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "morning-cockpit ADR-0015: System Map pane as OPM render surface",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Review and merge switchboard #1 (S1: FastAPI proxy core — Anthropic adapter, byte-for-byte SSE passthrough). 16 tests green, human gate only. Advances ns:l1-switchboard#P1 from 0→30. Start here — cleanest merge in the queue, no design judgment required.",
+        "repo": "switchboard",
+        "status": "open",
+        "sourceDate": "2026-07-23",
+        "id": "act-2026-07-23-pr-review-9605d8"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Review and merge dive-briefing #1 (S1: port the hybrid retriever behind the corpus-pack seam). 28 tests green, human gate only. Advances ns:l1-dive-briefing#P3 from 0→40.",
+        "repo": "dive-briefing",
+        "status": "open",
+        "sourceDate": "2026-07-23",
+        "id": "act-2026-07-23-pr-review-263e4f"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Review and merge morning-cockpit #34 (S8 read-side: derive decided-in-flight from closes: refs). Write-side (#32, #33) already merged; this completes the decision→delivery seam. Entrance check: pnpm test.",
+        "repo": "morning-cockpit",
+        "status": "open",
+        "sourceDate": "2026-07-23",
+        "id": "act-2026-07-23-pr-review-33bd9b"
+      },
+      {
+        "command": "/grill-with-docs",
+        "description": "Run on core #258 (root decision: does every learning unit yield a publishable artifact?). Operator-confirmed direction is both-coupled 50/50 — grilling converts that confirmation into a durable decision record. Every other issue in #257–#265 is blocked behind this.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-07-23",
+        "id": "act-2026-07-23-grill-with-docs-a6778a"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Review and merge morning-cockpit #37 (fleet reconcile: 14 missing active repos). Mechanical output of the first /fleet-onboard reconcile run — no design judgment required. Unblocks accurate fleet-card state and closes the manifest drift surfaced by this session.",
+        "repo": "morning-cockpit",
+        "status": "open",
+        "sourceDate": "2026-07-23",
+        "id": "act-2026-07-23-pr-review-2c75ad"
+      }
+    ]
+  },
+  {
     "date": "2026-07-18",
     "title": "Friday's honest loop sprint: 17 core commits wire the OPAV measurement spine through S1–S17",
     "summary": "Friday's 29-commit sprint bootstrapped the honest skill-telemetry loop S1–S17, shipped the Loop pane as a live read-model, and accepted ADR-0098 formalising two-track telemetry architecture.",
