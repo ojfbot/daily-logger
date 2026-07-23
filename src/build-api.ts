@@ -200,6 +200,8 @@ const KNOWN_REPOS = new Set([
   'dive-briefing', 'switchboard', 'agent-anatomy',
   // Added 2026-07-22 (fleet-onboard reconcile).
   'buddy-check', 'silicon-empires', 'f1-press-room', 'bldgblog-corpus', 'gastown-pilot', 'frame-ui-components', 'workstation-yuri', 'virtualLight',
+  // Added 2026-07-23: geospatial track (fleet-onboard).
+  'mirrorworld',
 ])
 
 // ─── Tag type inference for v1 articles ─────────────────────────────────────
@@ -224,6 +226,8 @@ const TAG_TYPE_MAP: Record<string, string> = {
   // 'frame-ui-components' is intentionally classified 'infra' below, not 'repo':
   // although a fleet repo exists, article tag arrays use it as an infra/topic tag
   // (alongside shared-components, module-federation, ci-cd). See TS1117 fix 2026-07-23.
+  // Added 2026-07-23 alongside KNOWN_REPOS addition (fleet-onboard).
+  'mirrorworld': 'repo',
   'module-federation': 'arch', 'container-presenter': 'arch', 'frame-agent': 'arch',
   'frame-os': 'arch', 'architecture': 'arch',
   'ci-cd': 'practice', 'visual-regression': 'practice', 'adr': 'practice',

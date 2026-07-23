@@ -50,6 +50,8 @@ const REPOS = [
   'frame-ui-components', // shared Carbon DS component library for Frame sub-apps
   'workstation-yuri',    // macOS workstation automation — Focus modes, wallpapers, launcher registrations
   'virtualLight',     // book-to-cinema pipeline — deterministic passage extraction + cinematography-styled video prompts (revived 2026-07-23; Gibson corpus private, public-domain demo)
+  // Added 2026-07-23: geospatial track (fleet-onboard alongside core registration PR #270).
+  'mirrorworld',      // real places as explorable three.js scenes — earth bundles (3DEP/imagery/OSM) + golf digital twin (apps/fairway); Bilawal Sidhu mentor corpus
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────

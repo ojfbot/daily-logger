@@ -21,6 +21,7 @@ Frame is a shared shell framework that hosts multiple Claude-powered application
 - **TripPlanner** — AI trip planning and itinerary management.
 
 Additional repos:
+- **mirrorworld** — geospatial intelligence track: real places as explorable three.js scenes (earth data bundles from 3DEP/orthoimagery/OSM + heightfield rendering); first consumer is the apps/fairway golf-course digital twin reviving the gcgcca lineage; frontier phase (gaussian splats, photorealistic 3D tiles, satellite-to-3D) follows the Bilawal Sidhu mentor corpus.
 - **buddy-check** — SME-calibrated dive-storefront Q&A + eval harness — judge calibration, standards-grounded hybrid RAG lab.
 - **silicon-empires** — AoE-style RTS of the AI-infrastructure complex — queues, capital, energy, silicon.
 - **f1-press-room** — F1 teaching studio — claim-checked articles + shorts consuming the f1 pair's export seam.
