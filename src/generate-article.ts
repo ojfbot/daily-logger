@@ -28,6 +28,7 @@ Additional repos:
 - **gastown-pilot** — Gas Town 6-tab coordination dashboard — reads the bead store.
 - **frame-ui-components** — shared Carbon DS component library for Frame sub-apps.
 - **workstation-yuri** — macOS workstation automation — Focus modes, wallpapers, launcher registrations.
+- **virtualLight** — book-to-cinema pipeline — deterministic passage extraction + cinematography-styled video prompts (revived 2026-07-23; Gibson corpus private, public-domain demo).
 - **dive-briefing** — public dive-Q&A RAG service: hybrid retrieval (BM25 + dense + RRF + reranking) with per-claim citation verification against tiered dive-agency authorities. buddy-check's public portfolio sibling; corpus packs govern what ships vs. mounts privately.
 - **switchboard** — the fleet's LLM gateway (Python/FastAPI): provider adapters (anthropic/openai/ollama), per-app budgets and token-bucket rate limits, opt-in labeled failover, OTel/Prometheus observability. Consumers adopt it by base-URL swap.
 - **agent-anatomy** — companion repo to the "anatomy of a production multi-agent system" article: diagrams and redacted pattern excerpts mapping the bead/convoy/day-runner substrate onto industry orchestration vocabulary.

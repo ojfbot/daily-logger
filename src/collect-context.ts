@@ -49,6 +49,7 @@ const REPOS = [
   'gastown-pilot',       // Gas Town 6-tab coordination dashboard — reads the bead store
   'frame-ui-components', // shared Carbon DS component library for Frame sub-apps
   'workstation-yuri',    // macOS workstation automation — Focus modes, wallpapers, launcher registrations
+  'virtualLight',     // book-to-cinema pipeline — deterministic passage extraction + cinematography-styled video prompts (revived 2026-07-23; Gibson corpus private, public-domain demo)
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
