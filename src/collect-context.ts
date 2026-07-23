@@ -41,6 +41,14 @@ const REPOS = [
   'dive-briefing',     // public dive-Q&A RAG service — hybrid retrieval + citation verification (buddy-check's public sibling)
   'switchboard',       // fleet LLM gateway — provider adapters, per-app budgets, opt-in labeled failover
   'agent-anatomy',     // anatomy of the fleet's multi-agent system — diagrams + pattern excerpts (article companion)
+  // Added 2026-07-22 (fleet-onboard reconcile): active repos the sweep had drifted past.
+  'buddy-check',         // SME-calibrated dive-storefront Q&A + eval harness — judge calibration, standards-grounded hybrid RAG lab
+  'silicon-empires',     // AoE-style RTS of the AI-infrastructure complex — queues, capital, energy, silicon
+  'f1-press-room',       // F1 teaching studio — claim-checked articles + shorts consuming the f1 pair's export seam
+  'bldgblog-corpus',     // deterministic BLDGBLOG archive ingest (2,512 posts) — annotated corpus + selfco deposit-library collection #1
+  'gastown-pilot',       // Gas Town 6-tab coordination dashboard — reads the bead store
+  'frame-ui-components', // shared Carbon DS component library for Frame sub-apps
+  'workstation-yuri',    // macOS workstation automation — Focus modes, wallpapers, launcher registrations
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
