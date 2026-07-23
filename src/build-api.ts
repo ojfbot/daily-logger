@@ -198,6 +198,8 @@ const KNOWN_REPOS = new Set([
   'f1-pit-wall', 'f1-substrate', 'lofi-beaver', 'golf-platform-scripts',
   // Added 2026-07-22: portfolio-first gap-closers (dive-briefing / switchboard / agent-anatomy).
   'dive-briefing', 'switchboard', 'agent-anatomy',
+  // Added 2026-07-22 (fleet-onboard reconcile).
+  'buddy-check', 'silicon-empires', 'f1-press-room', 'bldgblog-corpus', 'gastown-pilot', 'frame-ui-components', 'workstation-yuri',
 ])
 
 // ─── Tag type inference for v1 articles ─────────────────────────────────────
@@ -217,6 +219,8 @@ const TAG_TYPE_MAP: Record<string, string> = {
   'golf-platform-scripts': 'repo',
   // Added 2026-07-22 alongside KNOWN_REPOS additions.
   'dive-briefing': 'repo', 'switchboard': 'repo', 'agent-anatomy': 'repo',
+  // Added 2026-07-22 (fleet-onboard reconcile).
+  'buddy-check': 'repo', 'silicon-empires': 'repo', 'f1-press-room': 'repo', 'bldgblog-corpus': 'repo', 'gastown-pilot': 'repo', 'frame-ui-components': 'repo', 'workstation-yuri': 'repo',
   'module-federation': 'arch', 'container-presenter': 'arch', 'frame-agent': 'arch',
   'frame-os': 'arch', 'architecture': 'arch',
   'ci-cd': 'practice', 'visual-regression': 'practice', 'adr': 'practice',

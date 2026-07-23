@@ -21,6 +21,13 @@ Frame is a shared shell framework that hosts multiple Claude-powered application
 - **TripPlanner** — AI trip planning and itinerary management.
 
 Additional repos:
+- **buddy-check** — SME-calibrated dive-storefront Q&A + eval harness — judge calibration, standards-grounded hybrid RAG lab.
+- **silicon-empires** — AoE-style RTS of the AI-infrastructure complex — queues, capital, energy, silicon.
+- **f1-press-room** — F1 teaching studio — claim-checked articles + shorts consuming the f1 pair's export seam.
+- **bldgblog-corpus** — deterministic BLDGBLOG archive ingest (2,512 posts) — annotated corpus + selfco deposit-library collection #1.
+- **gastown-pilot** — Gas Town 6-tab coordination dashboard — reads the bead store.
+- **frame-ui-components** — shared Carbon DS component library for Frame sub-apps.
+- **workstation-yuri** — macOS workstation automation — Focus modes, wallpapers, launcher registrations.
 - **dive-briefing** — public dive-Q&A RAG service: hybrid retrieval (BM25 + dense + RRF + reranking) with per-claim citation verification against tiered dive-agency authorities. buddy-check's public portfolio sibling; corpus packs govern what ships vs. mounts privately.
 - **switchboard** — the fleet's LLM gateway (Python/FastAPI): provider adapters (anthropic/openai/ollama), per-app budgets and token-bucket rate limits, opt-in labeled failover, OTel/Prometheus observability. Consumers adopt it by base-URL swap.
 - **agent-anatomy** — companion repo to the "anatomy of a production multi-agent system" article: diagrams and redacted pattern excerpts mapping the bead/convoy/day-runner substrate onto industry orchestration vocabulary.
