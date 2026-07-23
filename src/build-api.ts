@@ -220,7 +220,10 @@ const TAG_TYPE_MAP: Record<string, string> = {
   // Added 2026-07-22 alongside KNOWN_REPOS additions.
   'dive-briefing': 'repo', 'switchboard': 'repo', 'agent-anatomy': 'repo',
   // Added 2026-07-22 (fleet-onboard reconcile).
-  'buddy-check': 'repo', 'silicon-empires': 'repo', 'f1-press-room': 'repo', 'bldgblog-corpus': 'repo', 'gastown-pilot': 'repo', 'frame-ui-components': 'repo', 'workstation-yuri': 'repo', 'virtualLight': 'repo', 'virtuallight': 'repo',
+  'buddy-check': 'repo', 'silicon-empires': 'repo', 'f1-press-room': 'repo', 'bldgblog-corpus': 'repo', 'gastown-pilot': 'repo', 'workstation-yuri': 'repo', 'virtualLight': 'repo', 'virtuallight': 'repo',
+  // 'frame-ui-components' is intentionally classified 'infra' below, not 'repo':
+  // although a fleet repo exists, article tag arrays use it as an infra/topic tag
+  // (alongside shared-components, module-federation, ci-cd). See TS1117 fix 2026-07-23.
   'module-federation': 'arch', 'container-presenter': 'arch', 'frame-agent': 'arch',
   'frame-os': 'arch', 'architecture': 'arch',
   'ci-cd': 'practice', 'visual-regression': 'practice', 'adr': 'practice',
