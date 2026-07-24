@@ -25,6 +25,7 @@ Additional repos:
 - **buddy-check** — SME-calibrated dive-storefront Q&A + eval harness — judge calibration, standards-grounded hybrid RAG lab.
 - **silicon-empires** — AoE-style RTS of the AI-infrastructure complex — queues, capital, energy, silicon.
 - **f1-press-room** — F1 teaching studio — claim-checked articles + shorts consuming the f1 pair's export seam.
+- **f1-doctrine** — RAQG "question layer" for the F1 stack: a tiered doctrine corpus (FIA regs, strategist interviews, academic strategy papers) + retriever that suggests *which* strategist questions to ask, each bound to an f1-substrate call. It never computes or emits numbers — that stays with f1-substrate. Early work is corpus curation and pipeline scaffolding, not model output.
 - **bldgblog-corpus** — deterministic BLDGBLOG archive ingest (2,512 posts) — annotated corpus + selfco deposit-library collection #1.
 - **gastown-pilot** — Gas Town 6-tab coordination dashboard — reads the bead store.
 - **frame-ui-components** — shared Carbon DS component library for Frame sub-apps.
