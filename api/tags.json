@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 52
+    "count": 53
   },
   {
     "name": "ci-cd",
@@ -15,14 +15,14 @@
     "count": 39
   },
   {
-    "name": "shell",
+    "name": "core",
     "type": "repo",
     "count": 37
   },
   {
-    "name": "core",
+    "name": "shell",
     "type": "repo",
-    "count": 36
+    "count": 37
   },
   {
     "name": "module-federation",
@@ -75,14 +75,14 @@
     "count": 13
   },
   {
-    "name": "beaverGame",
-    "type": "repo",
+    "name": "sprint",
+    "type": "concept",
     "count": 12
   },
   {
-    "name": "sprint",
-    "type": "concept",
-    "count": 11
+    "name": "beaverGame",
+    "type": "repo",
+    "count": 12
   },
   {
     "name": "gas-town",
@@ -110,13 +110,18 @@
     "count": 9
   },
   {
+    "name": "BlogEngine",
+    "type": "concept",
+    "count": 8
+  },
+  {
     "name": "core-reader",
     "type": "repo",
     "count": 8
   },
   {
-    "name": "BlogEngine",
-    "type": "concept",
+    "name": "morning-cockpit",
+    "type": "repo",
     "count": 7
   },
   {
@@ -148,11 +153,6 @@
     "name": "frame-agent",
     "type": "arch",
     "count": 7
-  },
-  {
-    "name": "morning-cockpit",
-    "type": "repo",
-    "count": 6
   },
   {
     "name": "ojfbot",
@@ -258,6 +258,26 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "switchboard",
+    "type": "repo",
+    "count": 2
+  },
+  {
+    "name": "dive-briefing",
+    "type": "repo",
+    "count": 2
+  },
+  {
+    "name": "stacked-prs",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "wayfinder",
+    "type": "concept",
+    "count": 2
   },
   {
     "name": "build",
@@ -380,13 +400,43 @@
     "count": 2
   },
   {
-    "name": "switchboard",
+    "name": "silicon-empires",
     "type": "repo",
     "count": 1
   },
   {
-    "name": "dive-briefing",
+    "name": "mirrorworld",
     "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "virtualLight",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "golden-rebake",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "sse-passthrough",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "3dep-terrain",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "session-replay",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "loading-discipline",
+    "type": "concept",
     "count": 1
   },
   {
@@ -396,11 +446,6 @@
   },
   {
     "name": "opm-inspectability",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "wayfinder",
     "type": "concept",
     "count": 1
   },
@@ -475,11 +520,6 @@
     "count": 1
   },
   {
-    "name": "stacked-prs",
-    "type": "concept",
-    "count": 1
-  },
-  {
     "name": "shadow-mode",
     "type": "concept",
     "count": 1
@@ -536,7 +576,7 @@
   },
   {
     "name": "workstation-yuri",
-    "type": "concept",
+    "type": "repo",
     "count": 1
   },
   {
@@ -741,7 +781,7 @@
   },
   {
     "name": "gastown-pilot",
-    "type": "concept",
+    "type": "repo",
     "count": 1
   },
   {
