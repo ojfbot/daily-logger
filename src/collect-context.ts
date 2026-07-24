@@ -52,6 +52,8 @@ const REPOS = [
   'virtualLight',     // book-to-cinema pipeline — deterministic passage extraction + cinematography-styled video prompts (revived 2026-07-23; Gibson corpus private, public-domain demo)
   // Added 2026-07-23: geospatial track (fleet-onboard alongside core registration PR #270).
   'mirrorworld',      // real places as explorable three.js scenes — earth bundles (3DEP/imagery/OSM) + golf digital twin (apps/fairway); Bilawal Sidhu mentor corpus
+  // Added 2026-07-24: RAQG question layer for the F1 stack (fleet-onboard).
+  'f1-doctrine',      // doctrine corpus + retriever suggesting strategist questions bound to f1-substrate calls; never computes numbers
 ]
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
