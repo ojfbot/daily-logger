@@ -1,5 +1,134 @@
 [
   {
+    "date": "2026-07-24",
+    "title": "Thursday's sprint: silicon-empires closes 13 PRs, switchboard goes live, and mirrorworld renders Mount Rainier",
+    "summary": "Sixty-seven commits across nine repos — silicon-empires' claim system merged in four stacked PRs, switchboard shipped its first FastAPI proxy, and mirrorworld rendered real 3DEP terrain as a three.js heightfield.",
+    "tags": [
+      {
+        "name": "silicon-empires",
+        "type": "repo"
+      },
+      {
+        "name": "mirrorworld",
+        "type": "repo"
+      },
+      {
+        "name": "switchboard",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "virtualLight",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "BlogEngine",
+        "type": "concept"
+      },
+      {
+        "name": "dive-briefing",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "stacked-prs",
+        "type": "concept"
+      },
+      {
+        "name": "golden-rebake",
+        "type": "concept"
+      },
+      {
+        "name": "wayfinder",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "sse-passthrough",
+        "type": "concept"
+      },
+      {
+        "name": "3dep-terrain",
+        "type": "concept"
+      },
+      {
+        "name": "session-replay",
+        "type": "concept"
+      },
+      {
+        "name": "loading-discipline",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "silicon-empires",
+      "switchboard",
+      "mirrorworld",
+      "virtualLight",
+      "dive-briefing",
+      "morning-cockpit",
+      "core",
+      "BlogEngine"
+    ],
+    "commitCount": 39,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Silicon-empires: stacked PRs with deliberate golden re-bakes as a first-class pattern",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Playlog born from the first human playthrough — telemetry closes the loop for agents",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Switchboard S1: byte-for-byte SSE passthrough as the consumer-adoption contract",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Mirrorworld: real USGS elevation data as the first rendered artifact, not synthetic terrain",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Core wayfinder: six grilling questions filed before any ADRs are written",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "BlogEngine ADR-0081 rollout: 63% always-loaded token reduction per repo per cycle",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-07-23",
     "title": "Wednesday's OPM pilot, /fleet-onboard, and the F1 learning studio wayfinder map",
     "summary": "Twenty-eight commits across seven repos advanced the OPM inspectability layer, launched /fleet-onboard for fleet reconciliation, and chartered the F1 learning studio wayfinder map.",
@@ -1611,7 +1740,7 @@
       },
       {
         "name": "workstation-yuri",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "module-federation",
@@ -9041,7 +9170,7 @@
       },
       {
         "name": "gastown-pilot",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "scaffold",
