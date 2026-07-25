@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 53
+    "count": 54
   },
   {
     "name": "ci-cd",
@@ -12,12 +12,12 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 39
+    "count": 40
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 37
+    "count": 38
   },
   {
     "name": "shell",
@@ -260,6 +260,11 @@
     "count": 3
   },
   {
+    "name": "f1-pit-wall",
+    "type": "repo",
+    "count": 2
+  },
+  {
     "name": "switchboard",
     "type": "repo",
     "count": 2
@@ -400,6 +405,26 @@
     "count": 2
   },
   {
+    "name": "f1-doctrine",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "question-layer",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "corpus-curation",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "fleet-onboarding",
+    "type": "concept",
+    "count": 1
+  },
+  {
     "name": "silicon-empires",
     "type": "repo",
     "count": 1
@@ -532,11 +557,6 @@
   {
     "name": "vault",
     "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "f1-pit-wall",
-    "type": "repo",
     "count": 1
   },
   {
