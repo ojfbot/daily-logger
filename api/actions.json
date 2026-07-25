@@ -1,5 +1,37 @@
 [
   {
+    "command": "/adr",
+    "description": "Write and commit the ADR formalizing f1-doctrine's compute boundary before merging PR #1. Name the failure mode (doctrine nodes embedding computed values go stale on data refresh and surface as confident wrong suggestions), the enforcement mechanism (no f1-substrate import permitted in the doctrine package), and the seam definition (QuestionNode carries a substrate_call binding field, not a result field). This ADR is a merge prerequisite for S1, not a follow-on — S1 cannot land against a constraint documented only in CONTEXT.md prose.",
+    "repo": "f1-doctrine",
+    "status": "open",
+    "sourceDate": "2026-07-25",
+    "id": "act-2026-07-25-adr-68e2ad"
+  },
+  {
+    "command": "/validate",
+    "description": "Run the S1 phase-keying gate locally and record results as the S2 baseline. Confirm arm A3 (race_progress × stint_position × decision_altitude, no persona filter) outperforms arm A4 (full filter) on the 14 blind-judge scenarios. Record mean delta per arm in docs/gates/2026-07-24-phase-keying-relevance.md. Verify test_race_engineer_is_first_class_but_seed_empty passes. Both are merge prerequisites for PR #1.",
+    "repo": "f1-doctrine",
+    "status": "open",
+    "sourceDate": "2026-07-25",
+    "id": "act-2026-07-25-validate-b047f5"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review and merge f1-doctrine #1 (S1: Registry v1) after the compute-boundary ADR is committed and the /validate gate run is recorded. Confirm all 33 QuestionNodes have a substrate_call binding field, the registry/ directory structure matches the taxonomy v1 axes, and the gate document is present. This PR is the prerequisite for all S2+ slices and for the persona re-rank experiment in issue #2.",
+    "repo": "f1-doctrine",
+    "status": "open",
+    "sourceDate": "2026-07-25",
+    "id": "act-2026-07-25-pr-review-33b3df"
+  },
+  {
+    "command": "/investigate",
+    "description": "Open f1-pit-wall #6 and assess whether the two confirmed data defects are already characterized at the field level. If they are, write corrected nl-query-corpus.json entries and open a fix PR in f1-pit-wall before f1-doctrine S2 uses the registry as a training baseline. If the defects are not yet field-level specific, this is a diagnosis task — update the time estimate accordingly and do not call it a triage.",
+    "repo": "f1-pit-wall",
+    "status": "open",
+    "sourceDate": "2026-07-25",
+    "id": "act-2026-07-25-investigate-afa72f"
+  },
+  {
     "command": "/pr-review",
     "description": "Review and merge switchboard #1 (S1: FastAPI proxy core — Anthropic adapter, byte-for-byte SSE passthrough). 16 tests green, human gate only. Advances ns:l1-switchboard#P1 from 0→30. Start here — cleanest merge in the queue, no design judgment required.",
     "repo": "switchboard",
