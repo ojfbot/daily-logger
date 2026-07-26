@@ -1,5 +1,108 @@
 [
   {
+    "date": "2026-07-26",
+    "title": "Saturday: f1-doctrine S1 lands — the compute boundary holds on first contact",
+    "summary": "f1-doctrine PR #1 merged Saturday, migrating 33 nl-query-corpus entries into a bound question registry while enforcing the doctrine-never-computes boundary in production for the first time.",
+    "tags": [
+      {
+        "name": "f1-doctrine",
+        "type": "repo"
+      },
+      {
+        "name": "f1-pit-wall",
+        "type": "repo"
+      },
+      {
+        "name": "switchboard",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "raqg-not-rag",
+        "type": "concept"
+      },
+      {
+        "name": "compute-boundary",
+        "type": "concept"
+      },
+      {
+        "name": "question-layer",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "silicon-empires",
+      "daily-logger",
+      "f1-doctrine",
+      "f1-pit-wall",
+      "switchboard"
+    ],
+    "commitCount": 11,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "QuestionNode carries a substrate_call binding, never a result",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0003: Seven-value race_progress replaces three-value phase, but stint_position is under test",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Migration surfaced upstream data defects rather than papering over them",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "core TD-006 filed: bead-ledger closure loop as tracked tech debt",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Review and merge core #291 (four northstar status.jsonl appends — data only, no code) and silicon-empires #28 (PH1.5 ledger bookkeeping — no code). Both are zero-risk merges that close named ledger gaps. Combined review time under 10 minutes.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-07-26",
+        "id": "act-2026-07-26-pr-review-e052ee"
+      },
+      {
+        "command": "/validate",
+        "description": "Run the f1-doctrine phase-keying gate against the merged registry/ to confirm all 33 QuestionNodes have valid substrate_call bindings and that the gate document reflects the A3 vs A4 delta recorded in docs/gates/2026-07-24-phase-keying-relevance.md. This establishes the S2 baseline before any node edits land. Expected output: 33/33 nodes pass binding validation; gate delta matches the committed document.",
+        "repo": "f1-doctrine",
+        "status": "open",
+        "sourceDate": "2026-07-26",
+        "id": "act-2026-07-26-validate-29a3ef"
+      },
+      {
+        "command": "/fix-defects",
+        "description": "Apply the field-level fixes characterised in f1-pit-wall PR #6 to nl-query-corpus.json — two entries with malformed substrate_call references need correct endpoint identifiers substituted. Open a correction PR. This is the single action that unblocks f1-doctrine S2.",
+        "repo": "f1-pit-wall",
+        "status": "open",
+        "sourceDate": "2026-07-26",
+        "id": "act-2026-07-26-fix-defects-651aaa"
+      }
+    ]
+  },
+  {
     "date": "2026-07-25",
     "title": "Bootstrapping f1-doctrine: a question layer that deliberately knows nothing about numbers",
     "summary": "Friday brought f1-doctrine from concept to fleet citizen — six commits bootstrapping the repo skeleton, corpus register, taxonomy, and full fleet-wiring across core and daily-logger.",

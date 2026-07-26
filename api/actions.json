@@ -1,5 +1,29 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Review and merge core #291 (four northstar status.jsonl appends — data only, no code) and silicon-empires #28 (PH1.5 ledger bookkeeping — no code). Both are zero-risk merges that close named ledger gaps. Combined review time under 10 minutes.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-07-26",
+    "id": "act-2026-07-26-pr-review-e052ee"
+  },
+  {
+    "command": "/validate",
+    "description": "Run the f1-doctrine phase-keying gate against the merged registry/ to confirm all 33 QuestionNodes have valid substrate_call bindings and that the gate document reflects the A3 vs A4 delta recorded in docs/gates/2026-07-24-phase-keying-relevance.md. This establishes the S2 baseline before any node edits land. Expected output: 33/33 nodes pass binding validation; gate delta matches the committed document.",
+    "repo": "f1-doctrine",
+    "status": "open",
+    "sourceDate": "2026-07-26",
+    "id": "act-2026-07-26-validate-29a3ef"
+  },
+  {
+    "command": "/fix-defects",
+    "description": "Apply the field-level fixes characterised in f1-pit-wall PR #6 to nl-query-corpus.json — two entries with malformed substrate_call references need correct endpoint identifiers substituted. Open a correction PR. This is the single action that unblocks f1-doctrine S2.",
+    "repo": "f1-pit-wall",
+    "status": "open",
+    "sourceDate": "2026-07-26",
+    "id": "act-2026-07-26-fix-defects-651aaa"
+  },
+  {
     "command": "/adr",
     "description": "Write and commit the ADR formalizing f1-doctrine's compute boundary before merging PR #1. Name the failure mode (doctrine nodes embedding computed values go stale on data refresh and surface as confident wrong suggestions), the enforcement mechanism (no f1-substrate import permitted in the doctrine package), and the seam definition (QuestionNode carries a substrate_call binding field, not a result field). This ADR is a merge prerequisite for S1, not a follow-on — S1 cannot land against a constraint documented only in CONTEXT.md prose.",
     "repo": "f1-doctrine",

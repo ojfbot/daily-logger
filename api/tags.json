@@ -7,7 +7,7 @@
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 45
+    "count": 46
   },
   {
     "name": "assistant-centric",
@@ -17,7 +17,7 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 38
+    "count": 39
   },
   {
     "name": "shell",
@@ -225,6 +225,16 @@
     "count": 4
   },
   {
+    "name": "f1-pit-wall",
+    "type": "repo",
+    "count": 3
+  },
+  {
+    "name": "switchboard",
+    "type": "repo",
+    "count": 3
+  },
+  {
     "name": "verification-flagged",
     "type": "concept",
     "count": 3
@@ -260,13 +270,13 @@
     "count": 3
   },
   {
-    "name": "f1-pit-wall",
+    "name": "f1-doctrine",
     "type": "repo",
     "count": 2
   },
   {
-    "name": "switchboard",
-    "type": "repo",
+    "name": "question-layer",
+    "type": "concept",
     "count": 2
   },
   {
@@ -405,12 +415,12 @@
     "count": 2
   },
   {
-    "name": "f1-doctrine",
-    "type": "repo",
+    "name": "raqg-not-rag",
+    "type": "concept",
     "count": 1
   },
   {
-    "name": "question-layer",
+    "name": "compute-boundary",
     "type": "concept",
     "count": 1
   },
