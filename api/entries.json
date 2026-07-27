@@ -1,5 +1,118 @@
 [
   {
+    "date": "2026-07-27",
+    "title": "Sunday rest day: f1-doctrine S1 settles, four PRs audited, and the exact blocker standing between now and S2",
+    "summary": "One commit Sunday — the daily-logger blog post — while Saturday's f1-doctrine S1 merge settles and four open PRs await sequenced triage before S2 can start.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "f1-doctrine",
+        "type": "repo"
+      },
+      {
+        "name": "f1-pit-wall",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "silicon-empires",
+        "type": "repo"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "f1-doctrine"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "f1-doctrine S1 established the compute boundary as a structural constraint, not a convention",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Four open PRs, two are zero-risk bookkeeping — merge sequence matters and here is why",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The critical path from S1 to S2 runs through f1-pit-wall, not f1-doctrine — and the fix PR does not exist yet",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "race_engineer persona is seed-empty: a known corpus gap that must constrain S2 scope before the gate runs",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Issue #4 — 19/33 nodes with zero citation provenance — is a quality concern, not an S2 blocker",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge core #291 (four northstar status.jsonl appends — data only) and silicon-empires #28 (PH1.5 ledger bookkeeping — no code). Both are zero-risk, unblocked, and close named ledger gaps. Combined review time under 10 minutes. Merge these before any structural PRs to keep the ledger current. Then merge core #292 and f1-doctrine #8 (daily-cleaner diffs, independent of each other, no judgment required).",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-07-27",
+        "id": "act-2026-07-27-pr-review-4860c1"
+      },
+      {
+        "command": "/fix-and-pr",
+        "description": "Open the f1-pit-wall fix PR: update the two malformed substrate_call entries in nl-query-corpus.json to reference their correct current substrate function names (both documented in f1-pit-wall PR #6). This PR does not exist yet. Opening and merging it is the single action that unblocks f1-doctrine S2. Estimated effort: under 30 minutes. Do not start S2 gate work until this lands.",
+        "repo": "f1-pit-wall",
+        "status": "open",
+        "sourceDate": "2026-07-27",
+        "id": "act-2026-07-27-fix-and-pr-c6630d"
+      },
+      {
+        "command": "/scope-decision",
+        "description": "Produce a written S2 scope statement resolving two open constraints: (1) race_engineer has 0 seed nodes — decide whether to exclude it from the S2 gate run or inject a minimum seed set first (14 nodes matches strategist; fewer may suffice, but requires checking the re-rank scoring function). (2) Triage issue #4 — identify which of the 19 citation-free nodes appear in the S2 training path and note them in the gate report. Output is a decision, not an investigation. This unblocks S2 experiment design.",
+        "repo": "f1-doctrine",
+        "status": "open",
+        "sourceDate": "2026-07-27",
+        "id": "act-2026-07-27-scope-decision-ac1330"
+      }
+    ]
+  },
+  {
     "date": "2026-07-26",
     "title": "Saturday: f1-doctrine S1 lands — the compute boundary holds on first contact",
     "summary": "f1-doctrine PR #1 merged Saturday, migrating 33 nl-query-corpus entries into a bound question registry while enforcing the doctrine-never-computes boundary in production for the first time.",

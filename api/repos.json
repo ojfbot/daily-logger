@@ -1,22 +1,25 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 95,
-    "totalCommits": 1184,
+    "articleCount": 96,
+    "totalCommits": 1185,
     "relatedTags": [
+      "daily-logger",
       "f1-doctrine",
       "f1-pit-wall",
-      "switchboard",
       "core",
+      "silicon-empires",
+      "rest-day",
+      "assistant-centric",
+      "model-behavior-as-design",
+      "ci-cd",
+      "tooling-for-iteration",
+      "switchboard",
       "raqg-not-rag",
       "compute-boundary",
       "question-layer",
-      "ci-cd",
-      "daily-logger",
       "corpus-curation",
       "fleet-onboarding",
-      "assistant-centric",
-      "silicon-empires",
       "mirrorworld",
       "morning-cockpit",
       "virtualLight",
@@ -34,8 +37,6 @@
       "opm-inspectability",
       "fleet-onboard",
       "skill-telemetry",
-      "model-behavior-as-design",
-      "tooling-for-iteration",
       "adr",
       "opav",
       "verification-flagged",
@@ -43,7 +44,6 @@
       "esm-compatibility",
       "vitest",
       "node-version",
-      "rest-day",
       "phase-9",
       "storybook",
       "shell",
@@ -1419,6 +1419,29 @@
     ]
   },
   {
+    "name": "f1-doctrine",
+    "articleCount": 3,
+    "totalCommits": 19,
+    "relatedTags": [
+      "daily-logger",
+      "f1-doctrine",
+      "f1-pit-wall",
+      "core",
+      "silicon-empires",
+      "rest-day",
+      "assistant-centric",
+      "model-behavior-as-design",
+      "ci-cd",
+      "tooling-for-iteration",
+      "switchboard",
+      "raqg-not-rag",
+      "compute-boundary",
+      "question-layer",
+      "corpus-curation",
+      "fleet-onboarding"
+    ]
+  },
+  {
     "name": "switchboard",
     "articleCount": 3,
     "totalCommits": 78,
@@ -1528,25 +1551,6 @@
       "3dep-terrain",
       "session-replay",
       "loading-discipline"
-    ]
-  },
-  {
-    "name": "f1-doctrine",
-    "articleCount": 2,
-    "totalCommits": 18,
-    "relatedTags": [
-      "f1-doctrine",
-      "f1-pit-wall",
-      "switchboard",
-      "core",
-      "raqg-not-rag",
-      "compute-boundary",
-      "question-layer",
-      "ci-cd",
-      "daily-logger",
-      "corpus-curation",
-      "fleet-onboarding",
-      "assistant-centric"
     ]
   },
   {

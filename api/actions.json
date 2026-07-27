@@ -1,6 +1,30 @@
 [
   {
     "command": "/pr-review",
+    "description": "Merge core #291 (four northstar status.jsonl appends — data only) and silicon-empires #28 (PH1.5 ledger bookkeeping — no code). Both are zero-risk, unblocked, and close named ledger gaps. Combined review time under 10 minutes. Merge these before any structural PRs to keep the ledger current. Then merge core #292 and f1-doctrine #8 (daily-cleaner diffs, independent of each other, no judgment required).",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-07-27",
+    "id": "act-2026-07-27-pr-review-4860c1"
+  },
+  {
+    "command": "/fix-and-pr",
+    "description": "Open the f1-pit-wall fix PR: update the two malformed substrate_call entries in nl-query-corpus.json to reference their correct current substrate function names (both documented in f1-pit-wall PR #6). This PR does not exist yet. Opening and merging it is the single action that unblocks f1-doctrine S2. Estimated effort: under 30 minutes. Do not start S2 gate work until this lands.",
+    "repo": "f1-pit-wall",
+    "status": "open",
+    "sourceDate": "2026-07-27",
+    "id": "act-2026-07-27-fix-and-pr-c6630d"
+  },
+  {
+    "command": "/scope-decision",
+    "description": "Produce a written S2 scope statement resolving two open constraints: (1) race_engineer has 0 seed nodes — decide whether to exclude it from the S2 gate run or inject a minimum seed set first (14 nodes matches strategist; fewer may suffice, but requires checking the re-rank scoring function). (2) Triage issue #4 — identify which of the 19 citation-free nodes appear in the S2 training path and note them in the gate report. Output is a decision, not an investigation. This unblocks S2 experiment design.",
+    "repo": "f1-doctrine",
+    "status": "open",
+    "sourceDate": "2026-07-27",
+    "id": "act-2026-07-27-scope-decision-ac1330"
+  },
+  {
+    "command": "/pr-review",
     "description": "Review and merge core #291 (four northstar status.jsonl appends — data only, no code) and silicon-empires #28 (PH1.5 ledger bookkeeping — no code). Both are zero-risk merges that close named ledger gaps. Combined review time under 10 minutes.",
     "repo": "core",
     "status": "open",
