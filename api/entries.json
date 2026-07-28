@@ -1,5 +1,80 @@
 [
   {
+    "date": "2026-07-28",
+    "title": "mirrorworld lands its first real course: OSM vectors co-registered on Gentle Creek CC",
+    "summary": "Monday's three-PR seam merged USGS imagery, elevation, and 163 OSM vectors onto Gentle Creek CC — mirrorworld's first proven acquisition-to-render pipeline on a live course.",
+    "tags": [
+      {
+        "name": "mirrorworld",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "geospatial",
+        "type": "concept"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "phase-5",
+        "type": "phase"
+      },
+      {
+        "name": "build",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "mirrorworld",
+      "core"
+    ],
+    "commitCount": 5,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "OSM multipolygon assembly fixed before the seam validation gate",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Northstar and roadmap advance in the same PR as the implementation",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Post-merge status as a first-class PR",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Growth posture contract amendment proposed via offsite northstar path",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-07-27",
     "title": "Sunday rest day: f1-doctrine S1 settles, four PRs audited, and the exact blocker standing between now and S2",
     "summary": "One commit Sunday — the daily-logger blog post — while Saturday's f1-doctrine S1 merge settles and four open PRs await sequenced triage before S2 can start.",
