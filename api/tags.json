@@ -2,22 +2,22 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 55
+    "count": 56
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 47
+    "count": 48
+  },
+  {
+    "name": "core",
+    "type": "repo",
+    "count": 41
   },
   {
     "name": "assistant-centric",
     "type": "concept",
     "count": 41
-  },
-  {
-    "name": "core",
-    "type": "repo",
-    "count": 40
   },
   {
     "name": "shell",
@@ -27,7 +27,7 @@
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 34
+    "count": 35
   },
   {
     "name": "tooling-for-iteration",
@@ -230,6 +230,16 @@
     "count": 4
   },
   {
+    "name": "phase-5",
+    "type": "phase",
+    "count": 3
+  },
+  {
+    "name": "build",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "f1-doctrine",
     "type": "repo",
     "count": 3
@@ -275,6 +285,11 @@
     "count": 3
   },
   {
+    "name": "mirrorworld",
+    "type": "repo",
+    "count": 2
+  },
+  {
     "name": "silicon-empires",
     "type": "repo",
     "count": 2
@@ -296,11 +311,6 @@
   },
   {
     "name": "wayfinder",
-    "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "build",
     "type": "concept",
     "count": 2
   },
@@ -365,11 +375,6 @@
     "count": 2
   },
   {
-    "name": "phase-5",
-    "type": "phase",
-    "count": 2
-  },
-  {
     "name": "GroupThink",
     "type": "concept",
     "count": 2
@@ -420,6 +425,11 @@
     "count": 2
   },
   {
+    "name": "geospatial",
+    "type": "concept",
+    "count": 1
+  },
+  {
     "name": "raqg-not-rag",
     "type": "concept",
     "count": 1
@@ -437,11 +447,6 @@
   {
     "name": "fleet-onboarding",
     "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "mirrorworld",
-    "type": "repo",
     "count": 1
   },
   {
