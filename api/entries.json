@@ -1,5 +1,83 @@
 [
   {
+    "date": "2026-07-29",
+    "title": "Tuesday's geospatial double-track: gcgcca's first real M2M download and mirrorworld's alignment verdict",
+    "summary": "Tuesday closed two parallel geospatial tracks — gcgcca executed its first real USGS M2M byte-fetch and mirrorworld settled its overlay alignment question with measurement, logging nine commits across two repos.",
+    "tags": [
+      {
+        "name": "gcgcca",
+        "type": "repo"
+      },
+      {
+        "name": "mirrorworld",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "geospatial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "m2m-api",
+        "type": "concept"
+      },
+      {
+        "name": "two-track-session",
+        "type": "concept"
+      },
+      {
+        "name": "raster-alignment",
+        "type": "concept"
+      },
+      {
+        "name": "build",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "silicon-empires",
+      "f1-doctrine",
+      "daily-logger",
+      "gcgcca",
+      "mirrorworld"
+    ],
+    "commitCount": 9,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "ADR committed for Gentle Creek + NAIP before any course data downloads",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Measurement-first verdict for overlay alignment — screenshot claims withdrawn",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "run-first, fix-what-breaks posture for USGS M2M byte-fetch",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "S17 deferred pending hole-centroid resolution — entrance condition is S16 merged with centroid committed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-07-28",
     "title": "mirrorworld lands its first real course: OSM vectors co-registered on Gentle Creek CC",
     "summary": "Monday's three-PR seam merged USGS imagery, elevation, and 163 OSM vectors onto Gentle Creek CC — mirrorworld's first proven acquisition-to-render pipeline on a live course.",
