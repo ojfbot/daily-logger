@@ -190,7 +190,7 @@ const KNOWN_REPOS = new Set([
   // Added 2026-05-05: present in collect-context.ts REPOS but were missing here,
   // causing extractReposFromBody() to silently drop them when articles lacked
   // an explicit reposActive frontmatter entry.
-  'gcgcca', 'beaverGame', 'asset-foundry',
+  'gcgcca', 'capture-agent', 'fairway', 'beaverGame', 'asset-foundry',
   'morning-cockpit',
   // Added 2026-06-10: selfco-box drift-heal (swept since 05-17, missing here)
   // + the four repos registered after the outage audit.
@@ -215,7 +215,7 @@ const TAG_TYPE_MAP: Record<string, string> = {
   'landing': 'repo', 'node-template': 'repo', 'github-actions': 'repo',
   // Added 2026-05-05 alongside KNOWN_REPOS additions. Both casings recorded
   // because article tag arrays preserve original case (e.g. 'beaverGame').
-  'gcgcca': 'repo', 'beaverGame': 'repo', 'beavergame': 'repo', 'asset-foundry': 'repo',
+  'gcgcca': 'repo', 'capture-agent': 'repo', 'fairway': 'repo', 'beaverGame': 'repo', 'beavergame': 'repo', 'asset-foundry': 'repo',
   'morning-cockpit': 'repo',
   // Added 2026-06-10 alongside KNOWN_REPOS additions.
   'selfco-box': 'repo',

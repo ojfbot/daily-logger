@@ -36,7 +36,7 @@ Each article lives at `/articles/YYYY-MM-DD`.
   → deploy-vercel.yml    fires on push to main → Vercel serverless build + deploy
 ```
 
-Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`, `gcgcca`, `browser-automation`, `node-template`, `dive-briefing`, `switchboard`, `agent-anatomy`, `f1-pit-wall`, `f1-substrate`, `lofi-beaver`, `golf-platform-scripts`, `f1-doctrine`.
+Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`, `capture-agent` (formerly `gcgcca`), `fairway`, `browser-automation`, `node-template`, `dive-briefing`, `switchboard`, `agent-anatomy`, `f1-pit-wall`, `f1-substrate`, `lofi-beaver`, `golf-platform-scripts`, `f1-doctrine`.
 
 ## Architecture
 
@@ -209,7 +209,8 @@ Part of [Frame OS](https://github.com/ojfbot/shell) — an AI-native application
 | [purefoy](https://github.com/ojfbot/purefoy) | Roger Deakins cinematography knowledge base |
 | [MrPlug](https://github.com/ojfbot/MrPlug) | Chrome extension for AI UI feedback |
 | [frame-ui-components](https://github.com/ojfbot/frame-ui-components) | Shared component library (Carbon DS) |
-| [gcgcca](https://github.com/ojfbot/gcgcca) | Pydantic + TypeScript cross-language type bridge |
+| [capture-agent](https://github.com/ojfbot/gcgcca) | Golf-course capture agent (formerly gcgcca; renamed 2026-07-30) — TX imagery → segmentation model → HF; Pydantic + TypeScript type bridge |
+| [fairway](https://github.com/ojfbot/fairway) | Golf digital twin — explorable twin surface (decomposed from mirrorworld 2026-07-30) |
 | [switchboard](https://github.com/ojfbot/switchboard) | FastAPI proxy — byte-for-byte SSE passthrough |
 | [f1-pit-wall](https://github.com/ojfbot/f1-pit-wall) | F1 pit-wall telemetry surface |
 | [f1-substrate](https://github.com/ojfbot/f1-substrate) | F1 data substrate layer |
