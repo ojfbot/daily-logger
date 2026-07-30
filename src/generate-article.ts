@@ -43,7 +43,7 @@ Additional repos:
 - **seh-study** — NASA SE Handbook study client, Frame OS sub-app. AI-guided study sessions with structured knowledge extraction.
 - **GroupThink** — LLM-powered Chrome extension for intelligent tab grouping. Frame-adjacent: demonstrates the same assistant-centric architecture applied to the browser chrome layer. Uses Claude to infer semantic relationships between open tabs and auto-organise them.
 - **purefoy** — Roger Deakins cinematography knowledge base (Python scraper + podcast transcripts). Roadmap: AI podcast interaction agent inside Frame.
-- **capture-agent** (renamed from gcgcca 2026-07-30) — golf-course capture agent: TX imagery corpus → segmentation/classification model → Hugging Face (cluster-golf first principle); USGS Earth Explorer acquisition CLI. Python CLI + TypeScript/React UI (purefoy pattern). Pydantic models → OpenAPI → TypeScript types. Module Federation remote (port 3035) with Express API (port 3036); code identifiers keep the gcgcca name.
+- **capture-agent** (renamed from gcgcca 2026-07-30) — golf-course capture agent: TX imagery corpus → segmentation/classification model → Hugging Face (cluster-golf first principle); USGS Earth Explorer acquisition CLI. Python CLI + TypeScript/React UI (purefoy pattern). Pydantic models → OpenAPI → TypeScript types. Module Federation remote (port 3035) with Express API (port 3036); code identifiers migrated to capture-agent 2026-07-30 (Python package \`capture_agent/\`, TS scope \`@capture-agent/*\`).
 - **daily-logger** — This repo. Generates and commits one blog article per day.
 - **landing** — jim.software personal landing page. Masonry portfolio grid, Three.js scroll animations, scroll-driven gradient background. Deployed on Vercel.
 - **beaverGame** — Cozy Beaver, 3D beaver simulator (Babylon.js client).
@@ -62,8 +62,8 @@ Additional repos:
 - BlogEngine: :3002
 - TripPlanner: :3003
 - CoreReader: :3015
-- capture-agent (gcgcca) browser-app: :3035
-- capture-agent (gcgcca) API: :3036
+- capture-agent browser-app: :3035
+- capture-agent API: :3036
 
 Do NOT invent repo names not on the list above. Do NOT fabricate ports.
 

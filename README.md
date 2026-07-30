@@ -209,7 +209,7 @@ Part of [Frame OS](https://github.com/ojfbot/shell) — an AI-native application
 | [purefoy](https://github.com/ojfbot/purefoy) | Roger Deakins cinematography knowledge base |
 | [MrPlug](https://github.com/ojfbot/MrPlug) | Chrome extension for AI UI feedback |
 | [frame-ui-components](https://github.com/ojfbot/frame-ui-components) | Shared component library (Carbon DS) |
-| [capture-agent](https://github.com/ojfbot/gcgcca) | Golf-course capture agent (formerly gcgcca; renamed 2026-07-30) — TX imagery → segmentation model → HF; Pydantic + TypeScript type bridge |
+| [capture-agent](https://github.com/ojfbot/capture-agent) | Golf-course capture agent (formerly gcgcca; renamed 2026-07-30) — TX imagery → segmentation model → HF; Pydantic + TypeScript type bridge |
 | [fairway](https://github.com/ojfbot/fairway) | Golf digital twin — explorable twin surface (decomposed from mirrorworld 2026-07-30) |
 | [switchboard](https://github.com/ojfbot/switchboard) | FastAPI proxy — byte-for-byte SSE passthrough |
 | [f1-pit-wall](https://github.com/ojfbot/f1-pit-wall) | F1 pit-wall telemetry surface |
