@@ -25,7 +25,8 @@ const REPOS = [
   'seh-study',        // SEH Study — NASA SE Handbook study client, Frame OS sub-app
   'GroupThink',       // GroupThink — LLM-powered tab grouping Chrome extension
   'landing',           // jim.software — personal landing page
-  'gcgcca',            // GCGCCA — USGS Earth Explorer orthoimagery query tool, Python+TS hybrid (purefoy pattern)
+  'capture-agent',     // Golf-course capture agent (renamed from gcgcca 2026-07-30) — USGS Earth Explorer acquisition + TX-corpus/segmentation-model mission
+  'fairway',           // Golf digital twin (decomposed from mirrorworld 2026-07-30) — explorable twin surface
   'beaverGame',        // Cozy Beaver — 3D beaver simulator (Three.js client)
   'asset-foundry',     // AI-driven Blender asset pipeline consumed by beaverGame
   'github-actions',    // Shared GitHub Actions + reusable workflows for the fleet (ADR-0067)

@@ -36,7 +36,7 @@ const TAG_MAP: Record<string, TagType> = {
   'github-actions': 'repo',
   // Added 2026-06-10: drift-heal vs collect-context.ts REPOS + the four repos
   // registered after the outage audit. Both casings where articles vary.
-  'gcgcca': 'repo',
+  'gcgcca': 'repo', 'capture-agent': 'repo', 'fairway': 'repo',
   'beavergame': 'repo',
   'beaverGame': 'repo',
   'asset-foundry': 'repo',

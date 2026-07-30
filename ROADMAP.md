@@ -52,7 +52,7 @@
    Two-column article layout with Lois design system integration landed.
    ADR-0035 (article status lifecycle) and ADR-0036 (structured decision output) ratified. Skill-audit CI extracted to shared `github-actions` repo (ADR-0067 pending).
   ADR-0035 (article status lifecycle) and ADR-0036 (structured decision output) ratified.
-- **gcgcca (bootstrapping)**: Python CLI complete (47 pytest tests passing). Type bridge wired (Pydantic → OpenAPI → TS). Milestones: [ ] Express API serving scene data on :3036, [ ] browser-app registered in shell as MF remote, [ ] Frame agent tools manifest at GET /api/tools, [ ] end-to-end KML → UI coverage display.
+- **gcgcca (now capture-agent, renamed 2026-07-30; mission reframed — see l1-capture-agent) (bootstrapping)**: Python CLI complete (47 pytest tests passing). Type bridge wired (Pydantic → OpenAPI → TS). Milestones: [ ] Express API serving scene data on :3036, [ ] browser-app registered in shell as MF remote, [ ] Frame agent tools manifest at GET /api/tools, [ ] end-to-end KML → UI coverage display.
 
 ---
 
@@ -75,7 +75,7 @@ pipeline, not here.
 7. purefoy as podcast AI agent in Frame — **corpus complete; frame-ui-components migration complete** ([purefoy] #9–#14 merged — 348/348 episodes transcribed, AWS runner retired, typed transcript editing UI in Frame, standalone Flask reference UI at localhost:5050, ADR-006–009; [purefoy] #17 + #18 merged — local components replaced with `@ojfbot/frame-ui-components` wrappers, `DashboardLayout` adopted, Vercel deployment wired)
 8. App definition from UI (ShellAgent scaffolds apps) — **not started**
 9. daily-logger → BlogEngine + editorial UI — **live / in progress**
-10. gcgcca as Frame OS geospatial sub-app — **bootstrapping** (Python CLI complete, type bridge wired, browser-app skeleton + Express API scaffolded, not yet registered in shell)
+10. gcgcca (now capture-agent, 2026-07-30) as Frame OS geospatial sub-app — **bootstrapping** (Python CLI complete, type bridge wired, browser-app skeleton + Express API scaffolded, not yet registered in shell)
 
 ---
 
