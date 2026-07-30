@@ -1,6 +1,30 @@
 [
   {
     "command": "/pr-review",
+    "description": "Merge mirrorworld #10, core #292, core #291, f1-doctrine #8, and silicon-empires #28. All are zero-risk mechanical merges — daily-cleaner output, northstar data appends, and ledger bookkeeping. Sequence: core #291 and silicon-empires #28 first (close northstar odometer and PH1.5 ledger gap), then batch the three cleaner PRs. Combined review time under 15 minutes. Do not include core #294 — that PR has an unresolved disposition and may require external input.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-07-30",
+    "id": "act-2026-07-30-pr-review-c4c2ef"
+  },
+  {
+    "command": "/validate",
+    "description": "Run the corrected /blind-sweep (consensus ordering fixed in 7dc53d8) on a real vault question. Confirm consensus-ranked answers score above singletons in the output. Record the first post-fix run as the baseline validation artifact. Also verify that the 3904fd2 vault-deposit step writes a correctly formatted structured note — check note schema against what /vault cultivate expects before the next cultivate pass runs.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-07-30",
+    "id": "act-2026-07-30-validate-3c574b"
+  },
+  {
+    "command": "/roadmap",
+    "description": "Scope morning-cockpit Anthropic watch Stage 2. Stage 1 merged — the four harnesses (voi-interview, revision-forecast, and companions) are now pointed at a live scored feed. Define Stage 2 as: surfacing ADR-0017 rubric scores back to harness callers with a feedback path, so the rubric can be tuned against real Anthropic output. Write it as a named slice. Ledger aging policy and harness activation criteria are valid follow-on work but depend on accumulated scored data that doesn't exist yet.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-07-30",
+    "id": "act-2026-07-30-roadmap-eebbd7"
+  },
+  {
+    "command": "/pr-review",
     "description": "Merge core #291 (four northstar status.jsonl appends — data only) and silicon-empires #28 (PH1.5 ledger bookkeeping — no code). Both are zero-risk, unblocked, and close named ledger gaps. Combined review time under 10 minutes. Merge these before any structural PRs to keep the ledger current. Then merge core #292 and f1-doctrine #8 (daily-cleaner diffs, independent of each other, no judgment required).",
     "repo": "core",
     "status": "open",

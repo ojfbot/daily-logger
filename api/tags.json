@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 57
+    "count": 58
   },
   {
     "name": "ci-cd",
@@ -12,7 +12,7 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 41
+    "count": 42
   },
   {
     "name": "assistant-centric",
@@ -57,7 +57,7 @@
   {
     "name": "hardening",
     "type": "practice",
-    "count": 17
+    "count": 18
   },
   {
     "name": "asset-foundry",
@@ -110,6 +110,16 @@
     "count": 9
   },
   {
+    "name": "morning-cockpit",
+    "type": "repo",
+    "count": 8
+  },
+  {
+    "name": "skill-catalog",
+    "type": "concept",
+    "count": 8
+  },
+  {
     "name": "BlogEngine",
     "type": "concept",
     "count": 8
@@ -120,22 +130,12 @@
     "count": 8
   },
   {
-    "name": "morning-cockpit",
-    "type": "repo",
-    "count": 7
-  },
-  {
     "name": "storybook",
     "type": "infra",
     "count": 7
   },
   {
     "name": "audit",
-    "type": "concept",
-    "count": 7
-  },
-  {
-    "name": "skill-catalog",
     "type": "concept",
     "count": 7
   },
@@ -423,6 +423,21 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "local-first",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "vault-ingest",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "agentic-harness",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "geospatial-pipeline",

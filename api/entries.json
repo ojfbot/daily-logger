@@ -1,5 +1,111 @@
 [
   {
+    "date": "2026-07-30",
+    "title": "Wednesday: morning-cockpit gets a live Anthropic feed, and core grows a self-testing quiz harness",
+    "summary": "Wednesday shipped morning-cockpit's Anthropic watch Stage 1 and six core commits hardening the merge-quiz and blind-sweep harnesses with self-testing loops and vault deposit.",
+    "tags": [
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "local-first",
+        "type": "concept"
+      },
+      {
+        "name": "skill-catalog",
+        "type": "concept"
+      },
+      {
+        "name": "vault-ingest",
+        "type": "concept"
+      },
+      {
+        "name": "agentic-harness",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "morning-cockpit",
+      "core"
+    ],
+    "commitCount": 9,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "morning-cockpit watches Anthropic directly, not through the creator ecosystem",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "/merge-quiz teaches before it tests",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "/blind-sweep consensus ranking was inverted — ordering fixed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "k=3 in /blind-sweep is a stopping point, not a floor",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "/merge-quiz deposits what it learned into the selfco vault",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge mirrorworld #10, core #292, core #291, f1-doctrine #8, and silicon-empires #28. All are zero-risk mechanical merges — daily-cleaner output, northstar data appends, and ledger bookkeeping. Sequence: core #291 and silicon-empires #28 first (close northstar odometer and PH1.5 ledger gap), then batch the three cleaner PRs. Combined review time under 15 minutes. Do not include core #294 — that PR has an unresolved disposition and may require external input.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-07-30",
+        "id": "act-2026-07-30-pr-review-c4c2ef"
+      },
+      {
+        "command": "/validate",
+        "description": "Run the corrected /blind-sweep (consensus ordering fixed in 7dc53d8) on a real vault question. Confirm consensus-ranked answers score above singletons in the output. Record the first post-fix run as the baseline validation artifact. Also verify that the 3904fd2 vault-deposit step writes a correctly formatted structured note — check note schema against what /vault cultivate expects before the next cultivate pass runs.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-07-30",
+        "id": "act-2026-07-30-validate-3c574b"
+      },
+      {
+        "command": "/roadmap",
+        "description": "Scope morning-cockpit Anthropic watch Stage 2. Stage 1 merged — the four harnesses (voi-interview, revision-forecast, and companions) are now pointed at a live scored feed. Define Stage 2 as: surfacing ADR-0017 rubric scores back to harness callers with a feedback path, so the rubric can be tuned against real Anthropic output. Write it as a named slice. Ledger aging policy and harness activation criteria are valid follow-on work but depend on accumulated scored data that doesn't exist yet.",
+        "repo": "morning-cockpit",
+        "status": "open",
+        "sourceDate": "2026-07-30",
+        "id": "act-2026-07-30-roadmap-eebbd7"
+      }
+    ]
+  },
+  {
     "date": "2026-07-29",
     "title": "Tuesday's geospatial double-track: gcgcca's first real M2M download and mirrorworld's alignment verdict",
     "summary": "Tuesday closed two parallel geospatial tracks — gcgcca executed its first real USGS M2M byte-fetch and mirrorworld settled its overlay alignment question with measurement, logging nine commits across two repos.",
