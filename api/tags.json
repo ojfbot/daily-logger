@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 58
+    "count": 59
   },
   {
     "name": "ci-cd",
@@ -12,7 +12,7 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 42
+    "count": 43
   },
   {
     "name": "assistant-centric",
@@ -100,6 +100,11 @@
     "count": 10
   },
   {
+    "name": "morning-cockpit",
+    "type": "repo",
+    "count": 9
+  },
+  {
     "name": "cleanup",
     "type": "concept",
     "count": 9
@@ -108,11 +113,6 @@
     "name": "MrPlug",
     "type": "concept",
     "count": 9
-  },
-  {
-    "name": "morning-cockpit",
-    "type": "repo",
-    "count": 8
   },
   {
     "name": "skill-catalog",
@@ -180,6 +180,11 @@
     "count": 5
   },
   {
+    "name": "mirrorworld",
+    "type": "repo",
+    "count": 4
+  },
+  {
     "name": "build",
     "type": "concept",
     "count": 4
@@ -236,11 +241,6 @@
   },
   {
     "name": "gcgcca",
-    "type": "repo",
-    "count": 3
-  },
-  {
-    "name": "mirrorworld",
     "type": "repo",
     "count": 3
   },
@@ -423,6 +423,41 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "capture-agent",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "fairway",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "repo-decomposition",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "rename-migration",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "defect-ledger",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "golf-umbrella",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "GOLF UMBRELLA",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "local-first",

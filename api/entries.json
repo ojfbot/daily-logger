@@ -1,5 +1,126 @@
 [
   {
+    "date": "2026-07-31",
+    "title": "Thursday's GOLF UMBRELLA close-out: renaming gcgcca to capture-agent across the fleet",
+    "summary": "Thursday completed the GOLF UMBRELLA landing with 28 commits across 6 repos — renaming gcgcca to capture-agent, decomposing fairway from mirrorworld, and hardening the core defect ledger.",
+    "tags": [
+      {
+        "name": "capture-agent",
+        "type": "repo"
+      },
+      {
+        "name": "fairway",
+        "type": "repo"
+      },
+      {
+        "name": "mirrorworld",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "repo-decomposition",
+        "type": "concept"
+      },
+      {
+        "name": "rename-migration",
+        "type": "concept"
+      },
+      {
+        "name": "defect-ledger",
+        "type": "concept"
+      },
+      {
+        "name": "golf-umbrella",
+        "type": "concept"
+      },
+      {
+        "name": "GOLF UMBRELLA",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "capture-agent",
+      "mirrorworld",
+      "fairway",
+      "morning-cockpit",
+      "core"
+    ],
+    "commitCount": 53,
+    "activityType": "sprint",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Repo decomposition before rename: fairway splits out of mirrorworld first",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Code identifier migration deferred one commit window from directory rename",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Independent closure loop for defect ledger: a failing probe must never self-report as claim-gone",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Vault schema extracted to a single machine-readable file (ADR-0105)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "mirrorworld declared a PRODUCER, not a peer consumer",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Run a structured validation pass on the probe fix commits 4ddcec0 and 3b58e89. Confirm the probes now correctly distinguish transient network/parse failure from genuine 'claim not found' — synthesize a transient failure condition and verify it does not produce a closed ledger entry. If ADR-0104 should specify a required validation gate for defect-closure commits, open a revision. This is the most operationally sensitive gap from Thursday's session.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-07-31",
+        "id": "act-2026-07-31-validate-bb305e"
+      },
+      {
+        "command": "/adr",
+        "description": "Write the ADR formalizing the Pydantic → OpenAPI → TypeScript codegen pattern. Document: invocation (python scripts/generate_schema.py, venv required, output to src/generated/types.ts), known failure mode (custom validators and Union discriminators may not map cleanly to OpenAPI), purefoy CLI+UI reference, canonical scope (@capture-agent/*). This resolves act-2026-04-07-adr-daa2ca, open since 2026-04-07. The rename was the last unstable dependency; it is now resolved.",
+        "repo": "capture-agent",
+        "status": "open",
+        "sourceDate": "2026-07-31",
+        "id": "act-2026-07-31-adr-61a759"
+      },
+      {
+        "command": "/validate",
+        "description": "Confirm the fairway Vite dev server starts cleanly at port 5187 (cd fairway && pnpm install && pnpm dev). Verify the mirrorworld terrain-bundle import path resolves correctly after the decomposition — mirrorworld must be serving terrain bundles; confirm which port. Run grep -r gcgcca across both fairway and mirrorworld repo roots to confirm no stale references remain. Document the local dev startup sequence (ports required, process order) in fairway's CLAUDE.md — this is the first re-entry gap for a new session.",
+        "repo": "fairway",
+        "status": "open",
+        "sourceDate": "2026-07-31",
+        "id": "act-2026-07-31-validate-599224"
+      }
+    ]
+  },
+  {
     "date": "2026-07-30",
     "title": "Wednesday: morning-cockpit gets a live Anthropic feed, and core grows a self-testing quiz harness",
     "summary": "Wednesday shipped morning-cockpit's Anthropic watch Stage 1 and six core commits hardening the merge-quiz and blind-sweep harnesses with self-testing loops and vault deposit.",
