@@ -1,5 +1,29 @@
 [
   {
+    "command": "/validate",
+    "description": "Run a structured validation pass on the probe fix commits 4ddcec0 and 3b58e89. Confirm the probes now correctly distinguish transient network/parse failure from genuine 'claim not found' — synthesize a transient failure condition and verify it does not produce a closed ledger entry. If ADR-0104 should specify a required validation gate for defect-closure commits, open a revision. This is the most operationally sensitive gap from Thursday's session.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-07-31",
+    "id": "act-2026-07-31-validate-bb305e"
+  },
+  {
+    "command": "/adr",
+    "description": "Write the ADR formalizing the Pydantic → OpenAPI → TypeScript codegen pattern. Document: invocation (python scripts/generate_schema.py, venv required, output to src/generated/types.ts), known failure mode (custom validators and Union discriminators may not map cleanly to OpenAPI), purefoy CLI+UI reference, canonical scope (@capture-agent/*). This resolves act-2026-04-07-adr-daa2ca, open since 2026-04-07. The rename was the last unstable dependency; it is now resolved.",
+    "repo": "capture-agent",
+    "status": "open",
+    "sourceDate": "2026-07-31",
+    "id": "act-2026-07-31-adr-61a759"
+  },
+  {
+    "command": "/validate",
+    "description": "Confirm the fairway Vite dev server starts cleanly at port 5187 (cd fairway && pnpm install && pnpm dev). Verify the mirrorworld terrain-bundle import path resolves correctly after the decomposition — mirrorworld must be serving terrain bundles; confirm which port. Run grep -r gcgcca across both fairway and mirrorworld repo roots to confirm no stale references remain. Document the local dev startup sequence (ports required, process order) in fairway's CLAUDE.md — this is the first re-entry gap for a new session.",
+    "repo": "fairway",
+    "status": "open",
+    "sourceDate": "2026-07-31",
+    "id": "act-2026-07-31-validate-599224"
+  },
+  {
     "command": "/pr-review",
     "description": "Merge mirrorworld #10, core #292, core #291, f1-doctrine #8, and silicon-empires #28. All are zero-risk mechanical merges — daily-cleaner output, northstar data appends, and ledger bookkeeping. Sequence: core #291 and silicon-empires #28 first (close northstar odometer and PH1.5 ledger gap), then batch the three cleaner PRs. Combined review time under 15 minutes. Do not include core #294 — that PR has an unresolved disposition and may require external input.",
     "repo": "core",
