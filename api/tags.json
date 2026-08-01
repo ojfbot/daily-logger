@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 59
+    "count": 60
   },
   {
     "name": "ci-cd",
@@ -12,7 +12,7 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 43
+    "count": 44
   },
   {
     "name": "assistant-centric",
@@ -40,14 +40,14 @@
     "count": 22
   },
   {
-    "name": "model-behavior-as-design",
-    "type": "concept",
+    "name": "adr",
+    "type": "practice",
     "count": 21
   },
   {
-    "name": "adr",
-    "type": "practice",
-    "count": 20
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 21
   },
   {
     "name": "phase-1",
@@ -90,6 +90,11 @@
     "count": 11
   },
   {
+    "name": "cleanup",
+    "type": "concept",
+    "count": 10
+  },
+  {
     "name": "security-as-emergent-ux",
     "type": "concept",
     "count": 10
@@ -102,11 +107,6 @@
   {
     "name": "morning-cockpit",
     "type": "repo",
-    "count": 9
-  },
-  {
-    "name": "cleanup",
-    "type": "concept",
     "count": 9
   },
   {
@@ -165,6 +165,11 @@
     "count": 6
   },
   {
+    "name": "mirrorworld",
+    "type": "repo",
+    "count": 5
+  },
+  {
     "name": "adr-registry",
     "type": "concept",
     "count": 5
@@ -180,7 +185,7 @@
     "count": 5
   },
   {
-    "name": "mirrorworld",
+    "name": "f1-doctrine",
     "type": "repo",
     "count": 4
   },
@@ -240,6 +245,11 @@
     "count": 4
   },
   {
+    "name": "silicon-empires",
+    "type": "repo",
+    "count": 3
+  },
+  {
     "name": "gcgcca",
     "type": "repo",
     "count": 3
@@ -247,11 +257,6 @@
   {
     "name": "phase-5",
     "type": "phase",
-    "count": 3
-  },
-  {
-    "name": "f1-doctrine",
-    "type": "repo",
     "count": 3
   },
   {
@@ -293,11 +298,6 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
-  },
-  {
-    "name": "silicon-empires",
-    "type": "repo",
-    "count": 2
   },
   {
     "name": "question-layer",
@@ -423,6 +423,21 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "techdebt",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "ledger-hygiene",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "ledger-close",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "capture-agent",

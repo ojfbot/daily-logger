@@ -1,5 +1,115 @@
 [
   {
+    "date": "2026-08-01",
+    "title": "Friday's ledger close: silicon-empires PH1.5, f1-doctrine S1 status, and two techdebt entries",
+    "summary": "Eight commits across four repos closed the silicon-empires PH1.5 ledger gap, recorded f1-doctrine S1, and appended two scoped techdebt entries to core's registry.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "silicon-empires",
+        "type": "repo"
+      },
+      {
+        "name": "f1-doctrine",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "mirrorworld",
+        "type": "repo"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "techdebt",
+        "type": "concept"
+      },
+      {
+        "name": "ledger-hygiene",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "ledger-close",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "mirrorworld",
+      "f1-doctrine",
+      "daily-logger",
+      "silicon-empires",
+      "core"
+    ],
+    "commitCount": 9,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Ledger gaps are closed as standalone PRs, not bundled with code",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Techdebt entries TD-006 and TD-007 added to the core registry before work begins",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "f1-doctrine's README and CLAUDE.md are co-updated on every stage transition",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Northstar odometer is turned as a discrete commit after merge events, not inline",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge mirrorworld #10 (clean: stale docs/comments 2026-07-29). Zero-risk daily-cleaner output, open since 2026-07-29 — survived Friday's ledger session with no technical blocker. This is the only open PR in the fleet. Merging it brings the queue to zero.",
+        "repo": "mirrorworld",
+        "status": "open",
+        "sourceDate": "2026-08-01",
+        "id": "act-2026-08-01-pr-review-d47cbf"
+      },
+      {
+        "command": "/techdebt",
+        "description": "Scope TD-006 (fleet-inventory reconciler): define what 'fleet inventory drift' means concretely, which repos are outside the current reconciler's coverage, and what the fix surface looks like. The entry was appended Friday with no implementation scope. TD-007 sequences after this — do not start it first.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-01",
+        "id": "act-2026-08-01-techdebt-063c77"
+      },
+      {
+        "command": "/validate",
+        "description": "Run quality gate pass across the fleet. No /validate ran Friday despite two techdebt entries being added to the registry. Confirm existing instrumentation is sound before beginning PH2 or S2 gate work in any repo.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-01",
+        "id": "act-2026-08-01-validate-04dc78"
+      }
+    ]
+  },
+  {
     "date": "2026-07-31",
     "title": "Thursday's GOLF UMBRELLA close-out: renaming gcgcca to capture-agent across the fleet",
     "summary": "Thursday completed the GOLF UMBRELLA landing with 28 commits across 6 repos — renaming gcgcca to capture-agent, decomposing fairway from mirrorworld, and hardening the core defect ledger.",

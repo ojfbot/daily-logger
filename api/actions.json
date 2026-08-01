@@ -1,5 +1,29 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Merge mirrorworld #10 (clean: stale docs/comments 2026-07-29). Zero-risk daily-cleaner output, open since 2026-07-29 — survived Friday's ledger session with no technical blocker. This is the only open PR in the fleet. Merging it brings the queue to zero.",
+    "repo": "mirrorworld",
+    "status": "open",
+    "sourceDate": "2026-08-01",
+    "id": "act-2026-08-01-pr-review-d47cbf"
+  },
+  {
+    "command": "/techdebt",
+    "description": "Scope TD-006 (fleet-inventory reconciler): define what 'fleet inventory drift' means concretely, which repos are outside the current reconciler's coverage, and what the fix surface looks like. The entry was appended Friday with no implementation scope. TD-007 sequences after this — do not start it first.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-01",
+    "id": "act-2026-08-01-techdebt-063c77"
+  },
+  {
+    "command": "/validate",
+    "description": "Run quality gate pass across the fleet. No /validate ran Friday despite two techdebt entries being added to the registry. Confirm existing instrumentation is sound before beginning PH2 or S2 gate work in any repo.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-01",
+    "id": "act-2026-08-01-validate-04dc78"
+  },
+  {
     "command": "/validate",
     "description": "Run a structured validation pass on the probe fix commits 4ddcec0 and 3b58e89. Confirm the probes now correctly distinguish transient network/parse failure from genuine 'claim not found' — synthesize a transient failure condition and verify it does not produce a closed ledger entry. If ADR-0104 should specify a required validation gate for defect-closure commits, open a revision. This is the most operationally sensitive gap from Thursday's session.",
     "repo": "core",
