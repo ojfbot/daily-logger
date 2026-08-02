@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 60
+    "count": 61
   },
   {
     "name": "ci-cd",
@@ -12,12 +12,12 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 44
+    "count": 45
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 41
+    "count": 42
   },
   {
     "name": "shell",
@@ -37,17 +37,17 @@
   {
     "name": "rest-day",
     "type": "activity",
+    "count": 23
+  },
+  {
+    "name": "model-behavior-as-design",
+    "type": "concept",
     "count": 22
   },
   {
     "name": "adr",
     "type": "practice",
-    "count": 21
-  },
-  {
-    "name": "model-behavior-as-design",
-    "type": "concept",
-    "count": 21
+    "count": 22
   },
   {
     "name": "phase-1",
@@ -85,17 +85,17 @@
     "count": 12
   },
   {
+    "name": "security-as-emergent-ux",
+    "type": "concept",
+    "count": 11
+  },
+  {
     "name": "gas-town",
     "type": "phase",
     "count": 11
   },
   {
     "name": "cleanup",
-    "type": "concept",
-    "count": 10
-  },
-  {
-    "name": "security-as-emergent-ux",
     "type": "concept",
     "count": 10
   },
@@ -245,6 +245,11 @@
     "count": 4
   },
   {
+    "name": "wayfinder",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "silicon-empires",
     "type": "repo",
     "count": 3
@@ -311,11 +316,6 @@
   },
   {
     "name": "stacked-prs",
-    "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "wayfinder",
     "type": "concept",
     "count": 2
   },

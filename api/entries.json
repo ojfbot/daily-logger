@@ -1,5 +1,105 @@
 [
   {
+    "date": "2026-08-02",
+    "title": "Saturday's wayfinder session: charting the texas-rr-engagement and the FDE operating presence seam",
+    "summary": "Saturday drove 11 core commits through two interleaved wayfinder maps — FDE operating presence and the first client-engagement traversal — producing a 37-issue work queue and the dossier→presence seam.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "wayfinder",
+        "type": "concept"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "mirrorworld",
+      "daily-logger"
+    ],
+    "commitCount": 12,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Dossier→presence seam: private engagement repo, sanitized public artifacts",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Absolute public-git lint for the employer-evidence boundary",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Two ledgers, never merged: wayfinder tickets vs. roadmap slices",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "FDE deliverables audit: independent second cycle, hypothesis scoring",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge core #359 (/wayfinder at user scope + full/lite charting modes, ADR-0101 rev A). Saturday's 11 wayfinder commits ran against ojfbot-scoped sessions only — the user-scope path the PR enables was never exercised. After merge, validate by running /wayfinder --scope user --mode full outside an ojfbot repo context. Merge before the next charting session.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-02",
+        "id": "act-2026-08-02-pr-review-2641d0"
+      },
+      {
+        "command": "/validate",
+        "description": "Run the public-git denylist lint against decisions/wayfinder/texas-rr-engagement.md after the sanitization pass (issue #356). This is also the first opportunity to exercise the lint against real content following a precautionary scrub — confirm the failure path works, not just the pass path. Confirm no protected terms from the employer-evidence-boundary denylist appear before the next wayfinder session touches the map.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-02",
+        "id": "act-2026-08-02-validate-7e79b9"
+      },
+      {
+        "command": "/scaffold",
+        "description": "Bootstrap the private engagement repo for texas-rr-engagement (wayfinder task #349): create the repo named per the ruling from #345, seed with the proof-plan skeleton (decision log, baseline ledger, eval ledger, plumbing journal, sanitized case-study skeleton), register on fleet surfaces via /fleet-onboard. BLOCKED on #345 (naming ruling) — do not execute until #345 closes and a ruling is recorded in decisions/wayfinder/texas-rr-engagement.md.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-02",
+        "id": "act-2026-08-02-scaffold-aa04fd"
+      }
+    ]
+  },
+  {
     "date": "2026-08-01",
     "title": "Friday's ledger close: silicon-empires PH1.5, f1-doctrine S1 status, and two techdebt entries",
     "summary": "Eight commits across four repos closed the silicon-empires PH1.5 ledger gap, recorded f1-doctrine S1, and appended two scoped techdebt entries to core's registry.",
