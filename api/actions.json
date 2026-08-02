@@ -1,6 +1,30 @@
 [
   {
     "command": "/pr-review",
+    "description": "Merge core #359 (/wayfinder at user scope + full/lite charting modes, ADR-0101 rev A). Saturday's 11 wayfinder commits ran against ojfbot-scoped sessions only — the user-scope path the PR enables was never exercised. After merge, validate by running /wayfinder --scope user --mode full outside an ojfbot repo context. Merge before the next charting session.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-02",
+    "id": "act-2026-08-02-pr-review-2641d0"
+  },
+  {
+    "command": "/validate",
+    "description": "Run the public-git denylist lint against decisions/wayfinder/texas-rr-engagement.md after the sanitization pass (issue #356). This is also the first opportunity to exercise the lint against real content following a precautionary scrub — confirm the failure path works, not just the pass path. Confirm no protected terms from the employer-evidence-boundary denylist appear before the next wayfinder session touches the map.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-02",
+    "id": "act-2026-08-02-validate-7e79b9"
+  },
+  {
+    "command": "/scaffold",
+    "description": "Bootstrap the private engagement repo for texas-rr-engagement (wayfinder task #349): create the repo named per the ruling from #345, seed with the proof-plan skeleton (decision log, baseline ledger, eval ledger, plumbing journal, sanitized case-study skeleton), register on fleet surfaces via /fleet-onboard. BLOCKED on #345 (naming ruling) — do not execute until #345 closes and a ruling is recorded in decisions/wayfinder/texas-rr-engagement.md.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-02",
+    "id": "act-2026-08-02-scaffold-aa04fd"
+  },
+  {
+    "command": "/pr-review",
     "description": "Merge mirrorworld #10 (clean: stale docs/comments 2026-07-29). Zero-risk daily-cleaner output, open since 2026-07-29 — survived Friday's ledger session with no technical blocker. This is the only open PR in the fleet. Merging it brings the queue to zero.",
     "repo": "mirrorworld",
     "status": "open",
