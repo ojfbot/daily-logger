@@ -1,5 +1,115 @@
 [
   {
+    "date": "2026-08-03",
+    "title": "Sunday: selfco-box gets a split transport, bead-lane aging lands, and S32 closes the ledger loop",
+    "summary": "Sunday shipped a transport-split in selfco-box, bead-lane age-ordering in morning-cockpit, and the S32 bead-ledger closure loop in core across 14 commits and 4 repos.",
+    "tags": [
+      {
+        "name": "selfco-box",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "mirrorworld",
+        "type": "repo"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "bead-ledger",
+        "type": "concept"
+      },
+      {
+        "name": "build",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "morning-cockpit",
+      "mirrorworld",
+      "daily-logger",
+      "selfco-box",
+      "core"
+    ],
+    "commitCount": 14,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "selfco-box transport split: remove Claude from the ingest hot path",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Poll-mode deployment alongside webhook transport",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "UNVERIFIABLE as a first-class bead-ledger state",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Age as the pickup queue's organizing principle in morning-cockpit",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Run the public-git denylist lint against decisions/wayfinder/texas-rr-engagement.md. First, inject a known protected term and confirm the lint fails loudly. Then remove it and confirm the file as currently committed passes cleanly. Both paths need to be exercised — the failure path is the one that isn't proven yet. This is a prerequisite before the next wayfinder session modifies the map.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-03",
+        "id": "act-2026-08-03-validate-04bfb1"
+      },
+      {
+        "command": "/roadmap",
+        "description": "Open the S33 slice record. Record entrance as confirmed (S32 merged, bead-lint reporting in shadow). Write down S33's objective explicitly — it is not named anywhere in the current record. Assign the first S33 deliverable before the next core session begins work.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-03",
+        "id": "act-2026-08-03-roadmap-e31065"
+      },
+      {
+        "command": "/validate",
+        "description": "Review the selfco-box deviations doc (dc02fbf). Triage the three divergences: box-token requirement (correctness risk — silent ingest failure on misconfiguration), pnpm 11 build approval (documentation debt), pi00 naming (documentation debt). Promote the box-token entry to a tracked issue or ADR. Confirm the deployed configuration reflects the box-token requirement before any further configuration changes.",
+        "repo": "selfco-box",
+        "status": "open",
+        "sourceDate": "2026-08-03",
+        "id": "act-2026-08-03-validate-3420d3"
+      }
+    ]
+  },
+  {
     "date": "2026-08-02",
     "title": "Saturday's wayfinder session: charting the texas-rr-engagement and the FDE operating presence seam",
     "summary": "Saturday drove 11 core commits through two interleaved wayfinder maps — FDE operating presence and the first client-engagement traversal — producing a 37-issue work queue and the dossier→presence seam.",
