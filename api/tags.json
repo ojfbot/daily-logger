@@ -12,12 +12,12 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 45
+    "count": 46
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 42
+    "count": 43
   },
   {
     "name": "shell",
@@ -32,17 +32,17 @@
   {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 25
+    "count": 26
+  },
+  {
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 23
   },
   {
     "name": "rest-day",
     "type": "activity",
     "count": 23
-  },
-  {
-    "name": "model-behavior-as-design",
-    "type": "concept",
-    "count": 22
   },
   {
     "name": "adr",
@@ -70,14 +70,14 @@
     "count": 15
   },
   {
-    "name": "purefoy",
-    "type": "repo",
+    "name": "sprint",
+    "type": "concept",
     "count": 13
   },
   {
-    "name": "sprint",
-    "type": "concept",
-    "count": 12
+    "name": "purefoy",
+    "type": "repo",
+    "count": 13
   },
   {
     "name": "beaverGame",
@@ -95,6 +95,11 @@
     "count": 11
   },
   {
+    "name": "morning-cockpit",
+    "type": "repo",
+    "count": 10
+  },
+  {
     "name": "cleanup",
     "type": "concept",
     "count": 10
@@ -103,11 +108,6 @@
     "name": "landing",
     "type": "repo",
     "count": 10
-  },
-  {
-    "name": "morning-cockpit",
-    "type": "repo",
-    "count": 9
   },
   {
     "name": "MrPlug",
@@ -155,6 +155,11 @@
     "count": 7
   },
   {
+    "name": "mirrorworld",
+    "type": "repo",
+    "count": 6
+  },
+  {
     "name": "ojfbot",
     "type": "concept",
     "count": 6
@@ -165,8 +170,8 @@
     "count": 6
   },
   {
-    "name": "mirrorworld",
-    "type": "repo",
+    "name": "build",
+    "type": "concept",
     "count": 5
   },
   {
@@ -187,11 +192,6 @@
   {
     "name": "f1-doctrine",
     "type": "repo",
-    "count": 4
-  },
-  {
-    "name": "build",
-    "type": "concept",
     "count": 4
   },
   {
@@ -243,6 +243,11 @@
     "name": "node-template",
     "type": "repo",
     "count": 4
+  },
+  {
+    "name": "selfco-box",
+    "type": "repo",
+    "count": 3
   },
   {
     "name": "wayfinder",
@@ -305,6 +310,11 @@
     "count": 3
   },
   {
+    "name": "bead-ledger",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "question-layer",
     "type": "concept",
     "count": 2
@@ -337,11 +347,6 @@
   {
     "name": "pipeline",
     "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "selfco-box",
-    "type": "repo",
     "count": 2
   },
   {
@@ -726,11 +731,6 @@
   },
   {
     "name": "pocock",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "bead-ledger",
     "type": "concept",
     "count": 1
   },

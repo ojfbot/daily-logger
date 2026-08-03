@@ -1,5 +1,29 @@
 [
   {
+    "command": "/validate",
+    "description": "Run the public-git denylist lint against decisions/wayfinder/texas-rr-engagement.md. First, inject a known protected term and confirm the lint fails loudly. Then remove it and confirm the file as currently committed passes cleanly. Both paths need to be exercised — the failure path is the one that isn't proven yet. This is a prerequisite before the next wayfinder session modifies the map.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-03",
+    "id": "act-2026-08-03-validate-04bfb1"
+  },
+  {
+    "command": "/roadmap",
+    "description": "Open the S33 slice record. Record entrance as confirmed (S32 merged, bead-lint reporting in shadow). Write down S33's objective explicitly — it is not named anywhere in the current record. Assign the first S33 deliverable before the next core session begins work.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-03",
+    "id": "act-2026-08-03-roadmap-e31065"
+  },
+  {
+    "command": "/validate",
+    "description": "Review the selfco-box deviations doc (dc02fbf). Triage the three divergences: box-token requirement (correctness risk — silent ingest failure on misconfiguration), pnpm 11 build approval (documentation debt), pi00 naming (documentation debt). Promote the box-token entry to a tracked issue or ADR. Confirm the deployed configuration reflects the box-token requirement before any further configuration changes.",
+    "repo": "selfco-box",
+    "status": "open",
+    "sourceDate": "2026-08-03",
+    "id": "act-2026-08-03-validate-3420d3"
+  },
+  {
     "command": "/pr-review",
     "description": "Merge core #359 (/wayfinder at user scope + full/lite charting modes, ADR-0101 rev A). Saturday's 11 wayfinder commits ran against ojfbot-scoped sessions only — the user-scope path the PR enables was never exercised. After merge, validate by running /wayfinder --scope user --mode full outside an ojfbot repo context. Merge before the next charting session.",
     "repo": "core",
