@@ -1,5 +1,124 @@
 [
   {
+    "date": "2026-08-04",
+    "title": "Monday's teach sprint: /teach ships, persist lands in the wayfinder, and a fleet-wide bead sweep closes",
+    "summary": "Monday's 32 commits built and shipped /teach in core — a full lesson-authoring workspace with a zero-JS quiz and a deposit that emits evidence — then immediately opened the wayfinder map governing its persistence.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "lofi-beaver",
+        "type": "repo"
+      },
+      {
+        "name": "silicon-empires",
+        "type": "repo"
+      },
+      {
+        "name": "f1-substrate",
+        "type": "repo"
+      },
+      {
+        "name": "f1-pit-wall",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "skill-catalog",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "wayfinder",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "lofi-beaver",
+      "silicon-empires",
+      "f1-substrate",
+      "f1-pit-wall"
+    ],
+    "commitCount": 11,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Deposit emits evidence; reconciler flags absence — not silent writes",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Zero-JS quiz: radio inputs and :checked selectors, no script execution",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Wayfinder map: teach persistence charted immediately after /teach shipped",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Bead-ledger conformance sweep: frontmatter repairs as fleet-coordinated PRs",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/investigate",
+        "description": "Audit the Pi's selfco vault state before any sync runs: confirm whether ff9c94a has any local-only writes not on the Mac (a naive pull destroys them if so), verify whether the 15-minute poll transport is configured (issue #420 lists zero systemd timers), and confirm teach/ has never arrived on the Pi. Produce a written gap report covering host reachability, vault divergence direction, and provisioning steps required before issue #419 prototype work can begin.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-04",
+        "id": "act-2026-08-04-investigate-e13b8c"
+      },
+      {
+        "command": "/validate",
+        "description": "Confirm deposit.mjs emits a sidecar JSON evidence file to teach/evidence/{session-id}.json and that reconcile-teach-deposits.mjs flags a session with no corresponding evidence file. Synthesize a session that invokes deposit.mjs with no prior lesson record and verify the reconciler raises an absence flag. The failure path — silent absence — is what ADR teach-corpus-deposit-architecture R2 depends on. Run this on Mac; Pi validation is gated on #420 closing.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-04",
+        "id": "act-2026-08-04-validate-08742a"
+      },
+      {
+        "command": "/hardening",
+        "description": "Run skill hardening Wave 1a: the 11 skills with dead or missing knowledge-file pointers (deploy, doc-refactor, pr-review, rag-audit missing JIT files; tdd, triage, deepen, writing-fragments broken See-Also links; skill-loader/knowledge/flows.md, frame-standup/knowledge/northstar.md, bead/references/bead-schemas.md orphaned). Write or delete each pointer. No eval gate required. Complete before Wave 2 description rewrites to avoid polluting the κ baseline with broken JIT directives.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-04",
+        "id": "act-2026-08-04-hardening-2fd995"
+      }
+    ]
+  },
+  {
     "date": "2026-08-03",
     "title": "Sunday: selfco-box gets a split transport, bead-lane aging lands, and S32 closes the ledger loop",
     "summary": "Sunday shipped a transport-split in selfco-box, bead-lane age-ordering in morning-cockpit, and the S32 bead-ledger closure loop in core across 14 commits and 4 repos.",
