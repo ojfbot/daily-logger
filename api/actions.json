@@ -1,5 +1,29 @@
 [
   {
+    "command": "/investigate",
+    "description": "Audit the Pi's selfco vault state before any sync runs: confirm whether ff9c94a has any local-only writes not on the Mac (a naive pull destroys them if so), verify whether the 15-minute poll transport is configured (issue #420 lists zero systemd timers), and confirm teach/ has never arrived on the Pi. Produce a written gap report covering host reachability, vault divergence direction, and provisioning steps required before issue #419 prototype work can begin.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-04",
+    "id": "act-2026-08-04-investigate-e13b8c"
+  },
+  {
+    "command": "/validate",
+    "description": "Confirm deposit.mjs emits a sidecar JSON evidence file to teach/evidence/{session-id}.json and that reconcile-teach-deposits.mjs flags a session with no corresponding evidence file. Synthesize a session that invokes deposit.mjs with no prior lesson record and verify the reconciler raises an absence flag. The failure path — silent absence — is what ADR teach-corpus-deposit-architecture R2 depends on. Run this on Mac; Pi validation is gated on #420 closing.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-04",
+    "id": "act-2026-08-04-validate-08742a"
+  },
+  {
+    "command": "/hardening",
+    "description": "Run skill hardening Wave 1a: the 11 skills with dead or missing knowledge-file pointers (deploy, doc-refactor, pr-review, rag-audit missing JIT files; tdd, triage, deepen, writing-fragments broken See-Also links; skill-loader/knowledge/flows.md, frame-standup/knowledge/northstar.md, bead/references/bead-schemas.md orphaned). Write or delete each pointer. No eval gate required. Complete before Wave 2 description rewrites to avoid polluting the κ baseline with broken JIT directives.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-04",
+    "id": "act-2026-08-04-hardening-2fd995"
+  },
+  {
     "command": "/validate",
     "description": "Run the public-git denylist lint against decisions/wayfinder/texas-rr-engagement.md. First, inject a known protected term and confirm the lint fails loudly. Then remove it and confirm the file as currently committed passes cleanly. Both paths need to be exercised — the failure path is the one that isn't proven yet. This is a prerequisite before the next wayfinder session modifies the map.",
     "repo": "core",
