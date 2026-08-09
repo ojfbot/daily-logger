@@ -1,5 +1,45 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Merge morning-cockpit #44 (Cockpit v2 design bundle, research-only, no code paths) — prerequisite for all Phase 2 code PRs. Until this merges, #45 (S10 fleet-structure API) cannot begin. Then merge #43 (preserved WIP chat tab, confirm-and-merge gate) and open #45 for review in sequence. Combined review time for #44 and #43 under 20 minutes.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-08-09",
+    "id": "act-2026-08-09-pr-review-28dc6a"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge core #445 (D5 canon generation from registry, cockpit-v2 wayfinder closeouts, TD-007 row 15, token vocabulary) in the same session as the morning-cockpit #44/#43 batch. Also merge daily-logger #266 (stale docs/comments, open since 2026-08-04, no recorded blocker — default action is merge unless a conflict is found on inspection).",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-09",
+    "id": "act-2026-08-09-pr-review-8678fc"
+  },
+  {
+    "command": "/validate",
+    "description": "Verify the bead event-log await fix (322efd9): simulate a session-exit race by triggering a bead write near process end and confirming the event appears in the ledger before exit. Silent drop is the failure mode this fix closes. Run this as the first quality-skill invocation of the next session — also serves as a live test of whether session-open positioning changes the 0% suggestion-conversion rate.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-09",
+    "id": "act-2026-08-09-validate-a406b8"
+  },
+  {
+    "command": "/roadmap",
+    "description": "Review S34–S39 PH7 slice records in northstar before opening S4. If they constrain S4's objective, record it explicitly and assign the first deliverable. If S4 is genuinely open after that review, scope it from first principles. S4 must have a named objective before the next decomposition session starts — not as the first task of it.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-09",
+    "id": "act-2026-08-09-roadmap-e92405"
+  },
+  {
+    "command": "/investigate",
+    "description": "Triage the Neistat AI bulletin wayfinder's first unblocked tasks: #424 (RSS capture task) and #425 (research pass on AI position). Both are marked AFK/manual with no external blockers. Confirm which can begin in the next session and whether the purefoy faster-whisper pipeline is reachable for the visual-channel prototype (#437).",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-09",
+    "id": "act-2026-08-09-investigate-dbc6c2"
+  },
+  {
     "command": "/investigate",
     "description": "Audit the Pi's selfco vault state before any sync runs: confirm whether ff9c94a has any local-only writes not on the Mac (a naive pull destroys them if so), verify whether the 15-minute poll transport is configured (issue #420 lists zero systemd timers), and confirm teach/ has never arrived on the Pi. Produce a written gap report covering host reachability, vault divergence direction, and provisioning steps required before issue #419 prototype work can begin.",
     "repo": "core",

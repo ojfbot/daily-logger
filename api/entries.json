@@ -1,5 +1,139 @@
 [
   {
+    "date": "2026-08-09",
+    "title": "Saturday's core decomposition sprint: manifest-driven domains, fleet symlink cleanup, and the Neistat wayfinder map",
+    "summary": "Twenty-seven Saturday commits drove core's manifest-driven domain decomposition through slices S1–S3, pruned dead symlinks across five repos, and opened a new wayfinder map tracking the Neistat AI bulletin program.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "workstation-yuri",
+        "type": "repo"
+      },
+      {
+        "name": "mirrorworld",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "manifest-driven-architecture",
+        "type": "concept"
+      },
+      {
+        "name": "wayfinder",
+        "type": "concept"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "verification-flagged",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "workstation-yuri",
+      "seh-study",
+      "mirrorworld",
+      "lean-canvas",
+      "frame-ui-components"
+    ],
+    "commitCount": 30,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Manifest-driven domain knowledge: universal/ + apps/ layout (decomposition S3)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet reconciler ships in shadow mode first (S1)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Dead symlinks pruned fleet-wide as a single coordinated pass",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "/wizard skill: stage-based human-in-the-loop setup",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Bead event-log write: fire-and-forget → await",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge morning-cockpit #44 (Cockpit v2 design bundle, research-only, no code paths) — prerequisite for all Phase 2 code PRs. Until this merges, #45 (S10 fleet-structure API) cannot begin. Then merge #43 (preserved WIP chat tab, confirm-and-merge gate) and open #45 for review in sequence. Combined review time for #44 and #43 under 20 minutes.",
+        "repo": "morning-cockpit",
+        "status": "open",
+        "sourceDate": "2026-08-09",
+        "id": "act-2026-08-09-pr-review-28dc6a"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Merge core #445 (D5 canon generation from registry, cockpit-v2 wayfinder closeouts, TD-007 row 15, token vocabulary) in the same session as the morning-cockpit #44/#43 batch. Also merge daily-logger #266 (stale docs/comments, open since 2026-08-04, no recorded blocker — default action is merge unless a conflict is found on inspection).",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-09",
+        "id": "act-2026-08-09-pr-review-8678fc"
+      },
+      {
+        "command": "/validate",
+        "description": "Verify the bead event-log await fix (322efd9): simulate a session-exit race by triggering a bead write near process end and confirming the event appears in the ledger before exit. Silent drop is the failure mode this fix closes. Run this as the first quality-skill invocation of the next session — also serves as a live test of whether session-open positioning changes the 0% suggestion-conversion rate.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-09",
+        "id": "act-2026-08-09-validate-a406b8"
+      },
+      {
+        "command": "/roadmap",
+        "description": "Review S34–S39 PH7 slice records in northstar before opening S4. If they constrain S4's objective, record it explicitly and assign the first deliverable. If S4 is genuinely open after that review, scope it from first principles. S4 must have a named objective before the next decomposition session starts — not as the first task of it.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-09",
+        "id": "act-2026-08-09-roadmap-e92405"
+      },
+      {
+        "command": "/investigate",
+        "description": "Triage the Neistat AI bulletin wayfinder's first unblocked tasks: #424 (RSS capture task) and #425 (research pass on AI position). Both are marked AFK/manual with no external blockers. Confirm which can begin in the next session and whether the purefoy faster-whisper pipeline is reachable for the visual-channel prototype (#437).",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-09",
+        "id": "act-2026-08-09-investigate-dbc6c2"
+      }
+    ]
+  },
+  {
     "date": "2026-08-04",
     "title": "Monday's teach sprint: /teach ships, persist lands in the wayfinder, and a fleet-wide bead sweep closes",
     "summary": "Monday's 32 commits built and shipped /teach in core — a full lesson-authoring workspace with a zero-JS quiz and a deposit that emits evidence — then immediately opened the wayfinder map governing its persistence.",
