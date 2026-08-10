@@ -1,5 +1,98 @@
 [
   {
+    "date": "2026-08-10",
+    "title": "Sunday: D5 canon from registry, cockpit-v2 wayfinder closeouts, and fleet symlink hygiene",
+    "summary": "Two Sunday commits closed the cockpit-v2 documentation trail in core and published the daily blog, while nine merged PRs completed a fleet-wide dead-symlink sweep and bead-ledger conformance repairs across five repos.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "wayfinder",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core"
+    ],
+    "commitCount": 5,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "D5 generated from the registry, not hand-authored",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Wayfinder closeouts as evidence gates before code PRs land",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Dead symlink removal as a fleet-wide mechanical sweep",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge morning-cockpit #44 (Cockpit v2 design bundle, research-only, no code paths). Sunday's core commit 807b6c8 closed the wayfinder evidence backing this PR — the documentation blocker is gone. Before merging, resolve the #43 disposition: confirm WIP does not conflict with #44/#45, then queue #43 and #45 for sequential review in the same session.",
+        "repo": "morning-cockpit",
+        "status": "open",
+        "sourceDate": "2026-08-10",
+        "id": "act-2026-08-10-pr-review-1d4d66"
+      },
+      {
+        "command": "/sweep",
+        "description": "After morning-cockpit #44 is confirmed merged: merge daily-logger #266 (open since 2026-08-04, no recorded blocker) and seh-study #20 (open since 2026-08-09, validated by Claude Opus). Combined review under 5 minutes. Brings the cleaner PR queue to zero.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-08-10",
+        "id": "act-2026-08-10-sweep-99365b"
+      },
+      {
+        "command": "/audit",
+        "description": "Schedule fleet-level symlink integrity CI. The dead-symlink sweep this week was caught manually — the architecture gap remains open. One target path dropping in core should produce a lint failure in downstream repos at the time of the core change, not weeks later. This is not yet scheduled; create the tracking issue.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-08-10",
+        "id": "act-2026-08-10-audit-e1a0ce"
+      }
+    ]
+  },
+  {
     "date": "2026-08-09",
     "title": "Saturday's core decomposition sprint: manifest-driven domains, fleet symlink cleanup, and the Neistat wayfinder map",
     "summary": "Twenty-seven Saturday commits drove core's manifest-driven domain decomposition through slices S1–S3, pruned dead symlinks across five repos, and opened a new wayfinder map tracking the Neistat AI bulletin program.",

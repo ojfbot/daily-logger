@@ -1,6 +1,30 @@
 [
   {
     "command": "/pr-review",
+    "description": "Merge morning-cockpit #44 (Cockpit v2 design bundle, research-only, no code paths). Sunday's core commit 807b6c8 closed the wayfinder evidence backing this PR — the documentation blocker is gone. Before merging, resolve the #43 disposition: confirm WIP does not conflict with #44/#45, then queue #43 and #45 for sequential review in the same session.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-08-10",
+    "id": "act-2026-08-10-pr-review-1d4d66"
+  },
+  {
+    "command": "/sweep",
+    "description": "After morning-cockpit #44 is confirmed merged: merge daily-logger #266 (open since 2026-08-04, no recorded blocker) and seh-study #20 (open since 2026-08-09, validated by Claude Opus). Combined review under 5 minutes. Brings the cleaner PR queue to zero.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-08-10",
+    "id": "act-2026-08-10-sweep-99365b"
+  },
+  {
+    "command": "/audit",
+    "description": "Schedule fleet-level symlink integrity CI. The dead-symlink sweep this week was caught manually — the architecture gap remains open. One target path dropping in core should produce a lint failure in downstream repos at the time of the core change, not weeks later. This is not yet scheduled; create the tracking issue.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-10",
+    "id": "act-2026-08-10-audit-e1a0ce"
+  },
+  {
+    "command": "/pr-review",
     "description": "Merge morning-cockpit #44 (Cockpit v2 design bundle, research-only, no code paths) — prerequisite for all Phase 2 code PRs. Until this merges, #45 (S10 fleet-structure API) cannot begin. Then merge #43 (preserved WIP chat tab, confirm-and-merge gate) and open #45 for review in sequence. Combined review time for #44 and #43 under 20 minutes.",
     "repo": "morning-cockpit",
     "status": "open",
