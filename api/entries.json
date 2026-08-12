@@ -1,5 +1,94 @@
 [
   {
+    "date": "2026-08-12",
+    "title": "cca-prep goes public: 11 PRs in one session, from zero to a fully mined CCAR-F deck",
+    "summary": "Tuesday was a sprint day: cca-prep launched as a fleet-first repo with 11 merged PRs, completing all 150 CCAR-F hard-mode items, privacy gate, finance domain pack, and fleet registration across core, morning-cockpit, and daily-logger.",
+    "tags": [
+      {
+        "name": "cca-prep",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "generation-over-content",
+        "type": "concept"
+      },
+      {
+        "name": "privacy-gate",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-onboard",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "daily-logger",
+      "seh-study",
+      "morning-cockpit",
+      "cca-prep"
+    ],
+    "commitCount": 13,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Generation-over-content: deck items synthesized fresh from the official guide, never transcribed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Hashed privacy name gate: the gate must cover its own merge artifacts",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Publication checklist truthfulness: record what the agent permission layer actually permits",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Three-tier source policy: provenance rules for deck content",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet registration as a sequenced ritual, not an afterthought",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "RFI response committed to disk before the session closed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-08-10",
     "title": "Sunday: D5 canon from registry, cockpit-v2 wayfinder closeouts, and fleet symlink hygiene",
     "summary": "Two Sunday commits closed the cockpit-v2 documentation trail in core and published the daily blog, while nine merged PRs completed a fleet-wide dead-symlink sweep and bead-ledger conformance repairs across five repos.",
