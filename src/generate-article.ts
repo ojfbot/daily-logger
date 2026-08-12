@@ -23,6 +23,7 @@ Frame is a shared shell framework that hosts multiple Claude-powered application
 Additional repos:
 - **mirrorworld** — geospatial intelligence track: real places as explorable three.js scenes (earth data bundles from 3DEP/orthoimagery/OSM + heightfield rendering); PRODUCER for the fairway golf digital twin (decomposed into its own repo 2026-07-30); frontier phase (gaussian splats, photorealistic 3D tiles, satellite-to-3D) follows the Bilawal Sidhu mentor corpus.
 - **fairway** — golf digital twin, decomposed out of mirrorworld 2026-07-30: the explorable twin surface consuming mirrorworld terrain/bundles and capture-agent model outputs (Vite app, port 5187).
+- **cca-prep** — multi-exam certification-prep engine for the Anthropic Claude certs (CCAR-F/CCDV-F/CCAR-P): zero-dependency Node drill server (port 8631) with per-exam deck registry and scope walls; generation-over-content thesis (fresh QA-gated questions, telemetry-driven retirement); personal telemetry stays in the selfco vault.
 - **buddy-check** — SME-calibrated dive-storefront Q&A + eval harness — judge calibration, standards-grounded hybrid RAG lab.
 - **silicon-empires** — AoE-style RTS of the AI-infrastructure complex — queues, capital, energy, silicon.
 - **f1-press-room** — F1 teaching studio — claim-checked articles + shorts consuming the f1 pair's export seam.
