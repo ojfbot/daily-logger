@@ -2,17 +2,17 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 63
+    "count": 64
+  },
+  {
+    "name": "core",
+    "type": "repo",
+    "count": 50
   },
   {
     "name": "ci-cd",
     "type": "practice",
     "count": 50
-  },
-  {
-    "name": "core",
-    "type": "repo",
-    "count": 49
   },
   {
     "name": "assistant-centric",
@@ -62,7 +62,7 @@
   {
     "name": "sprint",
     "type": "concept",
-    "count": 15
+    "count": 16
   },
   {
     "name": "asset-foundry",
@@ -75,14 +75,14 @@
     "count": 15
   },
   {
-    "name": "purefoy",
+    "name": "morning-cockpit",
     "type": "repo",
     "count": 13
   },
   {
-    "name": "morning-cockpit",
+    "name": "purefoy",
     "type": "repo",
-    "count": 12
+    "count": 13
   },
   {
     "name": "cleanup",
@@ -310,6 +310,11 @@
     "count": 3
   },
   {
+    "name": "fleet-onboard",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "workstation-yuri",
     "type": "repo",
     "count": 2
@@ -438,6 +443,21 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "cca-prep",
+    "type": "repo",
+    "count": 1
+  },
+  {
+    "name": "generation-over-content",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "privacy-gate",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "manifest-driven-architecture",
@@ -596,11 +616,6 @@
   },
   {
     "name": "opm-inspectability",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "fleet-onboard",
     "type": "concept",
     "count": 1
   },
