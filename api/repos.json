@@ -1,19 +1,21 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 107,
-    "totalCommits": 1355,
+    "articleCount": 108,
+    "totalCommits": 1371,
     "relatedTags": [
       "cca-prep",
       "core",
-      "morning-cockpit",
       "daily-logger",
+      "surface-isolation",
       "generation-over-content",
+      "wayfinder",
+      "exam-instrumentation",
+      "sprint",
+      "morning-cockpit",
       "privacy-gate",
       "fleet-onboard",
-      "sprint",
       "assistant-centric",
-      "wayfinder",
       "adr",
       "cleanup",
       "ci-cd",
@@ -216,19 +218,21 @@
   },
   {
     "name": "core",
-    "articleCount": 67,
-    "totalCommits": 1248,
+    "articleCount": 68,
+    "totalCommits": 1264,
     "relatedTags": [
       "cca-prep",
       "core",
-      "morning-cockpit",
       "daily-logger",
+      "surface-isolation",
       "generation-over-content",
+      "wayfinder",
+      "exam-instrumentation",
+      "sprint",
+      "morning-cockpit",
       "privacy-gate",
       "fleet-onboard",
-      "sprint",
       "assistant-centric",
-      "wayfinder",
       "adr",
       "cleanup",
       "ci-cd",
@@ -1784,6 +1788,24 @@
     ]
   },
   {
+    "name": "cca-prep",
+    "articleCount": 2,
+    "totalCommits": 29,
+    "relatedTags": [
+      "cca-prep",
+      "core",
+      "daily-logger",
+      "surface-isolation",
+      "generation-over-content",
+      "wayfinder",
+      "exam-instrumentation",
+      "sprint",
+      "morning-cockpit",
+      "privacy-gate",
+      "fleet-onboard"
+    ]
+  },
+  {
     "name": "f1-substrate",
     "articleCount": 2,
     "totalCommits": 40,
@@ -1833,21 +1855,6 @@
       "fleet-onboard",
       "skill-telemetry",
       "assistant-centric"
-    ]
-  },
-  {
-    "name": "cca-prep",
-    "articleCount": 1,
-    "totalCommits": 13,
-    "relatedTags": [
-      "cca-prep",
-      "core",
-      "morning-cockpit",
-      "daily-logger",
-      "generation-over-content",
-      "privacy-gate",
-      "fleet-onboard",
-      "sprint"
     ]
   },
   {

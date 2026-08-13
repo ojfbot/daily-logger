@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 64
+    "count": 65
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 50
+    "count": 51
   },
   {
     "name": "ci-cd",
@@ -62,7 +62,7 @@
   {
     "name": "sprint",
     "type": "concept",
-    "count": 16
+    "count": 17
   },
   {
     "name": "asset-foundry",
@@ -130,6 +130,11 @@
     "count": 8
   },
   {
+    "name": "wayfinder",
+    "type": "concept",
+    "count": 7
+  },
+  {
     "name": "mirrorworld",
     "type": "repo",
     "count": 7
@@ -158,11 +163,6 @@
     "name": "frame-agent",
     "type": "arch",
     "count": 7
-  },
-  {
-    "name": "wayfinder",
-    "type": "concept",
-    "count": 6
   },
   {
     "name": "ojfbot",
@@ -310,6 +310,16 @@
     "count": 3
   },
   {
+    "name": "cca-prep",
+    "type": "repo",
+    "count": 2
+  },
+  {
+    "name": "generation-over-content",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "fleet-onboard",
     "type": "concept",
     "count": 2
@@ -445,12 +455,12 @@
     "count": 2
   },
   {
-    "name": "cca-prep",
-    "type": "repo",
+    "name": "surface-isolation",
+    "type": "concept",
     "count": 1
   },
   {
-    "name": "generation-over-content",
+    "name": "exam-instrumentation",
     "type": "concept",
     "count": 1
   },
