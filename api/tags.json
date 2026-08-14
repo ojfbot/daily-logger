@@ -2,17 +2,17 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 65
+    "count": 66
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 51
+    "count": 52
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 50
+    "count": 51
   },
   {
     "name": "assistant-centric",
@@ -55,14 +55,14 @@
     "count": 20
   },
   {
-    "name": "hardening",
-    "type": "practice",
+    "name": "sprint",
+    "type": "concept",
     "count": 18
   },
   {
-    "name": "sprint",
-    "type": "concept",
-    "count": 17
+    "name": "hardening",
+    "type": "practice",
+    "count": 18
   },
   {
     "name": "asset-foundry",
@@ -120,6 +120,11 @@
     "count": 9
   },
   {
+    "name": "wayfinder",
+    "type": "concept",
+    "count": 8
+  },
+  {
     "name": "BlogEngine",
     "type": "concept",
     "count": 8
@@ -128,11 +133,6 @@
     "name": "core-reader",
     "type": "repo",
     "count": 8
-  },
-  {
-    "name": "wayfinder",
-    "type": "concept",
-    "count": 7
   },
   {
     "name": "mirrorworld",
@@ -260,6 +260,16 @@
     "count": 4
   },
   {
+    "name": "cca-prep",
+    "type": "repo",
+    "count": 3
+  },
+  {
+    "name": "generation-over-content",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "selfco-box",
     "type": "repo",
     "count": 3
@@ -308,16 +318,6 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
-  },
-  {
-    "name": "cca-prep",
-    "type": "repo",
-    "count": 2
-  },
-  {
-    "name": "generation-over-content",
-    "type": "concept",
-    "count": 2
   },
   {
     "name": "fleet-onboard",
@@ -453,6 +453,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "instrument-surface",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "surface-isolation",

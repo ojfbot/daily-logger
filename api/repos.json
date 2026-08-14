@@ -1,24 +1,25 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 108,
-    "totalCommits": 1371,
+    "articleCount": 109,
+    "totalCommits": 1383,
     "relatedTags": [
       "cca-prep",
       "core",
       "daily-logger",
-      "surface-isolation",
       "generation-over-content",
+      "instrument-surface",
       "wayfinder",
-      "exam-instrumentation",
       "sprint",
+      "ci-cd",
+      "surface-isolation",
+      "exam-instrumentation",
       "morning-cockpit",
       "privacy-gate",
       "fleet-onboard",
       "assistant-centric",
       "adr",
       "cleanup",
-      "ci-cd",
       "workstation-yuri",
       "mirrorworld",
       "manifest-driven-architecture",
@@ -218,24 +219,25 @@
   },
   {
     "name": "core",
-    "articleCount": 68,
-    "totalCommits": 1264,
+    "articleCount": 69,
+    "totalCommits": 1276,
     "relatedTags": [
       "cca-prep",
       "core",
       "daily-logger",
-      "surface-isolation",
       "generation-over-content",
+      "instrument-surface",
       "wayfinder",
-      "exam-instrumentation",
       "sprint",
+      "ci-cd",
+      "surface-isolation",
+      "exam-instrumentation",
       "morning-cockpit",
       "privacy-gate",
       "fleet-onboard",
       "assistant-centric",
       "adr",
       "cleanup",
-      "ci-cd",
       "workstation-yuri",
       "mirrorworld",
       "manifest-driven-architecture",
@@ -1665,6 +1667,26 @@
     ]
   },
   {
+    "name": "cca-prep",
+    "articleCount": 3,
+    "totalCommits": 41,
+    "relatedTags": [
+      "cca-prep",
+      "core",
+      "daily-logger",
+      "generation-over-content",
+      "instrument-surface",
+      "wayfinder",
+      "sprint",
+      "ci-cd",
+      "surface-isolation",
+      "exam-instrumentation",
+      "morning-cockpit",
+      "privacy-gate",
+      "fleet-onboard"
+    ]
+  },
+  {
     "name": "f1-pit-wall",
     "articleCount": 3,
     "totalCommits": 51,
@@ -1785,24 +1807,6 @@
       "tooling-for-iteration",
       "skill-audit",
       "babylon-migration"
-    ]
-  },
-  {
-    "name": "cca-prep",
-    "articleCount": 2,
-    "totalCommits": 29,
-    "relatedTags": [
-      "cca-prep",
-      "core",
-      "daily-logger",
-      "surface-isolation",
-      "generation-over-content",
-      "wayfinder",
-      "exam-instrumentation",
-      "sprint",
-      "morning-cockpit",
-      "privacy-gate",
-      "fleet-onboard"
     ]
   },
   {
