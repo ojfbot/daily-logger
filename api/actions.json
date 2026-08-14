@@ -1,6 +1,30 @@
 [
   {
     "command": "/pr-review",
+    "description": "Merge cca-prep #26 (fix(decks): repoint plan.html Lab 1 at ruled labs/ home). One-line correction removing the phantom newline-ai-course path hardcoded in plan.html. Wayfinder ruling 455 is unambiguous. Zero risk. Merge before any Lab 1 template work begins or the phantom path re-enters scope.",
+    "repo": "cca-prep",
+    "status": "open",
+    "sourceDate": "2026-08-14",
+    "id": "act-2026-08-14-pr-review-c4053b"
+  },
+  {
+    "command": "/investigate",
+    "description": "Run surface-check completeness audit on cca-prep before the next mock sitting. Three violating paths were found live during M2 and fixed in #25, but no grep audit was run before merge. Audit every drill-bank access point in src/ for code that reads deck items without first checking the surface field. This should have been the merge condition for #25 — run it now to confirm no fourth path exists.",
+    "repo": "cca-prep",
+    "status": "open",
+    "sourceDate": "2026-08-14",
+    "id": "act-2026-08-14-investigate-e28724"
+  },
+  {
+    "command": "/roadmap",
+    "description": "Assign an owner and deadline to core #447 (TD-009: worktrees inherit local main, HIGH severity). Record the CCDV-F milestone: exam stub active with 30 items (DV1–DV30), second track live. Define blueprint-quota coverage target for the full CCDV-F deck. Disposition morning-cockpit #43 (WIP chat tab) so the #44/#45 sequence can unblock.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-08-14",
+    "id": "act-2026-08-14-roadmap-fb295d"
+  },
+  {
+    "command": "/pr-review",
     "description": "Merge morning-cockpit #44 (Cockpit v2 design bundle, research-only, no code paths). Sunday's core commit 807b6c8 closed the wayfinder evidence backing this PR — the documentation blocker is gone. Before merging, resolve the #43 disposition: confirm WIP does not conflict with #44/#45, then queue #43 and #45 for sequential review in the same session.",
     "repo": "morning-cockpit",
     "status": "open",
