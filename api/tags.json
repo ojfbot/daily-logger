@@ -2,17 +2,17 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 66
+    "count": 67
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 52
+    "count": 53
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 51
+    "count": 52
   },
   {
     "name": "assistant-centric",
@@ -35,6 +35,11 @@
     "count": 26
   },
   {
+    "name": "rest-day",
+    "type": "activity",
+    "count": 24
+  },
+  {
     "name": "adr",
     "type": "practice",
     "count": 24
@@ -43,11 +48,6 @@
     "name": "model-behavior-as-design",
     "type": "concept",
     "count": 24
-  },
-  {
-    "name": "rest-day",
-    "type": "activity",
-    "count": 23
   },
   {
     "name": "phase-1",
@@ -77,7 +77,7 @@
   {
     "name": "morning-cockpit",
     "type": "repo",
-    "count": 13
+    "count": 14
   },
   {
     "name": "purefoy",
@@ -120,6 +120,11 @@
     "count": 9
   },
   {
+    "name": "audit",
+    "type": "concept",
+    "count": 8
+  },
+  {
     "name": "wayfinder",
     "type": "concept",
     "count": 8
@@ -142,11 +147,6 @@
   {
     "name": "storybook",
     "type": "infra",
-    "count": 7
-  },
-  {
-    "name": "audit",
-    "type": "concept",
     "count": 7
   },
   {
@@ -198,6 +198,21 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
+  },
+  {
+    "name": "cca-prep",
+    "type": "repo",
+    "count": 4
+  },
+  {
+    "name": "seh-study",
+    "type": "repo",
+    "count": 4
+  },
+  {
+    "name": "generation-over-content",
+    "type": "concept",
+    "count": 4
   },
   {
     "name": "verification-flagged",
@@ -260,16 +275,6 @@
     "count": 4
   },
   {
-    "name": "cca-prep",
-    "type": "repo",
-    "count": 3
-  },
-  {
-    "name": "generation-over-content",
-    "type": "concept",
-    "count": 3
-  },
-  {
     "name": "selfco-box",
     "type": "repo",
     "count": 3
@@ -305,11 +310,6 @@
     "count": 3
   },
   {
-    "name": "seh-study",
-    "type": "repo",
-    "count": 3
-  },
-  {
     "name": "groupthink",
     "type": "repo",
     "count": 3
@@ -318,6 +318,11 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "instrument-surface",
+    "type": "concept",
+    "count": 2
   },
   {
     "name": "fleet-onboard",
@@ -453,11 +458,6 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
-  },
-  {
-    "name": "instrument-surface",
-    "type": "concept",
-    "count": 1
   },
   {
     "name": "surface-isolation",
