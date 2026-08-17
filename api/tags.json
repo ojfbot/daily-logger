@@ -5,14 +5,14 @@
     "count": 67
   },
   {
-    "name": "core",
-    "type": "repo",
+    "name": "ci-cd",
+    "type": "practice",
     "count": 53
   },
   {
-    "name": "ci-cd",
-    "type": "practice",
-    "count": 52
+    "name": "core",
+    "type": "repo",
+    "count": 53
   },
   {
     "name": "assistant-centric",
@@ -32,21 +32,21 @@
   {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 26
-  },
-  {
-    "name": "rest-day",
-    "type": "activity",
-    "count": 24
-  },
-  {
-    "name": "adr",
-    "type": "practice",
-    "count": 24
+    "count": 27
   },
   {
     "name": "model-behavior-as-design",
     "type": "concept",
+    "count": 25
+  },
+  {
+    "name": "rest-day",
+    "type": "activity",
+    "count": 25
+  },
+  {
+    "name": "adr",
+    "type": "practice",
     "count": 24
   },
   {
@@ -80,14 +80,14 @@
     "count": 14
   },
   {
-    "name": "purefoy",
-    "type": "repo",
+    "name": "cleanup",
+    "type": "concept",
     "count": 13
   },
   {
-    "name": "cleanup",
-    "type": "concept",
-    "count": 12
+    "name": "purefoy",
+    "type": "repo",
+    "count": 13
   },
   {
     "name": "beaverGame",
@@ -110,6 +110,11 @@
     "count": 10
   },
   {
+    "name": "wayfinder",
+    "type": "concept",
+    "count": 9
+  },
+  {
     "name": "skill-catalog",
     "type": "concept",
     "count": 9
@@ -121,11 +126,6 @@
   },
   {
     "name": "audit",
-    "type": "concept",
-    "count": 8
-  },
-  {
-    "name": "wayfinder",
     "type": "concept",
     "count": 8
   },
@@ -175,6 +175,16 @@
     "count": 6
   },
   {
+    "name": "cca-prep",
+    "type": "repo",
+    "count": 5
+  },
+  {
+    "name": "verification-flagged",
+    "type": "concept",
+    "count": 5
+  },
+  {
     "name": "f1-pit-wall",
     "type": "repo",
     "count": 5
@@ -200,22 +210,12 @@
     "count": 5
   },
   {
-    "name": "cca-prep",
-    "type": "repo",
-    "count": 4
-  },
-  {
     "name": "seh-study",
     "type": "repo",
     "count": 4
   },
   {
     "name": "generation-over-content",
-    "type": "concept",
-    "count": 4
-  },
-  {
-    "name": "verification-flagged",
     "type": "concept",
     "count": 4
   },

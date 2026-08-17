@@ -1,5 +1,70 @@
 [
   {
+    "date": "2026-08-17",
+    "title": "Sunday cleanup: wayfinder rules the phantom path out of cca-prep's plan.html",
+    "summary": "One surgical commit Sunday closed cca-prep's stale Lab 1 path reference, guided by a wayfinder ruling that correctly identified the nonexistent repo.",
+    "tags": [
+      {
+        "name": "cca-prep",
+        "type": "repo"
+      },
+      {
+        "name": "wayfinder",
+        "type": "concept"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "verification-flagged",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "cca-prep",
+      "core",
+      "morning-cockpit",
+      "daily-logger",
+      "seh-study"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Wayfinder as a defect-detection mechanism, not just a planning tool",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "One-line fixes that unblock downstream work deserve prompt merge",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-08-15",
     "title": "Friday on a sitting day: one blog commit, fifteen cca-prep PRs merged in seven days",
     "summary": "A single daily-logger housekeeping commit on Friday closes a week of intensive cca-prep work — fifteen PRs merged in seven days, two exam tracks now active.",
