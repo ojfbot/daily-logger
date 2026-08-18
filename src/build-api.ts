@@ -193,6 +193,8 @@ const KNOWN_REPOS = new Set([
   'gcgcca', 'capture-agent', 'fairway', 'beaverGame', 'asset-foundry',
   // Added 2026-08-11: cca-prep onboarding (fleet-onboard).
   'cca-prep',
+  // Added 2026-08-18: jim-camera onboarding (fleet-onboard).
+  'jim-camera',
   'morning-cockpit',
   // Added 2026-06-10: selfco-box drift-heal (swept since 05-17, missing here)
   // + the four repos registered after the outage audit.
@@ -220,6 +222,7 @@ const TAG_TYPE_MAP: Record<string, string> = {
   'gcgcca': 'repo', 'capture-agent': 'repo', 'fairway': 'repo', 'beaverGame': 'repo', 'beavergame': 'repo', 'asset-foundry': 'repo',
   // Added 2026-08-11 alongside the KNOWN_REPOS addition (set+map, per the 05-05 incident).
   'cca-prep': 'repo',
+  'jim-camera': 'repo',
   'morning-cockpit': 'repo',
   // Added 2026-06-10 alongside KNOWN_REPOS additions.
   'selfco-box': 'repo',
