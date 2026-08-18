@@ -28,6 +28,7 @@ const REPOS = [
   'capture-agent',     // Golf-course capture agent (renamed from gcgcca 2026-07-30) — USGS Earth Explorer acquisition + TX-corpus/segmentation-model mission
   'fairway',           // Golf digital twin (decomposed from mirrorworld 2026-07-30) — explorable twin surface
   'cca-prep',          // Multi-exam Claude-cert prep engine (CCAR-F/CCDV-F/CCAR-P) — generation-over-content drill server + deck registry
+  'jim-camera',        // jim.camera portfolio + Lightroom-cloud pipeline — manifest-fed gallery + darkroom CLI
   'beaverGame',        // Cozy Beaver — 3D beaver simulator (Three.js client)
   'asset-foundry',     // AI-driven Blender asset pipeline consumed by beaverGame
   'github-actions',    // Shared GitHub Actions + reusable workflows for the fleet (ADR-0067)
