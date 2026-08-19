@@ -1,5 +1,29 @@
 [
   {
+    "command": "/validate",
+    "description": "Run a full end-to-end headless generate pass: `node /path/to/cv-builder/cli/generate.js` from a directory outside the cv-builder project root. Pass criteria: (1) run completes without a file-not-found error, confirming the path-resolution fix (2106be8); (2) the orchestrator debug log shows populated `bio` and `jobTarget` fields — non-null, non-empty — before the first agent dispatches, confirming the context injection fix (ee66a74); (3) a structured output file appears at the configured output path. If bio/jobTarget are empty in the debug log, ee66a74 did not propagate correctly.",
+    "repo": "cv-builder",
+    "status": "open",
+    "sourceDate": "2026-08-19",
+    "id": "act-2026-08-19-validate-786e76"
+  },
+  {
+    "command": "/investigate",
+    "description": "Read the source for Resume Generator, Tailoring, Skills Gap, and Interview Coach agents. Determine whether each agent reads bio/jobTarget from the orchestrator-provided context object, or whether any agent constructs its own context independently. If any agent constructs its own, ee66a74 fixed only the orchestrator-level injection and those agents still start from scratch — the silent data-loss bug is partially open. Document the finding before the next feature merges.",
+    "repo": "cv-builder",
+    "status": "open",
+    "sourceDate": "2026-08-19",
+    "id": "act-2026-08-19-investigate-923d57"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review and merge cv-builder #152 (fix(deps): resolve 8 HIGH prod vulns). The security-scan.yml job has been red since June 26 — 54 days — with no documented exception or false-positive triage on record. Jim is both author and reviewer as the sole operator. Merge it before any new agent feature lands on the current dep tree.",
+    "repo": "cv-builder",
+    "status": "open",
+    "sourceDate": "2026-08-19",
+    "id": "act-2026-08-19-pr-review-b3c636"
+  },
+  {
     "command": "/pr-review",
     "description": "Merge cca-prep #26 (fix(decks): repoint plan.html Lab 1 at ruled labs/ home). One-line correction removing the phantom newline-ai-course path hardcoded in plan.html. Wayfinder ruling 455 is unambiguous. Zero risk. Merge before any Lab 1 template work begins or the phantom path re-enters scope.",
     "repo": "cca-prep",
