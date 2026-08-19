@@ -6,7 +6,7 @@
 
 1. Sweeping the last 24 h of commits and PRs (both open and closed) across all ojfbot repos via the GitHub API
 2. Aggregating Claude Code skill telemetry (skill-dispositions ledger, suggestion follow-through tracking, and PR skill comments) alongside commit/PR data
-3. Feeding that context to Claude Sonnet with a project-aware system prompt
+3. Feeding that context to Claude Opus 5 with a project-aware system prompt
 4. Committing the resulting article to `articles/YYYY-MM-DD.md` (with a dedicated skill telemetry section)
 5. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
 The workflow runs on a daily cron at 09:00 UTC and can also be triggered manually with a date override or dry-run flag.
@@ -71,7 +71,7 @@ regenerate `system.md` via core's `/opm render`). Shadow-mode only: nothing gate
 
 ## Adding new repos to the sweep
 
-Edit the `REPOS` array in `src/collect-context.ts`. The sweep is additive — adding a repo costs one batch of `gh api` calls per run. Recent additions (f1-pit-wall, f1-substrate, lofi-beaver, golf-platform-scripts) were registered in commit `745beb2`; the registration PR is #210.
+Edit the `REPOS` array in `src/collect-context.ts`. The sweep is additive — adding a repo costs one batch of `gh api` calls per run. f1-pit-wall, f1-substrate, lofi-beaver, and golf-platform-scripts were registered in commit `745beb2` (PR #210, pending merge).
 
 ## Updating the system prompt / project vision
 
