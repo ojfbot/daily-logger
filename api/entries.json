@@ -1,5 +1,117 @@
 [
   {
+    "date": "2026-08-19",
+    "title": "Tuesday deep-dive: cv-builder agent wiring, structured outputs, and two new core communication skills",
+    "summary": "Seven commits Tuesday hardened cv-builder's agent-core plumbing and promoted two new business-communication skills to the core catalog.",
+    "tags": [
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "agent-orchestration",
+        "type": "concept"
+      },
+      {
+        "name": "structured-outputs",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "skill-catalog",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "cv-builder",
+      "core"
+    ],
+    "commitCount": 11,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Subpath imports over barrel index in browser-app",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Inject saved bio/job data into orchestrator requests",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Structured outputs for job analysis agent",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Default all agents to claude-opus-5 with 16k max output",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "CLI path resolution from any working directory",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "/pitch-craft and /eli as catalog skills, not ad-hoc prompts",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Run a full end-to-end headless generate pass: `node /path/to/cv-builder/cli/generate.js` from a directory outside the cv-builder project root. Pass criteria: (1) run completes without a file-not-found error, confirming the path-resolution fix (2106be8); (2) the orchestrator debug log shows populated `bio` and `jobTarget` fields — non-null, non-empty — before the first agent dispatches, confirming the context injection fix (ee66a74); (3) a structured output file appears at the configured output path. If bio/jobTarget are empty in the debug log, ee66a74 did not propagate correctly.",
+        "repo": "cv-builder",
+        "status": "open",
+        "sourceDate": "2026-08-19",
+        "id": "act-2026-08-19-validate-786e76"
+      },
+      {
+        "command": "/investigate",
+        "description": "Read the source for Resume Generator, Tailoring, Skills Gap, and Interview Coach agents. Determine whether each agent reads bio/jobTarget from the orchestrator-provided context object, or whether any agent constructs its own context independently. If any agent constructs its own, ee66a74 fixed only the orchestrator-level injection and those agents still start from scratch — the silent data-loss bug is partially open. Document the finding before the next feature merges.",
+        "repo": "cv-builder",
+        "status": "open",
+        "sourceDate": "2026-08-19",
+        "id": "act-2026-08-19-investigate-923d57"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Review and merge cv-builder #152 (fix(deps): resolve 8 HIGH prod vulns). The security-scan.yml job has been red since June 26 — 54 days — with no documented exception or false-positive triage on record. Jim is both author and reviewer as the sole operator. Merge it before any new agent feature lands on the current dep tree.",
+        "repo": "cv-builder",
+        "status": "open",
+        "sourceDate": "2026-08-19",
+        "id": "act-2026-08-19-pr-review-b3c636"
+      }
+    ]
+  },
+  {
     "date": "2026-08-17",
     "title": "Sunday cleanup: wayfinder rules the phantom path out of cca-prep's plan.html",
     "summary": "One surgical commit Sunday closed cca-prep's stale Lab 1 path reference, guided by a wayfinder ruling that correctly identified the nonexistent repo.",

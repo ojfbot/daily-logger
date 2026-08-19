@@ -5,14 +5,14 @@
     "count": 67
   },
   {
-    "name": "ci-cd",
-    "type": "practice",
-    "count": 53
-  },
-  {
     "name": "core",
     "type": "repo",
-    "count": 53
+    "count": 54
+  },
+  {
+    "name": "ci-cd",
+    "type": "practice",
+    "count": 54
   },
   {
     "name": "assistant-centric",
@@ -37,7 +37,7 @@
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 25
+    "count": 26
   },
   {
     "name": "rest-day",
@@ -55,22 +55,22 @@
     "count": 20
   },
   {
+    "name": "hardening",
+    "type": "practice",
+    "count": 19
+  },
+  {
     "name": "sprint",
     "type": "concept",
     "count": 18
   },
   {
-    "name": "hardening",
-    "type": "practice",
-    "count": 18
+    "name": "cv-builder",
+    "type": "repo",
+    "count": 16
   },
   {
     "name": "asset-foundry",
-    "type": "repo",
-    "count": 15
-  },
-  {
-    "name": "cv-builder",
     "type": "repo",
     "count": 15
   },
@@ -105,17 +105,17 @@
     "count": 11
   },
   {
+    "name": "skill-catalog",
+    "type": "concept",
+    "count": 10
+  },
+  {
     "name": "landing",
     "type": "repo",
     "count": 10
   },
   {
     "name": "wayfinder",
-    "type": "concept",
-    "count": 9
-  },
-  {
-    "name": "skill-catalog",
     "type": "concept",
     "count": 9
   },
@@ -458,6 +458,16 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "agent-orchestration",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "structured-outputs",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "surface-isolation",
