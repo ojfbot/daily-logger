@@ -18,6 +18,7 @@ import { execSync } from 'child_process'
 /** Repos in the org that are deliberately NOT swept. Policy, not drift. */
 export const EXCLUDED_REPOS: ReadonlySet<string> = new Set([
   'selfco', // the operator's private vault — intentionally unswept (see daily-logger tracking note)
+  'dealdesk', // client bids/proposals/engagements — never reaches the public blog (operator ruling 2026-09-24, PR #280)
 ])
 
 /**
@@ -72,7 +73,6 @@ export const REPO_NOTES: Record<string, string> = {
   // Added 2026-09-24 (fleet-onboard backport after the 08-21 → 09-24 silent-sweep incident).
   'lego-village-pipeline': 'play-well cluster — digital twin + build harness for the family LEGO Christmas village (correspondence register, design packages, DT-DESIGN cuts)',
   'play-well-library': 'play-well cluster — canonical LEGO village content library (branch flow play/<user> → staging → main)',
-  'dealdesk': 'control-plane dashboard for client-work bids, proposals, and engagements — local board + AI proposal reviewer',
   'foundry-recipes': 'Blender tutorial extraction pipeline — sped-up reels become structured BlenderRecipe records in Notion, read on demand by asset-foundry',
 }
 
@@ -131,7 +131,8 @@ export function classifyFleet(
   const swept: string[] = []
   const skippedPrivate: string[] = []
   for (const r of live) {
-    if (isPublicRepo(r) || r.name in notes) swept.push(r.name)
+    // Own-property check: `in` would opt in a repo named e.g. `constructor` or `toString`.
+    if (isPublicRepo(r) || Object.prototype.hasOwnProperty.call(notes, r.name)) swept.push(r.name)
     else skippedPrivate.push(r.name)
   }
   const discovered = new Set(valid.map((r) => r.name))
@@ -218,7 +219,7 @@ export function reportSurfaceDrift(repos: string[], systemPrompt: string): strin
   const warnings: string[] = []
   for (const repo of repos) {
     const gaps: string[] = []
-    if (!(repo in REPO_NOTES)) gaps.push('src/fleet.ts REPO_NOTES (surface 3)')
+    if (!Object.prototype.hasOwnProperty.call(REPO_NOTES, repo)) gaps.push('src/fleet.ts REPO_NOTES (surface 3)')
     if (!systemPrompt.includes(`**${repo}**`)) gaps.push('generate-article.ts "Additional repos" (surface 4)')
     if (gaps.length > 0) {
       warnings.push(`fleet drift: ${repo} is swept but missing from ${gaps.join(' and ')} — run /fleet-onboard ${repo}`)

@@ -53,7 +53,7 @@ describe('EXCLUDED_REPOS / KNOWN_REPOS', () => {
   })
 
   it('carries the 2026-09-24 backport repos', () => {
-    for (const r of ['lego-village-pipeline', 'play-well-library', 'dealdesk', 'foundry-recipes']) {
+    for (const r of ['lego-village-pipeline', 'play-well-library', 'foundry-recipes']) {
       expect(KNOWN_REPOS.has(r)).toBe(true)
     }
   })
@@ -168,8 +168,22 @@ describe('discoverRepos — visibility gate and lost-token guard', () => {
 
   it('(b) sweeps a private repo that REPO_NOTES opts in', () => {
     payload(fullOrg())
-    expect(discoverRepos('ojfbot')).toContain('dealdesk')
+    expect(discoverRepos('ojfbot')).toContain('foundry-recipes')
     expect(warnings()).toEqual([])
+  })
+
+  it('never sweeps dealdesk (client work, excluded by policy) and does not warn about it', () => {
+    payload([...fullOrg(), { name: 'dealdesk', visibility: 'PRIVATE' }])
+    expect(discoverRepos('ojfbot')).not.toContain('dealdesk')
+    expect(warnings().some((l) => l.includes('dealdesk'))).toBe(false)
+    expect(KNOWN_REPOS.has('dealdesk')).toBe(false)
+  })
+
+  it('does not treat inherited object keys as an opt-in (no `in` bypass)', () => {
+    const tricks = ['constructor', 'toString', 'hasOwnProperty', '__proto__']
+    payload([...fullOrg(), ...tricks.map((name) => ({ name, visibility: 'PRIVATE' }))])
+    const repos = discoverRepos('ojfbot')
+    for (const n of tricks) expect(repos).not.toContain(n)
   })
 
   it('(c) sweeps a public repo with no note', () => {
@@ -178,9 +192,9 @@ describe('discoverRepos — visibility gate and lost-token guard', () => {
   })
 
   it('(d) warns when a noted repo is absent from discovery', () => {
-    payload(fullOrg().filter((r) => r.name !== 'dealdesk'))
+    payload(fullOrg().filter((r) => r.name !== 'foundry-recipes'))
     discoverRepos('ojfbot')
-    expect(warnings()).toContain('::warning::fleet drift: noted repo(s) not discovered: dealdesk')
+    expect(warnings()).toContain('::warning::fleet drift: noted repo(s) not discovered: foundry-recipes')
   })
 
   it('(e) throws when every private noted repo is absent while public ones are present (lost private scope)', () => {

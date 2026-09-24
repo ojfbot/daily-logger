@@ -47,7 +47,7 @@ const openIssueFixture = [
 const repoListFixture = [
   { name: 'shell', pushedAt: '2026-02-27T20:00:00Z', isArchived: false, isFork: false, visibility: 'PUBLIC' },
   { name: 'BlogEngine', pushedAt: '2026-02-26T00:00:00Z', isArchived: false, isFork: false, visibility: 'PUBLIC' },
-  { name: 'dealdesk', pushedAt: '2026-02-25T00:00:00Z', isArchived: false, isFork: false, visibility: 'PRIVATE' },
+  { name: 'foundry-recipes', pushedAt: '2026-02-25T00:00:00Z', isArchived: false, isFork: false, visibility: 'PRIVATE' },
   { name: 'client-private', pushedAt: '2026-02-28T01:00:00Z', isArchived: false, isFork: false, visibility: 'PRIVATE' },
   { name: 'old-thing', pushedAt: '2025-01-01T00:00:00Z', isArchived: true, isFork: false, visibility: 'PUBLIC' },
   { name: 'upstream-fork', pushedAt: '2026-02-27T00:00:00Z', isArchived: false, isFork: true, visibility: 'PUBLIC' },
@@ -251,7 +251,7 @@ describe('collectContext — fleet discovery (derived sweep set)', () => {
 
   it('sweeps public + opted-in private repos (minus archived/fork/denylist), most recently pushed first', async () => {
     const ctx = await collectContext('2026-02-28')
-    expect(ctx.repos).toEqual(['shell', 'BlogEngine', 'dealdesk'])
+    expect(ctx.repos).toEqual(['shell', 'BlogEngine', 'foundry-recipes'])
   })
 
   it('never queries a private repo that REPO_NOTES does not opt in', async () => {
