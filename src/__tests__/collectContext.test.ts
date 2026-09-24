@@ -268,6 +268,22 @@ describe('collectContext — fleet discovery (derived sweep set)', () => {
   })
 })
 
+describe('collectContext — FLEET_REPOS test seam', () => {
+  afterEach(() => {
+    delete process.env.FLEET_REPOS
+    vi.mocked(execSync).mockImplementation(mockExecSync)
+  })
+
+  it('pins the sweep set and skips discovery when FLEET_REPOS is set', async () => {
+    process.env.FLEET_REPOS = 'shell, BlogEngine'
+    vi.mocked(execSync).mockClear() // call history accumulates across tests
+    const ctx = await collectContext('2026-02-28')
+    expect(ctx.repos).toEqual(['shell', 'BlogEngine'])
+    const calls = vi.mocked(execSync).mock.calls.map((c) => String(c[0]))
+    expect(calls.some((c) => c.includes('gh repo list'))).toBe(false)
+  })
+})
+
 describe('collectContext — gh api calls fit in one page (2026-09-24 silent-skip fix)', () => {
   // `--paginate` walked every page of the closed-PR list (core ≈ 5.9 MB) and
   // overflowed execSync's 1 MB default maxBuffer, so the four busiest repos were
