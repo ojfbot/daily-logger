@@ -43,9 +43,19 @@ const openIssueFixture = [
   },
 ]
 
+// Fleet discovery fixture — the sweep set is derived from `gh repo list` (src/fleet.ts).
+const repoListFixture = [
+  { name: 'shell', pushedAt: '2026-02-27T20:00:00Z', isArchived: false, isFork: false },
+  { name: 'BlogEngine', pushedAt: '2026-02-26T00:00:00Z', isArchived: false, isFork: false },
+  { name: 'old-thing', pushedAt: '2025-01-01T00:00:00Z', isArchived: true, isFork: false },
+  { name: 'upstream-fork', pushedAt: '2026-02-27T00:00:00Z', isArchived: false, isFork: true },
+  { name: 'selfco', pushedAt: '2026-02-28T00:00:00Z', isArchived: false, isFork: false },
+]
+
 // Route fixture responses by repo+endpoint — scope fixtures to 'shell' only
 // so dedup-by-URL doesn't overwrite them with data from later repos in the loop.
 function mockExecSync(cmd: string): string {
+  if (cmd.includes('gh repo list')) return JSON.stringify(repoListFixture)
   const forShell = cmd.includes('ojfbot/shell')
   if (forShell && cmd.includes('/pulls?state=open')) return JSON.stringify(openPRFixture)
   if (forShell && cmd.includes('/issues?state=open')) return JSON.stringify(openIssueFixture)
@@ -144,6 +154,7 @@ describe('collectContext — open issue createdAt mapping', () => {
 
   it('filters out pull_request entries from issues endpoint', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('gh repo list')) return JSON.stringify(repoListFixture)
       if (cmd.includes('/issues?state=open')) {
         return JSON.stringify([
           { number: 1, title: 'Real issue', labels: [], html_url: 'https://...', body: null, created_at: '2026-02-01T00:00:00Z', updated_at: '2026-02-01T00:00:00Z' },
@@ -195,6 +206,7 @@ describe('collectContext — resilience', () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
       // Preflight passes (token is valid); per-endpoint calls fail.
       if (cmd.includes('gh api rate_limit')) return '{}'
+      if (cmd.includes('gh repo list')) return JSON.stringify(repoListFixture)
       throw new Error('gh: HTTP 500')
     })
     const ctx = await collectContext('2026-02-28')
@@ -206,9 +218,98 @@ describe('collectContext — resilience', () => {
   })
 
   it('returns empty arrays when API returns malformed JSON', async () => {
-    vi.mocked(execSync).mockReturnValue(Buffer.from('not valid json'))
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('gh repo list')) return JSON.stringify(repoListFixture)
+      return Buffer.from('not valid json')
+    })
     const ctx = await collectContext('2026-02-28')
     expect(ctx.openPRs).toEqual([])
+  })
+
+  afterEach(() => {
+    vi.mocked(execSync).mockImplementation(mockExecSync)
+  })
+})
+
+describe('collectContext — fleet discovery (derived sweep set)', () => {
+  afterEach(() => {
+    vi.mocked(execSync).mockImplementation(mockExecSync)
+  })
+
+  it('sweeps every non-archived, non-fork org repo minus the denylist, most recently pushed first', async () => {
+    const ctx = await collectContext('2026-02-28')
+    expect(ctx.repos).toEqual(['shell', 'BlogEngine'])
+  })
+
+  it('never falls back to a hand list: discovery failure throws instead of sweeping nothing', async () => {
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('gh api rate_limit')) return '{}'
+      if (cmd.includes('gh repo list')) throw new Error('gh: HTTP 403')
+      return mockExecSync(cmd)
+    })
+    await expect(collectContext('2026-02-28')).rejects.toThrow(/Fleet discovery failed/)
+  })
+
+  it('throws when discovery returns an empty org', async () => {
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('gh repo list')) return '[]'
+      return mockExecSync(cmd)
+    })
+    await expect(collectContext('2026-02-28')).rejects.toThrow(/no repos/)
+  })
+
+  it('only queries repos that discovery returned', async () => {
+    await collectContext('2026-02-28')
+    const calls = vi.mocked(execSync).mock.calls.map((c) => String(c[0]))
+    expect(calls.some((c) => c.includes('repos/ojfbot/shell/commits'))).toBe(true)
+    expect(calls.some((c) => c.includes('repos/ojfbot/selfco/'))).toBe(false)
+    expect(calls.some((c) => c.includes('repos/ojfbot/old-thing/'))).toBe(false)
+    expect(calls.some((c) => c.includes('repos/ojfbot/upstream-fork/'))).toBe(false)
+  })
+})
+
+describe('collectContext — gh api calls fit in one page (2026-09-24 silent-skip fix)', () => {
+  // `--paginate` walked every page of the closed-PR list (core ≈ 5.9 MB) and
+  // overflowed execSync's 1 MB default maxBuffer, so the four busiest repos were
+  // silently "skipped" on every run. The per_page caps are the whole answer.
+  it('does not paginate the capped list endpoints', async () => {
+    await collectContext('2026-02-28')
+    const apiCalls = vi.mocked(execSync).mock.calls.map((c) => String(c[0])).filter((c) => c.includes('gh api "repos/'))
+    expect(apiCalls.length).toBeGreaterThan(0)
+    expect(apiCalls.filter((c) => c.includes('--paginate'))).toEqual([])
+  })
+
+  it('raises maxBuffer well above the 1 MB default on every gh api call', async () => {
+    await collectContext('2026-02-28')
+    const optsList = vi.mocked(execSync).mock.calls
+      .filter((c) => String(c[0]).includes('gh api "repos/'))
+      .map((c) => c[1] as { maxBuffer?: number } | undefined)
+    expect(optsList.length).toBeGreaterThan(0)
+    for (const opts of optsList) {
+      expect(opts?.maxBuffer ?? 0).toBeGreaterThanOrEqual(8 * 1024 * 1024)
+    }
+  })
+
+  it('parses a closed-PR page larger than the old 1 MB buffer', async () => {
+    const bigBody = 'x'.repeat(60_000)
+    const bigPage = Array.from({ length: 30 }, (_, i) => ({
+      number: 100 + i,
+      title: `PR ${i}`,
+      merged_at: '2026-02-27T12:00:00Z',
+      additions: 1,
+      deletions: 1,
+      html_url: `https://github.com/ojfbot/shell/pull/${100 + i}`,
+      body: bigBody,
+      user: { login: 'ojfbot' },
+    }))
+    const payload = JSON.stringify(bigPage)
+    expect(payload.length).toBeGreaterThan(1024 * 1024)
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('ojfbot/shell') && cmd.includes('/pulls?state=closed')) return payload
+      return mockExecSync(cmd)
+    })
+    const ctx = await collectContext('2026-02-28')
+    expect(ctx.mergedPRs.filter((pr) => pr.repo === 'shell')).toHaveLength(30)
   })
 
   afterEach(() => {

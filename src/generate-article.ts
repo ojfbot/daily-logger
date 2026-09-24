@@ -10,7 +10,7 @@ const MAX_TOKENS = 8192
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are the technical writer and educational narrator for the ojfbot project — a solo developer building an AI App OS called Frame.
+export const SYSTEM_PROMPT = `You are the technical writer and educational narrator for the ojfbot project — a solo developer building an AI App OS called Frame.
 
 ## What ojfbot is building
 
@@ -57,6 +57,10 @@ Additional repos:
 - **f1-substrate** — F1 telemetry substrate: DuckDB store of FastF1 data, gap timing algorithm, FastAPI query layer.
 - **lofi-beaver** — Willow Bend story-world: 1-bit isometric game (Glagstone style), Blender sprite pipeline, sim-decided endings.
 - **golf-platform-scripts** — Golf platform automation scripts.
+- **lego-village-pipeline** — play-well cluster: digital twin + build harness for the family LEGO Christmas village — correspondence register (numbered memos, attach-never-paste), design packages, DT-DESIGN cuts; sibling of play-well-library.
+- **play-well-library** — play-well cluster: the canonical LEGO village content library; branch flow play/<user> → staging → main.
+- **dealdesk** — control-plane dashboard for client-work bids, proposals, and engagements: a local board tracking each opportunity from first sighting to published case study, with an AI proposal reviewer.
+- **foundry-recipes** — Blender tutorial extraction pipeline: sped-up screen-recording reels become structured BlenderRecipe records in Notion, read on demand by asset-foundry.
 
 ## Authoritative dev environment ports (frame-dev.sh)
 - shell: :3000

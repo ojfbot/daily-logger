@@ -48,11 +48,17 @@ const TODO_RE = /\b(TODO|FIXME|HACK|XXX)\s*[:\-]?\s*(.{10,})/i
 
 // ─── Shell helpers ─────────────────────────────────────────────────────────────
 
+// 16 MB: a single gh api page or a contents blob must never trip execSync's
+// default 1 MB maxBuffer (that overflow is what silently "skipped" the busiest
+// repos in collect-context until 2026-09-24).
+const RUN_MAX_BUFFER = 16 * 1024 * 1024
+
 function run(cmd: string, cwd?: string): string {
   return execSync(cmd, {
     encoding: 'utf-8',
     env: { ...process.env },
     timeout: 60_000,
+    maxBuffer: RUN_MAX_BUFFER,
     cwd,
   })
 }
@@ -66,7 +72,8 @@ function tryRun(cmd: string, cwd?: string): string | null {
 }
 
 function ghApi<T>(endpoint: string): T | null {
-  const raw = tryRun(`gh api "${endpoint}" --paginate 2>/dev/null`)
+  // Single page: every endpoint here is either a capped list (per_page) or one object.
+  const raw = tryRun(`gh api "${endpoint}" 2>/dev/null`)
   if (!raw) return null
   try {
     return JSON.parse(raw) as T
