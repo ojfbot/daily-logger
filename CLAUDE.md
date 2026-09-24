@@ -38,7 +38,8 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 | File | Purpose |
 |---|---|
 | `src/index.ts` | Entry point — orchestrates collect → generate → write |
-| `src/collect-context.ts` | GitHub API sweep via `gh` CLI |
+| `src/collect-context.ts` | GitHub API sweep via `gh` CLI (single page per call, 16 MB buffer) |
+| `src/fleet.ts` | Sweep membership: `discoverRepos()` (derived from `gh repo list`), `EXCLUDED_REPOS`, `REPO_NOTES` → `KNOWN_REPOS`, `reportSurfaceDrift()` |
 | `src/collect-telemetry.ts` | Aggregates skill usage from `~/selfco/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources. **Note:** commit `4dd6765` fixed a silent no-op where skill-audit fetched telemetry from the wrong remote; telemetry collection now targets the correct source. |
 | `src/generate-article.ts` | Claude API call + prompt, JSON → markdown (includes dedicated skill telemetry section) |
 | `src/schema.ts` | Zod schemas + validation (ArticleDataSchema/ArticleDataV2, TypedTagSchema, ShipmentEntrySchema, DecisionEntrySchema, ActionItemSchema, ClosedActionSchema, CodeReferenceSchema, StructuredArticleSchema; `actionId`, `validateArticleOutput`, `getValidationErrors`) |
@@ -71,7 +72,23 @@ regenerate `system.md` via core's `/opm render`). Shadow-mode only: nothing gate
 
 ## Adding new repos to the sweep
 
-Edit the `REPOS` array in `src/collect-context.ts`. The sweep is additive — adding a repo costs one batch of `gh api` calls per run. Recent additions include f1-pit-wall, f1-substrate, lofi-beaver, golf-platform-scripts (commit `745beb2`, PR #210) and cca-prep (commit `2a99bdb`).
+You don't. Since 2026-09-24 the sweep set is **derived** at run time: `src/fleet.ts`
+`discoverRepos()` takes every non-archived, non-fork repo in the `ojfbot` org via
+`gh repo list`, minus `EXCLUDED_REPOS` (policy exclusions such as the private `selfco`
+vault). A new repo is swept on its first run after it exists. Discovery failure throws
+so the run goes red instead of retiring the day as "no activity".
+
+What is still hand-maintained (fleet-onboard surfaces 3–4), and warned about in the run
+log as `::warning::fleet drift: …` when a swept repo lacks it:
+
+- `REPO_NOTES` in `src/fleet.ts` — one-line role; also feeds `KNOWN_REPOS` for the API
+  builder and tag classifier (surface 3).
+- The "Additional repos" bullet in `SYSTEM_PROMPT` (`src/generate-article.ts`) — the
+  drafter mischaracterizes activity without it (surface 4).
+
+Run core's `/fleet-onboard <repo>` to fill both. History: four repos founded 04-30 → 09-17
+went dark for up to five weeks under the old hand-listed `REPOS` array (see
+`implementation-notes.md`, 2026-09-24).
 
 ## Updating the system prompt / project vision
 

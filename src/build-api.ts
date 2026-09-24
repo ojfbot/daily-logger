@@ -16,6 +16,8 @@ import { fileURLToPath } from 'url'
 import { marked } from 'marked'
 import { ARTICLE_OUTCOMES, actionId, type CodeReference } from './schema.js'
 
+import { KNOWN_REPOS } from './fleet.js'
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
 const ARTICLES_DIR = join(REPO_ROOT, '_articles')
@@ -183,62 +185,23 @@ function extractDecisionsFromBody(body: string): Array<{ title: string; summary:
   return decisions
 }
 
-const KNOWN_REPOS = new Set([
-  'shell', 'cv-builder', 'BlogEngine', 'TripPlanner', 'core', 'core-reader',
-  'MrPlug', 'purefoy', 'daily-logger', 'lean-canvas', 'seh-study', 'GroupThink', 'landing',
-  'github-actions',
-  // Added 2026-05-05: present in collect-context.ts REPOS but were missing here,
-  // causing extractReposFromBody() to silently drop them when articles lacked
-  // an explicit reposActive frontmatter entry.
-  'gcgcca', 'capture-agent', 'fairway', 'beaverGame', 'asset-foundry',
-  // Added 2026-08-11: cca-prep onboarding (fleet-onboard).
-  'cca-prep',
-  // Added 2026-08-18: jim-camera onboarding (fleet-onboard).
-  'jim-camera',
-  'morning-cockpit',
-  // Added 2026-06-10: selfco-box drift-heal (swept since 05-17, missing here)
-  // + the four repos registered after the outage audit.
-  'selfco-box',
-  'f1-pit-wall', 'f1-substrate', 'lofi-beaver', 'golf-platform-scripts',
-  // Added 2026-07-22: portfolio-first gap-closers (dive-briefing / switchboard / agent-anatomy).
-  'dive-briefing', 'switchboard', 'agent-anatomy',
-  // Added 2026-07-22 (fleet-onboard reconcile).
-  'buddy-check', 'silicon-empires', 'f1-press-room', 'bldgblog-corpus', 'gastown-pilot', 'frame-ui-components', 'workstation-yuri', 'virtualLight',
-  // Added 2026-07-23: geospatial track (fleet-onboard).
-  'mirrorworld',
-  // Added 2026-07-24: RAQG question layer for the F1 stack (fleet-onboard).
-  'f1-doctrine',
-])
+// KNOWN_REPOS lives in src/fleet.ts (derived from REPO_NOTES) so the sweep,
+// the API builder and the tag classifier share one registration. Fleet-onboard
+// surface 3 is now "add a REPO_NOTES entry".
 
 // ─── Tag type inference for v1 articles ─────────────────────────────────────
 
+// Repo tags are derived from KNOWN_REPOS in both casings (article tag arrays
+// preserve original case, e.g. 'beaverGame'). Explicit entries below override —
+// 'frame-ui-components' is intentionally 'infra', not 'repo': although a fleet
+// repo exists, article tag arrays use it as an infra/topic tag (alongside
+// shared-components, module-federation, ci-cd). See TS1117 fix 2026-07-23.
+const REPO_TAG_TYPES: Record<string, string> = Object.fromEntries(
+  [...KNOWN_REPOS].flatMap((r) => [[r, 'repo'], [r.toLowerCase(), 'repo']]),
+)
+
 const TAG_TYPE_MAP: Record<string, string> = {
-  'shell': 'repo', 'cv-builder': 'repo', 'blogengine': 'repo', 'tripplanner': 'repo',
-  'daily-logger': 'repo', 'mrplug': 'repo', 'purefoy': 'repo', 'core': 'repo',
-  'core-reader': 'repo', 'lean-canvas': 'repo', 'seh-study': 'repo', 'groupthink': 'repo',
-  'landing': 'repo', 'node-template': 'repo', 'github-actions': 'repo',
-  // Added 2026-05-05 alongside KNOWN_REPOS additions. Both casings recorded
-  // because article tag arrays preserve original case (e.g. 'beaverGame').
-  'gcgcca': 'repo', 'capture-agent': 'repo', 'fairway': 'repo', 'beaverGame': 'repo', 'beavergame': 'repo', 'asset-foundry': 'repo',
-  // Added 2026-08-11 alongside the KNOWN_REPOS addition (set+map, per the 05-05 incident).
-  'cca-prep': 'repo',
-  'jim-camera': 'repo',
-  'morning-cockpit': 'repo',
-  // Added 2026-06-10 alongside KNOWN_REPOS additions.
-  'selfco-box': 'repo',
-  'f1-pit-wall': 'repo', 'f1-substrate': 'repo', 'lofi-beaver': 'repo',
-  'golf-platform-scripts': 'repo',
-  // Added 2026-07-22 alongside KNOWN_REPOS additions.
-  'dive-briefing': 'repo', 'switchboard': 'repo', 'agent-anatomy': 'repo',
-  // Added 2026-07-22 (fleet-onboard reconcile).
-  'buddy-check': 'repo', 'silicon-empires': 'repo', 'f1-press-room': 'repo', 'bldgblog-corpus': 'repo', 'gastown-pilot': 'repo', 'workstation-yuri': 'repo', 'virtualLight': 'repo', 'virtuallight': 'repo',
-  // 'frame-ui-components' is intentionally classified 'infra' below, not 'repo':
-  // although a fleet repo exists, article tag arrays use it as an infra/topic tag
-  // (alongside shared-components, module-federation, ci-cd). See TS1117 fix 2026-07-23.
-  // Added 2026-07-23 alongside KNOWN_REPOS addition (fleet-onboard).
-  'mirrorworld': 'repo',
-  // Added 2026-07-24 alongside KNOWN_REPOS addition (fleet-onboard).
-  'f1-doctrine': 'repo',
+  ...REPO_TAG_TYPES,
   'module-federation': 'arch', 'container-presenter': 'arch', 'frame-agent': 'arch',
   'frame-os': 'arch', 'architecture': 'arch',
   'ci-cd': 'practice', 'visual-regression': 'practice', 'adr': 'practice',

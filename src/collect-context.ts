@@ -4,69 +4,35 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import type { ADRRegistryEntry, BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo, PRSkillUsage, RecentPRInfo } from './types.js'
 import { collectTelemetry } from './collect-telemetry.js'
+import { discoverRepos, reportSurfaceDrift } from './fleet.js'
+import { SYSTEM_PROMPT } from './generate-article.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
 const ARTICLES_DIR = join(REPO_ROOT, '_articles')
 
-// All ojfbot repos swept on every run, ordered by activity weight.
-// To add a repo: append its name here. Run `gh repo list ojfbot` to audit.
-const REPOS = [
-  'shell',            // Frame OS — Vite Module Federation host + frame-agent LLM gateway + K8s
-  'cv-builder',
-  'BlogEngine',
-  'TripPlanner',
-  'core',           // core (formerly node-template) — slash commands + TypeScript engine; hosts the selfco/vault skill (.claude/skills/vault/)
-  'core-reader',    // CoreReader — metadata dashboard for core commands, ADRs, roadmap
-  'MrPlug',
-  'purefoy',
-  'daily-logger',     // this repo — captures logger's own commits and improvements
-  'lean-canvas',      // Lean Canvas — Frame OS sub-app, AI-assisted business model design
-  'seh-study',        // SEH Study — NASA SE Handbook study client, Frame OS sub-app
-  'GroupThink',       // GroupThink — LLM-powered tab grouping Chrome extension
-  'landing',           // jim.software — personal landing page
-  'capture-agent',     // Golf-course capture agent (renamed from gcgcca 2026-07-30) — USGS Earth Explorer acquisition + TX-corpus/segmentation-model mission
-  'fairway',           // Golf digital twin (decomposed from mirrorworld 2026-07-30) — explorable twin surface
-  'cca-prep',          // Multi-exam Claude-cert prep engine (CCAR-F/CCDV-F/CCAR-P) — generation-over-content drill server + deck registry
-  'jim-camera',        // jim.camera portfolio + Lightroom-cloud pipeline — manifest-fed gallery + darkroom CLI
-  'beaverGame',        // Cozy Beaver — 3D beaver simulator (Three.js client)
-  'asset-foundry',     // AI-driven Blender asset pipeline consumed by beaverGame
-  'github-actions',    // Shared GitHub Actions + reusable workflows for the fleet (ADR-0067)
-  'selfco-box',        // selfco vault runner — Notion/iOS/MCP capture daemon ingesting into the (untracked) ~/selfco vault
-  'morning-cockpit',   // local-first morning dashboard — beads + reading + research-paper explainers
-  // Added 2026-06-10: created/first-pushed during the 05-19→06-09 outage window,
-  // discovered unregistered by the backfill audit (gh repo list ojfbot to re-audit).
-  'f1-pit-wall',       // F1 race-engineering dashboard — telemetry literacy layer + claim-grounding harness
-  'f1-substrate',      // F1 telemetry substrate — DuckDB FastF1 store, gap algorithm, FastAPI query layer
-  'lofi-beaver',       // Willow Bend story-world — 1-bit isometric game, Blender sprite pipeline
-  'golf-platform-scripts', // golf platform automation scripts
-  // Added 2026-07-22: portfolio-first gap-closer repos (operator sitting; core PR #249).
-  'dive-briefing',     // public dive-Q&A RAG service — hybrid retrieval + citation verification (buddy-check's public sibling)
-  'switchboard',       // fleet LLM gateway — provider adapters, per-app budgets, opt-in labeled failover
-  'agent-anatomy',     // anatomy of the fleet's multi-agent system — diagrams + pattern excerpts (article companion)
-  // Added 2026-07-22 (fleet-onboard reconcile): active repos the sweep had drifted past.
-  'buddy-check',         // SME-calibrated dive-storefront Q&A + eval harness — judge calibration, standards-grounded hybrid RAG lab
-  'silicon-empires',     // AoE-style RTS of the AI-infrastructure complex — queues, capital, energy, silicon
-  'f1-press-room',       // F1 teaching studio — claim-checked articles + shorts consuming the f1 pair's export seam
-  'bldgblog-corpus',     // deterministic BLDGBLOG archive ingest (2,512 posts) — annotated corpus + selfco deposit-library collection #1
-  'gastown-pilot',       // Gas Town 6-tab coordination dashboard — reads the bead store
-  'frame-ui-components', // shared Carbon DS component library for Frame sub-apps
-  'workstation-yuri',    // macOS workstation automation — Focus modes, wallpapers, launcher registrations
-  'virtualLight',     // book-to-cinema pipeline — deterministic passage extraction + cinematography-styled video prompts (revived 2026-07-23; Gibson corpus private, public-domain demo)
-  // Added 2026-07-23: geospatial track (fleet-onboard alongside core registration PR #270).
-  'mirrorworld',      // real places as explorable three.js scenes — earth bundles (3DEP/imagery/OSM) + golf digital twin (apps/fairway); Bilawal Sidhu mentor corpus
-  // Added 2026-07-24: RAQG question layer for the F1 stack (fleet-onboard).
-  'f1-doctrine',      // doctrine corpus + retriever suggesting strategist questions bound to f1-substrate calls; never computes numbers
-]
+// The swept repo set is DERIVED at run time (src/fleet.ts discoverRepos) —
+// every non-archived, non-fork org repo minus EXCLUDED_REPOS. Hand-listing
+// repos here is what let four founded repos go dark (2026-08-21 → 09-24).
+// To add a repo's description for the drafter, edit REPO_NOTES in fleet.ts.
 
 // ─── GitHub API helper ────────────────────────────────────────────────────────
 
+// A single page only. `--paginate` used to walk EVERY page of the closed-PR /
+// all-PR / closed-issue lists (core: 357 PRs ≈ 5.9 MB), overflowing execSync's
+// default 1 MB maxBuffer and silently "skipping" the four busiest repos on
+// every run — merged PRs, recent PRs and closed issues from shell, cv-builder,
+// core and daily-logger never reached the article or the cleaner. The per_page
+// values are "top N by updated" caps and are meant to be the whole answer.
+const GH_MAX_BUFFER = 16 * 1024 * 1024
+
 function ghApi<T>(endpoint: string): T | null {
   try {
-    const raw = execSync(`gh api "${endpoint}" --paginate 2>/dev/null`, {
+    const raw = execSync(`gh api "${endpoint}" 2>/dev/null`, {
       encoding: 'utf-8',
       env: { ...process.env },
       timeout: 30_000,
+      maxBuffer: GH_MAX_BUFFER,
     })
     return JSON.parse(raw) as T
   } catch {
@@ -421,7 +387,7 @@ const SKILL_UPDATE_MARKER = '<!-- skill-usage-update'
 
 function getSkillUsageFromPRComments(org: string, repo: string, prNumber: number): PRSkillUsage | undefined {
   type GHComment = { body: string }
-  const comments = ghApi<GHComment[]>(`repos/${org}/${repo}/issues/${prNumber}/comments`)
+  const comments = ghApi<GHComment[]>(`repos/${org}/${repo}/issues/${prNumber}/comments?per_page=100`)
   if (!comments) return undefined
 
   const skillComments = comments.filter(
@@ -505,7 +471,15 @@ export async function collectContext(date: string): Promise<BlogContext> {
   const allOpen: IssueInfo[] = []
   const allADRs: ADRRegistryEntry[] = []
 
-  for (const repo of REPOS) {
+  // Fleet discovery (surface 2 is derived; throws on failure — see fleet.ts).
+  const repos = discoverRepos(org)
+  console.log(`  → fleet: ${repos.length} repos discovered via gh repo list ${org}`)
+  for (const w of reportSurfaceDrift(repos, SYSTEM_PROMPT)) {
+    // ::warning:: renders as a GitHub Actions annotation; harmless locally.
+    console.warn(`::warning::${w}`)
+  }
+
+  for (const repo of repos) {
     console.log(`  ${repo}...`)
     allCommits.push(...getCommits(org, repo, since24h))
     allPRs.push(...getMergedPRs(org, repo, since7d))
@@ -548,7 +522,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
 
   const ctx: BlogContext = {
     date,
-    repos: REPOS,
+    repos,
     commits: dedup(allCommits).sort((a, b) => b.date.localeCompare(a.date)),
     mergedPRs: dedup(allPRs).sort((a, b) => b.mergedAt.localeCompare(a.mergedAt)),
     openPRs: dedup(allOpenPRs).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
