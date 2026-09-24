@@ -22,8 +22,12 @@ export const EXCLUDED_REPOS: ReadonlySet<string> = new Set([
 
 /**
  * One-line role per repo. Drafter grounding and the surface-3/4 anchor:
- * a repo listed here is a KNOWN_REPO for the API builder; a swept repo that is
- * NOT listed here is still swept, and reported as drift.
+ * a repo listed here is a KNOWN_REPO for the API builder; a PUBLIC swept repo
+ * that is NOT listed here is still swept, and reported as drift.
+ *
+ * An entry here is also the opt-in for a PRIVATE (or INTERNAL) repo: the blog is
+ * public, so a non-public repo is swept only when it is listed here, and skipped
+ * with a run-log warning otherwise (operator ruling 2026-09-24, PR #280).
  */
 export const REPO_NOTES: Record<string, string> = {
   'shell': 'Frame OS — Vite Module Federation host + frame-agent LLM gateway + K8s',
@@ -90,20 +94,61 @@ export interface DiscoveredRepo {
   pushedAt?: string | null
   isArchived?: boolean
   isFork?: boolean
+  /** `PUBLIC` | `PRIVATE` | `INTERNAL` from `gh repo list --json visibility`. */
+  visibility?: string | null
 }
 
-/** Pure filter/order over a `gh repo list` payload — exported for tests. */
-export function selectSweptRepos(list: DiscoveredRepo[]): string[] {
-  return list
-    .filter((r) => r && typeof r.name === 'string')
+/**
+ * Private-repo opt-in (operator ruling 2026-09-24, PR #280): the blog is PUBLIC,
+ * so a non-public repo reaches the drafter ONLY when it has a REPO_NOTES entry.
+ * A repo whose visibility is missing or unrecognized is treated as non-public —
+ * the safe default when GitHub's payload shape drifts.
+ */
+export function isPublicRepo(r: DiscoveredRepo): boolean {
+  return typeof r.visibility === 'string' && r.visibility.toUpperCase() === 'PUBLIC'
+}
+
+export interface FleetSelection {
+  /** Repos to sweep, most recently pushed first. */
+  swept: string[]
+  /** Non-public, non-archived, non-fork repos skipped for lack of a REPO_NOTES opt-in. */
+  skippedPrivate: string[]
+  /** REPO_NOTES entries that discovery did not return at all (lost token scope, rename, deletion). */
+  missingNoted: string[]
+  /** How many non-public repos discovery returned (any state) — 0 is the lost-private-scope signature. */
+  privateDiscovered: number
+}
+
+/** Pure classification of a `gh repo list` payload — exported for tests. */
+export function classifyFleet(
+  list: DiscoveredRepo[],
+  notes: Record<string, string> = REPO_NOTES,
+): FleetSelection {
+  const valid = list.filter((r) => r && typeof r.name === 'string')
+  const live = valid
     .filter((r) => !r.isArchived && !r.isFork && !EXCLUDED_REPOS.has(r.name))
     .sort((a, b) => (b.pushedAt ?? '').localeCompare(a.pushedAt ?? ''))
-    .map((r) => r.name)
+  const swept: string[] = []
+  const skippedPrivate: string[] = []
+  for (const r of live) {
+    if (isPublicRepo(r) || r.name in notes) swept.push(r.name)
+    else skippedPrivate.push(r.name)
+  }
+  const discovered = new Set(valid.map((r) => r.name))
+  const missingNoted = Object.keys(notes).filter((n) => !discovered.has(n))
+  const privateDiscovered = valid.filter((r) => !isPublicRepo(r)).length
+  return { swept, skippedPrivate, missingNoted, privateDiscovered }
+}
+
+/** Swept names only — exported for tests. */
+export function selectSweptRepos(list: DiscoveredRepo[]): string[] {
+  return classifyFleet(list).swept
 }
 
 /**
  * The live sweep set: every non-archived, non-fork repo in the org minus
- * EXCLUDED_REPOS, most recently pushed first. Throws on any failure — a failed
+ * EXCLUDED_REPOS, most recently pushed first — public repos always, non-public
+ * repos only when opted in via REPO_NOTES. Throws on any failure — a failed
  * discovery must go red, not sweep nothing and retire the day as "no activity"
  * (the same silent-green shape as the 2026-05-19 expired-PAT outage).
  */
@@ -118,7 +163,7 @@ export function discoverRepos(org: string): string[] {
   let raw: string
   try {
     raw = execSync(
-      `gh repo list ${org} --limit 300 --json name,pushedAt,isArchived,isFork 2>/dev/null`,
+      `gh repo list ${org} --limit 300 --json name,pushedAt,isArchived,isFork,visibility 2>/dev/null`,
       { encoding: 'utf-8', env: { ...process.env }, timeout: 30_000, maxBuffer: 16 * 1024 * 1024 },
     )
   } catch {
@@ -136,11 +181,31 @@ export function discoverRepos(org: string): string[] {
   if (!Array.isArray(list) || list.length === 0) {
     throw new Error(`Fleet discovery failed: \`gh repo list ${org}\` returned no repos.`)
   }
-  const repos = selectSweptRepos(list as DiscoveredRepo[])
-  if (repos.length === 0) {
-    throw new Error('Fleet discovery failed: every org repo was filtered out (archived/fork/excluded).')
+  const sel = classifyFleet(list as DiscoveredRepo[])
+
+  if (sel.skippedPrivate.length > 0) {
+    // Names only — nothing else about a non-opted-in private repo leaves this function.
+    console.warn(
+      `::warning::fleet: skipped ${sel.skippedPrivate.length} private repo(s) with no REPO_NOTES opt-in: ${sel.skippedPrivate.join(', ')}`,
+    )
   }
-  return repos
+  if (sel.missingNoted.length > 0) {
+    // Lost-token guard: a PAT that lost private-repo scope makes `gh repo list`
+    // return public repos only. With zero non-public repos in the payload, every
+    // private noted repo is necessarily absent — fail loud rather than publish a
+    // day that silently omits them.
+    if (sel.privateDiscovered === 0 && sel.swept.length > 0) {
+      throw new Error(
+        'Fleet discovery failed: `gh repo list` returned no private repos, so every private REPO_NOTES ' +
+          `repo is missing (${sel.missingNoted.join(', ')}). GH_PAT has likely lost private-repo scope.`,
+      )
+    }
+    console.warn(`::warning::fleet drift: noted repo(s) not discovered: ${sel.missingNoted.join(', ')}`)
+  }
+  if (sel.swept.length === 0) {
+    throw new Error('Fleet discovery failed: every org repo was filtered out (archived/fork/excluded/private).')
+  }
+  return sel.swept
 }
 
 /**

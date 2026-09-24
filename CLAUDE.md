@@ -39,7 +39,7 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 |---|---|
 | `src/index.ts` | Entry point — orchestrates collect → generate → write |
 | `src/collect-context.ts` | GitHub API sweep via `gh` CLI (single page per call, 16 MB buffer) |
-| `src/fleet.ts` | Sweep membership: `discoverRepos()` (derived from `gh repo list`), `EXCLUDED_REPOS`, `REPO_NOTES` → `KNOWN_REPOS`, `reportSurfaceDrift()` |
+| `src/fleet.ts` | Sweep membership: `discoverRepos()` (derived from `gh repo list`; private repos only when opted in via `REPO_NOTES`), `EXCLUDED_REPOS`, `REPO_NOTES` → `KNOWN_REPOS`, `reportSurfaceDrift()` |
 | `src/collect-telemetry.ts` | Aggregates skill usage from `~/selfco/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources. **Note:** commit `4dd6765` fixed a silent no-op where skill-audit fetched telemetry from the wrong remote; telemetry collection now targets the correct source. |
 | `src/generate-article.ts` | Claude API call + prompt, JSON → markdown (includes dedicated skill telemetry section) |
 | `src/schema.ts` | Zod schemas + validation (ArticleDataSchema/ArticleDataV2, TypedTagSchema, ShipmentEntrySchema, DecisionEntrySchema, ActionItemSchema, ClosedActionSchema, CodeReferenceSchema, StructuredArticleSchema; `actionId`, `validateArticleOutput`, `getValidationErrors`) |
@@ -75,8 +75,14 @@ regenerate `system.md` via core's `/opm render`). Shadow-mode only: nothing gate
 You don't. Since 2026-09-24 the sweep set is **derived** at run time: `src/fleet.ts`
 `discoverRepos()` takes every non-archived, non-fork repo in the `ojfbot` org via
 `gh repo list`, minus `EXCLUDED_REPOS` (policy exclusions such as the private `selfco`
-vault). A new repo is swept on its first run after it exists. Discovery failure throws
+vault). A new public repo is swept on its first run after it exists. Discovery failure throws
 so the run goes red instead of retiring the day as "no activity".
+
+**Private repos are opt-in** (operator ruling 2026-09-24, PR #280 — the blog is public):
+a PUBLIC repo is always swept; a PRIVATE/INTERNAL repo is swept only if it has a
+`REPO_NOTES` entry, otherwise it is skipped with one `::warning::` naming it. A noted repo
+missing from discovery warns; zero private repos discovered while noted ones are missing
+throws (GH_PAT lost private scope).
 
 What is still hand-maintained (fleet-onboard surfaces 3–4), and warned about in the run
 log as `::warning::fleet drift: …` when a swept repo lacks it:

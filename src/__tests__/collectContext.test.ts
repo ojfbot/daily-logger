@@ -45,12 +45,25 @@ const openIssueFixture = [
 
 // Fleet discovery fixture — the sweep set is derived from `gh repo list` (src/fleet.ts).
 const repoListFixture = [
-  { name: 'shell', pushedAt: '2026-02-27T20:00:00Z', isArchived: false, isFork: false },
-  { name: 'BlogEngine', pushedAt: '2026-02-26T00:00:00Z', isArchived: false, isFork: false },
-  { name: 'old-thing', pushedAt: '2025-01-01T00:00:00Z', isArchived: true, isFork: false },
-  { name: 'upstream-fork', pushedAt: '2026-02-27T00:00:00Z', isArchived: false, isFork: true },
-  { name: 'selfco', pushedAt: '2026-02-28T00:00:00Z', isArchived: false, isFork: false },
+  { name: 'shell', pushedAt: '2026-02-27T20:00:00Z', isArchived: false, isFork: false, visibility: 'PUBLIC' },
+  { name: 'BlogEngine', pushedAt: '2026-02-26T00:00:00Z', isArchived: false, isFork: false, visibility: 'PUBLIC' },
+  { name: 'dealdesk', pushedAt: '2026-02-25T00:00:00Z', isArchived: false, isFork: false, visibility: 'PRIVATE' },
+  { name: 'client-private', pushedAt: '2026-02-28T01:00:00Z', isArchived: false, isFork: false, visibility: 'PRIVATE' },
+  { name: 'old-thing', pushedAt: '2025-01-01T00:00:00Z', isArchived: true, isFork: false, visibility: 'PUBLIC' },
+  { name: 'upstream-fork', pushedAt: '2026-02-27T00:00:00Z', isArchived: false, isFork: true, visibility: 'PUBLIC' },
+  { name: 'selfco', pushedAt: '2026-02-28T00:00:00Z', isArchived: false, isFork: false, visibility: 'PRIVATE' },
 ]
+
+// Node's execSync throws ENOBUFS when output exceeds maxBuffer (default 1 MB).
+// The mock must enforce it, or a buffer regression passes silently.
+const EXEC_DEFAULT_MAX_BUFFER = 1024 * 1024
+function enforceMaxBuffer(out: string, opts?: { maxBuffer?: number }): string {
+  const limit = opts?.maxBuffer ?? EXEC_DEFAULT_MAX_BUFFER
+  if (Buffer.byteLength(out) > limit) {
+    throw Object.assign(new Error('spawnSync /bin/sh ENOBUFS'), { code: 'ENOBUFS' })
+  }
+  return out
+}
 
 // Route fixture responses by repo+endpoint — scope fixtures to 'shell' only
 // so dedup-by-URL doesn't overwrite them with data from later repos in the loop.
@@ -236,9 +249,17 @@ describe('collectContext — fleet discovery (derived sweep set)', () => {
     vi.mocked(execSync).mockImplementation(mockExecSync)
   })
 
-  it('sweeps every non-archived, non-fork org repo minus the denylist, most recently pushed first', async () => {
+  it('sweeps public + opted-in private repos (minus archived/fork/denylist), most recently pushed first', async () => {
     const ctx = await collectContext('2026-02-28')
-    expect(ctx.repos).toEqual(['shell', 'BlogEngine'])
+    expect(ctx.repos).toEqual(['shell', 'BlogEngine', 'dealdesk'])
+  })
+
+  it('never queries a private repo that REPO_NOTES does not opt in', async () => {
+    vi.mocked(execSync).mockClear()
+    const ctx = await collectContext('2026-02-28')
+    expect(ctx.repos).not.toContain('client-private')
+    const calls = vi.mocked(execSync).mock.calls.map((c) => String(c[0]))
+    expect(calls.some((c) => c.includes('repos/ojfbot/client-private/'))).toBe(false)
   })
 
   it('never falls back to a hand list: discovery failure throws instead of sweeping nothing', async () => {
@@ -320,10 +341,10 @@ describe('collectContext — gh api calls fit in one page (2026-09-24 silent-ski
     }))
     const payload = JSON.stringify(bigPage)
     expect(payload.length).toBeGreaterThan(1024 * 1024)
-    vi.mocked(execSync).mockImplementation((cmd: string) => {
-      if (cmd.includes('ojfbot/shell') && cmd.includes('/pulls?state=closed')) return payload
+    vi.mocked(execSync).mockImplementation(((cmd: string, opts?: { maxBuffer?: number }) => {
+      if (cmd.includes('ojfbot/shell') && cmd.includes('/pulls?state=closed')) return enforceMaxBuffer(payload, opts)
       return mockExecSync(cmd)
-    })
+    }) as typeof execSync)
     const ctx = await collectContext('2026-02-28')
     expect(ctx.mergedPRs.filter((pr) => pr.repo === 'shell')).toHaveLength(30)
   })
