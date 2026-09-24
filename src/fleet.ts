@@ -108,6 +108,13 @@ export function selectSweptRepos(list: DiscoveredRepo[]): string[] {
  * (the same silent-green shape as the 2026-05-19 expired-PAT outage).
  */
 export function discoverRepos(org: string): string[] {
+  // Test seam: FLEET_REPOS="a,b" pins the sweep set (CI smoke test, local
+  // replays). Never set in the scheduled workflows — membership there is derived.
+  const pinned = process.env.FLEET_REPOS?.split(',').map((r) => r.trim()).filter(Boolean)
+  if (pinned && pinned.length > 0) {
+    console.log(`  → fleet: FLEET_REPOS override — sweeping ${pinned.length} pinned repo(s), discovery skipped`)
+    return pinned
+  }
   let raw: string
   try {
     raw = execSync(

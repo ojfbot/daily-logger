@@ -91,6 +91,12 @@ jobs:
           # Fixed date so the output file is predictable for the PR body check below.
           DATE_OVERRIDE: "2026-01-01"
           DRY_RUN: "false"
+          # Pin the sweep to this repo. Membership is derived from `gh repo list`
+          # in real runs (src/fleet.ts), but with the fixed 2026-01-01 anchor every
+          # PR in the org counts as "recent" and the per-PR skill-comment scrape
+          # fans out to hundreds of gh calls — it blew the 5-minute job budget
+          # once the busy repos' PR lists started parsing (2026-09-24).
+          FLEET_REPOS: daily-logger
         run: pnpm generate
 
       - name: Verify article was written

@@ -86,7 +86,8 @@ log as `::warning::fleet drift: …` when a swept repo lacks it:
 - The "Additional repos" bullet in `SYSTEM_PROMPT` (`src/generate-article.ts`) — the
   drafter mischaracterizes activity without it (surface 4).
 
-Run core's `/fleet-onboard <repo>` to fill both. History: four repos founded 04-30 → 09-17
+Run core's `/fleet-onboard <repo>` to fill both. `FLEET_REPOS=a,b` pins the sweep set for local
+replays and the CI smoke test (`pr-check.yml`); the scheduled workflows never set it. History: four repos founded 04-30 → 09-17
 went dark for up to five weeks under the old hand-listed `REPOS` array (see
 `implementation-notes.md`, 2026-09-24).
 

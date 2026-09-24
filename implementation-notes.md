@@ -16,3 +16,11 @@
 - 2026-09-24 (same PR): `opm/system.opl` left unchanged on purpose — Context Collecting still
   *requires GitHub* and *yields Commit Context*; deriving the repo set changes an input's
   provenance, not the step's consumes/yields at the model's granularity.
+- 2026-09-24 (same PR, after first CI run): plan assumed the PR smoke test would be unaffected by
+  deriving the sweep. **Territory:** the smoke step runs the real sweep under the Actions token with a
+  fixed `DATE_OVERRIDE=2026-01-01`, so every PR in the org is "recent"; once the busy repos' PR lists
+  parsed (the buffer fix), the per-PR skill-comment scrape fanned out to hundreds of `gh` calls and the
+  job hit its 5-minute `timeout-minutes` (run 36070106221, cancelled mid-collect). **Went:** added a
+  `FLEET_REPOS` env seam that pins the sweep set (test/replay only, documented) and set it to
+  `daily-logger` in the smoke step, rather than raising the timeout or changing the live windows.
+
