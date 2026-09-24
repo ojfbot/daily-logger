@@ -74,8 +74,9 @@ regenerate `system.md` via core's `/opm render`). Shadow-mode only: nothing gate
 
 You don't. Since 2026-09-24 the sweep set is **derived** at run time: `src/fleet.ts`
 `discoverRepos()` takes every non-archived, non-fork repo in the `ojfbot` org via
-`gh repo list`, minus `EXCLUDED_REPOS` (policy exclusions such as the private `selfco`
-vault). A new public repo is swept on its first run after it exists. Discovery failure throws
+`gh repo list`, minus `EXCLUDED_REPOS` (policy exclusions: the private `selfco`
+vault, and `dealdesk` — client bids and proposals never reach the public blog, operator ruling
+2026-09-24). Don't add a client-work repo to `REPO_NOTES`; exclude it here instead. A new public repo is swept on its first run after it exists. Discovery failure throws
 so the run goes red instead of retiring the day as "no activity".
 
 **Private repos are opt-in** (operator ruling 2026-09-24, PR #280 — the blog is public):

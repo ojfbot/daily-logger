@@ -59,7 +59,6 @@ Additional repos:
 - **golf-platform-scripts** — Golf platform automation scripts.
 - **lego-village-pipeline** — play-well cluster: digital twin + build harness for the family LEGO Christmas village — correspondence register (numbered memos, attach-never-paste), design packages, DT-DESIGN cuts; sibling of play-well-library.
 - **play-well-library** — play-well cluster: the canonical LEGO village content library; branch flow play/<user> → staging → main.
-- **dealdesk** — control-plane dashboard for client-work bids, proposals, and engagements: a local board tracking each opportunity from first sighting to published case study, with an AI proposal reviewer.
 - **foundry-recipes** — Blender tutorial extraction pipeline: sped-up screen-recording reels become structured BlenderRecipe records in Notion, read on demand by asset-foundry.
 
 ## Authoritative dev environment ports (frame-dev.sh)
