@@ -23,4 +23,9 @@
   job hit its 5-minute `timeout-minutes` (run 36070106221, cancelled mid-collect). **Went:** added a
   `FLEET_REPOS` env seam that pins the sweep set (test/replay only, documented) and set it to
   `daily-logger` in the smoke step, rather than raising the timeout or changing the live windows.
-
+- 2026-09-24 (same PR, private-repo opt-in ruling): ruling said "fail loud if ALL private noted
+  repos are absent". **Territory:** when GH_PAT loses private scope, `gh repo list` omits private
+  repos entirely, so the code cannot tell which *noted* repos are private from the payload alone.
+  **Went:** throw when discovery returns zero non-public repos while any noted repo is missing
+  (and public repos are present) — the same signature, without hard-coding a private-repo list.
+  Also: a repo with a missing/unknown `visibility` field is treated as non-public (needs a note).
