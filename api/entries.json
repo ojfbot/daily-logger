@@ -1,5 +1,134 @@
 [
   {
+    "date": "2026-09-25",
+    "title": "Thursday's sprint closes the silent-sweep RCA and bootstraps the play-well cluster",
+    "summary": "Sixty commits across eight repos: the 35-day silent-sweep bug is root-caused and fixed, the play-well cluster earns its first correspondence canary, and cv-builder's self-report is reconciled against shipped code.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "lego-village-pipeline",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "play-well-library",
+        "type": "repo"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-onboarding",
+        "type": "concept"
+      },
+      {
+        "name": "rca",
+        "type": "concept"
+      },
+      {
+        "name": "correspondence-protocol",
+        "type": "concept"
+      },
+      {
+        "name": "security-scanning",
+        "type": "practice"
+      },
+      {
+        "name": "verification-flagged",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "cv-builder",
+      "lego-village-pipeline",
+      "morning-cockpit",
+      "play-well-library",
+      "cca-prep",
+      "seh-study"
+    ],
+    "commitCount": 33,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Derive the sweep set from `gh repo list` at runtime, never from a hardcoded list",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Private repos require explicit `REPO_NOTES` opt-in before the sweep touches them",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Self-reports must be reconciled against shipped code before a roadmap is registered",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The register-lint CI check must fire on every PR, not only when the register file is touched",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The test battery must tolerate forward register state before the first canary lands",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet onboarding is a multi-surface ceremony, not a single-file registration",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Run `pnpm sweep:dry --verbose` against the fixed daily-logger sweep and confirm: (1) repo list is live from `gh repo list`, not a cached snapshot; (2) `--paginate` does not truncate on large org listings; (3) private repos without REPO_NOTES are excluded. Attach the clean run log to the tracking issue. This is the acceptance criterion for PR #280 — the fix is unconfirmed until this runs.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-09-25",
+        "id": "act-2026-09-25-validate-b892d7"
+      },
+      {
+        "command": "/techdebt",
+        "description": "Run a blast-radius audit on TD-009: identify all multi-worktree sessions since the failure mode was introduced and determine whether any 'do not push' commits reached remote main. Then write a PR spec for the chosen fix (pre-session fetch guard, worktree-creation hook, or CI gate rejecting commits not on origin/main). The spec must be written before the next multi-worktree session.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-09-25",
+        "id": "act-2026-09-25-techdebt-800a43"
+      }
+    ]
+  },
+  {
     "date": "2026-08-19",
     "title": "Tuesday deep-dive: cv-builder agent wiring, structured outputs, and two new core communication skills",
     "summary": "Seven commits Tuesday hardened cv-builder's agent-core plumbing and promoted two new business-communication skills to the core catalog.",
@@ -1922,7 +2051,7 @@
       },
       {
         "name": "BlogEngine",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "dive-briefing",
@@ -2352,7 +2481,7 @@
       },
       {
         "name": "BlogEngine",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "rest-day",
@@ -2436,7 +2565,7 @@
       },
       {
         "name": "BlogEngine",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "shell",
@@ -4250,7 +4379,7 @@
       },
       {
         "name": "BlogEngine",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "shell",
@@ -5452,11 +5581,11 @@
       },
       {
         "name": "TripPlanner",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "BlogEngine",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "seh-study",
@@ -5464,7 +5593,7 @@
       },
       {
         "name": "MrPlug",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "rest-day",
@@ -6126,11 +6255,11 @@
       },
       {
         "name": "TripPlanner",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "BlogEngine",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "lean-canvas",
@@ -6138,7 +6267,7 @@
       },
       {
         "name": "MrPlug",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "landing",
@@ -6287,11 +6416,11 @@
       },
       {
         "name": "BlogEngine",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "TripPlanner",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "frame-ui-components",
@@ -6439,7 +6568,7 @@
       },
       {
         "name": "MrPlug",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "visual-regression",
@@ -6500,7 +6629,7 @@
     "tags": [
       {
         "name": "MrPlug",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "shell",
@@ -6516,7 +6645,7 @@
       },
       {
         "name": "TripPlanner",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "core",
@@ -6612,15 +6741,15 @@
       },
       {
         "name": "MrPlug",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "BlogEngine",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "TripPlanner",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "daily-logger",
@@ -6779,7 +6908,7 @@
       },
       {
         "name": "MrPlug",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "core",
@@ -6865,7 +6994,7 @@
       },
       {
         "name": "MrPlug",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "cross-app-orchestration",
@@ -6971,7 +7100,7 @@
       },
       {
         "name": "GroupThink",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "core",
@@ -7261,7 +7390,7 @@
       },
       {
         "name": "MrPlug",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "core",
@@ -7269,7 +7398,7 @@
       },
       {
         "name": "GroupThink",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "security-scanning",
@@ -7664,7 +7793,7 @@
       },
       {
         "name": "MrPlug",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "landing",
@@ -16093,6 +16222,7 @@
     "reposActive": [
       "shell",
       "TripPlanner",
+      "node-template",
       "purefoy",
       "MrPlug",
       "daily-logger"

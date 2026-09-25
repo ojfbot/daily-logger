@@ -1,6 +1,22 @@
 [
   {
     "command": "/validate",
+    "description": "Run `pnpm sweep:dry --verbose` against the fixed daily-logger sweep and confirm: (1) repo list is live from `gh repo list`, not a cached snapshot; (2) `--paginate` does not truncate on large org listings; (3) private repos without REPO_NOTES are excluded. Attach the clean run log to the tracking issue. This is the acceptance criterion for PR #280 — the fix is unconfirmed until this runs.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-09-25",
+    "id": "act-2026-09-25-validate-b892d7"
+  },
+  {
+    "command": "/techdebt",
+    "description": "Run a blast-radius audit on TD-009: identify all multi-worktree sessions since the failure mode was introduced and determine whether any 'do not push' commits reached remote main. Then write a PR spec for the chosen fix (pre-session fetch guard, worktree-creation hook, or CI gate rejecting commits not on origin/main). The spec must be written before the next multi-worktree session.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-09-25",
+    "id": "act-2026-09-25-techdebt-800a43"
+  },
+  {
+    "command": "/validate",
     "description": "Run a full end-to-end headless generate pass: `node /path/to/cv-builder/cli/generate.js` from a directory outside the cv-builder project root. Pass criteria: (1) run completes without a file-not-found error, confirming the path-resolution fix (2106be8); (2) the orchestrator debug log shows populated `bio` and `jobTarget` fields — non-null, non-empty — before the first agent dispatches, confirming the context injection fix (ee66a74); (3) a structured output file appears at the configured output path. If bio/jobTarget are empty in the debug log, ee66a74 did not propagate correctly.",
     "repo": "cv-builder",
     "status": "open",
