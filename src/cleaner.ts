@@ -412,7 +412,7 @@ Rules:
   }
 }
 
-// TODO validation: was this resolved by a recent commit or the shipped work described
+// Validation: check whether a TODO/FIXME was resolved by a recent commit or the shipped work
 // in today's article? Returns one proposal (delete or update) or null.
 
 async function validateTodoCandidate(
