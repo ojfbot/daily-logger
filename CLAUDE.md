@@ -38,7 +38,7 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 | File | Purpose |
 |---|---|
 | `src/index.ts` | Entry point — orchestrates collect → generate → write |
-| `src/collect-context.ts` | GitHub API sweep via `gh` CLI (single page per call, 16 MB buffer) |
+| `src/collect-context.ts` | GitHub API sweep via `gh` CLI (uses `--paginate` safely within `execSync` buffer limits) |
 | `src/fleet.ts` | Sweep membership: `discoverRepos()` (derived from `gh repo list`; private repos only when opted in via `REPO_NOTES`), `EXCLUDED_REPOS`, `REPO_NOTES` → `KNOWN_REPOS`, `reportSurfaceDrift()` |
 | `src/collect-telemetry.ts` | Aggregates skill usage from `~/selfco/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources. **Note:** commit `4dd6765` fixed a silent no-op where skill-audit fetched telemetry from the wrong remote; telemetry collection now targets the correct source. |
 | `src/generate-article.ts` | Claude API call + prompt, JSON → markdown (includes dedicated skill telemetry section) |
@@ -76,7 +76,8 @@ You don't. Since 2026-09-24 the sweep set is **derived** at run time: `src/fleet
 `discoverRepos()` takes every non-archived, non-fork repo in the `ojfbot` org via
 `gh repo list`, minus `EXCLUDED_REPOS` (policy exclusions: the private `selfco`
 vault, and `dealdesk` — client bids and proposals never reach the public blog, operator ruling
-2026-09-24). Don't add a client-work repo to `REPO_NOTES`; exclude it here instead. A new public repo is swept on its first run after it exists. Discovery failure throws
+2026-09-24). Commit `73a16f0` additionally closes a bypass where `dealdesk` could leak
+into the public sweep despite lacking opt-in. Don't add a client-work repo to `REPO_NOTES`; exclude it here instead. A new public repo is swept on its first run after it exists. Discovery failure throws
 so the run goes red instead of retiring the day as "no activity".
 
 **Private repos are opt-in** (operator ruling 2026-09-24, PR #280 — the blog is public):
@@ -94,8 +95,9 @@ log as `::warning::fleet drift: …` when a swept repo lacks it:
   drafter mischaracterizes activity without it (surface 4).
 
 Run core's `/fleet-onboard <repo>` to fill both. `FLEET_REPOS=a,b` pins the sweep set for local
-replays and the CI smoke test (`pr-check.yml`); the scheduled workflows never set it. History: four repos founded 04-30 → 09-17
-went dark for up to five weeks under the old hand-listed `REPOS` array (see
+replays and the CI smoke test (`pr-check.yml`); commit `eb7c749` pins the smoke
+test sweep to this repo via the `FLEET_REPOS` seam. The scheduled workflows never set it. History: four repos founded 04-30 → 09-17
+went dark for up to 35 days under the old hand-listed `REPOS` array (see
 `implementation-notes.md`, 2026-09-24).
 
 ## Updating the system prompt / project vision
