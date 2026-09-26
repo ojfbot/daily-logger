@@ -1,5 +1,82 @@
 [
   {
+    "date": "2026-09-26",
+    "title": "Friday's single commit: what one blog post tells you about a 35-day RCA closing",
+    "summary": "One automated commit Friday — the exhale after Thursday's 60-commit sprint that closed the silent-sweep RCA, bootstrapped play-well, and opened the fleet ADR gate.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "verification-flagged",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Rest days are first-class audit opportunities, not gaps to apologise for",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "The silent-sweep fix (daily-logger #280) left one open acceptance criterion — the RCA is closed-pending-validation, not closed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Three daily-cleaner PRs are open past the 72-hour freshness threshold — the queue needs a session",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Draft ADR for fleet correspondence speech-act tiers is the single human-gated critical path item (core #495)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-09-25",
     "title": "Thursday's sprint closes the silent-sweep RCA and bootstraps the play-well cluster",
     "summary": "Sixty commits across eight repos: the 35-day silent-sweep bug is root-caused and fixed, the play-well cluster earns its first correspondence canary, and cv-builder's self-report is reconciled against shipped code.",
