@@ -2,22 +2,22 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 69
+    "count": 70
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 56
+    "count": 57
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 56
+    "count": 57
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 46
+    "count": 47
   },
   {
     "name": "shell",
@@ -30,13 +30,18 @@
     "count": 35
   },
   {
+    "name": "rest-day",
+    "type": "activity",
+    "count": 27
+  },
+  {
     "name": "tooling-for-iteration",
     "type": "concept",
     "count": 27
   },
   {
-    "name": "rest-day",
-    "type": "activity",
+    "name": "adr",
+    "type": "practice",
     "count": 26
   },
   {
@@ -45,14 +50,14 @@
     "count": 26
   },
   {
-    "name": "adr",
-    "type": "practice",
-    "count": 25
-  },
-  {
     "name": "phase-1",
     "type": "phase",
     "count": 20
+  },
+  {
+    "name": "cv-builder",
+    "type": "repo",
+    "count": 19
   },
   {
     "name": "sprint",
@@ -65,9 +70,9 @@
     "count": 19
   },
   {
-    "name": "cv-builder",
-    "type": "repo",
-    "count": 18
+    "name": "cleanup",
+    "type": "concept",
+    "count": 15
   },
   {
     "name": "morning-cockpit",
@@ -78,11 +83,6 @@
     "name": "asset-foundry",
     "type": "repo",
     "count": 15
-  },
-  {
-    "name": "cleanup",
-    "type": "concept",
-    "count": 14
   },
   {
     "name": "purefoy",
@@ -125,6 +125,11 @@
     "count": 9
   },
   {
+    "name": "verification-flagged",
+    "type": "concept",
+    "count": 8
+  },
+  {
     "name": "audit",
     "type": "concept",
     "count": 8
@@ -138,11 +143,6 @@
     "name": "core-reader",
     "type": "repo",
     "count": 8
-  },
-  {
-    "name": "verification-flagged",
-    "type": "concept",
-    "count": 7
   },
   {
     "name": "security-scanning",
@@ -320,6 +320,16 @@
     "count": 3
   },
   {
+    "name": "lego-village-pipeline",
+    "type": "repo",
+    "count": 2
+  },
+  {
+    "name": "correspondence-protocol",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "fleet-onboarding",
     "type": "concept",
     "count": 2
@@ -465,22 +475,12 @@
     "count": 2
   },
   {
-    "name": "lego-village-pipeline",
-    "type": "repo",
-    "count": 1
-  },
-  {
     "name": "play-well-library",
     "type": "repo",
     "count": 1
   },
   {
     "name": "rca",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "correspondence-protocol",
     "type": "concept",
     "count": 1
   },
