@@ -2,17 +2,17 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 70
+    "count": 71
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 57
+    "count": 58
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 57
+    "count": 58
   },
   {
     "name": "assistant-centric",
@@ -32,6 +32,11 @@
   {
     "name": "rest-day",
     "type": "activity",
+    "count": 28
+  },
+  {
+    "name": "adr",
+    "type": "practice",
     "count": 27
   },
   {
@@ -40,24 +45,19 @@
     "count": 27
   },
   {
-    "name": "adr",
-    "type": "practice",
-    "count": 26
-  },
-  {
     "name": "model-behavior-as-design",
     "type": "concept",
     "count": 26
   },
   {
-    "name": "phase-1",
-    "type": "phase",
+    "name": "cv-builder",
+    "type": "repo",
     "count": 20
   },
   {
-    "name": "cv-builder",
-    "type": "repo",
-    "count": 19
+    "name": "phase-1",
+    "type": "phase",
+    "count": 20
   },
   {
     "name": "sprint",
@@ -95,6 +95,11 @@
     "count": 12
   },
   {
+    "name": "skill-catalog",
+    "type": "concept",
+    "count": 11
+  },
+  {
     "name": "security-as-emergent-ux",
     "type": "concept",
     "count": 11
@@ -105,14 +110,14 @@
     "count": 11
   },
   {
-    "name": "skill-catalog",
-    "type": "concept",
-    "count": 10
-  },
-  {
     "name": "landing",
     "type": "repo",
     "count": 10
+  },
+  {
+    "name": "verification-flagged",
+    "type": "concept",
+    "count": 9
   },
   {
     "name": "wayfinder",
@@ -123,11 +128,6 @@
     "name": "MrPlug",
     "type": "repo",
     "count": 9
-  },
-  {
-    "name": "verification-flagged",
-    "type": "concept",
-    "count": 8
   },
   {
     "name": "audit",
@@ -275,6 +275,16 @@
     "count": 4
   },
   {
+    "name": "lego-village-pipeline",
+    "type": "repo",
+    "count": 3
+  },
+  {
+    "name": "correspondence-protocol",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "selfco-box",
     "type": "repo",
     "count": 3
@@ -318,16 +328,6 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
-  },
-  {
-    "name": "lego-village-pipeline",
-    "type": "repo",
-    "count": 2
-  },
-  {
-    "name": "correspondence-protocol",
-    "type": "concept",
-    "count": 2
   },
   {
     "name": "fleet-onboarding",

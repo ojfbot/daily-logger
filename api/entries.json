@@ -1,5 +1,80 @@
 [
   {
+    "date": "2026-09-28",
+    "title": "Sunday rest: one blog commit, the Pocock skills watch issue lands, and five PRs hold the queue",
+    "summary": "Sunday produced one automated blog commit and a new Pocock skills watch issue, while five open PRs and 108 carry-forward actions hold the queue steady.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "lego-village-pipeline",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "skill-catalog",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "correspondence-protocol",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "verification-flagged",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 3,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "The Pocock skills watch issue (core #432) is a standing upstream monitor, not a task",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Five open PRs and 108 carry-forward actions: the queue is stable, not stalled",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Daily-cleaner PRs age safely to 72 hours; correspondence ADR draft must not auto-merge",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-09-27",
     "title": "Saturday rest: one blog commit, five open PRs, and the correspondence-speech-act ADR still in draft",
     "summary": "No feature code landed Saturday — one automated blog commit merged, five PRs remain in flight, and the fleet's most consequential in-progress work is the draft correspondence-speech-act ADR in core.",
