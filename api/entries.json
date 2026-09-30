@@ -1,5 +1,92 @@
 [
   {
+    "date": "2026-09-30",
+    "title": "Tuesday's single commit: blog bot holds the line as the Drafting Table draft opens",
+    "summary": "One automated commit landed Tuesday while lego-village-pipeline opened a draft PR prototyping its model-to-build Drafting Table workflow and four stale cleaner PRs waited for deliberate review.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "lego-village-pipeline",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "verification-flagged",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Letting the deceleration window run: no forced commits after a sprint",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Drafting Table as a local model-to-build prototype before it becomes infrastructure",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Correspondence register canary pattern: CORR-LEGO-PIPE-036-R0 as the first ordinary landing",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Speech-act ADR draft in core: fleet coordination vocabulary before implementation",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Stale docs cleaner PRs held open: merge discipline over queue speed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-09-29",
     "title": "Monday's single commit: the Pocock skills watch issue arrives and five PRs hold the queue",
     "summary": "One automated commit landed Monday as the fleet held steady, with core #432 filing the Pocock skills watch and five PRs anchoring the queue.",
