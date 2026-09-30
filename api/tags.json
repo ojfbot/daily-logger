@@ -2,22 +2,22 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 72
+    "count": 73
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 59
+    "count": 60
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 59
+    "count": 60
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 47
+    "count": 48
   },
   {
     "name": "shell",
@@ -32,12 +32,12 @@
   {
     "name": "rest-day",
     "type": "activity",
-    "count": 29
+    "count": 30
   },
   {
     "name": "adr",
     "type": "practice",
-    "count": 27
+    "count": 28
   },
   {
     "name": "tooling-for-iteration",
@@ -52,7 +52,7 @@
   {
     "name": "cv-builder",
     "type": "repo",
-    "count": 21
+    "count": 22
   },
   {
     "name": "phase-1",
@@ -72,7 +72,7 @@
   {
     "name": "cleanup",
     "type": "concept",
-    "count": 15
+    "count": 16
   },
   {
     "name": "morning-cockpit",
@@ -100,6 +100,11 @@
     "count": 12
   },
   {
+    "name": "verification-flagged",
+    "type": "concept",
+    "count": 11
+  },
+  {
     "name": "security-as-emergent-ux",
     "type": "concept",
     "count": 11
@@ -108,11 +113,6 @@
     "name": "gas-town",
     "type": "phase",
     "count": 11
-  },
-  {
-    "name": "verification-flagged",
-    "type": "concept",
-    "count": 10
   },
   {
     "name": "landing",
@@ -180,6 +180,11 @@
     "count": 6
   },
   {
+    "name": "lego-village-pipeline",
+    "type": "repo",
+    "count": 5
+  },
+  {
     "name": "cca-prep",
     "type": "repo",
     "count": 5
@@ -208,11 +213,6 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
-  },
-  {
-    "name": "lego-village-pipeline",
-    "type": "repo",
-    "count": 4
   },
   {
     "name": "correspondence-protocol",
