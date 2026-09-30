@@ -72,7 +72,10 @@ export interface RecentPRInfo {
   state: 'open' | 'closed'
   createdAt: string
   updatedAt: string
+  closedAt?: string
   mergedAt?: string
+  /** Latest commit on the PR branch. Metadata-only PR updates leave this outside the window. */
+  headCommitAt?: string
   draft: boolean
   skillUsage?: PRSkillUsage
   author?: string

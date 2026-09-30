@@ -278,9 +278,11 @@ function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo
     state: string
     created_at: string
     updated_at: string
+    closed_at: string | null
     merged_at: string | null
     draft: boolean
     user: { login: string } | null
+    head: { sha: string }
   }
   // Fetch all PRs (open + closed) sorted by most recently updated
   const data = ghApi<GHPR[]>(
@@ -289,19 +291,48 @@ function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo
   if (!data) return []
   return data
     .filter((pr) => pr.created_at >= since24h || pr.updated_at >= since24h || (pr.merged_at && pr.merged_at >= since24h))
-    .map((pr) => ({
-      number: pr.number,
-      title: pr.title,
-      repo,
-      url: pr.html_url,
-      body: pr.body ? pr.body.slice(0, 400) : undefined,
-      state: (pr.state === 'open' ? 'open' : 'closed') as 'open' | 'closed',
-      createdAt: pr.created_at,
-      updatedAt: pr.updated_at,
-      mergedAt: pr.merged_at ?? undefined,
-      draft: pr.draft,
-      author: pr.user?.login,
-    }))
+    .map((pr) => {
+      const lifecycleChanged =
+        pr.created_at >= since24h ||
+        (pr.closed_at !== null && pr.closed_at >= since24h) ||
+        (pr.merged_at !== null && pr.merged_at >= since24h)
+      let headCommitAt: string | undefined
+
+      // GitHub advances updated_at for comments, labels, reviews, checks, and
+      // pushes. Only a recent head commit proves that an old open PR changed.
+      if (!lifecycleChanged) {
+        type GHCommit = {
+          commit?: {
+            author?: { date?: string } | null
+            committer?: { date?: string } | null
+          }
+        }
+        const headCommit = ghApi<GHCommit>(`repos/${org}/${repo}/commits/${pr.head.sha}`)
+        headCommitAt = headCommit?.commit?.committer?.date ?? headCommit?.commit?.author?.date
+        if (!headCommitAt) {
+          throw new Error(
+            `Activity classification failed for ${repo}#${pr.number}: ` +
+              `could not resolve head commit ${pr.head.sha}.`,
+          )
+        }
+      }
+
+      return {
+        number: pr.number,
+        title: pr.title,
+        repo,
+        url: pr.html_url,
+        body: pr.body ? pr.body.slice(0, 400) : undefined,
+        state: (pr.state === 'open' ? 'open' : 'closed') as 'open' | 'closed',
+        createdAt: pr.created_at,
+        updatedAt: pr.updated_at,
+        closedAt: pr.closed_at ?? undefined,
+        mergedAt: pr.merged_at ?? undefined,
+        headCommitAt,
+        draft: pr.draft,
+        author: pr.user?.login,
+      }
+    })
 }
 
 // ─── Local context ────────────────────────────────────────────────────────────

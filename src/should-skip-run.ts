@@ -1,19 +1,35 @@
-import type { BlogContext } from './types.js'
+import type { BlogContext, CommitInfo, RecentPRInfo } from './types.js'
 
-// Bots whose activity should not, on its own, justify generating an article.
-// The daily-logger writes its own PRs (ojfbot-blog[bot]) and the cleaner
-// writes its own PRs (ojfbot-clean[bot]); generic GH workflow commits land
-// as github-actions[bot]. None of these represent human design or product
-// signal worth narrating. Dependabot/Renovate are intentionally absent —
-// a CVE bump or framework upgrade is worth a paragraph.
-const AUTOMATED_AUTHORS: ReadonlySet<string> = new Set([
-  'ojfbot-blog[bot]',
-  'ojfbot-clean[bot]',
-  'github-actions[bot]',
-])
+const DAY_MS = 24 * 60 * 60 * 1000
+const SELF_GENERATED_BLOG_COMMIT = /^blog: \d{4}-\d{2}-\d{2} \[skip ci\]$/
 
-function isAutomated(author: string | undefined): boolean {
-  return !!author && AUTOMATED_AUTHORS.has(author)
+interface ActivityWindow {
+  start: number
+  end: number
+}
+
+function activityWindow(date: string): ActivityWindow {
+  const end = new Date(`${date}T09:00:00Z`).getTime()
+  return { start: end - DAY_MS, end }
+}
+
+function occurredInWindow(timestamp: string | undefined, window: ActivityWindow): boolean {
+  if (!timestamp) return false
+  const time = Date.parse(timestamp)
+  return Number.isFinite(time) && time >= window.start && time < window.end
+}
+
+function isSelfGeneratedBlogCommit(commit: CommitInfo): boolean {
+  return commit.repo === 'daily-logger' && SELF_GENERATED_BLOG_COMMIT.test(commit.message)
+}
+
+function pullRequestChanged(pr: RecentPRInfo, window: ActivityWindow): boolean {
+  return (
+    occurredInWindow(pr.createdAt, window) ||
+    occurredInWindow(pr.headCommitAt, window) ||
+    occurredInWindow(pr.mergedAt, window) ||
+    occurredInWindow(pr.closedAt, window)
+  )
 }
 
 export interface SkipDecision {
@@ -22,19 +38,32 @@ export interface SkipDecision {
 }
 
 export function shouldSkipRun(ctx: BlogContext): SkipDecision {
-  const humanCommits = ctx.commits.filter((c) => !isAutomated(c.author))
-  const humanPRs = ctx.recentPRs.filter((pr) => !isAutomated(pr.author))
+  const window = activityWindow(ctx.date)
+  const meaningfulCommits = ctx.commits.filter(
+    (commit) => occurredInWindow(commit.date, window) && !isSelfGeneratedBlogCommit(commit),
+  )
+  const changedPullRequests = ctx.recentPRs.filter((pr) => pullRequestChanged(pr, window))
+  const createdIssues = ctx.openIssues.filter((issue) => occurredInWindow(issue.createdAt, window))
+  const closedIssues = ctx.closedIssues.filter((issue) => occurredInWindow(issue.closedAt, window))
 
-  if (humanCommits.length === 0 && humanPRs.length === 0) {
-    const botCommits = ctx.commits.length
-    const botPRs = ctx.recentPRs.length
-    if (botCommits === 0 && botPRs === 0) {
-      return { skip: true, reason: 'no activity in 24h window' }
-    }
-    return {
-      skip: true,
-      reason: `only automated activity (${botCommits} bot commit(s), ${botPRs} bot PR(s))`,
-    }
+  if (
+    meaningfulCommits.length > 0 ||
+    changedPullRequests.length > 0 ||
+    createdIssues.length > 0 ||
+    closedIssues.length > 0
+  ) {
+    return { skip: false, reason: '' }
   }
-  return { skip: false, reason: '' }
+
+  const observedItems = ctx.commits.length + ctx.recentPRs.length
+  if (observedItems === 0) {
+    return { skip: true, reason: 'no activity in 24h window' }
+  }
+
+  return {
+    skip: true,
+    reason:
+      `no meaningful activity in 24h window ` +
+      `(${ctx.commits.length} generated commit(s), ${ctx.recentPRs.length} metadata-only PR update(s))`,
+  }
 }
