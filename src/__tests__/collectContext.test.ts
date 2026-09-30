@@ -13,6 +13,23 @@ const openPRFixture = [
   },
 ]
 
+const metadataOnlyPRFixture = [
+  {
+    number: 11,
+    title: 'Old PR with a new comment',
+    html_url: 'https://github.com/ojfbot/shell/pull/11',
+    body: 'No new code in this window',
+    state: 'open',
+    created_at: '2026-02-01T12:00:00Z',
+    updated_at: '2026-02-27T23:00:00Z',
+    closed_at: null,
+    merged_at: null,
+    draft: false,
+    user: { login: 'ojfbot' },
+    head: { sha: 'old-head-sha' },
+  },
+]
+
 const openIssueFixture = [
   {
     number: 5,
@@ -71,6 +88,10 @@ function mockExecSync(cmd: string): string {
   if (cmd.includes('gh repo list')) return JSON.stringify(repoListFixture)
   const forShell = cmd.includes('ojfbot/shell')
   if (forShell && cmd.includes('/pulls?state=open')) return JSON.stringify(openPRFixture)
+  if (forShell && cmd.includes('/pulls?state=all')) return JSON.stringify(metadataOnlyPRFixture)
+  if (forShell && cmd.includes('/commits/old-head-sha')) {
+    return JSON.stringify({ commit: { committer: { date: '2026-02-20T12:00:00Z' } } })
+  }
   if (forShell && cmd.includes('/issues?state=open')) return JSON.stringify(openIssueFixture)
   if (cmd.includes('/pulls?state=open')) return JSON.stringify([])
   if (cmd.includes('/pulls?state=closed')) return JSON.stringify([])
@@ -130,6 +151,14 @@ describe('collectContext — open PR mapping', () => {
     expect(pr?.title).toBe('Open PR one')
     expect(pr?.url).toBe('https://github.com/ojfbot/shell/pull/10')
     expect(pr?.body).toBe('PR body text')
+  })
+})
+
+describe('collectContext — recent PR change classification', () => {
+  it('records the head commit time for an old PR with a metadata-only update', async () => {
+    const ctx = await collectContext('2026-02-28')
+    const pr = ctx.recentPRs.find((candidate) => candidate.number === 11 && candidate.repo === 'shell')
+    expect(pr?.headCommitAt).toBe('2026-02-20T12:00:00Z')
   })
 })
 

@@ -116,8 +116,9 @@ async function main() {
   console.log()
 
   // ── Skip gate ──────────────────────────────────────────────────────────────
-  // If yesterday produced only bot-authored commits and PRs, there is no
-  // human signal worth narrating. Bypassed when DRY_RUN or FORCE_RUN is set.
+  // Generate only when the window contains a real repository change. The
+  // previous article commit and metadata-only PR updates do not qualify.
+  // Bypassed when DRY_RUN or FORCE_RUN is set.
   const forceRun = process.env.FORCE_RUN === 'true'
   if (!forceRun && !isDryRun) {
     const decision = shouldSkipRun(ctx)
