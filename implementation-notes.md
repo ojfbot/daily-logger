@@ -29,3 +29,8 @@
   **Went:** throw when discovery returns zero non-public repos while any noted repo is missing
   (and public repos are present) — the same signature, without hard-coding a private-repo list.
   Also: a repo with a missing/unknown `visibility` field is treated as non-public (needs a note).
+- 2026-09-30 (`fix/meaningful-activity-gate`): plan assumed the PR smoke test already forced the
+  article write path, based on the earlier `feat/skip-bot-only-days` branch. **Territory:** `main`
+  never received that branch's `FORCE_RUN=true`, so the corrected gate skipped the synthetic
+  2026-01-01 window and CI failed while looking for its mock article. **Went:** set `FORCE_RUN=true`
+  only in the smoke-test environment; scheduled runs still use the meaningful-impact gate.
