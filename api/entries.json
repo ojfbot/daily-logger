@@ -1,5 +1,75 @@
 [
   {
+    "date": "2026-10-01",
+    "title": "Wednesday's two commits: plugging the localhost leak that greeted every visitor to frame.jim.software",
+    "summary": "cv-builder PR #157 fixes a production bug where localhost API calls triggered Chrome's Local Network Access prompt for every visitor to frame.jim.software, with BlogEngine and gastown-pilot carrying the same issue in open PRs.",
+    "tags": [
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "gastown-pilot",
+        "type": "repo"
+      },
+      {
+        "name": "BlogEngine",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "verification-flagged",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "cv-builder",
+      "gastown-pilot",
+      "BlogEngine",
+      "daily-logger",
+      "core",
+      "lego-village-pipeline"
+    ],
+    "commitCount": 2,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Gate API base URLs on a build-time assertion, not a compile-time constant with a localhost fallback",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Treat the localhost-in-production bug as a fleet-wide pattern; audit before the next sub-app ships",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-09-30",
     "title": "Tuesday's single commit: blog bot holds the line as the Drafting Table draft opens",
     "summary": "One automated commit landed Tuesday while lego-village-pipeline opened a draft PR prototyping its model-to-build Drafting Table workflow and four stale cleaner PRs waited for deliberate review.",

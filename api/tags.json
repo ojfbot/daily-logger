@@ -2,16 +2,16 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 73
-  },
-  {
-    "name": "core",
-    "type": "repo",
-    "count": 60
+    "count": 74
   },
   {
     "name": "ci-cd",
     "type": "practice",
+    "count": 61
+  },
+  {
+    "name": "core",
+    "type": "repo",
     "count": 60
   },
   {
@@ -27,7 +27,7 @@
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 35
+    "count": 36
   },
   {
     "name": "rest-day",
@@ -52,7 +52,12 @@
   {
     "name": "cv-builder",
     "type": "repo",
-    "count": 22
+    "count": 23
+  },
+  {
+    "name": "hardening",
+    "type": "practice",
+    "count": 20
   },
   {
     "name": "phase-1",
@@ -62,11 +67,6 @@
   {
     "name": "sprint",
     "type": "concept",
-    "count": 19
-  },
-  {
-    "name": "hardening",
-    "type": "practice",
     "count": 19
   },
   {
@@ -90,6 +90,16 @@
     "count": 13
   },
   {
+    "name": "security-as-emergent-ux",
+    "type": "concept",
+    "count": 12
+  },
+  {
+    "name": "verification-flagged",
+    "type": "concept",
+    "count": 12
+  },
+  {
     "name": "skill-catalog",
     "type": "concept",
     "count": 12
@@ -100,16 +110,6 @@
     "count": 12
   },
   {
-    "name": "verification-flagged",
-    "type": "concept",
-    "count": 11
-  },
-  {
-    "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 11
-  },
-  {
     "name": "gas-town",
     "type": "phase",
     "count": 11
@@ -118,6 +118,11 @@
     "name": "landing",
     "type": "repo",
     "count": 10
+  },
+  {
+    "name": "BlogEngine",
+    "type": "repo",
+    "count": 9
   },
   {
     "name": "wayfinder",
@@ -132,11 +137,6 @@
   {
     "name": "audit",
     "type": "concept",
-    "count": 8
-  },
-  {
-    "name": "BlogEngine",
-    "type": "repo",
     "count": 8
   },
   {
@@ -328,6 +328,11 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "gastown-pilot",
+    "type": "repo",
+    "count": 2
   },
   {
     "name": "dependency-management",
@@ -972,11 +977,6 @@
   {
     "name": "cache-headers",
     "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "gastown-pilot",
-    "type": "repo",
     "count": 1
   },
   {
