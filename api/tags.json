@@ -5,14 +5,14 @@
     "count": 74
   },
   {
-    "name": "ci-cd",
-    "type": "practice",
+    "name": "core",
+    "type": "repo",
     "count": 61
   },
   {
-    "name": "core",
-    "type": "repo",
-    "count": 60
+    "name": "ci-cd",
+    "type": "practice",
+    "count": 61
   },
   {
     "name": "assistant-centric",
@@ -22,12 +22,12 @@
   {
     "name": "shell",
     "type": "repo",
-    "count": 37
+    "count": 38
   },
   {
     "name": "module-federation",
     "type": "arch",
-    "count": 36
+    "count": 37
   },
   {
     "name": "rest-day",
@@ -37,7 +37,7 @@
   {
     "name": "adr",
     "type": "practice",
-    "count": 28
+    "count": 29
   },
   {
     "name": "tooling-for-iteration",
@@ -52,12 +52,12 @@
   {
     "name": "cv-builder",
     "type": "repo",
-    "count": 23
+    "count": 24
   },
   {
     "name": "hardening",
     "type": "practice",
-    "count": 20
+    "count": 21
   },
   {
     "name": "phase-1",
@@ -87,7 +87,7 @@
   {
     "name": "purefoy",
     "type": "repo",
-    "count": 13
+    "count": 14
   },
   {
     "name": "security-as-emergent-ux",
@@ -180,6 +180,11 @@
     "count": 6
   },
   {
+    "name": "lean-canvas",
+    "type": "repo",
+    "count": 5
+  },
+  {
     "name": "lego-village-pipeline",
     "type": "repo",
     "count": 5
@@ -255,11 +260,6 @@
     "count": 4
   },
   {
-    "name": "lean-canvas",
-    "type": "repo",
-    "count": 4
-  },
-  {
     "name": "visual-regression",
     "type": "practice",
     "count": 4
@@ -283,6 +283,11 @@
     "name": "node-template",
     "type": "repo",
     "count": 4
+  },
+  {
+    "name": "gastown-pilot",
+    "type": "repo",
+    "count": 3
   },
   {
     "name": "selfco-box",
@@ -328,11 +333,6 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
-  },
-  {
-    "name": "gastown-pilot",
-    "type": "repo",
-    "count": 2
   },
   {
     "name": "dependency-management",
@@ -483,6 +483,16 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "production-safety",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "fleet-runner",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "adopt-stack",

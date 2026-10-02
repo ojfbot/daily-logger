@@ -1,5 +1,118 @@
 [
   {
+    "date": "2026-10-02",
+    "title": "Thursday's eleven commits: the localhost-leak sweep completes fleet-wide, and fleet-runner finds its home in core",
+    "summary": "Thursday closed the localhost-leak hardening sweep across eight apps and formally settled fleet-runner's placement in core via ADR-0108, ending conductor's tenure as the control-plane name.",
+    "tags": [
+      {
+        "name": "shell",
+        "type": "repo"
+      },
+      {
+        "name": "cv-builder",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "purefoy",
+        "type": "repo"
+      },
+      {
+        "name": "lean-canvas",
+        "type": "repo"
+      },
+      {
+        "name": "gastown-pilot",
+        "type": "repo"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "production-safety",
+        "type": "concept"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "shell",
+      "TripPlanner",
+      "purefoy",
+      "lean-canvas",
+      "gastown-pilot",
+      "BlogEngine",
+      "cv-builder",
+      "core",
+      "daily-logger",
+      "lego-village-pipeline"
+    ],
+    "commitCount": 11,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Fleet-wide localhost-URL pattern: build-time env guard, not runtime fallback",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Eight apps share the same root cause: Module Federation remotes without production URL discipline",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet-runner supersedes conductor in core — ADR-0108 records the decision, not just the intent",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/validate",
+        "description": "Open frame.jim.software in a browser with DevTools Network panel open. Filter for 'localhost'. Confirm zero requests to any localhost:<port> URL across all mounted sub-apps (cv-builder, BlogEngine, TripPlanner, lean-canvas, gastown-pilot, purefoy). Report the result in Friday's article. The sweep is merged but not yet verified.",
+        "repo": "shell",
+        "status": "open",
+        "sourceDate": "2026-10-02",
+        "id": "act-2026-10-02-validate-473596"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Merge core #498 (docs: record approved fleet-runner publication hold) then batch-merge daily-logger #282, daily-logger #284, core #496, cv-builder #156. All are unblocked. Core #498 closes the ADR-0108 documentation gap; the four cleaner PRs clear a 7-day-old queue.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-10-02",
+        "id": "act-2026-10-02-pr-review-446a6c"
+      },
+      {
+        "command": "/lint-task",
+        "description": "File and assign a task to add a `grep -r 'localhost' dist/` check to the shared GitHub Actions workflow (or Vercel build hook) that runs on every production deploy across the fleet. The localhost-URL invariant is currently stated policy only — this makes it mechanical.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-10-02",
+        "id": "act-2026-10-02-lint-task-dee4a8"
+      }
+    ]
+  },
+  {
     "date": "2026-10-01",
     "title": "Wednesday's two commits: plugging the localhost leak that greeted every visitor to frame.jim.software",
     "summary": "cv-builder PR #157 fixes a production bug where localhost API calls triggered Chrome's Local Network Access prompt for every visitor to frame.jim.software, with BlogEngine and gastown-pilot carrying the same issue in open PRs.",
