@@ -1,6 +1,6 @@
 name: Daily Cleaner
 
-# Runs after daily-logger (09:00 UTC) to check for stale documentation and
+# Runs after Daily Dev Blog completes successfully to check for stale documentation and
 # resolved TODO/FIXME comments across all active ojfbot repos.
 #
 # Phase 1: Sweep   — find candidates in changed files + doc files
@@ -12,11 +12,7 @@ name: Daily Cleaner
 #   GH_PAT             — PAT with read+write access to all ojfbot repos
 
 on:
-  # Fire 2h after daily-logger cron (gives the logger time to finish)
-  schedule:
-    - cron: '0 11 * * *'
-
-  # Also fire when daily-logger workflow completes successfully
+  # Requires the completed Daily Dev Blog run to provide the day's context.
   workflow_run:
     workflows: ['Daily Dev Blog']
     types: [completed]
