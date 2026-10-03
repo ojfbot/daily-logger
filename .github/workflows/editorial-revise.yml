@@ -41,8 +41,8 @@ jobs:
       - name: Extract article date from branch name
         id: date
         run: |
-          # Read GITHUB_HEAD_REF from the environment and validate the branch
-          # name is user-controlled input.
+          # Read GITHUB_HEAD_REF from the environment, not an inline Actions expression:
+          # the branch name is user-controlled, so validate its date suffix strictly.
           DATE="${GITHUB_HEAD_REF#accept/}"
           if [[ ! "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
             echo "::error::accept/ branch suffix is not a YYYY-MM-DD date: $DATE"
