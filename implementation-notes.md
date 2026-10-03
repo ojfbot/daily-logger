@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-02 (article HTML formatting): plan assumed the latest article only needed visual styling. **Territory:** literal `\\n` sequences flattened two sections, while `<port>` and `<section>` in prose became unclosed HTML elements during Markdown conversion. **Went:** repaired the article source and made the API renderer restore escaped breaks and escape raw HTML before improving typography for all articles.
+
 - 2026-09-24 (silent-sweep fix, `fix/collector-paginate-and-fleet-drift`): plan assumed the
   surface-3 drift check could import `KNOWN_REPOS` from `src/build-api.ts`. **Territory:**
   `build-api.ts` calls `buildApi()` at module load, so importing it from the collector would
