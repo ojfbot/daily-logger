@@ -83,6 +83,45 @@ describe('shouldSkipRun', () => {
     expect(decision.reason).toContain('no meaningful activity')
   })
 
+  it.each([
+    ['2026-09-26', '2026-09-25'],
+    ['2026-09-27', '2026-09-26'],
+    ['2026-09-28', '2026-09-27'],
+    ['2026-09-29', '2026-09-28'],
+  ])('skips %s when the only activity is the prior article commit and PR', (date, priorDate) => {
+    const ctx = makeCtx({
+      date,
+      commits: [{
+        ...makeBlogCommit(),
+        message: `blog: ${priorDate} [skip ci]`,
+        date: `${priorDate}T10:30:00Z`,
+      }],
+      recentPRs: [makePR('ojfbot', 285, 'daily-logger', {
+        title: `blog: ${priorDate}`,
+        headRef: `article/${priorDate}`,
+        createdAt: `${priorDate}T10:31:00Z`,
+        updatedAt: `${priorDate}T10:40:00Z`,
+        mergedAt: `${priorDate}T10:40:00Z`,
+      })],
+    })
+    expect(shouldSkipRun(ctx).skip).toBe(true)
+  })
+
+  it('ignores an unmerged cleaner PR but counts its merge', () => {
+    const cleaner = makePR('ojfbot', 284, 'daily-logger', {
+      title: 'clean: stale docs/comments 2026-09-26',
+      headRef: 'clean/2026-09-26',
+      state: 'open',
+      createdAt: '2026-09-27T11:00:00Z',
+      updatedAt: '2026-09-27T11:00:00Z',
+      mergedAt: undefined,
+      headCommitAt: '2026-09-27T11:00:00Z',
+    })
+    expect(shouldSkipRun(makeCtx({ date: '2026-09-28', recentPRs: [cleaner] })).skip).toBe(true)
+    const merged = { ...cleaner, state: 'closed' as const, mergedAt: '2026-09-27T12:00:00Z' }
+    expect(shouldSkipRun(makeCtx({ date: '2026-09-28', recentPRs: [merged] })).skip).toBe(false)
+  })
+
   it('runs when an automation creates a PR with real changes', () => {
     const ctx = makeCtx({
       commits: [makeBlogCommit()],
@@ -90,6 +129,19 @@ describe('shouldSkipRun', () => {
     })
     const decision = shouldSkipRun(ctx)
     expect(decision.skip).toBe(false)
+    expect(decision.reason).toContain('core#42 PR created')
+  })
+
+  it('runs on a new feature PR after quiet article-only days', () => {
+    const ctx = makeCtx({
+      date: '2026-09-30',
+      recentPRs: [makePR('ojfbot', 99, 'core', {
+        headRef: 'feat/drafting-table-demo',
+        createdAt: '2026-09-29T12:00:00Z',
+        mergedAt: undefined,
+      })],
+    })
+    expect(shouldSkipRun(ctx).reason).toContain('core#99 PR created')
   })
 
   it('runs when an automation commits real changes to a default branch', () => {

@@ -29,6 +29,7 @@ import { loadPersonas, reviewDraft, synthesizeWithCouncil } from './council.js'
 import { actionId, type ClosedAction } from './schema.js'
 import { shouldSkipRun } from './should-skip-run.js'
 import { verifyFileExistenceClaims } from './verify-claims.js'
+import { checkAnthropicCredits } from './check-anthropic-credits.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -117,7 +118,8 @@ async function main() {
 
   // ── Skip gate ──────────────────────────────────────────────────────────────
   // Generate only when the window contains a real repository change. The
-  // previous article commit and metadata-only PR updates do not qualify.
+  // previous article commit and PR, unmerged cleaner PRs, and metadata-only
+  // PR updates do not qualify.
   // Bypassed when DRY_RUN or FORCE_RUN is set.
   const forceRun = process.env.FORCE_RUN === 'true'
   if (!forceRun && !isDryRun) {
@@ -127,6 +129,11 @@ async function main() {
       console.log('   Set FORCE_RUN=true to override.')
       return
     }
+    console.log(`▶  Generating because: ${decision.reason}`)
+  }
+
+  if (process.env.MOCK_LLM !== 'true') {
+    await checkAnthropicCredits(process.env.ANTHROPIC_API_KEY)
   }
 
   // ── 2. Draft ───────────────────────────────────────────────────────────────

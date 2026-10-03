@@ -74,6 +74,8 @@ export interface RecentPRInfo {
   updatedAt: string
   closedAt?: string
   mergedAt?: string
+  /** Source branch, used to recognize the logger's article and cleaner PRs. */
+  headRef?: string
   /** Latest commit on the PR branch. Metadata-only PR updates leave this outside the window. */
   headCommitAt?: string
   draft: boolean

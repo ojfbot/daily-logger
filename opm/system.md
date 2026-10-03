@@ -48,12 +48,16 @@ flowchart TD
   ClaudeAPI[Claude API]
   CommitContext[Commit Context]
   TelemetryDigest[Telemetry Digest]
+  ActivityDecision["Activity Decision<br/>{skip, run}"]
+  CreditStatus[Credit Status]
   Article["Article<br/>{draft, accepted, rejected}"]
   CouncilCritiques[Council Critiques]
   ClaimReport[Claim Report]
 
   ContextCollecting(Context Collecting)
   TelemetryCollecting(Telemetry Collecting)
+  ActivityAssessing(Activity Assessing)
+  CreditChecking(Credit Checking)
   Drafting(Drafting)
   CouncilReviewing(Council Reviewing)
   Synthesizing(Synthesizing)
@@ -66,9 +70,16 @@ flowchart TD
   ContextCollecting -. invokes .-> TelemetryCollecting
   ContextCollecting --> CommitContext
   TelemetryCollecting --> TelemetryDigest
+  CommitContext -. instrument .-> ActivityAssessing
+  ActivityAssessing --> ActivityDecision
+  ActivityDecision -. if .-> CreditChecking
+  ClaudeAPI -. instrument .-> CreditChecking
+  CreditChecking --> CreditStatus
   ClaudeAPI -. instrument .-> Drafting
   CommitContext -. instrument .-> Drafting
   TelemetryDigest -. instrument .-> Drafting
+  CreditStatus -. instrument .-> Drafting
+  ActivityDecision -. if .-> Drafting
   Drafting --> Article
   ClaudeAPI -. instrument .-> CouncilReviewing
   Article -. instrument .-> CouncilReviewing
@@ -82,11 +93,14 @@ flowchart TD
   ClaimVerifying -- affects --> Article
 ```
 
-**OPL paragraph.** Article Generating zooms into Context Collecting, Drafting, Council Reviewing,
-Synthesizing, and Claim Verifying. Context Collecting requires GitHub. Context Collecting invokes
-Telemetry Collecting. Context Collecting yields Commit Context. Telemetry Collecting yields
-Telemetry Digest. Drafting requires Claude API. Drafting requires Commit Context. Drafting
-requires Telemetry Digest. Drafting yields Article. Council Reviewing requires Claude API.
+**OPL paragraph.** Activity Decision can be skip or run. Article Generating zooms into Context Collecting, Activity Assessing,
+Credit Checking, Drafting, Council Reviewing, Synthesizing, and Claim Verifying. Context
+Collecting requires GitHub. Context Collecting invokes Telemetry Collecting. Context Collecting
+yields Commit Context. Telemetry Collecting yields Telemetry Digest. Activity Assessing requires
+Commit Context. Activity Assessing yields Activity Decision. Credit Checking occurs if Activity
+Decision is run. Credit Checking requires Claude API. Credit Checking yields Credit Status.
+Drafting requires Claude API. Drafting requires Commit Context. Drafting requires Telemetry Digest.
+Drafting requires Credit Status. Drafting occurs if Activity Decision is run. Drafting yields Article. Council Reviewing requires Claude API.
 Council Reviewing requires Article. Council Reviewing yields Council Critiques. Synthesizing
 requires Claude API. Synthesizing consumes Council Critiques. Synthesizing affects Article.
 Claim Verifying requires Article. Claim Verifying requires Commit Context. Claim Verifying yields
