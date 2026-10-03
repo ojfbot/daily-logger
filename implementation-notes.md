@@ -34,3 +34,7 @@
   never received that branch's `FORCE_RUN=true`, so the corrected gate skipped the synthetic
   2026-01-01 window and CI failed while looking for its mock article. **Went:** set `FORCE_RUN=true`
   only in the smoke-test environment; scheduled runs still use the meaningful-impact gate.
+- 2026-10-02 (PR #289 review): the review requested a live `DATE_OVERRIDE=2026-09-28` replay.
+  **Territory:** local `gh` credentials return HTTP 401, so the cross-repo sweep cannot run here.
+  **Went:** used dated fixtures based on the reviewed September run inputs to prove the gate's
+  skip decision; the PR's CI will still run the synthetic pipeline smoke test.

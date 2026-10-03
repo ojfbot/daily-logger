@@ -6,6 +6,7 @@ import type { ADRRegistryEntry, BlogContext, CommitInfo, IssueInfo, OpenPRInfo, 
 import { collectTelemetry } from './collect-telemetry.js'
 import { discoverRepos, reportSurfaceDrift } from './fleet.js'
 import { SYSTEM_PROMPT } from './generate-article.js'
+import { activityWindow } from './activity-window.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -270,6 +271,12 @@ function getOpenPRs(org: string, repo: string): OpenPRInfo[] {
 }
 
 function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo[] {
+  type GHCommit = {
+    commit?: {
+      author?: { date?: string } | null
+      committer?: { date?: string } | null
+    }
+  }
   type GHPR = {
     number: number
     title: string
@@ -282,7 +289,7 @@ function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo
     merged_at: string | null
     draft: boolean
     user: { login: string } | null
-    head: { sha: string }
+    head: { sha: string; ref: string }
   }
   // Fetch all PRs (open + closed) sorted by most recently updated
   const data = ghApi<GHPR[]>(
@@ -299,21 +306,13 @@ function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo
       let headCommitAt: string | undefined
 
       // GitHub advances updated_at for comments, labels, reviews, checks, and
-      // pushes. Only a recent head commit proves that an old open PR changed.
+      // pushes. The head commit date is an approximation of push time for an
+      // old PR; the lookup costs one extra API call per recently touched PR.
       if (!lifecycleChanged) {
-        type GHCommit = {
-          commit?: {
-            author?: { date?: string } | null
-            committer?: { date?: string } | null
-          }
-        }
         const headCommit = ghApi<GHCommit>(`repos/${org}/${repo}/commits/${pr.head.sha}`)
         headCommitAt = headCommit?.commit?.committer?.date ?? headCommit?.commit?.author?.date
         if (!headCommitAt) {
-          throw new Error(
-            `Activity classification failed for ${repo}#${pr.number}: ` +
-              `could not resolve head commit ${pr.head.sha}.`,
-          )
+          console.warn(`::warning::Could not classify head commit for ${repo}#${pr.number} (${pr.head.sha}); treating this PR update as metadata-only.`)
         }
       }
 
@@ -328,6 +327,7 @@ function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo
         updatedAt: pr.updated_at,
         closedAt: pr.closed_at ?? undefined,
         mergedAt: pr.merged_at ?? undefined,
+        headRef: pr.head.ref,
         headCommitAt,
         draft: pr.draft,
         author: pr.user?.login,
@@ -490,9 +490,9 @@ export async function collectContext(date: string): Promise<BlogContext> {
   // rather than Date.now(). This gives stable, predictable windows for both
   // cron runs and DATE_OVERRIDE re-generations, and makes tests deterministic
   // (fixture dates don't expire as calendar time advances).
-  const anchor = new Date(`${date}T09:00:00Z`).getTime()
-  const since24h = new Date(anchor - 24 * 60 * 60 * 1000).toISOString()
-  const since7d = new Date(anchor - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const window = activityWindow(date)
+  const since24h = new Date(window.start).toISOString()
+  const since7d = new Date(window.end - 7 * 24 * 60 * 60 * 1000).toISOString()
 
   const allCommits: CommitInfo[] = []
   const allPRs: PRInfo[] = []

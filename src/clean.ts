@@ -22,6 +22,7 @@ import {
   validateCandidates,
   openCleanPRs,
 } from './cleaner.js'
+import { checkAnthropicCredits } from './check-anthropic-credits.js'
 
 function todayUTC(): string {
   return new Date().toISOString().slice(0, 10)
@@ -86,6 +87,8 @@ async function main() {
     console.log('\n✓ Done (no candidates).')
     return
   }
+
+  await checkAnthropicCredits(process.env.ANTHROPIC_API_KEY)
 
   // ── 3. Validate ───────────────────────────────────────────────────────────────
   console.log(`3/3  Validating ${candidates.length} candidate(s) with Claude Opus...`)

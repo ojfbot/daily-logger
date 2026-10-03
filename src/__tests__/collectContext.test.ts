@@ -26,7 +26,7 @@ const metadataOnlyPRFixture = [
     merged_at: null,
     draft: false,
     user: { login: 'ojfbot' },
-    head: { sha: 'old-head-sha' },
+    head: { sha: 'old-head-sha', ref: 'feat/old-pr' },
   },
 ]
 
@@ -159,6 +159,24 @@ describe('collectContext — recent PR change classification', () => {
     const ctx = await collectContext('2026-02-28')
     const pr = ctx.recentPRs.find((candidate) => candidate.number === 11 && candidate.repo === 'shell')
     expect(pr?.headCommitAt).toBe('2026-02-20T12:00:00Z')
+    expect(pr?.headRef).toBe('feat/old-pr')
+  })
+
+  it('keeps collecting when an old PR head commit cannot be resolved', async () => {
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('/commits/old-head-sha')) throw new Error('HTTP 503')
+      return mockExecSync(cmd)
+    })
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const ctx = await collectContext('2026-02-28')
+      const pr = ctx.recentPRs.find((candidate) => candidate.number === 11 && candidate.repo === 'shell')
+      expect(pr?.headCommitAt).toBeUndefined()
+      expect(warning).toHaveBeenCalledWith(expect.stringContaining('Could not classify head commit for shell#11'))
+    } finally {
+      warning.mockRestore()
+      vi.mocked(execSync).mockImplementation(mockExecSync)
+    }
   })
 })
 

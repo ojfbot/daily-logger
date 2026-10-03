@@ -23,14 +23,22 @@ Frontend Rendering yields Rendered Site.
 
 ## SD1.1 — Article Generating in-zoom
 
-Article Generating zooms into Context Collecting, Drafting, Council Reviewing, Synthesizing, and Claim Verifying. [src: src/index.ts]
+Activity Decision can be skip or run.
+Article Generating zooms into Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, and Claim Verifying. [src: src/index.ts]
 Context Collecting requires GitHub. [src: src/collect-context.ts]
 Context Collecting invokes Telemetry Collecting. [src: src/collect-context.ts]
 Context Collecting yields Commit Context.
 Telemetry Collecting yields Telemetry Digest. [src: src/collect-telemetry.ts]
+Activity Assessing requires Commit Context. [src: src/should-skip-run.ts]
+Activity Assessing yields Activity Decision. [src: src/should-skip-run.ts]
+Credit Checking occurs if Activity Decision is run. [src: src/index.ts]
+Credit Checking requires Claude API. [src: src/check-anthropic-credits.ts]
+Credit Checking yields Credit Status. [src: src/check-anthropic-credits.ts]
 Drafting requires Claude API. [src: src/generate-article.ts]
 Drafting requires Commit Context.
 Drafting requires Telemetry Digest.
+Drafting requires Credit Status. [src: src/index.ts]
+Drafting occurs if Activity Decision is run. [src: src/index.ts]
 Drafting yields Article.
 Council Reviewing requires Claude API. [src: src/index.ts]
 Council Reviewing requires Article.
