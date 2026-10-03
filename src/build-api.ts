@@ -13,7 +13,7 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { marked } from 'marked'
+import { renderArticle } from './render-article.js'
 import { ARTICLE_OUTCOMES, actionId, type CodeReference } from './schema.js'
 
 import { KNOWN_REPOS } from './fleet.js'
@@ -340,7 +340,7 @@ export function buildApi() {
     const entry = entries.find((e) => e.date === date)
     if (!entry) continue
 
-    const bodyHtml = marked.parse(body) as string
+    const bodyHtml = renderArticle(body)
     writeFileSync(
       join(articlesApiDir, `${date}.json`),
       JSON.stringify({ ...entry, bodyHtml }, null, 2),
