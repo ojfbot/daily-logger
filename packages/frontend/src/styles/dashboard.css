@@ -51,7 +51,10 @@
   --border:     #4A4840;
   --text:       #F5F3ED;
   --text-secondary: #B5B0A1;
-  --accent-hover: #EF5350;
+  --blue:       #64B5F6;
+  --accent:     #EF5350;
+  --accent-hover: #FF6B6B;
+  --accent-text: #1C1B18;
   --tag-infra:  #78909C;
 }
 
@@ -62,6 +65,10 @@
     --border:     #4A4840;
     --text:       #F5F3ED;
     --text-secondary: #B5B0A1;
+    --blue:       #64B5F6;
+    --accent:     #EF5350;
+    --accent-hover: #FF6B6B;
+    --accent-text: #1C1B18;
     --tag-infra:  #78909C;
   }
 }
@@ -501,59 +508,100 @@ a:hover { border-bottom-color: var(--text); }
 }
 
 .article-content {
-  max-width: 680px;
+  max-width: 72ch;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
 }
 
 .article-content h2 {
   font-family: var(--font-sans);
-  font-size: 1.1rem;
+  font-size: 1.35rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  margin: 2.5rem 0 0.75rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--border);
+  margin: 3rem 0 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--text);
 }
 
 .article-content h3 {
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--text-secondary);
-  margin: 1.5rem 0 0.5rem;
+  color: var(--text);
+  margin: 2rem 0 0.65rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--accent);
 }
 
 .article-content p {
-  margin-bottom: 1rem;
-  line-height: 1.7;
+  margin-bottom: 1.15rem;
+}
+
+.article-content > p:first-child {
+  font-size: 1.1rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.article-content strong {
+  font-weight: 700;
+}
+
+.article-content em {
+  color: var(--text-secondary);
 }
 
 .article-content code {
   font-family: var(--font-mono);
-  font-size: 0.85em;
+  font-size: 0.82em;
   background: var(--bg-alt);
   padding: 0.1em 0.4em;
   border: 1px solid var(--border);
+  border-radius: 3px;
 }
 
 .article-content pre {
   background: var(--bg-alt);
   border: 1px solid var(--border);
-  padding: 1rem;
+  border-left: 3px solid var(--text-secondary);
+  padding: 1.25rem;
   overflow-x: auto;
-  margin-bottom: 1rem;
+  margin: 1.5rem 0;
+  line-height: 1.5;
 }
 .article-content pre code {
   background: none;
   border: none;
   padding: 0;
+  border-radius: 0;
 }
 
 .article-content blockquote {
-  border-left: 2px solid var(--text);
-  padding-left: 1rem;
-  margin: 1rem 0;
-  color: var(--text-secondary);
+  border-left: 3px solid var(--accent);
+  background: var(--bg-alt);
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.article-content blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.article-content hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+.article-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
 }
 
 .article-content table {
@@ -578,13 +626,39 @@ a:hover { border-bottom-color: var(--text); }
 
 .article-content ul,
 .article-content ol {
-  padding-left: 1.5rem;
-  margin-bottom: 1rem;
+  padding-left: 1.75rem;
+  margin: 0 0 1.25rem;
 }
-.article-content li { margin-bottom: 0.25rem; }
+.article-content li { margin-bottom: 0.4rem; }
+.article-content li::marker { color: var(--accent); font-weight: 700; }
+
+.article-content ul:has(> li > code.commit-hash:only-child) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 1.75rem;
+}
+
+.article-content ul:has(> li > code.commit-hash:only-child)::before {
+  content: 'COMMITS';
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin-right: 0.35rem;
+}
+
+.article-content ul:has(> li > code.commit-hash:only-child) li {
+  margin: 0;
+}
 
 .article-content a { color: var(--blue); }
 .article-content a:hover { border-bottom-color: var(--blue); }
+.article-content a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 /* ─── Decision card (accordion) ──────────────────────────────────────────── */
 
@@ -770,8 +844,22 @@ a:hover { border-bottom-color: var(--text); }
 }
 
 .related-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
   font-size: 0.8rem;
-  padding: 0.3rem 0;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.related-item a {
+  font-family: var(--font-sans);
+  line-height: 1.4;
+}
+
+.related-item .entry-stat {
+  display: block;
 }
 
 /* ─── Search overlay ─────────────────────────────────────────────────────── */
