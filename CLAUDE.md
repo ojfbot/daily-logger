@@ -6,7 +6,7 @@
 
 1. Sweeping the last 24 h of commits and PRs (both open and closed) across all ojfbot repos via the GitHub API
 2. Aggregating Claude Code skill telemetry (skill-dispositions ledger, suggestion follow-through tracking, and PR skill comments) alongside commit/PR data
-3. Feeding that context to Claude Sonnet with a project-aware system prompt (gated on meaningful change signals — no article is generated when there is nothing new to report)
+3. Feeding that context to Claude Sonnet with a project-aware system prompt (normal live runs skip generation when no meaningful activity is found; dry runs and `FORCE_RUN` bypass the skip gate)
 4. Committing the resulting article to `articles/YYYY-MM-DD.md` (with a dedicated skill telemetry section)
 5. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
 The workflow runs on a daily cron at 09:00 UTC and can also be triggered manually with a date override or dry-run flag.
@@ -39,7 +39,7 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 |---|---|
 | `src/index.ts` | Entry point — orchestrates collect → generate → write |
 | `src/collect-context.ts` | GitHub API sweep via `gh` CLI (single page per call, 16 MB buffer) |
-| `src/fleet.ts` | Sweep membership: `discoverRepos()` (live walk of `gh repo list` — no frozen hand-record; private repos only when opted in via `REPO_NOTES`), `EXCLUDED_REPOS`, `REPO_NOTES` → `KNOWN_REPOS`, `reportSurfaceDrift()` |
+| `src/fleet.ts` | Sweep membership: `discoverRepos()` (derived from `gh repo list`; private repos only when opted in via `REPO_NOTES`), `EXCLUDED_REPOS`, `REPO_NOTES` → `KNOWN_REPOS`, `reportSurfaceDrift()` |
 | `src/collect-telemetry.ts` | Aggregates skill usage from `~/selfco/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources. **Note:** commit `4dd6765` fixed a silent no-op where skill-audit fetched telemetry from the wrong remote; telemetry collection now targets the correct source. |
 | `src/generate-article.ts` | Claude API call + prompt, JSON → markdown (includes dedicated skill telemetry section) |
 | `src/schema.ts` | Zod schemas + validation (ArticleDataSchema/ArticleDataV2, TypedTagSchema, ShipmentEntrySchema, DecisionEntrySchema, ActionItemSchema, ClosedActionSchema, CodeReferenceSchema, StructuredArticleSchema; `actionId`, `validateArticleOutput`, `getValidationErrors`) |
