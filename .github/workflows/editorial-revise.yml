@@ -41,7 +41,7 @@ jobs:
       - name: Extract article date from branch name
         id: date
         run: |
-          # GITHUB_HEAD_REF via env (never ${{ }} in run:) + strict shape check — the branch
+          # Read GITHUB_HEAD_REF from the environment and validate the branch
           # name is user-controlled input.
           DATE="${GITHUB_HEAD_REF#accept/}"
           if [[ ! "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
