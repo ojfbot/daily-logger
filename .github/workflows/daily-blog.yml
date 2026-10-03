@@ -11,7 +11,8 @@ name: Daily Dev Blog
 
 on:
   schedule:
-    - cron: '0 9 * * *'    # 09:00 UTC daily
+    - cron: '30 3 * * *'   # 03:30 America/Chicago daily
+      timezone: 'America/Chicago'
   workflow_dispatch:
     inputs:
       date_override:
