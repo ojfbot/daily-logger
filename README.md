@@ -19,7 +19,7 @@ Each article lives at `/articles/YYYY-MM-DD`.
 ## How it works
 
 ```
-09:00 UTC cron (or manual dispatch)
+09:00 America/Chicago cron (or manual dispatch)
   → collect-context.ts   sweeps: commits (24 h), PRs/issues (7 d, open + closed) across all Frame repos
                          injects ROADMAP.md context (~2500 chars) into the prompt
   → generate-article.ts  Claude Sonnet → JSON → markdown
@@ -36,7 +36,7 @@ Each article lives at `/articles/YYYY-MM-DD`.
   → deploy-vercel.yml    fires on push to main → Vercel serverless build + deploy
 ```
 
-Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug`, `purefoy`, `daily-logger`, `lean-canvas`, `seh-study`, `core-reader`, `gastown-pilot`, `frame-ui-components`, `capture-agent` (formerly `gcgcca`), `fairway`, `browser-automation`, `node-template`, `dive-briefing`, `switchboard`, `agent-anatomy`, `f1-pit-wall`, `f1-substrate`, `lofi-beaver`, `golf-platform-scripts`, `f1-doctrine`.
+Repos swept: live walk of the `ojfbot` org (see `collect-context.ts`). The fleet census is no longer a frozen hand-record — it walks the live repo list at generation time.
 
 ## Architecture
 
@@ -77,7 +77,7 @@ Repos swept: `shell`, `cv-builder`, `BlogEngine`, `TripPlanner`, `core`, `MrPlug
 
 - **Automated content pipeline** — cron trigger, cross-repo context sweep via GitHub API, Claude generation, PR-based editorial review, Vercel deploy on merge
 - **Structured AI prompting** — ROADMAP.md context injection (~2500 chars), enforced article schema (frontmatter + 4 required sections), deterministic PR template
-- **Observable development** — every day's work across 24 repos is public at [log.jim.software](https://log.jim.software)
+- **Observable development** — every day's work across the full ojfbot fleet is public at [log.jim.software](https://log.jim.software)
 
 ---
 
@@ -152,7 +152,7 @@ Required body sections: `## What shipped`, `## The decisions`, `## Roadmap pulse
 
 ## Customisation
 
-**Add repos to the sweep** — edit the `REPOS` array in [`src/collect-context.ts`](src/collect-context.ts). Run `gh repo list ojfbot` to audit.
+**Repos are discovered automatically** — the sweep walks the live `ojfbot` org repo list at generation time. No manual `REPOS` array to edit.
 
 **Update project context** — edit [`ROADMAP.md`](ROADMAP.md). The "Where we are now" section should be updated weekly. The system prompt lives in [`src/generate-article.ts`](src/generate-article.ts).
 
