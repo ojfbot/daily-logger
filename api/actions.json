@@ -1,5 +1,29 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Review and merge daily-logger #294 (fix: restore article HTML structure and readability). Confirm a reviewer is assigned before treating this as unblocked. This is the prerequisite for both #300 and #301 — nothing downstream moves until it merges.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-10-04",
+    "id": "act-2026-10-04-pr-review-012b7e"
+  },
+  {
+    "command": "/doc-refactor",
+    "description": "Fix article Markdown normalization at the source (daily-logger #300): update assembleBody() and toMarkdown() in src/generate-article.ts, and council synthesis in src/council.ts, so escaped prose line breaks become real newlines and angle-bracket placeholders render as inline code before _articles/YYYY-MM-DD.md is committed. Add a regression test covering both cases against the October 2 failure pattern. Can be worked in parallel with #301 after #294 merges.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-10-04",
+    "id": "act-2026-10-04-doc-refactor-d2bec0"
+  },
+  {
+    "command": "/hardening",
+    "description": "Implement the ChatMessage.tsx safety boundary for daily-logger #301: determine external user exposure first — if live, this is the immediate priority over #300. Route assistant chat Markdown through an HTML and URL safety layer equivalent to the one introduced in PR #294, covering raw HTML injection, javascript: links, and data: images. Add regression tests before closing.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-10-04",
+    "id": "act-2026-10-04-hardening-375a60"
+  },
+  {
     "command": "/validate",
     "description": "Open frame.jim.software in a browser with DevTools Network panel open. Filter for 'localhost'. Confirm zero requests to any localhost:<port> URL across all mounted sub-apps (cv-builder, BlogEngine, TripPlanner, lean-canvas, gastown-pilot, purefoy). Report the result in Friday's article. The sweep is merged but not yet verified.",
     "repo": "shell",

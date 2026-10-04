@@ -1,5 +1,94 @@
 [
   {
+    "date": "2026-10-04",
+    "title": "Saturday's 6 commits: CI timing fixed for central time, bounded correspondence lands in core, and two article-quality issues filed",
+    "summary": "Saturday tightened the daily-logger pipeline with a timezone-correct schedule, published core's bounded correspondence proposal, and opened two issues targeting article Markdown quality at the source.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "correspondence-protocol",
+        "type": "concept"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "daily-logger"
+    ],
+    "commitCount": 7,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Schedule the blog workflow in America/Chicago, not UTC",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Daily Cleaner is now sequenced after a successful Daily Dev Blog via Actions needs: dependency",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Bounded correspondence published as Proposed, not Accepted",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Review and merge daily-logger #294 (fix: restore article HTML structure and readability). Confirm a reviewer is assigned before treating this as unblocked. This is the prerequisite for both #300 and #301 — nothing downstream moves until it merges.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-10-04",
+        "id": "act-2026-10-04-pr-review-012b7e"
+      },
+      {
+        "command": "/doc-refactor",
+        "description": "Fix article Markdown normalization at the source (daily-logger #300): update assembleBody() and toMarkdown() in src/generate-article.ts, and council synthesis in src/council.ts, so escaped prose line breaks become real newlines and angle-bracket placeholders render as inline code before _articles/YYYY-MM-DD.md is committed. Add a regression test covering both cases against the October 2 failure pattern. Can be worked in parallel with #301 after #294 merges.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-10-04",
+        "id": "act-2026-10-04-doc-refactor-d2bec0"
+      },
+      {
+        "command": "/hardening",
+        "description": "Implement the ChatMessage.tsx safety boundary for daily-logger #301: determine external user exposure first — if live, this is the immediate priority over #300. Route assistant chat Markdown through an HTML and URL safety layer equivalent to the one introduced in PR #294, covering raw HTML injection, javascript: links, and data: images. Add regression tests before closing.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-10-04",
+        "id": "act-2026-10-04-hardening-375a60"
+      }
+    ]
+  },
+  {
     "date": "2026-10-03",
     "title": "Friday's 35 commits: Selfco hygiene lands in morning-cockpit, the fleet census goes live, and the daily-logger editorial pipeline stabilises",
     "summary": "Friday closed 13 PRs across four repos, wiring the Selfco Codex heartbeat into morning-cockpit's Loop pod, replacing a frozen 2026-07-25 fleet census with a live walk, and hardening the daily-logger editorial CI against a self-triggering generation loop.",

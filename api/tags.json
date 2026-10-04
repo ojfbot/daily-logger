@@ -2,17 +2,17 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 75
+    "count": 76
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 62
+    "count": 63
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 62
+    "count": 63
   },
   {
     "name": "assistant-centric",
@@ -30,14 +30,14 @@
     "count": 37
   },
   {
-    "name": "rest-day",
-    "type": "activity",
+    "name": "adr",
+    "type": "practice",
     "count": 30
   },
   {
-    "name": "adr",
-    "type": "practice",
-    "count": 29
+    "name": "rest-day",
+    "type": "activity",
+    "count": 30
   },
   {
     "name": "tooling-for-iteration",
@@ -57,7 +57,7 @@
   {
     "name": "hardening",
     "type": "practice",
-    "count": 21
+    "count": 22
   },
   {
     "name": "sprint",
@@ -185,6 +185,11 @@
     "count": 6
   },
   {
+    "name": "correspondence-protocol",
+    "type": "concept",
+    "count": 5
+  },
+  {
     "name": "lean-canvas",
     "type": "repo",
     "count": 5
@@ -218,11 +223,6 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
-  },
-  {
-    "name": "correspondence-protocol",
-    "type": "concept",
-    "count": 4
   },
   {
     "name": "seh-study",
@@ -488,6 +488,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "editorial-pipeline",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "selfco-vault",
