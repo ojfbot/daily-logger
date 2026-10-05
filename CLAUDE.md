@@ -9,7 +9,7 @@
 3. Feeding that context to Claude Sonnet with a project-aware system prompt (normal live runs skip generation when no meaningful activity is found; dry runs and `FORCE_RUN` bypass the skip gate)
 4. Committing the resulting article to `articles/YYYY-MM-DD.md` (with a dedicated skill telemetry section)
 5. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
-The workflow runs on a daily cron at 09:00 UTC and can also be triggered manually with a date override or dry-run flag.
+The workflow runs on a daily cron scheduled in America/Chicago and can also be triggered manually with a date override or dry-run flag.
 
 ## Project context
 
