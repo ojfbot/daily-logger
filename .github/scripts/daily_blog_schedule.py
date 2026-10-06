@@ -129,7 +129,7 @@ def watchdog(github, target_date, dispatch):
     state = run_state(runs)
     result = {'state': state, 'date': target_date, 'runs': [run['html_url'] for run in runs]}
     if state == 'failed':
-        raise ValueError('A live run failed/cancelled; inspect it instead of automatically retrying')
+        raise ValueError('A live run failed/cancelled; inspect instead of retrying: ' + ', '.join(result['runs']))
     if state != 'missing' or not dispatch:
         return result
     if github.branch(target_date) is not None:
@@ -139,7 +139,7 @@ def watchdog(github, target_date, dispatch):
     if refreshed:
         state = run_state(refreshed)
         if state == 'failed':
-            raise ValueError('A live run failed during the check; no dispatch')
+            raise ValueError('A live run failed during the check; no dispatch: ' + ', '.join(run['html_url'] for run in refreshed))
         return {'state': state, 'date': target_date, 'runs': [run['html_url'] for run in refreshed]}
     receipt = github.api(f'actions/workflows/{WORKFLOW}/dispatches', data={
         'ref': 'main', 'inputs': {'date_override': target_date, 'dry_run': False},
