@@ -1,5 +1,13 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Review and merge daily-logger #294 (fix: restore article HTML structure and readability). Confirm a reviewer is assigned before treating this as unblocked. This is the prerequisite for both #300 and #301 — nothing downstream moves until it merges.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-10-04",
+    "id": "act-2026-10-04-pr-review-012b7e"
+  },
+  {
     "command": "/doc-refactor",
     "description": "Fix article Markdown normalization at the source (daily-logger #300): update assembleBody() and toMarkdown() in src/generate-article.ts, and council synthesis in src/council.ts, so escaped prose line breaks become real newlines and angle-bracket placeholders render as inline code before _articles/YYYY-MM-DD.md is committed. Add a regression test covering both cases against the October 2 failure pattern. Can be worked in parallel with #301 after #294 merges.",
     "repo": "daily-logger",
@@ -72,6 +80,22 @@
     "id": "act-2026-08-19-investigate-923d57"
   },
   {
+    "command": "/pr-review",
+    "description": "Review and merge cv-builder #152 (fix(deps): resolve 8 HIGH prod vulns). The security-scan.yml job has been red since June 26 — 54 days — with no documented exception or false-positive triage on record. Jim is both author and reviewer as the sole operator. Merge it before any new agent feature lands on the current dep tree.",
+    "repo": "cv-builder",
+    "status": "open",
+    "sourceDate": "2026-08-19",
+    "id": "act-2026-08-19-pr-review-b3c636"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge cca-prep #26 (fix(decks): repoint plan.html Lab 1 at ruled labs/ home). One-line correction removing the phantom newline-ai-course path hardcoded in plan.html. Wayfinder ruling 455 is unambiguous. Zero risk. Merge before any Lab 1 template work begins or the phantom path re-enters scope.",
+    "repo": "cca-prep",
+    "status": "open",
+    "sourceDate": "2026-08-14",
+    "id": "act-2026-08-14-pr-review-c4053b"
+  },
+  {
     "command": "/investigate",
     "description": "Run surface-check completeness audit on cca-prep before the next mock sitting. Three violating paths were found live during M2 and fixed in #25, but no grep audit was run before merge. Audit every drill-bank access point in src/ for code that reads deck items without first checking the surface field. This should have been the merge condition for #25 — run it now to confirm no fourth path exists.",
     "repo": "cca-prep",
@@ -88,6 +112,14 @@
     "id": "act-2026-08-14-roadmap-fb295d"
   },
   {
+    "command": "/pr-review",
+    "description": "Merge morning-cockpit #44 (Cockpit v2 design bundle, research-only, no code paths). Sunday's core commit 807b6c8 closed the wayfinder evidence backing this PR — the documentation blocker is gone. Before merging, resolve the #43 disposition: confirm WIP does not conflict with #44/#45, then queue #43 and #45 for sequential review in the same session.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-08-10",
+    "id": "act-2026-08-10-pr-review-1d4d66"
+  },
+  {
     "command": "/sweep",
     "description": "After morning-cockpit #44 is confirmed merged: merge daily-logger #266 (open since 2026-08-04, no recorded blocker) and seh-study #20 (open since 2026-08-09, validated by Claude Opus). Combined review under 5 minutes. Brings the cleaner PR queue to zero.",
     "repo": "daily-logger",
@@ -102,6 +134,14 @@
     "status": "open",
     "sourceDate": "2026-08-10",
     "id": "act-2026-08-10-audit-e1a0ce"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge morning-cockpit #44 (Cockpit v2 design bundle, research-only, no code paths) — prerequisite for all Phase 2 code PRs. Until this merges, #45 (S10 fleet-structure API) cannot begin. Then merge #43 (preserved WIP chat tab, confirm-and-merge gate) and open #45 for review in sequence. Combined review time for #44 and #43 under 20 minutes.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-08-09",
+    "id": "act-2026-08-09-pr-review-28dc6a"
   },
   {
     "command": "/pr-review",
@@ -208,6 +248,14 @@
     "id": "act-2026-08-02-scaffold-aa04fd"
   },
   {
+    "command": "/pr-review",
+    "description": "Merge mirrorworld #10 (clean: stale docs/comments 2026-07-29). Zero-risk daily-cleaner output, open since 2026-07-29 — survived Friday's ledger session with no technical blocker. This is the only open PR in the fleet. Merging it brings the queue to zero.",
+    "repo": "mirrorworld",
+    "status": "open",
+    "sourceDate": "2026-08-01",
+    "id": "act-2026-08-01-pr-review-d47cbf"
+  },
+  {
     "command": "/techdebt",
     "description": "Scope TD-006 (fleet-inventory reconciler): define what 'fleet inventory drift' means concretely, which repos are outside the current reconciler's coverage, and what the fix surface looks like. The entry was appended Friday with no implementation scope. TD-007 sequences after this — do not start it first.",
     "repo": "core",
@@ -296,6 +344,14 @@
     "id": "act-2026-07-27-scope-decision-ac1330"
   },
   {
+    "command": "/pr-review",
+    "description": "Review and merge core #291 (four northstar status.jsonl appends — data only, no code) and silicon-empires #28 (PH1.5 ledger bookkeeping — no code). Both are zero-risk merges that close named ledger gaps. Combined review time under 10 minutes.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-07-26",
+    "id": "act-2026-07-26-pr-review-e052ee"
+  },
+  {
     "command": "/validate",
     "description": "Run the f1-doctrine phase-keying gate against the merged registry/ to confirm all 33 QuestionNodes have valid substrate_call bindings and that the gate document reflects the A3 vs A4 delta recorded in docs/gates/2026-07-24-phase-keying-relevance.md. This establishes the S2 baseline before any node edits land. Expected output: 33/33 nodes pass binding validation; gate delta matches the committed document.",
     "repo": "f1-doctrine",
@@ -328,6 +384,14 @@
     "id": "act-2026-07-25-validate-b047f5"
   },
   {
+    "command": "/pr-review",
+    "description": "Review and merge f1-doctrine #1 (S1: Registry v1) after the compute-boundary ADR is committed and the /validate gate run is recorded. Confirm all 33 QuestionNodes have a substrate_call binding field, the registry/ directory structure matches the taxonomy v1 axes, and the gate document is present. This PR is the prerequisite for all S2+ slices and for the persona re-rank experiment in issue #2.",
+    "repo": "f1-doctrine",
+    "status": "open",
+    "sourceDate": "2026-07-25",
+    "id": "act-2026-07-25-pr-review-33b3df"
+  },
+  {
     "command": "/investigate",
     "description": "Open f1-pit-wall #6 and assess whether the two confirmed data defects are already characterized at the field level. If they are, write corrected nl-query-corpus.json entries and open a fix PR in f1-pit-wall before f1-doctrine S2 uses the registry as a training baseline. If the defects are not yet field-level specific, this is a diagnosis task — update the time estimate accordingly and do not call it a triage.",
     "repo": "f1-pit-wall",
@@ -336,12 +400,52 @@
     "id": "act-2026-07-25-investigate-afa72f"
   },
   {
+    "command": "/pr-review",
+    "description": "Review and merge switchboard #1 (S1: FastAPI proxy core — Anthropic adapter, byte-for-byte SSE passthrough). 16 tests green, human gate only. Advances ns:l1-switchboard#P1 from 0→30. Start here — cleanest merge in the queue, no design judgment required.",
+    "repo": "switchboard",
+    "status": "open",
+    "sourceDate": "2026-07-23",
+    "id": "act-2026-07-23-pr-review-9605d8"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review and merge dive-briefing #1 (S1: port the hybrid retriever behind the corpus-pack seam). 28 tests green, human gate only. Advances ns:l1-dive-briefing#P3 from 0→40.",
+    "repo": "dive-briefing",
+    "status": "open",
+    "sourceDate": "2026-07-23",
+    "id": "act-2026-07-23-pr-review-263e4f"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review and merge morning-cockpit #34 (S8 read-side: derive decided-in-flight from closes: refs). Write-side (#32, #33) already merged; this completes the decision→delivery seam. Entrance check: pnpm test.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-07-23",
+    "id": "act-2026-07-23-pr-review-33bd9b"
+  },
+  {
     "command": "/grill-with-docs",
     "description": "Run on core #258 (root decision: does every learning unit yield a publishable artifact?). Operator-confirmed direction is both-coupled 50/50 — grilling converts that confirmation into a durable decision record. Every other issue in #257–#265 is blocked behind this.",
     "repo": "core",
     "status": "open",
     "sourceDate": "2026-07-23",
     "id": "act-2026-07-23-grill-with-docs-a6778a"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review and merge morning-cockpit #37 (fleet reconcile: 14 missing active repos). Mechanical output of the first /fleet-onboard reconcile run — no design judgment required. Unblocks accurate fleet-card state and closes the manifest drift surfaced by this session.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-07-23",
+    "id": "act-2026-07-23-pr-review-2c75ad"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review and merge morning-cockpit #34 (S8 read-side: derive decided-in-flight from closes: refs). Run `pnpm test` first — this is the declared entrance check for the slice. The write-side (PRs #32, #33) is already merged; #34 completes the decision→delivery seam. Agent-eligible: no design judgment required, automated check is sufficient.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-07-18",
+    "id": "act-2026-07-18-pr-review-d12996"
   },
   {
     "command": "/adr",
@@ -424,12 +528,28 @@
     "id": "act-2026-06-12-validate-394776"
   },
   {
+    "command": "/pr-review",
+    "description": "Review and merge Core #150 (add frame-standup to user-scope baseline install — one-file change to install-agents.sh and the managed user CLAUDE.md template) and Core #147 (vault canvas node sizing — one-line schema addition). Both are low-risk, have no stated blockers, and were skipped Thursday for lack of bandwidth. Merge #150 first; it is a fleet-wide behavioral change. Merge #147 second.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-06-12",
+    "id": "act-2026-06-12-pr-review-a7f71e"
+  },
+  {
     "command": "/hardening",
     "description": "Add a test for the pipeline-alert issue-ops layer (1d21c5d): simulate a workflow failure in dry-run mode and confirm (a) a GitHub issue is opened and assigned, (b) the push notification fires via the GitHub App, and (c) running /disable sets the suppression variable and prevents a second issue from being opened on the next failure. Then confirm the variable can be manually reset to restore alerting. No test currently covers the suppression path.",
     "repo": "daily-logger",
     "status": "open",
     "sourceDate": "2026-06-12",
     "id": "act-2026-06-12-hardening-3b0738"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge daily-logger #210 (register f1-pit-wall, f1-substrate, lofi-beaver, golf-platform-scripts in the daily sweep). Four repos born during the outage window are producing commits that do not appear in daily articles. This is a live data-integrity gap. Merge this before #209.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-06-11",
+    "id": "act-2026-06-11-pr-review-24da3d"
   },
   {
     "command": "/pr-review",
@@ -478,6 +598,14 @@
     "status": "open",
     "sourceDate": "2026-05-18",
     "id": "act-2026-05-18-investigate-9a0199"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review and merge core #117 (Pocock skill conventions: /prototype, /caveman, /zoom-out, writing pipeline, /git-guardrails). Open six days, no conflicts or CI failures noted. Solo project — the review gate is a habit gap, not a technical one. Prerequisite for expanding the active skill surface in all subsequent sessions. Do this first.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-05-17",
+    "id": "act-2026-05-17-pr-review-6a458b"
   },
   {
     "command": "/adr",
@@ -608,6 +736,46 @@
     "id": "act-2026-04-30-roadmap-640008"
   },
   {
+    "command": "/pr-review",
+    "description": "Disposition beaverGame #27 (Three.js playability pass). Open the PR and decide: merge-as-spec or close-as-superseded. If closing, extract the heightAt(x,z) bilinear-blend fix into #28's behavioral-spec checklist before deleting the branch — that logic is the terrain-sampling spec the Babylon migration must satisfy. Leave a comment in #28 linking to the decision. This takes under 15 minutes and is the single action that unblocks Babylon bootstrap.",
+    "repo": "beaverGame",
+    "status": "open",
+    "sourceDate": "2026-04-30",
+    "id": "act-2026-04-30-pr-review-8f36f1"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Begin the Pocock skills adoption triage with core #81 only. #81 (foundation: /grill-with-docs, CONTEXT.md, agent defaults) is the prerequisite for all subsequent phases (#82–#85). Review and merge #81 before opening #82 for review. Merging out of order produces skill catalog phase-registry inconsistencies where later commands reference skill entries that do not yet exist. Do not batch-review all five — proceed one PR at a time in phase order.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-30",
+    "id": "act-2026-04-30-pr-review-bce0db"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge core #94 (game-engine architecture spike — Babylon.js recommended). This is the decision record that justifies discarding beaverGame's entire Three.js codebase. Draft PR #28 is already open; without #94 merged, the rationale exists only in a PR description and will be re-litigated in future sessions.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-04-29",
+    "id": "act-2026-04-29-pr-review-c0e169"
+  },
+  {
+    "command": "/roadmap",
+    "description": "Name a disposition for beaverGame #27 (Three.js playability pass) before #28 advances past the Babylon bootstrap. The heightAt(x,z) bilinear-blend fix is a correctness issue — leaving #27 open creates ambiguity about what the snap-rig oracle actually certifies. Merge it as spec, or close it as superseded. Do not leave it in an undecided state.",
+    "repo": "beaverGame",
+    "status": "open",
+    "sourceDate": "2026-04-29",
+    "id": "act-2026-04-29-roadmap-9d7534"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge shell #76 (register asset_foundry MF remote at :3035). One-line host config addition, zero risk surface, prerequisite for the asset-foundry Frame MF front door being visible in the dev environment. Can close in under ten minutes and unblocks the asset-foundry platform roadmap.",
+    "repo": "shell",
+    "status": "open",
+    "sourceDate": "2026-04-29",
+    "id": "act-2026-04-29-pr-review-e613c0"
+  },
+  {
     "command": "/test-expand",
     "description": "Write Vitest tests for beaverGame's load-glb.ts validation tripwire covering all four rejection paths: missing validation.json, rejected status field, malformed JSON, and schema mismatch. The tripwire is the gate that prevents a malformed or unvalidated .glb from being loaded into the scene — if it passes something it shouldn't, a corrupted or oversized asset silently enters the render pipeline. This is BG-004 and the highest-leverage untested code in the loader. The four paths map directly to the four branches in the validation check function.",
     "repo": "beaverGame",
@@ -638,6 +806,14 @@
     "status": "open",
     "sourceDate": "2026-04-28",
     "id": "act-2026-04-28-sweep-e4f372"
+  },
+  {
+    "command": "/techdebt",
+    "description": "Audit the approximately 16 open actions generated before commit `9c17d7f` for ID correctness: re-run the content hash (command + description + repo + date, whitespace-normalized) against each stored ID. Any mismatch means the action will not close in the next closure pipeline run. Remediate by re-generating the ID and updating the action file, or manually verifying the action is still open and re-writing with the correct hash. Complete before the next sprint closure run.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-04-14",
+    "id": "act-2026-04-14-techdebt-0b58d9"
   },
   {
     "command": "/review",

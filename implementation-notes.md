@@ -2,6 +2,9 @@
 
 ## Deviations
 
+- 2026-10-05 (action settlement): plan assumed a baseline static API rebuild would touch only action projections; current source also re-stamps an unrelated article as accepted in api/entries.json. Verified the same editorial delta exists before ledger edits, retained build digests, and excluded that delta from this settlement PR.
+- 2026-10-05 (action settlement): suggestions required #210 before #209; GitHub records #209 merging four seconds earlier. Preserved both original requests; resolved the narrower #210 source by shipped-outcome supersession and retained #209 because its plural backfill completion condition needs operator acceptance of the one shipped digest.
+
 - 2026-10-05 (PR #294 design review): plan assumed the isolated checkout could install dependencies; registry DNS was unavailable, so validation used the PR worktree's existing pnpm dependencies without changing the lockfile.
 - 2026-10-05 (PR #294 design review): plan assumed a phone-width browser pass; viewport control timed out, so desktop light/dark views and the responsive CSS were checked, with phone width left unverified.
 
