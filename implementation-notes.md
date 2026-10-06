@@ -64,6 +64,10 @@
   **Went:** used dated fixtures based on the reviewed September run inputs to prove the gate's
   skip decision; the PR's CI will still run the synthetic pipeline smoke test.
 
+- 2026-10-06 (daily blog fallback): plan assumed the existing branch guard was enough to skip duplicate work; it runs after model generation and leaves a pushed branch without a PR stranded. Moved admission ahead of collection and added PR recovery without regeneration.
+- 2026-10-06 (same PR): plan assumed a successful blog workflow identified new work for Daily Cleaner; successful duplicate/no-article completions are indistinguishable by conclusion alone. Added an explicit article-ready step and a cleaner admission check against the source run's jobs.
+- 2026-10-06 (same PR): initial guard resolved default dates at job execution while run attribution used creation time; those disagree when a queued run crosses Chicago midnight. Anchored the workflow date to run creation and added prior-attempt checks for reruns that retain the same run ID.
+
 ## Deviations — bounded historical action settlement 2026-10-08
 
 - The first candidate list included f1-doctrine's S1 merge request; its specific compute-boundary ADR is absent at the recorded merge revision. Kept that compound suggestion open rather than using the merge alone to claim its prerequisite was fulfilled. Initially selected nine additional candidates alongside #319's existing two; the subsequent independent-review exclusion below leaves ten original action IDs total.

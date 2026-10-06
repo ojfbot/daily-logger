@@ -223,3 +223,44 @@ Part of [Frame OS](https://github.com/ojfbot/shell) — an AI-native application
 | [f1-doctrine](https://github.com/ojfbot/f1-doctrine) | F1 question layer — taxonomy and corpus register |
 | [lofi-beaver](https://github.com/ojfbot/lofi-beaver) | Lofi beaver game |
 | [golf-platform-scripts](https://github.com/ojfbot/golf-platform-scripts) | Golf platform automation scripts |
+## Scheduled fallback
+
+Daily Dev Blog requests a 03:30 America/Chicago start. GitHub can deliver scheduled
+triggers hours late. A local Codex automation checks once at 04:00 America/Chicago,
+using GPT-6 Luna with low reasoning effort to run a deterministic Python check.
+The automation only uses the script from merged `main`; it does not execute a PR branch.
+It needs the desktop app running, the machine powered on, and working GitHub CLI credentials.
+
+```bash
+# Inspect without dispatching.
+python3 .github/scripts/daily_blog_schedule.py watchdog
+
+# Dispatch once only when today's live run and article are absent.
+python3 .github/scripts/daily_blog_schedule.py watchdog --dispatch
+```
+
+The check treats a successful live run, including an intentional no-activity skip,
+as complete. Queued or running live runs suppress dispatch. Dry runs and backfills
+for other dates do not count. Failures, cancelled runs, ambiguous legacy manual runs,
+API/authentication errors, and an orphan article branch require inspection instead of
+automatic retries. A dispatch without a returned run ID is uncertain: inspect remote
+runs before retrying. Local callers may clear stale `GH_TOKEN` / `GITHUB_TOKEN` variables
+to use stored `gh` authentication; CI uses its supplied token.
+
+The workflow serializes runs and checks fresh GitHub state before collection or model
+calls. It skips an existing article or successful live run, and can recover a pushed
+article branch by opening/reusing its PR without regenerating the article. Closed
+article PRs are respected. Dry runs remain available for inspection. Resolve the date
+once from the run's creation time in Chicago, then pass it to generation and branch
+creation. Successful prior attempts also suppress regeneration when a run is rerun.
+
+Daily Cleaner only follows a successful live run whose `Article ready for cleaner`
+step completed. Duplicate, dry-run, and no-article completions do not start another
+cleaner. Manual cleaner dispatch remains available. The dependent cleaner inherits
+the source article's date, including explicit backfills.
+
+Run the fallback behavior tests with:
+
+```bash
+python3 -m unittest discover -s .github/scripts -p 'test_daily_blog_schedule.py' -v
+```

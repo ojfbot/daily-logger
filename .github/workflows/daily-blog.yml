@@ -1,4 +1,5 @@
 name: Daily Dev Blog
+run-name: "Daily Dev Blog | date=${{ inputs.date_override || 'auto' }} | dry_run=${{ inputs.dry_run && 'true' || 'false' }}"
 
 # Sweeps GitHub activity, calls Claude, commits the article to a branch
 # article/YYYY-MM-DD, and opens a PR for editorial review. The PR stays
@@ -16,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       date_override:
-        description: 'Generate for this date (YYYY-MM-DD). Defaults to today UTC.'
+        description: 'Generate for this date (YYYY-MM-DD). Defaults to today America/Chicago.'
         required: false
         type: string
       dry_run:
@@ -40,6 +41,7 @@ jobs:
       contents: write
       issues: read
       pull-requests: write
+      actions: read
 
     steps:
       - name: Checkout
@@ -48,27 +50,48 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve date and duplicate state
+        id: preflight
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DATE_OVERRIDE: ${{ inputs.date_override }}
+          DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
+        run: python3 .github/scripts/daily_blog_schedule.py preflight
+
+      - name: Recover existing article branch
+        if: steps.preflight.outputs.mode == 'recover'
+        env:
+          ARTICLE_DATE: ${{ steps.preflight.outputs.date }}
+        run: |
+          git fetch origin "refs/heads/article/${ARTICLE_DATE}"
+          git checkout -B "article/${ARTICLE_DATE}" FETCH_HEAD
+
       - name: Setup pnpm
+        if: steps.preflight.outputs.mode == 'generate'
         run: |
           corepack enable
           corepack prepare pnpm@9.15.4 --activate
 
       - name: Setup Node.js
+        if: steps.preflight.outputs.mode == 'generate'
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'pnpm'
 
       - name: Install dependencies
+        if: steps.preflight.outputs.mode == 'generate'
         run: pnpm install --frozen-lockfile
 
       - name: Run unit tests
+        if: steps.preflight.outputs.mode == 'generate'
         run: pnpm test
 
       # Fail fast on a dead GH_PAT (the cleaner has this check; the blog did
       # not — an expired PAT produced empty sweeps and green no-op runs for
       # three weeks, 2026-05-19 → 2026-06-09).
       - name: Smoke test sweep auth
+        if: steps.preflight.outputs.mode == 'generate'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
@@ -77,6 +100,7 @@ jobs:
           echo "✓ GH_PAT is valid — safe to proceed with the sweep"
 
       - name: Fetch telemetry snapshot
+        if: steps.preflight.outputs.mode == 'generate'
         continue-on-error: true
         run: |
           git clone --depth 1 --branch telemetry/daily \
@@ -84,22 +108,23 @@ jobs:
             /tmp/telemetry-snapshot 2>/dev/null || echo "No telemetry snapshot available"
 
       - name: Generate article
+        if: steps.preflight.outputs.mode == 'generate'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           # GH_PAT has read access to all private ojfbot repos for the sweep.
           GH_TOKEN: ${{ secrets.GH_PAT }}
           OJFBOT_ORG: ojfbot
-          DATE_OVERRIDE: ${{ github.event.inputs.date_override }}
+          DATE_OVERRIDE: ${{ steps.preflight.outputs.date }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
           TELEMETRY_DIR: /tmp/telemetry-snapshot
         run: pnpm generate
 
       - name: Build static JSON API
-        if: github.event.inputs.dry_run != 'true'
+        if: steps.preflight.outputs.mode == 'generate' && github.event.inputs.dry_run != 'true'
         run: pnpm build:api
 
       - name: Upload article artifact
-        if: always()
+        if: always() && steps.preflight.outputs.mode == 'generate'
         uses: actions/upload-artifact@v4
         with:
           name: article-${{ github.run_number }}
@@ -113,13 +138,25 @@ jobs:
       # Exits cleanly (empty outputs) if: dry_run, branch exists, or no changes.
 
       - name: Create branch and commit article
-        if: github.event.inputs.dry_run != 'true'
+        if: steps.preflight.outputs.mode != 'complete' && github.event.inputs.dry_run != 'true'
         id: commit
+        env:
+          ARTICLE_DATE: ${{ steps.preflight.outputs.date }}
+          ARTICLE_MODE: ${{ steps.preflight.outputs.mode }}
         run: |
-          DATE="${{ github.event.inputs.date_override }}"
-          DATE="${DATE:-$(date -u +%Y-%m-%d)}"
-          DATE="${DATE:0:10}"
+          DATE="$ARTICLE_DATE"
           BRANCH="article/${DATE}"
+
+          if [ "$ARTICLE_MODE" = 'recover' ]; then
+            echo "date=${DATE}" >> "$GITHUB_OUTPUT"
+            echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # A meaningful-activity skip creates no article, even if API rebuilding changed files.
+          if [ ! -f "_articles/${DATE}.md" ]; then
+            echo "::notice::No article generated for ${DATE}."
+            exit 0
+          fi
 
           git config user.name "ojfbot-blog[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -163,11 +200,22 @@ jobs:
             "${DATE}" "${BRANCH}" "_articles/${DATE}.md" \
             > /tmp/pr-body.md
 
+          EXISTING=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            echo "::notice::PR #${EXISTING} already exists."
+            exit 0
+          fi
+
           gh pr create \
             --title "blog: ${DATE}" \
             --body-file /tmp/pr-body.md \
             --base main \
             --head "${BRANCH}"
+
+      # The dependent cleaner checks this successful step on the source run.
+      - name: Article ready for cleaner
+        if: steps.commit.outputs.date != ''
+        run: echo 'Article and editorial PR are ready.'
 
   # ── Auto-merge ──────────────────────────────────────────────────────────────
   # Enables auto-merge on the article PR so the draft is visible on
