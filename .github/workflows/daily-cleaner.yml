@@ -38,12 +38,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  clean:
-    # On workflow_run: only proceed if the triggering workflow succeeded
+  admission:
+    name: Check source article completion
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      proceed: ${{ steps.source.outputs.proceed }}
+      date: ${{ steps.source.outputs.date }}
+    # Failed blog runs do not admit a cleaner run.
     if: >
       github.event_name != 'workflow_run' ||
       github.event.workflow_run.conclusion == 'success'
 
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check source run
+        id: source
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          EVENT_NAME: ${{ github.event_name }}
+          DATE_OVERRIDE: ${{ inputs.date_override }}
+        run: python3 .github/scripts/daily_blog_schedule.py cleaner
+
+  clean:
+    needs: admission
+    if: needs.admission.outputs.proceed == 'true'
     name: Sweep, validate, and PR stale content
     runs-on: ubuntu-latest
     timeout-minutes: 60    # Opus validation can take 30-45 min for a full sweep
@@ -112,7 +136,7 @@ jobs:
           # GH_PAT needs read+write access to all ojfbot repos for cloning + PR creation
           GH_TOKEN: ${{ secrets.GH_PAT }}
           OJFBOT_ORG: ojfbot
-          DATE_OVERRIDE: ${{ github.event.inputs.date_override || '' }}
+          DATE_OVERRIDE: ${{ needs.admission.outputs.date }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
           TARGET_REPO: ${{ github.event.inputs.target_repo || '' }}
         run: pnpm clean
