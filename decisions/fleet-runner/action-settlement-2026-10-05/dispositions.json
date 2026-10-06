@@ -10,7 +10,7 @@
     },
     "disposition": "Addressed by shipped work",
     "proposedClosure": true,
-    "reason": "PR #294 shipped after a named reviewer reported on exact head 79830e1. Final review reports all five findings resolved; merge 80e93ef satisfies the review/merge prerequisite. #300 and #301 remain separate open work.",
+    "reason": "PR #294 merged at 80e93ef after an attributed agent COMMENTED review at exact head 79830e1 reported all five findings resolved. GitHub reviewer assignment is not evidenced; the completed operator merge supersedes that pending gate. #300 and #301 remain separate open work.",
     "retainedActionId": "act-2026-10-04-pr-review-012b7e",
     "subjects": [
       {
@@ -639,9 +639,9 @@
       "sourceDate": "2026-08-10",
       "id": "act-2026-08-10-sweep-99365b"
     },
-    "disposition": "Requires a human decision",
-    "proposedClosure": false,
-    "reason": "Cockpit #44 and seh-study #20 MERGED; daily-logger #266 CLOSED unmerged without an identified delivered replacement. The combined merge request is only partly satisfied; decide whether #266 work is still desired.",
+    "disposition": "Superseded by identified subsequent work",
+    "proposedClosure": true,
+    "reason": "Cockpit #44 and seh-study #20 merged. Daily-logger #266 closed unmerged because it called shipped #210 pending; its closing comment explicitly identifies merged #272 as the accurate replacement. All named delivery outcomes have shipped. This supersedes the stale merge batch; it does not claim the historical cleaner queue reached zero or that the original sequencing occurred.",
     "retainedActionId": "act-2026-08-10-sweep-99365b",
     "subjects": [
       {
@@ -676,6 +676,17 @@
         "merge": "7482b7036e88b7b170d50fefed4cf32339b0ea44",
         "mergedAt": "2026-09-24T20:39:31Z",
         "closedAt": "2026-09-24T20:39:31Z"
+      },
+      {
+        "repo": "ojfbot/daily-logger",
+        "number": 272,
+        "kind": "PullRequest",
+        "state": "MERGED",
+        "url": "https://github.com/ojfbot/daily-logger/pull/272",
+        "head": "93a98ec2dbf15b9672c38209e9aef2925f1ecab4",
+        "merge": "0f19929e9f7ab6f33e4891eaa8eedafefa2d558e",
+        "mergedAt": "2026-09-24T20:38:29Z",
+        "closedAt": null
       }
     ],
     "inspectedSourceUrls": [
@@ -779,9 +790,9 @@
       "sourceDate": "2026-08-09",
       "id": "act-2026-08-09-pr-review-8678fc"
     },
-    "disposition": "Requires a human decision",
-    "proposedClosure": false,
-    "reason": "core #445 and cockpit #44 MERGED; cockpit #43 has delivered successor #49; daily-logger #266 CLOSED unmerged with no identified delivered replacement. Preserve the partial batch for owner disposition.",
+    "disposition": "Superseded by identified subsequent work",
+    "proposedClosure": true,
+    "reason": "Core #445 and cockpit #44 merged; cockpit #43 has the explicit delivered #49 replacement. Daily-logger #266 closed unmerged with a closing comment identifying merged #272 as the accurate documentation replacement. Settle every named target by delivery or identified supersession, without claiming the requested same-session timing occurred.",
     "retainedActionId": "act-2026-08-09-pr-review-8678fc",
     "subjects": [
       {
@@ -827,6 +838,28 @@
         "merge": "6f77550127bf589082eb3a078f8303b0b314b905",
         "mergedAt": "2026-09-24T20:46:51Z",
         "closedAt": "2026-09-24T20:46:51Z"
+      },
+      {
+        "repo": "ojfbot/daily-logger",
+        "number": 272,
+        "kind": "PullRequest",
+        "state": "MERGED",
+        "url": "https://github.com/ojfbot/daily-logger/pull/272",
+        "head": "93a98ec2dbf15b9672c38209e9aef2925f1ecab4",
+        "merge": "0f19929e9f7ab6f33e4891eaa8eedafefa2d558e",
+        "mergedAt": "2026-09-24T20:38:29Z",
+        "closedAt": null
+      },
+      {
+        "repo": "ojfbot/morning-cockpit",
+        "number": 49,
+        "kind": "PullRequest",
+        "state": "MERGED",
+        "url": "https://github.com/ojfbot/morning-cockpit/pull/49",
+        "head": "ef16730cac6ae94eed4957693a79deee3646610c",
+        "merge": "1de277cfcfbf149d0df7ec54e55dfde91090e4d8",
+        "mergedAt": "2026-09-24T22:17:18Z",
+        "closedAt": null
       }
     ],
     "inspectedSourceUrls": [
@@ -1089,10 +1122,10 @@
       "sourceDate": "2026-08-03",
       "id": "act-2026-08-03-validate-04bfb1"
     },
-    "disposition": "Unsupported premise or insufficient evidence",
+    "disposition": "Duplicate of another suggestion",
     "proposedClosure": false,
-    "reason": "core #356 is OPEN; no retained positive and injected-negative denylist run proves both failure/pass paths on texas-rr-engagement.md. Sanitized content alone is insufficient.",
-    "retainedActionId": "act-2026-08-03-validate-04bfb1",
+    "reason": "Same file and injected-negative/clean-pass verification obligations as the August 2 source. Retain the oldest equivalent open item and preserve both source IDs. Core #356 remains open; no evidence establishes the required failure/pass runs.",
+    "retainedActionId": "act-2026-08-02-validate-7e79b9",
     "subjects": [],
     "inspectedSourceUrls": [
       "https://github.com/ojfbot/core/blob/b49f301fce3af95531f39af5dfae68d236b33a82/decisions/adr/0079-vault-page-lifecycle-policy.md",
@@ -1204,10 +1237,10 @@
       "sourceDate": "2026-08-02",
       "id": "act-2026-08-02-validate-7e79b9"
     },
-    "disposition": "Duplicate of another suggestion",
+    "disposition": "Unsupported premise or insufficient evidence",
     "proposedClosure": false,
-    "reason": "Same content/failure-path verification outcome as the August 3 denylist suggestion. Retain both source IDs under that still-open verification; no lint run has been established.",
-    "retainedActionId": "act-2026-08-03-validate-04bfb1",
+    "reason": "Core #356 is open. Both failure and clean-pass paths on texas-rr-engagement.md are required, but no retained run evidence was established. Sanitized content alone is insufficient. This is the oldest equivalent source for the August 2/3 proposed group; both remain open.",
+    "retainedActionId": "act-2026-08-02-validate-7e79b9",
     "subjects": [
       {
         "repo": "ojfbot/core",
@@ -1901,9 +1934,9 @@
       "sourceDate": "2026-07-25",
       "id": "act-2026-07-25-pr-review-33b3df"
     },
-    "disposition": "Addressed by shipped work",
-    "proposedClosure": true,
-    "reason": "f1-doctrine #1 MERGED. Current Accepted ADR-0001, committed phase-keying report, and PR evidence of 33 bound QuestionNodes establish the requested S1 delivery. Caveats about persona filtering and stint-position remain in the gate; S2 is not declared complete.",
+    "disposition": "Requires a human decision",
+    "proposedClosure": false,
+    "reason": "f1-doctrine #1 merged, but delivered v2 flat registry/nodes differs from the requested taxonomy-v1 directory axes. The 33 bindings include 28 full and 5 partial bindings, and ADR acceptance followed the merge. Decide whether the delivered contract supersedes the original prerequisites; the companion ADR and validation requests remain open.",
     "retainedActionId": "act-2026-07-25-pr-review-33b3df",
     "subjects": [
       {
@@ -1948,9 +1981,9 @@
       "sourceDate": "2026-07-25",
       "id": "act-2026-07-25-investigate-afa72f"
     },
-    "disposition": "Duplicate of another suggestion",
+    "disposition": "Still actionable",
     "proposedClosure": false,
-    "reason": "Same correction/open-PR outcome as the July 27 f1-pit-wall item, adding an initial diagnosis branch. The #6 handoff is identified, but its subsequent correction outcome remains unproved. Retain this source separately.",
+    "reason": "The characterization/diagnosis decision and conditional correction branch are additional obligations beyond the July 27 correction-and-merge request. #6 provides characterization context, but no recorded field-level decision and resulting correction or diagnosis closure was established. Keep this independent actionable source visible; the retained pointer denotes related work, not a duplicate.",
     "retainedActionId": "act-2026-07-27-fix-and-pr-c6630d",
     "subjects": [
       {
@@ -2037,7 +2070,7 @@
     },
     "disposition": "Addressed by shipped work",
     "proposedClosure": true,
-    "reason": "cockpit #34 MERGED. Its final PR report explicitly records pnpm test with 183 passing tests and browser verification of the decision-to-delivery seam; build-test is successful on the inspected head.",
+    "reason": "Cockpit #34 merged with its final PR report recording 183 passing pnpm tests and seam verification. The independently inspected post-merge push run at 4ad7232 ran pnpm test and passed 131 shared + 33 server + 19 renderer tests. This corroborates the requested test obligation; the post-merge run alone does not prove pre-merge timing. Preserve each original source ID.",
     "retainedActionId": "act-2026-07-23-pr-review-33bd9b",
     "subjects": [
       {
@@ -2185,7 +2218,7 @@
     },
     "disposition": "Addressed by shipped work",
     "proposedClosure": true,
-    "reason": "Same shipped #34 outcome as the July 23 source, with explicit requested entrance check corroborated by the final PR report of 183 passing pnpm tests and successful build-test. Preserve both original IDs in the ledger.",
+    "reason": "Cockpit #34 merged with its final PR report recording 183 passing pnpm tests and seam verification. The independently inspected post-merge push run at 4ad7232 ran pnpm test and passed 131 shared + 33 server + 19 renderer tests. This corroborates the requested test obligation; the post-merge run alone does not prove pre-merge timing. Preserve each original source ID.",
     "retainedActionId": "act-2026-07-18-pr-review-d12996",
     "subjects": [
       {
@@ -3315,9 +3348,54 @@
     },
     "disposition": "Requires a human decision",
     "proposedClosure": false,
-    "reason": "Current beaverGame tree uses Babylon. No four-issue BG-001/BG-003/BG-005/BG-015 owner mapping was established by the inspected #29 umbrella. Require named tracker ownership before assuming Phase 1 work commissioned.",
+    "reason": "The four tracker outcomes already exist: BG-001 is beaverGame #3, BG-003 #5, BG-005 #7 and BG-015 #17. All four are open and unassigned in the refreshed observation. Filing is satisfied; assigning owners or explicitly re-scoping the Babylon-era work remains a human decision. Do not file duplicate issues.",
     "retainedActionId": "act-2026-05-06-frame-standup-bbb3e2",
-    "subjects": [],
+    "subjects": [
+      {
+        "repo": "ojfbot/beaverGame",
+        "number": 3,
+        "kind": "Issue",
+        "state": "OPEN",
+        "url": "https://api.github.com/repos/ojfbot/beaverGame/issues/3",
+        "head": null,
+        "merge": null,
+        "mergedAt": null,
+        "closedAt": null
+      },
+      {
+        "repo": "ojfbot/beaverGame",
+        "number": 5,
+        "kind": "Issue",
+        "state": "OPEN",
+        "url": "https://api.github.com/repos/ojfbot/beaverGame/issues/5",
+        "head": null,
+        "merge": null,
+        "mergedAt": null,
+        "closedAt": null
+      },
+      {
+        "repo": "ojfbot/beaverGame",
+        "number": 7,
+        "kind": "Issue",
+        "state": "OPEN",
+        "url": "https://api.github.com/repos/ojfbot/beaverGame/issues/7",
+        "head": null,
+        "merge": null,
+        "mergedAt": null,
+        "closedAt": null
+      },
+      {
+        "repo": "ojfbot/beaverGame",
+        "number": 17,
+        "kind": "Issue",
+        "state": "OPEN",
+        "url": "https://api.github.com/repos/ojfbot/beaverGame/issues/17",
+        "head": null,
+        "merge": null,
+        "mergedAt": null,
+        "closedAt": null
+      }
+    ],
     "inspectedSourceUrls": [
       "https://github.com/ojfbot/beaverGame/blob/7f5deca469d83a1cd9ca8ae4533ced790ecec57e/.github/workflows/ci.yml",
       "https://github.com/ojfbot/beaverGame/blob/7f5deca469d83a1cd9ca8ae4533ced790ecec57e/scripts/snap.ts"
@@ -3515,9 +3593,9 @@
       "sourceDate": "2026-04-30",
       "id": "act-2026-04-30-pr-review-8f36f1"
     },
-    "disposition": "Addressed by shipped work",
-    "proposedClosure": true,
-    "reason": "beaverGame #27 MERGED, selecting the allowed merge-as-spec disposition. The description makes extraction/comment into #28 conditional on closing instead; that branch was not taken. No closure-as-superseded is claimed.",
+    "disposition": "Requires a human decision",
+    "proposedClosure": false,
+    "reason": "beaverGame #27 merged, but the requested decision-link comment is absent from the inspected #28 discussion. Merging alone does not establish preservation of the terrain-sampling specification through the later Babylon migration. Keep the decision-link and successor-contract obligations open for explicit disposition.",
     "retainedActionId": "act-2026-04-30-pr-review-8f36f1",
     "subjects": [
       {
@@ -3637,15 +3715,15 @@
         "closedAt": "2026-05-05T04:14:55Z"
       },
       {
-        "repo": "ojfbot/core",
+        "repo": "ojfbot/beaverGame",
         "number": 28,
         "kind": "PullRequest",
-        "state": "MERGED",
-        "url": "https://github.com/ojfbot/core/pull/28",
-        "head": "e85cb2b11a8e9b8b6c93ee2f7a54661827b074c1",
-        "merge": "1c52c87f9ab25b76c83244eec0163401a974ff13",
-        "mergedAt": "2026-03-24T03:57:36Z",
-        "closedAt": "2026-03-24T03:57:36Z"
+        "state": "CLOSED",
+        "url": "https://github.com/ojfbot/beaverGame/pull/28",
+        "head": "a6a0ac27226a2773befa10c08a54970ed42f0c33",
+        "merge": null,
+        "mergedAt": null,
+        "closedAt": "2026-05-05T02:26:54Z"
       }
     ],
     "inspectedSourceUrls": [
@@ -3749,12 +3827,26 @@
     },
     "disposition": "Unsupported premise or insufficient evidence",
     "proposedClosure": false,
-    "reason": "Current beaverGame tree is Babylon and does not contain the named load-glb.ts seam. No equivalent four-rejection-path evidence was established; locate the successor asset loader before writing or closing this historical test request.",
+    "reason": "Merged beaverGame #26 added validateManifest tests for rejected status and schema mismatch, but the inspected tests do not exercise missing validation-file fetch or malformed JSON handling. The named runtime loader was later removed; current scripts/validate-assets.ts is a build-time gate. Preserve the partial test delivery and re-qualify the remaining two rejection paths against the successor acceptance contract before closing.",
     "retainedActionId": "act-2026-04-28-test-expand-71bde1",
-    "subjects": [],
+    "subjects": [
+      {
+        "repo": "ojfbot/beaverGame",
+        "number": 26,
+        "kind": "PullRequest",
+        "state": "MERGED",
+        "url": "https://github.com/ojfbot/beaverGame/pull/26",
+        "head": "521019304845a4449c258d50b5519e3c7163ab05",
+        "merge": "2d88591a6bd1ac6c61455f699ddd994adccd5d2c",
+        "mergedAt": "2026-04-28T23:23:58Z",
+        "closedAt": null
+      }
+    ],
     "inspectedSourceUrls": [
       "https://github.com/ojfbot/beaverGame/blob/7f5deca469d83a1cd9ca8ae4533ced790ecec57e/.github/workflows/ci.yml",
-      "https://github.com/ojfbot/beaverGame/blob/7f5deca469d83a1cd9ca8ae4533ced790ecec57e/scripts/snap.ts"
+      "https://github.com/ojfbot/beaverGame/blob/7f5deca469d83a1cd9ca8ae4533ced790ecec57e/scripts/snap.ts",
+      "https://github.com/ojfbot/beaverGame/blob/2d88591a6bd1ac6c61455f699ddd994adccd5d2c/src/scene/load-glb.test.ts",
+      "https://github.com/ojfbot/beaverGame/blob/7f5deca469d83a1cd9ca8ae4533ced790ecec57e/scripts/validate-assets.ts"
     ],
     "evidenceLimit": "PR observations and source inspection qualify only the outcomes described in reason; missing runtime/historical evidence is not proof of nonperformance."
   },
@@ -3955,7 +4047,7 @@
     },
     "disposition": "Superseded by identified subsequent work",
     "proposedClosure": true,
-    "reason": "The current actionId implementation supersedes the proposed repo-inclusive normalized recipe. All 114 current IDs match sourceDate + command + SHA-256(exact description), with no open/done overlap and no collateral legacy matches. No ID rewrite is required; retain original identity.",
+    "reason": "The requested repo-inclusive whitespace-normalized hash recipe is superseded by the existing sourceDate/command/SHA-256(exact description) identity. Builder IDs are derived from article text, so recomputing the 114 projected IDs is a consistency check, not an independent migration audit. Rebuilding all 186 source actions with the ledger temporarily empty shows each of the 72 original done records matches exactly one source action under the real ID-or-legacy rule (8 explicit-ID matches, 72 legacy matches). No orphan or collateral historical closure requires an ID rewrite.",
     "retainedActionId": "act-2026-04-14-techdebt-0b58d9",
     "subjects": [],
     "inspectedSourceUrls": [
