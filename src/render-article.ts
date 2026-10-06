@@ -1,4 +1,4 @@
-import { Marked } from 'marked'
+import { Marked, Renderer } from 'marked'
 
 // Some council responses contain literal "\\n" sequences in a whole prose field.
 // Recover those line breaks before Markdown parsing, while leaving code spans alone.
@@ -67,8 +67,21 @@ function safeUrl(href: string): string | null {
   return url
 }
 
+const defaultRenderer = new Renderer()
+
 const articleMarkdown = new Marked({
   renderer: {
+    list(token) {
+      if (!token.ordered && token.items.length > 0 && token.items.every((item) =>
+        !item.task && /^`[a-f\d]{7,40}`$/i.test(item.text.trim())
+      )) {
+        const items = token.items.map((item) =>
+          `<li><code>${escapeHtml(item.text.trim().slice(1, -1))}</code></li>`
+        ).join('')
+        return `<div class="commit-list"><span class="commit-list-label" aria-hidden="true">COMMITS</span><ul aria-label="Commits">${items}</ul></div>\n`
+      }
+      return defaultRenderer.list.call(this, token)
+    },
     // Articles may describe paths such as /canvas/<section>/chat. Raw HTML in
     // prose corrupts the article DOM and can inject arbitrary markup.
     html({ text }) {

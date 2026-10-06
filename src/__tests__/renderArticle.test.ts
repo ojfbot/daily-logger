@@ -99,6 +99,16 @@ describe('renderArticle', () => {
     expect(html).toContain('<li>Two</li>')
   })
 
+  it('labels commit hash lists in rendered HTML without labelling code-only prose lists', () => {
+    const html = renderArticle('- `8e3a839`\n- `a6d4b07`\n\nA note.\n\n- `clean: stale docs/comments`')
+
+    expect(html).toContain('<div class="commit-list">')
+    expect(html).toContain('<span class="commit-list-label" aria-hidden="true">COMMITS</span>')
+    expect(html).toContain('<ul aria-label="Commits"><li><code>8e3a839</code></li>')
+    expect(html.match(/class="commit-list"/g)).toHaveLength(1)
+    expect(html).toContain('<li><code>clean: stale docs/comments</code></li>')
+  })
+
   it('renders the October 2 roadmap as paragraphs and lists', () => {
     const article = readFileSync(new URL('../../_articles/2026-10-02.md', import.meta.url), 'utf8')
     const body = article.replace(/^---[\s\S]*?---\n/, '')

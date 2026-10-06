@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    daily-logger design system
    George Lois wit + Dieter Rams rigor + Tom Sachs studio utility
-   Two typefaces: IBM Plex Mono (body) + IBM Plex Sans (headings/metrics)
+   IBM Plex Mono for chrome and code; IBM Plex Sans for headings, metrics, and article prose
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;700&display=swap');
@@ -512,10 +512,11 @@ a:hover { border-bottom-color: var(--text); }
   font-family: var(--font-sans);
   font-size: 1rem;
   line-height: 1.7;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .article-content h2 {
+  position: relative;
   font-family: var(--font-sans);
   font-size: 1.35rem;
   font-weight: 700;
@@ -526,14 +527,22 @@ a:hover { border-bottom-color: var(--text); }
   border-bottom: 2px solid var(--text);
 }
 
+.article-content h2::before {
+  content: '';
+  position: absolute;
+  top: -0.75rem;
+  left: 0;
+  width: 2rem;
+  height: 3px;
+  background: var(--accent);
+}
+
 .article-content h3 {
   font-family: var(--font-sans);
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text);
   margin: 2rem 0 0.65rem;
-  padding-left: 0.75rem;
-  border-left: 3px solid var(--accent);
 }
 
 .article-content p {
@@ -543,7 +552,7 @@ a:hover { border-bottom-color: var(--text); }
 .article-content > p:first-child {
   font-size: 1.1rem;
   line-height: 1.65;
-  color: var(--text-secondary);
+  color: var(--text);
 }
 
 .article-content strong {
@@ -580,7 +589,7 @@ a:hover { border-bottom-color: var(--text); }
 }
 
 .article-content blockquote {
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--text-secondary);
   background: var(--bg-alt);
   padding: 1rem 1.25rem;
   margin: 1.5rem 0;
@@ -630,20 +639,17 @@ a:hover { border-bottom-color: var(--text); }
   margin: 0 0 1.25rem;
 }
 .article-content li { margin-bottom: 0.4rem; }
-.article-content li::marker { color: var(--accent); font-weight: 700; }
+.article-content li::marker { color: var(--text-secondary); font-weight: 700; }
 
-.article-content ul:has(> li > code.commit-hash:only-child) {
+.article-content .commit-list {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   flex-wrap: wrap;
   gap: 0.4rem;
-  list-style: none;
-  padding: 0;
   margin: 0.75rem 0 1.75rem;
 }
 
-.article-content ul:has(> li > code.commit-hash:only-child)::before {
-  content: 'COMMITS';
+.article-content .commit-list-label {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   font-weight: 700;
@@ -652,7 +658,16 @@ a:hover { border-bottom-color: var(--text); }
   margin-right: 0.35rem;
 }
 
-.article-content ul:has(> li > code.commit-hash:only-child) li {
+.article-content .commit-list ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.article-content .commit-list li {
   margin: 0;
 }
 
@@ -1118,7 +1133,7 @@ a:hover { border-bottom-color: var(--text); }
   flex-shrink: 0;
 }
 
-/* Section chat launch button — Lois hero action, right-aligned */
+/* Section chat launch button, right-aligned */
 
 .section-chat-btn {
   display: inline-flex;
@@ -1129,19 +1144,18 @@ a:hover { border-bottom-color: var(--text); }
   font-family: var(--font-mono);
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--text-secondary);
   background: transparent;
-  border: 1.5px solid var(--accent);
+  border: 1.5px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 150ms, background 150ms, color 150ms;
+  transition: background 150ms, color 150ms, border-color 150ms;
 }
 
 .section-chat-btn:hover {
-  opacity: 1;
   color: var(--accent-text);
   background: var(--accent);
+  border-color: var(--accent);
 }
 
 /* Section chat zone — groups threads for one section in the right column */
