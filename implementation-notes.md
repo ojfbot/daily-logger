@@ -2,6 +2,9 @@
 
 ## Deviations
 
+- 2026-10-05 (PR #294 design review): plan assumed the isolated checkout could install dependencies; registry DNS was unavailable, so validation used the PR worktree's existing pnpm dependencies without changing the lockfile.
+- 2026-10-05 (PR #294 design review): plan assumed a phone-width browser pass; viewport control timed out, so desktop light/dark views and the responsive CSS were checked, with phone width left unverified.
+
 - 2026-10-02 (article HTML formatting): plan assumed the latest article only needed visual styling. **Territory:** literal `\\n` sequences flattened two sections, while `<port>` and `<section>` in prose became unclosed HTML elements during Markdown conversion. **Went:** repaired the article source and made the API renderer restore escaped breaks and escape raw HTML before improving typography for all articles.
 
 - 2026-09-24 (silent-sweep fix, `fix/collector-paginate-and-fleet-drift`): plan assumed the
