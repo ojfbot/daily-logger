@@ -2,17 +2,17 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 76
+    "count": 77
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 63
+    "count": 64
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 63
+    "count": 64
   },
   {
     "name": "assistant-centric",
@@ -70,13 +70,13 @@
     "count": 20
   },
   {
-    "name": "morning-cockpit",
-    "type": "repo",
-    "count": 16
-  },
-  {
     "name": "cleanup",
     "type": "concept",
+    "count": 17
+  },
+  {
+    "name": "morning-cockpit",
+    "type": "repo",
     "count": 16
   },
   {
@@ -185,6 +185,11 @@
     "count": 6
   },
   {
+    "name": "skill-telemetry",
+    "type": "concept",
+    "count": 5
+  },
+  {
     "name": "correspondence-protocol",
     "type": "concept",
     "count": 5
@@ -242,11 +247,6 @@
   {
     "name": "f1-doctrine",
     "type": "repo",
-    "count": 4
-  },
-  {
-    "name": "skill-telemetry",
-    "type": "concept",
     "count": 4
   },
   {
@@ -333,6 +333,11 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "editorial-pipeline",
+    "type": "concept",
+    "count": 2
   },
   {
     "name": "fleet-runner",
@@ -490,7 +495,17 @@
     "count": 2
   },
   {
-    "name": "editorial-pipeline",
+    "name": "action-triage",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "html-rendering",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "pipeline-integrity",
     "type": "concept",
     "count": 1
   },
