@@ -254,6 +254,29 @@ class GitHubBoundaryTests(unittest.TestCase):
             self.assertEqual(check.call_args.args[1], '2026-10-05')
             self.assertEqual(output.call_args.args[0]['date'], '2026-10-05')
 
+    def test_cli_dispatch_uses_one_post_and_returns_receipt(self):
+        with tempfile.TemporaryDirectory() as folder:
+            fake = Path(folder) / 'gh'
+            log = Path(folder) / 'dispatches.jsonl'
+            fake.write_text("#!/usr/bin/env python3\nimport json, os, sys\n"
+                            "if 'contents/' in sys.argv[2] or 'git/ref/' in sys.argv[2]:\n"
+                            " print('gh: Not Found (HTTP 404)', file=sys.stderr); sys.exit(1)\n"
+                            "if sys.argv[2].endswith('/dispatches'):\n"
+                            " assert '--method' in sys.argv and 'POST' in sys.argv\n"
+                            " assert 'X-GitHub-Api-Version: 2026-03-10' in sys.argv\n"
+                            " with open(os.environ['FAKE_DISPATCH_LOG'], 'a') as stream: stream.write(json.dumps(json.load(sys.stdin)) + '\\n')\n"
+                            " print(json.dumps({'workflow_run_id': 123, 'html_url': 'https://github.com/ojfbot/daily-logger/actions/runs/123'}))\n"
+                            "else: print(json.dumps([{'total_count': 0, 'workflow_runs': []}]))\n")
+            fake.chmod(0o755)
+            env = dict(os.environ, PATH=folder + os.pathsep + os.environ['PATH'], FAKE_DISPATCH_LOG=str(log))
+            result = subprocess.run([sys.executable, str(Path(schedule.__file__)), 'watchdog', '--date', DAY, '--dispatch'],
+                                    capture_output=True, text=True, env=env)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout)['run_id'], 123)
+            lines = log.read_text().splitlines()
+            self.assertEqual(len(lines), 1)
+            self.assertEqual(json.loads(lines[0]), {'ref': 'main', 'inputs': {'date_override': DAY, 'dry_run': False}})
+
     def test_cli_check_with_real_fake_gh_process_has_no_writes(self):
         with tempfile.TemporaryDirectory() as folder:
             fake = Path(folder) / 'gh'
