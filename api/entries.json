@@ -1,5 +1,108 @@
 [
   {
+    "date": "2026-10-06",
+    "title": "Monday's 15 commits: daily-logger pipeline hygiene, 22 suggested actions settled, and core's skill telemetry rollout scoped",
+    "summary": "Monday's 15 commits repaired HTML rendering, evidentially closed 22 stale actions, and proposed an inventory-derived telemetry rollout to replace a frozen legacy stream in core.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "cleanup",
+        "type": "concept"
+      },
+      {
+        "name": "skill-telemetry",
+        "type": "concept"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "action-triage",
+        "type": "concept"
+      },
+      {
+        "name": "html-rendering",
+        "type": "concept"
+      },
+      {
+        "name": "pipeline-integrity",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core"
+    ],
+    "commitCount": 14,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Evidence-first action closure: 22 actions settled against real commits, not aged out",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "HTML rendering fixed at the renderer, not the generator: the source issue (#300) stays open",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Vercel access probe added, diagnosed, and removed in the same session window",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Skill telemetry rollout scoped as docs-first, inventory-derived",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Merge daily-logger #305 (clean: stale docs/comments 2026-10-05). Review is complete — this is a merge action. Daily-cleaner output validated by Claude Opus. Merge before the next article generation run to keep the cleaner queue at zero.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-10-06",
+        "id": "act-2026-10-06-pr-review-53291b"
+      },
+      {
+        "command": "/doc-refactor",
+        "description": "Begin daily-logger #300 fix: update assembleBody() and toMarkdown() in src/generate-article.ts so escaped prose line breaks become real newlines and angle-bracket placeholders are wrapped as inline code before articles/YYYY-MM-DD.md is committed. The regression baseline is articles/2026-10-02.md — the failure pattern (escaped line breaks, bare angle-bracket tokens) is visible in that committed file. Verify the fix by confirming the October 2 article pattern does not reproduce on a fresh generation run. Note: confirm prioritization against daily-logger #301 (XSS/injection boundary) before starting — #301 may be higher priority if ChatMessage.tsx is a user-facing or session-handling surface.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-10-06",
+        "id": "act-2026-10-06-doc-refactor-e46091"
+      },
+      {
+        "command": "/investigate",
+        "description": "Two items: (1) Audit the Vercel deployment posture — the CI probe (65ed596–13f15f3) found that Vercel team access is not available under the current credential scope. Determine whether there is an alternate deployment target, what credential change would restore Vercel access, or whether Frame's deployment path needs to be explicitly re-scoped. This is a live gap, not a housekeeping item. (2) Confirm the core #432 mattpocock/skills watch issue is configured: verify the weekly cloud routine will post to #432 on the next delta and that the current pin (84fdeffd, v1.2.3) is recorded in decisions/adopt-stack/ as the diff baseline.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-10-06",
+        "id": "act-2026-10-06-investigate-f1f7a8"
+      }
+    ]
+  },
+  {
     "date": "2026-10-04",
     "title": "Saturday's 6 commits: CI timing fixed for central time, bounded correspondence lands in core, and two article-quality issues filed",
     "summary": "Saturday tightened the daily-logger pipeline with a timezone-correct schedule, published core's bounded correspondence proposal, and opened two issues targeting article Markdown quality at the source.",
@@ -40,7 +143,8 @@
     "commitCount": 7,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "accepted",
     "decisions": [
       {
         "title": "Schedule the blog workflow in America/Chicago, not UTC",
