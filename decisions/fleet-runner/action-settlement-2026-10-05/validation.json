@@ -6,6 +6,751 @@
   "newDone": 94,
   "idsMatchRealFunction": 114,
   "originalLedgerObjectsUnchanged": true,
+  "historicalLedgerAudit": {
+    "sourceActionCount": 186,
+    "ledgerCount": 72,
+    "exactlyOneMatchEach": true,
+    "explicitIdMatchCount": 8,
+    "legacyMatchCount": 72,
+    "records": [
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-02-pr-review-949800"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-02-pr-review-949800"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-02-adr-45771b"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-02-adr-45771b"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-02-adr-d656c4"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-02-adr-d656c4"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-02-adr-aacb78"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-02-adr-aacb78"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-02-pr-review-2cee95"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-02-pr-review-2cee95"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-02-roadmap-034556"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-02-roadmap-034556"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-02-adr-fb7c06"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-02-adr-fb7c06"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-02-adr-35040a"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-02-adr-35040a"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-01-adr-57b479"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-01-adr-57b479"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-01-adr-cfb4a5"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-01-adr-cfb4a5"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-01-pr-review-3c91a8"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-01-pr-review-3c91a8"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-01-roadmap-51382e"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-01-roadmap-51382e"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-01-adr-9d2a20"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-01-adr-9d2a20"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-01-adr-91712a"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-01-adr-91712a"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-28-pr-review-4f59f3"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-28-pr-review-4f59f3"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-28-roadmap-de2dc0"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-28-roadmap-de2dc0"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-28-adr-4ce4e6"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-28-adr-4ce4e6"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-28-adr-056aa2"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-28-adr-056aa2"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-27-validate-d54ff1"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-27-validate-d54ff1"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-27-adr-5c9532"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-27-adr-5c9532"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-27-adr-22df39"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-27-adr-22df39"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-27-adr-2c2861"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-27-adr-2c2861"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-01-investigate-8ee578"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-01-investigate-8ee578"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-01-adr-c3c210"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-01-adr-c3c210"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-27-roadmap-10a9fa"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-27-roadmap-10a9fa"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-28-techdebt-6f0b83"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-28-techdebt-6f0b83"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-27-plan-feature-9305df"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-27-plan-feature-9305df"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-28-adr-1a6757"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-28-adr-1a6757"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-28-adr-baff6a"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-28-adr-baff6a"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-27-scaffold-fa91f0"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-27-scaffold-fa91f0"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-27-scaffold-1c807c"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-27-scaffold-1c807c"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-27-plan-feature-cbe663"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-27-plan-feature-cbe663"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-01-investigate-84a4ba"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-01-investigate-84a4ba"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-28-techdebt-46f955"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-28-techdebt-46f955"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-27-techdebt-e302a0"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-27-techdebt-e302a0"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-02-27-plan-feature-1d57c1"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-02-27-plan-feature-1d57c1"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-02-merge-ade10a"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-02-merge-ade10a"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-01-sweep-94b330"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-01-sweep-94b330"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-02-hardening-9ebf00"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-02-hardening-9ebf00"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-02-adr-20bd77"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-02-adr-20bd77"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-01-validate-9c18dc"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-01-validate-9c18dc"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-01-investigate-a68d91"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-01-investigate-a68d91"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-31-validate-b08a98"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-31-validate-b08a98"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-31-sweep-30023b"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-31-sweep-30023b"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-31-adr-9ba2c1"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-31-adr-9ba2c1"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-31-investigate-0562e9"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-31-investigate-0562e9"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-30-investigate-42dc87"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-30-investigate-42dc87"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-30-document-929254"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-30-document-929254"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-30-validate-1c1664"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-30-validate-1c1664"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-29-investigate-603cde"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-29-investigate-603cde"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-29-adr-0d263f"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-29-adr-0d263f"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-29-validate-89720b"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-29-validate-89720b"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-03-31-test-expand-ed8254"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-03-31-test-expand-ed8254"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-05-pr-review-b2dc11"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-05-pr-review-b2dc11"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-05-pr-review-7922fa"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-05-pr-review-7922fa"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-05-validate-c7e47c"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-05-validate-c7e47c"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-04-ci-gate-415842"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-04-ci-gate-415842"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-07-pr-review-cc2ee0"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-07-pr-review-cc2ee0"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-07-scaffold-2f79ac"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-07-scaffold-2f79ac"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-11-pr-review-258b93"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-11-pr-review-258b93"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-10-pr-review-cd64dc"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-10-pr-review-cd64dc"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-10-pr-review-47badf"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-10-pr-review-47badf"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-07-validate-238c81"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-07-validate-238c81"
+        ]
+      },
+      {
+        "ledgerId": null,
+        "matches": [
+          "act-2026-04-04-doc-refactor-97da5a"
+        ],
+        "explicitIdMatches": [],
+        "legacyMatches": [
+          "act-2026-04-04-doc-refactor-97da5a"
+        ]
+      },
+      {
+        "ledgerId": "act-2026-04-21-roadmap-7d796f",
+        "matches": [
+          "act-2026-04-21-roadmap-7d796f"
+        ],
+        "explicitIdMatches": [
+          "act-2026-04-21-roadmap-7d796f"
+        ],
+        "legacyMatches": [
+          "act-2026-04-21-roadmap-7d796f"
+        ]
+      },
+      {
+        "ledgerId": "act-2026-04-21-sweep-914db8",
+        "matches": [
+          "act-2026-04-21-sweep-914db8"
+        ],
+        "explicitIdMatches": [
+          "act-2026-04-21-sweep-914db8"
+        ],
+        "legacyMatches": [
+          "act-2026-04-21-sweep-914db8"
+        ]
+      },
+      {
+        "ledgerId": "act-2026-04-12-validate-c53d7a",
+        "matches": [
+          "act-2026-04-12-validate-c53d7a"
+        ],
+        "explicitIdMatches": [
+          "act-2026-04-12-validate-c53d7a"
+        ],
+        "legacyMatches": [
+          "act-2026-04-12-validate-c53d7a"
+        ]
+      },
+      {
+        "ledgerId": "act-2026-04-13-adr-2d947c",
+        "matches": [
+          "act-2026-04-13-adr-2d947c"
+        ],
+        "explicitIdMatches": [
+          "act-2026-04-13-adr-2d947c"
+        ],
+        "legacyMatches": [
+          "act-2026-04-13-adr-2d947c"
+        ]
+      },
+      {
+        "ledgerId": "act-2026-04-14-adr-fc73ff",
+        "matches": [
+          "act-2026-04-14-adr-fc73ff"
+        ],
+        "explicitIdMatches": [
+          "act-2026-04-14-adr-fc73ff"
+        ],
+        "legacyMatches": [
+          "act-2026-04-14-adr-fc73ff"
+        ]
+      },
+      {
+        "ledgerId": "act-2026-04-12-investigate-b73cd2",
+        "matches": [
+          "act-2026-04-12-investigate-b73cd2"
+        ],
+        "explicitIdMatches": [
+          "act-2026-04-12-investigate-b73cd2"
+        ],
+        "legacyMatches": [
+          "act-2026-04-12-investigate-b73cd2"
+        ]
+      },
+      {
+        "ledgerId": "act-2026-04-14-validate-6ac692",
+        "matches": [
+          "act-2026-04-14-validate-6ac692"
+        ],
+        "explicitIdMatches": [
+          "act-2026-04-14-validate-6ac692"
+        ],
+        "legacyMatches": [
+          "act-2026-04-14-validate-6ac692"
+        ]
+      },
+      {
+        "ledgerId": "act-2026-04-13-validate-f1f33f",
+        "matches": [
+          "act-2026-04-13-validate-f1f33f"
+        ],
+        "explicitIdMatches": [
+          "act-2026-04-13-validate-f1f33f"
+        ],
+        "legacyMatches": [
+          "act-2026-04-13-validate-f1f33f"
+        ]
+      }
+    ]
+  },
   "originalFieldsPreserved": true,
   "exactOneMatchPerClosure": true,
   "unresolvedObjectsUnchanged": true,
@@ -18,7 +763,7 @@
   ],
   "unrelatedBaselineEditorialDeltaExcluded": "api/entries.json",
   "firstBuildDigests": {
-    "api/actions.json": "a79541ecb270cc4c222a9195be16f45fe7025329e86157081f8551f4bf35723c",
+    "api/actions.json": "8e562bc1a73853026f0657384aa064283212b8860da0ebc08b3e84627f0975cf",
     "api/articles/2026-02-24.json": "2d0a741f4df4c1d5905ccdddec72a1c09e6cbd7f01e68129cc1a66907d3f65da",
     "api/articles/2026-02-25.json": "04dd1103c6e7186ef8fc03816fb15f208d8519d772b3a62a45044096740b7ab0",
     "api/articles/2026-02-26.json": "65056ecee2cd774fe67528e59c91bba78b611dc772a3a1c417175362502f3299",
@@ -143,13 +888,13 @@
     "api/articles/2026-10-03.json": "c074a2be4743c9ab4221bfb6599394c5f4419d52f4ac931fc6387fc776d1c4c3",
     "api/articles/2026-10-04.json": "a21ac24614a7befea0161b649c70e6654f79967a40eb58ff445a39950f23c5dc",
     "api/code-refs.json": "29ddc20c3660c82b27d2abea2f5bc24e0381145fa9184a93d3cfa0ba2f29ce13",
-    "api/done-actions.json": "7c3e3875a285b81d5ed103a1b030fe06340185cc6b719651305748afda34736a",
+    "api/done-actions.json": "d6086f5b8819d4bc003e0bfe846af517fe0f29f8948cfb0de860470dd07b9a4f",
     "api/entries.json": "62ac7dd2711323dd36a354b33120e4aa41f68154b987d13836367812c5288c18",
     "api/repos.json": "e58fb46fedeca15853c1a715d6f9fd32a7ff6ad09eecdb4b862673a9cb45c0e8",
     "api/tags.json": "816a887dfb6a06325aed93cf81e6ce01f38f4001ae7d645ea28659dd1cb0ed73"
   },
   "secondBuildDigests": {
-    "api/actions.json": "a79541ecb270cc4c222a9195be16f45fe7025329e86157081f8551f4bf35723c",
+    "api/actions.json": "8e562bc1a73853026f0657384aa064283212b8860da0ebc08b3e84627f0975cf",
     "api/articles/2026-02-24.json": "2d0a741f4df4c1d5905ccdddec72a1c09e6cbd7f01e68129cc1a66907d3f65da",
     "api/articles/2026-02-25.json": "04dd1103c6e7186ef8fc03816fb15f208d8519d772b3a62a45044096740b7ab0",
     "api/articles/2026-02-26.json": "65056ecee2cd774fe67528e59c91bba78b611dc772a3a1c417175362502f3299",
@@ -274,7 +1019,7 @@
     "api/articles/2026-10-03.json": "c074a2be4743c9ab4221bfb6599394c5f4419d52f4ac931fc6387fc776d1c4c3",
     "api/articles/2026-10-04.json": "a21ac24614a7befea0161b649c70e6654f79967a40eb58ff445a39950f23c5dc",
     "api/code-refs.json": "29ddc20c3660c82b27d2abea2f5bc24e0381145fa9184a93d3cfa0ba2f29ce13",
-    "api/done-actions.json": "7c3e3875a285b81d5ed103a1b030fe06340185cc6b719651305748afda34736a",
+    "api/done-actions.json": "d6086f5b8819d4bc003e0bfe846af517fe0f29f8948cfb0de860470dd07b9a4f",
     "api/entries.json": "62ac7dd2711323dd36a354b33120e4aa41f68154b987d13836367812c5288c18",
     "api/repos.json": "e58fb46fedeca15853c1a715d6f9fd32a7ff6ad09eecdb4b862673a9cb45c0e8",
     "api/tags.json": "816a887dfb6a06325aed93cf81e6ce01f38f4001ae7d645ea28659dd1cb0ed73"

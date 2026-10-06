@@ -599,7 +599,7 @@
     "sourceDate": "2026-10-04",
     "id": "act-2026-10-04-pr-review-012b7e",
     "closedDate": "2026-10-05",
-    "resolution": "PR #294 shipped after a named reviewer reported on exact head 79830e1. Final review reports all five findings resolved; merge 80e93ef satisfies the review/merge prerequisite. #300 and #301 remain separate open work. Evidence: https://github.com/ojfbot/daily-logger/pull/294 merged 80e93efcf55329cdff4fcc332b1ea4004efd866b; https://github.com/ojfbot/daily-logger/pull/294#pullrequestreview-5423033688 at 79830e1c10e0673a9360115aa7d5db82a35ed9b9."
+    "resolution": "PR #294 merged at 80e93ef after an attributed agent COMMENTED review at exact head 79830e1 reported all five findings resolved. GitHub reviewer assignment is not evidenced; the completed operator merge supersedes that pending gate. #300 and #301 remain separate open work. Evidence: https://github.com/ojfbot/daily-logger/pull/294 merged 80e93efcf55329cdff4fcc332b1ea4004efd866b; https://github.com/ojfbot/daily-logger/issues/300 OPEN; https://github.com/ojfbot/daily-logger/issues/301 OPEN; https://github.com/ojfbot/daily-logger/pull/294#pullrequestreview-5423033688 at 79830e1c10e0673a9360115aa7d5db82a35ed9b9."
   },
   {
     "command": "/pr-review",
@@ -632,6 +632,16 @@
     "resolution": "Cockpit #44 and #45 MERGED. #43 explicitly points to merged #49, whose content-identical replay preserves S9 and main S10 exports. The named sequential-review queue is superseded by completed delivery through #44/#45/#49. Evidence: https://github.com/ojfbot/morning-cockpit/pull/44 merged 6f77550127bf589082eb3a078f8303b0b314b905; https://github.com/ojfbot/morning-cockpit/pull/45 merged ce5e254036ce7511593579cae7d00dd9f302be46; https://github.com/ojfbot/morning-cockpit/pull/49 merged 1de277cfcfbf149d0df7ec54e55dfde91090e4d8; https://github.com/ojfbot/morning-cockpit/pull/43#issuecomment-5823146628 records supersession."
   },
   {
+    "command": "/sweep",
+    "description": "After morning-cockpit #44 is confirmed merged: merge daily-logger #266 (open since 2026-08-04, no recorded blocker) and seh-study #20 (open since 2026-08-09, validated by Claude Opus). Combined review under 5 minutes. Brings the cleaner PR queue to zero.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-08-10",
+    "id": "act-2026-08-10-sweep-99365b",
+    "closedDate": "2026-10-05",
+    "resolution": "Cockpit #44 and seh-study #20 merged. Daily-logger #266 closed unmerged because it called shipped #210 pending; its closing comment explicitly identifies merged #272 as the accurate replacement. All named delivery outcomes have shipped. This supersedes the stale merge batch; it does not claim the historical cleaner queue reached zero or that the original sequencing occurred. Evidence: https://github.com/ojfbot/daily-logger/pull/266 CLOSED; https://github.com/ojfbot/morning-cockpit/pull/44 merged 6f77550127bf589082eb3a078f8303b0b314b905; https://github.com/ojfbot/seh-study/pull/20 merged 7482b7036e88b7b170d50fefed4cf32339b0ea44; https://github.com/ojfbot/daily-logger/pull/272 merged 0f19929e9f7ab6f33e4891eaa8eedafefa2d558e; https://github.com/ojfbot/daily-logger/pull/266#issuecomment-5821864614 explicitly identifies #272."
+  },
+  {
     "command": "/pr-review",
     "description": "Merge morning-cockpit #44 (Cockpit v2 design bundle, research-only, no code paths) — prerequisite for all Phase 2 code PRs. Until this merges, #45 (S10 fleet-structure API) cannot begin. Then merge #43 (preserved WIP chat tab, confirm-and-merge gate) and open #45 for review in sequence. Combined review time for #44 and #43 under 20 minutes.",
     "repo": "morning-cockpit",
@@ -640,6 +650,16 @@
     "id": "act-2026-08-09-pr-review-28dc6a",
     "closedDate": "2026-10-05",
     "resolution": "Cockpit #44/#45 MERGED and #43 was explicitly superseded by merged #49. The exact #43 branch was never merged; S9 delivery and its disposition replace that obsolete branch sequence. Evidence: https://github.com/ojfbot/morning-cockpit/pull/44 merged 6f77550127bf589082eb3a078f8303b0b314b905; https://github.com/ojfbot/morning-cockpit/pull/45 merged ce5e254036ce7511593579cae7d00dd9f302be46; https://github.com/ojfbot/morning-cockpit/pull/49 merged 1de277cfcfbf149d0df7ec54e55dfde91090e4d8; https://github.com/ojfbot/morning-cockpit/pull/43#issuecomment-5823146628 records supersession."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge core #445 (D5 canon generation from registry, cockpit-v2 wayfinder closeouts, TD-007 row 15, token vocabulary) in the same session as the morning-cockpit #44/#43 batch. Also merge daily-logger #266 (stale docs/comments, open since 2026-08-04, no recorded blocker — default action is merge unless a conflict is found on inspection).",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-08-09",
+    "id": "act-2026-08-09-pr-review-8678fc",
+    "closedDate": "2026-10-05",
+    "resolution": "Core #445 and cockpit #44 merged; cockpit #43 has the explicit delivered #49 replacement. Daily-logger #266 closed unmerged with a closing comment identifying merged #272 as the accurate documentation replacement. Settle every named target by delivery or identified supersession, without claiming the requested same-session timing occurred. Evidence: https://github.com/ojfbot/core/pull/445 merged 807b6c8ddc4735750bcdf2a8c5063fae8f33155b; https://github.com/ojfbot/daily-logger/pull/266 CLOSED; https://github.com/ojfbot/morning-cockpit/pull/43 CLOSED; https://github.com/ojfbot/morning-cockpit/pull/44 merged 6f77550127bf589082eb3a078f8303b0b314b905; https://github.com/ojfbot/daily-logger/pull/272 merged 0f19929e9f7ab6f33e4891eaa8eedafefa2d558e; https://github.com/ojfbot/daily-logger/pull/266#issuecomment-5821864614 explicitly identifies #272. Cockpit successor evidence: https://github.com/ojfbot/morning-cockpit/pull/49 merged 1de277cfcfbf149d0df7ec54e55dfde91090e4d8; https://github.com/ojfbot/morning-cockpit/pull/43#issuecomment-5823146628."
   },
   {
     "command": "/pr-review",
@@ -660,16 +680,6 @@
     "id": "act-2026-07-26-pr-review-e052ee",
     "closedDate": "2026-10-05",
     "resolution": "core #291 and silicon-empires #28 both MERGED. This two-target bookkeeping merge request is fully delivered, unlike later batches adding unmerged cleaner PRs. Evidence: https://github.com/ojfbot/silicon-empires/pull/28 merged cb1f778432c3f12ce0f942b4a742bd8af3df4372; https://github.com/ojfbot/core/pull/291 merged 47ce8e562f0dc026d03d28c09c42fc83f94092a9."
-  },
-  {
-    "command": "/pr-review",
-    "description": "Review and merge f1-doctrine #1 (S1: Registry v1) after the compute-boundary ADR is committed and the /validate gate run is recorded. Confirm all 33 QuestionNodes have a substrate_call binding field, the registry/ directory structure matches the taxonomy v1 axes, and the gate document is present. This PR is the prerequisite for all S2+ slices and for the persona re-rank experiment in issue #2.",
-    "repo": "f1-doctrine",
-    "status": "done",
-    "sourceDate": "2026-07-25",
-    "id": "act-2026-07-25-pr-review-33b3df",
-    "closedDate": "2026-10-05",
-    "resolution": "f1-doctrine #1 MERGED. Current Accepted ADR-0001, committed phase-keying report, and PR evidence of 33 bound QuestionNodes establish the requested S1 delivery. Caveats about persona filtering and stint-position remain in the gate; S2 is not declared complete. Evidence: https://github.com/ojfbot/f1-doctrine/pull/1 merged 4fe026cf3b95d3ee19face3989c5806555a0039a; https://github.com/ojfbot/f1-doctrine/blob/c876338e4087dbed2b570f0abc42b45b31463bd2/decisions/adr/0001-raqg-not-rag.md; https://github.com/ojfbot/f1-doctrine/blob/c876338e4087dbed2b570f0abc42b45b31463bd2/docs/gates/2026-07-24-phase-keying-relevance.md."
   },
   {
     "command": "/pr-review",
@@ -699,7 +709,7 @@
     "sourceDate": "2026-07-23",
     "id": "act-2026-07-23-pr-review-33bd9b",
     "closedDate": "2026-10-05",
-    "resolution": "cockpit #34 MERGED. Its final PR report explicitly records pnpm test with 183 passing tests and browser verification of the decision-to-delivery seam; build-test is successful on the inspected head. Evidence: https://github.com/ojfbot/morning-cockpit/pull/32 merged 000bb7b28e259a75d723e545b4b080d1ed579f87; https://github.com/ojfbot/morning-cockpit/pull/33 merged 063f8cc7fcbe1bff60712872a95e8f51bca4566c; https://github.com/ojfbot/morning-cockpit/pull/34 merged 4ad72326fbc6ca317b5a2bbaf5c856edd70bef42; https://github.com/ojfbot/morning-cockpit/pull/34 final PR report: pnpm test 183 passed; exact head 52ca92db7a6924db932269af757eca8609ec81c2."
+    "resolution": "Cockpit #34 merged with its final PR report recording 183 passing pnpm tests and seam verification. The independently inspected post-merge push run at 4ad7232 ran pnpm test and passed 131 shared + 33 server + 19 renderer tests. This corroborates the requested test obligation; the post-merge run alone does not prove pre-merge timing. Preserve each original source ID. Evidence: https://github.com/ojfbot/morning-cockpit/pull/32 merged 000bb7b28e259a75d723e545b4b080d1ed579f87; https://github.com/ojfbot/morning-cockpit/pull/33 merged 063f8cc7fcbe1bff60712872a95e8f51bca4566c; https://github.com/ojfbot/morning-cockpit/pull/34 merged 4ad72326fbc6ca317b5a2bbaf5c856edd70bef42; https://github.com/ojfbot/morning-cockpit/actions/runs/30049616432/job/89348623879 pnpm test log (183 passed)."
   },
   {
     "command": "/pr-review",
@@ -719,7 +729,7 @@
     "sourceDate": "2026-07-18",
     "id": "act-2026-07-18-pr-review-d12996",
     "closedDate": "2026-10-05",
-    "resolution": "Same shipped #34 outcome as the July 23 source, with explicit requested entrance check corroborated by the final PR report of 183 passing pnpm tests and successful build-test. Preserve both original IDs in the ledger. Evidence: https://github.com/ojfbot/morning-cockpit/pull/32 merged 000bb7b28e259a75d723e545b4b080d1ed579f87; https://github.com/ojfbot/morning-cockpit/pull/33 merged 063f8cc7fcbe1bff60712872a95e8f51bca4566c; https://github.com/ojfbot/morning-cockpit/pull/34 merged 4ad72326fbc6ca317b5a2bbaf5c856edd70bef42; https://github.com/ojfbot/morning-cockpit/pull/34 final PR report: pnpm test 183 passed; exact head 52ca92db7a6924db932269af757eca8609ec81c2."
+    "resolution": "Cockpit #34 merged with its final PR report recording 183 passing pnpm tests and seam verification. The independently inspected post-merge push run at 4ad7232 ran pnpm test and passed 131 shared + 33 server + 19 renderer tests. This corroborates the requested test obligation; the post-merge run alone does not prove pre-merge timing. Preserve each original source ID. Evidence: https://github.com/ojfbot/morning-cockpit/pull/32 merged 000bb7b28e259a75d723e545b4b080d1ed579f87; https://github.com/ojfbot/morning-cockpit/pull/33 merged 063f8cc7fcbe1bff60712872a95e8f51bca4566c; https://github.com/ojfbot/morning-cockpit/pull/34 merged 4ad72326fbc6ca317b5a2bbaf5c856edd70bef42; https://github.com/ojfbot/morning-cockpit/actions/runs/30049616432/job/89348623879 pnpm test log (183 passed)."
   },
   {
     "command": "/pr-review",
@@ -753,16 +763,6 @@
   },
   {
     "command": "/pr-review",
-    "description": "Disposition beaverGame #27 (Three.js playability pass). Open the PR and decide: merge-as-spec or close-as-superseded. If closing, extract the heightAt(x,z) bilinear-blend fix into #28's behavioral-spec checklist before deleting the branch — that logic is the terrain-sampling spec the Babylon migration must satisfy. Leave a comment in #28 linking to the decision. This takes under 15 minutes and is the single action that unblocks Babylon bootstrap.",
-    "repo": "beaverGame",
-    "status": "done",
-    "sourceDate": "2026-04-30",
-    "id": "act-2026-04-30-pr-review-8f36f1",
-    "closedDate": "2026-10-05",
-    "resolution": "beaverGame #27 MERGED, selecting the allowed merge-as-spec disposition. The description makes extraction/comment into #28 conditional on closing instead; that branch was not taken. No closure-as-superseded is claimed. Evidence: https://github.com/ojfbot/beaverGame/pull/27 merged b10da73a976bbba74702951b19c52b3389612535."
-  },
-  {
-    "command": "/pr-review",
     "description": "Begin the Pocock skills adoption triage with core #81 only. #81 (foundation: /grill-with-docs, CONTEXT.md, agent defaults) is the prerequisite for all subsequent phases (#82–#85). Review and merge #81 before opening #82 for review. Merging out of order produces skill catalog phase-registry inconsistencies where later commands reference skill entries that do not yet exist. Do not batch-review all five — proceed one PR at a time in phase order.",
     "repo": "core",
     "status": "done",
@@ -779,7 +779,7 @@
     "sourceDate": "2026-04-29",
     "id": "act-2026-04-29-pr-review-c0e169",
     "closedDate": "2026-10-05",
-    "resolution": "core #94 MERGED the game-engine decision record recommending Babylon.js. The requested durable rationale has shipped; no migration completeness claim is needed. Evidence: https://github.com/ojfbot/core/pull/94 merged 0b3569d27f44ef42b2b3e8cc1d65006322840008; https://github.com/ojfbot/core/pull/28 merged 1c52c87f9ab25b76c83244eec0163401a974ff13."
+    "resolution": "core #94 MERGED the game-engine decision record recommending Babylon.js. The requested durable rationale has shipped; no migration completeness claim is needed. Evidence: https://github.com/ojfbot/core/pull/94 merged 0b3569d27f44ef42b2b3e8cc1d65006322840008; https://github.com/ojfbot/beaverGame/pull/28 CLOSED."
   },
   {
     "command": "/roadmap",
@@ -809,6 +809,6 @@
     "sourceDate": "2026-04-14",
     "id": "act-2026-04-14-techdebt-0b58d9",
     "closedDate": "2026-10-05",
-    "resolution": "The current actionId implementation supersedes the proposed repo-inclusive normalized recipe. All 114 current IDs match sourceDate + command + SHA-256(exact description), with no open/done overlap and no collateral legacy matches. No ID rewrite is required; retain original identity. Evidence: src/schema.ts actionId at 80e93efcf55329cdff4fcc332b1ea4004efd866b; decisions/fleet-runner/action-settlement-2026-10-05/evidence.json and validation.json record all 114 IDs and exact/legacy closure checks."
+    "resolution": "The requested repo-inclusive whitespace-normalized hash recipe is superseded by the existing sourceDate/command/SHA-256(exact description) identity. Builder IDs are derived from article text, so recomputing the 114 projected IDs is a consistency check, not an independent migration audit. Rebuilding all 186 source actions with the ledger temporarily empty shows each of the 72 original done records matches exactly one source action under the real ID-or-legacy rule (8 explicit-ID matches, 72 legacy matches). No orphan or collateral historical closure requires an ID rewrite. Evidence: src/schema.ts and src/build-api.ts at 80e93efcf55329cdff4fcc332b1ea4004efd866b; validation.json historicalLedgerAudit records all 72 matches against the unfiltered source projection."
   }
 ]
