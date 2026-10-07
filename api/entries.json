@@ -1,5 +1,68 @@
 [
   {
+    "date": "2026-10-07",
+    "title": "Tuesday's 1 commit: the October 6 scheduling skew, what it broke, and what closes it",
+    "summary": "One commit landed Tuesday while three open daily-logger PRs expose a 7-hour cron skew and a documentation queue aging past its 72-hour threshold.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "pipeline-reliability",
+        "type": "concept"
+      },
+      {
+        "name": "audit",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "verification-flagged",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 3,
+    "activityType": "audit",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "The October 6 cron fired at 10:22 Central instead of 03:30 — root cause unknown, fix in flight",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Cleaner PRs #305 and #308 are independent of #309 and should merge before the next scheduled run",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "72-hour PR aging is the cleaner queue's observable health threshold — derived from article generation cadence",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": []
+  },
+  {
     "date": "2026-10-06",
     "title": "Monday's 15 commits: daily-logger pipeline hygiene, 22 suggested actions settled, and core's skill telemetry rollout scoped",
     "summary": "Monday's 15 commits repaired HTML rendering, evidentially closed 22 stale actions, and proposed an inventory-derived telemetry rollout to replace a frozen legacy stream in core.",
