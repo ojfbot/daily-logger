@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { marked } from 'marked'
+import { renderChatMarkdown } from '../utils/renderChatMarkdown.ts'
 
 interface Props {
   role: 'user' | 'assistant'
@@ -10,7 +10,7 @@ interface Props {
 export function ChatMessage({ role, content, isStreaming }: Props) {
   const html = useMemo(() => {
     if (role === 'user') return null
-    return marked.parse(content) as string
+    return renderChatMarkdown(content)
   }, [role, content])
 
   return (
