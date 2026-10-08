@@ -107,6 +107,50 @@ describe('shouldSkipRun', () => {
     expect(shouldSkipRun(ctx).skip).toBe(true)
   })
 
+  it.each([
+    'editorial: accept 2026-05-10 draft',
+    'editorial: revise 2026-05-10 per feedback',
+    'editorial: stamp outcome accepted [skip ci]',
+    'Merge pull request #311 from ojfbot/accept/2026-05-10',
+  ])('ignores article/editorial commit activity regardless of author: %s', (message) => {
+    const commit = makeCommit('Jim Green', 'daily-logger', message)
+    expect(shouldSkipRun(makeCtx({ commits: [commit] })).skip).toBe(true)
+  })
+
+  it('ignores an editorial accept PR when it is opened, revised, and merged', () => {
+    const pr = makePR('ojfbot', 311, 'daily-logger', {
+      title: 'editorial: accept 2026-05-10 draft',
+      headRef: 'accept/2026-05-10',
+      createdAt: '2026-05-10T10:30:00Z',
+      headCommitAt: '2026-05-10T10:40:00Z',
+      mergedAt: '2026-05-10T11:00:00Z',
+    })
+    expect(shouldSkipRun(makeCtx({ recentPRs: [pr] })).skip).toBe(true)
+  })
+
+  it('recognizes an editorial PR from its title if the branch name is unavailable', () => {
+    const pr = makePR('ojfbot', 311, 'daily-logger', {
+      title: 'editorial: accept 2026-05-10 draft',
+      headRef: undefined,
+      createdAt: '2026-05-10T10:30:00Z',
+      mergedAt: '2026-05-10T11:00:00Z',
+    })
+    expect(shouldSkipRun(makeCtx({ recentPRs: [pr] })).skip).toBe(true)
+  })
+
+  it('still runs on daily-logger development alongside article publishing', () => {
+    const ctx = makeCtx({
+      commits: [makeBlogCommit(), makeCommit('Jim Green', 'daily-logger', 'fix: article date validation')],
+      recentPRs: [makePR('ojfbot', 311, 'daily-logger', {
+        title: 'editorial: accept 2026-05-10 draft',
+        headRef: 'accept/2026-05-10',
+        createdAt: '2026-05-10T10:30:00Z',
+        mergedAt: '2026-05-10T11:00:00Z',
+      })],
+    })
+    expect(shouldSkipRun(ctx).skip).toBe(false)
+  })
+
   it('ignores an unmerged cleaner PR but counts its merge', () => {
     const cleaner = makePR('ojfbot', 284, 'daily-logger', {
       title: 'clean: stale docs/comments 2026-09-26',

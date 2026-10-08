@@ -1,7 +1,8 @@
 import type { BlogContext, CommitInfo, RecentPRInfo } from './types.js'
 import { activityWindow } from './activity-window.js'
 
-const SELF_GENERATED_BLOG_COMMIT = /^blog: \d{4}-\d{2}-\d{2} \[skip ci\]$/
+const ARTICLE_EDITORIAL_COMMIT = /^(?:blog: \d{4}-\d{2}-\d{2}|editorial: (?:accept \d{4}-\d{2}-\d{2} draft|revise \d{4}-\d{2}-\d{2} per feedback|stamp outcome accepted))(?: \[skip ci\])?(?: \(#\d+\))?$/
+const ARTICLE_EDITORIAL_MERGE = /^Merge pull request #\d+ from [^/]+\/(?:article|accept)\/\d{4}-\d{2}-\d{2}$/
 type ActivityWindow = ReturnType<typeof activityWindow>
 
 function occurredInWindow(timestamp: string | undefined, window: ActivityWindow): boolean {
@@ -10,17 +11,19 @@ function occurredInWindow(timestamp: string | undefined, window: ActivityWindow)
   return Number.isFinite(time) && time >= window.start && time < window.end
 }
 
-function isSelfGeneratedBlogCommit(commit: CommitInfo): boolean {
-  return commit.repo === 'daily-logger' && SELF_GENERATED_BLOG_COMMIT.test(commit.message)
+function isArticleEditorialCommit(commit: CommitInfo): boolean {
+  return commit.repo === 'daily-logger' &&
+    (ARTICLE_EDITORIAL_COMMIT.test(commit.message) || ARTICLE_EDITORIAL_MERGE.test(commit.message))
 }
 
 function generatedPRKind(pr: RecentPRInfo): 'article' | 'clean' | null {
   if (pr.headRef) {
-    if (pr.repo === 'daily-logger' && /^article\/\d{4}-\d{2}-\d{2}$/.test(pr.headRef)) return 'article'
+    if (pr.repo === 'daily-logger' && /^(?:article|accept)\/\d{4}-\d{2}-\d{2}$/.test(pr.headRef)) return 'article'
     if (/^clean\/\d{4}-\d{2}-\d{2}$/.test(pr.headRef)) return 'clean'
     return null
   }
-  if (pr.repo === 'daily-logger' && /^blog: \d{4}-\d{2}-\d{2}$/.test(pr.title)) return 'article'
+  if (pr.repo === 'daily-logger' &&
+    /^(?:blog: \d{4}-\d{2}-\d{2}|editorial: (?:accept \d{4}-\d{2}-\d{2} draft|revise \d{4}-\d{2}-\d{2} per feedback))$/.test(pr.title)) return 'article'
   if (/^clean: .*\d{4}-\d{2}-\d{2}$/.test(pr.title)) return 'clean'
   return null
 }
@@ -45,7 +48,7 @@ export interface SkipDecision {
 export function shouldSkipRun(ctx: BlogContext): SkipDecision {
   const window = activityWindow(ctx.date)
   const meaningfulCommits = ctx.commits.filter(
-    (commit) => occurredInWindow(commit.date, window) && !isSelfGeneratedBlogCommit(commit),
+    (commit) => occurredInWindow(commit.date, window) && !isArticleEditorialCommit(commit),
   )
   const triggers = meaningfulCommits.map((commit) => `${commit.repo}@${commit.hash} commit`)
   for (const pr of ctx.recentPRs) {
