@@ -1,13 +1,5 @@
 [
   {
-    "command": "/pr-review",
-    "description": "Merge daily-logger #305 (clean: stale docs/comments 2026-10-05). Review is complete — this is a merge action. Daily-cleaner output validated by Claude Opus. Merge before the next article generation run to keep the cleaner queue at zero.",
-    "repo": "daily-logger",
-    "status": "open",
-    "sourceDate": "2026-10-06",
-    "id": "act-2026-10-06-pr-review-53291b"
-  },
-  {
     "command": "/doc-refactor",
     "description": "Begin daily-logger #300 fix: update assembleBody() and toMarkdown() in src/generate-article.ts so escaped prose line breaks become real newlines and angle-bracket placeholders are wrapped as inline code before articles/YYYY-MM-DD.md is committed. The regression baseline is articles/2026-10-02.md — the failure pattern (escaped line breaks, bare angle-bracket tokens) is visible in that committed file. Verify the fix by confirming the October 2 article pattern does not reproduce on a fresh generation run. Note: confirm prioritization against daily-logger #301 (XSS/injection boundary) before starting — #301 may be higher priority if ChatMessage.tsx is a user-facing or session-handling surface.",
     "repo": "daily-logger",
