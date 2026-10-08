@@ -32,14 +32,6 @@
     "id": "act-2026-10-04-doc-refactor-d2bec0"
   },
   {
-    "command": "/hardening",
-    "description": "Implement the ChatMessage.tsx safety boundary for daily-logger #301: determine external user exposure first — if live, this is the immediate priority over #300. Route assistant chat Markdown through an HTML and URL safety layer equivalent to the one introduced in PR #294, covering raw HTML injection, javascript: links, and data: images. Add regression tests before closing.",
-    "repo": "daily-logger",
-    "status": "open",
-    "sourceDate": "2026-10-04",
-    "id": "act-2026-10-04-hardening-375a60"
-  },
-  {
     "command": "/validate",
     "description": "Open frame.jim.software in a browser with DevTools Network panel open. Filter for 'localhost'. Confirm zero requests to any localhost:<port> URL across all mounted sub-apps (cv-builder, BlogEngine, TripPlanner, lean-canvas, gastown-pilot, purefoy). Report the result in Friday's article. The sweep is merged but not yet verified.",
     "repo": "shell",
