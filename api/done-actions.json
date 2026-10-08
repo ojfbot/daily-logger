@@ -810,5 +810,15 @@
     "id": "act-2026-04-14-techdebt-0b58d9",
     "closedDate": "2026-10-05",
     "resolution": "The requested repo-inclusive whitespace-normalized hash recipe is superseded by the existing sourceDate/command/SHA-256(exact description) identity. Builder IDs are derived from article text, so recomputing the 114 projected IDs is a consistency check, not an independent migration audit. Rebuilding all 186 source actions with the ledger temporarily empty shows each of the 72 original done records matches exactly one source action under the real ID-or-legacy rule (8 explicit-ID matches, 72 legacy matches). No orphan or collateral historical closure requires an ID rewrite. Evidence: src/schema.ts and src/build-api.ts at 80e93efcf55329cdff4fcc332b1ea4004efd866b; validation.json historicalLedgerAudit records all 72 matches against the unfiltered source projection."
+  },
+  {
+    "command": "/hardening",
+    "description": "Implement the ChatMessage.tsx safety boundary for daily-logger #301: determine external user exposure first — if live, this is the immediate priority over #300. Route assistant chat Markdown through an HTML and URL safety layer equivalent to the one introduced in PR #294, covering raw HTML injection, javascript: links, and data: images. Add regression tests before closing.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-10-04",
+    "id": "act-2026-10-04-hardening-375a60",
+    "closedDate": "2026-10-08",
+    "resolution": "PR #315 merged at 7dc5c9b3da929eb8723a50bd1db1d945265c9a4c after source review and operator approval of 6f54e19. Production deployment succeeded, and log.jim.software serves the new chat renderer. Its HTML escaping, URL scheme allowlist and attribute escaping match the article safety boundary; all 39 component regressions pass for completed and streaming messages. The deployed renderer was verified with a mocked response and dummy key in an isolated Chrome browser: no injected elements, event handlers or active-scheme URLs. This check required removing injected + button text only in the test DOM to bypass a pre-existing section-lookup bug; normal Send behavior remains a separate follow-up logged in implementation-notes.md. No real model call was made. Evidence: https://github.com/ojfbot/daily-logger/pull/315 ; https://github.com/ojfbot/daily-logger/pull/315#issuecomment-6070552717 ; https://github.com/ojfbot/daily-logger/actions/runs/37856543126 ; https://log.jim.software/articles/2026-10-06 ."
   }
 ]
