@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-08 (#301 chat Markdown): sharing the article safety renderer assumed a backend-to-frontend source import was acceptable; the review checklist prohibits cross-package relative imports, so the frontend uses an equivalent local renderer, as #301 permits, with component regressions for both streaming and completed messages.
+
 - 2026-10-05 (settlement review): plan treated merged #27 and f1-doctrine #1 as full delivery; independent reviews found an unrecorded decision link and a changed registry contract. Reopened both sources, and used the newly inspected explicit #266 → merged #272 replacement to settle two fully evidenced batches.
 - 2026-10-05 (settlement evidence): automatic number extraction assumed core was the namespace for draft #28; the source meant beaverGame #28. Corrected the subject and ledger citation, removed unrelated core #28 evidence, and refreshed incomplete partial-delivery observations.
 
