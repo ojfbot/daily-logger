@@ -46,6 +46,14 @@ describe('article Markdown before commit', () => {
     expect(marked.parse(committed(body))).toContain('next <code>code</code>')
   })
 
+  it('keeps escaped table breaks in the original row and cell', () => {
+    const body = '| A | B |\n| --- | --- |\n| First\\nSecond <port> | `code` |'
+    const html = marked.parse(committed(body), { async: false })
+    expect(html).toContain('<td>First\\nSecond <code>&lt;port&gt;</code></td>')
+    expect(html).toContain('<td><code>code</code></td>')
+    expect(html.match(/<tbody>[\s\S]*?<\/tbody>/)?.[0].match(/<tr>/g)).toHaveLength(1)
+  })
+
   it('also normalizes a directly supplied body at serialization', () => {
     expect(committed(prose)).toContain('### Details\n- First\n- Second')
   })
@@ -66,6 +74,7 @@ describe('article Markdown before commit', () => {
     ['quote before heading', '> <port>\n## Next <section>', '> `<port>`\n## Next `<section>`'],
     ['table cell boundary', '| A | B |\n| --- | --- |\n| `unfinished <port> | next `code` |', '| A | B |\n| --- | --- |\n| \\`unfinished `<port>` | next `code` |'],
     ['table escaped pipes', '| A | B |\n| --- | --- |\n| `a\\|b\\n <port>` | <section> |', '| A | B |\n| --- | --- |\n| `a\\|b\\n <port>` | `<section>` |'],
+    ['table prose break', '| A | B |\n| --- | --- |\n| First\\nSecond <port> | `code` |', '| A | B |\n| --- | --- |\n| First\\nSecond `<port>` | `code` |'],
     ['single prose escape', String.raw`First\nSecond`, 'First\nSecond'],
     ['autolinks', '<https://example.com> <me@example.com>', '<https://example.com> <me@example.com>'],
     ['escaped Markdown', String.raw`\<port> and \\new`, String.raw`\<port> and \\new`],
