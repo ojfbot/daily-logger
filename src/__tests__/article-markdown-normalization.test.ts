@@ -46,6 +46,11 @@ describe('article Markdown before commit', () => {
   })
 
   it.each([
+    ['link destination', '[Section](https://example.com/<section>)', '[Section](https://example.com/<section>)'],
+    ['heading boundary', '`unfinished <port>\n# heading `code`', '\\`unfinished `<port>`\n# heading `code`'],
+    ['indented backticks', '    ```text\n    \\n <port>\n\nOutside <section>\\nNext', '    ```text\n    \\n <port>\n\nOutside `<section>`\nNext'],
+    ['unterminated quote fence', '> ```text\n> sample\\n <port>\n\nOutside\\nNext <section>', '> ```text\n> sample\\n <port>\n\nOutside\nNext `<section>`'],
+    ['unterminated list fence', '- ```text\n  sample\\n <port>\n\nOutside\\nNext <section>', '- ```text\n  sample\\n <port>\n\nOutside\nNext `<section>`'],
     ['single prose escape', String.raw`First\nSecond`, 'First\nSecond'],
     ['autolinks', '<https://example.com> <me@example.com>', '<https://example.com> <me@example.com>'],
     ['escaped Markdown', String.raw`\<port> and \\new`, String.raw`\<port> and \\new`],
