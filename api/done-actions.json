@@ -820,5 +820,15 @@
     "id": "act-2026-10-04-hardening-375a60",
     "closedDate": "2026-10-08",
     "resolution": "PR #315 merged at 7dc5c9b3da929eb8723a50bd1db1d945265c9a4c after source review and operator approval of 6f54e19. Production deployment succeeded, and log.jim.software serves the new chat renderer. Its HTML escaping, URL scheme allowlist and attribute escaping match the article safety boundary; all 39 component regressions pass for completed and streaming messages. The deployed renderer was verified with a mocked response and dummy key in an isolated Chrome browser: no injected elements, event handlers or active-scheme URLs. This check required removing injected + button text only in the test DOM to bypass a pre-existing section-lookup bug; normal Send behavior remains a separate follow-up logged in implementation-notes.md. No real model call was made. Evidence: https://github.com/ojfbot/daily-logger/pull/315 ; https://github.com/ojfbot/daily-logger/pull/315#issuecomment-6070552717 ; https://github.com/ojfbot/daily-logger/actions/runs/37856543126 ; https://log.jim.software/articles/2026-10-06 ."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge daily-logger #305 (clean: stale docs/comments 2026-10-05). Review is complete — this is a merge action. Daily-cleaner output validated by Claude Opus. Merge before the next article generation run to keep the cleaner queue at zero.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-10-06",
+    "id": "act-2026-10-06-pr-review-53291b",
+    "closedDate": "2026-10-08",
+    "resolution": "Superseded: PR #305 was closed unmerged. The corrected schedule and qualified fleet coverage documentation shipped in merged PR #303 (82916875c26430e1aced3a19ddf7e587b0af6b46). PR #308 review receipt confirms #305 was closed as superseded: https://github.com/ojfbot/daily-logger/pull/308#issuecomment-6069968909. No merge of #305 is required."
   }
 ]
