@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { normalizeArticleMarkdown } from './normalize-article-markdown.js'
 import type { BlogContext, GeneratedArticle, StructuredArticle } from './types.js'
 import type { ArticleDataV2 } from './schema.js'
 import { validateArticleOutput, getValidationErrors, actionId } from './schema.js'
@@ -498,9 +499,9 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
  */
 export function assembleBody(s: StructuredArticle | ArticleDataV2): string {
   if ('schemaVersion' in s && s.schemaVersion === 2) {
-    return assembleBodyV2(s as ArticleDataV2)
+    return normalizeArticleMarkdown(assembleBodyV2(s as ArticleDataV2))
   }
-  return assembleBodyV1(s as StructuredArticle)
+  return normalizeArticleMarkdown(assembleBodyV1(s as StructuredArticle))
 }
 
 function assembleBodyV1(s: StructuredArticle): string {
@@ -1141,7 +1142,7 @@ export function toMarkdown(article: GeneratedArticle & { schemaVersion?: number 
   lines.push(
     '---',
     '',
-    article.body,
+    normalizeArticleMarkdown(article.body),
     '',
     '---',
     '',
