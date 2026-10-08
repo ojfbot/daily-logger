@@ -1,0 +1,147 @@
+# AGENTS.md — daily-logger
+
+## What this repo does
+
+`daily-logger` generates one markdown blog article per day by:
+
+1. Sweeping commits, pull request changes, and issue changes across all eligible ojfbot repos via the GitHub API
+2. Aggregating Codex skill telemetry (skill-dispositions ledger, suggestion follow-through tracking, and PR skill comments) alongside commit/PR data
+3. Feeding that context to Claude Sonnet with a project-aware system prompt
+4. Committing the resulting article to `_articles/YYYY-MM-DD.md` (with a dedicated skill telemetry section)
+5. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
+The workflow runs on a daily cron scheduled in America/Chicago and can also be triggered manually with a date override or dry-run flag.
+
+## Run eligibility
+
+The run gate checks meaningful changes in the 24-hour activity window. In
+`daily-logger`, generated article and editorial commits plus PRs from dated
+`article/YYYY-MM-DD` and `accept/YYYY-MM-DD` branches do not qualify, regardless
+of author. The exclusion covers the full PR lifecycle. Unmerged generated cleaner
+PRs do not qualify, while their merge does. Other development activity and issue
+creation or closure continue to qualify under the normal activity rules. Apply the
+gate in `src/should-skip-run.ts`; do not remove excluded activity from collected
+context. `DRY_RUN=true` and `FORCE_RUN=true` bypass the gate. An ineligible run
+exits before drafting.
+
+## Project context
+
+Part of the ojfbot stack — see the parent roadmap for the full picture. This repo is intentionally standalone: no pnpm workspace, no monorepo. It has one job and should stay small.
+
+## Development
+
+```bash
+cp .env.example .env
+# Fill in ANTHROPIC_API_KEY and GITHUB_TOKEN
+
+pnpm install
+
+# Dry run (prints article, writes nothing)
+pnpm generate:dry
+
+# Live run (writes articles/YYYY-MM-DD.md)
+pnpm generate
+
+# Generate for a specific date
+DATE_OVERRIDE=2026-02-20 pnpm generate:dry
+```
+
+## Source files
+
+| File | Purpose |
+|---|---|
+| `src/index.ts` | Entry point — orchestrates collect → generate → write |
+| `src/collect-context.ts` | GitHub API sweep via `gh` CLI (single page per call, 16 MB buffer) |
+| `src/fleet.ts` | Sweep membership: `discoverRepos()` (derived from `gh repo list`), `EXCLUDED_REPOS`, `REPO_NOTES` → `KNOWN_REPOS`, `reportSurfaceDrift()` |
+| `src/collect-telemetry.ts` | Aggregates skill usage from `~/selfco/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources. **Note:** commit `4dd6765` fixed a silent no-op where skill-audit fetched telemetry from the wrong remote; telemetry collection now targets the correct source. |
+| `src/generate-article.ts` | Codex API call + prompt, JSON → markdown (includes dedicated skill telemetry section) |
+| `src/schema.ts` | Zod schemas + validation (ArticleDataSchema/ArticleDataV2, TypedTagSchema, ShipmentEntrySchema, DecisionEntrySchema, ActionItemSchema, ClosedActionSchema, CodeReferenceSchema, StructuredArticleSchema; `actionId`, `validateArticleOutput`, `getValidationErrors`) |
+| `src/types.ts` | Shared TypeScript types (BlogContext, GeneratedArticle, CommitInfo, PR/issue infos, Persona, cleaner types) |
+| `src/verify-claims.ts` | Deterministic fact-checker — flags article claims (file paths, PR refs, SHAs) absent from the collected context (TD-001) |
+| `src/build-api.ts` | Generates static JSON API (`api/*.json`) from articles |
+| `skills/` | Codex skill definitions (previously `commands/`) |
+| `packages/frontend/` | React SPA (Vite + Redux Toolkit), deployed to Vercel |
+| `api/auth/`, `api/github/` | Vercel serverless functions (OAuth, GitHub API proxy) |
+| `decisions/adr/` | Architecture Decision Records (local to this repo) |
+
+- **ADR-0031** (`decisions/adr/0031-universal-code-reference-popovers.md`) — Extend popover system to all inline code references with structured data model
+- **ADR-0032** (`decisions/adr/0032-daily-logger-react-vercel-migration.md`) — Migrate frontend to React + Vercel
+- **ADR-0033** — Three-tier confidence threshold for daily-cleaner bot
+- **ADR-0034** — Isolated Redux stores per remote, coordinated via FrameBus
+- **ADR-0013** — FrameBus cross-domain event fanout (shipped with implementation + Playwright e2e)
+- **ADR-0035** — Article status lifecycle and auto-merge overnight PRs (implemented in commit `7482a30`)
+- **ADR-0036** (`decisions/adr/0036-structured-decision-output-for-rich-ui.md`) — Structured decision output for rich UI
+- **ADR-0036** (core #45) — Also codifies the lock-file-rebuild protocol as a two-gate CI requirement (unmerged — still a PR in core)
+- **ADR-0038** — Editorial revision CI workflow (verified end-to-end on PR #112)
+- **ADR-0098** — Two-track skill telemetry: use-funnel and evolution stream never blend (accepted 2026-07-18)
+
+## System model (OPM pilot — ADR-0039)
+
+`opm/system.opl` is a controlled-English Object-Process model of the pipeline (OJF-OPL profile,
+defined in core `domain-knowledge/opm-modeling.md`), with a Mermaid rendering in `opm/system.md`.
+One fact per line, `[src:]`-anchored. If you change what a pipeline step consumes, yields, or
+requires — or add/remove a step — update the model in the same PR (edit `system.opl`, then
+regenerate `system.md` via core's `/opm render`). Shadow-mode only: nothing gates on it.
+
+## Adding new repos to the sweep
+
+You don't. Since 2026-09-24 the sweep set is **derived** at run time: `src/fleet.ts`
+`discoverRepos()` takes every non-archived, non-fork repo in the `ojfbot` org via
+`gh repo list`, minus `EXCLUDED_REPOS` (policy exclusions such as the private `selfco`
+vault). A new repo is swept on its first run after it exists. Discovery failure throws
+so the run goes red instead of retiring the day as "no activity".
+
+What is still hand-maintained (fleet-onboard surfaces 3–4), and warned about in the run
+log as `::warning::fleet drift: …` when a swept repo lacks it:
+
+- `REPO_NOTES` in `src/fleet.ts` — one-line role; also feeds `KNOWN_REPOS` for the API
+  builder and tag classifier (surface 3).
+- The "Additional repos" bullet in `SYSTEM_PROMPT` (`src/generate-article.ts`) — the
+  drafter mischaracterizes activity without it (surface 4).
+
+Run core's `/fleet-onboard <repo>` to fill both. `FLEET_REPOS=a,b` pins the sweep set for local
+replays and the CI smoke test (`pr-check.yml`); the scheduled workflows never set it. History: four repos founded 04-30 → 09-17
+went dark for up to five weeks under the old hand-listed `REPOS` array (see
+`implementation-notes.md`, 2026-09-24).
+
+## Updating the system prompt / project vision
+
+Edit the `SYSTEM_PROMPT` constant in `src/generate-article.ts`. The prompt contains the full ojfbot architectural context and should be kept in sync with the master roadmap.
+
+For longer-lived context (roadmap phases, architectural decisions), add a `ROADMAP.md` to this repo root — `collect-context.ts` reads it preferentially over AGENTS.md.
+
+## Article format
+
+Articles are committed as `articles/YYYY-MM-DD.md` with YAML frontmatter:
+
+```yaml
+---
+title: "..."
+date: YYYY-MM-DD
+tags: ["tag1", "tag2"]
+summary: "One sentence preview."
+status: "draft" | "published"
+---
+```
+
+Body sections (enforced by the system prompt):
+- `## What shipped`
+- `## The decisions`
+- `## Roadmap pulse`
+- `## What's next`
+
+## Secrets required
+
+Set these in the repo's GitHub Settings → Secrets and variables → Actions:
+
+| Secret | Required | Notes |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Yes | Codex API key |
+| `GITHUB_TOKEN` | Auto | Provided by Actions; use a PAT for private repos |
+| `BLOGENGINE_API_URL` | No | e.g. `https://blog.ojfbot.dev` — enables live publish |
+
+## Deployment
+
+**NEVER deploy directly to production** via CLI (`vercel deploy --prod`, `vercel promote`, etc.).
+All production deployments go through the GitHub PR → CI → merge → automated deploy pipeline.
+The only exception is `workflow_dispatch` for manual CI triggers.
+Local Vercel CLI usage is restricted to preview deploys only.
