@@ -32,10 +32,26 @@ function normalizeListItem(item: Tokens.ListItem): string {
   return lines.map((line, index) => index === 0 ? prefix + taskPrefix + line : line ? ' '.repeat(prefix.length) + line : '').join('\n') + ending
 }
 
+function normalizeTable(markdown: string): string {
+  return markdown.split('\n').map((line) => {
+    let result = ''
+    let start = 0
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '\\') i++
+      else if (line[i] === '|') {
+        result += Lexer.lexInline(line.slice(start, i)).map(normalizeInline).join('') + '|'
+        start = i + 1
+      }
+    }
+    return result + Lexer.lexInline(line.slice(start)).map(normalizeInline).join('')
+  }).join('\n')
+}
+
 /** Normalize generated prose without changing code examples or queue identities. */
 export function normalizeArticleMarkdown(markdown: string): string {
   return Lexer.lex(markdown).map((token) => {
     if (token.type === 'code' || token.type === 'def' || token.type === 'space') return token.raw
+    if (token.type === 'table') return normalizeTable(token.raw)
     if (token.type === 'blockquote') {
       // Action descriptions are hashed by actionId. Preserve the source lines
       // consumed by build-api so normalization cannot create new queue entries.
