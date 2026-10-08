@@ -38,6 +38,12 @@ Each article lives at `/articles/YYYY-MM-DD`.
 
 Repos swept: eligible repositories discovered from the live `ojfbot` org list (see `src/fleet.ts`). Archived repositories, forks, policy exclusions, and private repositories without a `REPO_NOTES` opt-in are skipped.
 
+Generated article/editorial commits and PRs in `daily-logger` do not make another
+run eligible, regardless of author. This covers dated `article/` and `accept/`
+branches through their full PR lifecycle. Daily-logger development work still
+counts, and excluded publishing activity remains available as context when other
+work triggers generation.
+
 ## Architecture
 
 ```

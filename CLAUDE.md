@@ -11,6 +11,16 @@
 5. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
 The workflow runs on a daily cron scheduled in America/Chicago time and can also be triggered manually with a date override or dry-run flag.
 
+## Run eligibility
+
+Generated article and editorial activity in `daily-logger` does not make a run
+eligible, regardless of author. The gate ignores the `blog: YYYY-MM-DD` article
+commit, editorial accept/revise/stamp commits, and PRs from dated `article/` or
+`accept/` branches. It ignores the full PR lifecycle, including creation, revision,
+closure, and merge. Other development activity in `daily-logger` and matching
+activity in other repos still follow the regular activity rules. Excluded activity
+stays in the collected context when another event qualifies a run.
+
 ## Project context
 
 Part of the ojfbot stack — see the parent roadmap for the full picture. This repo is intentionally standalone: no pnpm workspace, no monorepo. It has one job and should stay small.
