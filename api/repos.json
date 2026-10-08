@@ -1,12 +1,14 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 124,
-    "totalCommits": 1495,
+    "articleCount": 125,
+    "totalCommits": 1499,
     "relatedTags": [
       "daily-logger",
       "ci-cd",
+      "rest-day",
       "pipeline-reliability",
+      "editorial-workflow",
       "audit",
       "assistant-centric",
       "tooling-for-iteration",
@@ -35,7 +37,6 @@
       "module-federation",
       "BlogEngine",
       "security-as-emergent-ux",
-      "rest-day",
       "skill-catalog",
       "dependency-management",
       "adopt-stack",
@@ -143,7 +144,6 @@
       "core-reader",
       "landing",
       "github-integration",
-      "editorial-workflow",
       "skill-audit",
       "babylon-migration",
       "critical-path",

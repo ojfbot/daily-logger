@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 78
+    "count": 79
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 65
+    "count": 66
   },
   {
     "name": "core",
@@ -30,13 +30,13 @@
     "count": 37
   },
   {
-    "name": "adr",
-    "type": "practice",
-    "count": 30
-  },
-  {
     "name": "rest-day",
     "type": "activity",
+    "count": 31
+  },
+  {
+    "name": "adr",
+    "type": "practice",
     "count": 30
   },
   {
@@ -115,14 +115,14 @@
     "count": 11
   },
   {
-    "name": "landing",
-    "type": "repo",
+    "name": "audit",
+    "type": "concept",
     "count": 10
   },
   {
-    "name": "audit",
-    "type": "concept",
-    "count": 9
+    "name": "landing",
+    "type": "repo",
+    "count": 10
   },
   {
     "name": "BlogEngine",
@@ -335,6 +335,16 @@
     "count": 3
   },
   {
+    "name": "pipeline-reliability",
+    "type": "concept",
+    "count": 2
+  },
+  {
+    "name": "editorial-workflow",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "editorial-pipeline",
     "type": "concept",
     "count": 2
@@ -493,11 +503,6 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
-  },
-  {
-    "name": "pipeline-reliability",
-    "type": "concept",
-    "count": 1
   },
   {
     "name": "action-triage",
@@ -836,11 +841,6 @@
   },
   {
     "name": "multi-agent",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "editorial-workflow",
     "type": "concept",
     "count": 1
   },
