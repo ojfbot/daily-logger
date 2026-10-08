@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-08 (#300): Converting an escaped prose newline inside a GFM table cell creates a new row and changes cell associations. Preserve those literal escapes within cells while normalizing placeholders; ordinary prose line breaks are restored. This conservative exception keeps the existing table structure.
+
 - 2026-10-08 (#300): The issue named council synthesis as a separate normalization target; synthesis already calls `assembleBody`, so the shared assembler and final `toMarkdown` boundary apply the fix. Suggested-action lines are preserved because descriptions determine queue IDs. Independent review found link and block-boundary errors in the initial scanner; the existing Marked lexer now bounds normalization by nested blocks and list items and recurses into formatted prose and link labels while preserving code and link destinations. Quote/list prefixes use standard Markdown spacing after normalization. No pipeline step or OPM input/output contract changes.
 
 - 2026-10-08 (#301 production verification): the plan assumed the deployed chat panel could send a mocked message normally; its pre-existing section lookup compares a heading containing the injected '+' button with the original section name, so Send silently returns. Verified the deployed safety renderer after removing that button text only in the isolated browser's DOM; the ordinary Send path remains a separate follow-up, and its source is unchanged by #315.

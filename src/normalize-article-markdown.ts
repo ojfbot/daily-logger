@@ -1,24 +1,24 @@
 import { Lexer, type Token, type Tokens } from 'marked'
 
-function normalizeText(text: string): string {
+function normalizeText(text: string, inTableCell: boolean): string {
   return text.replace(/\\\\|\\n|`|<[a-zA-Z][\w-]*>/g, (match) => {
-    if (match === '\\n') return '\n'
+    if (match === '\\n') return inTableCell ? match : '\n'
     if (match === '`') return '\\`'
     if (match.startsWith('<')) return `\`${match}\``
     return match
   })
 }
 
-function normalizeInline(token: Token): string {
+function normalizeInline(token: Token, inTableCell = false): string {
   if (token.type === 'codespan' || token.type === 'escape') return token.raw
   if ('tokens' in token && token.tokens) {
     const original = token.tokens.map((child) => child.raw).join('')
-    const normalized = token.tokens.map(normalizeInline).join('')
+    const normalized = token.tokens.map((child) => normalizeInline(child, inTableCell)).join('')
     // Replace only the label/formatting content. Link destinations and
     // formatting delimiters retain their original source spelling.
     return original ? token.raw.replace(original, () => normalized) : token.raw
   }
-  if (token.type === 'text' || token.type === 'html') return normalizeText(token.raw)
+  if (token.type === 'text' || token.type === 'html') return normalizeText(token.raw, inTableCell)
   return token.raw
 }
 
@@ -39,11 +39,11 @@ function normalizeTable(markdown: string): string {
     for (let i = 0; i < line.length; i++) {
       if (line[i] === '\\') i++
       else if (line[i] === '|') {
-        result += Lexer.lexInline(line.slice(start, i)).map(normalizeInline).join('') + '|'
+        result += Lexer.lexInline(line.slice(start, i)).map((token) => normalizeInline(token, true)).join('') + '|'
         start = i + 1
       }
     }
-    return result + Lexer.lexInline(line.slice(start)).map(normalizeInline).join('')
+    return result + Lexer.lexInline(line.slice(start)).map((token) => normalizeInline(token, true)).join('')
   }).join('\n')
 }
 
@@ -66,8 +66,8 @@ export function normalizeArticleMarkdown(markdown: string): string {
     }
     if ('tokens' in token && token.tokens) {
       const original = token.tokens.map((child) => child.raw).join('')
-      return original ? token.raw.replace(original, () => token.tokens?.map(normalizeInline).join('') ?? '') : token.raw
+      return original ? token.raw.replace(original, () => token.tokens?.map((child) => normalizeInline(child)).join('') ?? '') : token.raw
     }
-    return Lexer.lexInline(token.raw).map(normalizeInline).join('')
+    return Lexer.lexInline(token.raw).map((child) => normalizeInline(child)).join('')
   }).join('')
 }
