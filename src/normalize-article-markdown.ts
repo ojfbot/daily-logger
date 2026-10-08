@@ -1,57 +1,57 @@
-import { Lexer } from 'marked'
+import { Lexer, type Token, type Tokens } from 'marked'
 
-function normalizeProse(markdown: string): string {
-  return Lexer.lexInline(markdown).map((token) => {
-    if (token.type !== 'text' && token.type !== 'html') return token.raw
-    return token.raw.replace(/\\\\|\\n|`|<[a-zA-Z][\w-]*>/g, (match) => {
-      if (match === '\\n') return '\n'
-      if (match === '`') return '\\`'
-      if (match.startsWith('<')) return `\`${match}\``
-      return match
-    })
-  }).join('')
+function normalizeText(text: string): string {
+  return text.replace(/\\\\|\\n|`|<[a-zA-Z][\w-]*>/g, (match) => {
+    if (match === '\\n') return '\n'
+    if (match === '`') return '\\`'
+    if (match.startsWith('<')) return `\`${match}\``
+    return match
+  })
 }
 
-function normalizeBlock(markdown: string): string {
-  let result = ''
-  let prose = ''
-  let fence: { marker: string; length: number } | undefined
-  const flushProse = (): void => {
-    result += normalizeProse(prose)
-    prose = ''
+function normalizeInline(token: Token): string {
+  if (token.type === 'codespan' || token.type === 'escape') return token.raw
+  if ('tokens' in token && token.tokens) {
+    const original = token.tokens.map((child) => child.raw).join('')
+    const normalized = token.tokens.map(normalizeInline).join('')
+    // Replace only the label/formatting content. Link destinations and
+    // formatting delimiters retain their original source spelling.
+    return original ? token.raw.replace(original, () => normalized) : token.raw
   }
+  if (token.type === 'text' || token.type === 'html') return normalizeText(token.raw)
+  return token.raw
+}
 
-  // Block tokenization bounds container fences and inline spans. Within a list
-  // or quote, keep code lines and identity-bearing action lines verbatim.
-  for (const line of markdown.match(/[^\n]*\n|[^\n]+$/g) ?? []) {
-    const delimiter = line.replace(/\r?\n$/, '').match(/^[ \t]*(?:> ?)*[ \t]*(?:[-+*] |\d+[.)] )?(`{3,}|~{3,})(.*)$/)
-    if (fence) {
-      result += line
-      if (delimiter && delimiter[1][0] === fence.marker
-        && delimiter[1].length >= fence.length && /^\s*$/.test(delimiter[2])) {
-        fence = undefined
-      }
-    } else if (delimiter && (delimiter[1][0] === '~' || !delimiter[2].includes('`'))) {
-      flushProse()
-      fence = { marker: delimiter[1][0], length: delimiter[1].length }
-      result += line
-    } else if (/^> - `\/\w[\w-]*` — /.test(line) || /^(?: {4}|\t)/.test(line)) {
-      // Action descriptions are hashed by actionId; changing their Markdown
-      // would create new queue entries or break existing closure references.
-      flushProse()
-      result += line
-    } else {
-      prose += line
-    }
-  }
-  flushProse()
-  return result
+function normalizeListItem(item: Tokens.ListItem): string {
+  const prefix = item.raw.match(/^([ \t]*(?:[-+*]|\d+[.)])[ \t]+)/)?.[1]
+  if (!prefix) return item.raw
+  const taskPrefix = item.task ? item.raw.slice(prefix.length).match(/^\[[ xX]\][ \t]+/)?.[0] ?? '' : ''
+  const content = normalizeArticleMarkdown(item.text).replace(/\n+$/, '')
+  const lines = content.split('\n')
+  const ending = item.raw.match(/\n*$/)?.[0] ?? ''
+  return lines.map((line, index) => index === 0 ? prefix + taskPrefix + line : line ? ' '.repeat(prefix.length) + line : '').join('\n') + ending
 }
 
 /** Normalize generated prose without changing code examples or queue identities. */
 export function normalizeArticleMarkdown(markdown: string): string {
   return Lexer.lex(markdown).map((token) => {
     if (token.type === 'code' || token.type === 'def' || token.type === 'space') return token.raw
-    return normalizeBlock(token.raw)
+    if (token.type === 'blockquote') {
+      // Action descriptions are hashed by actionId. Preserve the source lines
+      // consumed by build-api so normalization cannot create new queue entries.
+      if (/^> - `\/\w[\w-]*` — /m.test(token.raw)) return token.raw
+      const content = normalizeArticleMarkdown(token.text).replace(/\n+$/, '')
+      const ending = token.raw.match(/\n*$/)?.[0] ?? ''
+      return content.split('\n').map((line) => `> ${line}`).join('\n') + ending
+    }
+    if (token.type === 'list') {
+      const original = token.items.map((item: Tokens.ListItem) => item.raw).join('')
+      return token.items.map(normalizeListItem).join('') + token.raw.slice(original.length)
+    }
+    if ('tokens' in token && token.tokens) {
+      const original = token.tokens.map((child) => child.raw).join('')
+      return original ? token.raw.replace(original, () => token.tokens?.map(normalizeInline).join('') ?? '') : token.raw
+    }
+    return Lexer.lexInline(token.raw).map(normalizeInline).join('')
   }).join('')
 }
