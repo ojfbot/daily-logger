@@ -5,7 +5,7 @@
 `daily-logger` generates one markdown blog article per day by:
 
 1. Sweeping the last 24 h of commits and PRs (both open and closed) across all ojfbot repos via the GitHub API
-2. Aggregating Claude Code skill telemetry (skill-dispositions ledger, suggestion follow-through tracking, and PR skill comments) alongside commit/PR data — rollout scoped as docs-first, inventory-derived (replacing the frozen legacy telemetry stream)
+2. Aggregating Claude Code skill telemetry (skill-dispositions ledger, suggestion follow-through tracking, and PR skill comments) alongside commit/PR data
 3. Feeding that context to Claude Sonnet with a project-aware system prompt (normal live runs skip generation when no meaningful activity is found; dry runs and `FORCE_RUN` bypass the skip gate)
 4. Committing the resulting article to `articles/YYYY-MM-DD.md` (with a dedicated skill telemetry section)
 5. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
