@@ -13,3 +13,9 @@ decisions/core
 
 # eval runner intermediate (snapshot lives at evals/results/latest.json)
 evals/results/raw.json
+
+# Local assistant state and generated site previews
+/.codex/
+/.serena/
+/_site/
+/_site_preview/
