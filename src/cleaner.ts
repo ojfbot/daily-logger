@@ -652,7 +652,7 @@ export async function openCleanPRs(
       )
       run(`git -C ${tmpDir} checkout -b ${branch}`)
       run(`git -C ${tmpDir} add -A`)
-      run(`git -C ${tmpDir} commit -m "clean: remove stale comments/docs ${date} [skip ci]"`)
+      run(`git -C ${tmpDir} commit -m "clean: remove stale comments/docs ${date}"`)
       run(`git -C ${tmpDir} push -u origin ${branch}`)
 
       // Open PR

@@ -111,6 +111,8 @@ describe('shouldSkipRun', () => {
     'editorial: accept 2026-05-10 draft',
     'editorial: revise 2026-05-10 per feedback',
     'editorial: stamp outcome accepted [skip ci]',
+    'editorial: stamp outcome accepted',
+    'blog: 2026-05-10',
     'Merge pull request #311 from ojfbot/accept/2026-05-10',
   ])('ignores article/editorial commit activity regardless of author: %s', (message) => {
     const commit = makeCommit('Jim Green', 'daily-logger', message)

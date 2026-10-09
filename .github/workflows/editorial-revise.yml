@@ -2,7 +2,8 @@ name: Editorial Revision
 
 # Triggered when an editorial accept PR is opened or its body is edited.
 # Extracts feedback from the PR body, calls Claude to revise the article,
-# and pushes the result back to the PR branch.
+# and pushes the result back to the PR branch. Checkout uses GH_PAT so these
+# pushes trigger PR checks on the stamped/revised head (GITHUB_TOKEN suppresses them).
 
 on:
   pull_request:
@@ -36,7 +37,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 2
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
 
       - name: Extract article date from branch name
         id: date
@@ -81,7 +82,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "⏭ No outcome change to commit"
           else
-            git commit -m "editorial: stamp outcome accepted [skip ci]"
+            git commit -m "editorial: stamp outcome accepted"
             git push
           fi
 
@@ -102,7 +103,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 2
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
 
       - name: Guard — skip if last commit was by bot
         id: guard

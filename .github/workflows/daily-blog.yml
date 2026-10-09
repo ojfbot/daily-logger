@@ -174,7 +174,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "blog: ${DATE} [skip ci]"
+          git commit -m "blog: ${DATE}"
           git push -u origin "${BRANCH}"
 
           echo "date=${DATE}" >> "$GITHUB_OUTPUT"
