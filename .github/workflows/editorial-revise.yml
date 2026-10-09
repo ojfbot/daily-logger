@@ -4,9 +4,12 @@ name: Editorial Revision
 # Extracts feedback from the PR body, calls Claude to revise the article,
 # and pushes the result back to the PR branch. The final push uses GH_PAT so
 # updated-head PR checks run without GITHUB_TOKEN workflow-run approval.
+# pull_request_target loads this policy from the trusted base, excludes foreign
+# repositories, and admits only a regular dated article before checking out head.
+# Every other head file must equal the pinned base, including scripts and lockfile.
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, edited]
     branches: [main]
 
@@ -24,18 +27,19 @@ jobs:
     name: Stamp accepted outcome
     if: >-
       github.event.action == 'opened' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
       startsWith(github.head_ref, 'accept/') &&
       !contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_START')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: false
@@ -57,13 +61,17 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          git fetch --no-tags origin "$BASE_SHA"
-          CHANGED=$(git diff --name-only "$BASE_SHA"...HEAD)
-          if [[ "$CHANGED" != "$ARTICLE_PATH" || ! -f "$ARTICLE_PATH" || -L "$ARTICLE_PATH" ]]; then
+          git fetch --no-tags origin "$HEAD_SHA"
+          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          MODE=$(git ls-tree "$HEAD_SHA" -- "$ARTICLE_PATH" | cut -d ' ' -f 1)
+          if [[ "$CHANGED" != "$ARTICLE_PATH" || "$MODE" != '100644' ]]; then
             echo "::error::Editorial automation accepts only the dated article file."
             exit 1
           fi
+          git checkout -B "$HEAD_BRANCH" "$HEAD_SHA"
 
       - name: Setup pnpm
         run: |
@@ -104,27 +112,31 @@ jobs:
   revise:
     name: Apply editorial revisions
     if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
       startsWith(github.head_ref, 'accept/') &&
       contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_START')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
 
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: false
 
       - name: Guard — skip if last commit was by bot
         id: guard
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          AUTHOR=$(git log -1 --format='%an')
+          git fetch --no-tags origin "$HEAD_SHA"
+          AUTHOR=$(git log -1 --format='%an' "$HEAD_SHA")
           if [[ "$AUTHOR" == *"[bot]"* ]]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "⏭ Last commit by bot ($AUTHOR) — skipping to prevent loop"
@@ -182,13 +194,17 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          git fetch --no-tags origin "$BASE_SHA"
-          CHANGED=$(git diff --name-only "$BASE_SHA"...HEAD)
-          if [[ "$CHANGED" != "$ARTICLE_PATH" || ! -f "$ARTICLE_PATH" || -L "$ARTICLE_PATH" ]]; then
+          git fetch --no-tags origin "$HEAD_SHA"
+          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          MODE=$(git ls-tree "$HEAD_SHA" -- "$ARTICLE_PATH" | cut -d ' ' -f 1)
+          if [[ "$CHANGED" != "$ARTICLE_PATH" || "$MODE" != '100644' ]]; then
             echo "::error::Editorial automation accepts only the dated article file."
             exit 1
           fi
+          git checkout -B "$HEAD_BRANCH" "$HEAD_SHA"
 
       - name: Setup pnpm
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
