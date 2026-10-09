@@ -1,5 +1,45 @@
 [
   {
+    "command": "/validate",
+    "description": "Triage core #508: open ADR-0079 and ADR-0080, verify their acceptance criteria against the merged PR descriptions for core #118 and #121, and record an accept or change-request decision on each. Accept 0079 before reviewing 0080 — the scanner ADR's criteria may depend on the lifecycle-policy ADR being accepted first.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-09",
+    "id": "act-2026-10-09-validate-e0a0a1"
+  },
+  {
+    "command": "/scaffold",
+    "description": "Draft the maintenance correspondence exchange schema for core #505 as a machine-readable file per ADR-0105. Scope: schema shape only — no tooling, no runtime adoption, no authority decisions. Dependencies #313, #316, #311, #318 are confirmed satisfied by today's merges. Post for operator walkthrough before any downstream use is authorized.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-09",
+    "id": "act-2026-10-09-scaffold-e6256c"
+  },
+  {
+    "command": "/investigate",
+    "description": "Resolve act-2026-09-25-validate-b892d7: determine whether PR #280 is in production in a state that depends on the pnpm sweep:dry --verbose acceptance run passing. If yes, run the sweep and record the output. If no, retire the action with a written rationale. Do not carry this item to a fourth article without a disposition.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-09",
+    "id": "act-2026-10-09-investigate-abb8d9"
+  },
+  {
+    "command": "/investigate",
+    "description": "Confirm whether frame.jim.software is currently serving production traffic. If live, validate localhost-origin posture immediately and close act-2026-10-02-validate-473596. If not yet in production, update the action's critical-path label and record the expected production date.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-09",
+    "id": "act-2026-10-09-investigate-1d5886"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review morning-cockpit #54 (DRAFT): identify the specific missing section in the cockpit transition plan that is blocking merge-readiness. Name it in the PR description. Do not assess overall completeness until the gap is named — 'complete enough to remove DRAFT status' is not a reviewable criterion without knowing what is missing.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-10-09",
+    "id": "act-2026-10-09-pr-review-1b795e"
+  },
+  {
     "command": "/investigate",
     "description": "Two items: (1) Audit the Vercel deployment posture — the CI probe (65ed596–13f15f3) found that Vercel team access is not available under the current credential scope. Determine whether there is an alternate deployment target, what credential change would restore Vercel access, or whether Frame's deployment path needs to be explicitly re-scoped. This is a live gap, not a housekeeping item. (2) Confirm the core #432 mattpocock/skills watch issue is configured: verify the weekly cloud routine will post to #432 on the next delta and that the current pin (84fdeffd, v1.2.3) is recorded in decisions/adopt-stack/ as the diff baseline.",
     "repo": "core",
