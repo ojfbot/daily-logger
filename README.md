@@ -264,3 +264,15 @@ Run the fallback behavior tests with:
 ```bash
 python3 -m unittest discover -s .github/scripts -p 'test_daily_blog_schedule.py' -v
 ```
+
+### Required PR checks
+
+Default-branch updates require a PR, including automation and administrators, with
+no standing bypass. Generated article, editorial and cleaner commits run CI.
+Editorial pushes use `GH_PAT` so GitHub schedules checks on each updated PR head;
+`GITHUB_TOKEN` pushes suppress those follow-on workflows.
+
+The daily-logger server gate requires `Test + pipeline smoke test` and
+`Scan for Secrets`, bound to the GitHub Actions app. Both must pass for the PR's
+current head before merge. Other repositories retain their own required checks.
+Private-repository protection remains pending a supporting GitHub plan.
