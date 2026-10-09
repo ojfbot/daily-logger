@@ -81,3 +81,5 @@
 - 2026-10-09 (sweep validation closure): the action assumed `pnpm sweep:dry --verbose` and a paginated collector; current main has no such script and intentionally uses capped single-page queries with a 16 MB buffer. Validated the exported collector directly without generation and preserved both the original action and its core-labelled reminder as separate evidenced dispositions.
 
 - 2026-10-09 (queue projection): plan assumed the API rebuild would change only the target queue; it also projected the already-accepted October 9 article from main. Verified repeated builds, then retained only the queue closure diff and excluded the unrelated article projection update.
+
+- 2026-10-09 (validation evidence): the initial receipt inferred missing ADR directories from skipped requests; the collector suppresses error details. Reported the 23 ADR skips without assigning a cause and retained the full redacted log for the historical PR #280 evidence venue.
