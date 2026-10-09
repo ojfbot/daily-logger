@@ -85,3 +85,4 @@
 - 2026-10-09 (validation evidence): the initial receipt inferred missing ADR directories from skipped requests; the collector suppresses error details. Reported the 23 ADR skips without assigning a cause and retained the full redacted log for the historical PR #280 evidence venue.
 
 - Mandatory CI assumed removing skip markers was sufficient; editorial GITHUB_TOKEN PR events require workflow-run approval. Use the existing GH_PAT only at final push, and reject changes outside the dated article before executing PR code.
+- An inline guard in a pull_request workflow could be edited by its own PR; run editorial policy from pull_request_target's trusted base, reject foreign repositories, and require direct tree equality outside the regular dated article before head checkout.

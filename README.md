@@ -269,7 +269,9 @@ python3 -m unittest discover -s .github/scripts -p 'test_daily_blog_schedule.py'
 
 Default-branch updates require a PR, including automation and administrators, with
 no standing bypass. Generated article, editorial and cleaner commits run CI.
-Editorial jobs reject changes outside the dated article before running PR code.
+Editorial automation uses the trusted-base `pull_request_target` workflow, rejects
+foreign repositories, and requires every file except the regular dated article to
+match the pinned base before checking out the head.
 Checkout does not persist credentials. Only the final push receives `GH_PAT`, so
 updated-head checks run without the extra workflow-run approval required for
 `GITHUB_TOKEN` PR events.
