@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-08 (#323 historical backfill acceptance): the coverage audit initially treated the missing daily dates as the digest's exact source window; retained sources include June 10 UTC developments and no contemporaneous golf first-push receipt. Recorded operator acceptance of a best-effort retrospective with explicit time boundaries and source limits, preserving the original draft rather than claiming exhaustive daily reconstruction.
+
 - 2026-10-08 (two-action settlement): The API rebuild was expected to change only the queue projection; refreshed main had an unprojected accepted outcome from editorial PR #321. Included the existing accepted status and outcome in api/entries.json and retained all other article data and queue records unchanged.
 
 - 2026-10-09 (#300 settlement): Shipping verification initially expected a web deployment, but the Vercel workflow excludes generator-only changes. Verified merged main contains the exact reviewed normalizer and the mock-generation CI passed; no production article run was triggered.
