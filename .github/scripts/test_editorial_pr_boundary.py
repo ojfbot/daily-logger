@@ -47,3 +47,16 @@ class EditorialBoundaryTests(unittest.TestCase):
                                             env={**os.environ, 'BASE_SHA': base, 'ARTICLE_PATH': ARTICLE, 'HEAD_SHA': head, 'HEAD_BRANCH': 'accept/2026-10-09'},
                                             capture_output=True, text=True)
                     self.assertEqual(result.returncode, 0 if change == 'article' else 1, result.stderr)
+
+                    if change == 'article':
+                        self.assertEqual(git('rev-parse', 'HEAD'), head)
+                        remote = root / 'remote.git'
+                        git('init', '--bare', '-q', str(remote))
+                        git('remote', 'set-url', 'origin', str(remote))
+                        pushes = re.findall(r'^\s*(git push origin .+)$', workflow, re.M)
+                        self.assertEqual(len(pushes), 2)
+                        for push in pushes:
+                            subprocess.check_call(['bash', '-eo', 'pipefail', '-c', push], cwd=root,
+                                                  env={**os.environ, 'HEAD_BRANCH': 'accept/2026-10-09'},
+                                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        self.assertEqual(git('--git-dir', str(remote), 'rev-parse', 'refs/heads/accept/2026-10-09'), head)

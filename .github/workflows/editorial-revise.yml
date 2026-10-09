@@ -96,6 +96,7 @@ jobs:
       - name: Commit stamped article
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
+          HEAD_BRANCH: ${{ github.head_ref }}
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
         run: |
           git config user.name "ojfbot-blog[bot]"
@@ -106,7 +107,7 @@ jobs:
           else
             git commit -m "editorial: stamp outcome accepted"
             gh auth setup-git
-            git push
+            git push origin "HEAD:refs/heads/${HEAD_BRANCH}"
           fi
 
   revise:
@@ -237,6 +238,7 @@ jobs:
       - name: Commit revised article
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
+          HEAD_BRANCH: ${{ github.head_ref }}
         if: steps.guard.outputs.skip != 'true' && steps.revise.outputs.changed == 'true'
         run: |
           git config user.name "ojfbot-blog[bot]"
@@ -244,7 +246,7 @@ jobs:
           git add "${{ steps.date.outputs.article_path }}"
           git commit -m "editorial: revise ${{ steps.date.outputs.date }} per feedback"
           gh auth setup-git
-          git push
+          git push origin "HEAD:refs/heads/${HEAD_BRANCH}"
 
       - name: Post revision summary on PR
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
