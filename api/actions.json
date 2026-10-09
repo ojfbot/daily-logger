@@ -536,6 +536,14 @@
     "id": "act-2026-04-30-roadmap-640008"
   },
   {
+    "command": "/pr-review",
+    "description": "Disposition beaverGame #27 (Three.js playability pass). Open the PR and decide: merge-as-spec or close-as-superseded. If closing, extract the heightAt(x,z) bilinear-blend fix into #28's behavioral-spec checklist before deleting the branch — that logic is the terrain-sampling spec the Babylon migration must satisfy. Leave a comment in #28 linking to the decision. This takes under 15 minutes and is the single action that unblocks Babylon bootstrap.",
+    "repo": "beaverGame",
+    "status": "open",
+    "sourceDate": "2026-04-30",
+    "id": "act-2026-04-30-pr-review-8f36f1"
+  },
+  {
     "command": "/test-expand",
     "description": "Write Vitest tests for beaverGame's load-glb.ts validation tripwire covering all four rejection paths: missing validation.json, rejected status field, malformed JSON, and schema mismatch. The tripwire is the gate that prevents a malformed or unvalidated .glb from being loaded into the scene — if it passes something it shouldn't, a corrupted or oversized asset silently enters the render pipeline. This is BG-004 and the highest-leverage untested code in the loader. The four paths map directly to the four branches in the validation check function.",
     "repo": "beaverGame",

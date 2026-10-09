@@ -922,16 +922,6 @@
     "resolution": "Superseded historical merge/conflict-cleanup request: every specifically named PR is now terminal. https://github.com/ojfbot/daily-logger/pull/155 MERGED at 85930622890be1df3e767218726a4c377d196dcc; https://github.com/ojfbot/daily-logger/pull/157 CLOSED; https://github.com/ojfbot/daily-logger/pull/159 CLOSED; https://github.com/ojfbot/daily-logger/pull/161 CLOSED; https://github.com/ojfbot/daily-logger/pull/163 CLOSED; https://github.com/ojfbot/daily-logger/pull/165 CLOSED; https://github.com/ojfbot/daily-logger/pull/167 CLOSED; https://github.com/ojfbot/daily-logger/pull/169 CLOSED. Closed-unmerged PRs were not implemented by this settlement; their current terminal states and recorded supersession/cleanup decisions replace the obsolete batch instruction. This does not assert that today's fleet PR queue is empty, that a standing 72-hour policy is satisfied, or that every intended cleaner edit shipped."
   },
   {
-    "command": "/pr-review",
-    "description": "Disposition beaverGame #27 (Three.js playability pass). Open the PR and decide: merge-as-spec or close-as-superseded. If closing, extract the heightAt(x,z) bilinear-blend fix into #28's behavioral-spec checklist before deleting the branch — that logic is the terrain-sampling spec the Babylon migration must satisfy. Leave a comment in #28 linking to the decision. This takes under 15 minutes and is the single action that unblocks Babylon bootstrap.",
-    "repo": "beaverGame",
-    "status": "done",
-    "sourceDate": "2026-04-30",
-    "id": "act-2026-04-30-pr-review-8f36f1",
-    "closedDate": "2026-10-08",
-    "resolution": "Implemented: beaverGame #27 is merged at b10da73a976bbba74702951b19c52b3389612535. https://github.com/ojfbot/beaverGame/pull/27 MERGED at b10da73a976bbba74702951b19c52b3389612535. The requested merge-or-close decision is terminal by merge; the conditional extraction into #28 applied only if closing unmerged. No new gameplay or Babylon validation is claimed."
-  },
-  {
     "command": "/validate",
     "description": "Run the S1 phase-keying gate locally and record results as the S2 baseline. Confirm arm A3 (race_progress × stint_position × decision_altitude, no persona filter) outperforms arm A4 (full filter) on the 14 blind-judge scenarios. Record mean delta per arm in docs/gates/2026-07-24-phase-keying-relevance.md. Verify test_race_engineer_is_first_class_but_seed_empty passes. Both are merge prerequisites for PR #1.",
     "repo": "f1-doctrine",
