@@ -1,0 +1,53 @@
+{
+  "startedAt": "2026-10-09T14:56:39.129Z",
+  "finishedAt": "2026-10-09T15:00:06.026Z",
+  "revision": "c0321638a051a5440be7feb9f12e6a95f14911e8",
+  "date": "2026-10-09",
+  "scope": "Live discovery without FLEET_REPOS; collection only; no model calls, article writes or publishing",
+  "discovered": 56,
+  "selected": 45,
+  "collected": 45,
+  "privateWithoutOptInSkipped": 4,
+  "missingExpectedCount": 0,
+  "unnotedPrivateIncludedCount": 0,
+  "policyExcludedIncludedCount": 0,
+  "counts": {
+    "commits": 37,
+    "mergedPRs": 38,
+    "recentPRs": 25,
+    "closedIssues": 3,
+    "adrs": 199
+  },
+  "publicRepoSignals": [
+    {
+      "repo": "core",
+      "commits": 4,
+      "mergedPRs": 7,
+      "recentPRs": 5
+    },
+    {
+      "repo": "daily-logger",
+      "commits": 32,
+      "mergedPRs": 27,
+      "recentPRs": 17
+    },
+    {
+      "repo": "cv-builder",
+      "commits": 0,
+      "mergedPRs": 0,
+      "recentPRs": 0
+    },
+    {
+      "repo": "shell",
+      "commits": 0,
+      "mergedPRs": 0,
+      "recentPRs": 0
+    }
+  ],
+  "checksPassed": true,
+  "expectedMissingAdrDirectoryWarnings": 23,
+  "otherApiSkips": 0,
+  "regressionTestsPassed": 279,
+  "typeCheck": "passed",
+  "lint": "passed, one existing no-explicit-any warning in src/__tests__/schema.test.ts:195"
+}
