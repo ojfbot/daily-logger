@@ -54,6 +54,40 @@ describe('article Markdown before commit', () => {
     expect(html.match(/<tbody>[\s\S]*?<\/tbody>/)?.[0].match(/<tr>/g)).toHaveLength(1)
   })
 
+  it.each(['[Use <port>][]', '[Use <port>]'])('preserves implicit reference destinations for %s through both boundaries', (reference) => {
+    const prose = `${reference}\n\n[Use <port>]: https://example.com "Reference title"`
+    const assembled = assembleBody({ ...v1, whatShipped: prose })
+    const md = committed(assembled)
+    expect(marked.parse(md)).toContain('<a href="https://example.com" title="Reference title">Use <code>&lt;port&gt;</code></a>')
+    expect(md).toContain('[Use `<port>`][Use <port>]')
+    expect(md).toContain('[Use <port>]: https://example.com "Reference title"')
+    expect(committed(assembled)).toBe(md)
+  })
+
+  it.each([
+    ['quote', '> [Use <port>][]'],
+    ['list', '- [Use <port>]'],
+    ['table', '| Link |\n| --- |\n| [Use <port>][] |'],
+  ])('preserves references with definitions outside a %s', (_name, source) => {
+    const prose = `${source}\n\n[Use <port>]: https://example.com`
+    const assembled = assembleBody({ ...v1, whatShipped: prose })
+    const md = committed(assembled)
+    expect(marked.parse(md)).toContain('<a href="https://example.com">Use <code>&lt;port&gt;</code></a>')
+    expect(md).toContain('[Use <port>]: https://example.com')
+    expect(md).toContain(assembled)
+  })
+
+  it.each(['-     ', '-      ', '10.     ', '-\t\t'])('preserves rendered indented code for list prefix %j through both boundaries', (prefix) => {
+    const prose = `${prefix}const value = "\\n <port>"`
+    const codeBefore = marked.parse(prose, { async: false }).match(/<code>[\s\S]*?<\/code>/)?.[0]
+    expect(codeBefore).toBeDefined()
+    const assembled = assembleBody({ ...v1, whatShipped: prose })
+    const md = committed(assembled)
+    expect(marked.parse(md)).toContain(codeBefore)
+    expect(md).toContain(`\n\n${assembled}\n\n---`)
+    expect(committed(assembled)).toBe(md)
+  })
+
   it('also normalizes a directly supplied body at serialization', () => {
     expect(committed(prose)).toContain('### Details\n- First\n- Second')
   })

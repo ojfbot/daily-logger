@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-08 (#300): A separate independent review reproduced broken implicit reference links and increasing code indentation in widely spaced list items despite the passing suite. Changed labels now retain explicit reference identifiers, nested parsing retains shared definitions, and list reconstruction adds only separator spacing. Rendered-link/code and repeated-normalization regressions cover the reported failures.
+
 - 2026-10-08 (#300): Converting an escaped prose newline inside a GFM table cell creates a new row and changes cell associations. Preserve those literal escapes within cells while normalizing placeholders; ordinary prose line breaks are restored. This conservative exception keeps the existing table structure.
 
 - 2026-10-08 (#300): The issue named council synthesis as a separate normalization target; synthesis already calls `assembleBody`, so the shared assembler and final `toMarkdown` boundary apply the fix. Suggested-action lines are preserved because descriptions determine queue IDs. Independent review found link and block-boundary errors in the initial scanner; the existing Marked lexer now bounds normalization by nested blocks and list items and recurses into formatted prose and link labels while preserving code and link destinations. Quote/list prefixes use standard Markdown spacing after normalization. No pipeline step or OPM input/output contract changes.
