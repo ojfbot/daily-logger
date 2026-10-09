@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-08 (#300): Fresh review found inserted placeholder delimiters could merge adjacent code spans, and generic angle-token normalization changed intentional HTML markup. Separate changed inline-code delimiters with spaces; preserve paired HTML tags, void tags, and preformatted HTML content while continuing prose normalization. Rendered regressions cover both gaps.
+
 - 2026-10-08 (#300): A separate independent review reproduced broken implicit reference links and increasing code indentation in widely spaced list items despite the passing suite. Changed labels now retain explicit reference identifiers, nested parsing retains shared definitions, and list reconstruction adds only separator spacing. Rendered-link/code and repeated-normalization regressions cover the reported failures.
 
 - 2026-10-08 (#300): Converting an escaped prose newline inside a GFM table cell creates a new row and changes cell associations. Preserve those literal escapes within cells while normalizing placeholders; ordinary prose line breaks are restored. This conservative exception keeps the existing table structure.

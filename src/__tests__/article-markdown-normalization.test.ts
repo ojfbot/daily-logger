@@ -88,6 +88,28 @@ describe('article Markdown before commit', () => {
     expect(committed(assembled)).toBe(md)
   })
 
+  it('keeps adjacent code spans and placeholders as separate rendered values', () => {
+    const assembled = assembleBody({ ...v1, whatShipped: '`prefix`<port>`suffix` and <port><section>' })
+    const md = committed(assembled)
+    const html = marked.parse(md, { async: false })
+    expect(html).toContain('<code>prefix</code> <code>&lt;port&gt;</code> <code>suffix</code>')
+    expect(html).toContain('<code>&lt;port&gt;</code> <code>&lt;section&gt;</code>')
+    expect(md).toContain(assembled)
+  })
+
+  it.each([
+    '<div>Documentation</div>',
+    '<details>\n<summary>Details</summary>\n\nBody\n\n</details>',
+    '<kbd>Enter</kbd> and <br>',
+    '<pre>\\n <port></pre>',
+  ])('preserves intentional HTML markup %j', (source) => {
+    const assembled = assembleBody({ ...v1, whatShipped: source })
+    const md = committed(assembled)
+    expect(md).toContain(source)
+    expect(marked.parse(md)).toContain(marked.parse(source, { async: false }).trim())
+    expect(md).toContain(assembled)
+  })
+
   it('also normalizes a directly supplied body at serialization', () => {
     expect(committed(prose)).toContain('### Details\n- First\n- Second')
   })
