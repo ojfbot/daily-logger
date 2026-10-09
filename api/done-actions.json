@@ -1010,5 +1010,25 @@
     "id": "act-2026-04-30-pr-review-8f36f1",
     "closedDate": "2026-10-08",
     "resolution": "Historical disposition and correspondence fulfilled: beaverGame #27 merged at b10da73a976bbba74702951b19c52b3389612535, choosing the merge-as-spec branch. The required decision-link comment is now present on #28 and links #27 with its merge disposition, preserves the triangle-exact heightAt sampling specification and explicitly limits the evidence to historical Three.js behavior. The conditional extract-before-closing obligation does not apply to merged #27. No current Babylon terrain parity or new runtime delivery is claimed. Evidence: https://github.com/ojfbot/beaverGame/pull/27 ; https://github.com/ojfbot/beaverGame/pull/28#issuecomment-6072669179 ; decisions/fleet-runner/pr-review-settlement-2026-10-08.md ."
+  },
+  {
+    "command": "/investigate",
+    "description": "Resolve act-2026-09-25-validate-b892d7: determine whether PR #280 is in production in a state that depends on the pnpm sweep:dry --verbose acceptance run passing. If yes, run the sweep and record the output. If no, retire the action with a written rationale. Do not carry this item to a fourth article without a disposition.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-10-09",
+    "id": "act-2026-10-09-investigate-abb8d9",
+    "closedDate": "2026-10-09",
+    "resolution": "Fulfilled by fresh collection-only validation on 2026-10-09 at c0321638a051a5440be7feb9f12e6a95f14911e8: 56 repos listed, all 45 eligible repos collected, four unnoted private repos skipped, no excluded/private leakage and zero commit/PR/issue API skips. All 279 regression tests and type-check passed; lint has one existing warning. The prescribed sweep:dry command does not exist; validation covered the implemented single-page/16 MB-buffer collector. Evidence: decisions/fleet-runner/sweep-validation-2026-10-09.md and its JSON receipt. No article generation or model call occurred."
+  },
+  {
+    "command": "/validate",
+    "description": "Run `pnpm sweep:dry --verbose` against the fixed daily-logger sweep and confirm: (1) repo list is live from `gh repo list`, not a cached snapshot; (2) `--paginate` does not truncate on large org listings; (3) private repos without REPO_NOTES are excluded. Attach the clean run log to the tracking issue. This is the acceptance criterion for PR #280 — the fix is unconfirmed until this runs.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-09-25",
+    "id": "act-2026-09-25-validate-b892d7",
+    "closedDate": "2026-10-09",
+    "resolution": "Fulfilled by fresh collection-only validation on 2026-10-09 at c0321638a051a5440be7feb9f12e6a95f14911e8: 56 repos listed, all 45 eligible repos collected, four unnoted private repos skipped, no excluded/private leakage and zero commit/PR/issue API skips. All 279 regression tests and type-check passed; lint has one existing warning. The prescribed sweep:dry command does not exist; validation covered the implemented single-page/16 MB-buffer collector. Evidence: decisions/fleet-runner/sweep-validation-2026-10-09.md and its JSON receipt. No article generation or model call occurred."
   }
 ]
