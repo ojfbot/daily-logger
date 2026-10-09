@@ -2,17 +2,17 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 79
+    "count": 80
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 66
+    "count": 67
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 64
+    "count": 65
   },
   {
     "name": "assistant-centric",
@@ -47,7 +47,7 @@
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 26
+    "count": 27
   },
   {
     "name": "cv-builder",
@@ -62,7 +62,7 @@
   {
     "name": "sprint",
     "type": "concept",
-    "count": 20
+    "count": 21
   },
   {
     "name": "phase-1",
@@ -80,14 +80,14 @@
     "count": 16
   },
   {
-    "name": "asset-foundry",
-    "type": "repo",
+    "name": "verification-flagged",
+    "type": "concept",
     "count": 15
   },
   {
-    "name": "verification-flagged",
-    "type": "concept",
-    "count": 14
+    "name": "asset-foundry",
+    "type": "repo",
+    "count": 15
   },
   {
     "name": "purefoy",
@@ -97,7 +97,7 @@
   {
     "name": "security-as-emergent-ux",
     "type": "concept",
-    "count": 12
+    "count": 13
   },
   {
     "name": "skill-catalog",
@@ -285,6 +285,16 @@
     "count": 4
   },
   {
+    "name": "workstation-yuri",
+    "type": "repo",
+    "count": 3
+  },
+  {
+    "name": "pipeline-reliability",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "gastown-pilot",
     "type": "repo",
     "count": 3
@@ -335,11 +345,6 @@
     "count": 3
   },
   {
-    "name": "pipeline-reliability",
-    "type": "concept",
-    "count": 2
-  },
-  {
     "name": "editorial-workflow",
     "type": "concept",
     "count": 2
@@ -372,11 +377,6 @@
   {
     "name": "fleet-onboard",
     "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "workstation-yuri",
-    "type": "repo",
     "count": 2
   },
   {
