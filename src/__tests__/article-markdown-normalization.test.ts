@@ -97,6 +97,14 @@ describe('article Markdown before commit', () => {
     expect(md).toContain(assembled)
   })
 
+  it('keeps a code span ending in a literal backslash beside a placeholder', () => {
+    const source = '`prefix\\`<port>'
+    const assembled = assembleBody({ ...v1, whatShipped: source })
+    const md = committed(assembled)
+    expect(marked.parse(md)).toContain('<code>prefix\\</code> <code>&lt;port&gt;</code>')
+    expect(md).toContain(assembled)
+  })
+
   it.each([
     '<div>Documentation</div>',
     '<details>\n<summary>Details</summary>\n\nBody\n\n</details>',
