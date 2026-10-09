@@ -99,7 +99,7 @@ function normalizeBlocks(markdown: string, links?: TokensList['links'], protecte
   }
   return tokens.map((token) => {
     if (token.type === 'code' || token.type === 'def' || token.type === 'space') return token.raw
-    if (token.type === 'html' && token.pre) return token.raw
+    if (token.type === 'html' && 'pre' in token && token.pre) return token.raw
     if (token.type === 'table') return normalizeTable(token.raw, tokens.links, htmlTags)
     if (token.type === 'blockquote') {
       // Action descriptions are hashed by actionId. Preserve the source lines
