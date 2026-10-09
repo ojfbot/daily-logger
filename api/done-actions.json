@@ -850,5 +850,95 @@
     "id": "act-2026-10-04-doc-refactor-d2bec0",
     "closedDate": "2026-10-09",
     "resolution": "Implemented in merged PR #317 (a3cf635a8e37b05cf7ee259307cef3cee9f69263), closing issue #300. Shared article assembly and commit serialization normalize prose while preserving code, links, and queue identities. All 272 tests, including 50 normalization regressions, and the mock-generation CI passed. Main contains the exact reviewed source. Accepted exceptions preserve literal table-cell escapes and suggested-action descriptions; historical articles remain unchanged."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge core #498 (docs: record approved fleet-runner publication hold) then batch-merge daily-logger #282, daily-logger #284, core #496, cv-builder #156. All are unblocked. Core #498 closes the ADR-0108 documentation gap; the four cleaner PRs clear a 7-day-old queue.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-10-02",
+    "id": "act-2026-10-02-pr-review-446a6c",
+    "closedDate": "2026-10-08",
+    "resolution": "Superseded historical merge/conflict-cleanup request: every specifically named PR is now terminal. https://github.com/ojfbot/core/pull/498 MERGED at e90d0621741e227375c1265d424ba5cf26526aad; https://github.com/ojfbot/daily-logger/pull/282 CLOSED; https://github.com/ojfbot/daily-logger/pull/284 CLOSED; https://github.com/ojfbot/core/pull/496 CLOSED; https://github.com/ojfbot/cv-builder/pull/156 CLOSED. Closed-unmerged PRs were not implemented by this settlement; their current terminal states and recorded supersession/cleanup decisions replace the obsolete batch instruction. This does not assert that today's fleet PR queue is empty, that a standing 72-hour policy is satisfied, or that every intended cleaner edit shipped."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge mirrorworld #10, core #292, core #291, f1-doctrine #8, and silicon-empires #28. All are zero-risk mechanical merges — daily-cleaner output, northstar data appends, and ledger bookkeeping. Sequence: core #291 and silicon-empires #28 first (close northstar odometer and PH1.5 ledger gap), then batch the three cleaner PRs. Combined review time under 15 minutes. Do not include core #294 — that PR has an unresolved disposition and may require external input.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-07-30",
+    "id": "act-2026-07-30-pr-review-c4c2ef",
+    "closedDate": "2026-10-08",
+    "resolution": "Superseded historical merge/conflict-cleanup request: every specifically named PR is now terminal. https://github.com/ojfbot/mirrorworld/pull/10 MERGED at 871723dd731125b3307f5bbd318492425cfcb7f2; https://github.com/ojfbot/core/pull/292 CLOSED; https://github.com/ojfbot/core/pull/291 MERGED at 47ce8e562f0dc026d03d28c09c42fc83f94092a9; https://github.com/ojfbot/f1-doctrine/pull/8 CLOSED; https://github.com/ojfbot/silicon-empires/pull/28 MERGED at cb1f778432c3f12ce0f942b4a742bd8af3df4372. Closed-unmerged PRs were not implemented by this settlement; their current terminal states and recorded supersession/cleanup decisions replace the obsolete batch instruction. This does not assert that today's fleet PR queue is empty, that a standing 72-hour policy is satisfied, or that every intended cleaner edit shipped. Core #294 remains excluded; no disposition or external decision for it is inferred."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge core #291 (four northstar status.jsonl appends — data only) and silicon-empires #28 (PH1.5 ledger bookkeeping — no code). Both are zero-risk, unblocked, and close named ledger gaps. Combined review time under 10 minutes. Merge these before any structural PRs to keep the ledger current. Then merge core #292 and f1-doctrine #8 (daily-cleaner diffs, independent of each other, no judgment required).",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-07-27",
+    "id": "act-2026-07-27-pr-review-4860c1",
+    "closedDate": "2026-10-08",
+    "resolution": "Superseded historical merge/conflict-cleanup request: every specifically named PR is now terminal. https://github.com/ojfbot/core/pull/291 MERGED at 47ce8e562f0dc026d03d28c09c42fc83f94092a9; https://github.com/ojfbot/silicon-empires/pull/28 MERGED at cb1f778432c3f12ce0f942b4a742bd8af3df4372; https://github.com/ojfbot/core/pull/292 CLOSED; https://github.com/ojfbot/f1-doctrine/pull/8 CLOSED. Closed-unmerged PRs were not implemented by this settlement; their current terminal states and recorded supersession/cleanup decisions replace the obsolete batch instruction. This does not assert that today's fleet PR queue is empty, that a standing 72-hour policy is satisfied, or that every intended cleaner edit shipped."
+  },
+  {
+    "command": "/sweep",
+    "description": "Execute the core #150 → BlogEngine #57 → core #151 → oldest-first cleaner PR merge sequence. Do not batch core #150 or #151 with the cleaner PRs — they carry different review weight. Target: zero PRs older than 72 hours across all repos.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-07-15",
+    "id": "act-2026-07-15-sweep-bb70ae",
+    "closedDate": "2026-10-08",
+    "resolution": "Superseded historical merge/conflict-cleanup request: every specifically named PR is now terminal. https://github.com/ojfbot/core/pull/150 CLOSED; https://github.com/ojfbot/BlogEngine/pull/57 MERGED at b71c4a81e39a353cb6d9a6f9bdcfab48c2403a4d; https://github.com/ojfbot/core/pull/151 MERGED at 34760a892a92617ca6fcf9828fbe4ac4780c1788. Closed-unmerged PRs were not implemented by this settlement; their current terminal states and recorded supersession/cleanup decisions replace the obsolete batch instruction. This does not assert that today's fleet PR queue is empty, that a standing 72-hour policy is satisfied, or that every intended cleaner edit shipped. The unspecified oldest-first cleaner tail is retired as a historical batch instruction; current cleaner work remains separately reviewable."
+  },
+  {
+    "command": "/sweep",
+    "description": "Merge the daily-cleaner PR queue in this sequence: (1) core #150 first — fleet-wide behavioral change, adds frame-standup to user-scope baseline, review carefully; (2) BlogEngine #57 — 63% token reduction in always-loaded CLAUDE.md, no blocker; (3) core #151 — ADR-0081 tracker sync, merge after #57; (4) batch the remaining cleaner PRs oldest-first: core #152, #153, #159, #162, landing #25, daily-logger #215. Do not batch #151 with the cleaner PRs — it carries different review weight. Target: zero open daily-cleaner PRs and the ADR-0081 chain closed.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-06-19",
+    "id": "act-2026-06-19-sweep-56d7a3",
+    "closedDate": "2026-10-08",
+    "resolution": "Superseded historical merge/conflict-cleanup request: every specifically named PR is now terminal. https://github.com/ojfbot/core/pull/150 CLOSED; https://github.com/ojfbot/BlogEngine/pull/57 MERGED at b71c4a81e39a353cb6d9a6f9bdcfab48c2403a4d; https://github.com/ojfbot/core/pull/151 MERGED at 34760a892a92617ca6fcf9828fbe4ac4780c1788; https://github.com/ojfbot/core/pull/152 MERGED at d75aa79274af8aeac47390e727bf3fdb90f2ff9f; https://github.com/ojfbot/core/pull/153 MERGED at cf4820714a976912e42b8ea4e27b372a1abd7c20; https://github.com/ojfbot/core/pull/159 MERGED at ddb180f0507be77e4aac397025d3ba1c38970842; https://github.com/ojfbot/core/pull/162 MERGED at ac817e78abf605a04212ec0030168e06acd6ce09; https://github.com/ojfbot/landing/pull/25 MERGED at 5f33c47195ef87909430c20222f9c10884cd5422; https://github.com/ojfbot/daily-logger/pull/215 MERGED at 1e5f480c5db64208dbfd6d4f42c988a40056d6d5. Closed-unmerged PRs were not implemented by this settlement; their current terminal states and recorded supersession/cleanup decisions replace the obsolete batch instruction. This does not assert that today's fleet PR queue is empty, that a standing 72-hour policy is satisfied, or that every intended cleaner edit shipped."
+  },
+  {
+    "command": "/sweep",
+    "description": "Merge all seven open daily-cleaner PRs across four repos: beaverGame #42, core-reader #29, landing #23, daily-logger #191, asset-foundry #30, daily-logger #195, daily-logger #198. Before merging core-reader #29, confirm no conflict with in-flight feature branches — it has been open six days in an active repo. Target: queue resets to zero. Acceptable steady-state is zero PRs older than 72 hours.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-05-12",
+    "id": "act-2026-05-12-sweep-cf33c5",
+    "closedDate": "2026-10-08",
+    "resolution": "Superseded historical merge/conflict-cleanup request: every specifically named PR is now terminal. https://github.com/ojfbot/beaverGame/pull/42 MERGED at 7f5deca469d83a1cd9ca8ae4533ced790ecec57e; https://github.com/ojfbot/core-reader/pull/29 MERGED at 9741fa4dfdf177d0e5cd73da5566abf683afc408; https://github.com/ojfbot/landing/pull/23 MERGED at 18ff1bb1b439b480db1175ae1b226377402e6e27; https://github.com/ojfbot/daily-logger/pull/191 CLOSED; https://github.com/ojfbot/asset-foundry/pull/30 MERGED at a07bbeb546ac55d45175d3f819c6641560418454; https://github.com/ojfbot/daily-logger/pull/195 CLOSED; https://github.com/ojfbot/daily-logger/pull/198 CLOSED. Closed-unmerged PRs were not implemented by this settlement; their current terminal states and recorded supersession/cleanup decisions replace the obsolete batch instruction. This does not assert that today's fleet PR queue is empty, that a standing 72-hour policy is satisfied, or that every intended cleaner edit shipped."
+  },
+  {
+    "command": "/sweep",
+    "description": "Verify conflict state of daily-logger daily-cleaner PRs #155, #157, #159, #161 (opened April 14–17) before touching #163–#169. Open each PR in the GitHub UI, check for conflict markers, and manually resolve any conflicts on the affected branches. Once the oldest four are clean, run act-2026-04-21-sweep-914db8 to batch-merge all eight. Do not invoke the batch-merge action until conflict state is verified — the queue is 8 PRs deep and a single conflicted branch will block the entire batch.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-04-28",
+    "id": "act-2026-04-28-sweep-e4f372",
+    "closedDate": "2026-10-08",
+    "resolution": "Superseded historical merge/conflict-cleanup request: every specifically named PR is now terminal. https://github.com/ojfbot/daily-logger/pull/155 MERGED at 85930622890be1df3e767218726a4c377d196dcc; https://github.com/ojfbot/daily-logger/pull/157 CLOSED; https://github.com/ojfbot/daily-logger/pull/159 CLOSED; https://github.com/ojfbot/daily-logger/pull/161 CLOSED; https://github.com/ojfbot/daily-logger/pull/163 CLOSED; https://github.com/ojfbot/daily-logger/pull/165 CLOSED; https://github.com/ojfbot/daily-logger/pull/167 CLOSED; https://github.com/ojfbot/daily-logger/pull/169 CLOSED. Closed-unmerged PRs were not implemented by this settlement; their current terminal states and recorded supersession/cleanup decisions replace the obsolete batch instruction. This does not assert that today's fleet PR queue is empty, that a standing 72-hour policy is satisfied, or that every intended cleaner edit shipped."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Disposition beaverGame #27 (Three.js playability pass). Open the PR and decide: merge-as-spec or close-as-superseded. If closing, extract the heightAt(x,z) bilinear-blend fix into #28's behavioral-spec checklist before deleting the branch — that logic is the terrain-sampling spec the Babylon migration must satisfy. Leave a comment in #28 linking to the decision. This takes under 15 minutes and is the single action that unblocks Babylon bootstrap.",
+    "repo": "beaverGame",
+    "status": "done",
+    "sourceDate": "2026-04-30",
+    "id": "act-2026-04-30-pr-review-8f36f1",
+    "closedDate": "2026-10-08",
+    "resolution": "Implemented: beaverGame #27 is merged at b10da73a976bbba74702951b19c52b3389612535. https://github.com/ojfbot/beaverGame/pull/27 MERGED at b10da73a976bbba74702951b19c52b3389612535. The requested merge-or-close decision is terminal by merge; the conditional extraction into #28 applied only if closing unmerged. No new gameplay or Babylon validation is claimed."
+  },
+  {
+    "command": "/validate",
+    "description": "Run the S1 phase-keying gate locally and record results as the S2 baseline. Confirm arm A3 (race_progress × stint_position × decision_altitude, no persona filter) outperforms arm A4 (full filter) on the 14 blind-judge scenarios. Record mean delta per arm in docs/gates/2026-07-24-phase-keying-relevance.md. Verify test_race_engineer_is_first_class_but_seed_empty passes. Both are merge prerequisites for PR #1.",
+    "repo": "f1-doctrine",
+    "status": "done",
+    "sourceDate": "2026-07-25",
+    "id": "act-2026-07-25-validate-b047f5",
+    "closedDate": "2026-10-08",
+    "resolution": "Implemented historical S1 baseline: f1-doctrine #1 merged at 4fe026cf3b95d3ee19face3989c5806555a0039a includes docs/gates/2026-07-24-phase-keying-relevance.md and its preserved 14-scenario blind-judge results. Re-ran the original deterministic gate from a frozen archive of that revision and all 37 lookup tests, including test_race_engineer_is_first_class_but_seed_empty: PASS. Recomputed preserved blind-judge means A3=0.714286 versus A4=0.557143, delta +0.157143. This is historical-result reproduction, not a new blind-judge run; n=14 and the unvalidated stint-position caveat remain. https://github.com/ojfbot/f1-doctrine/pull/1 MERGED at 4fe026cf3b95d3ee19face3989c5806555a0039a."
   }
 ]

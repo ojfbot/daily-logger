@@ -63,3 +63,8 @@
   **Territory:** local `gh` credentials return HTTP 401, so the cross-repo sweep cannot run here.
   **Went:** used dated fixtures based on the reviewed September run inputs to prove the gate's
   skip decision; the PR's CI will still run the synthetic pipeline smoke test.
+
+## Deviations — bounded historical action settlement 2026-10-08
+
+- The first candidate list included f1-doctrine's S1 merge request; its specific compute-boundary ADR is absent at the recorded merge revision. Kept that compound suggestion open rather than using the merge alone to claim its prerequisite was fulfilled. Selected nine additional evidenced suggestions, alongside #319's existing two, for eleven original action IDs total.
+- Historical cleaner suggestions name terminal mixed merged/closed PR cohorts and sometimes an ongoing queue-age target. Recorded their bounded batch instruction as superseded, preserving closure reasons and explicitly avoiding a claim that unmerged edits shipped or today's queue meets the old age target.

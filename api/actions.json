@@ -16,14 +16,6 @@
     "id": "act-2026-10-02-validate-473596"
   },
   {
-    "command": "/pr-review",
-    "description": "Merge core #498 (docs: record approved fleet-runner publication hold) then batch-merge daily-logger #282, daily-logger #284, core #496, cv-builder #156. All are unblocked. Core #498 closes the ADR-0108 documentation gap; the four cleaner PRs clear a 7-day-old queue.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-10-02",
-    "id": "act-2026-10-02-pr-review-446a6c"
-  },
-  {
     "command": "/lint-task",
     "description": "File and assign a task to add a `grep -r 'localhost' dist/` check to the shared GitHub Actions workflow (or Vercel build hook) that runs on every production deploy across the fleet. The localhost-URL invariant is currently stated policy only — this makes it mechanical.",
     "repo": "core",
@@ -224,14 +216,6 @@
     "id": "act-2026-07-31-validate-599224"
   },
   {
-    "command": "/pr-review",
-    "description": "Merge mirrorworld #10, core #292, core #291, f1-doctrine #8, and silicon-empires #28. All are zero-risk mechanical merges — daily-cleaner output, northstar data appends, and ledger bookkeeping. Sequence: core #291 and silicon-empires #28 first (close northstar odometer and PH1.5 ledger gap), then batch the three cleaner PRs. Combined review time under 15 minutes. Do not include core #294 — that PR has an unresolved disposition and may require external input.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-07-30",
-    "id": "act-2026-07-30-pr-review-c4c2ef"
-  },
-  {
     "command": "/validate",
     "description": "Run the corrected /blind-sweep (consensus ordering fixed in 7dc53d8) on a real vault question. Confirm consensus-ranked answers score above singletons in the output. Record the first post-fix run as the baseline validation artifact. Also verify that the 3904fd2 vault-deposit step writes a correctly formatted structured note — check note schema against what /vault cultivate expects before the next cultivate pass runs.",
     "repo": "core",
@@ -246,14 +230,6 @@
     "status": "open",
     "sourceDate": "2026-07-30",
     "id": "act-2026-07-30-roadmap-eebbd7"
-  },
-  {
-    "command": "/pr-review",
-    "description": "Merge core #291 (four northstar status.jsonl appends — data only) and silicon-empires #28 (PH1.5 ledger bookkeeping — no code). Both are zero-risk, unblocked, and close named ledger gaps. Combined review time under 10 minutes. Merge these before any structural PRs to keep the ledger current. Then merge core #292 and f1-doctrine #8 (daily-cleaner diffs, independent of each other, no judgment required).",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-07-27",
-    "id": "act-2026-07-27-pr-review-4860c1"
   },
   {
     "command": "/fix-and-pr",
@@ -294,14 +270,6 @@
     "status": "open",
     "sourceDate": "2026-07-25",
     "id": "act-2026-07-25-adr-68e2ad"
-  },
-  {
-    "command": "/validate",
-    "description": "Run the S1 phase-keying gate locally and record results as the S2 baseline. Confirm arm A3 (race_progress × stint_position × decision_altitude, no persona filter) outperforms arm A4 (full filter) on the 14 blind-judge scenarios. Record mean delta per arm in docs/gates/2026-07-24-phase-keying-relevance.md. Verify test_race_engineer_is_first_class_but_seed_empty passes. Both are merge prerequisites for PR #1.",
-    "repo": "f1-doctrine",
-    "status": "open",
-    "sourceDate": "2026-07-25",
-    "id": "act-2026-07-25-validate-b047f5"
   },
   {
     "command": "/pr-review",
@@ -352,14 +320,6 @@
     "id": "act-2026-07-15-investigate-1a9b5b"
   },
   {
-    "command": "/sweep",
-    "description": "Execute the core #150 → BlogEngine #57 → core #151 → oldest-first cleaner PR merge sequence. Do not batch core #150 or #151 with the cleaner PRs — they carry different review weight. Target: zero PRs older than 72 hours across all repos.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-07-15",
-    "id": "act-2026-07-15-sweep-bb70ae"
-  },
-  {
     "command": "/add-validation-gate",
     "description": "Add a post-generation check to the ojfbot publish pipeline: reject any output where the lede matches the known failure sentinel `_(Article generation` or where JSON schema parsing fails. Pipeline should halt and alert rather than publish.",
     "repo": "ojfbot",
@@ -390,14 +350,6 @@
     "status": "open",
     "sourceDate": "2026-06-19",
     "id": "act-2026-06-19-validate-df55c3"
-  },
-  {
-    "command": "/sweep",
-    "description": "Merge the daily-cleaner PR queue in this sequence: (1) core #150 first — fleet-wide behavioral change, adds frame-standup to user-scope baseline, review carefully; (2) BlogEngine #57 — 63% token reduction in always-loaded CLAUDE.md, no blocker; (3) core #151 — ADR-0081 tracker sync, merge after #57; (4) batch the remaining cleaner PRs oldest-first: core #152, #153, #159, #162, landing #25, daily-logger #215. Do not batch #151 with the cleaner PRs — it carries different review weight. Target: zero open daily-cleaner PRs and the ADR-0081 chain closed.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-06-19",
-    "id": "act-2026-06-19-sweep-56d7a3"
   },
   {
     "command": "/validate",
@@ -496,14 +448,6 @@
     "id": "act-2026-05-12-investigate-be2f20"
   },
   {
-    "command": "/sweep",
-    "description": "Merge all seven open daily-cleaner PRs across four repos: beaverGame #42, core-reader #29, landing #23, daily-logger #191, asset-foundry #30, daily-logger #195, daily-logger #198. Before merging core-reader #29, confirm no conflict with in-flight feature branches — it has been open six days in an active repo. Target: queue resets to zero. Acceptable steady-state is zero PRs older than 72 hours.",
-    "repo": "daily-logger",
-    "status": "open",
-    "sourceDate": "2026-05-12",
-    "id": "act-2026-05-12-sweep-cf33c5"
-  },
-  {
     "command": "/investigate",
     "description": "Run the ADR-0068 telemetry audit now — this action has been open for five days and has no technical blocker. Grep the suggestion log for Saturday's four sessions across lofi-beaver, asset-foundry, core-library, and ojfbot. Classify each of the 4 suggestions by source: realtime vs pr-comment-marker. Determine whether the 0% follow rate reflects comment-marker inflation (instrumentation problem) or genuine agent non-compliance (ADR-0068 enforcement problem). Output: a classification table and a disposition — either 'telemetry fix needed' or 'agent behavior correction needed.' This is the prerequisite before ADR-0068 is enforceable.",
     "repo": "core",
@@ -592,14 +536,6 @@
     "id": "act-2026-04-30-roadmap-640008"
   },
   {
-    "command": "/pr-review",
-    "description": "Disposition beaverGame #27 (Three.js playability pass). Open the PR and decide: merge-as-spec or close-as-superseded. If closing, extract the heightAt(x,z) bilinear-blend fix into #28's behavioral-spec checklist before deleting the branch — that logic is the terrain-sampling spec the Babylon migration must satisfy. Leave a comment in #28 linking to the decision. This takes under 15 minutes and is the single action that unblocks Babylon bootstrap.",
-    "repo": "beaverGame",
-    "status": "open",
-    "sourceDate": "2026-04-30",
-    "id": "act-2026-04-30-pr-review-8f36f1"
-  },
-  {
     "command": "/test-expand",
     "description": "Write Vitest tests for beaverGame's load-glb.ts validation tripwire covering all four rejection paths: missing validation.json, rejected status field, malformed JSON, and schema mismatch. The tripwire is the gate that prevents a malformed or unvalidated .glb from being loaded into the scene — if it passes something it shouldn't, a corrupted or oversized asset silently enters the render pipeline. This is BG-004 and the highest-leverage untested code in the loader. The four paths map directly to the four branches in the validation check function.",
     "repo": "beaverGame",
@@ -622,14 +558,6 @@
     "status": "open",
     "sourceDate": "2026-04-28",
     "id": "act-2026-04-28-validate-7e7216"
-  },
-  {
-    "command": "/sweep",
-    "description": "Verify conflict state of daily-logger daily-cleaner PRs #155, #157, #159, #161 (opened April 14–17) before touching #163–#169. Open each PR in the GitHub UI, check for conflict markers, and manually resolve any conflicts on the affected branches. Once the oldest four are clean, run act-2026-04-21-sweep-914db8 to batch-merge all eight. Do not invoke the batch-merge action until conflict state is verified — the queue is 8 PRs deep and a single conflicted branch will block the entire batch.",
-    "repo": "daily-logger",
-    "status": "open",
-    "sourceDate": "2026-04-28",
-    "id": "act-2026-04-28-sweep-e4f372"
   },
   {
     "command": "/review",
