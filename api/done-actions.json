@@ -950,5 +950,65 @@
     "id": "act-2026-05-17-adr-97c404",
     "closedDate": "2026-10-08",
     "resolution": "Implemented in workstation-yuri PR #2, merged at 320b03a204941b96744c9cea272952f2f55952ad. CLAUDE.md now records the repository boundary and all three runtime-placement questions. It preserves Accepted ADR-0001's data/runtime boundary: portable skill catalog logic and shared fleet data/orchestration remain in core, while machine-specific, OS-specific or hardware-tied runtime belongs in workstation-yuri. Current main retains the exact reviewed documentation; independent Standards and Spec reviews and applicable CI passed. This settles the documentation request, not a runtime migration or proof that every existing file follows the boundary. Evidence: https://github.com/ojfbot/workstation-yuri/pull/2 ; https://github.com/ojfbot/workstation-yuri/pull/2#issuecomment-6072860129 ; https://github.com/ojfbot/workstation-yuri/blob/320b03a204941b96744c9cea272952f2f55952ad/decisions/adr/0001-workstation-orchestration.md ."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge core #359 (/wayfinder at user scope + full/lite charting modes, ADR-0101 rev A). Saturday's 11 wayfinder commits ran against ojfbot-scoped sessions only — the user-scope path the PR enables was never exercised. After merge, validate by running /wayfinder --scope user --mode full outside an ojfbot repo context. Merge before the next charting session.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-08-02",
+    "id": "act-2026-08-02-pr-review-2641d0",
+    "closedDate": "2026-10-08",
+    "resolution": "Transferred remaining validation obligation, not delivered: core #359 merged at 5e71c6297da95814f5ea9ab11b844a13f795f1b6 and current catalog/user-scope installation plus helper full/lite detection are verified. A complete user-scope Wayfinder charting validation receipt was not found. Operator authorized retiring the obsolete merge/review instruction after preserving unmet work in https://github.com/ojfbot/core/issues/507, assigned to ojfbot, and Available human-only gate-0 bead core-task-f130ba6a. The follow-up reconciles full mode with registry resolvability and retains the end-to-end validation requirement; no runtime defect or full charting success is inferred. Evidence: https://github.com/ojfbot/core/pull/359 ; decisions/fleet-runner/pr-review-settlement-2026-10-08.md ."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review and merge f1-doctrine #1 (S1: Registry v1) after the compute-boundary ADR is committed and the /validate gate run is recorded. Confirm all 33 QuestionNodes have a substrate_call binding field, the registry/ directory structure matches the taxonomy v1 axes, and the gate document is present. This PR is the prerequisite for all S2+ slices and for the persona re-rank experiment in issue #2.",
+    "repo": "f1-doctrine",
+    "status": "done",
+    "sourceDate": "2026-07-25",
+    "id": "act-2026-07-25-pr-review-33b3df",
+    "closedDate": "2026-10-08",
+    "resolution": "Historical review prerequisites fulfilled: f1-doctrine #1 merged at 4fe026cf3b95d3ee19face3989c5806555a0039a. The compute-boundary ADR draft-raqg-not-rag.md was committed in S0 5636139 before the registry merge; this original action requires commitment, not acceptance. The merged registry contains all 33 nodes with substrate_call_template bindings, 28 full and five explicitly declared partial. Its taxonomy v2 and directory/schema contract replace the stale v1 wording through the documented S1 grill and phase-vocabulary ADR. The committed docs/gates/2026-07-24-phase-keying-relevance.md records PASS with persona-filter and unvalidated stint-position caveats. This settles the historical review/merge request, not full capability coverage, current live server validation or a new blind-judge run. Existing F1 follow-ups remain open. Evidence: https://github.com/ojfbot/f1-doctrine/pull/1 ; decisions/fleet-runner/pr-review-settlement-2026-10-08.md ."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Merge daily-logger #209 (backfill digest for 2026-05-19→06-09) after #210 lands. The backfill is reconstructed from git history and is independently mergeable, but sequencing it after #210 ensures the four dark repos are included. Done when the backfill articles are generated and the gap in the dev log is closed.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-06-11",
+    "id": "act-2026-06-11-pr-review-f028f2",
+    "closedDate": "2026-10-08",
+    "resolution": "Transferred remaining coverage/acceptance obligation, not delivered: daily-logger #209 and #210 merged, but #209 preceded #210 by four seconds. Current main contains the June 10 returning-from-absence digest, still draft, and no per-day articles for May 19 through June 9. The digest explicitly includes all four previously dark repos, so merge order alone does not prove a missing-repo defect. Operator authorized retiring the historical merge instruction after preserving the unresolved digest-substitution/daily-coverage decision in https://github.com/ojfbot/daily-logger/issues/323, assigned to ojfbot, and Available human-only gate-0 bead dail-task-5e3f1111. No completed per-day backfill, accepted digest substitute or current pipeline failure is claimed. Evidence: https://github.com/ojfbot/daily-logger/pull/209 ; https://github.com/ojfbot/daily-logger/pull/210 ; decisions/fleet-runner/pr-review-settlement-2026-10-08.md ."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review and merge ADR-0079 (core #118, vault page-lifecycle policy). Filed 2026-05-16, currently Proposed. The /vault skill shipped Sunday has no staleness governance until this advances to Accepted — sessions reading from the vault via the planned obsidian-mcp transport will produce confidently-wrong answers from stale pages with no user-visible signal. This is the prerequisite gate for the transport upgrade. Accept or request changes; do not leave it in Proposed.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-05-18",
+    "id": "act-2026-05-18-pr-review-e902e3",
+    "closedDate": "2026-10-08",
+    "resolution": "Transferred unresolved human decision, not accepted: core #118 merged the Proposed ADR-0079 text at 10c8ba4cc9b659cb5324cc4c236dbea86cec6088. Current core main still says Status: Proposed, so the original accept-or-request-changes requirement is not fulfilled by merge. Operator authorized retiring the obsolete review instruction only after retaining ADR disposition, lifecycle/scanner consistency and historical dependency review in https://github.com/ojfbot/core/issues/508, assigned to ojfbot, and Available human-only gate-0 bead core-task-997ccfbb. ADR acceptance, scanner implementation and vault transport readiness remain unproven. Evidence: https://github.com/ojfbot/core/pull/118 ; decisions/fleet-runner/pr-review-settlement-2026-10-08.md ."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review ADR-0080 (core #121, vault staleness scanner). Depends on ADR-0079 (#118) — do not merge before #118 is Accepted. Opened 2026-05-18. Confirm the implementation decisions in #121 are consistent with the page-lifecycle policy in #118. Specifically: #121 refines mechanism (2) from #118; verify the scanner behavior aligns with whatever lifecycle boundaries ADR-0079 establishes.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-05-18",
+    "id": "act-2026-05-18-pr-review-42141c",
+    "closedDate": "2026-10-08",
+    "resolution": "Transferred unresolved policy/consistency review, not delivered: core #121 merged Proposed ADR-0080 at 024f7525bda9785c3cf2dad2654fdca090a3c7a1 before #118, and both ADR-0079 and ADR-0080 remain Proposed on current core main. This does not satisfy the source acceptance dependency or prove scanner conformance. Operator authorized retiring the obsolete review instruction only after preserving both original IDs, human ADR disposition and scanner/lifecycle consistency verification in https://github.com/ojfbot/core/issues/508, assigned to ojfbot, and Available human-only gate-0 bead core-task-997ccfbb. Shared follow-up avoids duplicate investigations; no scanner defect or implementation completion is inferred. Evidence: https://github.com/ojfbot/core/pull/121 ; https://github.com/ojfbot/core/pull/118 ; decisions/fleet-runner/pr-review-settlement-2026-10-08.md ."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Disposition beaverGame #27 (Three.js playability pass). Open the PR and decide: merge-as-spec or close-as-superseded. If closing, extract the heightAt(x,z) bilinear-blend fix into #28's behavioral-spec checklist before deleting the branch — that logic is the terrain-sampling spec the Babylon migration must satisfy. Leave a comment in #28 linking to the decision. This takes under 15 minutes and is the single action that unblocks Babylon bootstrap.",
+    "repo": "beaverGame",
+    "status": "done",
+    "sourceDate": "2026-04-30",
+    "id": "act-2026-04-30-pr-review-8f36f1",
+    "closedDate": "2026-10-08",
+    "resolution": "Historical disposition and correspondence fulfilled: beaverGame #27 merged at b10da73a976bbba74702951b19c52b3389612535, choosing the merge-as-spec branch. The required decision-link comment is now present on #28 and links #27 with its merge disposition, preserves the triangle-exact heightAt sampling specification and explicitly limits the evidence to historical Three.js behavior. The conditional extract-before-closing obligation does not apply to merged #27. No current Babylon terrain parity or new runtime delivery is claimed. Evidence: https://github.com/ojfbot/beaverGame/pull/27 ; https://github.com/ojfbot/beaverGame/pull/28#issuecomment-6072669179 ; decisions/fleet-runner/pr-review-settlement-2026-10-08.md ."
   }
 ]
