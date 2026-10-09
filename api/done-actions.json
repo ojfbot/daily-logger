@@ -830,5 +830,25 @@
     "id": "act-2026-10-06-pr-review-53291b",
     "closedDate": "2026-10-08",
     "resolution": "Superseded: PR #305 was closed unmerged. The corrected schedule and qualified fleet coverage documentation shipped in merged PR #303 (82916875c26430e1aced3a19ddf7e587b0af6b46). PR #308 review receipt confirms #305 was closed as superseded: https://github.com/ojfbot/daily-logger/pull/308#issuecomment-6069968909. No merge of #305 is required."
+  },
+  {
+    "command": "/doc-refactor",
+    "description": "Begin daily-logger #300 fix: update assembleBody() and toMarkdown() in src/generate-article.ts so escaped prose line breaks become real newlines and angle-bracket placeholders are wrapped as inline code before articles/YYYY-MM-DD.md is committed. The regression baseline is articles/2026-10-02.md — the failure pattern (escaped line breaks, bare angle-bracket tokens) is visible in that committed file. Verify the fix by confirming the October 2 article pattern does not reproduce on a fresh generation run. Note: confirm prioritization against daily-logger #301 (XSS/injection boundary) before starting — #301 may be higher priority if ChatMessage.tsx is a user-facing or session-handling surface.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-10-06",
+    "id": "act-2026-10-06-doc-refactor-e46091",
+    "closedDate": "2026-10-09",
+    "resolution": "Implemented in merged PR #317 (a3cf635a8e37b05cf7ee259307cef3cee9f69263), closing issue #300. Shared article assembly and commit serialization normalize prose while preserving code, links, and queue identities. All 272 tests, including 50 normalization regressions, and the mock-generation CI passed. Main contains the exact reviewed source. Accepted exceptions preserve literal table-cell escapes and suggested-action descriptions; historical articles remain unchanged."
+  },
+  {
+    "command": "/doc-refactor",
+    "description": "Fix article Markdown normalization at the source (daily-logger #300): update assembleBody() and toMarkdown() in src/generate-article.ts, and council synthesis in src/council.ts, so escaped prose line breaks become real newlines and angle-bracket placeholders render as inline code before _articles/YYYY-MM-DD.md is committed. Add a regression test covering both cases against the October 2 failure pattern. Can be worked in parallel with #301 after #294 merges.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-10-04",
+    "id": "act-2026-10-04-doc-refactor-d2bec0",
+    "closedDate": "2026-10-09",
+    "resolution": "Implemented in merged PR #317 (a3cf635a8e37b05cf7ee259307cef3cee9f69263), closing issue #300. Shared article assembly and commit serialization normalize prose while preserving code, links, and queue identities. All 272 tests, including 50 normalization regressions, and the mock-generation CI passed. Main contains the exact reviewed source. Accepted exceptions preserve literal table-cell escapes and suggested-action descriptions; historical articles remain unchanged."
   }
 ]
