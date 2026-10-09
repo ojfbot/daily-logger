@@ -152,14 +152,6 @@
     "id": "act-2026-08-03-validate-3420d3"
   },
   {
-    "command": "/pr-review",
-    "description": "Merge core #359 (/wayfinder at user scope + full/lite charting modes, ADR-0101 rev A). Saturday's 11 wayfinder commits ran against ojfbot-scoped sessions only — the user-scope path the PR enables was never exercised. After merge, validate by running /wayfinder --scope user --mode full outside an ojfbot repo context. Merge before the next charting session.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-08-02",
-    "id": "act-2026-08-02-pr-review-2641d0"
-  },
-  {
     "command": "/validate",
     "description": "Run the public-git denylist lint against decisions/wayfinder/texas-rr-engagement.md after the sanitization pass (issue #356). This is also the first opportunity to exercise the lint against real content following a precautionary scrub — confirm the failure path works, not just the pass path. Confirm no protected terms from the employer-evidence-boundary denylist appear before the next wayfinder session touches the map.",
     "repo": "core",
@@ -272,14 +264,6 @@
     "id": "act-2026-07-25-adr-68e2ad"
   },
   {
-    "command": "/pr-review",
-    "description": "Review and merge f1-doctrine #1 (S1: Registry v1) after the compute-boundary ADR is committed and the /validate gate run is recorded. Confirm all 33 QuestionNodes have a substrate_call binding field, the registry/ directory structure matches the taxonomy v1 axes, and the gate document is present. This PR is the prerequisite for all S2+ slices and for the persona re-rank experiment in issue #2.",
-    "repo": "f1-doctrine",
-    "status": "open",
-    "sourceDate": "2026-07-25",
-    "id": "act-2026-07-25-pr-review-33b3df"
-  },
-  {
     "command": "/investigate",
     "description": "Open f1-pit-wall #6 and assess whether the two confirmed data defects are already characterized at the field level. If they are, write corrected nl-query-corpus.json entries and open a fix PR in f1-pit-wall before f1-doctrine S2 uses the registry as a training baseline. If the defects are not yet field-level specific, this is a diagnosis task — update the time estimate accordingly and do not call it a triage.",
     "repo": "f1-pit-wall",
@@ -368,14 +352,6 @@
     "id": "act-2026-06-12-hardening-3b0738"
   },
   {
-    "command": "/pr-review",
-    "description": "Merge daily-logger #209 (backfill digest for 2026-05-19→06-09) after #210 lands. The backfill is reconstructed from git history and is independently mergeable, but sequencing it after #210 ensures the four dark repos are included. Done when the backfill articles are generated and the gap in the dev log is closed.",
-    "repo": "daily-logger",
-    "status": "open",
-    "sourceDate": "2026-06-11",
-    "id": "act-2026-06-11-pr-review-f028f2"
-  },
-  {
     "command": "/validate",
     "description": "Enable the defuddle shadow-compare step in selfco-box and run five real URL ingests. Review the comparison log in the selfco-box run directory. Promotion criterion: readability extraction is visibly cleaner than raw on noisy URL sources and does not drop source:: frontmatter or inline tags. Record the outcome as a note in the vault. Done when you have a written go/no-go on promoting the step to opt-in default.",
     "repo": "selfco-box",
@@ -390,22 +366,6 @@
     "status": "open",
     "sourceDate": "2026-06-11",
     "id": "act-2026-06-11-investigate-f14602"
-  },
-  {
-    "command": "/pr-review",
-    "description": "Review and merge ADR-0079 (core #118, vault page-lifecycle policy). Filed 2026-05-16, currently Proposed. The /vault skill shipped Sunday has no staleness governance until this advances to Accepted — sessions reading from the vault via the planned obsidian-mcp transport will produce confidently-wrong answers from stale pages with no user-visible signal. This is the prerequisite gate for the transport upgrade. Accept or request changes; do not leave it in Proposed.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-05-18",
-    "id": "act-2026-05-18-pr-review-e902e3"
-  },
-  {
-    "command": "/pr-review",
-    "description": "Review ADR-0080 (core #121, vault staleness scanner). Depends on ADR-0079 (#118) — do not merge before #118 is Accepted. Opened 2026-05-18. Confirm the implementation decisions in #121 are consistent with the page-lifecycle policy in #118. Specifically: #121 refines mechanism (2) from #118; verify the scanner behavior aligns with whatever lifecycle boundaries ADR-0079 establishes.",
-    "repo": "core",
-    "status": "open",
-    "sourceDate": "2026-05-18",
-    "id": "act-2026-05-18-pr-review-42141c"
   },
   {
     "command": "/investigate",
@@ -518,14 +478,6 @@
     "status": "open",
     "sourceDate": "2026-04-30",
     "id": "act-2026-04-30-roadmap-640008"
-  },
-  {
-    "command": "/pr-review",
-    "description": "Disposition beaverGame #27 (Three.js playability pass). Open the PR and decide: merge-as-spec or close-as-superseded. If closing, extract the heightAt(x,z) bilinear-blend fix into #28's behavioral-spec checklist before deleting the branch — that logic is the terrain-sampling spec the Babylon migration must satisfy. Leave a comment in #28 linking to the decision. This takes under 15 minutes and is the single action that unblocks Babylon bootstrap.",
-    "repo": "beaverGame",
-    "status": "open",
-    "sourceDate": "2026-04-30",
-    "id": "act-2026-04-30-pr-review-8f36f1"
   },
   {
     "command": "/test-expand",
