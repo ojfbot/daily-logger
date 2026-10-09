@@ -45,9 +45,9 @@
     }
   ],
   "checksPassed": true,
-  "expectedMissingAdrDirectoryWarnings": 23,
   "otherApiSkips": 0,
   "regressionTestsPassed": 279,
   "typeCheck": "passed",
-  "lint": "passed, one existing no-explicit-any warning in src/__tests__/schema.test.ts:195"
+  "lint": "passed, one existing no-explicit-any warning in src/__tests__/schema.test.ts:195",
+  "adrDirectoryRequestSkips": 23
 }

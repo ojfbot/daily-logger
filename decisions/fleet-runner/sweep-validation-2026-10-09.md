@@ -11,7 +11,7 @@ Original action: `act-2026-09-25-validate-b892d7`. Today's reminder: `act-2026-1
 - [PR #280](https://github.com/ojfbot/daily-logger/pull/280) merged on September 24. The [successful production generation run](https://github.com/ojfbot/daily-logger/actions/runs/37940663039) on October 9 executed the implemented collector; the corresponding article was merged through [PR #326](https://github.com/ojfbot/daily-logger/pull/326).
 - Fresh validation used clean current-main revision `c0321638a051a5440be7feb9f12e6a95f14911e8`, associated with [PR #327](https://github.com/ojfbot/daily-logger/pull/327). Collection ran October 9, 14:56:39–15:00:06 UTC, or 09:56:39–10:00:06 America/Chicago.
 - [Current package scripts](https://github.com/ojfbot/daily-logger/blob/c0321638a051a5440be7feb9f12e6a95f14911e8/package.json) contain no `sweep:dry`. [The actual collector](https://github.com/ojfbot/daily-logger/blob/c0321638a051a5440be7feb9f12e6a95f14911e8/src/collect-context.ts) uses single-page capped queries with a 16 MB buffer. [Fleet discovery](https://github.com/ojfbot/daily-logger/blob/c0321638a051a5440be7feb9f12e6a95f14911e8/src/fleet.ts) queries the live org, applies policy exclusions and requires notes for non-public repos.
-- The committed [machine-readable receipt](sweep-validation-2026-10-09.json) retains only aggregate counts, revision, times and public-repo signals. Raw context, private repo names, local telemetry and credentials are not published.
+- The committed [machine-readable receipt](sweep-validation-2026-10-09.json) retains only aggregate counts, revision, times and public-repo signals. The [complete collection log](sweep-validation-2026-10-09.log) preserves the run output with non-public repo names replaced by stable placeholders. Raw collected context, private repo names, local telemetry and credentials are not published.
 
 ## Fresh results
 
@@ -24,7 +24,7 @@ Original action: `act-2026-09-25-validate-b892d7`. Today's reminder: `act-2026-1
 | Collection returns activity | PASS | 37 commits, 38 merged PRs, 25 recent PRs, 3 closed issues and 199 ADRs. Commit/recent-PR and merged-PR windows differ by design; these counts are not a count of today's shipments. |
 | Existing regression checks | PASS WITH NOTES | `pnpm test`: 279 passed; `pnpm type-check`: passed; `pnpm lint`: no errors and one existing warning at `src/__tests__/schema.test.ts:195`. |
 
-Twenty-three API skips were missing `contents/decisions/adr` directories. No commit, PR or issue request was skipped. Empty shell/cv-builder activity is not presented as proof of current activity. The API sweep is a sequence of requests, not an atomic org snapshot.
+Twenty-three `contents/decisions/adr` requests were skipped. The helper suppresses stderr, so this receipt does not establish their causes. No commit, PR or issue request was skipped. Empty shell/cv-builder activity is not presented as proof of current activity. The API sweep is a sequence of requests, not an atomic org snapshot.
 
 ## Reproduction
 
@@ -46,4 +46,4 @@ The prepared queue projection moves from 80 open / 114 dispositions to 78 open /
 
 ## Queue verification
 
-Existing action and closed-action schemas and deterministic IDs pass for both dispositions. All prior 114 dispositions and all other 78 open actions retain their content and order. Legacy matching closes no additional records. Two `pnpm build:api` runs produced byte-identical output across 133 JSON files. The rebuild also projected the already-accepted October 9 article from main; that unrelated pre-existing projection change was excluded from this settlement diff. `git diff --check` passes. Merge, CI and deployed readback remain the final publication checks.
+Existing action and closed-action schemas and deterministic IDs pass for both dispositions. All prior 114 dispositions and all other 78 open actions retain their content and order. Legacy matching closes no additional records. Two `pnpm build:api` runs produced byte-identical output across 133 JSON files. The rebuild also projected the already-accepted October 9 article from main; that unrelated pre-existing projection change was excluded from this settlement diff. `git diff --check` passes. The historical [October 5 qualification](action-settlement-2026-10-05/dispositions.json) identifies PR #280 as the evidence-delivery venue. The committed receipt and complete redacted log will be linked there before settlement merge. CI and deployed readback remain the final publication checks.
