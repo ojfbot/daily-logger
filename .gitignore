@@ -19,3 +19,6 @@ evals/results/raw.json
 /.serena/
 /_site/
 /_site_preview/
+
+# Python workflow-test artifacts
+__pycache__/
