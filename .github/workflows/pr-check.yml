@@ -49,6 +49,9 @@ jobs:
       - name: Scheduled fallback tests
         run: python3 -m unittest discover -s .github/scripts -p 'test_daily_blog_schedule.py' -v
 
+      - name: Editorial PR boundary tests
+        run: python3 -m unittest discover -s .github/scripts -p 'test_editorial_pr_boundary.py' -v
+
       - name: Unit tests
         run: pnpm test
 
