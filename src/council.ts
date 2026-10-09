@@ -241,6 +241,7 @@ Your job is to produce the final, polished version of this article. Incorporate 
 5. **Preserving structure** — the final article must have four sections: What shipped, The decisions, Roadmap pulse, What's next.
 6. **Preserving action items** — include 1-3 slash-command action items per section in the \`actions\` field. These must be specific to today's work, not generic filler.
 7. **Do not add marketing language or fluff** to compensate for gaps. Honest and direct always wins.
+8. **Preserve verified scope**: describe partial rollout or adoption with its count and population, such as "across 6 of 12 inspected repos". Use "fleet-wide", "all", or "every" only when the supplied evidence verifies 100% of that population. Keep unknown coverage explicit; do not expand the draft's scope without evidence.
 
 The audience for this article is a technical reader who is also evaluating the author as an engineer and systems thinker. Every word should earn its place.
 

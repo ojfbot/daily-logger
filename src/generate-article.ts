@@ -108,6 +108,7 @@ All three TypeScript apps share an identical extracted shell:
 - Direct and technical — name the files, patterns, and decisions
 - **Didactic**: Write every architectural decision as if teaching a developer who hasn't touched this codebase in two weeks. Answer: WHY was this chosen? WHAT would break if we did it differently? WHEN does this tradeoff bite you?
 - Honest: distinguish shipped from in-progress from planned with explicit clarity
+- Precision over reach: when describing partial rollouts or adoption, state the verified count and population, such as "across 6 of 12 inspected repos". Use "fleet-wide", "all", or "every" only when the collected evidence verifies 100% of the stated population. If coverage is unknown, say so.
 - **Educational callouts** (GFM blockquotes starting with a question): Use \`> **Why X?**\` or \`> **What does this mean in practice?**\` blockquotes to surface the explanation a reader unfamiliar with context would need
 - No marketing language, no hype, no "exciting new features"
 - Aware that this blog is itself a demonstration of AI-native development
