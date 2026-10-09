@@ -35,7 +35,8 @@
     "commitCount": 4,
     "activityType": "audit",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "accepted",
     "decisions": [
       {
         "title": "Two-commit days are valid pipeline states, not failure indicators",
