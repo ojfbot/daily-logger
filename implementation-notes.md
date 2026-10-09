@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-08 (two-action settlement): The API rebuild was expected to change only the queue projection; refreshed main had an unprojected accepted outcome from editorial PR #321. Included the existing accepted status and outcome in api/entries.json and retained all other article data and queue records unchanged.
+
 - 2026-10-09 (#300 settlement): Shipping verification initially expected a web deployment, but the Vercel workflow excludes generator-only changes. Verified merged main contains the exact reviewed normalizer and the mock-generation CI passed; no production article run was triggered.
 
 - 2026-10-08 (#300): Fresh review found inserted placeholder delimiters could merge adjacent code spans, and generic angle-token normalization changed intentional HTML markup. Separate changed inline-code delimiters with spaces; preserve paired HTML tags, void tags, and preformatted HTML content while continuing prose normalization. Rendered regressions cover both gaps.

@@ -930,5 +930,25 @@
     "id": "act-2026-07-25-validate-b047f5",
     "closedDate": "2026-10-08",
     "resolution": "Implemented historical S1 baseline: f1-doctrine #1 merged at 4fe026cf3b95d3ee19face3989c5806555a0039a includes docs/gates/2026-07-24-phase-keying-relevance.md and its preserved 14-scenario blind-judge results. Re-ran the original deterministic gate from a frozen archive of that revision and all 37 lookup tests, including test_race_engineer_is_first_class_but_seed_empty: PASS. Recomputed preserved blind-judge means A3=0.714286 versus A4=0.557143, delta +0.157143. This is historical-result reproduction, not a new blind-judge run; n=14 and the unvalidated stint-position caveat remain. https://github.com/ojfbot/f1-doctrine/pull/1 MERGED at 4fe026cf3b95d3ee19face3989c5806555a0039a."
+  },
+  {
+    "command": "/style-rule",
+    "description": "Add a precision-over-reach rule to the daily-logger style guardrails: when describing partial rollouts or adoption, state the explicit count (e.g. \"across 6 repos\") rather than using totalising language like 'fleet-wide', 'all', or 'every' unless 100% coverage is verified. This prevents future articles from overstating scope the way this article's original summary did.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-05-05",
+    "id": "act-2026-05-05-style-rule-102013",
+    "closedDate": "2026-10-08",
+    "resolution": "Implemented in daily-logger PR #320, merged at 4c151fa048bd4767b21fe5f8e03b3a4895c457e0. The drafting SYSTEM_PROMPT and council SYNTHESIZER_PROMPT both require verified rollout/adoption counts and populations, reserve fleet-wide/all/every for evidence of complete coverage, and keep unknown coverage explicit. Current main retains the exact reviewed additions; independent Standards and Spec reviews and applicable CI passed. This settles the requested style-guardrail addition, not a guarantee of live model adherence, which remains untested. Evidence: https://github.com/ojfbot/daily-logger/pull/320 ; https://github.com/ojfbot/daily-logger/pull/320#issuecomment-6072859708 ."
+  },
+  {
+    "command": "/adr",
+    "description": "Write a CLAUDE.md entry in workstation-yuri (not a full ADR — that's for core) codifying the boundary rule established by commit 1029c2b: 'Machine-specific, OS-specific, or hardware-tied concerns belong in workstation-yuri; portable skill catalog logic stays in core.' Also include the three-question test: Is it OS-specific? Is it tied to a display profile or hardware layout? Is it named after or configured for a single machine? Commit this before the next session adds something ambiguous.",
+    "repo": "workstation-yuri",
+    "status": "done",
+    "sourceDate": "2026-05-17",
+    "id": "act-2026-05-17-adr-97c404",
+    "closedDate": "2026-10-08",
+    "resolution": "Implemented in workstation-yuri PR #2, merged at 320b03a204941b96744c9cea272952f2f55952ad. CLAUDE.md now records the repository boundary and all three runtime-placement questions. It preserves Accepted ADR-0001's data/runtime boundary: portable skill catalog logic and shared fleet data/orchestration remain in core, while machine-specific, OS-specific or hardware-tied runtime belongs in workstation-yuri. Current main retains the exact reviewed documentation; independent Standards and Spec reviews and applicable CI passed. This settles the documentation request, not a runtime migration or proof that every existing file follows the boundary. Evidence: https://github.com/ojfbot/workstation-yuri/pull/2 ; https://github.com/ojfbot/workstation-yuri/pull/2#issuecomment-6072860129 ; https://github.com/ojfbot/workstation-yuri/blob/320b03a204941b96744c9cea272952f2f55952ad/decisions/adr/0001-workstation-orchestration.md ."
   }
 ]
