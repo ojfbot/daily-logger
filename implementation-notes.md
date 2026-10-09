@@ -66,5 +66,6 @@
 
 ## Deviations — bounded historical action settlement 2026-10-08
 
-- The first candidate list included f1-doctrine's S1 merge request; its specific compute-boundary ADR is absent at the recorded merge revision. Kept that compound suggestion open rather than using the merge alone to claim its prerequisite was fulfilled. Selected nine additional evidenced suggestions, alongside #319's existing two, for eleven original action IDs total.
+- The first candidate list included f1-doctrine's S1 merge request; its specific compute-boundary ADR is absent at the recorded merge revision. Kept that compound suggestion open rather than using the merge alone to claim its prerequisite was fulfilled. Initially selected nine additional candidates alongside #319's existing two; the subsequent independent-review exclusion below leaves ten original action IDs total.
 - Historical cleaner suggestions name terminal mixed merged/closed PR cohorts and sometimes an ongoing queue-age target. Recorded their bounded batch instruction as superseded, preserving closure reasons and explicitly avoiding a claim that unmerged edits shipped or today's queue meets the old age target.
+- Independent Spec review found that beaverGame #27 had merged but the original suggestion also required an unconditional decision-link comment in #28, which is absent. Removed that candidate from the settlement and kept its original action open; final batch is eight additional suggestions plus the existing two, ten original IDs total.
