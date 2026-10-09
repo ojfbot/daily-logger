@@ -118,6 +118,25 @@ describe('article Markdown before commit', () => {
     expect(md).toContain(assembled)
   })
 
+  it.each([
+    '<section>Existing content</section>',
+    '<!-- documentation: </section> -->',
+  ])('does not let separate HTML %j disable a route placeholder', (markup) => {
+    const assembled = assembleBody({ ...v1, whatShipped: `Use /canvas/<section>/chat.\n\n${markup}` })
+    expect(committed(assembled)).toContain('Use /canvas/`<section>`/chat.')
+    expect(committed(assembled)).toContain(markup)
+  })
+
+  it.each(['<div>\n<pre>\\n <port></pre>\n</div>', '<code>\\n <port></code>'])('preserves nested HTML code %j', (source) => {
+    expect(committed(assembleBody({ ...v1, whatShipped: source }))).toContain(source)
+  })
+
+  it('renders a technical placeholder inside HTML prose as HTML code', () => {
+    const assembled = assembleBody({ ...v1, whatShipped: '<div>Use <port>\\nNext</div>' })
+    expect(marked.parse(committed(assembled))).toContain('<div>Use <code>&lt;port&gt;</code>\nNext</div>')
+    expect(committed(assembled)).toContain(assembled)
+  })
+
   it('also normalizes a directly supplied body at serialization', () => {
     expect(committed(prose)).toContain('### Details\n- First\n- Second')
   })
