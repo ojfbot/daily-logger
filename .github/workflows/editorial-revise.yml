@@ -2,8 +2,8 @@ name: Editorial Revision
 
 # Triggered when an editorial accept PR is opened or its body is edited.
 # Extracts feedback from the PR body, calls Claude to revise the article,
-# and pushes the result back to the PR branch. Checkout uses GH_PAT so these
-# pushes trigger PR checks on the stamped/revised head (GITHUB_TOKEN suppresses them).
+# and pushes the result back to the PR branch. The final push uses GH_PAT so
+# updated-head PR checks run without GITHUB_TOKEN workflow-run approval.
 
 on:
   pull_request:
@@ -36,8 +36,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
-          fetch-depth: 2
-          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Extract article date from branch name
         id: date
@@ -51,6 +52,18 @@ jobs:
           fi
           echo "article_path=_articles/${DATE}.md" >> "$GITHUB_OUTPUT"
           echo "📅 Article date: $DATE"
+
+      - name: Require article-only changes before running PR code
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+        run: |
+          git fetch --no-tags origin "$BASE_SHA"
+          CHANGED=$(git diff --name-only "$BASE_SHA"...HEAD)
+          if [[ "$CHANGED" != "$ARTICLE_PATH" || ! -f "$ARTICLE_PATH" || -L "$ARTICLE_PATH" ]]; then
+            echo "::error::Editorial automation accepts only the dated article file."
+            exit 1
+          fi
 
       - name: Setup pnpm
         run: |
@@ -74,6 +87,7 @@ jobs:
 
       - name: Commit stamped article
         env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
         run: |
           git config user.name "ojfbot-blog[bot]"
@@ -83,6 +97,7 @@ jobs:
             echo "⏭ No outcome change to commit"
           else
             git commit -m "editorial: stamp outcome accepted"
+            gh auth setup-git
             git push
           fi
 
@@ -102,8 +117,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
-          fetch-depth: 2
-          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Guard — skip if last commit was by bot
         id: guard
@@ -153,9 +169,26 @@ jobs:
         id: date
         run: |
           DATE="${GITHUB_HEAD_REF#accept/}"
+          if [[ ! "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "::error::accept/ branch suffix is not a YYYY-MM-DD date."
+            exit 1
+          fi
           echo "date=$DATE" >> "$GITHUB_OUTPUT"
           echo "article_path=_articles/${DATE}.md" >> "$GITHUB_OUTPUT"
           echo "📅 Article date: $DATE"
+
+      - name: Require article-only changes before running PR code
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+        run: |
+          git fetch --no-tags origin "$BASE_SHA"
+          CHANGED=$(git diff --name-only "$BASE_SHA"...HEAD)
+          if [[ "$CHANGED" != "$ARTICLE_PATH" || ! -f "$ARTICLE_PATH" || -L "$ARTICLE_PATH" ]]; then
+            echo "::error::Editorial automation accepts only the dated article file."
+            exit 1
+          fi
 
       - name: Setup pnpm
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
@@ -186,12 +219,15 @@ jobs:
           echo "changed=$(jq -r '.changed' /tmp/revision-result.json)" >> "$GITHUB_OUTPUT"
 
       - name: Commit revised article
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         if: steps.guard.outputs.skip != 'true' && steps.revise.outputs.changed == 'true'
         run: |
           git config user.name "ojfbot-blog[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "${{ steps.date.outputs.article_path }}"
           git commit -m "editorial: revise ${{ steps.date.outputs.date }} per feedback"
+          gh auth setup-git
           git push
 
       - name: Post revision summary on PR
