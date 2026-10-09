@@ -3,12 +3,14 @@ import { Lexer, walkTokens, type Token, type Tokens, type TokensList } from 'mar
 function normalizeInlineSequence(tokens: Token[], htmlTags: ReadonlySet<string>, inTableCell = false): string {
   let result = ''
   let previousChanged = false
+  let previousWasCode = false
   for (const token of tokens) {
     const normalized = normalizeInline(token, htmlTags, inTableCell)
     const changed = normalized !== token.raw
-    if ((changed || previousChanged) && result.endsWith('`') && !result.endsWith('\\`') && normalized.startsWith('`')) result += ' '
+    if ((changed || previousChanged) && result.endsWith('`') && (previousWasCode || !result.endsWith('\\`')) && normalized.startsWith('`')) result += ' '
     result += normalized
     previousChanged = changed
+    previousWasCode = token.type === 'codespan'
   }
   return result
 }
