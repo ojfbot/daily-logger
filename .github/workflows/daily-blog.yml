@@ -30,6 +30,12 @@ concurrency:
   group: daily-blog
   cancel-in-progress: false
 
+# Keep the nominal target available to scheduled runs and watchdog fallbacks.
+# The trigger declaration above remains GitHub's source of scheduling truth.
+env:
+  DAILY_BLOG_SCHEDULE: '30 3 * * *'
+  DAILY_BLOG_TIMEZONE: America/Chicago
+
 jobs:
   generate:
     name: Generate & open PR
@@ -115,8 +121,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           # The narrower workflow token reads this Actions run for provenance.
           RUN_EVIDENCE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DAILY_BLOG_SCHEDULE: ${{ github.event.schedule }}
-          DAILY_BLOG_TIMEZONE: America/Chicago
           OJFBOT_ORG: ojfbot
           DATE_OVERRIDE: ${{ steps.preflight.outputs.date }}
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}

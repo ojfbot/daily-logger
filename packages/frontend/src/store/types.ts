@@ -61,7 +61,7 @@ export interface ArticleProvenance {
           | { status: 'unavailable'; reason: string }
       }
   authoring: Array<{
-    role: 'draft' | 'synthesis'
+    role: 'draft' | 'synthesis' | 'revision'
     model: string
     promptVersion: string
     promptSha256: string

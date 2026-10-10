@@ -52,6 +52,7 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 | `src/fleet.ts` | Sweep membership: `discoverRepos()` (live walk via `gh repo list`; private repos only when opted in via `REPO_NOTES`), `EXCLUDED_REPOS`, `REPO_NOTES` → `KNOWN_REPOS`, `reportSurfaceDrift()` |
 | `src/collect-telemetry.ts` | Aggregates skill usage from `~/selfco/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources. **Note:** commit `4dd6765` fixed a silent no-op where skill-audit fetched telemetry from the wrong remote; telemetry collection now targets the correct source. |
 | `src/generate-article.ts` | Claude API call + prompt, JSON → markdown (includes dedicated skill telemetry section) |
+| `src/run-provenance.ts` | Best-effort Actions run timing, article authoring provenance, frontmatter preservation, and diagnostic reporting |
 | `src/schema.ts` | Zod schemas + validation (ArticleDataSchema/ArticleDataV2, TypedTagSchema, ShipmentEntrySchema, DecisionEntrySchema, ActionItemSchema, ClosedActionSchema, CodeReferenceSchema, StructuredArticleSchema; `actionId`, `validateArticleOutput`, `getValidationErrors`) |
 | `src/types.ts` | Shared TypeScript types (BlogContext, GeneratedArticle, CommitInfo, PR/issue infos, Persona, cleaner types) |
 | `src/verify-claims.ts` | Deterministic fact-checker — flags article claims (file paths, PR refs, SHAs) absent from the collected context (TD-001) |

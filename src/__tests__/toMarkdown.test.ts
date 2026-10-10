@@ -44,7 +44,7 @@ const withProvenance: GeneratedArticle = {
     }],
     nodeVersion: 'v24.0.0',
     packageVersion: '0.1.0',
-  }),
+  })!,
 }
 
 describe('toMarkdown — frontmatter structure', () => {

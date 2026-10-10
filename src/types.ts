@@ -133,6 +133,7 @@ export interface GeneratedArticle {
   commitCount?: number
   reposActive?: string[]
   provenance?: ArticleProvenance
+  generationMode?: 'model' | 'mock' | 'stub'
 }
 
 export interface Persona {

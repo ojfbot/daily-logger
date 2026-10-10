@@ -14,12 +14,17 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { stampOutcome } from './stamp-outcome.js'
-import { preserveProvenanceFrontmatter } from './run-provenance.js'
+import {
+  appendAuthoringStage,
+  preserveProvenanceFrontmatter,
+  promptSha256,
+} from './run-provenance.js'
 
-const MODEL = 'claude-opus-4-6'
+export const REVISION_MODEL = 'claude-opus-4-6'
+export const REVISION_PROMPT_VERSION = 'editorial-revision-v1'
 const MAX_TOKENS = 8192
 
-const SYSTEM_PROMPT = `You are a careful editor revising a daily development blog article for the ojfbot project.
+export const REVISION_SYSTEM_PROMPT = `You are a careful editor revising a daily development blog article for the ojfbot project.
 
 You have received the original article (full markdown including YAML frontmatter) and a set of editorial revision instructions from the human author.
 
@@ -85,9 +90,9 @@ Here is the editorial feedback to apply:
 ${feedback}`
 
   const response = await client.messages.create({
-    model: MODEL,
+    model: REVISION_MODEL,
     max_tokens: MAX_TOKENS,
-    system: SYSTEM_PROMPT,
+    system: REVISION_SYSTEM_PROMPT,
     tools: [REVISE_TOOL],
     tool_choice: { type: 'tool', name: 'revise_article' },
     messages: [{ role: 'user', content: userPrompt }],
@@ -169,6 +174,17 @@ async function main() {
   console.error(`\n✓ Revision complete (${result.changed ? 'changes applied' : 'no changes needed'})`)
   for (const change of result.changesSummary) {
     console.error(`  - ${change}`)
+  }
+
+  if (result.changed) {
+    result.revisedMarkdown = appendAuthoringStage(result.revisedMarkdown, {
+      role: 'revision',
+      model: isMock ? 'mock-llm' : REVISION_MODEL,
+      promptVersion: isMock ? 'mock-editorial-revision-v1' : REVISION_PROMPT_VERSION,
+      promptSha256: promptSha256(
+        isMock ? 'daily-logger mock editorial revision v1' : REVISION_SYSTEM_PROMPT,
+      ),
+    })
   }
 
   if (!isDryRun && result.changed) {

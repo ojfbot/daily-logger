@@ -18,6 +18,72 @@ RUN_TITLE = re.compile(r'^Daily Dev Blog \| date=(auto|\d{4}-\d{2}-\d{2}) \| dry
 ACTIVE = {'queued', 'in_progress', 'requested', 'waiting', 'pending'}
 
 
+def run_evidence(run, target_date, schedule_expression, timezone_name):
+    """Return best-effort timing evidence for this attempt's configured target."""
+    match = re.fullmatch(r'\s*(\d{1,2})\s+(\d{1,2})\s+\*\s+\*\s+\*\s*', schedule_expression)
+    if not match:
+        raise ValueError('Unsupported schedule expression')
+    minute, hour = int(match[1]), int(match[2])
+    if minute > 59 or hour > 23:
+        raise ValueError('Invalid schedule expression')
+    zone = ZoneInfo(timezone_name)
+    expected = datetime.combine(date.fromisoformat(target_date), time(hour, minute), zone).astimezone(timezone.utc)
+    created = datetime.fromisoformat(run['created_at'].replace('Z', '+00:00'))
+    evidence = {
+        'expected_at': expected.isoformat(),
+        'created_at': created.isoformat(),
+        'dispatch_delay_seconds': round((created - expected).total_seconds()),
+    }
+    started_at = run.get('run_started_at')
+    if started_at:
+        started = datetime.fromisoformat(started_at.replace('Z', '+00:00'))
+        evidence['started_at'] = started.isoformat()
+        # Top-level created_at/run_started_at belong to the original attempt.
+        # They do not prove queue latency for an Actions rerun.
+        if int(run.get('run_attempt', 1)) == 1:
+            evidence['start_delay_seconds'] = round((started - created).total_seconds())
+    return evidence
+
+
+def report_run_evidence(run, target_date):
+    """Emit diagnostics for generate, recover, and complete preflight outcomes."""
+    schedule_expression = os.environ['DAILY_BLOG_SCHEDULE']
+    timezone_name = os.environ['DAILY_BLOG_TIMEZONE']
+    evidence = run_evidence(run, target_date, schedule_expression, timezone_name)
+    url = run.get('html_url', '')
+    attempt = f"{run.get('run_number', '?')}.{run.get('run_attempt', 1)}"
+    actor = run.get('actor') if isinstance(run.get('actor'), dict) else {}
+    source_sha = run.get('head_sha', 'unavailable')
+    workflow_ref = run.get('path', 'unavailable')
+    print(
+        '::notice title=Daily blog preflight evidence::'
+        f"event={run.get('event', 'unknown')} run={attempt} "
+        f"actor={actor.get('login', 'unavailable')} sha={source_sha} workflow={workflow_ref} "
+        f"expected={evidence['expected_at']} created={evidence['created_at']} "
+        f"target_delay_seconds={evidence['dispatch_delay_seconds']} url={url}"
+    )
+    summary = os.environ.get('GITHUB_STEP_SUMMARY')
+    if not summary:
+        return
+    rows = [
+        ('Run', f'[{attempt}]({url})' if url else attempt),
+        ('Event', f"`{run.get('event', 'unknown')}`"),
+        ('Source SHA', f'`{source_sha}`'),
+        ('Workflow ref', f'`{workflow_ref}`'),
+        ('Actor', f"`{actor.get('login', 'unavailable')}`"),
+        ('Target schedule', f'`{schedule_expression}` in `{timezone_name}`'),
+        ('Expected target', evidence['expected_at']),
+        ('Run created', evidence['created_at']),
+        ('Run started', evidence.get('started_at', 'n/a')),
+        ('Target-to-created delay', str(evidence['dispatch_delay_seconds']) + ' seconds'),
+        ('Run start delay', str(evidence['start_delay_seconds']) + ' seconds'
+         if 'start_delay_seconds' in evidence else 'n/a for reruns or missing timestamp'),
+    ]
+    with Path(summary).open('a') as stream:
+        stream.write('## Daily blog preflight evidence\n\n| Field | Value |\n|---|---|\n')
+        stream.write('\n'.join(f'| {key} | {value} |' for key, value in rows) + '\n\n')
+
+
 def calendar_date(value):
     parsed = date.fromisoformat(value)
     if parsed.isoformat() != value:
@@ -188,6 +254,10 @@ def main():
         if not args.date:
             # A run queued across midnight must keep the date used by the watchdog's attribution.
             target_date = datetime.fromisoformat(current['created_at'].replace('Z', '+00:00')).astimezone(CHICAGO).date().isoformat()
+        try:
+            report_run_evidence(current, target_date)
+        except (ValueError, KeyError, TypeError, OSError) as error:
+            print(f'::warning title=Run evidence unavailable::{error}')
         outputs({'mode': preflight(github, target_date, os.environ.get('DRY_RUN') == 'true',
                                   args.run_id, int(current['run_attempt'])), 'date': target_date})
     elif args.mode == 'cleaner':

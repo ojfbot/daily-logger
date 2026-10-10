@@ -13,6 +13,9 @@ Run Admission can be generate, recover, or complete. [src: .github/scripts/daily
 Cron Firing triggers Run Admitting. [src: .github/workflows/daily-blog.yml]
 Run Admitting requires GitHub. [src: .github/scripts/daily_blog_schedule.py]
 Run Admitting yields Run Admission. [src: .github/scripts/daily_blog_schedule.py]
+Run Admitting invokes Run Evidence Capturing. [src: .github/scripts/daily_blog_schedule.py]
+Run Evidence Capturing requires GitHub. [src: .github/scripts/daily_blog_schedule.py]
+Run Evidence Capturing yields Run Evidence. [src: .github/scripts/daily_blog_schedule.py]
 Article Generating occurs if Run Admission is generate. [src: .github/workflows/daily-blog.yml]
 Branch Recovering occurs if Run Admission is recover. [src: .github/workflows/daily-blog.yml]
 Branch Recovering requires GitHub. [src: .github/workflows/daily-blog.yml]
@@ -46,13 +49,11 @@ Frontend Rendering yields Rendered Site.
 Activity Decision can be skip or run.
 Run Timing can be available or unavailable.
 Run Evidence consists of Run Timing.
-Article Generating zooms into Run Evidence Capturing, Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, and Provenance Attaching. [src: src/index.ts]
+Article Generating zooms into Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, and Provenance Attaching. [src: src/index.ts]
 Context Collecting requires GitHub. [src: src/collect-context.ts]
 Context Collecting invokes Telemetry Collecting. [src: src/collect-context.ts]
 Context Collecting yields Commit Context.
 Telemetry Collecting yields Telemetry Digest. [src: src/collect-telemetry.ts]
-Run Evidence Capturing requires GitHub. [src: src/run-provenance.ts]
-Run Evidence Capturing yields Run Evidence. [src: src/run-provenance.ts]
 Activity Assessing requires Commit Context. [src: src/should-skip-run.ts]
 Activity Assessing yields Activity Decision. [src: src/should-skip-run.ts]
 Credit Checking occurs if Activity Decision is run. [src: src/index.ts]
