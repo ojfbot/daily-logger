@@ -12,6 +12,7 @@ import { SectionChatButton } from './SectionChatButton.tsx'
 import { SectionChatZone } from './SectionChatZone.tsx'
 import { EditorialSidebar } from './EditorialSidebar.tsx'
 import { SubmitAllFeedback } from './SubmitAllFeedback.tsx'
+import { ArticleProvenanceDetails } from './ArticleProvenanceDetails.tsx'
 
 export function ArticlePage() {
   const { date } = useParams<{ date: string }>()
@@ -19,6 +20,7 @@ export function ArticlePage() {
   const dispatch = useAppDispatch()
   const { articleCache, articleLoading } = useAppSelector((s) => s.articles)
   const { threads, threadOrder } = useAppSelector((s) => s.chat)
+  const authUser = useAppSelector((s) => s.auth.user)
   const contentRef = useRef<HTMLDivElement>(null)
   const [sectionHeadings, setSectionHeadings] = useState<string[]>([])
   const isMobile = useIsMobile()
@@ -193,6 +195,14 @@ export function ArticlePage() {
             />
           ) : (
             !articleLoading && <article className="article-content"><p>Article not found.</p></article>
+          )}
+
+          {/* Static article JSON is public; auth controls disclosure density, not data security. */}
+          {authUser?.authorized && (
+            <ArticleProvenanceDetails
+              provenance={displayEntry?.provenance}
+              viewerLogin={authUser.login}
+            />
           )}
 
           {buttonPortals}

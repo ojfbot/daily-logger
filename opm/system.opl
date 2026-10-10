@@ -44,11 +44,15 @@ Frontend Rendering yields Rendered Site.
 ## SD1.1 — Article Generating in-zoom
 
 Activity Decision can be skip or run.
-Article Generating zooms into Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, and Claim Verifying. [src: src/index.ts]
+Run Timing can be available or unavailable.
+Run Evidence consists of Run Timing.
+Article Generating zooms into Run Evidence Capturing, Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, and Provenance Attaching. [src: src/index.ts]
 Context Collecting requires GitHub. [src: src/collect-context.ts]
 Context Collecting invokes Telemetry Collecting. [src: src/collect-context.ts]
 Context Collecting yields Commit Context.
 Telemetry Collecting yields Telemetry Digest. [src: src/collect-telemetry.ts]
+Run Evidence Capturing requires GitHub. [src: src/run-provenance.ts]
+Run Evidence Capturing yields Run Evidence. [src: src/run-provenance.ts]
 Activity Assessing requires Commit Context. [src: src/should-skip-run.ts]
 Activity Assessing yields Activity Decision. [src: src/should-skip-run.ts]
 Credit Checking occurs if Activity Decision is run. [src: src/index.ts]
@@ -70,3 +74,6 @@ Claim Verifying requires Article. [src: src/verify-claims.ts]
 Claim Verifying requires Commit Context.
 Claim Verifying yields Claim Report.
 Claim Verifying affects Article. [src: src/index.ts]
+Provenance Attaching requires Article. [src: src/index.ts]
+Provenance Attaching requires Run Evidence. [src: src/index.ts]
+Provenance Attaching affects Article. [src: src/index.ts]

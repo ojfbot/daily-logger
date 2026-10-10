@@ -1,5 +1,6 @@
 import type { ActionItem as ActionItemType, ClosedAction as ClosedActionType } from './schema.js'
 import type { TelemetrySummary } from './collect-telemetry.js'
+import type { ArticleProvenance } from './run-provenance.js'
 export type { TelemetrySummary }
 
 export interface CommitInfo {
@@ -131,6 +132,7 @@ export interface GeneratedArticle {
   closedActions?: ClosedActionType[]
   commitCount?: number
   reposActive?: string[]
+  provenance?: ArticleProvenance
 }
 
 export interface Persona {

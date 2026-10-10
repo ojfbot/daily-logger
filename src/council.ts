@@ -26,7 +26,8 @@ import { validateArticleOutput } from './schema.js'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
 const PERSONAS_DIR = join(REPO_ROOT, 'personas')
-const MODEL = 'claude-sonnet-4-6'
+export const COUNCIL_MODEL = 'claude-sonnet-4-6'
+export const COUNCIL_SYNTHESIS_PROMPT_VERSION = 'council-synthesis-v1-2026-10-10'
 
 // ─── Persona loader ───────────────────────────────────────────────────────────
 
@@ -107,7 +108,7 @@ Respond with exactly three sections:
 Be direct. No hedging. This is feedback from someone who wants him to succeed, not someone trying to seem helpful.`
 
   const message = await client.messages.create({
-    model: MODEL,
+    model: COUNCIL_MODEL,
     max_tokens: 2048,
     system,
     messages: [
@@ -205,6 +206,23 @@ const SYNTHESIS_TOOL: Anthropic.Tool = {
   },
 }
 
+export const COUNCIL_SYNTHESIS_SYSTEM_PROMPT = `You are the technical writer and educational narrator for the ojfbot project — the same writer who produced the draft below. You have now received feedback from a panel of trusted expert reviewers, each reading the article through their own professional lens.
+
+Your job is to produce the final, polished version of this article. Incorporate the feedback by:
+
+1. **Preemptively answering questions** where the information is available from the project context. If a reviewer asks "is this live?" and it is, say so clearly in the article.
+2. **Honestly acknowledging gaps** that the reviewers flagged where the information isn't available — a sentence of honest acknowledgment is better than silence.
+3. **Sharpening the framing** based on what the reviewers said landed well — if something worked, make sure it's prominent.
+4. **Deepening the didactic layer**: if a reviewer asked a question that the article doesn't answer, and the answer is knowable, answer it. Explain it as if teaching a developer who is returning to this codebase after two weeks away.
+5. **Preserving structure** — the final article must have four sections: What shipped, The decisions, Roadmap pulse, What's next.
+6. **Preserving action items** — include 1-3 slash-command action items per section in the \`actions\` field. These must be specific to today's work, not generic filler.
+7. **Do not add marketing language or fluff** to compensate for gaps. Honest and direct always wins.
+8. **Preserve verified scope**: describe partial rollout or adoption with its count and population, such as "across 6 of 12 inspected repos". Use "fleet-wide", "all", or "every" only when the supplied evidence verifies 100% of that population. Keep unknown coverage explicit; do not expand the draft's scope without evidence.
+
+The audience for this article is a technical reader who is also evaluating the author as an engineer and systems thinker. Every word should earn its place.
+
+Output each section as its body text only — no ## headings, those are injected automatically. Use the write_article tool.`
+
 // ─── Synthesis phase ──────────────────────────────────────────────────────────
 //
 // Takes the draft + all council notes and produces a final, polished article
@@ -230,22 +248,7 @@ export async function synthesizeWithCouncil(
     )
     .join('\n\n---\n\n')
 
-  const system = `You are the technical writer and educational narrator for the ojfbot project — the same writer who produced the draft below. You have now received feedback from a panel of trusted expert reviewers, each reading the article through their own professional lens.
-
-Your job is to produce the final, polished version of this article. Incorporate the feedback by:
-
-1. **Preemptively answering questions** where the information is available from the project context. If a reviewer asks "is this live?" and it is, say so clearly in the article.
-2. **Honestly acknowledging gaps** that the reviewers flagged where the information isn't available — a sentence of honest acknowledgment is better than silence.
-3. **Sharpening the framing** based on what the reviewers said landed well — if something worked, make sure it's prominent.
-4. **Deepening the didactic layer**: if a reviewer asked a question that the article doesn't answer, and the answer is knowable, answer it. Explain it as if teaching a developer who is returning to this codebase after two weeks away.
-5. **Preserving structure** — the final article must have four sections: What shipped, The decisions, Roadmap pulse, What's next.
-6. **Preserving action items** — include 1-3 slash-command action items per section in the \`actions\` field. These must be specific to today's work, not generic filler.
-7. **Do not add marketing language or fluff** to compensate for gaps. Honest and direct always wins.
-8. **Preserve verified scope**: describe partial rollout or adoption with its count and population, such as "across 6 of 12 inspected repos". Use "fleet-wide", "all", or "every" only when the supplied evidence verifies 100% of that population. Keep unknown coverage explicit; do not expand the draft's scope without evidence.
-
-The audience for this article is a technical reader who is also evaluating the author as an engineer and systems thinker. Every word should earn its place.
-
-Output each section as its body text only — no ## headings, those are injected automatically. Use the write_article tool.`
+  const system = COUNCIL_SYNTHESIS_SYSTEM_PROMPT
 
   const userPrompt = [
     `Synthesize the final article for **${ctx.date}**.`,
@@ -277,7 +280,7 @@ Output each section as its body text only — no ## headings, those are injected
   let raw: unknown = null
   try {
     const message = await client.messages.create({
-      model: MODEL,
+      model: COUNCIL_MODEL,
       max_tokens: 8192,
       system,
       tools: [SYNTHESIS_TOOL],

@@ -68,11 +68,14 @@ flowchart TD
 ```mermaid
 flowchart TD
   ActivityDecision["Activity Decision<br/>{skip, run}"]
+  RunTiming["Run Timing<br/>{available, unavailable}"]
   GitHub["GitHub"]
   ContextCollecting("Context Collecting")
   TelemetryCollecting("Telemetry Collecting")
   CommitContext["Commit Context"]
   TelemetryDigest["Telemetry Digest"]
+  RunEvidenceCapturing("Run Evidence Capturing")
+  RunEvidence["Run Evidence"]
   ActivityAssessing("Activity Assessing")
   CreditChecking("Credit Checking")
   ClaudeAPI["Claude API"]
@@ -84,12 +87,16 @@ flowchart TD
   Synthesizing("Synthesizing")
   ClaimVerifying("Claim Verifying")
   ClaimReport["Claim Report"]
+  ProvenanceAttaching("Provenance Attaching")
 
 
   GitHub -. instrument .-> ContextCollecting
   ContextCollecting -. invokes .-> TelemetryCollecting
   ContextCollecting --> CommitContext
   TelemetryCollecting --> TelemetryDigest
+  GitHub -. instrument .-> RunEvidenceCapturing
+  RunEvidenceCapturing --> RunEvidence
+  RunTiming -- part of --> RunEvidence
   CommitContext -. instrument .-> ActivityAssessing
   ActivityAssessing --> ActivityDecision
   ActivityDecision -. if run .-> CreditChecking
@@ -111,6 +118,9 @@ flowchart TD
   CommitContext -. instrument .-> ClaimVerifying
   ClaimVerifying --> ClaimReport
   ClaimVerifying -- affects --> Article
+  Article -. instrument .-> ProvenanceAttaching
+  RunEvidence -. instrument .-> ProvenanceAttaching
+  ProvenanceAttaching -- affects --> Article
 ```
 
-**OPL paragraph.** Activity Decision can be skip or run. Article Generating zooms into Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, and Claim Verifying. Context Collecting requires GitHub. Context Collecting invokes Telemetry Collecting. Context Collecting yields Commit Context. Telemetry Collecting yields Telemetry Digest. Activity Assessing requires Commit Context. Activity Assessing yields Activity Decision. Credit Checking occurs if Activity Decision is run. Credit Checking requires Claude API. Credit Checking yields Credit Status. Drafting requires Claude API. Drafting requires Commit Context. Drafting requires Telemetry Digest. Drafting requires Credit Status. Drafting occurs if Activity Decision is run. Drafting yields Article. Council Reviewing requires Claude API. Council Reviewing requires Article. Council Reviewing yields Council Critiques. Synthesizing requires Claude API. Synthesizing consumes Council Critiques. Synthesizing affects Article. Claim Verifying requires Article. Claim Verifying requires Commit Context. Claim Verifying yields Claim Report. Claim Verifying affects Article.
+**OPL paragraph.** Activity Decision can be skip or run. Run Timing can be available or unavailable. Run Evidence consists of Run Timing. Article Generating zooms into Run Evidence Capturing, Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, and Provenance Attaching. Context Collecting requires GitHub. Context Collecting invokes Telemetry Collecting. Context Collecting yields Commit Context. Telemetry Collecting yields Telemetry Digest. Run Evidence Capturing requires GitHub. Run Evidence Capturing yields Run Evidence. Activity Assessing requires Commit Context. Activity Assessing yields Activity Decision. Credit Checking occurs if Activity Decision is run. Credit Checking requires Claude API. Credit Checking yields Credit Status. Drafting requires Claude API. Drafting requires Commit Context. Drafting requires Telemetry Digest. Drafting requires Credit Status. Drafting occurs if Activity Decision is run. Drafting yields Article. Council Reviewing requires Claude API. Council Reviewing requires Article. Council Reviewing yields Council Critiques. Synthesizing requires Claude API. Synthesizing consumes Council Critiques. Synthesizing affects Article. Claim Verifying requires Article. Claim Verifying requires Commit Context. Claim Verifying yields Claim Report. Claim Verifying affects Article. Provenance Attaching requires Article. Provenance Attaching requires Run Evidence. Provenance Attaching affects Article.

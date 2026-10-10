@@ -32,6 +32,49 @@ export interface ActionItem {
   resolution?: string
 }
 
+export interface ArticleProvenance {
+  schemaVersion: 1
+  run:
+    | { kind: 'local'; capturedAt: string }
+    | {
+        kind: 'github-actions'
+        capturedAt: string
+        runId: string
+        runNumber: number
+        runAttempt: number
+        event: string
+        url: string
+        workflowRef: string
+        sourceSha: string
+        actor: string
+        scheduleExpression?: string
+        timezone?: string
+        timing:
+          | {
+              status: 'available'
+              createdAt: string
+              startedAt?: string
+              expectedAt?: string
+              dispatchDelaySeconds?: number
+              startDelaySeconds?: number
+            }
+          | { status: 'unavailable'; reason: string }
+      }
+  authoring: Array<{
+    role: 'draft' | 'synthesis'
+    model: string
+    promptVersion: string
+    promptSha256: string
+  }>
+  runtime: {
+    nodeVersion: string
+    packageVersion: string
+    runnerOs?: string
+    runnerArch?: string
+    job?: string
+  }
+}
+
 export interface EntryData {
   date: string
   title: string
@@ -45,6 +88,7 @@ export interface EntryData {
   decisions?: DecisionEntry[]
   actions?: ActionItem[]
   codeReferences?: CodeReference[]
+  provenance?: ArticleProvenance
 }
 
 export interface TagCount {

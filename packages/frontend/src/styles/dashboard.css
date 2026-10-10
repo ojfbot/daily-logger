@@ -675,6 +675,71 @@ a:hover { border-bottom-color: var(--text); }
 .article-content a:hover { border-bottom-color: var(--blue); }
 .article-content a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
+.article-provenance {
+  max-width: 72ch;
+  margin-top: 2rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.article-provenance summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.article-provenance summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.provenance-access {
+  color: var(--text-secondary);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.article-provenance dl {
+  margin: 0;
+  padding: 0 0 0.75rem;
+}
+
+.provenance-row {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 0.35fr) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.4rem 0;
+  border-top: 1px dotted var(--border);
+}
+
+.provenance-row dt { color: var(--text-secondary); }
+.provenance-row dd { margin: 0; overflow-wrap: anywhere; }
+.provenance-row code { font-size: 0.95em; }
+
+@media (max-width: 600px) {
+  .article-provenance summary,
+  .provenance-row {
+    display: block;
+  }
+
+  .provenance-access,
+  .provenance-row dd {
+    display: block;
+    margin-top: 0.25rem;
+  }
+}
+
 /* ─── Decision card (accordion) ──────────────────────────────────────────── */
 
 .decision-card {
