@@ -1,5 +1,29 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Reconcile all six unresolved Claude review threads on morning-cockpit PR #54 (MC-UX-01 design handoff capture). Address: T1–T7/core-gate crosswalk using the Codex follow-up's qualified crosswalk (do not assume all T1–T6 are ungated/read-only), capture verifier in CI with byte guards, merge-method/pin handling, local AGENTS attribution, deviation numbering, and published local paths. Record a fix or reasoned disposition for each thread. Keep the PR draft — this task does not request a merge or UI/executor implementation.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-10-10",
+    "id": "act-2026-10-10-pr-review-4bb888"
+  },
+  {
+    "command": "/investigate",
+    "description": "Audit the 8 repositories not yet confirmed by the fleet-runner PR-gate sweep (core #509 covered 16 of 24). Trigger the fleet-runner audit run manually — it is not scheduled. Produce a list of unprotected repos. For each: confirm whether the fleet-runner will apply gates on its next run or whether a refused-and-preserved conflict from an existing stricter rule is blocking application. The 8 repos are not confirmed compliant; treat them as unprotected until the audit run confirms otherwise.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-10",
+    "id": "act-2026-10-10-investigate-bfe1a3"
+  },
+  {
+    "command": "/triage",
+    "description": "Accept ADR-0079 (vault-lifecycle policy) and re-evaluate ADR-0080 (scanner acceptance criteria) against the scanner PR description from core PR #121. ADR-0079 must be accepted first — it is the prerequisite. Both ADRs have been in Proposed state since their governing PRs merged in September; the gap erodes the audit trail. This is housekeeping, not blocking any current implementation work.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-10",
+    "id": "act-2026-10-10-triage-5957cd"
+  },
+  {
     "command": "/validate",
     "description": "Triage core #508: open ADR-0079 and ADR-0080, verify their acceptance criteria against the merged PR descriptions for core #118 and #121, and record an accept or change-request decision on each. Accept 0079 before reviewing 0080 — the scanner ADR's criteria may depend on the lifecycle-policy ADR being accepted first.",
     "repo": "core",

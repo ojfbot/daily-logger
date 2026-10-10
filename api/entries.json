@@ -1,5 +1,101 @@
 [
   {
+    "date": "2026-10-10",
+    "title": "Friday's 11 commits: tightening PR gates and editorial CI across the fleet",
+    "summary": "Friday's 11 commits across daily-logger and core closed credential and CI gaps in the editorial pipeline and enforced no-bypass PR gates on 16 of 24 active public repositories.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "security-scanning",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "morning-cockpit",
+      "core",
+      "daily-logger"
+    ],
+    "commitCount": 26,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Require CI on editorial PR heads even when commits carry [skip ci]",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Isolate editorial push credentials behind an article-only validation boundary",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Refuse ambiguous policy repairs that could weaken existing rules",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet-wide PR gate enforcement as a single auditable commit",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Reconcile all six unresolved Claude review threads on morning-cockpit PR #54 (MC-UX-01 design handoff capture). Address: T1–T7/core-gate crosswalk using the Codex follow-up's qualified crosswalk (do not assume all T1–T6 are ungated/read-only), capture verifier in CI with byte guards, merge-method/pin handling, local AGENTS attribution, deviation numbering, and published local paths. Record a fix or reasoned disposition for each thread. Keep the PR draft — this task does not request a merge or UI/executor implementation.",
+        "repo": "morning-cockpit",
+        "status": "open",
+        "sourceDate": "2026-10-10",
+        "id": "act-2026-10-10-pr-review-4bb888"
+      },
+      {
+        "command": "/investigate",
+        "description": "Audit the 8 repositories not yet confirmed by the fleet-runner PR-gate sweep (core #509 covered 16 of 24). Trigger the fleet-runner audit run manually — it is not scheduled. Produce a list of unprotected repos. For each: confirm whether the fleet-runner will apply gates on its next run or whether a refused-and-preserved conflict from an existing stricter rule is blocking application. The 8 repos are not confirmed compliant; treat them as unprotected until the audit run confirms otherwise.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-10-10",
+        "id": "act-2026-10-10-investigate-bfe1a3"
+      },
+      {
+        "command": "/triage",
+        "description": "Accept ADR-0079 (vault-lifecycle policy) and re-evaluate ADR-0080 (scanner acceptance criteria) against the scanner PR description from core PR #121. ADR-0079 must be accepted first — it is the prerequisite. Both ADRs have been in Proposed state since their governing PRs merged in September; the gap erodes the audit trail. This is housekeeping, not blocking any current implementation work.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-10-10",
+        "id": "act-2026-10-10-triage-5957cd"
+      }
+    ]
+  },
+  {
     "date": "2026-10-09",
     "title": "Thursday's sprint: 35 commits close the pipeline's self-referential failure modes",
     "summary": "Thirty-five commits across daily-logger, core, and workstation-yuri closed twelve merged PRs, hardening the generation pipeline against scheduling drift, scope inflation, and unsafe Markdown rendering.",
@@ -49,7 +145,7 @@
     "commitCount": 11,
     "activityType": "build",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
     "decisions": [
       {
         "title": "Generator must ignore its own publishing activity to prevent feedback loops",
