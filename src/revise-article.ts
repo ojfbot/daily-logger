@@ -14,6 +14,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { stampOutcome } from './stamp-outcome.js'
+import { preserveProvenanceFrontmatter } from './run-provenance.js'
 
 const MODEL = 'claude-opus-4-6'
 const MAX_TOKENS = 8192
@@ -25,7 +26,7 @@ You have received the original article (full markdown including YAML frontmatter
 Rules:
 1. Apply ONLY the changes described in the editorial feedback. Do not rewrite sections that are not mentioned in the feedback.
 2. Preserve the article's voice — first-person plural ("we"), direct, technical, didactic.
-3. Keep ALL YAML frontmatter fields intact (title, date, tags, summary, status). Do not modify the status field.
+3. Keep ALL YAML frontmatter fields intact (including title, date, tags, summary, status, and provenance). Do not modify the status or provenance fields.
 4. Preserve section structure: ## What shipped, ## The decisions, ## Roadmap pulse, ## What's next, and the > **Suggested actions** blockquote.
 5. Preserve all markdown formatting: GFM links, backtick code references, blockquotes, headings, lists.
 6. Return the FULL revised article (not a diff), including the YAML frontmatter delimiters (---).
@@ -98,6 +99,9 @@ ${feedback}`
   }
 
   const input = toolBlock.input as { revisedMarkdown: string; changesSummary: string[] }
+  if (typeof input.revisedMarkdown === 'string') {
+    input.revisedMarkdown = preserveProvenanceFrontmatter(articleContent, input.revisedMarkdown)
+  }
 
   if (!input.revisedMarkdown || !input.revisedMarkdown.startsWith('---')) {
     throw new Error('Revised markdown is missing or does not start with YAML frontmatter')

@@ -15,6 +15,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { renderArticle } from './render-article.js'
 import { ARTICLE_OUTCOMES, actionId, type CodeReference } from './schema.js'
+import { parseArticleProvenance, type ArticleProvenance } from './run-provenance.js'
 
 import { KNOWN_REPOS } from './fleet.js'
 
@@ -55,6 +56,7 @@ interface EntryData {
   decisions?: Array<{ title: string; summary: string; repo: string; pillar?: string; relatedTags: string[] }>
   actions?: ActionItem[]
   codeReferences?: CodeReference[]
+  provenance?: ArticleProvenance
 }
 
 interface TagCount {
@@ -111,6 +113,11 @@ function parseFrontmatter(content: string): Record<string, unknown> {
   const raMatch = raw.match(/^reposActive:\s*\[(.+)\]$/m)
   if (raMatch) {
     fm.reposActive = raMatch[1].split(',').map((r) => r.trim().replace(/^"|"$/g, ''))
+  }
+
+  const provenanceMatch = raw.match(/^provenance:\s*(\{.+\})$/m)
+  if (provenanceMatch) {
+    fm.provenance = parseArticleProvenance(provenanceMatch[1])
   }
 
   return fm
@@ -299,6 +306,7 @@ export function buildApi() {
       decisions,
       actions,
       codeReferences: codeRefsByDate[date],
+      provenance: fm.provenance as ArticleProvenance | undefined,
     }
     entries.push(entry)
 

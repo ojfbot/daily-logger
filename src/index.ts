@@ -24,12 +24,34 @@ import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
-import { generateArticle, toMarkdown, buildUserPrompt } from './generate-article.js'
-import { loadPersonas, reviewDraft, synthesizeWithCouncil } from './council.js'
+import {
+  ARTICLE_MODEL,
+  ARTICLE_PROMPT_VERSION,
+  articleSystemPrompt,
+  generateArticle,
+  toMarkdown,
+  buildUserPrompt,
+} from './generate-article.js'
+import {
+  COUNCIL_MODEL,
+  COUNCIL_SYNTHESIS_PROMPT_VERSION,
+  COUNCIL_SYNTHESIS_SYSTEM_PROMPT,
+  loadPersonas,
+  reviewDraft,
+  synthesizeWithCouncil,
+} from './council.js'
 import { actionId, type ClosedAction } from './schema.js'
 import { shouldSkipRun } from './should-skip-run.js'
 import { verifyFileExistenceClaims } from './verify-claims.js'
 import { checkAnthropicCredits } from './check-anthropic-credits.js'
+import {
+  buildArticleProvenance,
+  captureRunEvidence,
+  promptSha256,
+  reportArticleProvenance,
+  reportRunEvidence,
+  type AuthoringStage,
+} from './run-provenance.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -111,6 +133,12 @@ async function main() {
   }
   console.log()
 
+  // Capture the source run before any network-heavy pipeline work. Even if the
+  // context sweep later fails, schedule diagnostics remain in the Actions log.
+  const runEvidence = await captureRunEvidence(date)
+  reportRunEvidence(runEvidence)
+  console.log()
+
   // ── 1. Collect ─────────────────────────────────────────────────────────────
   console.log('1/4  Collecting GitHub context...')
   const ctx = await collectContext(date)
@@ -139,6 +167,7 @@ async function main() {
   // ── 2. Draft ───────────────────────────────────────────────────────────────
   console.log('2/4  Generating draft article...')
   let article = await generateArticle(ctx)
+  let synthesisApplied = false
   console.log(`     Title : "${article.title}"`)
   console.log(`     Words : ~${article.body.split(/\s+/).length}`)
   console.log()
@@ -165,7 +194,9 @@ async function main() {
 
     // ── 4a. Synthesize ───────────────────────────────────────────────────────
     console.log('4/4  Synthesizing final article with council input...')
-    article = await synthesizeWithCouncil(article, notes, ctx)
+    const draft = article
+    article = await synthesizeWithCouncil(draft, notes, ctx)
+    synthesisApplied = article !== draft
     console.log(`     Title : "${article.title}"`)
     console.log(`     Words : ~${article.body.split(/\s+/).length}`)
     console.log()
@@ -190,6 +221,32 @@ async function main() {
       `\n\n<!-- verification: ${verification.unverified.length} unverified claims: ` +
       `${verification.unverified.join(', ')} -->`
   }
+
+  const isMock = process.env.MOCK_LLM === 'true'
+  const authoringStages: AuthoringStage[] = [{
+    role: 'draft',
+    model: isMock ? 'mock-llm' : ARTICLE_MODEL,
+    promptVersion: isMock ? 'mock-article-v2' : ARTICLE_PROMPT_VERSION,
+    promptSha256: promptSha256(articleSystemPrompt(!!ctx.telemetry)),
+  }]
+  if (synthesisApplied) {
+    authoringStages.push({
+      role: 'synthesis',
+      model: COUNCIL_MODEL,
+      promptVersion: COUNCIL_SYNTHESIS_PROMPT_VERSION,
+      promptSha256: promptSha256(COUNCIL_SYNTHESIS_SYSTEM_PROMPT),
+    })
+  }
+  article.provenance = buildArticleProvenance({
+    run: runEvidence,
+    stages: authoringStages,
+    nodeVersion: process.version,
+    packageVersion: process.env.npm_package_version ?? '0.1.0',
+    runnerOs: process.env.RUNNER_OS,
+    runnerArch: process.env.RUNNER_ARCH,
+    job: process.env.GITHUB_JOB,
+  })
+  reportArticleProvenance(article.provenance)
 
   const markdown = toMarkdown(article)
 

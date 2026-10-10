@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { toMarkdown } from '../generate-article.js'
 import type { GeneratedArticle } from '../types.js'
+import { buildArticleProvenance, promptSha256 } from '../run-provenance.js'
 
 const base: GeneratedArticle = {
   title: 'Test article',
@@ -8,6 +9,42 @@ const base: GeneratedArticle = {
   tags: ['foo', 'bar'],
   summary: 'A short summary.',
   body: '## What shipped\n\nSome content.',
+}
+
+const withProvenance: GeneratedArticle = {
+  ...base,
+  provenance: buildArticleProvenance({
+    run: {
+      kind: 'github-actions',
+      capturedAt: '2026-10-10T14:37:00.000Z',
+      runId: '123',
+      runNumber: 229,
+      runAttempt: 1,
+      event: 'schedule',
+      url: 'https://github.com/ojfbot/daily-logger/actions/runs/123',
+      workflowRef: 'ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main',
+      sourceSha: '1d1b24e000000000000000000000000000000000',
+      actor: 'github-actions[bot]',
+      scheduleExpression: '30 3 * * *',
+      timezone: 'America/Chicago',
+      timing: {
+        status: 'available',
+        expectedAt: '2026-10-10T08:30:00.000Z',
+        createdAt: '2026-10-10T14:36:24.000Z',
+        startedAt: '2026-10-10T14:36:30.000Z',
+        dispatchDelaySeconds: 21_984,
+        startDelaySeconds: 6,
+      },
+    },
+    stages: [{
+      role: 'draft',
+      model: 'claude-sonnet-4-6',
+      promptVersion: 'article-v2',
+      promptSha256: promptSha256('system prompt'),
+    }],
+    nodeVersion: 'v24.0.0',
+    packageVersion: '0.1.0',
+  }),
 }
 
 describe('toMarkdown — frontmatter structure', () => {
@@ -63,5 +100,16 @@ describe('toMarkdown — frontmatter structure', () => {
     const fmEnd = md.indexOf('\n---\n', 4) // skip opening ---
     const bodyStart = md.indexOf('## What shipped')
     expect(bodyStart).toBeGreaterThan(fmEnd)
+  })
+
+  it('serializes provenance as JSON frontmatter and links the source Actions run', () => {
+    const md = toMarkdown(withProvenance)
+    const provenanceLine = md.split('\n').find((line) => line.startsWith('provenance: '))
+
+    expect(provenanceLine).toBeDefined()
+    expect(() => JSON.parse(provenanceLine!.slice('provenance: '.length))).not.toThrow()
+    expect(md).toContain('[GitHub Actions run #229](https://github.com/ojfbot/daily-logger/actions/runs/123)')
+    expect(md).toContain('Authoring model `claude-sonnet-4-6`')
+    expect(md).toContain('prompt `article-v2`')
   })
 })
