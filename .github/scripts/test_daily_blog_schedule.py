@@ -65,6 +65,20 @@ class FakeGitHub:
 
 
 class AdmissionTests(unittest.TestCase):
+    def test_run_evidence_uses_target_schedule_for_manual_fallbacks(self):
+        current = run(created='2026-10-10T14:36:24Z', event='workflow_dispatch')
+        current.update({'run_started_at': '2026-10-10T14:36:30Z', 'run_attempt': 1})
+        evidence = schedule.run_evidence(current, '2026-10-10', '30 3 * * *', 'America/Chicago')
+        self.assertEqual(evidence['expected_at'], '2026-10-10T08:30:00+00:00')
+        self.assertEqual(evidence['dispatch_delay_seconds'], 21984)
+        self.assertEqual(evidence['start_delay_seconds'], 6)
+
+    def test_rerun_evidence_does_not_claim_attempt_start_delay(self):
+        current = run(created='2026-10-10T14:36:24Z')
+        current.update({'run_started_at': '2026-10-10T14:36:30Z', 'run_attempt': 2})
+        evidence = schedule.run_evidence(current, '2026-10-10', '30 3 * * *', 'America/Chicago')
+        self.assertNotIn('start_delay_seconds', evidence)
+
     def test_existing_article_stops_before_run_listing(self):
         github = FakeGitHub(article={'sha': 'abc'})
         self.assertEqual(schedule.preflight(github, DAY, False, 2), 'complete')

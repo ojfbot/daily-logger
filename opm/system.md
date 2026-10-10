@@ -15,6 +15,8 @@ flowchart TD
   RunAdmission["Run Admission<br/>{generate, recover, complete}"]
   CronFiring("Cron Firing")
   RunAdmitting("Run Admitting")
+  RunEvidenceCapturing("Run Evidence Capturing")
+  RunEvidence["Run Evidence"]
   ArticleGenerating("Article Generating")
   BranchRecovering("Branch Recovering")
   ArticleCompletion["Article Completion"]
@@ -37,6 +39,9 @@ flowchart TD
   CronFiring -. triggers .-> RunAdmitting
   GitHub -. instrument .-> RunAdmitting
   RunAdmitting --> RunAdmission
+  RunAdmitting -. invokes .-> RunEvidenceCapturing
+  GitHub -. instrument .-> RunEvidenceCapturing
+  RunEvidenceCapturing --> RunEvidence
   RunAdmission -. if generate .-> ArticleGenerating
   RunAdmission -. if recover .-> BranchRecovering
   GitHub -. instrument .-> BranchRecovering
@@ -61,7 +66,7 @@ flowchart TD
   FrontendRendering --> RenderedSite
 ```
 
-**OPL paragraph.** Jim is physical. GitHub is environmental. Claude API is environmental. Article can be draft, accepted, or rejected. Draft is initial. Run Admission can be generate, recover, or complete. Cron Firing triggers Run Admitting. Run Admitting requires GitHub. Run Admitting yields Run Admission. Article Generating occurs if Run Admission is generate. Branch Recovering occurs if Run Admission is recover. Branch Recovering requires GitHub. Branch Recovering yields Article Completion. Article Generating yields Article Completion. Cleaner Admitting requires Article Completion. Cleaner Admitting yields Cleaner Admission. Cleaner Admission can be run or skip. Stale Content Cleaning occurs if Cleaner Admission is run. Stale Content Cleaning affects GitHub. Fallback Checking requires GitHub. Fallback Checking yields Fallback Decision. Fallback Decision can be missing, active, complete, or failed. Fallback Dispatching occurs if Fallback Decision is missing. Fallback Dispatching requires GitHub. Fallback Dispatching yields Workflow Run. Workflow Run triggers Run Admitting. Article Generating yields Article. Jim handles Editorial Accepting. Editorial Accepting changes Article from draft to accepted. API Building requires Article. API Building yields JSON API. Frontend Rendering requires JSON API. Frontend Rendering yields Rendered Site.
+**OPL paragraph.** Jim is physical. GitHub is environmental. Claude API is environmental. Article can be draft, accepted, or rejected. Draft is initial. Run Admission can be generate, recover, or complete. Cron Firing triggers Run Admitting. Run Admitting requires GitHub. Run Admitting yields Run Admission. Run Admitting invokes Run Evidence Capturing. Run Evidence Capturing requires GitHub. Run Evidence Capturing yields Run Evidence. Article Generating occurs if Run Admission is generate. Branch Recovering occurs if Run Admission is recover. Branch Recovering requires GitHub. Branch Recovering yields Article Completion. Article Generating yields Article Completion. Cleaner Admitting requires Article Completion. Cleaner Admitting yields Cleaner Admission. Cleaner Admission can be run or skip. Stale Content Cleaning occurs if Cleaner Admission is run. Stale Content Cleaning affects GitHub. Fallback Checking requires GitHub. Fallback Checking yields Fallback Decision. Fallback Decision can be missing, active, complete, or failed. Fallback Dispatching occurs if Fallback Decision is missing. Fallback Dispatching requires GitHub. Fallback Dispatching yields Workflow Run. Workflow Run triggers Run Admitting. Article Generating yields Article. Jim handles Editorial Accepting. Editorial Accepting changes Article from draft to accepted. API Building requires Article. API Building yields JSON API. Frontend Rendering requires JSON API. Frontend Rendering yields Rendered Site.
 
 ## SD1.1 — Article Generating in-zoom
 
@@ -74,7 +79,6 @@ flowchart TD
   TelemetryCollecting("Telemetry Collecting")
   CommitContext["Commit Context"]
   TelemetryDigest["Telemetry Digest"]
-  RunEvidenceCapturing("Run Evidence Capturing")
   RunEvidence["Run Evidence"]
   ActivityAssessing("Activity Assessing")
   CreditChecking("Credit Checking")
@@ -94,8 +98,6 @@ flowchart TD
   ContextCollecting -. invokes .-> TelemetryCollecting
   ContextCollecting --> CommitContext
   TelemetryCollecting --> TelemetryDigest
-  GitHub -. instrument .-> RunEvidenceCapturing
-  RunEvidenceCapturing --> RunEvidence
   RunTiming -- part of --> RunEvidence
   CommitContext -. instrument .-> ActivityAssessing
   ActivityAssessing --> ActivityDecision
@@ -123,4 +125,4 @@ flowchart TD
   ProvenanceAttaching -- affects --> Article
 ```
 
-**OPL paragraph.** Activity Decision can be skip or run. Run Timing can be available or unavailable. Run Evidence consists of Run Timing. Article Generating zooms into Run Evidence Capturing, Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, and Provenance Attaching. Context Collecting requires GitHub. Context Collecting invokes Telemetry Collecting. Context Collecting yields Commit Context. Telemetry Collecting yields Telemetry Digest. Run Evidence Capturing requires GitHub. Run Evidence Capturing yields Run Evidence. Activity Assessing requires Commit Context. Activity Assessing yields Activity Decision. Credit Checking occurs if Activity Decision is run. Credit Checking requires Claude API. Credit Checking yields Credit Status. Drafting requires Claude API. Drafting requires Commit Context. Drafting requires Telemetry Digest. Drafting requires Credit Status. Drafting occurs if Activity Decision is run. Drafting yields Article. Council Reviewing requires Claude API. Council Reviewing requires Article. Council Reviewing yields Council Critiques. Synthesizing requires Claude API. Synthesizing consumes Council Critiques. Synthesizing affects Article. Claim Verifying requires Article. Claim Verifying requires Commit Context. Claim Verifying yields Claim Report. Claim Verifying affects Article. Provenance Attaching requires Article. Provenance Attaching requires Run Evidence. Provenance Attaching affects Article.
+**OPL paragraph.** Activity Decision can be skip or run. Run Timing can be available or unavailable. Run Evidence consists of Run Timing. Article Generating zooms into Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, and Provenance Attaching. Context Collecting requires GitHub. Context Collecting invokes Telemetry Collecting. Context Collecting yields Commit Context. Telemetry Collecting yields Telemetry Digest. Activity Assessing requires Commit Context. Activity Assessing yields Activity Decision. Credit Checking occurs if Activity Decision is run. Credit Checking requires Claude API. Credit Checking yields Credit Status. Drafting requires Claude API. Drafting requires Commit Context. Drafting requires Telemetry Digest. Drafting requires Credit Status. Drafting occurs if Activity Decision is run. Drafting yields Article. Council Reviewing requires Claude API. Council Reviewing requires Article. Council Reviewing yields Council Critiques. Synthesizing requires Claude API. Synthesizing consumes Council Critiques. Synthesizing affects Article. Claim Verifying requires Article. Claim Verifying requires Commit Context. Claim Verifying yields Claim Report. Claim Verifying affects Article. Provenance Attaching requires Article. Provenance Attaching requires Run Evidence. Provenance Attaching affects Article.

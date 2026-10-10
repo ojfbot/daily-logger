@@ -61,6 +61,19 @@ function todayUTC(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+function packageVersion(): string | undefined {
+  try {
+    const manifest: unknown = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf-8'))
+    return manifest && typeof manifest === 'object' &&
+      'version' in manifest && typeof manifest.version === 'string' &&
+      manifest.version.length > 0
+      ? manifest.version
+      : undefined
+  } catch {
+    return undefined
+  }
+}
+
 function persistClosedActions(closed: ClosedAction[], date: string): void {
   if (closed.length === 0) return
   const apiDir = join(REPO_ROOT, 'api')
@@ -197,6 +210,7 @@ async function main() {
     const draft = article
     article = await synthesizeWithCouncil(draft, notes, ctx)
     synthesisApplied = article !== draft
+    article.generationMode ??= draft.generationMode
     console.log(`     Title : "${article.title}"`)
     console.log(`     Words : ~${article.body.split(/\s+/).length}`)
     console.log()
@@ -222,12 +236,29 @@ async function main() {
       `${verification.unverified.join(', ')} -->`
   }
 
-  const isMock = process.env.MOCK_LLM === 'true'
+  const generationMode = article.generationMode ?? 'model'
+  const draftAttribution = generationMode === 'model'
+    ? {
+        model: ARTICLE_MODEL,
+        promptVersion: ARTICLE_PROMPT_VERSION,
+        prompt: articleSystemPrompt(!!ctx.telemetry),
+      }
+    : generationMode === 'mock'
+      ? {
+          model: 'mock-llm',
+          promptVersion: 'mock-article-v2',
+          prompt: 'daily-logger mock article fixture v2',
+        }
+      : {
+          model: 'daily-logger',
+          promptVersion: 'generation-failure-stub-v1',
+          prompt: 'daily-logger deterministic generation failure stub v1',
+        }
   const authoringStages: AuthoringStage[] = [{
     role: 'draft',
-    model: isMock ? 'mock-llm' : ARTICLE_MODEL,
-    promptVersion: isMock ? 'mock-article-v2' : ARTICLE_PROMPT_VERSION,
-    promptSha256: promptSha256(articleSystemPrompt(!!ctx.telemetry)),
+    model: draftAttribution.model,
+    promptVersion: draftAttribution.promptVersion,
+    promptSha256: promptSha256(draftAttribution.prompt),
   }]
   if (synthesisApplied) {
     authoringStages.push({
@@ -237,16 +268,21 @@ async function main() {
       promptSha256: promptSha256(COUNCIL_SYNTHESIS_SYSTEM_PROMPT),
     })
   }
-  article.provenance = buildArticleProvenance({
+  const provenance = buildArticleProvenance({
     run: runEvidence,
     stages: authoringStages,
     nodeVersion: process.version,
-    packageVersion: process.env.npm_package_version ?? '0.1.0',
+    packageVersion: packageVersion(),
     runnerOs: process.env.RUNNER_OS,
     runnerArch: process.env.RUNNER_ARCH,
     job: process.env.GITHUB_JOB,
   })
-  reportArticleProvenance(article.provenance)
+  if (provenance) {
+    article.provenance = provenance
+    reportArticleProvenance(provenance)
+  } else {
+    console.warn('::warning title=Article provenance unavailable::Generated article will continue without provenance metadata')
+  }
 
   const markdown = toMarkdown(article)
 
