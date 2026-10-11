@@ -1070,5 +1070,25 @@
     "id": "act-2026-10-10-triage-5957cd",
     "closedDate": "2026-10-10",
     "resolution": "Transferred to the prepared human decision packet at the operator's explicit October 10 clarification that a packet with the human gate open is acceptable. NOT accepted/delivered: ADR-0079 and ADR-0080 remain Proposed; core #508 and existing human-only gate-0 bead core-task-997ccfbb retain the actual policy disposition and ordered reevaluation. Operator-directed packet recommends corrections to 0079 first, identifies exact response options and evidence, assigns owner ojfbot, and requests a 2026-10-10 17:00 America/Chicago checkpoint or an explicit next review date. Scanner defects are separately retained in core #519. No approval by silence, automated reminder or private-vault mutation. Evidence: https://github.com/ojfbot/core/issues/508#issuecomment-6101032449 ; https://github.com/ojfbot/core/issues/519 ; decisions/daily-queue/2026-10-10.md ."
+  },
+  {
+    "command": "/investigate",
+    "description": "Open morning-cockpit #54, read act-2026-10-09-pr-review-1b795e, and post the specific missing section as a comment on #54. Morning-cockpit #55 is closed and core #522 has merged — the named gap is the only remaining blocker. The output of this action is one comment on #54 that names which document has the gap and what the missing section is. That comment unblocks the #54 → #56 → MC-UX-01 consumer wiring sequence.",
+    "repo": "morning-cockpit",
+    "status": "done",
+    "sourceDate": "2026-10-11",
+    "id": "act-2026-10-11-investigate-34a4ff",
+    "closedDate": "2026-10-11",
+    "resolution": "Retired as a duplicate of the false missing-section premise. The October 9 independent review is already posted on #54 and explicitly finds no missing capture/planning section; no second comment naming a nonexistent gap is due. #54 remains draft, and #56/#57 need separate contract decisions and evidence. Evidence: https://github.com/ojfbot/morning-cockpit/pull/54#pullrequestreview-5472577238 ; https://github.com/ojfbot/morning-cockpit/pull/54 ."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review morning-cockpit #54 (DRAFT): identify the specific missing section in the cockpit transition plan that is blocking merge-readiness. Name it in the PR description. Do not assess overall completeness until the gap is named — 'complete enough to remove DRAFT status' is not a reviewable criterion without knowing what is missing.",
+    "repo": "morning-cockpit",
+    "status": "done",
+    "sourceDate": "2026-10-09",
+    "id": "act-2026-10-09-pr-review-1b795e",
+    "closedDate": "2026-10-11",
+    "resolution": "Retired false missing-section blocker after the posted independent capture/planning review found no absent required transition-plan section at the reviewed head. The October 10 #54 amendment then resolved all six #55 review threads while keeping the capture PR draft by scope. Future REST diagnostics and identity work remain separate. Evidence: https://github.com/ojfbot/morning-cockpit/pull/54#pullrequestreview-5472577238 ; https://github.com/ojfbot/morning-cockpit/pull/54 ; https://github.com/ojfbot/morning-cockpit/issues/55 ."
   }
 ]
