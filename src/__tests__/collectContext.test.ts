@@ -109,6 +109,71 @@ vi.mock('child_process', () => ({
 
 import { collectContext } from '../collect-context.js'
 import { execSync } from 'child_process'
+import { buildUserPrompt } from '../generate-article.js'
+import { buildReportUserPrompt } from '../generate-report.js'
+
+describe('collectContext — merged PR outcomes reach the drafter', () => {
+  afterEach(() => vi.mocked(execSync).mockImplementation(mockExecSync))
+
+  it('preserves rollout outcomes and constraints after both former truncation boundaries', async () => {
+    const body = `${'Rollout inspection details. '.repeat(30)}\nAll 24 public defaults verified.\n27 active private repositories remain pending: current GitHub plan rejects private rulesets.`
+    const pr = {
+      ...metadataOnlyPRFixture[0], number: 509, title: 'Enforce no-bypass PR gates', body,
+      state: 'closed', merged_at: '2026-02-27T23:00:00Z', closed_at: '2026-02-27T23:00:00Z',
+      html_url: 'https://github.com/ojfbot/core/pull/509', additions: 20, deletions: 0,
+    }
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('gh repo list')) return JSON.stringify([...repoListFixture, { name: 'core', isArchived: false, isFork: false, visibility: 'PUBLIC' }])
+      if (cmd.includes('ojfbot/core/pulls?state=closed') || cmd.includes('ojfbot/core/pulls?state=all')) return JSON.stringify([pr])
+      return mockExecSync(cmd)
+    })
+    const ctx = await collectContext('2026-02-28')
+    expect(ctx.mergedPRs.find((candidate) => candidate.number === 509)?.body).toBe(body)
+    expect(ctx.recentPRs.find((candidate) => candidate.number === 509)?.body).toBe(body)
+    const prompt = buildUserPrompt(ctx)
+    const mergedWeek = prompt.split('## PRs merged in last 7 days')[1].split('## Open PRs')[0]
+    const mergedDay = prompt.split('### MERGED IN LAST 24H')[1].split('### OPEN')[0]
+    for (const section of [mergedWeek, buildReportUserPrompt(ctx)]) {
+      expect(section).toContain('All 24 public defaults verified.')
+      expect(section).toContain('27 active private repositories remain pending: current GitHub plan rejects private rulesets.')
+    }
+    expect(mergedDay).toContain('#509 MERGED')
+    expect(mergedDay).not.toContain('All 24 public defaults verified.')
+    expect(prompt.match(/All 24 public defaults verified\./g)).toHaveLength(1)
+    const recentOnly = buildUserPrompt({ ...ctx, mergedPRs: [] })
+    expect(recentOnly).toContain('All 24 public defaults verified.')
+    expect(recentOnly.match(/All 24 public defaults verified\./g)).toHaveLength(1)
+  })
+
+  it('bounds large merged bodies with an omission marker while preserving their conclusion', async () => {
+    const body = `${'Audit detail. '.repeat(5000)}\nRollout: 24 public verified; 27 private pending.`
+    const pr = { ...metadataOnlyPRFixture[0], body, state: 'closed', merged_at: '2026-02-27T23:00:00Z', closed_at: '2026-02-27T23:00:00Z', additions: 20, deletions: 0 }
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('ojfbot/shell/pulls?state=closed') || cmd.includes('ojfbot/shell/pulls?state=all')) return JSON.stringify([pr])
+      return mockExecSync(cmd)
+    })
+    const ctx = await collectContext('2026-02-28')
+    for (const collected of [ctx.mergedPRs[0], ctx.recentPRs[0]]) {
+      expect(collected.body?.length).toBeLessThanOrEqual(6000)
+      expect(collected.body).toMatch(/\[\.\.\.truncated \d+ chars/)
+      expect(collected.body).toContain('Rollout: 24 public verified; 27 private pending.')
+    }
+    for (const prompt of [buildUserPrompt(ctx), buildReportUserPrompt(ctx)]) {
+      expect(prompt).toContain('Rollout: 24 public verified; 27 private pending.')
+      expect(prompt.match(/Rollout: 24 public verified/g)).toHaveLength(1)
+    }
+  })
+
+  it('keeps the non-merged recent body preview at 400 characters', async () => {
+    const body = 'x'.repeat(1000)
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('ojfbot/shell/pulls?state=all')) return JSON.stringify([{ ...metadataOnlyPRFixture[0], body }])
+      return mockExecSync(cmd)
+    })
+    const ctx = await collectContext('2026-02-28')
+    expect(ctx.recentPRs[0].body).toBe('x'.repeat(400))
+  })
+})
 
 // --- tests --------------------------------------------------------------------
 

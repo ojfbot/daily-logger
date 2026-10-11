@@ -2,7 +2,7 @@
   {
     "date": "2026-10-10",
     "title": "Friday's 11 commits: tightening PR gates and editorial CI across the fleet",
-    "summary": "Friday's 11 commits across daily-logger and core closed credential and CI gaps in the editorial pipeline and enforced no-bypass PR gates on 16 of 24 active public repositories.",
+    "summary": "Friday's hardening removed CI-skip markers from automated PRs and extended no-bypass gates to the 16 remaining public repositories, bringing verified public coverage to 24 of 24; private-repository coverage remains a separate plan-constrained decision.",
     "tags": [
       {
         "name": "daily-logger",
@@ -34,23 +34,23 @@
       }
     ],
     "reposActive": [
-      "morning-cockpit",
-      "core",
-      "daily-logger"
+      "daily-logger",
+      "core"
     ],
-    "commitCount": 26,
+    "commitCount": 12,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "edited",
     "decisions": [
       {
-        "title": "Require CI on editorial PR heads even when commits carry [skip ci]",
+        "title": "Remove CI skip markers from automated PR commits",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Isolate editorial push credentials behind an article-only validation boundary",
+        "title": "Confine the existing editorial PAT to the validated final push",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
@@ -62,7 +62,7 @@
         "relatedTags": []
       },
       {
-        "title": "Fleet-wide PR gate enforcement as a single auditable commit",
+        "title": "Verify public rollout separately from private capability and rollback",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
@@ -79,11 +79,19 @@
       },
       {
         "command": "/investigate",
-        "description": "Audit the 8 repositories not yet confirmed by the fleet-runner PR-gate sweep (core #509 covered 16 of 24). Trigger the fleet-runner audit run manually — it is not scheduled. Produce a list of unprotected repos. For each: confirm whether the fleet-runner will apply gates on its next run or whether a refused-and-preserved conflict from an existing stricter rule is blocking application. The 8 repos are not confirmed compliant; treat them as unprotected until the audit run confirms otherwise.",
+        "description": "Clarify the 8 repositories not covered by the fleet-runner PR-gate sweep (core #509 covered 16 of 24). These are now identified as private repos where the current GitHub license tier does not allow branch protection rules. File a follow-up issue in core to determine: (a) why the fleet-runner inspection did not surface this constraint in its output or PR description, (b) whether the daily-logger runner missed the context or whether it was never captured in documentation or decision records, and (c) next steps — evaluate a license tier upgrade to enable branch protection on private repos, or record an explicit risk-acceptance decision.",
         "repo": "core",
         "status": "open",
         "sourceDate": "2026-10-10",
-        "id": "act-2026-10-10-investigate-bfe1a3"
+        "id": "act-2026-10-10-investigate-4f976a"
+      },
+      {
+        "command": "/file-bug",
+        "description": "Daily-logger editorial UI: the `+` icon button next to section-level editorial text area inputs does not function. No clean interface exists for adding multiple editorial entries per section — all notes must be freeformed into one paragraph. This degrades readability, agent parseability, and introduces data-loss risk. Request a proper UX design and delivery work cycle to ship an improved multi-entry editorial input interface.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-10-10",
+        "id": "act-2026-10-10-file-bug-067a8d"
       },
       {
         "command": "/triage",
