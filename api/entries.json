@@ -1,8 +1,8 @@
 [
   {
     "date": "2026-10-11",
-    "title": "Saturday's 15 commits: hardening the MC-UX contract and closing the editorial proof chain",
-    "summary": "Saturday's 15 commits across daily-logger and core closed seven PRs, seeding the MC-UX-01 consumer contract profile and completing the editorial evidence chain.",
+    "title": "Saturday's 15 commits: hardening the MC-UX contract and advancing editorial verification",
+    "summary": "Saturday's 15 commits across daily-logger and core closed seven PRs, seeding the MC-UX-01 consumer contract profile and advancing editorial verification.",
     "tags": [
       {
         "name": "daily-logger",
@@ -60,7 +60,8 @@
     "commitCount": 15,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "accepted",
     "decisions": [
       {
         "title": "Adversarial fixtures as a first-class contract artifact, not a CI afterthought",
