@@ -2,18 +2,11 @@
 
 ## Daily-cycle questions in Codex
 
-For the next daily run, issue pickup, queued actions, editorial follow-up or
-scheduling, read `docs/daily-cycle.md`. Identify the workflow the user means.
-"Pick up" normally means discover/reconcile on the next pass, not agent launch.
-
-Use current merged source, the matching scheduled-task prompt and latest receipt.
-A stale checkout or cron declaration alone does not establish what ran. A missing
-local automation is an evidence limit, not proof that no other scheduled task exists.
-The core `/daily-logger` skill is orientation, not the scheduled worker itself.
-
-For work intake, fetch the full issue and relevant PR discussion; article previews
-can omit gates. Preserve task permissions. Retained human gates need the decision,
-owner and requested review checkpoint; silence or elapsed time is not approval.
+Use core's `/daily-logger` orientation workflow for daily-run, issue-pickup, and
+queue questions. Read `docs/daily-cycle.md` for this project's source index.
+Identify the intended workflow or saved task before making pickup claims. If its
+identity is missing, ask for the task name or latest receipt. This orientation
+does not grant execution authority.
 
 ## What this repo does
 
@@ -21,7 +14,7 @@ owner and requested review checkpoint; silence or elapsed time is not approval.
 
 1. Sweeping commits, pull request changes, and issue changes across all eligible ojfbot repos via the GitHub API
 2. Aggregating Codex skill telemetry (skill-dispositions ledger, suggestion follow-through tracking, and PR skill comments) alongside commit/PR data
-3. Feeding that context to Claude Sonnet with a project-aware system prompt
+3. Feeding that context to the configured drafting model with a project-aware system prompt
 4. Committing the resulting article to `_articles/YYYY-MM-DD.md` (with a dedicated skill telemetry section)
 5. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
 The workflow runs on a daily cron scheduled in America/Chicago and can also be triggered manually with a date override or dry-run flag.
