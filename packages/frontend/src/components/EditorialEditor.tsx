@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAppSelector } from '../store/hooks.ts'
-import { stampDraft } from '../utils/stampDraft.ts'
+import { stampDraft, type EditorialFeedback } from '../utils/stampDraft.ts'
 
 interface Props {
   date: string
@@ -59,20 +59,18 @@ export function EditorialEditor({ date, articleTitle, login }: Props & { login: 
     setState('loading')
     setErrorMsg(null)
 
-    // Build editorial feedback payload
-    const feedback: string[] = []
+    const notes: EditorialFeedback['notes'] = []
 
     for (const suggestion of suggestions) {
-      feedback.push(`## Root-level edit suggestion\n\n${suggestion}`)
+      notes.push({ kind: 'root', content: suggestion })
     }
 
     for (const thread of articleThreads) {
       const userNotes = thread.messages
         .filter((m) => m.role === 'user')
-        .map((m) => `- ${m.content}`)
-        .join('\n')
-      if (userNotes) {
-        feedback.push(`## Section: ${thread.section}\n\n${userNotes}`)
+        .map((m) => m.content)
+      for (const content of userNotes) {
+        notes.push({ kind: 'section', section: thread.section, content })
       }
     }
 
@@ -81,7 +79,7 @@ export function EditorialEditor({ date, articleTitle, login }: Props & { login: 
         date,
         articleTitle,
         login,
-        feedback.length > 0 ? feedback.join('\n\n---\n\n') : undefined,
+        notes.length > 0 ? { version: 2, notes } : undefined,
       )
       try {
         sessionStorage.removeItem(storageKey)
