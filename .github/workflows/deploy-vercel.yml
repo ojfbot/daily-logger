@@ -4,12 +4,16 @@ on:
   push:
     branches: [main]
     paths:
+      - '_articles/**'
+      - '.github/workflows/deploy-vercel.yml'
       - 'packages/frontend/**'
       - 'api/**'
       - 'vercel.json'
       - 'src/build-api.ts'
   pull_request:
     paths:
+      - '_articles/**'
+      - '.github/workflows/deploy-vercel.yml'
       - 'packages/frontend/**'
       - 'api/**'
       - 'vercel.json'
