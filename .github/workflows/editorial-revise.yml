@@ -29,7 +29,8 @@ jobs:
       github.event.action == 'opened' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       startsWith(github.head_ref, 'accept/') &&
-      !contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_START')
+      !contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_START') &&
+      !contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_V2_START')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -115,7 +116,8 @@ jobs:
     if: >-
       github.event.pull_request.head.repo.full_name == github.repository &&
       startsWith(github.head_ref, 'accept/') &&
-      contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_START')
+      (contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_START') ||
+       contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_V2_START'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -145,40 +147,8 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Extract editorial feedback from PR body
-        if: steps.guard.outputs.skip != 'true'
-        id: feedback
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const body = context.payload.pull_request.body || '';
-            const startMarker = '<!-- EDITORIAL_FEEDBACK_START -->';
-            const endMarker = '<!-- EDITORIAL_FEEDBACK_END -->';
-            const startIdx = body.indexOf(startMarker);
-            const endIdx = body.indexOf(endMarker);
-            if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) {
-              core.setOutput('feedback', '');
-              core.info('No valid feedback markers found');
-              return;
-            }
-            const feedback = body.slice(startIdx + startMarker.length, endIdx).trim();
-            core.setOutput('feedback', feedback);
-            core.info(`Extracted ${feedback.length} chars of feedback`);
-
-      - name: Guard — feedback non-empty
-        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback == ''
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              ...context.repo,
-              issue_number: context.issue.number,
-              body: '⚠️ Editorial feedback markers found but no actionable feedback extracted.\n\nPlease edit the PR body with revision instructions between the `EDITORIAL_FEEDBACK_START` and `EDITORIAL_FEEDBACK_END` markers.',
-            });
-            core.setFailed('No feedback content between markers');
-
       - name: Extract article date from branch name
-        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        if: steps.guard.outputs.skip != 'true'
         id: date
         run: |
           DATE="${GITHUB_HEAD_REF#accept/}"
@@ -191,7 +161,7 @@ jobs:
           echo "📅 Article date: $DATE"
 
       - name: Require article-only changes before running PR code
-        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        if: steps.guard.outputs.skip != 'true'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
@@ -206,6 +176,29 @@ jobs:
             exit 1
           fi
           git checkout -B "$HEAD_BRANCH" "$HEAD_SHA"
+
+      - name: Extract editorial feedback from PR body
+        if: steps.guard.outputs.skip != 'true'
+        id: feedback
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { extractEditorialFeedback } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/extract-editorial-feedback.mjs`);
+            const feedback = extractEditorialFeedback(context.payload.pull_request.body || '');
+            core.setOutput('feedback', feedback);
+            core.info(`Extracted ${feedback.length} chars of feedback`);
+
+      - name: Guard — feedback non-empty
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback == ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: '⚠️ Editorial feedback markers found but no actionable feedback extracted.\n\nPlease edit the PR body with non-empty editorial feedback. For v2 feedback, keep the encoded payload between its markers.',
+            });
+            core.setFailed('No feedback content between markers');
 
       - name: Setup pnpm
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''

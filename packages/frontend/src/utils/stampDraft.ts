@@ -16,6 +16,21 @@ interface StampResult {
   prUrl: string
 }
 
+export type EditorialFeedback = {
+  version: 2
+  notes: Array<
+    | { kind: 'root'; content: string }
+    | { kind: 'section'; section: string; content: string }
+  >
+}
+
+function encodeFeedback(feedback: EditorialFeedback): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(feedback))
+  let binary = ''
+  for (const byte of bytes) binary += String.fromCharCode(byte)
+  return btoa(binary)
+}
+
 async function ghFetch(path: string, options?: RequestInit): Promise<Response> {
   const url = `/api/github/${path}`
   const headers: Record<string, string> = {
@@ -36,7 +51,7 @@ async function ghFetch(path: string, options?: RequestInit): Promise<Response> {
   })
 }
 
-export async function stampDraft(date: string, articleTitle: string, userLogin: string, editorialFeedback?: string): Promise<StampResult> {
+export async function stampDraft(date: string, articleTitle: string, userLogin: string, editorialFeedback?: EditorialFeedback): Promise<StampResult> {
   const branch = `accept/${date}`
   const filePath = `_articles/${date}.md`
 
@@ -128,9 +143,15 @@ export async function stampDraft(date: string, articleTitle: string, userLogin: 
           '',
           '### Editorial Feedback',
           '',
-          '<!-- EDITORIAL_FEEDBACK_START -->',
-          editorialFeedback!,
-          '<!-- EDITORIAL_FEEDBACK_END -->',
+          '<!-- EDITORIAL_FEEDBACK_V2_START -->',
+          encodeFeedback(editorialFeedback!),
+          '<!-- EDITORIAL_FEEDBACK_V2_END -->',
+          '',
+          '### Notes for review',
+          '',
+          '```json',
+          JSON.stringify(editorialFeedback, null, 2),
+          '```',
         ]
       : []),
     '',

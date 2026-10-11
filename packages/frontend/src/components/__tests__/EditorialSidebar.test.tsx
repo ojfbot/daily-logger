@@ -73,7 +73,11 @@ describe('editorial revision notes', () => {
     expect(container.textContent).toContain('2 suggestions')
     await click('ACCEPT WITH REVISIONS')
     expect(stampDraft).toHaveBeenCalledExactlyOnceWith('2026-10-10', 'Friday', 'editor',
-      '## Root-level edit suggestion\n\nEdited first note\n\n---\n\n## Root-level edit suggestion\n\nThird note\n\n---\n\n## Section: What shipped\n\n- Section note')
+      { version: 2, notes: [
+        { kind: 'root', content: 'Edited first note' },
+        { kind: 'root', content: 'Third note' },
+        { kind: 'section', section: 'What shipped', content: 'Section note' },
+      ] })
     expect(sessionStorage.getItem('dl-editorial:editor:2026-10-10')).toBeNull()
     expect(container.textContent).toContain('PR #42 opened')
   })
@@ -141,17 +145,22 @@ describe('editorial revision notes', () => {
       .mockResolvedValueOnce(Response.json({}))
       .mockResolvedValueOnce(Response.json({ number: 42, html_url: 'https://github.com/ojfbot/daily-logger/pull/42' }))
     vi.stubGlobal('fetch', request)
-    await enter(0, 'HTTP first')
+    const literal = 'HTTP first\n---\n## Section: Not a section\n<!-- EDITORIAL_FEEDBACK_END -->\n雪'
+    await enter(0, literal)
     await click('Add another edit suggestion')
     await enter(1, 'HTTP second')
     await click('ACCEPT WITH REVISIONS')
     const prRequest = request.mock.calls.find(([path, options]) => String(path).endsWith('/pulls') && options?.method === 'POST')
     if (typeof prRequest?.[1]?.body !== 'string') throw new Error('Missing HTTP PR body')
     const payload: { body: string } = JSON.parse(prRequest[1].body)
-    expect(payload.body).toContain('## Root-level edit suggestion\n\nHTTP first\n\n---\n\n## Root-level edit suggestion\n\nHTTP second')
-    expect(payload.body.match(/HTTP first/g)).toHaveLength(1)
-    expect(payload.body.match(/HTTP second/g)).toHaveLength(1)
-    expect(payload.body).toContain('## Section: What shipped\n\n- Section note')
+    const encoded = payload.body.match(/<!-- EDITORIAL_FEEDBACK_V2_START -->\n([^\n]+)\n<!-- EDITORIAL_FEEDBACK_V2_END -->/)?.[1]
+    if (!encoded) throw new Error('Missing encoded feedback')
+    const feedback = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0))))
+    expect(feedback).toEqual({ version: 2, notes: [
+      { kind: 'root', content: literal },
+      { kind: 'root', content: 'HTTP second' },
+      { kind: 'section', section: 'What shipped', content: 'Section note' },
+    ] })
     expect(prRequest[1].headers).toMatchObject({ 'X-Requested-With': 'XMLHttpRequest' })
     expect(prRequest[1].credentials).toBe('same-origin')
     expect(container.textContent).toContain('PR #42 opened')
