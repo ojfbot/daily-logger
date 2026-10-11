@@ -1,5 +1,20 @@
 # AGENTS.md — daily-logger
 
+## Daily-cycle questions in Codex
+
+For the next daily run, issue pickup, queued actions, editorial follow-up or
+scheduling, read `docs/daily-cycle.md`. Identify the workflow the user means.
+"Pick up" normally means discover/reconcile on the next pass, not agent launch.
+
+Use current merged source, the matching scheduled-task prompt and latest receipt.
+A stale checkout or cron declaration alone does not establish what ran. A missing
+local automation is an evidence limit, not proof that no other scheduled task exists.
+The core `/daily-logger` skill is orientation, not the scheduled worker itself.
+
+For work intake, fetch the full issue and relevant PR discussion; article previews
+can omit gates. Preserve task permissions. Retained human gates need the decision,
+owner and requested review checkpoint; silence or elapsed time is not approval.
+
 ## What this repo does
 
 `daily-logger` generates one markdown blog article per day by:

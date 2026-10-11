@@ -22,6 +22,8 @@
 
 - 2026-10-11 (#341 browser regression): the planned feedback journey assumed a section note could be entered normally; the injected chat button changes the heading text, so the section lookup dropped Send before it reached the mocked API. Correct the heading lookup in this slice and use the browser case to verify the full path.
 
+- 2026-10-10 (Codex daily-cycle context): the initial answer treated issue pickup as agent dispatch after loading only article-generation orientation; the operator meant the next scheduled agent pass, and the inspected local tasks cover fallback/cleaner review rather than a proven general issue worker. Added source-backed workflow routing and explicit capture/tracking/execution distinctions without changing task scope or scheduling. The primary checkout is stale and dirty, so isolated the proposal on merged main and preserved its existing instructions.
+
 - 2026-10-10 (final review records): the earlier queue split preserved a legacy-path pointer and immutable handoff text, but neither path nor beads had landed on main. With explicit operator permission, removed the pointer, normalized only references/internal chat IDs in the unmerged records, and kept substantive historical claims as dated snapshots with a new superseding report.
 
 - 2026-10-10 (editorial review reconciliation): the reviewed PR base was c7b3b9c while main contained provenance UI/styles through 4b4589a; preserved both the provenance changes and editorial notes in an isolated merge tree and reran tests/build rather than deploying the stale reviewed snapshot.
