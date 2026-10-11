@@ -1030,5 +1030,45 @@
     "id": "act-2026-09-25-validate-b892d7",
     "closedDate": "2026-10-09",
     "resolution": "Fulfilled by fresh collection-only validation on 2026-10-09 at c0321638a051a5440be7feb9f12e6a95f14911e8: 56 repos listed, all 45 eligible repos collected, four unnoted private repos skipped, no excluded/private leakage and zero commit/PR/issue API skips. All 279 regression tests and type-check passed; lint has one existing warning. The prescribed sweep:dry command does not exist; validation covered the implemented single-page/16 MB-buffer collector. Evidence: decisions/fleet-runner/sweep-validation-2026-10-09.md and its JSON receipt. No article generation or model call occurred."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Reconcile all six unresolved Claude review threads on morning-cockpit PR #54 (MC-UX-01 design handoff capture). Address: T1–T7/core-gate crosswalk using the Codex follow-up's qualified crosswalk (do not assume all T1–T6 are ungated/read-only), capture verifier in CI with byte guards, merge-method/pin handling, local AGENTS attribution, deviation numbering, and published local paths. Record a fix or reasoned disposition for each thread. Keep the PR draft — this task does not request a merge or UI/executor implementation.",
+    "repo": "morning-cockpit",
+    "status": "done",
+    "sourceDate": "2026-10-10",
+    "id": "act-2026-10-10-pr-review-4bb888",
+    "closedDate": "2026-10-10",
+    "resolution": "Delivered the bounded review cleanup, not runtime implementation: morning-cockpit PR #54 amended at 5078639b2e752c3e1fa7125288201a2ccfef8424; all six inline threads received individual dispositions and were resolved after GitHub build-test passed. Issue #55 closed completed with all six checkboxes checked. Capture verifier/mutation tests, 330 existing tests, typecheck/build and contract parity pass. PR #54 remains draft and unmerged as instructed. Evidence: https://github.com/ojfbot/morning-cockpit/issues/55#issuecomment-6100803626 ; https://github.com/ojfbot/morning-cockpit/actions/runs/38075910081/job/114282695136 ; decisions/daily-queue/2026-10-10.md ."
+  },
+  {
+    "command": "/investigate",
+    "description": "Clarify the 8 repositories not covered by the fleet-runner PR-gate sweep (core #509 covered 16 of 24). These are now identified as private repos where the current GitHub license tier does not allow branch protection rules. File a follow-up issue in core to determine: (a) why the fleet-runner inspection did not surface this constraint in its output or PR description, (b) whether the daily-logger runner missed the context or whether it was never captured in documentation or decision records, and (c) next steps — evaluate a license tier upgrade to enable branch protection on private repos, or record an explicit risk-acceptance decision.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-10-10",
+    "id": "act-2026-10-10-investigate-4f976a",
+    "closedDate": "2026-10-10",
+    "resolution": "Investigation and requested follow-up filing fulfilled; private policy not delivered: core #509 explicitly documents 8 public defaults already protected + 16 newly protected = 24/24 verified, and a separate 27 active private repositories pending under the GitHub plan. The article's eight-private/unconfirmed premise is false. Merged bodies were cut at 400 during collection and 200 in both drafting views; daily-logger #336 tracks the end-to-end fix and article correction. Core #518 retains the operator's license/capability evaluation versus time-bounded risk-acceptance choice in human-only gate-0 bead core-task-2d4dc109. No purchase, administrative mutation or private protection completion is claimed. Evidence: https://github.com/ojfbot/core/pull/509 ; https://github.com/ojfbot/core/issues/518 ; https://github.com/ojfbot/daily-logger/issues/336 ; decisions/daily-queue/2026-10-10.md ."
+  },
+  {
+    "command": "/file-bug",
+    "description": "Daily-logger editorial UI: the `+` icon button next to section-level editorial text area inputs does not function. No clean interface exists for adding multiple editorial entries per section — all notes must be freeformed into one paragraph. This degrades readability, agent parseability, and introduces data-loss risk. Request a proper UX design and delivery work cycle to ship an improved multi-entry editorial input interface.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-10-10",
+    "id": "act-2026-10-10-file-bug-067a8d",
+    "closedDate": "2026-10-10",
+    "resolution": "Requested bug filing fulfilled in daily-logger #334 with source provenance and behavioral acceptance criteria. The broken control is the root editorial sidebar +, not the working section-chat launcher. Tested multi-note implementation is in PR #337: independent add/edit/remove, ordered exactly-once payload including current input and section feedback, reload/failure preservation and loading guards. All final-head GitHub checks passed at 22073ab9141ae67dae6541c78b56f408e31c7b67. This retires the file-bug instruction, not the undelivered deployment: #334 and human-only gate-0 review bead dail-task-bd8cc79e remain open until merge and deployed verification. Evidence: https://github.com/ojfbot/daily-logger/issues/334 ; https://github.com/ojfbot/daily-logger/pull/337 ; decisions/daily-queue/2026-10-10.md ."
+  },
+  {
+    "command": "/triage",
+    "description": "Accept ADR-0079 (vault-lifecycle policy) and re-evaluate ADR-0080 (scanner acceptance criteria) against the scanner PR description from core PR #121. ADR-0079 must be accepted first — it is the prerequisite. Both ADRs have been in Proposed state since their governing PRs merged in September; the gap erodes the audit trail. This is housekeeping, not blocking any current implementation work.",
+    "repo": "core",
+    "status": "done",
+    "sourceDate": "2026-10-10",
+    "id": "act-2026-10-10-triage-5957cd",
+    "closedDate": "2026-10-10",
+    "resolution": "Transferred to the prepared human decision packet at the operator's explicit October 10 clarification that a packet with the human gate open is acceptable. NOT accepted/delivered: ADR-0079 and ADR-0080 remain Proposed; core #508 and existing human-only gate-0 bead core-task-997ccfbb retain the actual policy disposition and ordered reevaluation. Operator-directed packet recommends corrections to 0079 first, identifies exact response options and evidence, assigns owner ojfbot, and requests a 2026-10-10 17:00 America/Chicago checkpoint or an explicit next review date. Scanner defects are separately retained in core #519. No approval by silence, automated reminder or private-vault mutation. Evidence: https://github.com/ojfbot/core/issues/508#issuecomment-6101032449 ; https://github.com/ojfbot/core/issues/519 ; decisions/daily-queue/2026-10-10.md ."
   }
 ]
