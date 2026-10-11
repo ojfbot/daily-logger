@@ -6,6 +6,8 @@
 
 - 2026-10-13 (PR349 current-main refresh): the prior local patch was expected to replay cleanly, but accepted PR #348 added notes at the same heading; retained both sets of notes and recorded the conflict without changing application or browser-test behavior.
 
+- 2026-10-10 (prompt repair): the first proposal interpreted pickup before resolving the user's scheduled worker and duplicated instructions across project docs and saved prompts. Reduced project guidance to an evidence index, structured the two existing saved-task prompts without changing their authority or schedule, and retained the unidentified worker as an explicit evidence gap. Independent review remains pending.
+
 - 2026-10-13 (PR #348 / issue #342): the existing cohort test assumed reports could omit recent-only merged PRs and measured allocator output rather than rendered prompts; native regressions found missing report evidence and 24,044 characters after quote separators. Added recent-only report coverage with shared-body deduplication and reserved separator space inside the named 24,000-character budget. This remains a character heuristic for selected body quotes, not a token or whole-prompt bound.
 
 - 2026-10-13 (PR #348 integration): PR metadata still named base `872a7e7` while the live main endpoint resolved to `457809f`; rebased the owned detached worktree onto the actual main commit and retained source pins rather than integrating against the stale metadata.
