@@ -3,7 +3,7 @@ import { normalizeArticleMarkdown } from './normalize-article-markdown.js'
 import type { BlogContext, GeneratedArticle, StructuredArticle } from './types.js'
 import type { ArticleDataV2 } from './schema.js'
 import { validateArticleOutput, getValidationErrors, actionId } from './schema.js'
-import { quotedMergedPRBody, PROMPT_PR_PREVIEW_CHARS } from './pr-body.js'
+import { allocateMergedPREvidence, mergedEvidenceKey, PROMPT_PR_PREVIEW_CHARS } from './pr-body.js'
 import { formatArticleFooter } from './run-provenance.js'
 
 export const ARTICLE_MODEL = 'claude-sonnet-4-6'
@@ -763,13 +763,18 @@ export function buildUserPrompt(ctx: BlogContext): string {
     parts.push('## Commits in last 24h\n_No commits today._\n')
   }
 
+  const weeklyMerged = ctx.mergedPRs.slice(0, 15)
+  const mergedRecent = ctx.recentPRs.filter((pr) => !!pr.mergedAt)
+  const recentMerged = mergedRecent.slice(0, 30)
+  const mergedEvidence = allocateMergedPREvidence([...weeklyMerged, ...recentMerged])
+
   if (ctx.mergedPRs.length > 0) {
     parts.push(`## PRs merged in last 7 days (${ctx.mergedPRs.length})`)
-    ctx.mergedPRs.slice(0, 15).forEach((pr) => {
+    weeklyMerged.forEach((pr) => {
       parts.push(
-        `- [${pr.repo}] #${pr.number}: ${pr.title} (+${pr.additions}/-${pr.deletions})`
+        `- [${pr.repo}] [#${pr.number}: ${pr.title}](${pr.url}) (+${pr.additions}/-${pr.deletions})`
       )
-      if (pr.body) parts.push(quotedMergedPRBody(pr.body))
+      if (pr.body) parts.push(mergedEvidence.get(mergedEvidenceKey(pr)) ?? '')
     })
     parts.push('')
   }
@@ -789,8 +794,7 @@ export function buildUserPrompt(ctx: BlogContext): string {
     // verification-rules section (system prompt). The drafter MUST treat
     // each bucket as authoritative and never speculate about a PR's state
     // that conflicts with its bucket placement here.
-    const mergedRecent = ctx.recentPRs.filter((pr) => !!pr.mergedAt)
-    const describedMergedPRs = new Set(ctx.mergedPRs.slice(0, 15).filter((pr) => pr.body).map((pr) => `${pr.repo}#${pr.number}`))
+    const describedMergedPRs = new Set(weeklyMerged.filter((pr) => pr.body).map(mergedEvidenceKey))
     const openRecent = ctx.recentPRs.filter((pr) => !pr.mergedAt && pr.state === 'open')
     const closedNotMergedRecent = ctx.recentPRs.filter(
       (pr) => !pr.mergedAt && pr.state === 'closed'
@@ -806,11 +810,11 @@ export function buildUserPrompt(ctx: BlogContext): string {
     if (mergedRecent.length === 0) {
       parts.push('_(none)_')
     } else {
-      mergedRecent.slice(0, 30).forEach((pr) => {
+      recentMerged.forEach((pr) => {
         parts.push(
-          `- [${pr.repo}] #${pr.number} MERGED ${pr.mergedAt!.slice(0, 19)}: ${pr.title}`
+          `- [${pr.repo}] [#${pr.number}: ${pr.title}](${pr.url}) MERGED ${pr.mergedAt!.slice(0, 19)}`
         )
-        if (pr.body && !describedMergedPRs.has(`${pr.repo}#${pr.number}`)) parts.push(quotedMergedPRBody(pr.body))
+        if (pr.body && !describedMergedPRs.has(mergedEvidenceKey(pr))) parts.push(mergedEvidence.get(mergedEvidenceKey(pr)) ?? '')
       })
     }
     parts.push('')
