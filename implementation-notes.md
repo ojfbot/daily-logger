@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-10 (final review records): the earlier queue split preserved a legacy-path pointer and immutable handoff text, but neither path nor beads had landed on main. With explicit operator permission, removed the pointer, normalized only references/internal chat IDs in the unmerged records, and kept substantive historical claims as dated snapshots with a new superseding report.
+
 - 2026-10-10 (editorial review reconciliation): the reviewed PR base was c7b3b9c while main contained provenance UI/styles through 4b4589a; preserved both the provenance changes and editorial notes in an isolated merge tree and reran tests/build rather than deploying the stale reviewed snapshot.
 
 - 2026-10-10 (authorized merge policy): repository settings advertised all merge methods, but the active default-branch ruleset permits only rebase; GitHub then rejected rebasing the reviewed merge-commit history. Linearized only the owned PR branch onto inspected main, preserved the final reviewed contents plus this deviation, used an expected-head lease and reran final-head CI. No ruleset or bypass changed.
@@ -99,3 +101,4 @@
 - 2026-10-10 (merged-PR grounding): initial inspection found a 400-character collector cutoff; article and report drafting also cut merged views at 200. Replaced these with one bounded 6,000-character head/tail policy and an explicit middle-omission marker; each merged body appears only once per article prompt. Existing non-merged previews and list limits remain.
 - 2026-10-10 (review correction): preserving the inaccurate narrative under a correction preface still exposed false decision titles through the API; corrected narrative and decisions inline, retained exact suggested-action text for ID audit, and documented source-checked correction attribution. Queue settlement is reviewed in a separate follow-on PR after operator confirmation.
 - 2026-10-10 (local API verification): the documented tsx CLI tried to bind an IPC socket denied by the sandbox; ran the same API builder with `pnpm exec node --import tsx src/build-api.ts`, without changing production build commands.
+- 2026-10-10 (human-gate settlement): the initial receipt kept the article triage instruction open until an actual ADR disposition; the operator clarified that a prepared packet with the human gate left open is an acceptable day outcome, provided agents direct timely resolution. Retired only the article instruction as transferred, retained core #508/its human-only bead, and recorded an owner, exact response options and requested checkpoint without pretending the ADRs were accepted or a reminder was armed.

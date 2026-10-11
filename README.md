@@ -163,6 +163,13 @@ Update the generated JSON API and identify the correction in the article footer.
 Explicitly dated follow-up notes may record later events, but must distinguish
 those events from the original activity window and retain source links.
 
+Daily queue evidence lives in `decisions/daily-queue/`. Curated `.handoff/` briefs and
+reports retain source issue hooks, actor attribution and acceptance evidence for
+session continuity. They are public records, not dispatch instructions or approval
+of Proposed policy. Append corrections as new reports; keep prior reports as dated
+snapshots. Queue dispositions record completion or explicit transfer of the original
+instruction separately from open follow-up issues and human gates.
+
 ---
 
 ## Customisation
