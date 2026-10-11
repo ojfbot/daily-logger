@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-10 (editorial review reconciliation): the reviewed PR base was c7b3b9c while main contained provenance UI/styles through 4b4589a; preserved both the provenance changes and editorial notes in an isolated merge tree and reran tests/build rather than deploying the stale reviewed snapshot.
+
 - 2026-10-10 (authorized merge policy): repository settings advertised all merge methods, but the active default-branch ruleset permits only rebase; GitHub then rejected rebasing the reviewed merge-commit history. Linearized only the owned PR branch onto inspected main, preserved the final reviewed contents plus this deviation, used an expected-head lease and reran final-head CI. No ruleset or bypass changed.
 
 - 2026-10-10 (review branch reconciliation): the reviewed PR base was c7b3b9c while main already contained run-provenance commits through 4b4589a; preserved that implementation, combined its footer import with the bounded-evidence import, and reran verification against the combined tree rather than reporting stale-head readiness.
