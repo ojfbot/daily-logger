@@ -1,5 +1,29 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Review core #525 (docs: structure daily-logger orientation evidence contracts) and daily-logger #343 (docs: index daily-cycle evidence and resolve workflow identity). Both were opened Saturday to fix the Codex context-substitution failure — the agent ran article generation against issue-processing inputs and completed silently. Check whether the two PRs duplicate instructions across documents and consolidate before merge. This is the prerequisite for the next scheduled issue-processing session.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-11",
+    "id": "act-2026-10-11-pr-review-0823d8"
+  },
+  {
+    "command": "/investigate",
+    "description": "Open morning-cockpit #54, read act-2026-10-09-pr-review-1b795e, and post the specific missing section as a comment on #54. Morning-cockpit #55 is closed and core #522 has merged — the named gap is the only remaining blocker. The output of this action is one comment on #54 that names which document has the gap and what the missing section is. That comment unblocks the #54 → #56 → MC-UX-01 consumer wiring sequence.",
+    "repo": "morning-cockpit",
+    "status": "open",
+    "sourceDate": "2026-10-11",
+    "id": "act-2026-10-11-investigate-34a4ff"
+  },
+  {
+    "command": "/validate",
+    "description": "Verify the MC-UX-01 checker's R3 fixes hold under one additional adversarial fixture not present in the committed suite: create a delivery_receipt whose publication_intent references a different body_digest than the producer's recorded projection, and confirm the checker quarantines it rather than passing it. Run via `pnpm test:contracts` (confirm invocation in repo README). This is the one fixture class not covered by the 21 in core #522.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-11",
+    "id": "act-2026-10-11-validate-a7a1a5"
+  },
+  {
     "command": "/validate",
     "description": "Triage core #508: open ADR-0079 and ADR-0080, verify their acceptance criteria against the merged PR descriptions for core #118 and #121, and record an accept or change-request decision on each. Accept 0079 before reviewing 0080 — the scanner ADR's criteria may depend on the lifecycle-policy ADR being accepted first.",
     "repo": "core",

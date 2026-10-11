@@ -2,22 +2,22 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 81
+    "count": 82
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 68
+    "count": 69
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 66
+    "count": 67
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 50
+    "count": 51
   },
   {
     "name": "shell",
@@ -40,24 +40,24 @@
     "count": 30
   },
   {
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 28
+  },
+  {
     "name": "tooling-for-iteration",
     "type": "concept",
     "count": 28
   },
   {
-    "name": "model-behavior-as-design",
-    "type": "concept",
-    "count": 27
+    "name": "hardening",
+    "type": "practice",
+    "count": 24
   },
   {
     "name": "cv-builder",
     "type": "repo",
     "count": 24
-  },
-  {
-    "name": "hardening",
-    "type": "practice",
-    "count": 23
   },
   {
     "name": "sprint",
@@ -70,14 +70,19 @@
     "count": 20
   },
   {
+    "name": "morning-cockpit",
+    "type": "repo",
+    "count": 17
+  },
+  {
     "name": "cleanup",
     "type": "concept",
     "count": 17
   },
   {
-    "name": "morning-cockpit",
-    "type": "repo",
-    "count": 16
+    "name": "security-as-emergent-ux",
+    "type": "concept",
+    "count": 15
   },
   {
     "name": "verification-flagged",
@@ -88,11 +93,6 @@
     "name": "asset-foundry",
     "type": "repo",
     "count": 15
-  },
-  {
-    "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 14
   },
   {
     "name": "purefoy",
@@ -503,6 +503,26 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "mc-ux-01",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "contract-profile",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "provenance",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "adversarial-fixtures",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "action-triage",
