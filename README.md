@@ -154,6 +154,15 @@ summary: "One sentence preview."
 
 Required body sections: `## What shipped`, `## The decisions`, `## Roadmap pulse`, `## What's next`.
 
+Source-checked editorial corrections use the normal review PR and automated deployment path.
+Correct inaccurate narrative and decision titles inline, retain the four body sections,
+name the correction author/date and link the source evidence and original Git version.
+Keep original suggested-action text when its exact identity is needed for audit; label
+any incorrect premise explicitly rather than presenting it as a current instruction.
+Update the generated JSON API and identify the correction in the article footer.
+Explicitly dated follow-up notes may record later events, but must distinguish
+those events from the original activity window and retain source links.
+
 ---
 
 ## Customisation

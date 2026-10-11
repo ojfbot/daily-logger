@@ -2,6 +2,10 @@
 
 ## Deviations
 
+- 2026-10-10 (authorized merge policy): repository settings advertised all merge methods, but the active default-branch ruleset permits only rebase; GitHub then rejected rebasing the reviewed merge-commit history. Linearized only the owned PR branch onto inspected main, preserved the final reviewed contents plus this deviation, used an expected-head lease and reran final-head CI. No ruleset or bypass changed.
+
+- 2026-10-10 (review branch reconciliation): the reviewed PR base was c7b3b9c while main already contained run-provenance commits through 4b4589a; preserved that implementation, combined its footer import with the bounded-evidence import, and reran verification against the combined tree rather than reporting stale-head readiness.
+
 - 2026-10-10 (PR #333 review): the plan attached run evidence only during article generation. Review exposed that duplicate admission can route a late run to recover or complete before Node setup, and watchdog fallbacks have no event cron. Added best-effort evidence to the Python preflight for every admission outcome and made the nominal target schedule explicit to both scheduled and fallback runs.
 
 - 2026-10-08 (#323 historical backfill acceptance): the coverage audit initially treated the missing daily dates as the digest's exact source window; retained sources include June 10 UTC developments and no contemporaneous golf first-push receipt. Recorded operator acceptance of a best-effort retrospective with explicit time boundaries and source limits, preserving the original draft rather than claiming exhaustive daily reconstruction.
@@ -88,3 +92,8 @@
 
 - Mandatory CI assumed removing skip markers was sufficient; editorial GITHUB_TOKEN PR events require workflow-run approval. Use the existing GH_PAT only at final push, and reject changes outside the dated article before executing PR code.
 - An inline guard in a pull_request workflow could be edited by its own PR; run editorial policy from pull_request_target's trusted base, reject foreign repositories, and require direct tree equality outside the regular dated article before head checkout.
+
+- 2026-10-10 (article queue investigation): the article assumed eight public repositories were unconfirmed private repositories and the constraint was undocumented; core #509 explicitly records 24/24 public verification plus 27 private repositories pending. Preserved those separate populations and retained the private-policy choice as a human-only issue rather than repeating the false premise.
+- 2026-10-10 (merged-PR grounding): initial inspection found a 400-character collector cutoff; article and report drafting also cut merged views at 200. Replaced these with one bounded 6,000-character head/tail policy and an explicit middle-omission marker; each merged body appears only once per article prompt. Existing non-merged previews and list limits remain.
+- 2026-10-10 (review correction): preserving the inaccurate narrative under a correction preface still exposed false decision titles through the API; corrected narrative and decisions inline, retained exact suggested-action text for ID audit, and documented source-checked correction attribution. Queue settlement is reviewed in a separate follow-on PR after operator confirmation.
+- 2026-10-10 (local API verification): the documented tsx CLI tried to bind an IPC socket denied by the sandbox; ran the same API builder with `pnpm exec node --import tsx src/build-api.ts`, without changing production build commands.

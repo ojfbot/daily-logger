@@ -7,6 +7,7 @@ import { collectTelemetry } from './collect-telemetry.js'
 import { discoverRepos, reportSurfaceDrift } from './fleet.js'
 import { SYSTEM_PROMPT } from './generate-article.js'
 import { activityWindow } from './activity-window.js'
+import { boundedMergedPRBody, RECENT_PR_PREVIEW_CHARS } from './pr-body.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -173,7 +174,7 @@ function getMergedPRs(org: string, repo: string, since: string): PRInfo[] {
       deletions: pr.deletions,
       url: pr.html_url,
       repo,
-      body: pr.body ? pr.body.slice(0, 400) : undefined,
+      body: pr.body ? boundedMergedPRBody(pr.body) : undefined,
       author: pr.user?.login,
     }))
 }
@@ -321,7 +322,7 @@ function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo
         title: pr.title,
         repo,
         url: pr.html_url,
-        body: pr.body ? pr.body.slice(0, 400) : undefined,
+        body: pr.body ? (pr.merged_at ? boundedMergedPRBody(pr.body) : pr.body.slice(0, RECENT_PR_PREVIEW_CHARS)) : undefined,
         state: (pr.state === 'open' ? 'open' : 'closed') as 'open' | 'closed',
         createdAt: pr.created_at,
         updatedAt: pr.updated_at,
