@@ -108,6 +108,8 @@ work triggers generation.
 
 ## Development
 
+Run the editorial browser regression with `pnpm test:browser`. It builds the local API and starts the Vite dev server, uses a simulated authorized editor, and intercepts the article, chat, and GitHub requests; it does not create a real editorial PR. CI installs Chromium and runs the same case on each PR.
+
 ```bash
 cp .env.example .env
 # Fill in ANTHROPIC_API_KEY and a GITHUB_TOKEN with read access to ojfbot repos

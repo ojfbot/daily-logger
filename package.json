@@ -17,6 +17,7 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint 'src/**/*.ts'",
     "test": "vitest run",
+    "test:browser": "pnpm build:api && playwright test",
     "test:watch": "vitest",
     "eval": "tsx evals/run.ts",
     "eval:test": "vitest run --config evals/vitest.config.ts"
@@ -27,6 +28,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@types/marked": "^6.0.0",
     "@types/node": "^22.9.0",
     "esbuild": "^0.27.4",
