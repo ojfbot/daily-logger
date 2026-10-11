@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-11 (accepted article contract command): the article assumed a `pnpm test:contracts` script in core, but core has no such script. Replaced the prose instruction with the checker's actual CLI command, retained the historical suggested action for traceability, and added a correction pointing to the open fixture PR.
+
 - 2026-10-11 (accepted article follow-up): the first correction verified telemetry and PR evidence but left the article's #54 missing-section handoff intact. The #54 discussion already contained an October 9 independent review finding no such section was absent, followed by an October 10 amendment. Corrected the article against that receipt, retained the historical action wording for traceability, and retired both misleading action IDs in `api/done-actions.json` rather than posting a duplicate comment.
 
 - 2026-10-10 (final review records): the earlier queue split preserved a legacy-path pointer and immutable handoff text, but neither path nor beads had landed on main. With explicit operator permission, removed the pointer, normalized only references/internal chat IDs in the unmerged records, and kept substantive historical claims as dated snapshots with a new superseding report.
