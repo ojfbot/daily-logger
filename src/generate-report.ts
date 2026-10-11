@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { BlogContext, Persona, GeneratedReport } from './types.js'
-import { quotedMergedPRBody } from './pr-body.js'
+import { allocateMergedPREvidence, mergedEvidenceKey } from './pr-body.js'
 
 const MODEL = 'claude-sonnet-4-6'
 const MAX_TOKENS = 4096
@@ -57,11 +57,13 @@ export function buildReportUserPrompt(ctx: BlogContext): string {
 
   if (ctx.mergedPRs.length > 0) {
     parts.push(`## PRs merged in last 7 days (${ctx.mergedPRs.length})`)
-    ctx.mergedPRs.slice(0, 15).forEach((pr) => {
+    const weeklyMerged = ctx.mergedPRs.slice(0, 15)
+    const mergedEvidence = allocateMergedPREvidence(weeklyMerged)
+    weeklyMerged.forEach((pr) => {
       parts.push(
-        `- [${pr.repo}] #${pr.number}: ${pr.title} (+${pr.additions}/-${pr.deletions})`
+        `- [${pr.repo}] [#${pr.number}: ${pr.title}](${pr.url}) (+${pr.additions}/-${pr.deletions})`
       )
-      if (pr.body) parts.push(quotedMergedPRBody(pr.body))
+      if (pr.body) parts.push(mergedEvidence.get(mergedEvidenceKey(pr)) ?? '')
     })
     parts.push('')
   }
