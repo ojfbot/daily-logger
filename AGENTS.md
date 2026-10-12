@@ -4,6 +4,9 @@
 
 Use core's `/daily-logger` orientation workflow for daily-run, issue-pickup, and
 queue questions. Read `docs/daily-cycle.md` for this project's source index.
+If Codex does not list `/daily-logger` as an available skill, read
+`core/.claude/skills/daily-logger/SKILL.md` in the ojfbot core checkout and
+the `knowledge/` files it references directly.
 Identify the intended workflow or saved task before making pickup claims. If its
 identity is missing, ask for the task name or latest receipt. This orientation
 does not grant execution authority.
