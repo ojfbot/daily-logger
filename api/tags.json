@@ -2,22 +2,22 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 82
+    "count": 83
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 69
+    "count": 70
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 67
+    "count": 68
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 51
+    "count": 52
   },
   {
     "name": "shell",
@@ -52,7 +52,7 @@
   {
     "name": "hardening",
     "type": "practice",
-    "count": 24
+    "count": 25
   },
   {
     "name": "cv-builder",
@@ -72,7 +72,7 @@
   {
     "name": "morning-cockpit",
     "type": "repo",
-    "count": 17
+    "count": 18
   },
   {
     "name": "cleanup",
@@ -82,12 +82,12 @@
   {
     "name": "security-as-emergent-ux",
     "type": "concept",
-    "count": 15
+    "count": 16
   },
   {
     "name": "verification-flagged",
     "type": "concept",
-    "count": 15
+    "count": 16
   },
   {
     "name": "asset-foundry",
@@ -345,6 +345,11 @@
     "count": 3
   },
   {
+    "name": "provenance",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "editorial-workflow",
     "type": "concept",
     "count": 2
@@ -511,11 +516,6 @@
   },
   {
     "name": "contract-profile",
-    "type": "concept",
-    "count": 1
-  },
-  {
-    "name": "provenance",
     "type": "concept",
     "count": 1
   },
