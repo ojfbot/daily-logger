@@ -1,6 +1,30 @@
 [
   {
     "command": "/pr-review",
+    "description": "Review core #527 (fix: bind publication digest to prepared artifact). Confirm the checker quarantines a delivery receipt whose publication_intent names a different body_digest than the producer's recorded projection — the adversarial fixture case not covered by the 21 in core #522. Run `pnpm test` against the branch first.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-13",
+    "id": "act-2026-10-13-pr-review-7a0cd3"
+  },
+  {
+    "command": "/investigate",
+    "description": "Confirm whether core #432 (mattpocock/skills watch) has a working weekly cloud routine pointed at it. Verify the current pin (84fdeffd, v1.2.3) appears in decisions/adopt-stack/ as the diff baseline before the first weekly post is expected. If the routine is not yet active, that needs to be set up before the watch issue is meaningful.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-13",
+    "id": "act-2026-10-13-investigate-e8f1b0"
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review core #525 (structure daily-logger orientation evidence contracts) as the prerequisite merge before daily-logger #343. Confirm the prompt template scope is correctly bounded to article generation, not issue processing. Then review #343 for instruction duplication before merging it.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-13",
+    "id": "act-2026-10-13-pr-review-a495a7"
+  },
+  {
+    "command": "/pr-review",
     "description": "Review core #525 (docs: structure daily-logger orientation evidence contracts) and daily-logger #343 (docs: index daily-cycle evidence and resolve workflow identity). Both were opened Saturday to fix the Codex context-substitution failure — the agent ran article generation against issue-processing inputs and completed silently. Check whether the two PRs duplicate instructions across documents and consolidate before merge. This is the prerequisite for the next scheduled issue-processing session.",
     "repo": "core",
     "status": "open",
