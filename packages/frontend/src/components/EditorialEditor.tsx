@@ -52,7 +52,7 @@ export function EditorialEditor({ date, articleTitle, login }: Props & { login: 
     .map((id) => threads[id])
     .filter((t) => t && t.date === date && t.messages.length > 0)
 
-  const suggestions = entries.map((entry) => entry.content.trim()).filter(Boolean)
+  const suggestions = entries.map((entry) => entry.content).filter((content) => content.trim())
   const hasFeedback = suggestions.length > 0 || articleThreads.length > 0
 
   async function handleAccept() {

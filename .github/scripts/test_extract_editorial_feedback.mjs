@@ -35,7 +35,7 @@ test('invalid v2 feedback fails closed', () => {
 test('real stamper HTTP body reaches the workflow extractor without changing note boundaries', async (t) => {
   const date = '2026-10-10'
   const article = '---\nstatus: "draft"\n---\nFriday'
-  const literal = 'Keep literal text\n---\n## Section: Fake\n<!-- EDITORIAL_FEEDBACK_START -->\n<!-- EDITORIAL_FEEDBACK_END -->\n<!-- EDITORIAL_FEEDBACK_V2_START -->\n<!-- EDITORIAL_FEEDBACK_V2_END -->\n雪 🦫 "quoted" \\path'
+  const literal = ' \t\nKeep literal text\n---\n## Section: Fake\n<!-- EDITORIAL_FEEDBACK_START -->\n<!-- EDITORIAL_FEEDBACK_END -->\n<!-- EDITORIAL_FEEDBACK_V2_START -->\n<!-- EDITORIAL_FEEDBACK_V2_END -->\n雪 🦫 "quoted" \\path\n \t '
   const notes = [
     { kind: 'root', content: literal },
     { kind: 'root', content: 'Second root note' },
