@@ -16,7 +16,7 @@ interface StampResult {
   prUrl: string
 }
 
-export type EditorialFeedback = {
+export interface EditorialFeedback {
   version: 2
   notes: Array<
     | { kind: 'root'; content: string }
