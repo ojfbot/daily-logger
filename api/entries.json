@@ -1,5 +1,138 @@
 [
   {
+    "date": "2026-10-13",
+    "title": "Monday's 3 commits: morning-cockpit #54 merges after a month, and the independent review track opens",
+    "summary": "Three commits on Monday merged morning-cockpit's MC-UX-01 capture PR after its October 10 review amendment and opened a paired independent daily-article review track in core and daily-logger.",
+    "tags": [
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "mc-ux-01",
+        "type": "concept"
+      },
+      {
+        "name": "provenance",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "morning-cockpit"
+    ],
+    "commitCount": 8,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Merge morning-cockpit #54 as capture-and-planning only, with no runtime authority",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Register independent daily-article review as a paired draft-PR in core and daily-logger",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Review core #527 (fix: bind publication digest to prepared artifact). Confirm the checker quarantines a delivery receipt whose publication_intent names a different body_digest than the producer's recorded projection — the adversarial fixture case not covered by the 21 in core #522. Run `pnpm test` against the branch first.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-10-13",
+        "id": "act-2026-10-13-pr-review-7a0cd3"
+      },
+      {
+        "command": "/investigate",
+        "description": "Confirm whether core #432 (mattpocock/skills watch) has a working weekly cloud routine pointed at it. Verify the current pin (84fdeffd, v1.2.3) appears in decisions/adopt-stack/ as the diff baseline before the first weekly post is expected. If the routine is not yet active, that needs to be set up before the watch issue is meaningful.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-10-13",
+        "id": "act-2026-10-13-investigate-e8f1b0"
+      },
+      {
+        "command": "/pr-review",
+        "description": "Review core #525 (structure daily-logger orientation evidence contracts) as the prerequisite merge before daily-logger #343. Confirm the prompt template scope is correctly bounded to article generation, not issue processing. Then review #343 for instruction duplication before merging it.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-10-13",
+        "id": "act-2026-10-13-pr-review-a495a7"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-10-13T09:03:37.531Z",
+        "runId": "38373579636",
+        "runNumber": 234,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/38373579636",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "97c88648a63efd1708d4facbbc596bbeb2a6e7dd",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-10-13T09:03:17.000Z",
+          "startedAt": "2026-10-13T09:03:17.000Z",
+          "expectedAt": "2026-10-13T08:30:00.000Z",
+          "dispatchDelaySeconds": 1997,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v2-2026-10-10",
+          "promptSha256": "7d4fc1024777db9d2becb9f5fde8a614f4e53c7327939cd8fa26201b6ab4fa63"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-10",
+          "promptSha256": "1ac427b3ba4743c7a702f122ae59e8448295741a6356ec7d2f828c3b09e00542"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.21.0",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-12",
     "title": "Sunday's 7 commits: closing the October 11 editorial loop and filing the NanoClaw research front",
     "summary": "Seven editorial commits across daily-logger completed the October 11 proof chain, fixed a silent CI deploy gap, and opened the NanoClaw trust-boundary research track feeding fleet-runner.",
