@@ -111,7 +111,7 @@ import { collectContext } from '../collect-context.js'
 import { execSync } from 'child_process'
 import { buildUserPrompt } from '../generate-article.js'
 import { buildReportUserPrompt } from '../generate-report.js'
-import { allocateMergedPREvidence, MERGED_PR_EVIDENCE_CHARS } from '../pr-body.js'
+import { MERGED_PR_EVIDENCE_CHARS } from '../pr-body.js'
 
 describe('collectContext — merged PR outcomes reach the drafter', () => {
   afterEach(() => vi.mocked(execSync).mockImplementation(mockExecSync))
@@ -141,9 +141,13 @@ describe('collectContext — merged PR outcomes reach the drafter', () => {
     expect(mergedDay).toContain('[#509: Enforce no-bypass PR gates](https://github.com/ojfbot/core/pull/509) MERGED')
     expect(mergedDay).not.toContain('All 24 public defaults verified.')
     expect(prompt.match(/All 24 public defaults verified\./g)).toHaveLength(1)
-    const recentOnly = buildUserPrompt({ ...ctx, mergedPRs: [] })
-    expect(recentOnly).toContain('All 24 public defaults verified.')
-    expect(recentOnly.match(/All 24 public defaults verified\./g)).toHaveLength(1)
+    for (const buildPrompt of [buildUserPrompt, buildReportUserPrompt]) {
+      const recentOnly = buildPrompt({ ...ctx, mergedPRs: [] })
+      expect(recentOnly).toContain('All 24 public defaults verified.')
+      expect(recentOnly.match(/All 24 public defaults verified\./g)).toHaveLength(1)
+      const missingWeeklyBody = buildPrompt({ ...ctx, mergedPRs: ctx.mergedPRs.map((pr) => ({ ...pr, body: undefined })) })
+      expect(missingWeeklyBody.match(/All 24 public defaults verified\./g)).toHaveLength(1)
+    }
   })
 
   it('bounds large merged bodies with an omission marker while preserving their conclusion', async () => {
@@ -175,18 +179,19 @@ describe('collectContext — merged PR outcomes reach the drafter', () => {
     expect(ctx.recentPRs[0].body).toBe('x'.repeat(400))
   })
 
-  it('bounds disjoint weekly and recent-only cohorts in both drafter prompts', async () => {
+  it.each(['maximum bodies', 'short and missing bodies'])('bounds disjoint 15-weekly/30-recent cohorts with %s in both prompts', async (cohort) => {
+    const mixed = cohort === 'short and missing bodies'
     const weekly = Array.from({ length: 15 }, (_, index) => ({
       ...metadataOnlyPRFixture[0], number: index + 1, title: `Weekly ${index + 1}`,
       html_url: `https://github.com/ojfbot/shell/pull/${index + 1}`,
-      body: index === 0 ? 'Short weekly body' : index === 1 ? null : `WEEKLY-${index + 1}\n${'w'.repeat(65000)}\nWEEKLY-END-${index + 1}`,
+      body: mixed && index === 0 ? 'Short weekly body' : mixed && index === 1 ? null : `WEEKLY-${index + 1}\n${'w'.repeat(65000)}\nWEEKLY-END-${index + 1}`,
       state: 'closed', merged_at: '2026-02-25T12:00:00Z', closed_at: '2026-02-25T12:00:00Z',
       updated_at: '2026-02-25T12:00:00Z', additions: 1, deletions: 0,
     }))
     const recent = Array.from({ length: 30 }, (_, index) => ({
       ...weekly[0], number: index + 100, title: `Recent ${index + 100}`,
       html_url: `https://github.com/ojfbot/shell/pull/${index + 100}`,
-      body: index === 1 ? 'Short recent body' : `RECENT-${index + 100}\n${'r'.repeat(65000)}\nRECENT-END-${index + 100}`,
+      body: mixed && index === 0 ? null : mixed && index === 1 ? 'Short recent body' : `RECENT-${index + 100}\n${'r'.repeat(65000)}\nRECENT-END-${index + 100}`,
       merged_at: '2026-02-27T23:00:00Z', closed_at: '2026-02-27T23:00:00Z',
       updated_at: '2026-02-27T23:00:00Z',
     }))
@@ -198,21 +203,28 @@ describe('collectContext — merged PR outcomes reach the drafter', () => {
     const ctx = await collectContext('2026-02-28')
     expect(ctx.mergedPRs).toHaveLength(15)
     expect(ctx.recentPRs).toHaveLength(30)
-    const articleQuotes = allocateMergedPREvidence([...ctx.mergedPRs, ...ctx.recentPRs])
-    const reportQuotes = allocateMergedPREvidence(ctx.mergedPRs)
-    expect([...articleQuotes.values()].reduce((sum, value) => sum + value.length, 0)).toBeLessThanOrEqual(MERGED_PR_EVIDENCE_CHARS)
-    expect([...reportQuotes.values()].reduce((sum, value) => sum + value.length, 0)).toBeLessThanOrEqual(MERGED_PR_EVIDENCE_CHARS)
-    const article = buildUserPrompt(ctx)
-    const report = buildReportUserPrompt(ctx)
-    expect(article).toContain('[#1: Weekly 1](https://github.com/ojfbot/shell/pull/1)')
-    expect(article).toContain('Short weekly body')
-    expect(article).toContain('[#2: Weekly 2](https://github.com/ojfbot/shell/pull/2)')
-    expect(article).toContain('Short recent body')
-    expect(article).toContain('[#100: Recent 100](https://github.com/ojfbot/shell/pull/100)')
-    expect(article).toContain('RECENT-100')
-    expect(article).toMatch(/truncated \d+ chars from middle/)
-    expect(report).toContain('[#15: Weekly 15](https://github.com/ojfbot/shell/pull/15)')
-    expect(report).not.toContain('RECENT-100')
+    for (const buildPrompt of [buildUserPrompt, buildReportUserPrompt]) {
+      const prompt = buildPrompt(ctx)
+      const mergedSections = prompt.split(/(?=^#{2,3} )/m).filter((section) => /^## PRs merged|^### MERGED IN LAST 24H/.test(section)).join('\n')
+      const quotes = mergedSections.split('\n').filter((line) => line.startsWith('  > ')).join('\n')
+      expect(quotes.length).toBeLessThanOrEqual(24000)
+      expect(MERGED_PR_EVIDENCE_CHARS).toBe(24000)
+      expect(quotes.length).toBeGreaterThan(22000)
+      for (const pr of [...weekly, ...recent]) {
+        expect(prompt).toContain(`[#${pr.number}: ${pr.title}](${pr.html_url})`)
+        if (pr.body && pr.body.length > 6000) {
+          const prefix = pr.number < 100 ? 'WEEKLY' : 'RECENT'
+          expect(prompt.match(new RegExp(`${prefix}-${pr.number}\\n`, 'g'))).toHaveLength(1)
+          expect(prompt).toContain(`${prefix}-END-${pr.number}`)
+        }
+      }
+      expect(prompt).toMatch(/truncated \d+ chars from middle/)
+      if (mixed) {
+        expect(prompt).toContain('Short weekly body')
+        expect(prompt).toContain('Short recent body')
+      }
+      expect(buildPrompt(ctx)).toBe(prompt)
+    }
   })
 })
 

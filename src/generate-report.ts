@@ -55,15 +55,28 @@ export function buildReportUserPrompt(ctx: BlogContext): string {
     parts.push('## Commits in last 24h\n_No commits today._\n')
   }
 
+  const weeklyMerged = ctx.mergedPRs.slice(0, 15)
+  const mergedRecent = ctx.recentPRs.filter((pr) => !!pr.mergedAt)
+  const recentMerged = mergedRecent.slice(0, 30)
+  const mergedEvidence = allocateMergedPREvidence([...weeklyMerged, ...recentMerged])
+
   if (ctx.mergedPRs.length > 0) {
     parts.push(`## PRs merged in last 7 days (${ctx.mergedPRs.length})`)
-    const weeklyMerged = ctx.mergedPRs.slice(0, 15)
-    const mergedEvidence = allocateMergedPREvidence(weeklyMerged)
     weeklyMerged.forEach((pr) => {
       parts.push(
         `- [${pr.repo}] [#${pr.number}: ${pr.title}](${pr.url}) (+${pr.additions}/-${pr.deletions})`
       )
       if (pr.body) parts.push(mergedEvidence.get(mergedEvidenceKey(pr)) ?? '')
+    })
+    parts.push('')
+  }
+
+  if (mergedRecent.length > 0) {
+    parts.push(`## PRs merged in last 24h (${mergedRecent.length})`)
+    const describedMergedPRs = new Set(weeklyMerged.filter((pr) => pr.body).map(mergedEvidenceKey))
+    recentMerged.forEach((pr) => {
+      parts.push(`- [${pr.repo}] [#${pr.number}: ${pr.title}](${pr.url}) MERGED ${pr.mergedAt?.slice(0, 19)}`)
+      if (pr.body && !describedMergedPRs.has(mergedEvidenceKey(pr))) parts.push(mergedEvidence.get(mergedEvidenceKey(pr)) ?? '')
     })
     parts.push('')
   }

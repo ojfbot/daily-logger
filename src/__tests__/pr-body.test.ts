@@ -20,6 +20,21 @@ describe('merged PR evidence budget', () => {
 })
 
 describe('total merged PR evidence', () => {
+  it.each(['x', '\n'])('keeps 45 maximum bodies within the literal rendered budget including quote separators (%j)', (character) => {
+    const sources = Array.from({ length: 45 }, (_, number) => ({
+      repo: 'shell', number, body: `HEAD-${number}\n${character.repeat(65000)}\nTAIL-${number}`,
+    }))
+    const quotes = [...allocateMergedPREvidence(sources).values()]
+    expect(quotes).toHaveLength(45)
+    expect(quotes.join('\n').length).toBeLessThanOrEqual(24000)
+    expect(Math.max(...quotes.map((quote) => quote.length)) - Math.min(...quotes.map((quote) => quote.length))).toBeLessThanOrEqual(10)
+    sources.forEach((source, index) => {
+      expect(quotes[index]).toContain(`HEAD-${source.number}`)
+      expect(quotes[index]).toContain(`TAIL-${source.number}`)
+      expect(quotes[index]).toMatch(/truncated \d+ chars from middle/)
+    })
+  })
+
   it('shares space across unique PRs and returns unused space from short bodies', () => {
     const sources = [
       { repo: 'core', number: 1, body: 'Short body' },

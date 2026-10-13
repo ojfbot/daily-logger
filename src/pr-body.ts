@@ -1,5 +1,5 @@
 export const MERGED_PR_BODY_CHARS = 6000
-// About four full 6k PR bodies. Coverage takes priority over full bodies when activity is high.
+// Character heuristic, not a token bound: about four full 6k bodies. Coverage takes priority over depth.
 export const MERGED_PR_EVIDENCE_CHARS = 24000
 export const RECENT_PR_PREVIEW_CHARS = 400
 export const PROMPT_PR_PREVIEW_CHARS = 200
@@ -35,7 +35,8 @@ export function allocateMergedPREvidence(prs: MergedEvidenceSource[]): Map<strin
   const candidates = [...unique].map(([key, body]) => ({ key, body, fullLength: quotedMergedPRBody(body).length }))
   const byLength = [...candidates].sort((a, b) => a.fullLength - b.fullLength || a.key.localeCompare(b.key))
   const shares = new Map<string, number>()
-  let remaining = MERGED_PR_EVIDENCE_CHARS
+  // Include the newlines joining separate body quotes in the rendered budget.
+  let remaining = MERGED_PR_EVIDENCE_CHARS - Math.max(0, candidates.length - 1)
   for (let index = 0; index < byLength.length; index++) {
     const candidate = byLength[index]
     const share = Math.min(candidate.fullLength, Math.floor(remaining / (byLength.length - index)))
