@@ -2,6 +2,10 @@
 
 ## Deviations
 
+- 2026-10-13 (PR #348 / issue #342): the existing cohort test assumed reports could omit recent-only merged PRs and measured allocator output rather than rendered prompts; native regressions found missing report evidence and 24,044 characters after quote separators. Added recent-only report coverage with shared-body deduplication and reserved separator space inside the named 24,000-character budget. This remains a character heuristic for selected body quotes, not a token or whole-prompt bound.
+
+- 2026-10-13 (PR #348 integration): PR metadata still named base `872a7e7` while the live main endpoint resolved to `457809f`; rebased the owned detached worktree onto the actual main commit and retained source pins rather than integrating against the stale metadata.
+
 - 2026-10-11 (accepted article deployment): the plan assumed merging a source-only editorial correction would refresh production, but `deploy-vercel.yml` watched frontend and API paths only. Added `_articles/**` and the workflow file itself to push and PR deployment triggers so the existing `vercel.json` build regenerates the static API from article source through CI and this trigger change deploys on merge.
 
 - 2026-10-11 (accepted article contract command): the article assumed a `pnpm test:contracts` script in core, but core has no such script. Replaced the prose instruction with the checker's actual CLI command, retained the historical suggested action for traceability, and added a correction pointing to the open fixture PR.
