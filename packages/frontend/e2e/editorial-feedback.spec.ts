@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { z } from 'zod'
 
 const date = '2026-10-11'
 const title = 'Editorial browser fixture'
@@ -15,9 +16,15 @@ const article = {
   bodyHtml: '<h2>What shipped</h2><p>The first claim needs review.</p>',
 }
 
-test('restores notes and submits the surviving note with section feedback once', async ({ page }) => {
+test('restores notes and submits the surviving note with section feedback once', async ({ page }, testInfo) => {
   const githubCalls: string[] = []
   let pullRequestBody = ''
+
+  // Deny unexpected external traffic; all editorial writes below are intercepted.
+  await page.route('**/*', (route) => {
+    if (new URL(route.request().url()).origin === 'http://127.0.0.1:4040') return route.continue()
+    return route.abort('blockedbyclient')
+  })
 
   await page.addInitScript(() => localStorage.setItem('dl-anthropic-key', 'browser-fixture-key'))
   await page.route('**/api/entries.json', (route) => route.fulfill({ json: [article] }))
@@ -47,7 +54,7 @@ test('restores notes and submits the surviving note with section feedback once',
     } else if (request.method() === 'PUT' && path.endsWith(`/_articles/${date}.md`)) {
       await route.fulfill({ json: {} })
     } else if (request.method() === 'POST' && path.endsWith('/pulls')) {
-      pullRequestBody = (request.postDataJSON() as { body: string }).body
+      pullRequestBody = z.object({ body: z.string() }).parse(request.postDataJSON()).body
       await route.fulfill({ status: 201, json: {
         number: 42,
         html_url: 'https://github.com/ojfbot/daily-logger/pull/42',
@@ -68,9 +75,14 @@ test('restores notes and submits the surviving note with section feedback once',
   await expect(notes).toHaveCount(2)
   await expect(notes.nth(0)).toHaveValue('Remove this note')
   await expect(notes.nth(1)).toHaveValue('Surviving note')
+  await testInfo.attach('restored-notes', {
+    body: JSON.stringify([await notes.nth(0).inputValue(), await notes.nth(1).inputValue()]),
+    contentType: 'application/json',
+  })
   await page.getByRole('button', { name: 'Remove edit suggestion 1' }).click()
   await expect(notes).toHaveCount(1)
   await expect(notes).toHaveValue('Surviving note')
+  await notes.fill('Surviving note — updated')
 
   await page.getByRole('button', { name: 'New chat thread for What shipped' }).click()
   await page.getByPlaceholder('Ask or suggest changes...').fill('Section note')
@@ -79,18 +91,29 @@ test('restores notes and submits the surviving note with section feedback once',
 
   await page.getByRole('button', { name: 'ACCEPT WITH REVISIONS' }).click()
   await expect(page.locator('.stamp-success')).toContainText('PR #42 opened')
-  expect(githubCalls).toHaveLength(6)
+  await testInfo.attach('intercepted-editorial-submission', {
+    body: JSON.stringify({ githubCalls, pullRequestBody }, null, 2),
+    contentType: 'application/json',
+  })
+  expect(githubCalls).toEqual([
+    `GET repos/ojfbot/daily-logger/git/refs/heads/accept/${date}`,
+    `GET repos/ojfbot/daily-logger/contents/_articles/${date}.md`,
+    'GET repos/ojfbot/daily-logger/git/refs/heads/main',
+    'POST repos/ojfbot/daily-logger/git/refs',
+    `PUT repos/ojfbot/daily-logger/contents/_articles/${date}.md`,
+    'POST repos/ojfbot/daily-logger/pulls',
+  ])
   expect(pullRequestBody).not.toContain('Remove this note')
 
   const v2 = pullRequestBody.match(/<!-- EDITORIAL_FEEDBACK_V2_START -->\n([^\n]+)\n<!-- EDITORIAL_FEEDBACK_V2_END -->/)?.[1]
   if (v2) {
     const feedback = JSON.parse(Buffer.from(v2, 'base64').toString('utf8'))
-    expect(feedback.notes).toEqual([
-      { kind: 'root', content: 'Surviving note' },
+    expect(feedback).toEqual({ version: 2, notes: [
+      { kind: 'root', content: 'Surviving note — updated' },
       { kind: 'section', section: 'What shipped', content: 'Section note' },
-    ])
+    ] })
   } else {
     const feedback = pullRequestBody.match(/<!-- EDITORIAL_FEEDBACK_START -->\n([\s\S]*?)\n<!-- EDITORIAL_FEEDBACK_END -->/)?.[1]
-    expect(feedback).toBe('## Root-level edit suggestion\n\nSurviving note\n\n---\n\n## Section: What shipped\n\n- Section note')
+    expect(feedback).toBe('## Root-level edit suggestion\n\nSurviving note — updated\n\n---\n\n## Section: What shipped\n\n- Section note')
   }
 })

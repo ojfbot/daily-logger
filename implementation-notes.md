@@ -4,9 +4,13 @@
 - 2026-10-13 (daily-347 exact content follow-up): prior review treated preexisting root-note trimming as compatible, but issue #339 requires exact literal content; kept raw nonblank strings and trimmed only for blankness, with a real UI HTTP assertion failing on baccf6d before the correction.
 - 2026-10-13 (daily-347): preparation assumed the existing extractor and UI checks established the issue #339 boundary; they tested HTTP encoding and parser input separately, so added a native real-stamper HTTP-body → workflow-extractor regression, including typed root/section Unicode literals and malformed-v2 counterexamples.
 
+- 2026-10-13 (PR349 current-main refresh): the prior local patch was expected to replay cleanly, but accepted PR #348 added notes at the same heading; retained both sets of notes and recorded the conflict without changing application or browser-test behavior.
+
 - 2026-10-13 (PR #348 / issue #342): the existing cohort test assumed reports could omit recent-only merged PRs and measured allocator output rather than rendered prompts; native regressions found missing report evidence and 24,044 characters after quote separators. Added recent-only report coverage with shared-body deduplication and reserved separator space inside the named 24,000-character budget. This remains a character heuristic for selected body quotes, not a token or whole-prompt bound.
 
 - 2026-10-13 (PR #348 integration): PR metadata still named base `872a7e7` while the live main endpoint resolved to `457809f`; rebased the owned detached worktree onto the actual main commit and retained source pins rather than integrating against the stale metadata.
+
+- 2026-10-13 (PR349 integration): PR metadata retained base `872a7e7` while the current main ref was `457809f`; integrated only PR349 onto the directly refreshed main tip and retained the remote branch unchanged.
 
 - 2026-10-11 (accepted article deployment): the plan assumed merging a source-only editorial correction would refresh production, but `deploy-vercel.yml` watched frontend and API paths only. Added `_articles/**` and the workflow file itself to push and PR deployment triggers so the existing `vercel.json` build regenerates the static API from article source through CI and this trigger change deploys on merge.
 
