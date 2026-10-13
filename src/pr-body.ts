@@ -18,7 +18,11 @@ export function quotedMergedPRBody(body: string, limit = MERGED_PR_BODY_CHARS): 
   return `  > ${boundedMergedPRBody(body, limit).replace(/\n/g, '\n  > ')}`
 }
 
-type MergedEvidenceSource = { repo: string; number: number; body?: string }
+export interface MergedEvidenceSource {
+  repo: string
+  number: number
+  body?: string
+}
 
 export function mergedEvidenceKey(pr: MergedEvidenceSource): string {
   return `${pr.repo}#${pr.number}`
