@@ -8,10 +8,10 @@ export default defineConfig({
     channel: process.env.CI ? undefined : 'chrome',
   },
   webServer: {
-    command: 'pnpm --dir packages/frontend dev --host 127.0.0.1',
+    command: 'pnpm --dir packages/frontend dev --host 127.0.0.1 --strictPort',
     url: 'http://127.0.0.1:4040',
     env: { VITE_BASE_PATH: '/' },
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 30_000,
   },
 })

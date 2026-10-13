@@ -20,7 +20,8 @@ export function useSectionContent(contentRef: React.RefObject<HTMLElement | null
       let targetH2: Element | null = null
 
       for (const h2 of headings) {
-        const heading = h2.cloneNode(true) as Element
+        const heading = h2.cloneNode(true)
+        if (!(heading instanceof Element)) continue
         heading.querySelector('.section-chat-wrapper')?.remove()
         if (heading.textContent?.trim() === sectionHeading) {
           targetH2 = h2
