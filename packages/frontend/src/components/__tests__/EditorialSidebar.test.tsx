@@ -134,7 +134,7 @@ describe('editorial revision notes', () => {
     expect(container.querySelectorAll('textarea')).toHaveLength(1)
   })
 
-  it('submits notes through the real stamper into the HTTP PR body', async () => {
+  it('preserves nonblank root-note whitespace through the real HTTP PR body and omits blank notes', async () => {
     const actual = await vi.importActual<typeof import('../../utils/stampDraft.ts')>('../../utils/stampDraft.ts')
     vi.mocked(stampDraft).mockImplementation(actual.stampDraft)
     const request = vi.fn<typeof fetch>()
@@ -145,10 +145,13 @@ describe('editorial revision notes', () => {
       .mockResolvedValueOnce(Response.json({}))
       .mockResolvedValueOnce(Response.json({ number: 42, html_url: 'https://github.com/ojfbot/daily-logger/pull/42' }))
     vi.stubGlobal('fetch', request)
-    const literal = 'HTTP first\n---\n## Section: Not a section\n<!-- EDITORIAL_FEEDBACK_END -->\n雪'
+    const literal = ' \t\nHTTP first\n---\n## Section: Not a section\n<!-- EDITORIAL_FEEDBACK_END -->\n雪\n \t '
     await enter(0, literal)
     await click('Add another edit suggestion')
     await enter(1, 'HTTP second')
+    await click('Add another edit suggestion')
+    await enter(2, ' \t\n  ')
+    expect(container.querySelector('button[aria-label="Add another edit suggestion"]')?.hasAttribute('disabled')).toBe(true)
     await click('ACCEPT WITH REVISIONS')
     const prRequest = request.mock.calls.find(([path, options]) => String(path).endsWith('/pulls') && options?.method === 'POST')
     if (typeof prRequest?.[1]?.body !== 'string') throw new Error('Missing HTTP PR body')
