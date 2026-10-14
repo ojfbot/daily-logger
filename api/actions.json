@@ -1,11 +1,11 @@
 [
   {
     "command": "/pr-review",
-    "description": "Review core #527 (fix: bind publication digest to prepared artifact). Confirm the checker quarantines a delivery receipt whose publication_intent names a different body_digest than the producer's recorded projection — the adversarial fixture case not covered by the 21 in core #522. Run `pnpm test` against the branch first.",
+    "description": "Inspect the merged core #527 publication-digest regression against its exact source revision. Retain `act-2026-10-11-validate-a7a1a5`; check that a prepared-artifact mismatch leaves publication and consumption unproven, with a matching-digest positive control. The Proposed checker’s fixture success does not establish operating delivery or settle the original action.",
     "repo": "core",
     "status": "open",
     "sourceDate": "2026-10-13",
-    "id": "act-2026-10-13-pr-review-7a0cd3"
+    "id": "act-2026-10-13-pr-review-6f2fa2"
   },
   {
     "command": "/investigate",
@@ -17,11 +17,11 @@
   },
   {
     "command": "/pr-review",
-    "description": "Review core #525 (structure daily-logger orientation evidence contracts) as the prerequisite merge before daily-logger #343. Confirm the prompt template scope is correctly bounded to article generation, not issue processing. Then review #343 for instruction duplication before merging it.",
+    "description": "Review core #525 and daily-logger #343 against the prepared fresh-session cases. Confirm workflow identity before pickup claims, retain human gates and original identifiers, and disclose the unidentified 24-hour worker. Evaluate procedural adoption and each merge separately.",
     "repo": "core",
     "status": "open",
     "sourceDate": "2026-10-13",
-    "id": "act-2026-10-13-pr-review-a495a7"
+    "id": "act-2026-10-13-pr-review-aeb0fc"
   },
   {
     "command": "/pr-review",
