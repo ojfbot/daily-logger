@@ -44,6 +44,16 @@ API Building yields JSON API.
 Frontend Rendering requires JSON API. [src: packages/frontend]
 Frontend Rendering yields Rendered Site.
 
+API Building yields Article Fingerprint. [src: src/build-api.ts]
+Frontend Rendering invokes Independent Review Projecting. [src: packages/frontend/src/components/IndependentArticleReviews.tsx]
+Independent Review Projecting requires GitHub. [src: api/_lib/article-review-service.ts]
+Independent Review Projecting requires Article Fingerprint. [src: api/_lib/article-review-service.ts]
+Independent Review Projecting yields Review Projection. [src: api/_lib/article-review-service.ts]
+Jim handles Revision Requesting. [src: packages/frontend/src/components/IndependentArticleReviews.tsx]
+Revision Requesting requires Review Projection. [src: api/_lib/article-review-service.ts]
+Revision Requesting yields Revision Request. [src: api/_lib/article-review-service.ts]
+Revision Requesting affects GitHub. [src: api/_lib/article-review-service.ts]
+
 ## SD1.1 — Article Generating in-zoom
 
 Activity Decision can be skip or run.

@@ -10,6 +10,7 @@
  * Usage: pnpm build:api
  */
 
+import { createHash } from 'crypto'
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -351,7 +352,7 @@ export function buildApi() {
     const bodyHtml = renderArticle(body)
     writeFileSync(
       join(articlesApiDir, `${date}.json`),
-      JSON.stringify({ ...entry, bodyHtml }, null, 2),
+      JSON.stringify({ ...entry, sourceBlobSha: createHash('sha1').update(`blob ${Buffer.byteLength(content)}\0`).update(content).digest('hex'), bodyHtml }, null, 2),
     )
   }
   console.log(`  articles/    — ${files.length} per-article JSON files`)

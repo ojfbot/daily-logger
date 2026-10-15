@@ -10,6 +10,7 @@ import { useSectionContent } from '../hooks/useSectionContent.ts'
 import { Popover } from './Popover.tsx'
 import { SectionChatButton } from './SectionChatButton.tsx'
 import { SectionChatZone } from './SectionChatZone.tsx'
+import { IndependentArticleReviews } from './IndependentArticleReviews.tsx'
 import { EditorialSidebar } from './EditorialSidebar.tsx'
 import { SubmitAllFeedback } from './SubmitAllFeedback.tsx'
 import { ArticleProvenanceDetails } from './ArticleProvenanceDetails.tsx'
@@ -142,7 +143,7 @@ export function ArticlePage() {
     })
   }, [threads, threadOrder, date])
 
-  const showSidebar = hasThreads || isDraft
+  const showSidebar = hasThreads || isDraft || !!authUser?.authorized
 
   // Related articles (share 2+ tags)
   const related = useMemo(() => {
@@ -182,6 +183,7 @@ export function ArticlePage() {
             </div>
           </div>
           <p className="entry-summary">{displayEntry.summary}</p>
+          {authUser?.authorized && <a href="#independent-review-heading">Independent review and corrections</a>}
         </div>
       )}
 
@@ -234,6 +236,7 @@ export function ArticlePage() {
                 extractSection={extractSection}
               />
             ))}
+            {authUser?.authorized && <IndependentArticleReviews key={`${authUser.login}:${date}:${article?.sourceBlobSha ?? 'unknown'}`} date={date} visibleBlobSha={article?.sourceBlobSha} login={authUser.login} />}
             {isDraft && (
               <EditorialSidebar date={date} articleTitle={displayEntry?.title ?? ''} />
             )}

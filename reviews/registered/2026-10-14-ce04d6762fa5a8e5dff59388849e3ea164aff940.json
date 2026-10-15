@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "id": "independent-2026-10-14-ce04d67",
+  "article": {
+    "date": "2026-10-14",
+    "sourceCommitSha": "ce04d6762fa5a8e5dff59388849e3ea164aff940",
+    "blobSha": "385b344f70b3e07b5ac5233149486d07213f43d6"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": "01a13a4a-d543-72f0-a286-28fe0789bd2c"
+  },
+  "reviewedAt": "2026-10-14T12:02:25Z",
+  "scope": "Structured transcription of the existing advisory review: eight reported confirmed findings and four unverified claims. This pilot does not independently recertify the findings. reviewedAt records the attested run start; observations span 12:02–12:09 UTC. Human disposition remains unknown.",
+  "fullRecordPath": "reviews/articles/2026-10-14-ce04d6762fa5a8e5dff59388849e3ea164aff940.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "A fixture result is described as a filesystem quarantine and delivery controller",
+      "location": "source lines 27 and 69, especially \"quarantine directory\" and the asserted delivery halt and mandatory producer rerun.",
+      "explanation": "[the merged checker](https://github.com/ojfbot/core/blob/de60ef47725511a8ad63b84d958bd8be412891d1/scripts/lib/mc-ux-01-contract.mjs#L237) appends the mismatched publication-intent ID to an in-memory `quarantined` result, emits `PUBLICATION_SOURCE_DIGEST_MISMATCH`, and leaves publication and consumption unproven. The module reads the conformance manifest and writes its report to stdout. It implements no quarantine-directory writer, delivery-stage controller or producer recovery workflow. The [R4 validation record](https://github.com/ojfbot/core/blob/de60ef47725511a8ad63b84d958bd8be412891d1/decisions/fleet-runner/mc-ux-01-validation-r4-2026-10-11.md#L13) keeps the checker Proposed and non-production. [ADR-0108](https://github.com/ojfbot/core/blob/6d6ffd2e8cb4ccf6d577314e25fbfb630ca2601e/decisions/adr/0108-fleet-runner-in-core.md#L65) accepts placement and responsibility boundaries. It does not define the asserted live-conformance promotion rule for this checker.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/blob/de60ef47725511a8ad63b84d958bd8be412891d1/scripts/lib/mc-ux-01-contract.mjs#L237",
+        "https://github.com/ojfbot/core/blob/de60ef47725511a8ad63b84d958bd8be412891d1/decisions/fleet-runner/mc-ux-01-validation-r4-2026-10-11.md#L13",
+        "https://github.com/ojfbot/core/blob/6d6ffd2e8cb4ccf6d577314e25fbfb630ca2601e/decisions/adr/0108-fleet-runner-in-core.md#L65"
+      ],
+      "correction": "describe the synthetic checker's classification and unproven proof states. Remove the filesystem, automatic halt and required rerun mechanism. Cite the actual qualification venue before stating a promotion criterion. Retain the useful limit that synthetic success does not establish live operation.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The recommended identity-blocker decision already exists, and #56 is draft",
+      "location": "source lines 89, 101 and 108. The article calls #56 the \"oldest non-draft\" PR and treats #57's effect as undecided.",
+      "explanation": "[the October 12 contract review](https://github.com/ojfbot/morning-cockpit/pull/56#pullrequestreview-5485897700), at head `b18493480c4eb29f4e2348a12bca4f02f1440fd2`, explicitly permits the bounded Dolt/handoff slice to proceed without additional GitHub accounts or an always-on device, provided unsupported GitHub identity fails closed and routing stays server-side. It retains public-contract, provenance and owner gates and requires the implementation to remain draft. The PR is still draft at the same remote head. The [subsequent integration-audit handoff](https://github.com/ojfbot/morning-cockpit/pull/56#issuecomment-6159561870) records concrete reader/contract defects, then qualified unpublished local repairs and pending exact contract acceptance. Those records predate today's generation; local repair is not a remote merge receipt.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/morning-cockpit/pull/56#pullrequestreview-5485897700",
+        "https://github.com/ojfbot/morning-cockpit/pull/56#issuecomment-6159561870"
+      ],
+      "correction": "report draft status and the already recorded bounded #57 disposition. Focus the next review on the actual contract/owner decisions and exact source candidates, preserving the distinction between unpublished repairs and the unchanged remote PR. Remove the recommendation to reopen a dependency decision as though it had never been answered.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Older research issues are counted as new Tuesday work and turned into an unsupported pilot gate",
+      "location": "source lines 93 and 105, including the section labeled \"Ten new issues filed Tuesday\" and the mandatory cluster triage before pilot nomination.",
+      "explanation": "GitHub's creation metadata for [core #511](https://github.com/ojfbot/core/issues/511) through [#517](https://github.com/ojfbot/core/issues/517) is October 10, `15:42:04Z` through `15:42:07Z`, not Tuesday October 13. [Core #510](https://github.com/ojfbot/core/issues/510) was created October 10 at `02:49:49Z`, October 9 in Chicago. The [pinned evaluation registration](https://github.com/ojfbot/core/blob/6d6ffd2e8cb4ccf6d577314e25fbfb630ca2601e/decisions/research/2026-10-13-daily-article-evaluation-review.md#L219) states that its proposed receiving-work order creates no native blocking graph. It allows an advisory consumption/UI pilot independently of S20 judge qualification. [Daily-logger #358](https://github.com/ojfbot/daily-logger/issues/358) likewise distinguishes research relationships from new native blocking edges.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/issues/511",
+        "https://github.com/ojfbot/core/issues/517",
+        "https://github.com/ojfbot/core/issues/510",
+        "https://github.com/ojfbot/core/blob/6d6ffd2e8cb4ccf6d577314e25fbfb630ca2601e/decisions/research/2026-10-13-daily-article-evaluation-review.md#L219",
+        "https://github.com/ojfbot/daily-logger/issues/358"
+      ],
+      "correction": "separate newly filed receiving work from older linked research. Treat a cluster triage pass as a recommendation, not an adopted prerequisite for the bounded pilot. Preserve existing task-specific entrance evidence and human grants. The review did not independently reconstruct the complete daily issue total, so it supplies no replacement count.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The vault scanner's concrete failure mode is wrong",
+      "location": "source lines 10, 27 and 75. The article says pages named `log.md` were falsely reported as orphaned.",
+      "explanation": "[the merged scanner](https://github.com/ojfbot/core/blob/336ebe7f4a2a3b5b0df4788c52c55024b0375ec9/.claude/skills/vault/scripts/lint.py#L444) keeps orphan counting separate and explicitly excludes pages named `log.md` from the orphan list. It changes the staleness predicate's independent inbound demand and creation-versus-later log handling. [The regressions](https://github.com/ojfbot/core/blob/336ebe7f4a2a3b5b0df4788c52c55024b0375ec9/.claude/skills/vault/scripts/test_lint_stale.py#L65) retain later references as activity and inbound demand from an ordinary knowledge page named `log.md`; a verified creation-only ledger entry can leave its target stale without making it an orphan. PR #526 explicitly preserves orphan counts and the existing advisory gate.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/blob/336ebe7f4a2a3b5b0df4788c52c55024b0375ec9/.claude/skills/vault/scripts/lint.py#L444",
+        "https://github.com/ojfbot/core/blob/336ebe7f4a2a3b5b0df4788c52c55024b0375ec9/.claude/skills/vault/scripts/test_lint_stale.py#L65"
+      ],
+      "correction": "describe separation of independent graph demand from canonical creation-log history, with later references preserved. Remove the invented false-orphan filename mechanism and any suggestion that this correction changes the accepted orphan gate.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The pre-budget implementation already capped each merged PR body",
+      "location": "source lines 16 and 63. The article describes a prior count-only policy admitting an arbitrarily long body in full.",
+      "explanation": "[the pre-merge source](https://github.com/ojfbot/daily-logger/blob/457809f46579052c829ab8c2abe704ff644bdbf5/src/pr-body.ts#L1) already limits each merged body to 6,000 characters, retaining its beginning and end with a truncation marker. [The merged implementation](https://github.com/ojfbot/daily-logger/blob/590114d2776e61c009f4bec3376dc21fe233e801/src/pr-body.ts#L1) adds a shared 24,000-character rendered-quote budget and fair allocation across selected sources. The PR also repairs missing recent-only report evidence. It does not introduce the first per-body bound.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/457809f46579052c829ab8c2abe704ff644bdbf5/src/pr-body.ts#L1",
+        "https://github.com/ojfbot/daily-logger/blob/590114d2776e61c009f4bec3376dc21fe233e801/src/pr-body.ts#L1"
+      ],
+      "correction": "describe the added aggregate allocation and source-coverage repair. Remove the unbounded single-source account and the asserted contributor bias unless an actual output comparison supports it. The separate empirical-selection claim is U1 below.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "NanoClaw is misidentified and the article-review registration gets assigned to NanoClaw",
+      "location": "source lines 38 and 81. NanoClaw is called an internal workstream, and core #534 is included in its research PR group.",
+      "explanation": "[the research registration](https://github.com/ojfbot/core/blob/7faa220e57a73703d14d7db339ee33eff291d53c/decisions/research/2026-10-11-nanoclaw-trust-queue-registration.md#L93) studies external repository `nanocoai/nanoclaw` at upstream `cab10bbc9413a8d25c83a5302fddff06be2d6072`. Core #533 and morning-cockpit #58 register that research. [The separate #534 map entry](https://github.com/ojfbot/core/blob/0c1e7b60b2346c158a93e63f39bb8b4ebe0202de/decisions/wayfinder/control-plane-conductor.md#L272) registers independent final-article review, paired with daily-logger #354. It is not a NanoClaw registration.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/blob/7faa220e57a73703d14d7db339ee33eff291d53c/decisions/research/2026-10-11-nanoclaw-trust-queue-registration.md#L93",
+        "https://github.com/ojfbot/core/blob/0c1e7b60b2346c158a93e63f39bb8b4ebe0202de/decisions/wayfinder/control-plane-conductor.md#L272"
+      ],
+      "correction": "identify NanoClaw as the external project studied by the internal research effort. Keep #534/#354's article-review registration separate from #533/#58's trust and queue research.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The old Frame registration action is assigned to the wrong product and owner",
+      "location": "source line 97, around `act-2026-04-07-roadmap-6f4599`.",
+      "explanation": "[action JSON at the article revision](https://github.com/ojfbot/daily-logger/blob/ce04d6762fa5a8e5dff59388849e3ea164aff940/api/actions.json) assigns that action to `gcgcca`. It asks to register gcgcca as a Module Federation remote in the shell at port 3035, wire it into `frame-dev.sh`, and verify hot reload. It does not ask to declare morning-cockpit a Frame app. The adjacent `act-2026-07-31-adr-61a759` belongs to capture-agent and explicitly says its last unstable rename dependency is resolved.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/ce04d6762fa5a8e5dff59388849e3ea164aff940/api/actions.json"
+      ],
+      "correction": "preserve the exact action IDs and their original repository and requested outcome. Separate gcgcca shell registration from capture-agent's codegen ADR and any independently evidenced port collision. Do not rewrite their historical open state into an ownerless common milestone.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "The asserted incident-response chronology conflicts with the PR history",
+      "location": "source lines 10 and 16, which present Tuesday's set as a response to the faulty October 13 article.",
+      "explanation": "[PR #347](https://github.com/ojfbot/daily-logger/pull/347) was opened October 11 at `18:59:45Z`; [#348](https://github.com/ojfbot/daily-logger/pull/348) at `19:02:25Z`; [core #526](https://github.com/ojfbot/core/pull/526) at `19:04:10Z`; and [core #527](https://github.com/ojfbot/core/pull/527) at `19:17:22Z`. All precede the October 13 article's [generation run](https://github.com/ojfbot/daily-logger/actions/runs/38373579636). The [accepted article correction](https://github.com/ojfbot/daily-logger/commit/13ea71c598e60bfed4013592390372d2ec9808de) fixes source interpretation and attribution. The older PRs have distinct original issues and counterexamples.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/347",
+        "https://github.com/ojfbot/daily-logger/pull/348",
+        "https://github.com/ojfbot/core/pull/526",
+        "https://github.com/ojfbot/core/pull/527",
+        "https://github.com/ojfbot/daily-logger/actions/runs/38373579636",
+        "https://github.com/ojfbot/daily-logger/commit/13ea71c598e60bfed4013592390372d2ec9808de"
+      ],
+      "correction": "say these existing fixes landed alongside the October 13 editorial correction. Remove the asserted common causal incident. Dates establish that these proposals predate that article; they do not establish why every later integration step was prioritized. The alleged truncation incident is separately unverified below.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Lines 16 and 63 describe a corpus experiment, overflow at lower limits, a margin above maximum source length and a decision to defer relevance ranking.",
+      "location": "Lines 16 and 63 describe a corpus experiment, overflow at lower limits, a margin above maximum source length and a decision to defer relevance ranking.",
+      "explanation": "[Merged budget source](https://github.com/ojfbot/daily-logger/blob/590114d2776e61c009f4bec3376dc21fe233e801/src/pr-body.ts#L1) and [PR #348](https://github.com/ojfbot/daily-logger/pull/348) specify a coverage heuristic of about four 6,000-character bodies. The inspected records contain deterministic synthetic checks, not the asserted corpus study, quality comparison or ranking decision.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/590114d2776e61c009f4bec3376dc21fe233e801/src/pr-body.ts#L1",
+        "https://github.com/ojfbot/daily-logger/pull/348"
+      ],
+      "correction": "Describe the heuristic and tested bounds. Supply an experiment or decision receipt before asserting empirical selection or a deferred alternative.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "Lines 10, 16 and 57 assert that normalization stripped delimiters and collapsed Unicode, and that a truncated note caused the bad article.",
+      "location": "Lines 10, 16 and 57 assert that normalization stripped delimiters and collapsed Unicode, and that a truncated note caused the bad article.",
+      "explanation": "[PR #356](https://github.com/ojfbot/daily-logger/pull/356) and its [revision receipt](https://github.com/ojfbot/daily-logger/pull/356#issuecomment-6149497087) establish source/dependency corrections. [The typed feedback extractor](https://github.com/ojfbot/daily-logger/blob/8c5fbc520a9378e11323b8b09d6afcb41d37fb6b/.github/scripts/extract-editorial-feedback.mjs) establishes literal JSON handling and legacy parsing, not a specific production Unicode-normalization incident. No before/after request, parser output or causal receipt for this article was found.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/356",
+        "https://github.com/ojfbot/daily-logger/pull/356#issuecomment-6149497087",
+        "https://github.com/ojfbot/daily-logger/blob/8c5fbc520a9378e11323b8b09d6afcb41d37fb6b/.github/scripts/extract-editorial-feedback.mjs"
+      ],
+      "correction": "State the proven delimiter/whitespace preservation behavior. Remove the concrete production mechanism and article-level causality unless a retained payload trace proves them.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U3",
+      "classification": "unverified_claim",
+      "title": "Lines 44 and 91 give #44, #45 and #46 a common R4/R6 import hold and sprint disposition deadline.",
+      "location": "Lines 44 and 91 give #44, #45 and #46 a common R4/R6 import hold and sprint disposition deadline.",
+      "explanation": "[PR #45](https://github.com/ojfbot/lego-village-pipeline/pull/45), head `bd88923891eb51c64b337c7b79a5c169b413c102`, retains a separate HOUSE-WORLD second-steward check and James's merge decision. Its [original pinned brief](https://github.com/ojfbot/lego-village-pipeline/blob/bbaeec06ef09d60a39c7fdfa8163054667ac17ee/docs/correspondence/HANDOFF-LEGO-PIPE-037-R0-house-world.md) is distinct from the overlay imports. The inspected PRs do not establish a shared sprint deadline or hold milestone.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+        "https://github.com/ojfbot/lego-village-pipeline/blob/bbaeec06ef09d60a39c7fdfa8163054667ac17ee/docs/correspondence/HANDOFF-LEGO-PIPE-037-R0-house-world.md"
+      ],
+      "correction": "Keep each recorded merge boundary separate. Label closure/hold timing as an editorial recommendation, not an existing operator commitment.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U4",
+      "classification": "unverified_claim",
+      "title": "Lines 89 and 97 declare the old actions parked by design, without an available next step, and describe the port collision as ownerless and unresolved.",
+      "location": "Lines 89 and 97 declare the old actions parked by design, without an available next step, and describe the port collision as ownerless and unresolved.",
+      "explanation": "[Pinned action JSON](https://github.com/ojfbot/daily-logger/blob/ce04d6762fa5a8e5dff59388849e3ea164aff940/api/actions.json) records open recommendations with concrete descriptions; it contains no parked disposition or undefined-trigger receipt for those IDs. A historical port mention and missing owner field do not prove current environment failure or absence of an owner. No live capture-agent environment was inspected.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/ce04d6762fa5a8e5dff59388849e3ea164aff940/api/actions.json"
+      ],
+      "correction": "Retain historical open recommendations and their dates. Mark current port status and owner as unverified; request a current disposition only as a recommendation.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ],
+  "fullRecordBlobSha": "4c18ac2c1f87124357cb7aa33a9ae8eba600f800"
+}
