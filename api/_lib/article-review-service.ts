@@ -21,7 +21,8 @@ export function createReviewService(github: GitHub) {
     return response.json()
   }
   async function file(path: string, ref: string) {
-    const data = sourceFileSchema.parse(await json(`/contents/${path}?ref=${ref}`))
+    const encodedPath = path.split('/').map(encodeURIComponent).join('/')
+    const data = sourceFileSchema.parse(await json(`/contents/${encodedPath}?ref=${ref}`))
     if (data.content.length > 700000) throw new ReviewError(503, 'Review record exceeds the bounded reader limit.')
     return { blobSha: data.sha, text: Buffer.from(data.content, 'base64').toString('utf8') }
   }
@@ -76,7 +77,7 @@ export function createReviewService(github: GitHub) {
         entries.push(entrySchema.parse({
           lifecycle: registration.lifecycle, recordRef: registration.ref, recordBlobSha: record.blobSha,
           recordUrl: `https://github.com/ojfbot/daily-logger/blob/${registration.ref}/${registration.path}`,
-          fullRecordUrl: `https://github.com/ojfbot/daily-logger/blob/${registration.ref}/${review.fullRecordPath}`,
+          fullRecordUrl: `https://github.com/ojfbot/daily-logger/blob/${registration.ref}/${review.fullRecordPath.split('/').map(encodeURIComponent).join('/')}`,
           review,
           freshness: !visibleBlobSha ? 'visible_revision_unknown' : review.article.blobSha === visibleBlobSha ? 'current' : 'stale',
         }))
@@ -125,15 +126,17 @@ export function createReviewService(github: GitHub) {
     const body = [
       `## Article revision request: ${request.date}`,
       '',
-      `Requested by @${actor}. Intent: request_changes. This records feedback only; article acceptance and correction-PR creation require separate actions.`,
+      `Requested by GitHub account ${actor}. Intent: request_changes. This records feedback only; article acceptance and correction-PR creation require separate actions.`,
       '',
       `Visible article blob: \`${request.visibleBlobSha}\`. Checked against main commit \`${latestSha}\` before recording.`,
       ...selected.map(({ entry, finding }) => `- [${entry.review.id}/${finding.id}](${entry.fullRecordUrl}) at record blob \`${entry.recordBlobSha}\` (${entry.lifecycle}, ${finding.classification}).`),
-      '', '### Editable feedback, recorded verbatim', '',
-      // JSON strings keep delimiters and literal newlines unambiguous in the display.
-      '```json', JSON.stringify({ feedback: request.feedback }, null, 2), '```', '',
+      '', '### Feedback JSON, decoded text preserved exactly', '',
+      // GitHub examines raw comment bodies for automation mentions, even inside code fences.
+      // JSON Unicode escapes preserve exact decoded text without emitting a mention.
+      '```json', JSON.stringify({ feedback: request.feedback }, null, 2).replaceAll('@', '\\u0040'), '```', '',
       start, Buffer.from(JSON.stringify(record), 'utf8').toString('base64'), end,
     ].join('\n')
+    if (body.includes('@') || body.startsWith('/')) throw new ReviewError(400, 'Comment display contains an automation trigger; no request was submitted.')
     const response = commentSchema.parse(await json(`/issues/${projection.requestTarget.issueNumber}/comments`, { method: 'POST', body: JSON.stringify({ body }) }))
     return { url: response.html_url, requestId: request.requestId, reused: false }
   }

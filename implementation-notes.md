@@ -134,3 +134,5 @@
 - The October 14 article requested a new design spike, while #357 already specifies a bounded working pilot without separate design sign-off. Prepared a local implementation under that existing issue rather than a duplicate issue or framework.
 - The current independent October 13 and 14 review records were local and uncommitted, so the candidate explicitly registers preserved copies; it does not claim those records are already published or automatically discoverable.
 - Narrow-screen dogfooding placed independent review below a long article. Added a direct article-header navigation link without changing the article or acceptance controls.
+
+- Cold review proved that literal provider mentions inside displayed feedback match the checked-in comment automation rule. Escaped display-only at-signs and artifact paths, retained exact encoded feedback, and added a predicate-driven regression plus fail-closed body guard.

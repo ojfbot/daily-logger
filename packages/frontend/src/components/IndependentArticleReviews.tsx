@@ -109,7 +109,7 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login }: Props
       <label htmlFor="independent-review-feedback">Revision feedback</label>
       <textarea id="independent-review-feedback" value={feedback} maxLength={30000} disabled={sending} onChange={(event) => { changed(); setFeedback(event.currentTarget.value) }} rows={6} />
       <p>Only the selected finding references and this editable text are submitted. Existing editorial notes and section feedback stay separate.</p>
-      {projection.requestTarget ? <p>This pilot records correspondence on <a href={projection.requestTarget.contextUrl}>issue #{projection.requestTarget.issueNumber}</a>. It creates no acceptance branch, PR, or model run.</p> : <p>No correspondence target is registered for this article. Requests are disabled.</p>}
+      {projection.requestTarget ? <p>This pilot records correspondence on <a href={projection.requestTarget.contextUrl}>issue #{projection.requestTarget.issueNumber}</a>. It creates no acceptance branch, PR, or model run. Mentions are escaped in the comment display; stored feedback stays unchanged.</p> : <p>No correspondence target is registered for this article. Requests are disabled.</p>}
       <button type="button" disabled={sending || !canSubmit} onClick={requestChanges}>{sending ? 'Recording revision request...' : `Request changes${projection.requestTarget ? ` on #${projection.requestTarget.issueNumber}` : ''}`}</button>
       {projection.requests.length > 0 && <details><summary>Recorded revision requests ({projection.requests.length})</summary><ul>{projection.requests.map((request) => <li key={request.url}><a href={request.url}>{request.findingIds.join(', ')} requested by {request.actor}</a></li>)}</ul></details>}
     </>}
