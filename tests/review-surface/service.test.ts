@@ -65,6 +65,16 @@ describe('registered article review and request-changes seam', () => {
     await expect(service.requestChanges(request, 'editor')).rejects.toThrow('article changed')
     expect(state.comments).toHaveLength(0)
   })
+  it('rejects a registered review whose declared article blob disagrees with fetched historical bytes', async () => {
+    const { state, service, request } = await setup()
+    state.files.set(recordPath, JSON.stringify({ ...review, article: { ...review.article, blobSha: 'a'.repeat(40) } }))
+    const view = await service.load(today, blob)
+    expect(view.entries).toEqual([])
+    expect(view.unavailable.join()).toContain('Review source commit and article blob disagree')
+    await expect(service.requestChanges(request, 'editor')).rejects.toThrow('Selected review')
+    expect(state.calls.filter((call) => !call.startsWith('GET '))).toEqual([])
+    expect(state.comments).toEqual([])
+  })
   it('marks a review stale against a changed visible blob and unknown without a visible fingerprint', async () => {
     const { service } = await setup()
     expect((await service.load(today, 'a'.repeat(40))).entries[0]?.freshness).toBe('stale')
