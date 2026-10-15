@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
-import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
+import { readArticleSnapshot } from './article-snapshots.js'
 import { registrySchema, reviewSchema } from '../../shared/article-review.js'
 
 export const source = 'ce04d6762fa5a8e5dff59388849e3ea164aff940'
@@ -15,7 +15,7 @@ export function createFixture() {
   const comments: Array<{ body: string; html_url: string; user: { login: string } }> = []
   const calls: string[] = []
   const files = new Map<string, string>()
-  const state = { source, blob, login: 'editor', outage: false, prHead: 'a'.repeat(40), registry, comments, calls, files }
+  const state = { source, login: 'editor', outage: false, prHead: 'a'.repeat(40), registry, comments, calls, files }
   async function github(path: string, options?: RequestInit): Promise<Response> {
     const method = options?.method ?? 'GET'
     calls.push(`${method} ${path}`)
@@ -29,8 +29,8 @@ export function createFixture() {
       const ref = url.searchParams.get('ref') ?? ''
       try {
         const text = path === 'reviews/registry.json' ? JSON.stringify(state.registry) : state.files.get(path) ??
-          (path.startsWith('_articles/') ? execFileSync('git', ['show', `${ref}:${path}`], { encoding: 'utf8' }) : readFileSync(path, 'utf8'))
-        const hash = path === `_articles/${today}.md` && ref === state.source ? state.blob : createHash('sha1').update(`blob ${Buffer.byteLength(text)}\0`).update(text).digest('hex')
+          (path.startsWith('_articles/') ? readArticleSnapshot(ref, path.slice('_articles/'.length).replace(/\.md$/, '')).content : readFileSync(path, 'utf8'))
+        const hash = createHash('sha1').update(`blob ${Buffer.byteLength(text)}\0`).update(text).digest('hex')
         return Response.json({ type: 'file', encoding: 'base64', content: Buffer.from(text).toString('base64'), sha: hash })
       } catch { return Response.json({ message: 'Not found' }, { status: 404 }) }
     }

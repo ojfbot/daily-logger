@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "articles": [
+    {
+      "sourceCommitSha": "ce04d6762fa5a8e5dff59388849e3ea164aff940",
+      "date": "2026-10-14",
+      "sourcePath": "_articles/2026-10-14.md",
+      "file": "2026-10-14-ce04d6762fa5a8e5dff59388849e3ea164aff940.md",
+      "blobSha": "385b344f70b3e07b5ac5233149486d07213f43d6",
+      "sha256": "99207359ca62a6bce8cb29a8a2f048f7c02dab483b710469d86a899534963759"
+    },
+    {
+      "sourceCommitSha": "ce04d6762fa5a8e5dff59388849e3ea164aff940",
+      "date": "2026-10-13",
+      "sourcePath": "_articles/2026-10-13.md",
+      "file": "2026-10-13-ce04d6762fa5a8e5dff59388849e3ea164aff940.md",
+      "blobSha": "069636cadb3a468ce9cdee15e461f763c17cb674",
+      "sha256": "77f812860549d711a470a0260537ee6c28e3c7e4a43491373f71a507f30004c9"
+    },
+    {
+      "sourceCommitSha": "457809f46579052c829ab8c2abe704ff644bdbf5",
+      "date": "2026-10-13",
+      "sourcePath": "_articles/2026-10-13.md",
+      "file": "2026-10-13-457809f46579052c829ab8c2abe704ff644bdbf5.md",
+      "blobSha": "31c1ef985938a48d1c3648ee9acb36f81893de74",
+      "sha256": "528ca86fc176f4837b5e03004ae86a0aaf816a36f8ef1b3f2588e523479db94c"
+    },
+    {
+      "sourceCommitSha": "59d39b52f87629945b70cb13840ee3ad90ca7454",
+      "date": "2026-10-14",
+      "sourcePath": "_articles/2026-10-14.md",
+      "file": "2026-10-14-59d39b52f87629945b70cb13840ee3ad90ca7454.md",
+      "blobSha": "9f355b32d62f6fbeb0698417903cde46a29e0611",
+      "sha256": "ebcbb7eebdb2249031f11dec9b0b1fb3f42a4015e066256edcb2b63be9851586"
+    }
+  ]
+}

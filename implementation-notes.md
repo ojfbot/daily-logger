@@ -136,3 +136,8 @@
 - Narrow-screen dogfooding placed independent review below a long article. Added a direct article-header navigation link without changing the article or acceptance controls.
 
 - Cold review proved that literal provider mentions inside displayed feedback match the checked-in comment automation rule. Escaped display-only at-signs and artifact paths, retained exact encoded feedback, and added a predicate-driven regression plus fail-closed body guard.
+
+## Deviations — October 15 review fixture CI repair
+
+- Local review tests assumed historical Git objects were available; hosted CI checks out one commit and returned 404 for those fixture reads. Frozen the four exact article inputs with verified Git blob and SHA-256 identities instead of widening CI history or changing runtime source.
+- Browser fixtures relabeled current rebuilt article JSON with a historical blob, and a source-change control overrode a reported SHA without changing source bytes. Rendered the browser fixture from its matching frozen bytes and used the actual corrected October 14 revision for the article-change control.

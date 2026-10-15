@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
-import { readFileSync } from 'node:fs'
 import { z } from 'zod'
 import { createReviewService } from '../../../api/_lib/article-review-service.js'
 import { requestSchema } from '../../../shared/article-review.js'
+import { browserArticle, readArticleSnapshot } from '../../../tests/review-surface/article-snapshots.js'
 import { blob, createFixture, recordPath, review, today } from '../../../tests/review-surface/fixture.js'
 
 type Fixture = ReturnType<typeof createFixture>
@@ -11,7 +11,8 @@ async function mount(page: Page, fixture: Fixture, date: string, visibleBlob: st
   const baseURL = test.info().project.use.baseURL
   if (!baseURL) throw new Error('Browser base URL is required')
   const origin = new URL(baseURL).origin
-  const article = { ...JSON.parse(readFileSync(`api/articles/${date}.json`, 'utf8')), sourceBlobSha: visibleBlob }
+  const article = browserArticle(fixture.state.source, date)
+  expect(article.sourceBlobSha).toBe(visibleBlob)
   const browserWrites: string[] = []
   page.on('request', (request) => { if (request.method() !== 'GET') browserWrites.push(`${request.method()} ${new URL(request.url()).pathname}`) })
   await page.route('**/*', async (route) => {
@@ -67,7 +68,7 @@ test('today: editor and agent agree; request changes preserves exact text and ex
   expect(z.object({ feedback: z.string() }).parse(JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'))).feedback).toBe(exact)
   await expect(page.locator('.editorial-note textarea').first()).toHaveValue('Existing editorial note must remain')
   await testInfo.attach('recorded-request', { body: JSON.stringify(fixture.state.comments, null, 2), contentType: 'application/json' })
-  await testInfo.attach('no-acceptance-side-effects', { body: JSON.stringify({ browserWrites, githubWrites: fixture.state.calls.filter((call) => !call.startsWith('GET ')), articleBlobUnchanged: fixture.state.blob === blob }), contentType: 'application/json' })
+  await testInfo.attach('no-acceptance-side-effects', { body: JSON.stringify({ browserWrites, githubWrites: fixture.state.calls.filter((call) => !call.startsWith('GET ')), articleBlobUnchanged: readArticleSnapshot(fixture.state.source, today).blobSha === blob }), contentType: 'application/json' })
   await panel.evaluate((element) => element.scrollIntoView({ block: 'start' }))
   await page.screenshot({ path: testInfo.outputPath('today-request-recorded.png') })
 })
@@ -87,7 +88,7 @@ test('historical T1 walkthrough: original pin can request correction, then chang
   await panel.getByRole('button', { name: 'Request changes on #357', exact: true }).click()
   await expect(panel.getByText('Revision request recorded.', { exact: false })).toBeVisible()
   fixture.state.source = 'ce04d6762fa5a8e5dff59388849e3ea164aff940'
-  await page.route('**/api/articles/2026-10-13.json', (route) => route.fulfill({ json: JSON.parse(readFileSync('api/articles/2026-10-13.json', 'utf8')) }))
+  await page.route('**/api/articles/2026-10-13.json', (route) => route.fulfill({ json: browserArticle(fixture.state.source, '2026-10-13') }))
   await page.reload()
   await expect(panel.getByText('Stale: article changed; a fresh review is needed')).toBeVisible()
   await panel.locator('.independent-review-finding summary').first().click()
