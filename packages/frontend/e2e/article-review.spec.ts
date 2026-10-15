@@ -49,7 +49,7 @@ test('today: editor and agent agree; request changes preserves exact text and ex
   await panel.locator('.independent-review-finding summary').first().click()
   await panel.getByLabel('Select C1 for revision feedback').check()
   await panel.getByRole('button', { name: 'Add selected corrections to feedback' }).click()
-  const exact = ' \t\n雪\n---\n<!-- EDITORIAL_FEEDBACK_V2_END -->\nKeep this feedback verbatim.\n\t '
+  const exact = ' \t\n雪\n---\n<!-- EDITORIAL_FEEDBACK_V2_END -->\nKeep this feedback verbatim. @ClAuDe @codex @copilot\n\t '
   await panel.getByLabel('Revision feedback', { exact: true }).fill(exact)
   await page.locator('.editorial-note textarea').first().fill('Existing editorial note must remain')
   await page.reload()
@@ -62,6 +62,7 @@ test('today: editor and agent agree; request changes preserves exact text and ex
   expect(browserWrites).toEqual(['POST /api/article-reviews'])
   expect(fixture.state.calls.filter((call) => !call.startsWith('GET '))).toEqual(['POST /repos/ojfbot/daily-logger/issues/357/comments'])
   expect(fixture.state.comments[0]?.body).toContain('request_changes')
+  expect(fixture.state.comments[0]?.body).not.toContain('@')
   const encoded = fixture.state.comments[0]?.body.split('<!-- ARTICLE_REVIEW_REQUEST_V1_START -->')[1]?.split('<!-- ARTICLE_REVIEW_REQUEST_V1_END -->')[0]?.trim() ?? ''
   expect(z.object({ feedback: z.string() }).parse(JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'))).feedback).toBe(exact)
   await expect(page.locator('.editorial-note textarea').first()).toHaveValue('Existing editorial note must remain')

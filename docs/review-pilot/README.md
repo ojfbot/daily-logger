@@ -105,6 +105,18 @@ read and comment write; the comment names the checked commit and article blob.
 That race can only leave an explicitly historical feedback request. It cannot
 accept or publish an article.
 
+The checked-in `claude.yml` dispatches a provider job when a newly created issue
+comment contains its mention token, including text inside a code fence. The
+comment display therefore uses JSON Unicode escapes for every at-sign, uses
+mention-free account attribution, and percent-encodes review artifact paths.
+Both the display JSON and structured record decode to the original feedback
+exactly. A final raw-body guard rejects any remaining at-sign or slash-command
+prefix before the write. The `pipeline-alert-commands.yml` comment rule requires
+a slash prefix; generated correspondence starts with its fixed heading instead.
+A regression reads the actual checked-in predicates and fails if the known
+correspondence workflow inventory changes. This qualifies those repository
+predicates, not unknown organization-level integrations.
+
 The same UUID and identical actor/payload reuse an existing comment. A changed
 payload under the same UUID is rejected. GitHub comments provide no atomic
 create-if-absent operation, so truly concurrent identical requests can still
