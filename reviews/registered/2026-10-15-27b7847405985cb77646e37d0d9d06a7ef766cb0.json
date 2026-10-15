@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-review-20261015-27b784740598",
+  "article": {
+    "date": "2026-10-15",
+    "sourceCommitSha": "27b7847405985cb77646e37d0d9d06a7ef766cb0",
+    "blobSha": "046761c8b256972f8fa19990681692e80583282e"
+  },
+  "reviewer": {
+    "name": "Codex independent review: accuracy and next-action relevance",
+    "sessionId": "01a135fd-dad7-7691-b64c-c81a899337b9"
+  },
+  "reviewedAt": "2026-10-15T18:25:28.499141Z",
+  "scope": "Evidence review of the unchanged visible October15 article and all three next-action suggestions. Ten confirmed article errors and one unverified claim; supporting API/docs gaps and a per-action usefulness assessment are in the full record. Two independent Codex tasks plus publishing-session integration; same model family, not cross-model assurance. Human disposition remains open. This does not certify producers, deployment, the operating loop or action completion.",
+  "fullRecordBlobSha": "03a3eb98e1d4e874cbb3d10eaeec7b038714b0d5",
+  "fullRecordPath": "reviews/articles/2026-10-15-27b7847405985cb77646e37d0d9d06a7ef766cb0.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The identity recommendation reopens an accepted bounded decision",
+      "location": "Article _articles/2026-10-15.md, lines 86, 91",
+      "explanation": "The exact bounded contract was accepted in Decision16 before the article, with separate publication Decisions17/18. It is closed over Dolt/handoff variants, explicitly excludes universal provider identity, keeps credentials/principals/device metadata out of keys, defines account-independent future GitHub resource identity and fails unsupported GitHub observations closed. Issue57 itself offers a black-box path and conditions its #56 prerequisite on universal-key or client mutation-routing intent. An open issue does not erase the accepted bounded disposition or establish a gate on every inspector feature.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/blob/f9539f92db560056d5084fff641eff67c24f8d9c/packages/read-model-contract/inspector-contract.md#L7-L11",
+        "https://github.com/ojfbot/morning-cockpit/blob/f5ff6a0d699482d022ee0b700e7aef84d3693991/packages/shared/src/source-record.ts#L98-L100",
+        "https://github.com/ojfbot/morning-cockpit/blob/f5ff6a0d699482d022ee0b700e7aef84d3693991/packages/shared/src/source-record.ts#L130-L160",
+        "https://github.com/ojfbot/morning-cockpit/pull/56#issuecomment-6159561870",
+        "https://github.com/ojfbot/morning-cockpit/issues/57"
+      ],
+      "correction": "The Dolt/handoff identity boundary is accepted. Keep issue57 for remaining GitHub/provenance decisions; define the source-specific GitHub contract before emitting GitHub records. Apply remaining gates only when the next feature crosses them.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Unknown-target rendering is already implemented",
+      "location": "Article _articles/2026-10-15.md, line 66",
+      "explanation": "Accepted implementation already renders diagnostic reason labels, literal declared-link status and invalid-declaration reasons, unknown repository text, unavailable source reasons and unavailable process identity. Issue57 covers identity and production provenance, not a generic unresolved badge/style decision. A different visual treatment could be proposed, but the present rendering is not absent.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/morning-cockpit/blob/f5ff6a0d699482d022ee0b700e7aef84d3693991/packages/renderer/src/components/EvidenceView.tsx#L22-L27",
+        "https://github.com/ojfbot/morning-cockpit/blob/f5ff6a0d699482d022ee0b700e7aef84d3693991/packages/renderer/src/components/EvidenceView.tsx#L221-L225",
+        "https://github.com/ojfbot/morning-cockpit/blob/f5ff6a0d699482d022ee0b700e7aef84d3693991/packages/renderer/src/components/EvidenceButton.tsx#L15-L19",
+        "https://github.com/ojfbot/morning-cockpit/blob/f5ff6a0d699482d022ee0b700e7aef84d3693991/packages/renderer/src/components/EvidenceDialog.tsx#L236-L268",
+        "https://github.com/ojfbot/morning-cockpit/issues/57"
+      ],
+      "correction": "Describe the implemented explicit diagnostic/status labels and disclosures. Treat any visual refinement as optional UX work rather than a prerequisite attributed to issue57.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Four source links miss their intended PRs",
+      "location": "Article _articles/2026-10-15.md, lines 14, 22, 24, 38",
+      "explanation": "The three shipment headings embed a full PR URL after /pull/, producing malformed destinations. The inline #537 dependency under morning-cockpit points at morning-cockpit/pull/537 rather than core/pull/537. This is one source-link construction finding, not four separate findings.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/27b7847405985cb77646e37d0d9d06a7ef766cb0/_articles/2026-10-15.md#L14",
+        "https://github.com/ojfbot/daily-logger/blob/27b7847405985cb77646e37d0d9d06a7ef766cb0/_articles/2026-10-15.md#L22",
+        "https://github.com/ojfbot/daily-logger/blob/27b7847405985cb77646e37d0d9d06a7ef766cb0/_articles/2026-10-15.md#L24",
+        "https://github.com/ojfbot/daily-logger/blob/27b7847405985cb77646e37d0d9d06a7ef766cb0/_articles/2026-10-15.md#L38"
+      ],
+      "correction": "Use core/pull/537 for the core heading and dependency, morning-cockpit/pull/56 for the cockpit heading, and daily-logger/pull/359 for the logger heading.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The refresh repair names the wrong commit",
+      "location": "Article _articles/2026-10-15.md, lines 24, 60",
+      "explanation": "The full accepted fa5d665 diff is a REST-only claim-routing change. It changes briefing routing and claim eligibility, not inspector detail/refresh request lifetimes. The accepted f47d4c2 commit adds useEvidenceInspector and the request-lifetime controls; the final accepted hook aborts obsolete requests and checks an epoch/detail generation before adopting results.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/morning-cockpit/commit/fa5d6659e7445b3dfb0cb0e87d773fe958ea528b",
+        "https://github.com/ojfbot/morning-cockpit/commit/f47d4c2abdaea805234300b540e19b6342611445",
+        "https://github.com/ojfbot/morning-cockpit/blob/f5ff6a0d699482d022ee0b700e7aef84d3693991/packages/renderer/src/use-evidence-inspector.ts"
+      ],
+      "correction": "Attribute the inspector request-lifetime repair to f47d4c2 and the final accepted hook, or omit the single-commit attribution.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The product commit count includes the logger article",
+      "location": "Article _articles/2026-10-15.md, line 5",
+      "explanation": "The accepted main-history population contains 11 morning-cockpit commits and 3 core commits in the anchored activity window. Fifteen is the total only after adding daily-logger’s one October 14 article commit. The article itself lists the same 11 + 3 + 1 commits.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/commit/f9539f92db560056d5084fff641eff67c24f8d9c",
+        "https://github.com/ojfbot/morning-cockpit/commit/f5ff6a0d699482d022ee0b700e7aef84d3693991",
+        "https://github.com/ojfbot/daily-logger/commit/ce04d6762fa5a8e5dff59388849e3ea164aff940"
+      ],
+      "correction": "Say fourteen commits across morning-cockpit and core, or fifteen across all three named repositories.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "The merges were six hours apart, not fourteen minutes",
+      "location": "Article _articles/2026-10-15.md, line 10",
+      "explanation": "Core #537 merged at 2026-10-14T15:15:05Z and morning-cockpit #56 at 2026-10-14T21:40:31Z. Their exact interval is 6 hours, 25 minutes, 26 seconds. Both timestamps were already settled before generation.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/pull/537",
+        "https://github.com/ojfbot/morning-cockpit/pull/56"
+      ],
+      "correction": "Replace fourteen minutes with about six hours and twenty-five minutes, preserving the merge order.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The fleet-runner tracker was filed in August",
+      "location": "Article _articles/2026-10-15.md, line 76",
+      "explanation": "Core #307 was created on 2026-08-01T12:46:36Z. Its accepted succession/placement decision is dated October 1. October 14 activity added an accepted-reader/operating-boundary update to the existing tracker; it did not create the tracker.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/issues/307",
+        "https://github.com/ojfbot/core/blob/f9539f92db560056d5084fff641eff67c24f8d9c/decisions/adr/0108-fleet-runner-in-core.md"
+      ],
+      "correction": "Describe #307 as the existing tracker, originally filed August 1 and repurposed for fleet-runner under the October 1 succession decision.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "The LEGO correspondence landed October 14",
+      "location": "Article _articles/2026-10-15.md, line 78",
+      "explanation": "LEGO PR #47 was created October 14 at 01:28:46Z and merged October 14 at 05:21:37Z. It was already merged before this article generated, but its merge precedes the nominal October 14 09:00Z collection start. That boundary explains exclusion from the day’s three-merge total; it does not make the landing last week.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/lego-village-pipeline/pull/47",
+        "https://github.com/ojfbot/lego-village-pipeline/commit/e52fded56415c5a4f6ab85cdcd95a8024d259256"
+      ],
+      "correction": "Say it landed early October 14, outside this article’s anchored activity window.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C9",
+      "classification": "confirmed_error",
+      "title": "The draft PRs already describe conditional exit paths",
+      "location": "Article _articles/2026-10-15.md, line 78",
+      "explanation": "The full PR bodies supply concrete conditional paths. #44 and #46 explicitly say to close or supersede the review draft rather than merge it and state the requirements for a later operative import. #45 states that a second steward still needs to rerun the finalization check before merge, with James controlling merge. None of these receipts supplies a calendar close date, but the blanket no-path assertion is too strong.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/46"
+      ],
+      "correction": "Preserve the do-not-merge status and existing close-or-supersede instructions for #44 and #46. State #45's pending second-steward check and owner-controlled merge path. Keep the lack of calendar close dates explicit.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C10",
+      "classification": "confirmed_error",
+      "title": "Three suggestions follow a two-action introduction",
+      "location": "Article _articles/2026-10-15.md, lines 84, 91, 92, 93",
+      "explanation": "The Suggested actions block contains three source suggestions. The orientation recommendation is missing from the preceding count/prioritization.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/27b7847405985cb77646e37d0d9d06a7ef766cb0/_articles/2026-10-15.md#L82-L93"
+      ],
+      "correction": "Say three suggested actions, or explicitly distinguish two main priorities and an optional documentation follow-up.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The first-maintenance claim is not established",
+      "location": "Article _articles/2026-10-15.md, lines 88, 92",
+      "explanation": "The byte-equality gate and CI wiring were introduced June27. The October14 accepted-candidate CI has a successful drift-gate step, and acceptance receipts include byte comparisons and distinct actual-schema mutation probes. Those historical schema probes are not automatically evidence of the exact single-byte vendor negative check. No exhaustive maintenance history was found to establish the word first. The narrow negative case is now directly reproduced locally by this review.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/morning-cockpit/commit/820e8877e4c79d72937aed3b08e3762ea8eb36ee",
+        "https://github.com/ojfbot/morning-cockpit/actions/runs/38641515929/job/116117903389",
+        "https://github.com/ojfbot/morning-cockpit/pull/56#issuecomment-6159561870"
+      ],
+      "correction": "Call this a repeatable maintenance replay, cite existing CI/acceptance evidence, and qualify exactly what was tested. Do not describe the pattern or baseline as previously unvalidated.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
