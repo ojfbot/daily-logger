@@ -128,3 +128,9 @@
 - 2026-10-10 (review correction): preserving the inaccurate narrative under a correction preface still exposed false decision titles through the API; corrected narrative and decisions inline, retained exact suggested-action text for ID audit, and documented source-checked correction attribution. Queue settlement is reviewed in a separate follow-on PR after operator confirmation.
 - 2026-10-10 (local API verification): the documented tsx CLI tried to bind an IPC socket denied by the sandbox; ran the same API builder with `pnpm exec node --import tsx src/build-api.ts`, without changing production build commands.
 - 2026-10-10 (human-gate settlement): the initial receipt kept the article triage instruction open until an actual ADR disposition; the operator clarified that a prepared packet with the human gate left open is an acceptable day outcome, provided agents direct timely resolution. Retired only the article instruction as transferred, retained core #508/its human-only bead, and recorded an owner, exact response options and requested checkpoint without pretending the ADRs were accepted or a reminder was armed.
+
+## Deviations — October 14 review pilot
+
+- The October 14 article requested a new design spike, while #357 already specifies a bounded working pilot without separate design sign-off. Prepared a local implementation under that existing issue rather than a duplicate issue or framework.
+- The current independent October 13 and 14 review records were local and uncommitted, so the candidate explicitly registers preserved copies; it does not claim those records are already published or automatically discoverable.
+- Narrow-screen dogfooding placed independent review below a long article. Added a direct article-header navigation link without changing the article or acceptance controls.

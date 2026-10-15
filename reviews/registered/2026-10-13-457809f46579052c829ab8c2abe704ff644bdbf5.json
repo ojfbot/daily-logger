@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "independent-2026-10-13-457809f",
+  "article": {
+    "date": "2026-10-13",
+    "sourceCommitSha": "457809f46579052c829ab8c2abe704ff644bdbf5",
+    "blobSha": "31c1ef985938a48d1c3648ee9acb36f81893de74"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": "01a13523-7037-77c3-becf-aa16e786a951"
+  },
+  "reviewedAt": "2026-10-13T12:10:24Z",
+  "scope": "Historical pilot projection of C1 only. The full record contains additional findings. The current article is revised, so this historical finding is stale.",
+  "fullRecordPath": "reviews/articles/2026-10-13-457809f46579052c829ab8c2abe704ff644bdbf5.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The article reverses the task dependencies and invents a blanket T1 gate",
+      "location": "source lines 16, 47, 85 and 93. Quotes include \"none of them touched T1–T7 gate conditions\", \"T2–T7 are downstream of T1\", and \"Not actionable until T1 opens\".",
+      "explanation": "the merged [roadmap task table](https://github.com/ojfbot/morning-cockpit/blob/ad7f5376904419c678fe3fbfa1cd677e878cf5b4/.claude/roadmap.md#L341) explicitly gives T1 a dependency on T2 fixtures, leaves Q2 open during comparison, and assigns different entrances to T4–T7. The [transition plan](https://github.com/ojfbot/morning-cockpit/blob/ad7f5376904419c678fe3fbfa1cd677e878cf5b4/planning/mc-ux-01/transition-plan.md#L72) also puts T2 before T1. [Issue #55's completion receipt](https://github.com/ojfbot/morning-cockpit/issues/55#issuecomment-6100803626) confirms that the review amendment corrected the qualified task crosswalk. [PR #56's pinned validation record](https://github.com/ojfbot/morning-cockpit/blob/b18493480c4eb29f4e2348a12bca4f02f1440fd2/verification/mc-ux-01-evidence-inspector-2026-10-10.md#L6) documents an already implemented bounded T2/T3 slice. Its [retained owner gate](https://github.com/ojfbot/morning-cockpit/blob/b18493480c4eb29f4e2348a12bca4f02f1440fd2/decisions/open-unknowns.md#L1) concerns the public REST diagnostic contract.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/morning-cockpit/blob/ad7f5376904419c678fe3fbfa1cd677e878cf5b4/.claude/roadmap.md#L341",
+        "https://github.com/ojfbot/morning-cockpit/blob/ad7f5376904419c678fe3fbfa1cd677e878cf5b4/planning/mc-ux-01/transition-plan.md#L72",
+        "https://github.com/ojfbot/morning-cockpit/issues/55#issuecomment-6100803626",
+        "https://github.com/ojfbot/morning-cockpit/blob/b18493480c4eb29f4e2348a12bca4f02f1440fd2/verification/mc-ux-01-evidence-inspector-2026-10-10.md#L6",
+        "https://github.com/ojfbot/morning-cockpit/blob/b18493480c4eb29f4e2348a12bca4f02f1440fd2/decisions/open-unknowns.md#L1"
+      ],
+      "correction": "distinguish blocked roadmap planning entries from the existing draft implementation. State that #56 implements the bounded T2/T3 slice and awaits dedicated contract review and explicit owner approval before merge. Preserve the separate shell, correspondence and runtime gates. Remove the five-decisions-before-T1 prerequisite and blanket downstream ordering. Describe the review amendment as correcting gate attribution, rather than leaving it untouched. Do not infer an automated dispatch receipt from the existence of implementation.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ],
+  "fullRecordBlobSha": "0f8d224459c507b5e1e1b69ec327f1d509341b25"
+}

@@ -2170,3 +2170,19 @@ a:hover { border-bottom-color: var(--text); }
     padding-top: 16px;
   }
 }
+
+/* Independent review stays next to the article and follows existing responsive columns. */
+.independent-reviews { border-top: 3px solid var(--accent, #3969b1); padding: 1rem 0; margin-bottom: 2rem; overflow-wrap: anywhere; }
+.independent-reviews h2 { font-size: 1.25rem; margin: 0 0 .5rem; }
+.independent-reviews h3 { font-size: 1rem; margin: 1rem 0 .4rem; }
+.independent-reviews h4 { margin: .8rem 0 .4rem; }
+.independent-reviews p, .independent-reviews li, .independent-reviews dd { font-size: .875rem; line-height: 1.55; }
+.independent-reviews dd { margin-left: 0; margin-bottom: .5rem; }
+.independent-reviews details { margin: .6rem 0; }
+.independent-reviews summary { cursor: pointer; padding: .35rem 0; }
+.independent-reviews textarea { display: block; width: 100%; box-sizing: border-box; color: inherit; background: var(--bg, transparent); font: inherit; padding: .6rem; border: 1px solid currentColor; }
+.independent-reviews button { display: block; margin: .6rem 0; padding: .5rem; max-width: 100%; cursor: pointer; }
+.independent-reviews button:disabled { cursor: default; opacity: .55; }
+.independent-reviews :focus-visible { outline: 3px solid #5489d4; outline-offset: 3px; }
+.independent-review-record { border-bottom: 1px solid currentColor; padding-bottom: .8rem; }
+.independent-reviews [role=alert] { border-left: 3px solid #c54c42; padding-left: .6rem; }

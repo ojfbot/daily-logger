@@ -11,6 +11,7 @@ async function fetchJSON<T>(path: string): Promise<T> {
 
 export interface ArticleDetail extends EntryData {
   bodyHtml: string
+  sourceBlobSha?: string
 }
 
 export const fetchEntries = createAsyncThunk('articles/fetchEntries', () =>
