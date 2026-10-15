@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { createReviewService } from '../../api/_lib/article-review-service.js'
 import { requestSchema } from '../../shared/article-review.js'
+import { correctedSource, readArticleSnapshot } from './article-snapshots.js'
 import { blob, createFixture, recordPath, review, today } from './fixture.js'
 
 async function setup() {
@@ -53,10 +54,14 @@ describe('registered article review and request-changes seam', () => {
   })
   it('shows changed article as stale and refuses a request before any mutation', async () => {
     const { state, service, request } = await setup()
-    state.blob = 'b'.repeat(40)
-    const view = await service.load(today, state.blob)
-    expect(view.entries).toHaveLength(0) // mismatched claimed source blob is unavailable, never eligible
-    expect(view.unavailable.join()).toContain('disagree')
+    state.source = correctedSource
+    const corrected = readArticleSnapshot(correctedSource, today)
+    expect(corrected.blobSha).not.toBe(blob)
+    const view = await service.load(today, corrected.blobSha)
+    expect(view.currentBlobSha).toBe(corrected.blobSha)
+    expect(view.entries).toHaveLength(1)
+    expect(view.entries[0]?.freshness).toBe('stale')
+    expect(view.entries[0]?.review.article.blobSha).toBe(blob)
     await expect(service.requestChanges(request, 'editor')).rejects.toThrow('article changed')
     expect(state.comments).toHaveLength(0)
   })
