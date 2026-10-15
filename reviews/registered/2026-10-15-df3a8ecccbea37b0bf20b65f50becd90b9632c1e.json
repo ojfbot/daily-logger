@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-post-revision-20261015-df3a8ecccbea",
+  "article": {
+    "date": "2026-10-15",
+    "sourceCommitSha": "df3a8ecccbea37b0bf20b65f50becd90b9632c1e",
+    "blobSha": "2da806aa48b403d9d20901ef0096df26900c49bc"
+  },
+  "reviewer": {
+    "name": "Codex post-revision verification: accuracy and action usefulness",
+    "sessionId": "01a135fd-dad7-7691-b64c-c81a899337b9"
+  },
+  "reviewedAt": "2026-10-15T21:23:49.947232Z",
+  "scope": "Focused independent accuracy and action-usefulness verification of the regenerated October15 article and final editorial cleanup. C1-C10 corrected; U1 qualified. Exact reviewed candidate tree equals accepted source. No remaining material findings in this correction scope; no new org sweep, individual human finding disposition, action settlement or runtime/deployment certification. Original source review remains historical.",
+  "fullRecordBlobSha": "2661c0d9422d10e8bf88d2fbee0c2d29ae98f3a4",
+  "fullRecordPath": "reviews/articles/2026-10-15-df3a8ecccbea37b0bf20b65f50becd90b9632c1e.md",
+  "result": "completed",
+  "findings": []
+}
