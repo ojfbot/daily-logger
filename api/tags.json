@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 85
+    "count": 86
   },
   {
     "name": "ci-cd",
@@ -12,12 +12,12 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 70
+    "count": 71
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 54
+    "count": 55
   },
   {
     "name": "shell",
@@ -42,6 +42,11 @@
   {
     "name": "model-behavior-as-design",
     "type": "concept",
+    "count": 29
+  },
+  {
+    "name": "hardening",
+    "type": "practice",
     "count": 28
   },
   {
@@ -50,24 +55,19 @@
     "count": 28
   },
   {
-    "name": "hardening",
-    "type": "practice",
-    "count": 27
-  },
-  {
     "name": "cv-builder",
     "type": "repo",
     "count": 24
   },
   {
-    "name": "sprint",
-    "type": "concept",
+    "name": "morning-cockpit",
+    "type": "repo",
     "count": 21
   },
   {
-    "name": "morning-cockpit",
-    "type": "repo",
-    "count": 20
+    "name": "sprint",
+    "type": "concept",
+    "count": 21
   },
   {
     "name": "phase-1",
@@ -77,7 +77,7 @@
   {
     "name": "verification-flagged",
     "type": "concept",
-    "count": 17
+    "count": 18
   },
   {
     "name": "cleanup",
@@ -513,6 +513,16 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "graphql-federation",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "evidence-contracts",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "contract-profile",
