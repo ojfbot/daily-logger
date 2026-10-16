@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-review-20261016-bcdeb7e6c66f",
+  "article": {
+    "date": "2026-10-16",
+    "sourceCommitSha": "bcdeb7e6c66fc5db742faf4524ceef16f264086b",
+    "blobSha": "4664dba41d6aa3519944dc3ef2dc566758896033"
+  },
+  "reviewer": {
+    "name": "Codex independent review: October16 accuracy and next-action relevance",
+    "sessionId": "01a135fd-dad7-7691-b64c-c81a899337b9"
+  },
+  "reviewedAt": "2026-10-16T17:25:31.063394Z",
+  "scope": "Exact unchanged October16 draft: 14 confirmed errors and two unverified generalizations; factual review and all3 suggested-action assessments. Two independent Codex tasks plus root source/API integration and gitless native340/browser4 replay. Individual human dispositions remain open. No action settlement or full runtime/automation qualification.",
+  "fullRecordBlobSha": "800cc32faed3562b460e32b0653315641edce1f4",
+  "fullRecordPath": "reviews/articles/2026-10-16-bcdeb7e6c66fc5db742faf4524ceef16f264086b.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The review has ten confirmed errors and eleven findings total",
+      "location": "Article _articles/2026-10-16.md, lines 10, 20",
+      "explanation": "The immutable structured record has exactly C1\u2013C10 classified confirmed_error and U1 classified unverified_claim: 10 confirmed +1 unverified=11 findings total. The article\u2019s roadmap row at84 already correctly says11 findings, but the introduction and PR363 paragraph claim12 total.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/reviews/registered/2026-10-15-27b7847405985cb77646e37d0d9d06a7ef766cb0.json",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/reviews/articles/2026-10-15-27b7847405985cb77646e37d0d9d06a7ef766cb0.md"
+      ],
+      "correction": "Use ten confirmed errors and one unverified claim, eleven findings total.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The error summary reverses and invents original findings",
+      "location": "Article _articles/2026-10-16.md, lines 20",
+      "explanation": "The original review says the article incorrectly treated an accepted bounded Dolt/handoff decision as unresolved and universally blocking; the draft reverses that direction. The review found a wrong refresh-fix commit attribution, not findings assigned to a wrong inspector pass. Core then cockpit was the correct merge order; the defect was the fourteen-minute interval versus6h25m26s. The fleet/LEGO findings were tracker age, placement/qualification, correspondence date and draft exit paths, not a partially rolled-out fleet-wide feature.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/reviews/articles/2026-10-15-27b7847405985cb77646e37d0d9d06a7ef766cb0.md",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/reviews/articles/2026-10-15-df3a8ecccbea37b0bf20b65f50becd90b9632c1e.md"
+      ],
+      "correction": "Summarize the actual finding IDs and directions: accepted identity scope and existing unknown-state rendering; malformed/wrong links and commit attribution; count/interval/tracker-date errors; LEGO date/conditional exits; suggestion framing. Do not attribute a fleet-wide rollout claim to the old article.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "U1 was qualified by revision rather than left as a generic sourcing claim",
+      "location": "Article _articles/2026-10-16.md, lines 20, 22",
+      "explanation": "U1 specifically challenged the unsupported first-maintenance-validation claim. The revised article removed that first-ever assertion, distinguished existing June27/accepted-candidate CI from the later exact local negative replay, and PR365 explicitly says C1\u2013C10 corrected; U1 qualified. Zero remaining material findings was scoped correction verification, not a ruling that the original unverified claim could stay unchanged.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/reviews/articles/2026-10-15-27b7847405985cb77646e37d0d9d06a7ef766cb0.md",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/reviews/articles/2026-10-15-df3a8ecccbea37b0bf20b65f50becd90b9632c1e.md",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/_articles/2026-10-15.md"
+      ],
+      "correction": "Name U1 as the unproved first-maintenance claim and say revision removed/qualified it while preserving exact evidence and replay limits.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The guard prevents mention-triggered provider jobs, not comment-based acceptance",
+      "location": "Article _articles/2026-10-16.md, lines 59, 61, 63",
+      "explanation": "claude.yml admits newly created comments containing @claude. The other checked comment workflow requires a leading slash plus label/association guards. Editorial acceptance/revision is a separate accept/<date> PR path admitted by pull_request_target opened/edited and feedback markers. The emitter escapes every at-sign in display JSON, removes mention-style attribution, encodes artifact paths, preserves exact decoded display/base64 payloads, and rejects any remaining raw @ or leading slash before POST. It does not make correction and acceptance comments structurally distinguishable because acceptance is not this comment trigger.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/.github/workflows/claude.yml#L15",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/.github/workflows/pipeline-alert-commands.yml#L25",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/.github/workflows/editorial-revise.yml#L11",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/api/_lib/article-review-service.ts#L126",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/docs/review-pilot/README.md#L108"
+      ],
+      "correction": "Describe accidental provider invocation from raw mention text, including inside code fences. State the exact encoding/final guard and distinguish it from the unchanged acceptance PR workflow. Bound qualification to checked-in predicates.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Other merged work is not eight fixup commits within one PR",
+      "location": "Article _articles/2026-10-16.md, lines 65",
+      "explanation": "The12 accepted-main commits include the original October15 article (f4e3868/PR360), two October14 corrections (6c2631a,59d39b5/PR361), four pilot commits(PR362), original review registration(318d1ec/PR363), acceptance/revision/cleanup(ff1a59b,3533732,df3a8ec/PR364), and post-review registration(68505bb/PR365). Calling all remaining eight comment tests/fixture updates/CI config within one PR erases independently merged article and review work.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/_articles/2026-10-16.md#L26",
+        "https://github.com/ojfbot/daily-logger/pull/360",
+        "https://github.com/ojfbot/daily-logger/pull/361",
+        "https://github.com/ojfbot/daily-logger/pull/363",
+        "https://github.com/ojfbot/daily-logger/pull/364"
+      ],
+      "correction": "Group the commit list by its six actual PRs, or remove the speculative eight-fixups explanation. Do not infer an architectural-decision count from commit arithmetic.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "PR365 publishes review data as well as reading the article",
+      "location": "Article _articles/2026-10-16.md, lines 24, 71",
+      "explanation": "The accepted68505bb diff adds a full Markdown verification record, a structured JSON record, and a registry entry. It leaves article bytes, product code, action rows and original human dispositions unchanged. Its service replay performed zero external writes; that narrower replay boundary must not be generalized to the publication PR itself. Independent article correction reviews also occurred before PR364 merged; PR365 makes the matching accepted-byte verification durably discoverable afterward.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/commit/68505bbb3478f40b2b9905c8117bfc5bfae055b4",
+        "https://github.com/ojfbot/daily-logger/pull/365",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/reviews/articles/2026-10-15-df3a8ecccbea37b0bf20b65f50becd90b9632c1e.md"
+      ],
+      "correction": "Say PR365 publishes three review-data changes for a focused exact-byte verification, with no article/product/action changes. Keep zero writes attached to the service replay, not the PR.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The ADRs are under decisions/adr",
+      "location": "Article _articles/2026-10-16.md, lines 97, 116",
+      "explanation": "The frozen accepted tree contains Accepted ADR0037 and0038, both dated March30, at decisions/adr/0037-editorial-stamp-workflow.md and decisions/adr/0038-editorial-revision-workflow.md. The claimed docs/decisions path is absent. This sends readers and the proposed amendment to the wrong destination.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/decisions/adr/0037-editorial-stamp-workflow.md",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/decisions/adr/0038-editorial-revision-workflow.md"
+      ],
+      "correction": "Link the two actual decisions/adr paths and preserve their Accepted status. Any amendment remains a separate decision rather than a consequence of this article.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "The editorial workflow ran before this new review pilot",
+      "location": "Article _articles/2026-10-16.md, lines 10, 99",
+      "explanation": "April4 PR112 was created by the editorial UI with feedback markers, received a successful Editorial Revision comment at18:43:54Z, and merged18:44:39Z. AGENTS and the retained action-settlement record also identify that earlier end-to-end verification. Therefore the existing stamp/revise workflow was not only on paper until October15. The new contribution is this source-pinned review/registration and supervised correction verification pilot.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/112",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/AGENTS.md#L86",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/decisions/fleet-runner/action-settlement-2026-10-05/input-done-actions.json#L323",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/reviews/articles/2026-10-15-df3a8ecccbea37b0bf20b65f50becd90b9632c1e.md"
+      ],
+      "correction": "Describe October15 as an evidenced run of the new registered-review pilot using the existing acceptance/revision workflow. Drop unqualified first-ever/first-fully-instrumented claims unless a defined population and evidence establish them.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Fixture repair does not prove a universal checkout guarantee",
+      "location": "Article _articles/2026-10-16.md, lines 47, 53, 55, 107",
+      "explanation": "4926206 makes four specific historical article inputs self-contained and hash-checked, removes git-show lookup, and renders browser prose/fingerprints from those same bytes instead of current generated API output. That is supported. The harness still loads current renderer code, review records and registry; the loader deliberately refuses unknown source/date pairs. This proves a bounded seam and the recorded depth-one replay, not arbitrary future branches or all CI behavior. No evidence establishes the universal same-result claim or that every later green run is ambiguous until a new test is performed.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/commit/49262065bdda90cce4fbc85a47833bd883a131eb",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/tests/review-surface/article-snapshots.ts",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/tests/review-surface/fixture.ts#L10",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/tests/review-surface/fixtures/README.md",
+        "https://github.com/ojfbot/daily-logger/pull/362"
+      ],
+      "correction": "State the exact dependencies removed and the existing exact-head depth-one/native/browser evidence. Avoid deterministic guarantees for all checkouts/branches or the entire harness. Rerun when relevant inputs/code change.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C9",
+      "classification": "confirmed_error",
+      "title": "The LEGO drafts explicitly discuss Frame boundaries",
+      "location": "Article _articles/2026-10-16.md, lines 95",
+      "explanation": "The retained full PR44/46 bodies explicitly flag Frame topology/boundary ownership, Workbench/Frame design and avoiding implied architecture acceptance. They are separate, non-operative design work, but unrelated to Frame is false. Their blockers are concrete missing overlay/reproducibility/import requirements and operator decisions; the receipts do not name the asserted external milestone as an agreed parked status.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/46",
+        "https://github.com/ojfbot/lego-village-pipeline/blob/4bf12c8370d341a2bd8d1094491e281ebd6637ec/docs/design/review/DT-DESIGN-R6-addendum/review.md"
+      ],
+      "correction": "Call these separate non-operative design drafts touching future Frame boundaries. Preserve their explicit do-not-merge/close-or-supersede rules and concrete missing export/import requirements; do not invent an external milestone or stale status.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "Separate verification PR is a pilot record, not a proven universal architecture requirement",
+      "location": "Article _articles/2026-10-16.md, lines 24, 69, 73",
+      "explanation": "PR365 documents a case-specific registration of a current accepted-byte review after the original became stale. It does not establish that an independent exact-head check/artifact on the revision PR cannot preserve separate revision and verification facts. Independent reviews and fresh checks in fact preceded PR364 merge. ADR0037/0038 do not accept a mandatory second-PR architecture.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/365",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/reviews/articles/2026-10-15-df3a8ecccbea37b0bf20b65f50becd90b9632c1e.md",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/decisions/adr/0038-editorial-revision-workflow.md"
+      ],
+      "correction": "Explain this pilot\u2019s durable current-review registration and preserve independent pre-merge review versus post-merge publication as separate evidence. Present any mandatory separate-PR policy as an unaccepted design proposal, not a required architectural fact.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C10",
+      "classification": "confirmed_error",
+      "title": "Cold-checkout baseline is already evidenced; a new repeat is not the first trustworthy run",
+      "location": "Article _articles/2026-10-16.md, lines 107, 114",
+      "explanation": "PR362 already documents reproduction of historical-object failures and the repaired 340-native/four-browser result in a new depth-one checkout without historical objects; fresh hosted run38756750107 has successful native and browser jobs at exact publication head e612f63018b7c95b25a72e7c6dc707dc3c1c02a2. Workflow uses ordinary actions/checkout without fetching history. The source directly reads verified frozen article inputs rather than historical Git at test time. A truly gitless current-source archive adds a stronger independent check, but the claim that any existing green CI is ambiguous and a first baseline is missing is inaccurate.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/362",
+        "https://github.com/ojfbot/daily-logger/actions/runs/38756750107",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/.github/workflows/pr-check.yml#L26-L37",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/.github/workflows/pr-check.yml#L47-L80",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/tests/review-surface/fixtures/README.md#L13-L23",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/tests/review-surface/article-snapshots.test.ts#L6-L44"
+      ],
+      "correction": "Acknowledge the existing shallow-checkout and hosted baseline. Describe any new archive run as an exact-source independent repeat, report its actual scope/counts and environment limits, and do not make it a new prerequisite to advisory date registration.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C11",
+      "classification": "confirmed_error",
+      "title": "An issue comment does not register an eligible review date",
+      "location": "Article _articles/2026-10-16.md, lines 101, 109, 115",
+      "explanation": "The accepted service loads records/proposals and date-specific requestTargets from reviews/registry.json at pinned main. It reads comments as already routed request history and refuses a request without a registered target. Current registry covers October13/14/15 only. A comment saying October16 is eligible cannot supply a source-pinned review record, the registry entry or its route.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/reviews/registry.json",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/api/_lib/article-review-service.ts#L51-L106",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/shared/article-review.ts#L25-L35",
+        "https://github.com/ojfbot/daily-logger/pull/362",
+        "https://github.com/ojfbot/daily-logger/pull/365"
+      ],
+      "correction": "Register a source-pinned October16 full/structured review and date-specific requestTarget through the existing data-only source path, verify service/UI projection and retain October13/14 routes. Issue357 is receiving correspondence, not the executable registry. Do not claim that comment-only registration extends product eligibility.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C12",
+      "classification": "confirmed_error",
+      "title": "The claimed issue358 prerequisite contradicts the receiving records",
+      "location": "Article _articles/2026-10-16.md, lines 101",
+      "explanation": "Issue358 explicitly says the full retrospective harness must not block issue357 advisory UI pilot. Issue357 comment6158948782 likewise calls the historical substrate supporting research, not a prerequisite, and says the human-adjudicated advisory consumer may proceed without S20 qualification or whole retrospective harness. The article turns a research relationship into a blocking dependency.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/358",
+        "https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6158948782"
+      ],
+      "correction": "Describe issue358 as supporting historical-evaluation research. October16 advisory registration under issue357 may proceed within existing permissions and integrity checks; it does not require the full substrate.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C13",
+      "classification": "confirmed_error",
+      "title": "Existing failure/correction practice is erased by an absolute no-reentry claim",
+      "location": "Article _articles/2026-10-16.md, lines 75, 111, 116",
+      "explanation": "Accepted ADR0038 defines red-check/API failure retry via edited feedback and human merge when satisfied. The Proposed independent review method says report failure, retain old pinned records and perform a fresh review when source changes. The October15 record shows initial revision6ec8b4d received two narrow review corrections before final aa43a5f acceptance, then a new current verification record while the original became stale. These are existing correction/review practices. However, no automatic post-accept verification-failure orchestrator is established: stampDraft refuses non-drafts and an existing accept/date branch. Do not claim the entire failure process is undefined or, conversely, that after-accept automatic recovery already works.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/decisions/adr/0038-editorial-revision-workflow.md#L41-L53",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/decisions/adr/0038-editorial-revision-workflow.md#L87-L94",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/docs/article-review.md#L3-L9",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/docs/article-review.md#L26-L41",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/reviews/articles/2026-10-15-df3a8ecccbea37b0bf20b65f50becd90b9632c1e.md#L17-L41",
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/packages/frontend/src/utils/stampDraft.ts#L54-L88"
+      ],
+      "correction": "Document the current human-directed response: retain the failed/pinned evidence, return remaining corrections to the existing editorial authority, review changed bytes again, and explicitly identify the after-accept automation/UI limitation. An optional process clarification is useful; it is not a newly accepted requirement to amend architecture before another article cycle.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C14",
+      "classification": "confirmed_error",
+      "title": "Two-action introduction omits the third suggestion",
+      "location": "Article _articles/2026-10-16.md, lines 105, 114, 115, 116",
+      "explanation": "The source has three suggestions. The third design suggestion also creates a purported before-second-cycle gate despite being excluded from the two-action dependency summary.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/_articles/2026-10-16.md#L103-L116"
+      ],
+      "correction": "Say three retained suggestions and describe their distinct dispositions: baseline already evidenced/optional independent repeat, concrete review registration, optional bounded process clarification. Remove invented global dependency gates.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
