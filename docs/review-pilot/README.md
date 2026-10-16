@@ -1,9 +1,13 @@
 # Request article corrections from an independent review
 
-This local pilot lets an authorized editor or agent read the same registered,
-version-pinned findings and record selected corrections without accepting the
-article. It addresses existing issue #357. Publication and live validation remain
-pending. The existing article acceptance path is unchanged.
+The current surface supports published records, eligible open review PRs and
+GitHub-backed human/agent correspondence. See [Open reviews and saved
+discussion](correspondence.md) for current behavior, routing and verification.
+Recording feedback remains separate from accepting an article.
+
+The remainder records the original bounded pilot and its historical verification
+at the stated source pins; its original publication-pending statements are not
+the current deployment status.
 
 ## What the current system already does
 

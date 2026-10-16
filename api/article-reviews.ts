@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
 import { extractToken } from './_lib/cookies.js'
 import { createReviewService, ReviewError } from './_lib/article-review-service.js'
-import { date, requestSchema, sha } from '../shared/article-review.js'
+import { date, postSchema, sha } from '../shared/article-review.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'private, no-store')
@@ -29,8 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const query = z.object({ date, visibleBlobSha: sha.optional() }).parse(req.query)
       return res.status(200).json(await service.load(query.date, query.visibleBlobSha ?? null))
     }
-    const request = requestSchema.parse(typeof req.body === 'string' ? JSON.parse(req.body) : req.body)
-    return res.status(200).json(await service.requestChanges(request, login))
+    const request = postSchema.parse(typeof req.body === 'string' ? JSON.parse(req.body) : req.body)
+    return res.status(200).json(request.intent === 'request_changes' ? await service.requestChanges(request, login) : await service.comment(request, login))
   } catch (error) {
     if (error instanceof ReviewError) return res.status(error.status).json({ error: error.message })
     if (error instanceof z.ZodError || error instanceof SyntaxError) return res.status(400).json({ error: 'Invalid review request or source record. Submission is not confirmed; refresh request history before retrying.' })

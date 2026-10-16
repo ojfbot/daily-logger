@@ -5,6 +5,7 @@ import { stampDraft, type EditorialFeedback } from '../utils/stampDraft.ts'
 interface Props {
   date: string
   articleTitle: string
+  visibleBlobSha?: string
 }
 
 type StampState = 'idle' | 'loading' | 'success' | 'error'
@@ -28,7 +29,7 @@ function readDraft(key: string): string[] {
   return ['']
 }
 
-export function EditorialEditor({ date, articleTitle, login }: Props & { login: string }) {
+export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: Props & { login: string }) {
   const { threads, threadOrder } = useAppSelector((s) => s.chat)
   const storageKey = `dl-editorial:${login}:${date}`
   const [entries, setEntries] = useState<Note[]>(() => readDraft(storageKey).map((content, id) => ({ id, content })))
@@ -50,7 +51,8 @@ export function EditorialEditor({ date, articleTitle, login }: Props & { login: 
   // Collect section-level feedback from chat threads
   const articleThreads = threadOrder
     .map((id) => threads[id])
-    .filter((t) => t && t.date === date && t.messages.length > 0)
+    .filter((t) => t && t.date === date && !t.isHidden && t.messages.some((message) =>
+      message.role === 'user' && message.includeInRevision && !!visibleBlobSha && message.articleBlobSha === visibleBlobSha))
 
   const suggestions = entries.map((entry) => entry.content).filter((content) => content.trim())
   const hasFeedback = suggestions.length > 0 || articleThreads.length > 0
@@ -67,7 +69,7 @@ export function EditorialEditor({ date, articleTitle, login }: Props & { login: 
 
     for (const thread of articleThreads) {
       const userNotes = thread.messages
-        .filter((m) => m.role === 'user')
+        .filter((m) => m.role === 'user' && m.includeInRevision && !!visibleBlobSha && m.articleBlobSha === visibleBlobSha)
         .map((m) => m.content)
       for (const content of userNotes) {
         notes.push({ kind: 'section', section: thread.section, content })

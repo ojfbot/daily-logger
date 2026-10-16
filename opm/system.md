@@ -38,6 +38,11 @@ flowchart TD
   RevisionRequesting("Revision Requesting")
   RevisionRequest["Revision Request"]
 
+  ConversationSaving("Conversation Saving")
+  SavedMessage["Saved Message"]
+  ReviewRecords["Review Records"]
+  Correspondence["Correspondence"]
+
   style GitHub stroke-dasharray: 5 5
   style ClaudeAPI stroke-dasharray: 5 5
 
@@ -78,9 +83,16 @@ flowchart TD
   ReviewProjection -. instrument .-> RevisionRequesting
   RevisionRequesting --> RevisionRequest
   RevisionRequesting -- affects --> GitHub
+  GitHub -. instrument .-> ConversationSaving
+  ArticleFingerprint -. instrument .-> ConversationSaving
+  ReviewProjection -. instrument .-> ConversationSaving
+  ConversationSaving --> SavedMessage
+  ConversationSaving -- affects --> GitHub
+  ReviewRecords -- part of --> ReviewProjection
+  Correspondence -- part of --> ReviewProjection
 ```
 
-**OPL paragraph.** Jim is physical. GitHub is environmental. Claude API is environmental. Article can be draft, accepted, or rejected. Draft is initial. Run Admission can be generate, recover, or complete. Cron Firing triggers Run Admitting. Run Admitting requires GitHub. Run Admitting yields Run Admission. Run Admitting invokes Run Evidence Capturing. Run Evidence Capturing requires GitHub. Run Evidence Capturing yields Run Evidence. Article Generating occurs if Run Admission is generate. Branch Recovering occurs if Run Admission is recover. Branch Recovering requires GitHub. Branch Recovering yields Article Completion. Article Generating yields Article Completion. Cleaner Admitting requires Article Completion. Cleaner Admitting yields Cleaner Admission. Cleaner Admission can be run or skip. Stale Content Cleaning occurs if Cleaner Admission is run. Stale Content Cleaning affects GitHub. Fallback Checking requires GitHub. Fallback Checking yields Fallback Decision. Fallback Decision can be missing, active, complete, or failed. Fallback Dispatching occurs if Fallback Decision is missing. Fallback Dispatching requires GitHub. Fallback Dispatching yields Workflow Run. Workflow Run triggers Run Admitting. Article Generating yields Article. Jim handles Editorial Accepting. Editorial Accepting changes Article from draft to accepted. API Building requires Article. API Building yields JSON API. Frontend Rendering requires JSON API. Frontend Rendering yields Rendered Site. API Building yields Article Fingerprint. Frontend Rendering invokes Independent Review Projecting. Independent Review Projecting requires GitHub. Independent Review Projecting requires Article Fingerprint. Independent Review Projecting yields Review Projection. Jim handles Revision Requesting. Revision Requesting requires Review Projection. Revision Requesting yields Revision Request. Revision Requesting affects GitHub.
+**OPL paragraph.** Jim is physical. GitHub is environmental. Claude API is environmental. Article can be draft, accepted, or rejected. Draft is initial. Run Admission can be generate, recover, or complete. Cron Firing triggers Run Admitting. Run Admitting requires GitHub. Run Admitting yields Run Admission. Run Admitting invokes Run Evidence Capturing. Run Evidence Capturing requires GitHub. Run Evidence Capturing yields Run Evidence. Article Generating occurs if Run Admission is generate. Branch Recovering occurs if Run Admission is recover. Branch Recovering requires GitHub. Branch Recovering yields Article Completion. Article Generating yields Article Completion. Cleaner Admitting requires Article Completion. Cleaner Admitting yields Cleaner Admission. Cleaner Admission can be run or skip. Stale Content Cleaning occurs if Cleaner Admission is run. Stale Content Cleaning affects GitHub. Fallback Checking requires GitHub. Fallback Checking yields Fallback Decision. Fallback Decision can be missing, active, complete, or failed. Fallback Dispatching occurs if Fallback Decision is missing. Fallback Dispatching requires GitHub. Fallback Dispatching yields Workflow Run. Workflow Run triggers Run Admitting. Article Generating yields Article. Jim handles Editorial Accepting. Editorial Accepting changes Article from draft to accepted. API Building requires Article. API Building yields JSON API. Frontend Rendering requires JSON API. Frontend Rendering yields Rendered Site. API Building yields Article Fingerprint. Frontend Rendering invokes Independent Review Projecting. Independent Review Projecting requires GitHub. Independent Review Projecting requires Article Fingerprint. Independent Review Projecting yields Review Projection. Jim handles Revision Requesting. Revision Requesting requires Review Projection. Revision Requesting yields Revision Request. Revision Requesting affects GitHub. Conversation Saving requires GitHub. Conversation Saving requires Article Fingerprint. Conversation Saving requires Review Projection. Conversation Saving yields Saved Message. Conversation Saving affects GitHub. Review Projection consists of Review Records and Correspondence.
 
 ## SD1.1 — Article Generating in-zoom
 

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { z } from 'zod'
+import { commentSchema } from '../../../shared/article-review.ts'
 
 const date = '2026-10-11'
 const title = 'Editorial browser fixture'
@@ -13,12 +14,15 @@ const article = {
   activityType: 'development',
   schemaVersion: 2,
   status: 'draft',
+  sourceBlobSha: 'a'.repeat(40),
   bodyHtml: '<h2>What shipped</h2><p>The first claim needs review.</p>',
 }
 
 test('restores notes and submits the surviving note with section feedback once', async ({ page }, testInfo) => {
   const githubCalls: string[] = []
   let pullRequestBody = ''
+  let savedNote: unknown
+  let modelCalls = 0
 
   // Deny unexpected external traffic; all editorial writes below are intercepted.
   await page.route('**/*', (route) => {
@@ -26,14 +30,20 @@ test('restores notes and submits the surviving note with section feedback once',
     return route.abort('blockedbyclient')
   })
 
-  await page.addInitScript(() => localStorage.setItem('dl-anthropic-key', 'browser-fixture-key'))
   await page.route('**/api/entries.json', (route) => route.fulfill({ json: [article] }))
   await page.route(`**/api/articles/${date}.json`, (route) => route.fulfill({ json: article }))
-  await page.route('https://api.anthropic.com/v1/messages', (route) => route.fulfill({
-    status: 200,
-    contentType: 'text/event-stream',
-    body: 'data: {"type":"content_block_delta","delta":{"text":"Acknowledged."}}\n\ndata: [DONE]\n\n',
-  }))
+  await page.route('https://api.anthropic.com/v1/messages', (route) => {
+    modelCalls++
+    return route.fulfill({ status: 500, json: { error: 'No provider call expected' } })
+  })
+  await page.route('**/api/article-reviews**', (route) => {
+    if (route.request().method() === 'POST') {
+      const message = commentSchema.parse(route.request().postDataJSON())
+      savedNote = message
+      return route.fulfill({ json: { requestId: message.requestId, url: 'https://github.com/ojfbot/daily-logger/issues/357#issuecomment-1', reused: false } })
+    }
+    return route.fulfill({ json: { schemaVersion: 1, date, observedAt: '2026-10-16T12:00:00Z', sourceCommitSha: 'b'.repeat(40), currentBlobSha: article.sourceBlobSha, visibleBlobSha: article.sourceBlobSha, discovery: 'registered_and_eligible_pull_requests', requestTarget: { issueNumber: 357, kind: 'pilot_issue', contextUrl: 'https://github.com/ojfbot/daily-logger/issues/357' }, entries: [], unavailable: [], requests: [], pullRequests: [], correspondence: [] } })
+  })
   await page.route('**/api/github/**', async (route) => {
     const request = route.request()
     const path = new URL(request.url()).pathname.replace('/api/github/', '')
@@ -85,9 +95,12 @@ test('restores notes and submits the surviving note with section feedback once',
   await notes.fill('Surviving note — updated')
 
   await page.getByRole('button', { name: 'New chat thread for What shipped' }).click()
-  await page.getByPlaceholder('Ask or suggest changes...').fill('Section note')
+  await page.getByPlaceholder('Write a note or question...').fill('Section note')
   await page.locator('.chat-thread .chat-send-btn').click()
   await expect(page.locator('.chat-thread-messages')).toContainText('Section note')
+  await expect(page.getByRole('link', { name: 'Saved on GitHub' })).toBeVisible()
+  expect(savedNote).toMatchObject({ content: 'Section note', visibleBlobSha: article.sourceBlobSha, speaker: { kind: 'human' } })
+  expect(modelCalls).toBe(0)
 
   await page.getByRole('button', { name: 'ACCEPT WITH REVISIONS' }).click()
   await expect(page.locator('.stamp-success')).toContainText('PR #42 opened')
