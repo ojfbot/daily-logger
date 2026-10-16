@@ -22,6 +22,9 @@ describe('durable correspondence display', () => {
     expect(html).toContain('Full unstructured PR description')
     expect(html).toContain('&lt;script&gt;bad()&lt;/script&gt;')
     expect(html).not.toContain('<script>')
+    expect(html).toContain('PR #367')
+    expect(html).toContain('Pull-request metadata and head are unavailable from the current projection.')
+    expect(html).not.toContain('Issue #367')
   })
 
   it('groups repeated cycles by durable source and separates structured heads from body claims', () => {

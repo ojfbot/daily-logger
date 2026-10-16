@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { z } from 'zod'
 import { projectionSchema, type ReviewProjection } from '../../../../shared/article-review.ts'
 import { useAppDispatch } from '../store/hooks.ts'
@@ -175,6 +175,21 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscu
   const projection = load.kind === 'ready' ? load.projection : null
   const choices = projection?.entries.flatMap((entry) => entry.review.result === 'completed'
     ? entry.review.findings.map((finding) => ({ entry, finding, key: `${entry.review.id}:${finding.id}` })) : []) ?? []
+  const selectableKeys = useMemo(() => new Set(choices
+    .filter(({ entry, finding }) => entry.freshness === 'current' && finding.disposition.kind === 'open')
+    .map(({ key }) => key)), [projection])
+
+  useEffect(() => {
+    if (!projection) return
+    const retained = selected.filter((key) => selectableKeys.has(key))
+    const removed = selected.length - retained.length
+    if (removed === 0) return
+    setSelected(retained)
+    setRequestId(crypto.randomUUID())
+    setReceipt(null)
+    setMessage(`Review status changed; ${removed} unavailable ${removed === 1 ? 'selection was' : 'selections were'} removed.`)
+  }, [projection, selectableKeys, selected])
+
   const picked = choices.filter((choice) => selected.includes(choice.key))
   const canSubmit = !!projection?.requestTarget && !!visibleBlobSha && projection.currentBlobSha === visibleBlobSha &&
     selected.length > 0 && picked.length === selected.length && picked.every(({ entry, finding }) => entry.freshness === 'current' && finding.disposition.kind === 'open') && !!feedback.trim()
