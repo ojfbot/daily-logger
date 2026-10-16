@@ -5,6 +5,7 @@ import type { ArticleDataV2 } from './schema.js'
 import { validateArticleOutput, getValidationErrors, actionId } from './schema.js'
 import { allocateMergedPREvidence, mergedEvidenceKey, PROMPT_PR_PREVIEW_CHARS } from './pr-body.js'
 import { formatArticleFooter } from './run-provenance.js'
+import { isReviewedAction } from './action-model.js'
 
 export const ARTICLE_MODEL = 'claude-sonnet-4-6'
 export const ARTICLE_PROMPT_VERSION = 'article-v2-2026-10-10'
@@ -881,12 +882,30 @@ export function buildUserPrompt(ctx: BlogContext): string {
     }
   }
 
-  if (ctx.openActions.length > 0) {
-    parts.push(`## Open actions from previous runs (${ctx.openActions.length})`)
+  const reviewedActions = ctx.openActions.filter(isReviewedAction)
+  const ordinaryActions = ctx.openActions.filter((action) => !isReviewedAction(action))
+
+  if (ordinaryActions.length > 0) {
+    parts.push(`## Open actions from previous runs (${ordinaryActions.length})`)
     parts.push('_Review each action against today\'s commits, merged PRs, and closed issues. If today\'s work addressed it, include it in `closedActions` — copy the `id`, `command`, `repo`, `sourceDate`, and `description` EXACTLY as shown below. Do NOT re-emit open actions in `suggestedActions`._')
-    ctx.openActions.forEach((a) => {
+    ordinaryActions.forEach((a) => {
       const id = a.id ?? actionId(a)
       parts.push(`- **id:** \`${id}\` | [${a.sourceDate}] [${a.repo}] \`${a.command}\` — ${a.description}`)
+    })
+    parts.push('')
+  }
+
+  if (reviewedActions.length > 0) {
+    parts.push(`## Reviewed canonical actions — context only (${reviewedActions.length})`)
+    parts.push('_These records are visible for continuity but carry no execution or settlement authority. Do not recommend, redispatch, or add them to `closedActions`. Preserve their exact IDs and wait for a separately accepted settlement receipt._')
+    reviewedActions.forEach((action) => {
+      const disposition = action.review.disposition
+      const detail = disposition.kind === 'deferred'
+        ? `deferred; owner ${disposition.owner.title}; reason: ${disposition.reason}; retry: ${disposition.nextSafeRetry}`
+        : disposition.kind === 'completed-existing-evidence'
+          ? `evidence complete but unsettled; qualification: ${disposition.qualification}; retry: ${disposition.nextSafeRetry}`
+          : `pending receipt; owner ${disposition.owner.title}; retry: ${disposition.nextSafeRetry}`
+      parts.push(`- **id:** \`${action.id}\` | [${action.sourceDate}] [${action.repo}] \`${action.invocation}\` — ${detail} | source: ${action.review.source.articlePath}:${action.review.source.line}`)
     })
     parts.push('')
   }

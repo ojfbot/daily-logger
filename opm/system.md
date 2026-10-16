@@ -23,12 +23,17 @@ flowchart TD
   CleanerAdmitting("Cleaner Admitting")
   CleanerAdmission["Cleaner Admission<br/>{run, skip}"]
   StaleContentCleaning("Stale Content Cleaning")
+  CanonicalActionProjection["Canonical Action Projection"]
   FallbackChecking("Fallback Checking")
   FallbackDecision["Fallback Decision<br/>{missing, active, complete, failed}"]
   FallbackDispatching("Fallback Dispatching")
   WorkflowRun["Workflow Run"]
   EditorialAccepting("Editorial Accepting")
   APIBuilding("API Building")
+  ActionProjecting("Action Projecting")
+  ActionAdmission["Action Admission"]
+  ReviewedDisposition["Reviewed Disposition<br/>{deferred, completed-existing-evidence, pending-receipt}"]
+  CanonicalActions["Canonical Actions"]
   JSONAPI["JSON API"]
   FrontendRendering("Frontend Rendering")
   RenderedSite["Rendered Site"]
@@ -37,7 +42,6 @@ flowchart TD
   ReviewProjection["Review Projection"]
   RevisionRequesting("Revision Requesting")
   RevisionRequest["Revision Request"]
-
   ConversationSaving("Conversation Saving")
   SavedMessage["Saved Message"]
   ReviewRecords["Review Records"]
@@ -60,6 +64,7 @@ flowchart TD
   ArticleCompletion -. instrument .-> CleanerAdmitting
   CleanerAdmitting --> CleanerAdmission
   CleanerAdmission -. if run .-> StaleContentCleaning
+  CanonicalActionProjection -. instrument .-> StaleContentCleaning
   StaleContentCleaning -- affects --> GitHub
   GitHub -. instrument .-> FallbackChecking
   FallbackChecking --> FallbackDecision
@@ -71,8 +76,16 @@ flowchart TD
   Jim -. agent .-> EditorialAccepting
   EditorialAccepting -- draft→accepted --> Article
   Article -. instrument .-> APIBuilding
+  Article -. instrument .-> ActionProjecting
+  ActionAdmission -. instrument .-> ActionProjecting
+  ActionProjecting --> CanonicalActionProjection
+  CanonicalActions -- part of --> CanonicalActionProjection
+  ReviewedDisposition -- part of --> CanonicalActionProjection
+  APIBuilding -. invokes .-> ActionProjecting
+  CanonicalActionProjection -. instrument .-> APIBuilding
   APIBuilding --> JSONAPI
   JSONAPI -. instrument .-> FrontendRendering
+  CanonicalActionProjection -. instrument .-> FrontendRendering
   FrontendRendering --> RenderedSite
   APIBuilding --> ArticleFingerprint
   FrontendRendering -. invokes .-> IndependentReviewProjecting
@@ -92,7 +105,7 @@ flowchart TD
   Correspondence -- part of --> ReviewProjection
 ```
 
-**OPL paragraph.** Jim is physical. GitHub is environmental. Claude API is environmental. Article can be draft, accepted, or rejected. Draft is initial. Run Admission can be generate, recover, or complete. Cron Firing triggers Run Admitting. Run Admitting requires GitHub. Run Admitting yields Run Admission. Run Admitting invokes Run Evidence Capturing. Run Evidence Capturing requires GitHub. Run Evidence Capturing yields Run Evidence. Article Generating occurs if Run Admission is generate. Branch Recovering occurs if Run Admission is recover. Branch Recovering requires GitHub. Branch Recovering yields Article Completion. Article Generating yields Article Completion. Cleaner Admitting requires Article Completion. Cleaner Admitting yields Cleaner Admission. Cleaner Admission can be run or skip. Stale Content Cleaning occurs if Cleaner Admission is run. Stale Content Cleaning affects GitHub. Fallback Checking requires GitHub. Fallback Checking yields Fallback Decision. Fallback Decision can be missing, active, complete, or failed. Fallback Dispatching occurs if Fallback Decision is missing. Fallback Dispatching requires GitHub. Fallback Dispatching yields Workflow Run. Workflow Run triggers Run Admitting. Article Generating yields Article. Jim handles Editorial Accepting. Editorial Accepting changes Article from draft to accepted. API Building requires Article. API Building yields JSON API. Frontend Rendering requires JSON API. Frontend Rendering yields Rendered Site. API Building yields Article Fingerprint. Frontend Rendering invokes Independent Review Projecting. Independent Review Projecting requires GitHub. Independent Review Projecting requires Article Fingerprint. Independent Review Projecting yields Review Projection. Jim handles Revision Requesting. Revision Requesting requires Review Projection. Revision Requesting yields Revision Request. Revision Requesting affects GitHub. Conversation Saving requires GitHub. Conversation Saving requires Article Fingerprint. Conversation Saving requires Review Projection. Conversation Saving yields Saved Message. Conversation Saving affects GitHub. Review Projection consists of Review Records and Correspondence.
+**OPL paragraph.** Jim is physical. GitHub is environmental. Claude API is environmental. Article can be draft, accepted, or rejected. Draft is initial. Run Admission can be generate, recover, or complete. Cron Firing triggers Run Admitting. Run Admitting requires GitHub. Run Admitting yields Run Admission. Run Admitting invokes Run Evidence Capturing. Run Evidence Capturing requires GitHub. Run Evidence Capturing yields Run Evidence. Article Generating occurs if Run Admission is generate. Branch Recovering occurs if Run Admission is recover. Branch Recovering requires GitHub. Branch Recovering yields Article Completion. Article Generating yields Article Completion. Cleaner Admitting requires Article Completion. Cleaner Admitting yields Cleaner Admission. Cleaner Admission can be run or skip. Stale Content Cleaning occurs if Cleaner Admission is run. Stale Content Cleaning requires Canonical Action Projection. Stale Content Cleaning affects GitHub. Fallback Checking requires GitHub. Fallback Checking yields Fallback Decision. Fallback Decision can be missing, active, complete, or failed. Fallback Dispatching occurs if Fallback Decision is missing. Fallback Dispatching requires GitHub. Fallback Dispatching yields Workflow Run. Workflow Run triggers Run Admitting. Article Generating yields Article. Jim handles Editorial Accepting. Editorial Accepting changes Article from draft to accepted. API Building requires Article. Action Projecting requires Article. Action Projecting requires Action Admission. Action Projecting yields Canonical Action Projection. Reviewed Disposition can be deferred, completed-existing-evidence, or pending-receipt. Canonical Action Projection consists of Canonical Actions and Reviewed Disposition. API Building invokes Action Projecting. API Building requires Canonical Action Projection. API Building yields JSON API. Frontend Rendering requires JSON API. Frontend Rendering requires Canonical Action Projection. Frontend Rendering yields Rendered Site. API Building yields Article Fingerprint. Frontend Rendering invokes Independent Review Projecting. Independent Review Projecting requires GitHub. Independent Review Projecting requires Article Fingerprint. Independent Review Projecting yields Review Projection. Jim handles Revision Requesting. Revision Requesting requires Review Projection. Revision Requesting yields Revision Request. Revision Requesting affects GitHub. Conversation Saving requires GitHub. Conversation Saving requires Article Fingerprint. Conversation Saving requires Review Projection. Conversation Saving yields Saved Message. Conversation Saving affects GitHub. Review Projection consists of Review Records and Correspondence.
 
 ## SD1.1 — Article Generating in-zoom
 
@@ -100,12 +113,13 @@ flowchart TD
 flowchart TD
   ActivityDecision["Activity Decision<br/>{skip, run}"]
   RunTiming["Run Timing<br/>{available, unavailable}"]
-  GitHub["GitHub"]
+  RunEvidence["Run Evidence"]
   ContextCollecting("Context Collecting")
+  GitHub["GitHub"]
+  CanonicalActionProjection["Canonical Action Projection"]
   TelemetryCollecting("Telemetry Collecting")
   CommitContext["Commit Context"]
   TelemetryDigest["Telemetry Digest"]
-  RunEvidence["Run Evidence"]
   ActivityAssessing("Activity Assessing")
   CreditChecking("Credit Checking")
   ClaudeAPI["Claude API"]
@@ -119,12 +133,12 @@ flowchart TD
   ClaimReport["Claim Report"]
   ProvenanceAttaching("Provenance Attaching")
 
-
+  RunTiming -- part of --> RunEvidence
   GitHub -. instrument .-> ContextCollecting
+  CanonicalActionProjection -. instrument .-> ContextCollecting
   ContextCollecting -. invokes .-> TelemetryCollecting
   ContextCollecting --> CommitContext
   TelemetryCollecting --> TelemetryDigest
-  RunTiming -- part of --> RunEvidence
   CommitContext -. instrument .-> ActivityAssessing
   ActivityAssessing --> ActivityDecision
   ActivityDecision -. if run .-> CreditChecking
@@ -151,4 +165,4 @@ flowchart TD
   ProvenanceAttaching -- affects --> Article
 ```
 
-**OPL paragraph.** Activity Decision can be skip or run. Run Timing can be available or unavailable. Run Evidence consists of Run Timing. Article Generating zooms into Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, and Provenance Attaching. Context Collecting requires GitHub. Context Collecting invokes Telemetry Collecting. Context Collecting yields Commit Context. Telemetry Collecting yields Telemetry Digest. Activity Assessing requires Commit Context. Activity Assessing yields Activity Decision. Credit Checking occurs if Activity Decision is run. Credit Checking requires Claude API. Credit Checking yields Credit Status. Drafting requires Claude API. Drafting requires Commit Context. Drafting requires Telemetry Digest. Drafting requires Credit Status. Drafting occurs if Activity Decision is run. Drafting yields Article. Council Reviewing requires Claude API. Council Reviewing requires Article. Council Reviewing yields Council Critiques. Synthesizing requires Claude API. Synthesizing consumes Council Critiques. Synthesizing affects Article. Claim Verifying requires Article. Claim Verifying requires Commit Context. Claim Verifying yields Claim Report. Claim Verifying affects Article. Provenance Attaching requires Article. Provenance Attaching requires Run Evidence. Provenance Attaching affects Article.
+**OPL paragraph.** Activity Decision can be skip or run. Run Timing can be available or unavailable. Run Evidence consists of Run Timing. Article Generating zooms into Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, and Provenance Attaching. Context Collecting requires GitHub. Context Collecting requires Canonical Action Projection. Context Collecting invokes Telemetry Collecting. Context Collecting yields Commit Context. Telemetry Collecting yields Telemetry Digest. Activity Assessing requires Commit Context. Activity Assessing yields Activity Decision. Credit Checking occurs if Activity Decision is run. Credit Checking requires Claude API. Credit Checking yields Credit Status. Drafting requires Claude API. Drafting requires Commit Context. Drafting requires Telemetry Digest. Drafting requires Credit Status. Drafting occurs if Activity Decision is run. Drafting yields Article. Council Reviewing requires Claude API. Council Reviewing requires Article. Council Reviewing yields Council Critiques. Synthesizing requires Claude API. Synthesizing consumes Council Critiques. Synthesizing affects Article. Claim Verifying requires Article. Claim Verifying requires Commit Context. Claim Verifying yields Claim Report. Claim Verifying affects Article. Provenance Attaching requires Article. Provenance Attaching requires Run Evidence. Provenance Attaching affects Article.

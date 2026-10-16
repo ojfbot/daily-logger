@@ -1044,10 +1044,56 @@ a:hover { border-bottom-color: var(--text); }
 
 .actions-columns {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   margin-top: 1rem;
 }
+
+.actions-column-reviewed {
+  grid-column: 1 / -1;
+  border-left: 3px solid var(--amber);
+}
+
+.action-reviewed {
+  display: block;
+  padding: 0.75rem 0;
+}
+
+.action-reviewed-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.action-disposition {
+  color: var(--amber);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.action-id,
+.action-invocation {
+  overflow-wrap: anywhere;
+}
+
+.action-invocation {
+  color: var(--green);
+}
+
+.action-evidence {
+  margin: 0.4rem 0;
+  padding-left: 1.2rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.action-reviewed-completed-existing-evidence { border-left: 3px solid var(--green); padding-left: 0.65rem; }
+.action-reviewed-pending-receipt { border-left: 3px solid var(--amber); padding-left: 0.65rem; }
+.action-reviewed-deferred { border-left: 3px solid var(--text-secondary); padding-left: 0.65rem; }
 
 @media (max-width: 768px) {
   .actions-columns { grid-template-columns: 1fr; }

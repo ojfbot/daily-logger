@@ -24,6 +24,7 @@ import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
+import { CanonicalActionArraySchema, assertNoReviewedActionClosures, legacyActionKey } from './action-model.js'
 import {
   ARTICLE_MODEL,
   ARTICLE_PROMPT_VERSION,
@@ -81,13 +82,12 @@ function persistClosedActions(closed: ClosedAction[], date: string): void {
   const actionsPath = join(apiDir, 'actions.json')
 
   // Load current open actions to validate matches
-  const openActions: Array<{ id?: string; command: string; sourceDate: string; description: string }> = existsSync(actionsPath)
-    ? JSON.parse(readFileSync(actionsPath, 'utf-8'))
+  const openActions = existsSync(actionsPath)
+    ? CanonicalActionArraySchema.parse(JSON.parse(readFileSync(actionsPath, 'utf-8')))
     : []
+  assertNoReviewedActionClosures(closed, openActions)
   const openIds = new Set(openActions.map((a) => a.id ?? actionId(a)))
-  const openLegacyKeys = new Set(
-    openActions.map((a) => `${a.command}|${a.sourceDate}|${a.description.slice(0, 50)}`),
-  )
+  const openLegacyKeys = new Set(openActions.map(legacyActionKey))
 
   // Append to done-actions.json (build-api.ts handles filtering actions.json)
   const done: Record<string, unknown>[] = existsSync(donePath)
@@ -97,7 +97,7 @@ function persistClosedActions(closed: ClosedAction[], date: string): void {
   for (const c of closed) {
     // Stamp id if missing
     const id = c.id ?? actionId(c)
-    const legacyKey = `${c.command}|${c.sourceDate}|${c.description.slice(0, 50)}`
+    const legacyKey = legacyActionKey(c)
     const isMatch = openIds.has(id) || openLegacyKeys.has(legacyKey)
     if (!isMatch) {
       console.warn(`     ⚠ closedAction does not match any open action: ${id} (${c.command} ${c.sourceDate})`)

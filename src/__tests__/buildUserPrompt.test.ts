@@ -121,3 +121,53 @@ describe('buildUserPrompt — date header', () => {
     expect(prompt).toContain('2026-02-28')
   })
 })
+
+describe('buildUserPrompt — reviewed canonical actions', () => {
+  it('keeps reviewed dispositions out of the closure-capable action list', () => {
+    const invocation = '/validate core#537 exact byte gate'
+    const ctx: BlogContext = {
+      ...emptyCtx,
+      openActions: [{
+        id: 'act-reviewed',
+        command: '/validate',
+        invocation,
+        description: 'Validate the byte gate.',
+        repo: 'core',
+        status: 'open',
+        sourceDate: '2026-10-15',
+        review: {
+          source: {
+            repository: 'ojfbot/daily-logger',
+            articlePath: '_articles/2026-10-15.md',
+            articleCommitSha: 'a'.repeat(40),
+            articleBlobSha: 'b'.repeat(40),
+            line: 97,
+            suggestionLineSha256: 'c'.repeat(64),
+            url: 'https://github.com/ojfbot/daily-logger/blob/a/_articles/2026-10-15.md#L97',
+          },
+          disposition: {
+            kind: 'completed-existing-evidence',
+            evidence: [{
+              kind: 'repository-file',
+              path: 'reviews/proof.md',
+              commitSha: 'd'.repeat(40),
+              blobSha: 'e'.repeat(40),
+              sha256: 'f'.repeat(64),
+              qualification: 'Bounded replay only.',
+            }],
+            qualification: 'Evidence complete, action unsettled.',
+            nextSafeRetry: 'Retry only after source changes.',
+          },
+          executionAuthority: 'none',
+          settlementAuthority: 'none',
+        },
+      }],
+    }
+
+    const prompt = buildUserPrompt(ctx)
+    expect(prompt).toContain('Reviewed canonical actions — context only (1)')
+    expect(prompt).toContain(invocation)
+    expect(prompt).toContain('Do not recommend, redispatch, or add them to `closedActions`')
+    expect(prompt).not.toContain('Open actions from previous runs')
+  })
+})

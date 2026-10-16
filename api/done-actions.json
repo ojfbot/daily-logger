@@ -1090,5 +1090,35 @@
     "id": "act-2026-10-09-pr-review-1b795e",
     "closedDate": "2026-10-11",
     "resolution": "Retired false missing-section blocker after the posted independent capture/planning review found no absent required transition-plan section at the reviewed head. The October 10 #54 amendment then resolved all six #55 review threads while keeping the capture PR draft by scope. Future REST diagnostics and identity work remain separate. Evidence: https://github.com/ojfbot/morning-cockpit/pull/54#pullrequestreview-5472577238 ; https://github.com/ojfbot/morning-cockpit/pull/54 ; https://github.com/ojfbot/morning-cockpit/issues/55 ."
+  },
+  {
+    "command": "/validate",
+    "description": "Run the daily-logger test suite from a clean checkout with no local Git history. Confirm the full suite passes against the fixture-independence changes in 4926206. Note the actual test count — do not assume 340 native + 4 browser is still current. Record the result as the CI baseline for fixture-independent review registration.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-10-16",
+    "id": "act-2026-10-16-validate-869768",
+    "closedDate": "2026-10-16",
+    "resolution": "Completed the bounded independent Git-free replay at exact source 42d583b9357859f9c298e0fe4591ce9f2e31b33a: 385 native tests and six controlled browser scenarios passed with no failures or skips, including self-contained historical fixtures and the registry validator. Product/test code equals accepted article source 061324ad4738c2594978bc059aa9578cc876a62d; only article prose differs. Dependencies were reused after exact lockfile/manifests comparison on the existing machine, and browser provider/acceptance effects were mocked. This strengthens the existing baseline; it is not a hermetic install, universal runtime guarantee or new registration prerequisite. Evidence: https://github.com/ojfbot/daily-logger/blob/083884b9ed553725534ce7d180e520dc9d0910dd/reviews/articles/2026-10-16-061324ad4738c2594978bc059aa9578cc876a62d.md ; https://github.com/ojfbot/daily-logger/commit/49262065bdda90cce4fbc85a47833bd883a131eb ."
+  },
+  {
+    "command": "/roadmap",
+    "description": "Add October 16 as an eligible pilot date in daily-logger issue #357. Verify that existing correspondence routes for October 13 and October 14 still resolve correctly after the #362 inspection UI changes. Record the extended date range and any routing changes in the issue. Do not proceed until /validate has passed.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-10-16",
+    "id": "act-2026-10-16-roadmap-1db9b8",
+    "closedDate": "2026-10-16",
+    "resolution": "Completed October 16 registration, legacy read resolution and the receiving-record substep. PR #367 registered the dated full/structured review and requestTarget; the registry covers October 13–16. Actual service.load resolved October 13/14 records and issue #357 correspondence through 39 live GitHub GETs, zero writes/unavailable records, with historical findings correctly stale; current service and legacy targets preserve those observed bytes. Independently read back comment 6223720569 and the corrected issue opening; the remaining substantive issue body is unchanged. This is read evidence, not live POST proof, and adopts no new global /validate gate. Evidence: https://github.com/ojfbot/daily-logger/pull/367 ; https://github.com/ojfbot/daily-logger/blob/083884b9ed553725534ce7d180e520dc9d0910dd/reviews/registry.json ; https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6223720569 ."
+  },
+  {
+    "command": "/design",
+    "description": "Document the re-entry path for post-revision verification failure in daily-logger. Define: what happens when a verification PR finds remaining material findings — does it block merge, open a new correction PR, or return to review registration? Record the decision as an amendment to ADR-0038 at docs/decisions/ before the second article cycle runs.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-10-16",
+    "id": "act-2026-10-16-design-890f08",
+    "closedDate": "2026-10-16",
+    "resolution": "Superseded, not implemented. The accepted article correction documents retaining failed/pinned evidence, returning remaining corrections to existing editorial authority and reviewing changed bytes before merge. ADR-0038 already documents human merge when satisfied and the bot-head guard: a feedback-only edit after a successful bot-authored revision skips the model. No ADR amendment, mandatory second verification PR or before-second-cycle gate was adopted or implemented; docs/decisions was the wrong destination. Automatic post-acceptance recovery remains unqualified, and stampDraft still refuses non-drafts and existing accept/date branches. Evidence: https://github.com/ojfbot/daily-logger/blob/061324ad4738c2594978bc059aa9578cc876a62d/_articles/2026-10-16.md#L68-L74 ; https://github.com/ojfbot/daily-logger/blob/061324ad4738c2594978bc059aa9578cc876a62d/_articles/2026-10-16.md#L104-L117 ; https://github.com/ojfbot/daily-logger/blob/083884b9ed553725534ce7d180e520dc9d0910dd/decisions/adr/0038-editorial-revision-workflow.md ; https://github.com/ojfbot/daily-logger/blob/083884b9ed553725534ce7d180e520dc9d0910dd/.github/workflows/editorial-revise.yml#L136-L151 ; https://github.com/ojfbot/daily-logger/blob/083884b9ed553725534ce7d180e520dc9d0910dd/packages/frontend/src/utils/stampDraft.ts#L54-L88 ."
   }
 ]

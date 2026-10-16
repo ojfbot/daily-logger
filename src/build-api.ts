@@ -12,33 +12,29 @@
 
 import { createHash } from 'crypto'
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'fs'
-import { join, dirname } from 'path'
+import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { renderArticle } from './render-article.js'
-import { ARTICLE_OUTCOMES, actionId, type CodeReference } from './schema.js'
+import { ARTICLE_OUTCOMES, type CodeReference } from './schema.js'
 import { parseArticleProvenance, type ArticleProvenance } from './run-provenance.js'
+import {
+  CanonicalActionArraySchema,
+  assertNoReviewedActionClosures,
+  legacyActionKey,
+  type CanonicalAction,
+} from './action-model.js'
+import { projectActionIntake, type ActionIntakeProjection } from './action-intake.js'
 
 import { KNOWN_REPOS } from './fleet.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
-const ARTICLES_DIR = join(REPO_ROOT, '_articles')
-const API_DIR = join(REPO_ROOT, 'api')
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface TypedTag {
   name: string
   type: string
-}
-
-interface ActionItem {
-  id?: string
-  command: string
-  description: string
-  repo: string
-  status: string
-  sourceDate: string
 }
 
 interface EntryData {
@@ -55,7 +51,7 @@ interface EntryData {
   outcome?: 'accepted' | 'edited' | 'rejected' | 'abandoned'
   // Body sections for detail pages (not included in index to keep payload small)
   decisions?: Array<{ title: string; summary: string; repo: string; pillar?: string; relatedTags: string[] }>
-  actions?: ActionItem[]
+  actions?: CanonicalAction[]
   codeReferences?: CodeReference[]
   provenance?: ArticleProvenance
 }
@@ -149,26 +145,6 @@ function countCommitsInBody(body: string): number {
   return shas.length
 }
 
-function extractActionsFromBody(body: string, date: string): ActionItem[] {
-  const actions: ActionItem[] = []
-  // Match lines like: > - `/command` — description
-  const actionLines = body.match(/^> - `(\/\w[\w-]*)` — (.+)$/gm) ?? []
-  for (const line of actionLines) {
-    const m = line.match(/^> - `(\/\w[\w-]*)` — (.+?)(?:\s*\((\w[\w-]*)\))?$/)
-    if (m) {
-      const action = {
-        command: m[1],
-        description: m[2].trim(),
-        repo: m[3] ?? 'daily-logger',
-        status: 'open' as const,
-        sourceDate: date,
-      }
-      actions.push({ ...action, id: actionId(action) })
-    }
-  }
-  return actions
-}
-
 function extractDecisionsFromBody(body: string): Array<{ title: string; summary: string; repo: string; relatedTags: string[] }> {
   const decisions: Array<{ title: string; summary: string; repo: string; relatedTags: string[] }> = []
 
@@ -228,11 +204,17 @@ function classifyTag(name: string): TypedTag {
 
 // ─── Main build ─────────────────────────────────────────────────────────────
 
-export function buildApi() {
-  if (!existsSync(API_DIR)) mkdirSync(API_DIR, { recursive: true })
+export interface BuildApiResult {
+  openActions: readonly CanonicalAction[]
+  intake: ActionIntakeProjection
+}
+
+export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
+  const articlesDir = join(repoRoot, '_articles')
+  const apiDir = join(repoRoot, 'api')
 
   // Load backfilled code references if available
-  const codeRefsPath = join(API_DIR, 'code-refs.json')
+  const codeRefsPath = join(apiDir, 'code-refs.json')
   let codeRefsByDate: Record<string, CodeReference[]> = {}
   if (existsSync(codeRefsPath)) {
     try {
@@ -240,18 +222,30 @@ export function buildApi() {
     } catch { /* ignore corrupt file */ }
   }
 
-  const files = readdirSync(ARTICLES_DIR)
+  const files = readdirSync(articlesDir)
     .filter((f) => f.endsWith('.md'))
     .sort()
     .reverse() // newest first
 
   const entries: EntryData[] = []
-  const allActions: ActionItem[] = []
+  const articleSources = files.map((file) => {
+    const content = readFileSync(join(articlesDir, file), 'utf-8')
+    const fm = parseFrontmatter(content)
+    return {
+      path: `_articles/${file}`,
+      date: (fm.date as string) ?? file.replace('.md', ''),
+      content,
+    }
+  })
+  const intake = projectActionIntake({ repoRoot, articles: articleSources })
+  const allActions: CanonicalAction[] = []
   const tagCounts = new Map<string, { type: string; count: number }>()
   const repoStats = new Map<string, { articleCount: number; totalCommits: number; tags: Set<string> }>()
 
   for (const file of files) {
-    const content = readFileSync(join(ARTICLES_DIR, file), 'utf-8')
+    const source = articleSources.find((article) => article.path === `_articles/${file}`)
+    if (!source) throw new Error(`Article source disappeared during API build: ${file}`)
+    const content = source.content
     const fm = parseFrontmatter(content)
     const body = content.replace(/^---[\s\S]*?---\n/, '')
     const date = (fm.date as string) ?? file.replace('.md', '')
@@ -276,7 +270,7 @@ export function buildApi() {
       : countCommitsInBody(body)
 
     // Actions
-    const actions = extractActionsFromBody(body, date)
+    const actions = [...(intake.byArticlePath.get(source.path) ?? [])]
     allActions.push(...actions)
 
     // Decisions
@@ -338,12 +332,27 @@ export function buildApi() {
     }
   }
 
-  // Write per-article JSON files with rendered HTML body
-  const articlesApiDir = join(API_DIR, 'articles')
+  const donePath = join(apiDir, 'done-actions.json')
+  const doneItems = existsSync(donePath)
+    ? CanonicalActionArraySchema.parse(JSON.parse(readFileSync(donePath, 'utf-8')))
+    : []
+  assertNoReviewedActionClosures(doneItems, allActions)
+  const doneIds = new Set(doneItems.flatMap((item) => item.id ? [item.id] : []))
+  const doneLegacyKeys = new Set(doneItems.map(legacyActionKey))
+  const openActions = allActions.filter(
+    (action) => !(action.id && doneIds.has(action.id)) && !doneLegacyKeys.has(legacyActionKey(action)),
+  )
+
+  // No output changes occur until all admissions, source proofs, evidence and
+  // closure guards have passed.
+  if (!existsSync(apiDir)) mkdirSync(apiDir, { recursive: true })
+  const articlesApiDir = join(apiDir, 'articles')
   if (!existsSync(articlesApiDir)) mkdirSync(articlesApiDir, { recursive: true })
 
   for (const file of files) {
-    const content = readFileSync(join(ARTICLES_DIR, file), 'utf-8')
+    const source = articleSources.find((article) => article.path === `_articles/${file}`)
+    if (!source) throw new Error(`Article source disappeared during API write: ${file}`)
+    const content = source.content
     const body = content.replace(/^---[\s\S]*?---\n/, '')
     const date = file.replace('.md', '')
     const entry = entries.find((e) => e.date === date)
@@ -358,32 +367,14 @@ export function buildApi() {
   console.log(`  articles/    — ${files.length} per-article JSON files`)
 
   // Write entries.json
-  writeFileSync(join(API_DIR, 'entries.json'), JSON.stringify(entries, null, 2))
-
-  // Write actions.json — filter out actions already marked done
-  const donePath = join(API_DIR, 'done-actions.json')
-  const doneItems: Array<{ id?: string; command: string; sourceDate: string; description: string }> = existsSync(donePath)
-    ? JSON.parse(readFileSync(donePath, 'utf-8'))
-    : []
-  // Match by id (preferred) or legacy 50-char key (backward compat)
-  const doneIds = new Set(
-    doneItems.filter((d) => d.id).map((d) => d.id),
-  )
-  const doneLegacyKeys = new Set(
-    doneItems.map((d) => `${d.command}|${d.sourceDate}|${d.description.slice(0, 50)}`),
-  )
-  const openActions = allActions.filter(
-    (a) =>
-      !(a.id && doneIds.has(a.id)) &&
-      !doneLegacyKeys.has(`${a.command}|${a.sourceDate}|${a.description.slice(0, 50)}`),
-  )
-  writeFileSync(join(API_DIR, 'actions.json'), JSON.stringify(openActions, null, 2))
+  writeFileSync(join(apiDir, 'entries.json'), JSON.stringify(entries, null, 2))
+  writeFileSync(join(apiDir, 'actions.json'), JSON.stringify(openActions, null, 2))
 
   // Write tags.json
   const tagsArr: TagCount[] = [...tagCounts.entries()]
     .map(([name, { type, count }]) => ({ name, type, count }))
     .sort((a, b) => b.count - a.count)
-  writeFileSync(join(API_DIR, 'tags.json'), JSON.stringify(tagsArr, null, 2))
+  writeFileSync(join(apiDir, 'tags.json'), JSON.stringify(tagsArr, null, 2))
 
   // Write repos.json
   const reposArr: RepoStats[] = [...repoStats.entries()]
@@ -394,14 +385,18 @@ export function buildApi() {
       relatedTags: [...stats.tags],
     }))
     .sort((a, b) => b.articleCount - a.articleCount)
-  writeFileSync(join(API_DIR, 'repos.json'), JSON.stringify(reposArr, null, 2))
+  writeFileSync(join(apiDir, 'repos.json'), JSON.stringify(reposArr, null, 2))
 
   console.log(`API built:`)
   console.log(`  entries.json — ${entries.length} articles`)
   console.log(`  actions.json — ${openActions.length} open actions (${allActions.length - openActions.length} filtered as done)`)
+  console.log(`    reviewed — ${intake.reviewedActions.length} admitted; ${intake.historicalHeldCount} historical held`)
   console.log(`  tags.json    — ${tagsArr.length} unique tags`)
   console.log(`  repos.json   — ${reposArr.length} repos`)
+  return { openActions, intake }
 }
 
 // Run directly
-buildApi()
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  buildApi()
+}

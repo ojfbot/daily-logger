@@ -30,6 +30,7 @@ import type {
   CleanProposal,
   StructuredCleanContext,
 } from './types.js'
+import { CanonicalActionArraySchema, isReviewedAction } from './action-model.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
@@ -134,18 +135,14 @@ export function loadStructuredContext(date: string, org: string): StructuredClea
   const actionsPath = join(API_DIR, 'actions.json')
   let openActions: CleanOpenAction[] = []
   if (existsSync(actionsPath)) {
-    try {
-      openActions = JSON.parse(readFileSync(actionsPath, 'utf-8'))
-    } catch { /* ignore */ }
+    openActions = CanonicalActionArraySchema.parse(JSON.parse(readFileSync(actionsPath, 'utf-8')))
   }
 
   // Read done actions
   const donePath = join(API_DIR, 'done-actions.json')
   let doneActions: CleanDoneAction[] = []
   if (existsSync(donePath)) {
-    try {
-      doneActions = JSON.parse(readFileSync(donePath, 'utf-8'))
-    } catch { /* ignore */ }
+    doneActions = CanonicalActionArraySchema.parse(JSON.parse(readFileSync(donePath, 'utf-8')))
   }
 
   const todayEntry = entries.find((e) => e.date === date)
@@ -178,7 +175,7 @@ function formatDecisions(entries: CleanEntryData[], repo?: string): string {
   return decisions.length > 0 ? decisions.join('\n') : '(none)'
 }
 
-function formatActions(
+export function formatActions(
   actions: Array<CleanOpenAction | CleanDoneAction>,
   repo: string,
   kind: 'open' | 'done',
@@ -188,6 +185,15 @@ function formatActions(
 
   return filtered
     .map((a) => {
+      if (isReviewedAction(a)) {
+        const disposition = a.review.disposition
+        const detail = disposition.kind === 'deferred'
+          ? `deferred; owner ${disposition.owner.title}; ${disposition.reason}`
+          : disposition.kind === 'completed-existing-evidence'
+            ? `evidence complete but unsettled; ${disposition.qualification}`
+            : `pending accepted receipt from ${disposition.owner.title}`
+        return `- ${a.invocation} — "${a.description.slice(0, 100)}" — reviewed context only; do not redispatch or treat as settled (${detail}; source ${a.review.source.articlePath}:${a.review.source.line})`
+      }
       if (kind === 'done' && 'resolution' in a && a.resolution) {
         return `- ${a.command} — "${a.description.slice(0, 80)}" — resolved ${a.closedDate}: "${a.resolution}"`
       }

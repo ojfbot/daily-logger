@@ -8,6 +8,7 @@ import { discoverRepos, reportSurfaceDrift } from './fleet.js'
 import { SYSTEM_PROMPT } from './generate-article.js'
 import { activityWindow } from './activity-window.js'
 import { boundedMergedPRBody, RECENT_PR_PREVIEW_CHARS } from './pr-body.js'
+import { CanonicalActionArraySchema, legacyActionKey, type CanonicalAction } from './action-model.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -376,40 +377,21 @@ function getPreviousArticles(): Array<{ date: string; excerpt: string }> {
 
 // ─── Open actions from previous articles ─────────────────────────────────────
 
-interface RawAction {
-  id?: string
-  command: string
-  description: string
-  repo: string
-  status: 'open' | 'done'
-  sourceDate: string
-}
-
-function getOpenActions(): RawAction[] {
+function getOpenActions(): CanonicalAction[] {
   const actionsPath = join(REPO_ROOT, 'api/actions.json')
   const donePath = join(REPO_ROOT, 'api/done-actions.json')
   if (!existsSync(actionsPath)) return []
-  try {
-    const all: RawAction[] = JSON.parse(readFileSync(actionsPath, 'utf-8'))
-    const done: RawAction[] = existsSync(donePath)
-      ? JSON.parse(readFileSync(donePath, 'utf-8'))
-      : []
-    // Match by id (preferred) or legacy 50-char key (backward compat)
-    const doneIds = new Set(
-      done.filter((d) => d.id).map((d) => d.id),
-    )
-    const doneLegacyKeys = new Set(
-      done.map((d) => `${d.command}|${d.sourceDate}|${d.description.slice(0, 50)}`),
-    )
-    return all.filter(
-      (a) =>
-        a.status === 'open' &&
-        !(a.id && doneIds.has(a.id)) &&
-        !doneLegacyKeys.has(`${a.command}|${a.sourceDate}|${a.description.slice(0, 50)}`),
-    )
-  } catch {
-    return []
-  }
+  const all = CanonicalActionArraySchema.parse(JSON.parse(readFileSync(actionsPath, 'utf-8')))
+  const done = existsSync(donePath)
+    ? CanonicalActionArraySchema.parse(JSON.parse(readFileSync(donePath, 'utf-8')))
+    : []
+  const doneIds = new Set(done.flatMap((item) => item.id ? [item.id] : []))
+  const doneLegacyKeys = new Set(done.map(legacyActionKey))
+  return all.filter(
+    (action) => action.status === 'open' &&
+      !(action.id && doneIds.has(action.id)) &&
+      !doneLegacyKeys.has(legacyActionKey(action)),
+  )
 }
 
 // ─── PR skill comment scraping ──────────────────────────────────────────���────

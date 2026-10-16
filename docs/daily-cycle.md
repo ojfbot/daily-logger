@@ -24,8 +24,14 @@ identified in this investigation. Its intake remains unresolved, not disproven.
 | Activity-window bounds | `src/activity-window.ts` |
 | Issue query, ordering, and body previews | `src/collect-context.ts` |
 | Article prompt and suggested output | `src/generate-article.ts` |
-| Action identities and closure schema | `src/schema.ts` |
-| Cross-article closure and API projections | `src/index.ts`, `src/build-api.ts`, `api/actions.json`, `api/done-actions.json` |
+| Action identities, reviewed dispositions, and closure guard | `src/action-model.ts`, `src/schema.ts`, `src/index.ts` |
+| Reviewed argument-bearing admission and source proof | `action-admissions/`, `src/action-intake.ts`, `docs/action-intake.md` |
+| Cross-article canonical projection | `src/build-api.ts`, `api/actions.json`, `api/done-actions.json` |
+
+The October 15 repair admits only its three reviewed argument-bearing suggestions.
+It preserves the existing 85 action rows and IDs, while 138 earlier omissions remain
+held pending a separate admission decision. Reviewed dispositions are context, not
+execution or settlement authority; only `api/done-actions.json` records closure.
 
 The October 10 source snapshot fetches 30 recently updated open issue/PR records
 per repo before excluding PRs. It prioritizes active issues and retains at most

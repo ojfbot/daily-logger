@@ -25,6 +25,7 @@ Cleaner Admitting requires Article Completion. [src: .github/scripts/daily_blog_
 Cleaner Admitting yields Cleaner Admission. [src: .github/scripts/daily_blog_schedule.py]
 Cleaner Admission can be run or skip. [src: .github/scripts/daily_blog_schedule.py]
 Stale Content Cleaning occurs if Cleaner Admission is run. [src: .github/workflows/daily-cleaner.yml]
+Stale Content Cleaning requires Canonical Action Projection. [src: src/cleaner.ts]
 Stale Content Cleaning affects GitHub. [src: .github/workflows/daily-cleaner.yml]
 Fallback Checking requires GitHub. [src: .github/scripts/daily_blog_schedule.py]
 Fallback Checking yields Fallback Decision. [src: .github/scripts/daily_blog_schedule.py]
@@ -39,9 +40,17 @@ Jim handles Editorial Accepting. [src: .github/workflows/editorial-revise.yml]
 Editorial Accepting changes Article from draft to accepted. [src: packages/frontend/src/utils/stampDraft.ts]
 
 API Building requires Article. [src: src/build-api.ts]
+Action Projecting requires Article. [src: src/action-intake.ts]
+Action Projecting requires Action Admission. [src: action-admissions]
+Action Projecting yields Canonical Action Projection. [src: src/action-intake.ts]
+Reviewed Disposition can be deferred, completed-existing-evidence, or pending-receipt. [src: src/action-model.ts]
+Canonical Action Projection consists of Canonical Actions and Reviewed Disposition. [src: src/action-model.ts]
+API Building invokes Action Projecting. [src: src/build-api.ts]
+API Building requires Canonical Action Projection. [src: src/build-api.ts]
 API Building yields JSON API.
 
 Frontend Rendering requires JSON API. [src: packages/frontend]
+Frontend Rendering requires Canonical Action Projection. [src: packages/frontend/src/components/ActionsPage.tsx]
 Frontend Rendering yields Rendered Site.
 
 API Building yields Article Fingerprint. [src: src/build-api.ts]
@@ -68,6 +77,7 @@ Run Timing can be available or unavailable.
 Run Evidence consists of Run Timing.
 Article Generating zooms into Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, and Provenance Attaching. [src: src/index.ts]
 Context Collecting requires GitHub. [src: src/collect-context.ts]
+Context Collecting requires Canonical Action Projection. [src: src/collect-context.ts]
 Context Collecting invokes Telemetry Collecting. [src: src/collect-context.ts]
 Context Collecting yields Commit Context.
 Telemetry Collecting yields Telemetry Digest. [src: src/collect-telemetry.ts]
