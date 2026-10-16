@@ -7,10 +7,11 @@ interface Props {
   date: string
   articleTitle: string
   visibleBlobSha?: string
+  discussionReady: boolean
   extractSection: (heading: string) => { heading: string; content: string; codeRefs: string[] } | null
 }
 
-export function SectionChatZone({ section, date, articleTitle, visibleBlobSha, extractSection }: Props) {
+export function SectionChatZone({ section, date, articleTitle, visibleBlobSha, discussionReady, extractSection }: Props) {
   const dispatch = useAppDispatch()
   const threads = useAppSelector((s) => {
     const all = s.chat.threadOrder
@@ -32,6 +33,7 @@ export function SectionChatZone({ section, date, articleTitle, visibleBlobSha, e
           thread={thread}
           articleTitle={articleTitle}
           visibleBlobSha={visibleBlobSha}
+          discussionReady={discussionReady}
           extractSection={extractSection}
         />
       ))}

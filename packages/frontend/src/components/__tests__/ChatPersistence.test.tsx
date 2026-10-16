@@ -39,6 +39,7 @@ describe('durable section conversation', () => {
       const thread = useSelector((state: ChatRoot) => state.chat.threads[threadId])
       if (!thread) return null
       return createElement(InlineChatThread, { thread, articleTitle: 'Today', visibleBlobSha: failure === 'invalid source' ? 'invalid' : blob,
+        discussionReady: true,
         extractSection: () => ({ heading: 'What shipped', content: 'Claim', codeRefs: [] }) })
     }
     const prior = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollIntoView')

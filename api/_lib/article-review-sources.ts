@@ -18,7 +18,7 @@ export const githubPullRequestSchema = z.object({
 export type GitHubPullRequest = z.infer<typeof githubPullRequestSchema>
 const changedFile = z.object({ filename: z.string(), status: z.string() })
 export const githubCommentSchema = z.object({
-  id: z.number().int().positive(), body: z.string(), html_url: githubUrl, user,
+  id: z.number().int().positive(), body: z.string(), html_url: githubUrl, user, author_association: z.string(),
   created_at: z.iso.datetime(), updated_at: z.iso.datetime(),
 })
 const submittedReview = z.object({
@@ -29,6 +29,9 @@ const inlineComment = githubCommentSchema.extend({ path: z.string(), line: z.num
 export function trustedPullRequest(pr: GitHubPullRequest) {
   return pr.head.repo?.full_name === 'ojfbot/daily-logger' && pr.base.repo.full_name === 'ojfbot/daily-logger' &&
     pr.base.ref === 'main' && ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association)
+}
+export function trustedAssociation(association: string) {
+  return ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(association)
 }
 
 export async function boundedMap<T, U>(items: T[], work: (item: T) => Promise<U>): Promise<U[]> {
@@ -109,6 +112,7 @@ export function createReviewSource(github: GitHub) {
     main: async (fresh = false) => z.object({ object: z.object({ sha }) }).parse(await json('/git/ref/heads/main', undefined, fresh)).object.sha,
     pull: async (number: number, fresh = false) => githubPullRequestSchema.parse(await json(`/pulls/${number}`, undefined, fresh)),
     openPulls: () => list('/pulls?state=open&base=main&sort=updated&direction=desc', githubPullRequestSchema),
+    reviewPulls: (date: string) => list(`/pulls?state=all&base=main&head=ojfbot%3Acodex%2Freview-article-${date}`, githubPullRequestSchema),
     acceptPulls: (date: string) => list(`/pulls?state=all&base=main&head=ojfbot%3Aaccept%2F${date}`, githubPullRequestSchema),
     files: (number: number) => list(`/pulls/${number}/files`, changedFile),
     pathCommits: (path: string, ref: string) => list(`/commits?path=${encodeURIComponent(path)}&sha=${ref}`, z.object({ sha }), 1, 20),

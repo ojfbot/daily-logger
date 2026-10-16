@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!identity.ok) return res.status(401).json({ error: 'Could not verify GitHub identity' })
     const { login } = z.object({ login: z.string().min(1) }).parse(await identity.json())
     if (!allowed.includes(login.toLowerCase())) return res.status(403).json({ error: 'Not authorized for editorial reviews' })
-    const service = createReviewService(github)
+    const service = createReviewService(github, new Set(allowed))
     if (method === 'GET') {
       const query = z.object({ date, visibleBlobSha: sha.optional() }).parse(req.query)
       return res.status(200).json(await service.load(query.date, query.visibleBlobSha ?? null))

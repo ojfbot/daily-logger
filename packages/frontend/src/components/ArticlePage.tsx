@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams, Link } from 'react-router-dom'
 import { useEntries } from '../hooks/useEntries.ts'
@@ -24,6 +24,7 @@ export function ArticlePage() {
   const authUser = useAppSelector((s) => s.auth.user)
   const contentRef = useRef<HTMLDivElement>(null)
   const [sectionHeadings, setSectionHeadings] = useState<string[]>([])
+  const [discussionReady, setDiscussionReady] = useState(false)
   const isMobile = useIsMobile()
 
   const entry = entries.find((e) => e.date === date)
@@ -45,7 +46,9 @@ export function ArticlePage() {
 
   useEffect(() => {
     dispatch(clearCorrespondence())
+    setDiscussionReady(false)
   }, [dispatch, authUser?.login, authUser?.authorized])
+  const updateDiscussionAvailability = useCallback((available: boolean) => setDiscussionReady(available), [])
 
   // Inject chat buttons into h2 headings + section-end portal targets for inline threads
   useEffect(() => {
@@ -99,7 +102,7 @@ export function ArticlePage() {
 
       result.push(
         createPortal(
-          <SectionChatButton section={heading} date={date} visibleBlobSha={article?.sourceBlobSha} />,
+          <SectionChatButton section={heading} date={date} visibleBlobSha={article?.sourceBlobSha} discussionReady={discussionReady} />,
           wrapper,
           `btn-${heading}`,
         ),
@@ -108,7 +111,7 @@ export function ArticlePage() {
 
     return result
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [article?.bodyHtml, article?.sourceBlobSha, date, sectionHeadings])
+  }, [article?.bodyHtml, article?.sourceBlobSha, date, discussionReady, sectionHeadings])
 
   // On mobile, portal section threads inline after their sections
   const inlineThreadPortals = useMemo(() => {
@@ -127,6 +130,7 @@ export function ArticlePage() {
             date={date}
             articleTitle={displayEntry?.title ?? ''}
             visibleBlobSha={article?.sourceBlobSha}
+            discussionReady={discussionReady}
             extractSection={extractSection}
           />,
           target,
@@ -136,7 +140,7 @@ export function ArticlePage() {
     }
     return portals
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMobile, article?.bodyHtml, article?.sourceBlobSha, date, sectionHeadings, displayEntry?.title, extractSection])
+  }, [isMobile, article?.bodyHtml, article?.sourceBlobSha, date, discussionReady, sectionHeadings, displayEntry?.title, extractSection])
 
   const isDraft = displayEntry?.status === 'draft'
 
@@ -239,10 +243,11 @@ export function ArticlePage() {
                 date={date}
                 articleTitle={displayEntry?.title ?? ''}
                 visibleBlobSha={article?.sourceBlobSha}
+                discussionReady={discussionReady}
                 extractSection={extractSection}
               />
             ))}
-            {authUser?.authorized && <IndependentArticleReviews key={`${authUser.login}:${date}:${article?.sourceBlobSha ?? 'unknown'}`} date={date} visibleBlobSha={article?.sourceBlobSha} login={authUser.login} />}
+            {authUser?.authorized && <IndependentArticleReviews key={`${authUser.login}:${date}:${article?.sourceBlobSha ?? 'unknown'}`} date={date} visibleBlobSha={article?.sourceBlobSha} login={authUser.login} onDiscussionAvailabilityChange={updateDiscussionAvailability} />}
             {isDraft && (
               <EditorialSidebar date={date} articleTitle={displayEntry?.title ?? ''} visibleBlobSha={article?.sourceBlobSha} />
             )}

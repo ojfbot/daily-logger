@@ -4,7 +4,7 @@ import {
   projectionSchema, registrySchema, requestRecordSchema, requestSchema, reviewSchema,
   type ArticleComment, type Correspondence, type ReviewEntry, type ReviewProjection, type ReviewPullRequest, type ReviewRequest,
 } from '../../shared/article-review.js'
-import { boundedMap, createReviewSource, ReviewError, trustedPullRequest, type GitHub, type GitHubPullRequest } from './article-review-sources.js'
+import { boundedMap, createReviewSource, ReviewError, trustedAssociation, trustedPullRequest, type GitHub, type GitHubPullRequest } from './article-review-sources.js'
 export { ReviewError } from './article-review-sources.js'
 
 const requestStart = '<!-- ARTICLE_REVIEW_REQUEST_V1_START -->'
@@ -45,7 +45,9 @@ function safeComment(title: string, display: unknown, record: unknown, start: st
   return body
 }
 
-export function createReviewService(github: GitHub) {
+export function createReviewService(github: GitHub, allowedActors: ReadonlySet<string> = new Set()) {
+  const trustedActor = (login: string, association: string) =>
+    trustedAssociation(association) || allowedActors.has(login.toLowerCase())
   async function read(articleDate: string, visibleBlobSha: string | null) {
     const source = createReviewSource(github)
     const sourceCommitSha = await source.main()
@@ -102,6 +104,25 @@ export function createReviewService(github: GitHub) {
         })).flat()
       } catch (error) { complete = false; unavailable.push(`Open review discovery: ${detail(error)}`); return [] }
     })()
+    const closedReviewWork = (async () => {
+      try {
+        const reviews = await source.reviewPulls(articleDate)
+        await boundedMap(reviews.filter((pr) => trustedPullRequest(pr) && pr.state === 'closed' && pr.head.ref === `codex/review-article-${articleDate}`), async (pr) => {
+          try {
+            const files = await source.files(pr.number)
+            const changedRecords = files.filter((file) => recordPath.test(file.filename) && ['added', 'modified'].includes(file.status))
+            if (!changedRecords.length || files.some((file) => !reviewDataPath.test(file.filename) || !['added', 'modified'].includes(file.status))) return
+            const manifest = manifestSchema.parse(JSON.parse((await source.file('reviews/registry.json', pr.head.sha)).text))
+            const registrations = manifest.records.filter((record) => record.date === articleDate && changedRecords.some((file) => file.filename === record.path))
+            if (!registrations.length) return
+            await boundedMap(registrations, (registration) => verifiedRecord(registration.path, pr.head.sha, 'proposed', metadata(pr, 'review_pr')))
+            const fresh = await source.pull(pr.number, true)
+            if (!trustedPullRequest(fresh) || fresh.state !== 'closed' || fresh.head.sha !== pr.head.sha) throw new Error('Closed review PR changed while its history was loaded.')
+            pullRequests.set(pr.number, { pr: fresh, kind: 'review_pr' })
+          } catch (error) { complete = false; unavailable.push(`Closed review PR #${pr.number}: ${detail(error)}`) }
+        })
+      } catch (error) { complete = false; unavailable.push(`Closed review history: ${detail(error)}`) }
+    })()
     const legacyWork = boundedMap(registry.proposals.filter((record) => record.date === articleDate), async (registration) => {
       try {
         const pr = await source.pull(registration.pullRequest)
@@ -146,7 +167,7 @@ export function createReviewService(github: GitHub) {
         })
       } catch (error) { complete = false; unavailable.push(`Editorial PR history: ${detail(error)}`) }
     })()
-    const [open, legacy] = await Promise.all([openWork, legacyWork, originsWork, acceptanceWork])
+    const [open, legacy] = await Promise.all([openWork, legacyWork, originsWork, acceptanceWork, closedReviewWork])
     const byId = new Map<string, ReviewEntry>()
     const conflicts = new Set<string>()
     for (const entry of [...published, ...open, ...legacy.filter((entry) => entry !== null)]) {
@@ -181,12 +202,13 @@ export function createReviewService(github: GitHub) {
           author: comment.user.login, createdAt: comment.created_at, updatedAt: comment.updated_at, body: comment.body }
         let item: Correspondence = correspondenceSchema.parse({ ...base, kind: 'comment' })
         try {
-          if (comment.body.includes(requestStart)) {
+          const trusted = trustedActor(comment.user.login, comment.author_association)
+          if (trusted && comment.body.startsWith(`## Article revision request: ${articleDate}\n`) && comment.body.includes(requestStart)) {
             const request = requestRecordSchema.parse(decodeEnvelope(comment.body, requestStart, requestEnd))
             if (request.actor.toLowerCase() !== comment.user.login.toLowerCase()) throw new Error('Recorded actor disagrees with GitHub comment author.')
             if (request.date !== articleDate) continue
             item = correspondenceSchema.parse({ ...base, kind: 'revision_request', request })
-          } else if (comment.body.includes(messageStart)) {
+          } else if (trusted && comment.body.startsWith(`## Article discussion: ${articleDate}\n`) && comment.body.includes(messageStart)) {
             const message = commentRecordSchema.parse(decodeEnvelope(comment.body, messageStart, messageEnd))
             if (message.actor.toLowerCase() !== comment.user.login.toLowerCase()) throw new Error('Recorded actor disagrees with GitHub comment author.')
             if (message.date !== articleDate) continue

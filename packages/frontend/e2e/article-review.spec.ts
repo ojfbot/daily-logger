@@ -111,24 +111,50 @@ test('open review PR appears before merge and a saved section note survives relo
   await expect(panel.getByText('Corrections and saved discussion go to', { exact: false })).toContainText('PR #367')
 
   const exact = 'Persistent section note\n雪\n---\nkept exactly'
-  await page.getByRole('button', { name: 'New chat thread for What shipped' }).click()
+  const newDiscussion = page.getByRole('button', { name: 'New chat thread for What shipped' })
+  await expect(newDiscussion).toBeEnabled()
+  await newDiscussion.click()
   await page.getByPlaceholder('Write a note or question...').fill(exact)
+  expect(await page.locator('.chat-input-area').evaluate((element) => getComputedStyle(element).flexDirection)).toBe('column')
   await page.getByRole('button', { name: 'Save note' }).click()
   await expect(page.getByRole('link', { name: 'Saved on GitHub' })).toBeVisible()
-  await expect(page.locator('.chat-thread-messages')).toContainText(exact)
+  const savedContent = page.locator('.chat-message-user .chat-message-content')
+  expect(await savedContent.textContent()).toBe(exact)
+  expect(await savedContent.evaluate((element) => getComputedStyle(element).whiteSpace)).toBe('pre-wrap')
   expect(browserWrites).toEqual(['POST /api/article-reviews'])
   expect(fixture.state.calls.filter((call) => !call.startsWith('GET '))).toEqual(['POST /repos/ojfbot/daily-logger/issues/367/comments'])
 
   await page.reload()
   await expect(panel.getByText('Proposed, unmerged review record')).toBeVisible()
-  await expect(page.locator('.chat-thread-messages')).toContainText(exact)
+  expect(await page.locator('.chat-message-user .chat-message-content').textContent()).toBe(exact)
   await expect(page.getByRole('link', { name: 'Saved on GitHub' })).toBeVisible()
   expect(browserWrites).toEqual(['POST /api/article-reviews'])
   expect(fixture.state.registry.records.some((record) => record.date === today)).toBe(false)
+
+  fixture.state.outage = true
+  await panel.getByRole('button', { name: 'Refresh reviews and request history' }).click()
+  await expect(panel.getByRole('alert')).toContainText('Review data unavailable')
+  await expect(page.locator('.chat-message-receipt')).toContainText('Last observed; refresh could not verify current correspondence')
+  await expect(page.getByRole('button', { name: 'Save note' })).toBeDisabled()
+  fixture.state.outage = false
+  await panel.getByRole('button', { name: 'Refresh reviews and request history' }).click()
+  await expect(panel.getByText('Proposed, unmerged review record')).toBeVisible()
+  await expect(page.locator('.chat-message-receipt')).not.toContainText('Last observed; refresh could not verify current correspondence')
   await testInfo.attach('proposed-review-and-persistent-note', {
     body: JSON.stringify({ pullRequest: 367, articleBlob: blob, browserWrites, githubWrites: fixture.state.calls.filter((call) => !call.startsWith('GET ')) }, null, 2),
     contentType: 'application/json',
   })
+})
+
+test('an article without a durable GitHub target disables new section discussions', async ({ page }) => {
+  const fixture = createFixture()
+  fixture.state.registry.records = []
+  fixture.state.registry.proposals = []
+  fixture.state.registry.requestTargets = []
+  await mount(page, fixture, today, blob)
+  const panel = page.locator('.independent-reviews')
+  await expect(panel.getByText('No eligible correspondence target is available for this article. Requests and new discussion saves are disabled.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'New chat thread for What shipped' })).toBeDisabled()
 })
 
 test('narrow screen: proposed records, unknown data and network failure stay distinct and retain feedback', async ({ page }, testInfo) => {
