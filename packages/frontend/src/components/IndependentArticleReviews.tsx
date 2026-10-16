@@ -181,7 +181,7 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscu
     if (!projection || sending) return
     const retained = selected.filter((key) => {
       const choice = choicesByKey.get(key)
-      if (!choice) return projection.unavailable.length > 0
+      if (!choice) return true
       return choice.entry.freshness === 'current' && choice.finding.disposition.kind === 'open'
     })
     const removed = selected.length - retained.length
@@ -193,6 +193,7 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscu
   }, [projection, choicesByKey, selected, sending])
 
   const picked = choices.filter((choice) => selected.includes(choice.key))
+  const missingSelectedCount = selected.filter((key) => !choicesByKey.has(key)).length
   const canSubmit = !!projection?.requestTarget && !!visibleBlobSha && projection.currentBlobSha === visibleBlobSha &&
     selected.length > 0 && picked.length === selected.length && picked.every(({ entry, finding }) => entry.freshness === 'current' && finding.disposition.kind === 'open') && !!feedback.trim()
 
@@ -230,6 +231,8 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscu
       {projection.unavailable.map((reason) => <p role="alert" key={reason}>Review unavailable: {reason}</p>)}
       {projection.entries.length === 0 && <p>No eligible registered review was found. This is not a clean-review verdict.</p>}
       <ReviewRecordGroups projection={projection} selected={selected} sending={sending} onToggle={(key, checked) => { changed(); setSelected((previous) => checked ? [...previous, key] : previous.filter((value) => value !== key)) }} />
+      {missingSelectedCount > 0 && <p role="status">{missingSelectedCount} retained {missingSelectedCount === 1 ? 'selection is' : 'selections are'} unavailable and cannot be submitted. Clear selections to continue with visible findings; feedback is preserved.</p>}
+      <button type="button" disabled={sending || selected.length === 0} onClick={() => { changed(); setSelected([]) }}>Clear selections</button>
       <button type="button" disabled={sending || picked.length === 0} onClick={() => { changed(); setFeedback((previous) => [previous, ...picked.map(({ finding }) => finding.correction)].filter(Boolean).join('\n\n')) }}>Add selected corrections to feedback</button>
       <label htmlFor="independent-review-feedback">Revision feedback</label>
       <textarea id="independent-review-feedback" value={feedback} maxLength={30000} disabled={sending} onChange={(event) => { changed(); setFeedback(event.currentTarget.value) }} rows={6} />

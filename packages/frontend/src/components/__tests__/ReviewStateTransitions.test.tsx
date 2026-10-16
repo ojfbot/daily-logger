@@ -201,10 +201,16 @@ describe('review UI state transitions', () => {
       .find((button) => button.textContent === 'Request changes on #357')?.disabled).toBe(false)
   })
 
-  it('preserves a missing-source selection and draft until complete evidence returns', async () => {
+  it('preserves a missing-source selection until the editor clears it and submits a visible review', async () => {
     let current = reviewProjection({ includeSecondEntry: true })
+    const posts: Array<{ requestId: string; selections: Array<{ reviewId: string }>; feedback: string }> = []
     const onDiscussionAvailabilityChange = () => undefined
-    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(Response.json(current))))
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => {
+      if (init?.method !== 'POST') return Promise.resolve(Response.json(current))
+      const request = JSON.parse(String(init.body)) as { requestId: string; selections: Array<{ reviewId: string }>; feedback: string }
+      posts.push(request)
+      return Promise.resolve(Response.json({ requestId: request.requestId, url: 'https://github.com/ojfbot/daily-logger/issues/357#issuecomment-1', reused: false }))
+    }))
     await act(async () => root.render(<IndependentArticleReviews
       date="2026-10-16"
       visibleBlobSha={reviewSha}
@@ -224,21 +230,37 @@ describe('review UI state transitions', () => {
     const during = JSON.parse(sessionStorage.getItem(draftKey) ?? 'null') as { selected: string[]; feedback: string; requestId: string }
     expect(during).toEqual(before)
     expect(reviewerCheckbox('Reviewer B')?.checked).toBe(false)
-
-    current = reviewProjection({ includeSecondEntry: true })
-    await act(async () => [...node.querySelectorAll('button')]
-      .find((button) => button.textContent === 'Refresh reviews and request history')?.click())
-    expect(reviewerCheckbox('Reviewer A')?.checked).toBe(true)
-    expect(reviewerCheckbox('Reviewer B')?.checked).toBe(false)
+    expect(node.textContent).toContain('1 retained selection is unavailable')
 
     current = reviewProjection({ includeEntry: false, includeSecondEntry: true })
     await act(async () => [...node.querySelectorAll('button')]
       .find((button) => button.textContent === 'Refresh reviews and request history')?.click())
-    const afterCompleteRemoval = JSON.parse(sessionStorage.getItem(draftKey) ?? 'null') as { selected: string[]; feedback: string; requestId: string }
-    expect(afterCompleteRemoval.selected).toEqual([])
-    expect(afterCompleteRemoval.feedback).toBe(before.feedback)
-    expect(afterCompleteRemoval.requestId).not.toBe(before.requestId)
-    expect(reviewerCheckbox('Reviewer B')?.checked).toBe(false)
+    expect(JSON.parse(sessionStorage.getItem(draftKey) ?? 'null')).toEqual(before)
+    expect(node.textContent).toContain('1 retained selection is unavailable')
+
+    await act(async () => reviewerCheckbox('Reviewer B')?.click())
+    await act(async () => [...node.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Add selected corrections to feedback')?.click())
+    const beforeClear = JSON.parse(sessionStorage.getItem(draftKey) ?? 'null') as { selected: string[]; feedback: string; requestId: string }
+    expect(beforeClear.selected).toEqual(['review-a:C1', 'review-b:C1'])
+    expect([...node.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Request changes on #357')?.disabled).toBe(true)
+
+    await act(async () => [...node.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Clear selections')?.click())
+    const afterClear = JSON.parse(sessionStorage.getItem(draftKey) ?? 'null') as { selected: string[]; feedback: string; requestId: string }
+    expect(afterClear.selected).toEqual([])
+    expect(afterClear.feedback).toBe(beforeClear.feedback)
+    expect(afterClear.requestId).not.toBe(beforeClear.requestId)
+
+    await act(async () => reviewerCheckbox('Reviewer B')?.click())
+    expect([...node.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Request changes on #357')?.disabled).toBe(false)
+    await act(async () => [...node.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Request changes on #357')?.click())
+    expect(posts).toHaveLength(1)
+    expect(posts[0]?.selections).toEqual([{ reviewId: 'review-b', recordBlobSha: 'd'.repeat(40), findingId: 'C1' }])
+    expect(posts[0]?.feedback).toBe(beforeClear.feedback)
   })
 
   it('does not rotate the request identity while a submission is in flight', async () => {
@@ -263,6 +285,8 @@ describe('review UI state transitions', () => {
 
     await act(async () => [...node.querySelectorAll('button')]
       .find((button) => button.textContent === 'Request changes on #357')?.click())
+    expect([...node.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Clear selections')?.disabled).toBe(true)
     current = reviewProjection({ includeEntry: false, unavailable: ['The selected review source is temporarily unavailable'] })
     await act(async () => window.dispatchEvent(new Event('focus')))
 
@@ -272,6 +296,8 @@ describe('review UI state transitions', () => {
     await act(async () => completePost(Response.json({}, { status: 503 })))
     const afterFailure = JSON.parse(sessionStorage.getItem(draftKey) ?? 'null') as { selected: string[]; feedback: string; requestId: string }
     expect(afterFailure).toEqual(before)
+    expect([...node.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Clear selections')?.disabled).toBe(false)
 
     current = reviewProjection()
     await act(async () => window.dispatchEvent(new Event('focus')))
