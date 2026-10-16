@@ -263,6 +263,32 @@ describe('review UI state transitions', () => {
     expect(posts[0]?.feedback).toBe(beforeClear.feedback)
   })
 
+  it('keeps an empty-feedback clear durable across a same-actor same-source remount', async () => {
+    const onDiscussionAvailabilityChange = () => undefined
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(Response.json(reviewProjection()))))
+    const render = async () => act(async () => root.render(<IndependentArticleReviews
+      date="2026-10-16"
+      visibleBlobSha={reviewSha}
+      login="editor"
+      onDiscussionAvailabilityChange={onDiscussionAvailabilityChange}
+    />))
+    await render()
+
+    await act(async () => reviewerCheckbox('Reviewer A')?.click())
+    const draftKey = `dl-review-request:editor:2026-10-16:${reviewSha}`
+    expect(JSON.parse(sessionStorage.getItem(draftKey) ?? 'null')?.selected).toEqual(['review-a:C1'])
+    await act(async () => [...node.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Clear selections')?.click())
+    expect(reviewerCheckbox('Reviewer A')?.checked).toBe(false)
+    expect(sessionStorage.getItem(draftKey)).toBeNull()
+
+    await act(async () => root.unmount())
+    root = createRoot(node)
+    await render()
+    expect(reviewerCheckbox('Reviewer A')?.checked).toBe(false)
+    expect(sessionStorage.getItem(draftKey)).toBeNull()
+  })
+
   it('does not rotate the request identity while a submission is in flight', async () => {
     let current = reviewProjection()
     let completePost: (response: Response) => void = () => undefined
