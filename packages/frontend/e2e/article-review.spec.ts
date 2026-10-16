@@ -1,9 +1,9 @@
 import { expect, test, type Page } from '@playwright/test'
 import { z } from 'zod'
 import { createReviewService } from '../../../api/_lib/article-review-service.js'
-import { requestSchema } from '../../../shared/article-review.js'
+import { postSchema, requestRecordSchema } from '../../../shared/article-review.js'
 import { browserArticle, readArticleSnapshot } from '../../../tests/review-surface/article-snapshots.js'
-import { blob, createFixture, recordPath, review, today } from '../../../tests/review-surface/fixture.js'
+import { blob, createFixture, recordPath, review, seedOpenReview, today } from '../../../tests/review-surface/fixture.js'
 
 type Fixture = ReturnType<typeof createFixture>
 async function mount(page: Page, fixture: Fixture, date: string, visibleBlob: string) {
@@ -32,7 +32,10 @@ async function mount(page: Page, fixture: Fixture, date: string, visibleBlob: st
         return route.fulfill({ json: await service.load(date, url.searchParams.get('visibleBlobSha')) })
       }
       expect(request.headers()['x-requested-with']).toBe('XMLHttpRequest')
-      return route.fulfill({ json: await service.requestChanges(requestSchema.parse(request.postDataJSON()), 'editor') })
+      const input = postSchema.parse(request.postDataJSON())
+      return route.fulfill({ json: input.intent === 'request_changes'
+        ? await service.requestChanges(input, 'editor')
+        : await service.comment(input, 'editor') })
     } catch (error) { return route.fulfill({ status: 409, json: { error: error instanceof Error ? error.message : 'Unknown failure' } }) }
   })
   await page.goto(`/articles/${date}`)
@@ -62,10 +65,11 @@ test('today: editor and agent agree; request changes preserves exact text and ex
   await expect(panel.getByText('Revision request recorded.', { exact: false })).toBeVisible()
   expect(browserWrites).toEqual(['POST /api/article-reviews'])
   expect(fixture.state.calls.filter((call) => !call.startsWith('GET '))).toEqual(['POST /repos/ojfbot/daily-logger/issues/357/comments'])
-  expect(fixture.state.comments[0]?.body).toContain('request_changes')
   expect(fixture.state.comments[0]?.body).not.toContain('@')
   const encoded = fixture.state.comments[0]?.body.split('<!-- ARTICLE_REVIEW_REQUEST_V1_START -->')[1]?.split('<!-- ARTICLE_REVIEW_REQUEST_V1_END -->')[0]?.trim() ?? ''
-  expect(z.object({ feedback: z.string() }).parse(JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'))).feedback).toBe(exact)
+  const recorded = requestRecordSchema.parse(JSON.parse(Buffer.from(encoded, 'base64').toString('utf8')))
+  expect(recorded.intent).toBe('request_changes')
+  expect(recorded.feedback).toBe(exact)
   await expect(page.locator('.editorial-note textarea').first()).toHaveValue('Existing editorial note must remain')
   await testInfo.attach('recorded-request', { body: JSON.stringify(fixture.state.comments, null, 2), contentType: 'application/json' })
   await testInfo.attach('no-acceptance-side-effects', { body: JSON.stringify({ browserWrites, githubWrites: fixture.state.calls.filter((call) => !call.startsWith('GET ')), articleBlobUnchanged: readArticleSnapshot(fixture.state.source, today).blobSha === blob }), contentType: 'application/json' })
@@ -97,6 +101,36 @@ test('historical T1 walkthrough: original pin can request correction, then chang
   await testInfo.attach('historical-walkthrough-controls', { body: JSON.stringify({ fixture: true, historicalSha, historicalBlob, changedSource: fixture.state.source, browserWrites, comments: fixture.state.comments }), contentType: 'application/json' })
 })
 
+test('open review PR appears before merge and a saved section note survives reload without a provider call', async ({ page }, testInfo) => {
+  const fixture = createFixture()
+  seedOpenReview(fixture.state, 367)
+  const { browserWrites } = await mount(page, fixture, today, blob)
+  const panel = page.locator('.independent-reviews')
+  await expect(panel.getByText('Proposed, unmerged review record')).toBeVisible()
+  await expect(panel.getByRole('link', { name: 'PR #367' }).first()).toBeVisible()
+  await expect(panel.getByText('Corrections and saved discussion go to', { exact: false })).toContainText('PR #367')
+
+  const exact = 'Persistent section note\n雪\n---\nkept exactly'
+  await page.getByRole('button', { name: 'New chat thread for What shipped' }).click()
+  await page.getByPlaceholder('Write a note or question...').fill(exact)
+  await page.getByRole('button', { name: 'Save note' }).click()
+  await expect(page.getByRole('link', { name: 'Saved on GitHub' })).toBeVisible()
+  await expect(page.locator('.chat-thread-messages')).toContainText(exact)
+  expect(browserWrites).toEqual(['POST /api/article-reviews'])
+  expect(fixture.state.calls.filter((call) => !call.startsWith('GET '))).toEqual(['POST /repos/ojfbot/daily-logger/issues/367/comments'])
+
+  await page.reload()
+  await expect(panel.getByText('Proposed, unmerged review record')).toBeVisible()
+  await expect(page.locator('.chat-thread-messages')).toContainText(exact)
+  await expect(page.getByRole('link', { name: 'Saved on GitHub' })).toBeVisible()
+  expect(browserWrites).toEqual(['POST /api/article-reviews'])
+  expect(fixture.state.registry.records.some((record) => record.date === today)).toBe(false)
+  await testInfo.attach('proposed-review-and-persistent-note', {
+    body: JSON.stringify({ pullRequest: 367, articleBlob: blob, browserWrites, githubWrites: fixture.state.calls.filter((call) => !call.startsWith('GET ')) }, null, 2),
+    contentType: 'application/json',
+  })
+})
+
 test('narrow screen: proposed records, unknown data and network failure stay distinct and retain feedback', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const fixture = createFixture()
@@ -110,7 +144,7 @@ test('narrow screen: proposed records, unknown data and network failure stay dis
   await page.keyboard.press('Space')
   await panel.getByLabel('Revision feedback', { exact: true }).fill('Retain after failure')
   fixture.state.outage = true
-  await panel.getByRole('button', { name: 'Request changes on #357', exact: true }).click()
+  await panel.getByRole('button', { name: 'Request changes on #999', exact: true }).click()
   await expect(panel.getByText('Your feedback is retained.', { exact: false })).toBeVisible()
   await expect(panel.getByLabel('Revision feedback', { exact: true })).toHaveValue('Retain after failure')
   expect(fixture.state.comments).toEqual([])
