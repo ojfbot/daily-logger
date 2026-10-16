@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-post-revision-20261016-061324ad4738",
+  "article": {
+    "date": "2026-10-16",
+    "sourceCommitSha": "061324ad4738c2594978bc059aa9578cc876a62d",
+    "blobSha": "fa90734e5624cefbcc717549c572fcfaa8f330af"
+  },
+  "reviewer": {
+    "name": "Codex post-revision verification: October 16 accuracy and action usefulness",
+    "sessionId": "01a135fd-dad7-7691-b64c-c81a899337b9"
+  },
+  "reviewedAt": "2026-10-16T19:30:19.894124Z",
+  "scope": "Focused verification of the accepted article after its 14 confirmed corrections and two bounded unverified claims, including final Codex delta review and prior conditional Claude review. No remaining material findings in this correction scope. Original human dispositions, action settlement, live note submission, UI #370 and full-runner qualification remain separate.",
+  "fullRecordBlobSha": "6fd00ccdad597dbc05107268d9307e9376c0a302",
+  "fullRecordPath": "reviews/articles/2026-10-16-061324ad4738c2594978bc059aa9578cc876a62d.md",
+  "result": "completed",
+  "findings": []
+}
