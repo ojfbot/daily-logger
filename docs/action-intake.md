@@ -31,4 +31,4 @@ pnpm --dir packages/frontend type-check
 pnpm --dir packages/frontend build
 ```
 
-The intake check proves that the 85 baseline rows and IDs are unchanged, the three frozen reviewed rows are present, the completion ledger is byte-identical, 138 historical suggestions remain held, and a retry is byte-identical. Unit tests additionally falsify source variants, missing Git objects, missing or tampered portable evidence, duplicate admissions, and settlement attempts by exact ID or legacy key.
+The continuous intake check conserves all 85 baseline action identities across unchanged open rows or valid new completions and preserves all 122 pre-existing completion objects. It allows ordinary additions and completions, retains the three pinned reviewed admissions and 138 historical holds, and verifies byte-stable retry. Unit tests additionally falsify source variants, missing Git objects, missing or tampered portable evidence, duplicate admissions, and settlement attempts by exact ID or legacy key.
