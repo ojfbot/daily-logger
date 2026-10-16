@@ -31,9 +31,9 @@ function commentWorkflowPredicates(body: string) {
 }
 
 describe('registered article review and request-changes seam', () => {
-  it('gives an agent the same pinned findings as the UI, with only registered visibility', async () => {
+  it('gives an agent the same pinned findings as the UI, with explicit PR discovery scope', async () => {
     const { projection } = await setup()
-    expect(projection.discovery).toBe('registered_records_only')
+    expect(projection.discovery).toBe('registered_and_eligible_pull_requests')
     expect(projection.entries[0]?.review.result).toBe('completed')
     expect(projection.entries[0]?.review).toEqual(review)
     expect(projection.entries[0]?.freshness).toBe('current')
@@ -51,6 +51,9 @@ describe('registered article review and request-changes seam', () => {
     const actual: unknown = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'))
     expect(actual).toEqual({ ...request, actor: 'editor' })
     expect((await service.load(today, blob)).requests[0]?.findingIds).toEqual(['C1'])
+    expect((await service.load(today, blob)).correspondence.find((item) => item.kind === 'revision_request')).toMatchObject({
+      kind: 'revision_request', author: 'editor', request: { ...request, actor: 'editor' },
+    })
   })
   it('shows changed article as stale and refuses a request before any mutation', async () => {
     const { state, service, request } = await setup()

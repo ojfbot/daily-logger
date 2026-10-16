@@ -1,7 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 import { Socket } from 'node:net'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createFixture, blob, today } from './fixture.js'
+import { createFixture, blob, today, seedOpenReview } from './fixture.js'
 
 const auth = vi.hoisted(() => (() => { const state: { token: string | null } = { token: 'fixture-token' }; return state })())
 vi.mock('../../api/_lib/cookies.js', () => ({ extractToken: () => auth.token }))
@@ -58,5 +58,27 @@ describe('real review route admission', () => {
     vi.stubGlobal('fetch', (url: string, options?: RequestInit) => fixture.github(url.replace('https://api.github.com', ''), options))
     expect((await invoke()).status).toBe(401)
     expect(fixture.state.comments).toEqual([])
+  })
+  it('saves and rereads a section message only for an authenticated allowlisted actor with CSRF', async () => {
+    const fixture = createFixture()
+    seedOpenReview(fixture.state)
+    vi.stubEnv('ALLOWED_USERS', 'editor')
+    vi.stubGlobal('fetch', (url: string, options?: RequestInit) => fixture.github(url.replace('https://api.github.com', ''), options))
+    const body = { schemaVersion: 1, intent: 'comment', requestId: crypto.randomUUID(), threadId: crypto.randomUUID(), date: today,
+      visibleBlobSha: blob, section: 'What shipped', content: 'Preserve 雪\n---\nexactly', speaker: { kind: 'human' } }
+    auth.token = null
+    expect((await invoke({ method: 'POST', body })).status).toBe(401)
+    auth.token = 'fixture-token'
+    fixture.state.login = 'outsider'
+    expect((await invoke({ method: 'POST', body })).status).toBe(403)
+    fixture.state.login = 'editor'
+    expect((await invoke({ method: 'POST', body, csrf: false })).status).toBe(403)
+    expect((await invoke({ method: 'POST', body: { ...body, actor: 'forged-account' } })).status).toBe(400)
+    expect((await invoke({ method: 'POST', body })).status).toBe(200)
+    const reloaded = await invoke()
+    expect(reloaded.status).toBe(200)
+    expect(reloaded.output).toMatchObject({ correspondence: expect.arrayContaining([expect.objectContaining({ kind: 'thread_message',
+      author: 'editor', message: { ...body, actor: 'editor' } })]) })
+    expect(fixture.state.calls.filter((call) => !call.startsWith('GET '))).toEqual(['POST /repos/ojfbot/daily-logger/issues/367/comments'])
   })
 })

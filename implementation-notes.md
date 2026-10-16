@@ -141,3 +141,8 @@
 
 - Local review tests assumed historical Git objects were available; hosted CI checks out one commit and returned 404 for those fixture reads. Frozen the four exact article inputs with verified Git blob and SHA-256 identities instead of widening CI history or changing runtime source.
 - Browser fixtures relabeled current rebuilt article JSON with a historical blob, and a source-change control overrode a reported SHA without changing source bytes. Rendered the browser fixture from its matching frozen bytes and used the actual corrected October 14 revision for the article-change control.
+
+## Deviations — October 16 review correspondence repair
+
+- The deployed proposed-review path required a proposal already registered on main; an open source-pinned review PR could not reveal itself. Reused artifact validation for bounded GitHub PR discovery while retaining main's separate published-record authority.
+- The existing Submit All Feedback control was an alert-only stub, and saved chat history would have been implicitly resubmitted by acceptance. Removed the stub, added explicit save receipts and deliberate current-note inclusion, and kept restored historical correspondence outside acceptance inputs by default.

@@ -54,6 +54,13 @@ Revision Requesting requires Review Projection. [src: api/_lib/article-review-se
 Revision Requesting yields Revision Request. [src: api/_lib/article-review-service.ts]
 Revision Requesting affects GitHub. [src: api/_lib/article-review-service.ts]
 
+Conversation Saving requires GitHub. [src: api/_lib/article-review-service.ts]
+Conversation Saving requires Article Fingerprint. [src: api/_lib/article-review-service.ts]
+Conversation Saving requires Review Projection. [src: api/_lib/article-review-service.ts]
+Conversation Saving yields Saved Message. [src: api/_lib/article-review-service.ts]
+Conversation Saving affects GitHub. [src: api/_lib/article-review-service.ts]
+Review Projection consists of Review Records and Correspondence. [src: shared/article-review.ts]
+
 ## SD1.1 — Article Generating in-zoom
 
 Activity Decision can be skip or run.

@@ -2186,3 +2186,6 @@ a:hover { border-bottom-color: var(--text); }
 .independent-reviews :focus-visible { outline: 3px solid #5489d4; outline-offset: 3px; }
 .independent-review-record { border-bottom: 1px solid currentColor; padding-bottom: .8rem; }
 .independent-reviews [role=alert] { border-left: 3px solid #c54c42; padding-left: .6rem; }
+.article-correspondence { margin-top: 1.5rem; border-top: 1px solid currentColor; padding-top: .75rem; }
+.review-correspondence-item { border-bottom: 1px solid var(--border, #777); padding-bottom: .5rem; }
+.review-correspondence-text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: .875rem; line-height: 1.55; max-height: 28rem; overflow-y: auto; padding: .5rem; background: var(--bg-secondary, transparent); }

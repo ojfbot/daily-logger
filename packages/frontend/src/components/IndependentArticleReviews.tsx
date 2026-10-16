@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { projectionSchema, type ReviewProjection } from '../../../../shared/article-review.ts'
+import { useAppDispatch } from '../store/hooks.ts'
+import { hydrateCorrespondence } from '../store/chatSlice.ts'
+import { ArticleCorrespondence } from './ArticleCorrespondence.tsx'
 
 interface Props { date: string; visibleBlobSha: string | undefined; login: string }
 type LoadState = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; projection: ReviewProjection }
 const responseSchema = z.object({ url: z.url(), requestId: z.uuid(), reused: z.boolean() })
 
 export function IndependentArticleReviews({ date, visibleBlobSha, login }: Props) {
+  const dispatch = useAppDispatch()
   const [load, setLoad] = useState<LoadState>({ kind: 'loading' })
   const [refresh, setRefresh] = useState(0)
   const [selected, setSelected] = useState<string[]>([])
@@ -16,6 +20,16 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login }: Props
   const [requestId, setRequestId] = useState<string>(() => crypto.randomUUID())
   const [receipt, setReceipt] = useState<string | null>(null)
   const draftKey = `dl-review-request:${login}:${date}:${visibleBlobSha ?? 'unknown'}`
+
+  useEffect(() => {
+    if (load.kind === 'ready') dispatch(hydrateCorrespondence({ date, visibleBlobSha: visibleBlobSha ?? null, login, items: load.projection.correspondence, complete: load.projection.unavailable.length === 0 }))
+  }, [load, date, visibleBlobSha, login, dispatch])
+
+  useEffect(() => {
+    const reload = () => setRefresh((previous) => previous + 1)
+    window.addEventListener('focus', reload)
+    return () => window.removeEventListener('focus', reload)
+  }, [])
 
   useEffect(() => {
     try {
@@ -76,13 +90,14 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login }: Props
     {load.kind === 'loading' && <p role="status">Loading registered reviews...</p>}
     {load.kind === 'error' && <p role="alert">{load.message}</p>}
     {projection && <>
-      <p className="review-scope">Only explicitly registered, editor-visible records are listed. Unregistered local sessions are unknown.</p>
+      <p className="review-scope">Published records and eligible same-repository review PRs are listed. Open PR findings are proposed; local sessions remain unknown.</p>
       {!visibleBlobSha && <p role="alert">The visible article has no source fingerprint. Reload after the API is rebuilt. Requests are disabled.</p>}
       {visibleBlobSha && projection.currentBlobSha !== visibleBlobSha && <p role="alert">The visible article differs from current main. Reload the article before requesting changes.</p>}
       {projection.unavailable.map((reason) => <p role="alert" key={reason}>Review unavailable: {reason}</p>)}
       {projection.entries.length === 0 && <p>No eligible registered review was found. This is not a clean-review verdict.</p>}
       {projection.entries.map((entry) => <div className="independent-review-record" key={entry.review.id}>
         <h3>{entry.lifecycle === 'published' ? 'Published review record' : 'Proposed, unmerged review record'}</h3>
+        {entry.pullRequest && <p><a href={entry.pullRequest.url}>PR #{entry.pullRequest.number}</a> · {entry.pullRequest.merged ? 'merged' : entry.pullRequest.state} · submitted by GitHub account {entry.pullRequest.author}</p>}
         <p>{entry.freshness === 'current' ? 'Matches visible article' : entry.freshness === 'stale' ? 'Stale: article changed; a fresh review is needed' : 'Visible revision unknown'}</p>
         <details><summary>Review identity and scope</summary>
           <dl><dt>Reviewer</dt><dd>{entry.review.reviewer.name}</dd><dt>Session</dt><dd>{entry.review.reviewer.sessionId ?? 'Unknown'}</dd><dt>Review timestamp</dt><dd>{entry.review.reviewedAt}</dd><dt>Reviewed source commit</dt><dd><code>{entry.review.article.sourceCommitSha}</code></dd><dt>Article blob</dt><dd><code>{entry.review.article.blobSha}</code></dd></dl>
@@ -109,9 +124,10 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login }: Props
       <label htmlFor="independent-review-feedback">Revision feedback</label>
       <textarea id="independent-review-feedback" value={feedback} maxLength={30000} disabled={sending} onChange={(event) => { changed(); setFeedback(event.currentTarget.value) }} rows={6} />
       <p>Only the selected finding references and this editable text are submitted. Existing editorial notes and section feedback stay separate.</p>
-      {projection.requestTarget ? <p>This pilot records correspondence on <a href={projection.requestTarget.contextUrl}>issue #{projection.requestTarget.issueNumber}</a>. It creates no acceptance branch, PR, or model run. Mentions are escaped in the comment display; stored feedback stays unchanged.</p> : <p>No correspondence target is registered for this article. Requests are disabled.</p>}
+      {projection.requestTarget ? <p>Corrections and saved discussion go to <a href={projection.requestTarget.contextUrl}>{projection.requestTarget.kind === 'pilot_issue' ? 'issue' : 'PR'} #{projection.requestTarget.issueNumber}</a> and share its GitHub visibility. Saving creates no acceptance branch or model run. Stored text stays unchanged.</p> : <p>No eligible correspondence target is available for this article. Requests and new discussion saves are disabled.</p>}
       <button type="button" disabled={sending || !canSubmit} onClick={requestChanges}>{sending ? 'Recording revision request...' : `Request changes${projection.requestTarget ? ` on #${projection.requestTarget.issueNumber}` : ''}`}</button>
       {projection.requests.length > 0 && <details><summary>Recorded revision requests ({projection.requests.length})</summary><ul>{projection.requests.map((request) => <li key={request.url}><a href={request.url}>{request.findingIds.join(', ')} requested by {request.actor}</a></li>)}</ul></details>}
+      <ArticleCorrespondence projection={projection} />
     </>}
     {message && <p role="status">{message}{receipt && <> <a href={receipt}>Read recorded request</a></>}</p>}
   </section>

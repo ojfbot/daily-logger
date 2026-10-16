@@ -4,14 +4,14 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { EditorialSidebar } from '../EditorialSidebar.tsx'
 import { stampDraft } from '../../utils/stampDraft.ts'
-const identity = vi.hoisted(() => ({ login: 'editor' }))
+const identity = vi.hoisted(() => ({ login: 'editor', includeInRevision: true, blob: 'a'.repeat(40) }))
 
 vi.mock('../../utils/stampDraft.ts', () => ({ stampDraft: vi.fn() }))
 vi.mock('../../store/hooks.ts', () => ({
   useAppSelector: (select: (state: unknown) => unknown) => select({
     auth: { user: { login: identity.login, authorized: true } },
     chat: {
-      threads: { section: { date: '2026-10-10', section: 'What shipped', messages: [{ role: 'user', content: 'Section note' }] } },
+      threads: { section: { date: '2026-10-10', section: 'What shipped', messages: [{ role: 'user', content: 'Section note', articleBlobSha: identity.blob, includeInRevision: identity.includeInRevision }] } },
       threadOrder: ['section'],
     },
   }),
@@ -47,11 +47,13 @@ beforeEach(async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   vi.mocked(stampDraft).mockReset()
   identity.login = 'editor'
+  identity.includeInRevision = true
+  identity.blob = 'a'.repeat(40)
   sessionStorage.clear()
   container = document.createElement('div')
   document.body.append(container)
   root = createRoot(container)
-  await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-10', articleTitle: 'Friday' })))
+  await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-10', articleTitle: 'Friday', visibleBlobSha: 'a'.repeat(40) })))
 })
 
 afterEach(async () => {
@@ -61,6 +63,15 @@ afterEach(async () => {
 })
 
 describe('editorial revision notes', () => {
+  it.each(['restored', 'historical'])('does not automatically resubmit %s section correspondence', async (kind) => {
+    identity.includeInRevision = kind !== 'restored'
+    if (kind === 'historical') identity.blob = 'b'.repeat(40)
+    await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-10', articleTitle: 'Friday', visibleBlobSha: 'a'.repeat(40) })))
+    vi.mocked(stampDraft).mockResolvedValue({ prNumber: 42, prUrl: 'https://github.com/ojfbot/daily-logger/pull/42' })
+    await click('ACCEPT DRAFT')
+    expect(stampDraft).toHaveBeenCalledExactlyOnceWith('2026-10-10', 'Friday', 'editor', undefined)
+  })
+
   it('adds, edits and removes notes, then sends each remaining note and section feedback once', async () => {
     vi.mocked(stampDraft).mockResolvedValue({ prNumber: 42, prUrl: 'https://github.com/ojfbot/daily-logger/pull/42' })
     await enter(0, 'First note')
@@ -93,7 +104,7 @@ describe('editorial revision notes', () => {
     expect(container.textContent).toContain('Network unavailable')
     await act(async () => root.unmount())
     root = createRoot(container)
-    await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-10', articleTitle: 'Friday' })))
+    await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-10', articleTitle: 'Friday', visibleBlobSha: 'a'.repeat(40) })))
     expect(textarea(0).value).toBe('Keep first')
     expect(textarea(1).value).toBe('Keep second')
   })
@@ -113,7 +124,7 @@ describe('editorial revision notes', () => {
     vi.mocked(stampDraft).mockImplementation(() => new Promise((resolve) => { finish = resolve }))
     await enter(0, 'Submitted Friday note')
     await click('ACCEPT WITH REVISIONS')
-    await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-11', articleTitle: 'Saturday' })))
+    await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-11', articleTitle: 'Saturday', visibleBlobSha: 'a'.repeat(40) })))
     await enter(0, 'Keep Saturday note')
     await act(async () => finish({ prNumber: 42, prUrl: 'https://github.com/ojfbot/daily-logger/pull/42' }))
     expect(sessionStorage.getItem('dl-editorial:editor:2026-10-10')).toBeNull()
@@ -129,7 +140,7 @@ describe('editorial revision notes', () => {
 
   it.each(['{broken', '{}', '[1]', '[]'])('recovers from invalid stored draft %s', async (stored) => {
     sessionStorage.setItem('dl-editorial:editor:2026-10-11', stored)
-    await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-11', articleTitle: 'Saturday' })))
+    await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-11', articleTitle: 'Saturday', visibleBlobSha: 'a'.repeat(40) })))
     expect(textarea(0).value).toBe('')
     expect(container.querySelectorAll('textarea')).toHaveLength(1)
   })
@@ -186,12 +197,14 @@ describe('editorial revision notes', () => {
   it('isolates user drafts and labels every input', async () => {
     await enter(0, 'Editor private draft')
     identity.login = 'other-editor'
-    await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-10', articleTitle: 'Friday' })))
+    await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-10', articleTitle: 'Friday', visibleBlobSha: 'a'.repeat(40) })))
     expect(textarea(0).value).toBe('')
     await enter(0, 'Other private draft')
     expect(container.querySelector('label')?.htmlFor).toBe(textarea(0).id)
     identity.login = 'editor'
-    await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-10', articleTitle: 'Friday' })))
+  identity.includeInRevision = true
+  identity.blob = 'a'.repeat(40)
+    await act(async () => root.render(createElement(EditorialSidebar, { date: '2026-10-10', articleTitle: 'Friday', visibleBlobSha: 'a'.repeat(40) })))
     expect(textarea(0).value).toBe('Editor private draft')
     expect(sessionStorage.getItem('dl-editorial:other-editor:2026-10-10')).toBe('["Other private draft"]')
   })
