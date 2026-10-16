@@ -5,9 +5,10 @@ interface Props {
   section: string
   date: string
   visibleBlobSha?: string
+  discussionReady: boolean
 }
 
-export function SectionChatButton({ section, date, visibleBlobSha }: Props) {
+export function SectionChatButton({ section, date, visibleBlobSha, discussionReady }: Props) {
   const dispatch = useAppDispatch()
   const authorized = useAppSelector((state) => state.auth.user?.authorized)
   if (!authorized) return null
@@ -15,8 +16,8 @@ export function SectionChatButton({ section, date, visibleBlobSha }: Props) {
   return (
     <button
       className="section-chat-btn"
-      disabled={!visibleBlobSha}
-      title={`Start chat thread about "${section}"`}
+      disabled={!visibleBlobSha || !discussionReady}
+      title={discussionReady ? `Start discussion about "${section}"` : 'Discussion saving is unavailable until a durable GitHub target is verified'}
       onClick={() => dispatch(createThread({ section, date }))}
       aria-label={`New chat thread for ${section}`}
     >

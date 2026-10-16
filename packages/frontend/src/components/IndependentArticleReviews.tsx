@@ -5,11 +5,11 @@ import { useAppDispatch } from '../store/hooks.ts'
 import { hydrateCorrespondence } from '../store/chatSlice.ts'
 import { ArticleCorrespondence } from './ArticleCorrespondence.tsx'
 
-interface Props { date: string; visibleBlobSha: string | undefined; login: string }
+interface Props { date: string; visibleBlobSha: string | undefined; login: string; onDiscussionAvailabilityChange: (available: boolean) => void }
 type LoadState = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; projection: ReviewProjection }
 const responseSchema = z.object({ url: z.url(), requestId: z.uuid(), reused: z.boolean() })
 
-export function IndependentArticleReviews({ date, visibleBlobSha, login }: Props) {
+export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscussionAvailabilityChange }: Props) {
   const dispatch = useAppDispatch()
   const [load, setLoad] = useState<LoadState>({ kind: 'loading' })
   const [refresh, setRefresh] = useState(0)
@@ -45,15 +45,24 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login }: Props
   useEffect(() => {
     const controller = new AbortController()
     setLoad({ kind: 'loading' })
+    onDiscussionAvailabilityChange(false)
+    dispatch(hydrateCorrespondence({ date, visibleBlobSha: visibleBlobSha ?? null, login, items: [], complete: false }))
     fetch(`/api/article-reviews?date=${date}${visibleBlobSha ? `&visibleBlobSha=${visibleBlobSha}` : ''}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error(`Review data unavailable (${response.status}). Nothing here establishes a clean review.`)
         return projectionSchema.parse(await response.json())
       })
-      .then((projection) => { if (!controller.signal.aborted) setLoad({ kind: 'ready', projection }) })
-      .catch((error: unknown) => { if (!controller.signal.aborted) setLoad({ kind: 'error', message: error instanceof Error ? error.message : 'Review data unavailable' }) })
+      .then((projection) => { if (!controller.signal.aborted) {
+        setLoad({ kind: 'ready', projection })
+        onDiscussionAvailabilityChange(!!visibleBlobSha && projection.currentBlobSha === visibleBlobSha && !!projection.requestTarget)
+      } })
+      .catch((error: unknown) => { if (!controller.signal.aborted) {
+        onDiscussionAvailabilityChange(false)
+        dispatch(hydrateCorrespondence({ date, visibleBlobSha: visibleBlobSha ?? null, login, items: [], complete: false }))
+        setLoad({ kind: 'error', message: error instanceof Error ? error.message : 'Review data unavailable' })
+      } })
     return () => controller.abort()
-  }, [date, visibleBlobSha, refresh])
+  }, [date, visibleBlobSha, refresh, login, dispatch, onDiscussionAvailabilityChange])
 
   const projection = load.kind === 'ready' ? load.projection : null
   const choices = projection?.entries.flatMap((entry) => entry.review.result === 'completed'

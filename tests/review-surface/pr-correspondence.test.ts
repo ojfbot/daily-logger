@@ -16,7 +16,7 @@ function setup() {
 }
 function writes(calls: string[]) { return calls.filter((call) => !call.startsWith('GET ')) }
 function envelope(input: ArticleComment, actor = 'editor') {
-  return ['<!-- ARTICLE_DISCUSSION_MESSAGE_V1_START -->', Buffer.from(JSON.stringify({ ...input, actor })).toString('base64'), '<!-- ARTICLE_DISCUSSION_MESSAGE_V1_END -->'].join('\n')
+  return [`## Article discussion: ${input.date}`, '', '<!-- ARTICLE_DISCUSSION_MESSAGE_V1_START -->', Buffer.from(JSON.stringify({ ...input, actor })).toString('base64'), '<!-- ARTICLE_DISCUSSION_MESSAGE_V1_END -->'].join('\n')
 }
 
 describe('eligible open review PRs and durable correspondence', () => {
@@ -92,6 +92,41 @@ describe('eligible open review PRs and durable correspondence', () => {
     expect(view.correspondence.find((item) => item.kind === 'comment')?.author).toBe('editor')
     expect(view.unavailable.join()).toContain('disagrees with GitHub')
     expect(view.requestTarget).toBeNull()
+  })
+  it('keeps an outsider marker quote as ordinary history without disabling trusted writes', async () => {
+    const { service, state } = setup()
+    const quoted = `## Article discussion: ${today}\nquoted documentation\n<!-- ARTICLE_DISCUSSION_MESSAGE_V1_START -->`
+    state.prComments.set(367, [makeComment(quoted, 1, 'outside-reader', 367, 'NONE')])
+    const view = await service.load(today, blob)
+    expect(view.correspondence.find((item) => item.kind === 'comment')).toMatchObject({ author: 'outside-reader', body: quoted })
+    expect(view.unavailable).toEqual([])
+    expect(view.requestTarget?.issueNumber).toBe(367)
+    await service.comment(message(), 'editor')
+    expect(writes(state.calls)).toEqual(['POST /repos/ojfbot/daily-logger/issues/367/comments'])
+  })
+  it('restores a structured note from an explicitly allowlisted editor without repository association', async () => {
+    const { github, state } = setup()
+    const input = message()
+    state.prComments.set(367, [makeComment(envelope(input, 'invited-editor'), 1, 'invited-editor', 367, 'NONE')])
+    const view = await createReviewService(github, new Set(['invited-editor'])).load(today, blob)
+    expect(view.correspondence.find((item) => item.kind === 'thread_message')).toMatchObject({
+      author: 'invited-editor', message: { ...input, actor: 'invited-editor' },
+    })
+    expect(view.requestTarget?.issueNumber).toBe(367)
+  })
+  it('recovers correspondence from a conventionally named review PR after it closes unmerged', async () => {
+    const { github, service, state, pr } = setup()
+    const input = message()
+    await service.comment(input, 'editor')
+    state.openPullNumbers = []
+    state.pullRequests.set(367, { ...pr, state: 'closed', merged_at: null })
+    const view = await createReviewService(github).load(today, blob)
+    expect(view.entries).toEqual([])
+    expect(view.correspondence.find((item) => item.kind === 'thread_message')).toMatchObject({
+      sourceKind: 'review_pr', sourceNumber: 367, author: 'editor', message: { ...input, actor: 'editor' },
+    })
+    expect(view.requestTarget).toBeNull()
+    expect(view.unavailable).toEqual([])
   })
   it('keeps source-linked correspondence after review publication and merge', async () => {
     const { service, state, pr } = setup()

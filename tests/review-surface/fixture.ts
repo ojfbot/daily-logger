@@ -18,9 +18,9 @@ export function makePullRequest(number = 367) {
     head: { sha: 'a'.repeat(40), ref: `codex/review-article-${today}`, repo: { full_name: 'ojfbot/daily-logger' } },
     base: { ref: 'main', repo: { full_name: 'ojfbot/daily-logger' } } })
 }
-export function makeComment(body: string, id = 1, login = 'editor', issueNumber = 357) {
+export function makeComment(body: string, id = 1, login = 'editor', issueNumber = 357, authorAssociation = 'OWNER') {
   return githubCommentSchema.parse({ id, body, html_url: `https://github.com/ojfbot/daily-logger/issues/${issueNumber}#issuecomment-${id}`,
-    user: { login }, created_at: '2026-10-16T14:01:00.000Z', updated_at: '2026-10-16T14:01:00.000Z' })
+    user: { login }, author_association: authorAssociation, created_at: '2026-10-16T14:01:00.000Z', updated_at: '2026-10-16T14:01:00.000Z' })
 }
 export function createFixture() {
   const registry = registrySchema.parse(JSON.parse(readFileSync('reviews/registry.json', 'utf8')))
@@ -29,10 +29,11 @@ export function createFixture() {
   const files = new Map<string, string>()
   const openPullNumbers: number[] = []
   const acceptPullNumbers: number[] = []
+  const reviewPullNumbers: number[] = []
   const state = { source, login: 'editor', outage: false, prHead: 'a'.repeat(40), registry, comments, calls, files,
     refFiles: new Map<string, string>(), pullRequests: new Map<number, z.infer<typeof githubPullRequestSchema>>(),
     pullFiles: new Map<number, Array<{ filename: string; status: string }>>(),
-    openPullNumbers, acceptPullNumbers, pathCommits: new Map<string, string[]>(),
+    openPullNumbers, acceptPullNumbers, reviewPullNumbers, pathCommits: new Map<string, string[]>(),
     associatedPullNumbers: new Map<string, number[]>(), prComments: new Map<number, z.infer<typeof githubCommentSchema>[]>(),
     prReviews: new Map<number, unknown[]>(), prInlineComments: new Map<number, unknown[]>(),
     failRoutes: new Set<string>(), nextPageRoutes: new Set<string>(),
@@ -61,7 +62,11 @@ export function createFixture() {
         return Response.json({ type: 'file', encoding: 'base64', content: Buffer.from(text).toString('base64'), sha: hash })
       } catch { return Response.json({ message: 'Not found' }, { status: 404 }) }
     }
-    if (method === 'GET' && route === '/pulls') return Response.json((url.searchParams.get('head') ? state.acceptPullNumbers : state.openPullNumbers).map(pr), { headers })
+    if (method === 'GET' && route === '/pulls') {
+      const head = url.searchParams.get('head')
+      const numbers = head === `ojfbot:codex/review-article-${today}` ? state.reviewPullNumbers : head ? state.acceptPullNumbers : state.openPullNumbers
+      return Response.json(numbers.map(pr), { headers })
+    }
     const pull = route.match(/^\/pulls\/(\d+)(?:\/(files|reviews|comments))?$/)
     if (method === 'GET' && pull) {
       const number = Number(pull[1])
@@ -95,6 +100,7 @@ export function seedOpenReview(state: ReturnType<typeof createFixture>['state'],
   const pr = makePullRequest(number)
   state.pullRequests.set(number, pr)
   state.openPullNumbers.push(number)
+  state.reviewPullNumbers.push(number)
   const manifest = { ...state.registry, records: [...state.registry.records.filter((record) => record.date !== today), { date: today, path: recordPath }] }
   state.refFiles.set(`${pr.head.sha}:reviews/registry.json`, JSON.stringify(manifest))
   state.registry.records = state.registry.records.filter((record) => record.date !== today)

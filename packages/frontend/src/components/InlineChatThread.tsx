@@ -8,10 +8,11 @@ interface Props {
   thread: ChatThread
   articleTitle: string
   visibleBlobSha?: string
+  discussionReady: boolean
   extractSection: (heading: string) => { heading: string; content: string; codeRefs: string[] } | null
 }
 
-export function InlineChatThread({ thread, articleTitle, visibleBlobSha, extractSection }: Props) {
+export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discussionReady, extractSection }: Props) {
   const dispatch = useAppDispatch()
   const [input, setInput] = useState('')
   const [inputError, setInputError] = useState<string | null>(null)
@@ -25,7 +26,7 @@ export function InlineChatThread({ thread, articleTitle, visibleBlobSha, extract
   const { user } = useAppSelector((s) => s.auth)
   const canEdit = !!user?.authorized
   const busy = submitting || thread.isStreaming || thread.messages.some((message) => message.save.kind === 'saving')
-  const canPost = canEdit && !!visibleBlobSha && !!input.trim() && !busy
+  const canPost = canEdit && !!visibleBlobSha && discussionReady && !!input.trim() && !busy
   const threadNum = thread.messages.filter((message) => message.role === 'user').length
 
   useEffect(() => { if (!thread.isCollapsed) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) },
@@ -119,7 +120,7 @@ export function InlineChatThread({ thread, articleTitle, visibleBlobSha, extract
             </div>
             {message.save.kind === 'unsaved' && <div>
               {message.save.error && <p role="alert">{message.save.error}</p>}
-              <button disabled={!canEdit || busy || message.actor !== user?.login}
+              <button disabled={!canEdit || !discussionReady || busy || message.actor !== user?.login}
                 onClick={() => dispatch(saveMessage({ kind: 'retry', threadId: thread.id, messageId: message.id }))}>
                 Retry saving {message.role === 'assistant' ? 'response' : 'note'}
               </button>
@@ -142,6 +143,7 @@ export function InlineChatThread({ thread, articleTitle, visibleBlobSha, extract
       </div>
       {!canEdit ? <p>Sign in with an authorized account to save correspondence.</p> : <>
         {!visibleBlobSha && <p>Article source identity is unavailable. Saving is disabled.</p>}
+        {visibleBlobSha && !discussionReady && <p>GitHub correspondence is unavailable for this article. New saves and retries are disabled.</p>}
         {showKeyPrompt && <form className="chat-key-prompt" onSubmit={handleSaveKey}>
           <label>Anthropic API Key</label>
           <input type="password" name="apiKey" placeholder="sk-ant-..." autoFocus />

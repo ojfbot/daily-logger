@@ -1390,6 +1390,8 @@ a:hover { border-bottom-color: var(--text); }
   border: 1px solid rgba(21, 101, 192, 0.2);
   border-radius: 6px;
   padding: 8px 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .chat-message-assistant .chat-message-content {
@@ -1435,10 +1437,11 @@ a:hover { border-bottom-color: var(--text); }
 
 .chat-input-area {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   padding: 8px 12px;
   border-top: 1px solid var(--border);
-  align-items: flex-end;
+  align-items: stretch;
 }
 
 .chat-input {
@@ -1462,6 +1465,7 @@ a:hover { border-bottom-color: var(--text); }
 .chat-input-actions {
   display: flex;
   gap: 4px;
+  justify-content: flex-end;
 }
 
 .chat-send-btn {
