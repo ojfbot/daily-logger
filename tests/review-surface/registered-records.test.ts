@@ -14,6 +14,7 @@ function validateRegisteredRecords(input: unknown, read: ReadBytes = readFileSyn
     paths.add(entry.path)
     const review = reviewSchema.parse(JSON.parse(read(entry.path).toString('utf8')))
     if (review.article.date !== entry.date) throw new Error(`Article date mismatch: ${entry.path}`)
+    // The runtime checks ID collisions after filtering to one article date.
     const identity = `${entry.date}:${review.id}`
     if (identities.has(identity)) throw new Error(`Duplicate review identity: ${identity}`)
     identities.add(identity)
