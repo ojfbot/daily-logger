@@ -53,4 +53,15 @@ describe('review contribution ledger', () => {
     expect(html).toContain('2'.repeat(40))
     expect(html).toContain('3'.repeat(40))
   })
+
+  it('labels a review without a linked GitHub submission account as unknown', () => {
+    const entry = reviewEntry({ id: 'review-unlinked', reviewer: 'Reviewer D', sessionId: null,
+      articleBlobSha: visibleBlob, recordBlobSha: '4'.repeat(40), freshness: 'current', pullRequest: 371 })
+    entry.pullRequest = null
+    const projection = projectionSchema.parse({ schemaVersion: 1, date: '2026-10-16', observedAt: time, sourceCommitSha: source,
+      currentBlobSha: visibleBlob, visibleBlobSha: visibleBlob, discovery: 'registered_and_eligible_pull_requests', requestTarget: null,
+      entries: [entry], unavailable: [], requests: [], pullRequests: [], correspondence: [] })
+    const html = renderToStaticMarkup(<ReviewRecordGroups projection={projection} selected={[]} sending={false} onToggle={() => undefined} />)
+    expect(html).toContain('GitHub submission account not linked to this record.')
+  })
 })
