@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 86
+    "count": 87
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 72
+    "count": 73
   },
   {
     "name": "core",
@@ -17,7 +17,7 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 55
+    "count": 56
   },
   {
     "name": "shell",
@@ -35,19 +35,19 @@
     "count": 31
   },
   {
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 30
+  },
+  {
     "name": "adr",
     "type": "practice",
     "count": 30
   },
   {
-    "name": "model-behavior-as-design",
-    "type": "concept",
-    "count": 29
-  },
-  {
     "name": "hardening",
     "type": "practice",
-    "count": 28
+    "count": 29
   },
   {
     "name": "tooling-for-iteration",
@@ -185,6 +185,11 @@
     "count": 6
   },
   {
+    "name": "provenance",
+    "type": "concept",
+    "count": 5
+  },
+  {
     "name": "skill-telemetry",
     "type": "concept",
     "count": 5
@@ -228,11 +233,6 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
-  },
-  {
-    "name": "provenance",
-    "type": "concept",
-    "count": 4
   },
   {
     "name": "seh-study",
@@ -288,6 +288,11 @@
     "name": "node-template",
     "type": "repo",
     "count": 4
+  },
+  {
+    "name": "editorial-pipeline",
+    "type": "concept",
+    "count": 3
   },
   {
     "name": "workstation-yuri",
@@ -356,11 +361,6 @@
   },
   {
     "name": "editorial-workflow",
-    "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "editorial-pipeline",
     "type": "concept",
     "count": 2
   },
@@ -513,6 +513,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "verification",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "graphql-federation",

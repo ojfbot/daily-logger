@@ -1,5 +1,29 @@
 [
   {
+    "command": "/validate",
+    "description": "Run the daily-logger test suite from a clean checkout with no local Git history. Confirm the full suite passes against the fixture-independence changes in 4926206. Note the actual test count — do not assume 340 native + 4 browser is still current. Record the result as the CI baseline for fixture-independent review registration.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-10-16",
+    "id": "act-2026-10-16-validate-869768"
+  },
+  {
+    "command": "/roadmap",
+    "description": "Add October 16 as an eligible pilot date in daily-logger issue #357. Verify that existing correspondence routes for October 13 and October 14 still resolve correctly after the #362 inspection UI changes. Record the extended date range and any routing changes in the issue. Do not proceed until /validate has passed.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-10-16",
+    "id": "act-2026-10-16-roadmap-1db9b8"
+  },
+  {
+    "command": "/design",
+    "description": "Document the re-entry path for post-revision verification failure in daily-logger. Define: what happens when a verification PR finds remaining material findings — does it block merge, open a new correction PR, or return to review registration? Record the decision as an amendment to ADR-0038 at docs/decisions/ before the second article cycle runs.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-10-16",
+    "id": "act-2026-10-16-design-890f08"
+  },
+  {
     "command": "/pr-review",
     "description": "Inspect the merged core #527 publication-digest regression against its exact source revision. Retain `act-2026-10-11-validate-a7a1a5`; check that a prepared-artifact mismatch leaves publication and consumption unproven, with a matching-digest positive control. The Proposed checker’s fixture success does not establish operating delivery or settle the original action.",
     "repo": "core",
