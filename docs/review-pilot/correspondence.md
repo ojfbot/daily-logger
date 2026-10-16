@@ -1,9 +1,11 @@
 # Open reviews and saved discussion
 
-An authorized reader can inspect a review while its PR is still open. The card
-says **Proposed, unmerged review record** and links the exact PR and pinned
-artifacts. Merge makes a registered record published; neither state accepts the
-article or establishes that a finding is correct.
+An authorized reader can inspect a review while its PR is still open. Reviews
+are grouped by exact article blob; each card shows its recorded reviewer claim,
+review ID, lifecycle, freshness and GitHub carrier before the detailed findings.
+An open record is proposed and a merged registration is published. Neither
+state accepts the article or establishes that a finding or reviewer claim is
+correct.
 
 The authenticated review service owns discovery and routing. It admits bounded,
 validated same-repository review-data PRs to main, verifies their registry
@@ -16,11 +18,21 @@ availability failures, never a clean-review verdict.
 
 The correspondence panel loads PR descriptions, decoded version-2 editorial
 feedback, ordinary comments, submitted reviews and inline discussions from
-GitHub. Saved section notes and completed assistant transcripts reload into the
-section UI as well. Account attribution comes from GitHub; assistant model and
-session metadata are reported claims. A shared account cannot prove independent
-agent identity. GitHub edits and deletions change the returned history; this is
-not an immutable archive.
+GitHub. It groups them by review PR, editorial PR or pilot issue and shows each
+PR's current structured head, state and GitHub author. Saved section notes and
+completed assistant transcripts reload into the section UI as well. Account
+attribution comes from GitHub; reviewer, assistant model and session metadata
+are recorded claims. Unstructured PR bodies, comments and reviews can also make
+model, session, identity or commit claims, so the UI keeps those claims in raw
+text and labels them unverified. A shared account cannot prove independent agent
+identity. GitHub edits and deletions change the returned history; this is not an
+immutable archive.
+
+The current PR head is not a historical event receipt. If a PR moves after a
+workflow comment, GitHub's issue-comment object does not identify the output head
+that produced that comment. The UI shows the current structured head and leaves
+any body-reported commit as unverified text. Exact per-event input/output heads
+need a separate structured producer receipt.
 
 **Save note** records text without a provider call or article acceptance. **Ask
 assistant** remains a separate explicit action using the existing configured
