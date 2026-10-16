@@ -42,6 +42,7 @@ describe('durable correspondence display', () => {
     const html = renderToStaticMarkup(<ArticleCorrespondence projection={projection} />)
     expect(html).toContain('PR #367')
     expect(html).toContain('independent review')
+    expect(html).toContain('Current head')
     expect(html).toContain(reviewHead)
     expect(html).toContain('PR #369')
     expect(html).toContain('editorial revision')

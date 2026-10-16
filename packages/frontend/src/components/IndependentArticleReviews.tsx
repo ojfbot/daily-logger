@@ -173,22 +173,24 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscu
   }, [date, visibleBlobSha, refresh, login, dispatch, onDiscussionAvailabilityChange])
 
   const projection = load.kind === 'ready' ? load.projection : null
-  const choices = projection?.entries.flatMap((entry) => entry.review.result === 'completed'
-    ? entry.review.findings.map((finding) => ({ entry, finding, key: `${entry.review.id}:${finding.id}` })) : []) ?? []
-  const selectableKeys = useMemo(() => new Set(choices
-    .filter(({ entry, finding }) => entry.freshness === 'current' && finding.disposition.kind === 'open')
-    .map(({ key }) => key)), [projection])
+  const choices = useMemo(() => projection?.entries.flatMap((entry) => entry.review.result === 'completed'
+    ? entry.review.findings.map((finding) => ({ entry, finding, key: `${entry.review.id}:${finding.id}` })) : []) ?? [], [projection])
+  const choicesByKey = useMemo(() => new Map(choices.map((choice) => [choice.key, choice])), [choices])
 
   useEffect(() => {
-    if (!projection) return
-    const retained = selected.filter((key) => selectableKeys.has(key))
+    if (!projection || sending) return
+    const retained = selected.filter((key) => {
+      const choice = choicesByKey.get(key)
+      if (!choice) return projection.unavailable.length > 0
+      return choice.entry.freshness === 'current' && choice.finding.disposition.kind === 'open'
+    })
     const removed = selected.length - retained.length
     if (removed === 0) return
     setSelected(retained)
     setRequestId(crypto.randomUUID())
     setReceipt(null)
-    setMessage(`Review status changed; ${removed} unavailable ${removed === 1 ? 'selection was' : 'selections were'} removed.`)
-  }, [projection, selectableKeys, selected])
+    setMessage(`Review status changed; ${removed} ${removed === 1 ? 'selection is' : 'selections are'} no longer current and open, so ${removed === 1 ? 'it was' : 'they were'} removed.`)
+  }, [projection, choicesByKey, selected, sending])
 
   const picked = choices.filter((choice) => selected.includes(choice.key))
   const canSubmit = !!projection?.requestTarget && !!visibleBlobSha && projection.currentBlobSha === visibleBlobSha &&
