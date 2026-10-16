@@ -1,4 +1,5 @@
-import type { ActionItem as ActionItemType, ClosedAction as ClosedActionType } from './schema.js'
+import type { ClosedAction as ClosedActionType } from './schema.js'
+import type { CanonicalAction } from './action-model.js'
 import type { TelemetrySummary } from './collect-telemetry.js'
 import type { ArticleProvenance } from './run-provenance.js'
 export type { TelemetrySummary }
@@ -109,7 +110,7 @@ export interface BlogContext {
   closedIssues: IssueInfo[]
   openIssues: IssueInfo[]
   /** Open actions from previous articles, filtered against done-actions.json */
-  openActions: ActionItemType[]
+  openActions: CanonicalAction[]
   projectVision: string
   previousArticles: Array<{ date: string; excerpt: string }>
   /** Claude Code tool/skill telemetry for the 24h window. Null if unavailable. */
@@ -222,21 +223,8 @@ export interface CleanEntryData {
   actions: Array<{ command: string; description: string; repo: string }>
 }
 
-export interface CleanDoneAction {
-  command: string
-  description: string
-  repo: string
-  sourceDate: string
-  closedDate: string
-  resolution: string
-}
-
-export interface CleanOpenAction {
-  command: string
-  description: string
-  repo: string
-  sourceDate: string
-}
+export type CleanDoneAction = CanonicalAction
+export type CleanOpenAction = CanonicalAction
 
 export interface StructuredCleanContext {
   todaySummary: string

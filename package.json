@@ -13,6 +13,7 @@
     "backfill": "tsx src/backfill-tags.ts",
     "backfill:refs": "tsx src/backfill-code-refs.ts",
     "build:api": "tsx src/build-api.ts",
+    "check:action-intake": "tsx scripts/check-action-intake.ts",
     "dev": "tsx src/build-api.ts && cd packages/frontend && pnpm dev",
     "type-check": "tsc --noEmit",
     "lint": "eslint 'src/**/*.ts'",

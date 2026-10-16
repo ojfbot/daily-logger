@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useCallback } from 'react'
 import { useEntries } from '../hooks/useEntries.ts'
 import { ActionPopover } from './ActionPopover.tsx'
-import type { ActionItem } from '../store/types.ts'
+import type { ActionItem, ReviewedActionItem } from '../store/types.ts'
 
 const STALE_DAYS = 5
 const RECENT_DONE_DAYS = 14
@@ -11,6 +11,18 @@ function daysSince(dateStr: string): number {
   const d = new Date(dateStr + 'T00:00:00Z')
   const now = new Date()
   return Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+function isReviewedAction(action: ActionItem): action is ReviewedActionItem {
+  return 'review' in action && action.review !== undefined
+}
+
+function closedDate(action: ActionItem): string | undefined {
+  return 'closedDate' in action ? action.closedDate : undefined
+}
+
+function resolution(action: ActionItem): string | undefined {
+  return 'resolution' in action ? action.resolution : undefined
 }
 
 function ActionItemRow({ a, extraClass = '' }: { a: ActionItem; extraClass?: string }) {
@@ -35,6 +47,53 @@ function ArchivedRow({ a }: { a: ActionItem }) {
   )
 }
 
+const dispositionLabels = {
+  deferred: 'Deferred',
+  'completed-existing-evidence': 'Evidence complete · unsettled',
+  'pending-receipt': 'Pending receipt',
+} as const
+
+function ReviewedActionRow({ action }: { action: ReviewedActionItem }) {
+  const { disposition, source } = action.review
+  const owner = disposition.kind === 'deferred' || disposition.kind === 'pending-receipt'
+    ? `${disposition.owner.title} (${disposition.owner.threadId})`
+    : null
+  const explanation = disposition.kind === 'deferred'
+    ? disposition.reason
+    : disposition.kind === 'completed-existing-evidence'
+      ? disposition.qualification
+      : disposition.acceptanceCriteria.join(' ')
+
+  return (
+    <article className={`action-item action-reviewed action-reviewed-${disposition.kind}`}>
+      <div>
+        <div className="action-reviewed-heading">
+          <span className="action-disposition">{dispositionLabels[disposition.kind]}</span>
+          <code className="action-id">{action.id}</code>
+        </div>
+        <code className="action-invocation">{action.invocation}</code>
+        <p>{action.description}</p>
+        <p className="entry-stat">{explanation}</p>
+        {owner && <p className="entry-stat">Owner: {owner}</p>}
+        {disposition.kind === 'completed-existing-evidence' && (
+          <ul className="action-evidence">
+            {disposition.evidence.map((evidence) => (
+              <li key={evidence.kind === 'repository-file' ? evidence.path : evidence.locator}>
+                {evidence.kind === 'repository-file'
+                  ? <a href={`https://github.com/ojfbot/daily-logger/blob/${evidence.commitSha}/${evidence.path}`}>{evidence.path}</a>
+                  : <span>{evidence.locator} ({evidence.verification})</span>}
+                {' — '}{evidence.qualification}
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="entry-stat">Next safe retry: {disposition.nextSafeRetry}</p>
+        <a className="entry-stat" href={source.url}>Source {source.articlePath}:{source.line}</a>
+      </div>
+    </article>
+  )
+}
+
 export function ActionsPage() {
   const { actions, doneActions, loading } = useEntries()
   const [filter, setFilter] = useState<string | null>(null)
@@ -49,21 +108,26 @@ export function ActionsPage() {
     return Array.from(s).sort()
   }, [actions, doneActions])
 
-  const { open, stale } = useMemo(() => {
+  const { open, stale, reviewed } = useMemo(() => {
     const open: ActionItem[] = []
     const stale: ActionItem[] = []
+    const reviewed: ReviewedActionItem[] = []
 
     const sorted = [...actions].sort((a, b) => b.sourceDate.localeCompare(a.sourceDate))
 
     for (const a of sorted) {
       if (filter && a.command !== filter) continue
+      if (isReviewedAction(a)) {
+        reviewed.push(a)
+        continue
+      }
       if (daysSince(a.sourceDate) > STALE_DAYS) {
         stale.push(a)
       } else {
         open.push(a)
       }
     }
-    return { open, stale }
+    return { open, stale, reviewed }
   }, [actions, filter])
 
   const { recentDone, archivedDone } = useMemo(() => {
@@ -71,14 +135,14 @@ export function ActionsPage() {
     const archivedDone: ActionItem[] = []
 
     const sorted = [...doneActions].sort((a, b) => {
-      const dateA = a.closedDate || a.sourceDate
-      const dateB = b.closedDate || b.sourceDate
+      const dateA = closedDate(a) || a.sourceDate
+      const dateB = closedDate(b) || b.sourceDate
       return dateB.localeCompare(dateA)
     })
 
     for (const a of sorted) {
       if (filter && a.command !== filter) continue
-      const refDate = a.closedDate || a.sourceDate
+      const refDate = closedDate(a) || a.sourceDate
       if (daysSince(refDate) <= RECENT_DONE_DAYS) {
         recentDone.push(a)
       } else {
@@ -89,7 +153,7 @@ export function ActionsPage() {
   }, [doneActions, filter])
 
   const handleDoneEnter = useCallback((e: React.MouseEvent, a: ActionItem) => {
-    if (!a.resolution && !a.closedDate) return
+    if (!resolution(a) && !closedDate(a)) return
     const target = e.currentTarget as HTMLElement
     window.clearTimeout(hoverTimer.current)
     hoverTimer.current = window.setTimeout(() => {
@@ -134,12 +198,21 @@ export function ActionsPage() {
       )}
 
       <div className="actions-columns">
+        <div className="actions-column actions-column-reviewed">
+          <div className="actions-column-header">Reviewed ({reviewed.length})</div>
+          <div>
+            {reviewed.length === 0
+              ? <p className="entry-stat">No reviewed items.</p>
+              : reviewed.map((action) => <ReviewedActionRow key={action.id} action={action} />)}
+          </div>
+        </div>
+
         <div className="actions-column">
           <div className="actions-column-header">Open ({open.length})</div>
           <div>
             {open.length === 0
               ? <p className="entry-stat">No open items.</p>
-              : open.map((a, i) => <ActionItemRow key={`open-${i}`} a={a} />)}
+              : open.map((a) => <ActionItemRow key={a.id ?? `${a.command}-${a.sourceDate}-${a.description}`} a={a} />)}
           </div>
         </div>
 
@@ -148,7 +221,7 @@ export function ActionsPage() {
           <div>
             {stale.length === 0
               ? <p className="entry-stat">No stale items.</p>
-              : stale.map((a, i) => <ActionItemRow key={`stale-${i}`} a={a} extraClass="action-stale" />)}
+              : stale.map((a) => <ActionItemRow key={a.id ?? `${a.command}-${a.sourceDate}-${a.description}`} a={a} extraClass="action-stale" />)}
           </div>
         </div>
 
@@ -200,8 +273,8 @@ export function ActionsPage() {
       <ActionPopover
         visible={!!popover.anchor}
         anchor={popover.anchor}
-        resolution={popover.item?.resolution}
-        closedDate={popover.item?.closedDate}
+        resolution={popover.item ? resolution(popover.item) : undefined}
+        closedDate={popover.item ? closedDate(popover.item) : undefined}
       />
     </div>
   )

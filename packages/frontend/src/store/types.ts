@@ -1,4 +1,5 @@
 // Shared types for the React frontend — mirrors the static JSON API shape
+import type { CanonicalAction, ReviewedCanonicalAction } from '../../../../src/action-model.ts'
 
 export interface TypedTag {
   name: string
@@ -22,15 +23,8 @@ export interface DecisionEntry {
   relatedTags: string[]
 }
 
-export interface ActionItem {
-  command: string
-  description: string
-  repo: string
-  status: string
-  sourceDate: string
-  closedDate?: string
-  resolution?: string
-}
+export type ActionItem = CanonicalAction
+export type ReviewedActionItem = ReviewedCanonicalAction
 
 export interface ArticleProvenance {
   schemaVersion: 1

@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewed-action-admission",
+  "admissionId": "reviewed-actions-2026-10-15",
+  "recordedAt": "2026-10-16T12:00:00Z",
+  "baseline": {
+    "commitSha": "061324ad4738c2594978bc059aa9578cc876a62d",
+    "openActionCount": 85,
+    "openActionsSha256": "0d8170282fd66e5e8a0b70b1b8a4455d16f82d48e5b8e4f55aca20824743dae1",
+    "doneActionCount": 122,
+    "doneActionsSha256": "8eb5c1db6ca27a2616748582d5a95dec979bf149f9720af29217dc87d286c00f"
+  },
+  "source": {
+    "repository": "ojfbot/daily-logger",
+    "articlePath": "_articles/2026-10-15.md",
+    "articleDate": "2026-10-15",
+    "commitSha": "df3a8ecccbea37b0bf20b65f50becd90b9632c1e",
+    "blobSha": "2da806aa48b403d9d20901ef0096df26900c49bc",
+    "articleSha256": "df49ebbbbb4f23e40204efb50cff29f5f8f316db8e70a053944df2fb126adc25"
+  },
+  "historicalHold": {
+    "parserVersion": "argument-bearing-v1",
+    "throughDate": "2026-10-14",
+    "expectedCount": 138,
+    "reason": "Historical argument-bearing suggestions remain outside the canonical queue until separately reviewed and admitted."
+  },
+  "authority": {
+    "admissionApproved": true,
+    "executionAuthorityGranted": false,
+    "settlementAuthorityGranted": false,
+    "broadHistoricalBackfillApproved": false
+  },
+  "items": [
+    {
+      "id": "act-2026-10-15-investigate-66e04675dca0",
+      "allocatedAt": "2026-10-16T12:00:00Z",
+      "previousProductionActionId": null,
+      "sourceLine": 96,
+      "suggestionLineSha256": "66e04675dca0e5fa3a01ad0888d8aaf5ef1992821a7bf4658885466c10b7fb5d",
+      "command": "/investigate",
+      "invocation": "/investigate morning-cockpit#57 — multi-account GitHub identity boundary for source-record contracts",
+      "description": "The Dolt/handoff identity boundary is accepted (Decision 16). Issue #57 remains open for the source-specific GitHub and producer/provenance identity questions. Define the source-specific GitHub contract before emitting GitHub records. Account provisioning is deferred to dedicated follow-up; exploring whether a GitHub App or service/machine identity could avoid multiple interactive accounts is a research question only. Other work within the accepted Dolt/handoff scope may continue. This gates future inspector work only when it crosses into GitHub source territory.",
+      "repo": "morning-cockpit",
+      "disposition": {
+        "kind": "deferred",
+        "owner": {
+          "threadId": "01a140cd-9138-7b72-ab14-53796b5f12ba",
+          "title": "GitHub service identities: defer setup, compare options"
+        },
+        "reason": "The source-specific GitHub identity research is parked; no account, credential, billing, or provider action is authorized.",
+        "nextSafeRetry": "Resume only when the parked owner session is explicitly reactivated or GitHub-source emission crosses the accepted conditional gate."
+      }
+    },
+    {
+      "id": "act-2026-10-15-validate-bf0fbc1d6c71",
+      "allocatedAt": "2026-10-16T12:00:00Z",
+      "previousProductionActionId": null,
+      "sourceLine": 97,
+      "suggestionLineSha256": "bf0fbc1d6c71e969af9eb94c52dee0cc2969077355d9682699a44e88e8c31040",
+      "command": "/validate",
+      "invocation": "/validate core#537 vendor byte-comparison gate — clean re-checkout then single-byte SDL mutation",
+      "description": "Repeatable maintenance replay. The byte-equality gate and CI wiring were introduced June 27; the accepted-candidate CI includes a successful drift-gate step. The editorial source-backed review performed a local replay: baseline 3 passed, one-byte SDL documentation mutation failed byte equality (other 2 controls passed), restoration passed all 3. This is not a remotely dispatched negative CI run, branch-protection audit, or hermetic dependency install. Rerun when relevant source or validation changes land.",
+      "repo": "core",
+      "disposition": {
+        "kind": "completed-existing-evidence",
+        "evidence": [
+          {
+            "kind": "repository-file",
+            "path": "reviews/articles/2026-10-15-df3a8ecccbea37b0bf20b65f50becd90b9632c1e.md",
+            "commitSha": "68505bbb3478f40b2b9905c8117bfc5bfae055b4",
+            "blobSha": "2661c0d9422d10e8bf88d2fbee0c2d29ae98f3a4",
+            "sha256": "25ecc6be0e0fffbf11bc6ef1a0244cd8a418d12364e9becdaf36ac9f9467786b",
+            "qualification": "Accepted correction verification records baseline 3/3, one-byte mutation 2/3 with byte-equality failure, and restored 3/3."
+          },
+          {
+            "kind": "external-local-receipt",
+            "locator": ".handoff/daily-review-20261015/actions/evidence/gate-probe-receipt.json",
+            "sha256": "efd2cb675289e8d3c4405ac0cdd7a1baa4f588c6209420bdba0be6c1e63e14d1",
+            "qualification": "Owned local receipt; not a remote negative CI dispatch, branch-protection audit, or hermetic install.",
+            "verification": "external-not-verified"
+          }
+        ],
+        "qualification": "Existing evidence completes this bounded maintenance replay without settling a production action ID or certifying an always-on operating loop.",
+        "nextSafeRetry": "Reuse this evidence until relevant contract or validation source changes; do not rerun merely because this intake projection is rebuilt."
+      }
+    },
+    {
+      "id": "act-2026-10-15-orient-a778b3b2c5af",
+      "allocatedAt": "2026-10-16T12:00:00Z",
+      "previousProductionActionId": null,
+      "sourceLine": 98,
+      "suggestionLineSha256": "a778b3b2c5af5951ab8ccc41a29be31c3900df8305c18b459751ffefb8c16380",
+      "command": "/orient",
+      "invocation": "/orient morning-cockpit inspector — locate SDL path, vendored copy path, and inspector entry point",
+      "description": "Optional documentation refinement. An existing inspector paragraph explains the feature; adding the three file paths (`packages/read-model-contract/schema.graphql` in core; `packages/server/src/schema/read-model.graphql` and `packages/renderer/src/components/EvidenceView.tsx` in morning-cockpit) plus a dated acceptance pointer to the repo README or CONTRIBUTING doc can improve re-entry. This edit has not shipped.",
+      "repo": "morning-cockpit",
+      "disposition": {
+        "kind": "pending-receipt",
+        "owner": {
+          "threadId": "01a14181-6436-7ed2-9ef0-b3456e51c2a7",
+          "title": "Document inspector paths in morning-cockpit"
+        },
+        "acceptanceCriteria": [
+          "README or CONTRIBUTING names the core SDL, vendored SDL, and EvidenceView entry paths.",
+          "The current orientation includes a dated accepted-source pointer without rewriting historical proposal records.",
+          "An accepted receipt pins the resulting source head and verification."
+        ],
+        "acceptedReceipt": null,
+        "nextSafeRetry": "Review and publish the assigned candidate through the normal morning-cockpit path, then record an accepted-main exact-head receipt; keep pending without redispatch until then."
+      }
+    }
+  ]
+}
