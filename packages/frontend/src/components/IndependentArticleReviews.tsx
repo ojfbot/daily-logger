@@ -9,6 +9,114 @@ interface Props { date: string; visibleBlobSha: string | undefined; login: strin
 type LoadState = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; projection: ReviewProjection }
 const responseSchema = z.object({ url: z.url(), requestId: z.uuid(), reused: z.boolean() })
 
+type ReviewEntry = ReviewProjection['entries'][number]
+
+interface ReviewRevisionGroup {
+  articleBlobSha: string
+  entries: ReviewEntry[]
+}
+
+export function groupReviewsByArticle(entries: ReviewProjection['entries']): ReviewRevisionGroup[] {
+  const groups = new Map<string, ReviewRevisionGroup>()
+  for (const entry of entries) {
+    const articleBlobSha = entry.review.article.blobSha
+    const group = groups.get(articleBlobSha) ?? { articleBlobSha, entries: [] }
+    group.entries.push(entry)
+    groups.set(articleBlobSha, group)
+  }
+  const ordered = [...groups.values()]
+  for (const group of ordered) {
+    group.entries.sort((left, right) => right.review.reviewedAt.localeCompare(left.review.reviewedAt) || left.review.id.localeCompare(right.review.id))
+  }
+  function priority(group: ReviewRevisionGroup): number {
+    if (group.entries.some((entry) => entry.freshness === 'current')) return 0
+    if (group.entries.some((entry) => entry.freshness === 'visible_revision_unknown')) return 1
+    return 2
+  }
+  return ordered.sort((left, right) => priority(left) - priority(right)
+    || (right.entries[0]?.review.reviewedAt ?? '').localeCompare(left.entries[0]?.review.reviewedAt ?? '')
+    || left.articleBlobSha.localeCompare(right.articleBlobSha))
+}
+
+function freshnessLabel(freshness: ReviewEntry['freshness']): string {
+  switch (freshness) {
+    case 'current': return 'Matches visible article'
+    case 'stale': return 'Historical article revision; a fresh review is needed'
+    case 'visible_revision_unknown': return 'Visible article revision unknown'
+  }
+}
+
+interface ReviewRecordGroupsProps {
+  projection: ReviewProjection
+  selected: string[]
+  sending: boolean
+  onToggle: (key: string, checked: boolean) => void
+}
+
+interface CompletedReviewFindingsProps {
+  review: Extract<ReviewEntry['review'], { result: 'completed' }>
+  freshness: ReviewEntry['freshness']
+  selected: string[]
+  sending: boolean
+  onToggle: (key: string, checked: boolean) => void
+}
+
+function CompletedReviewFindings({ review, freshness, selected, sending, onToggle }: CompletedReviewFindingsProps) {
+  return <>
+    {review.findings.length === 0 && <p>The reviewer reported no findings within the stated scope.</p>}
+    {(['confirmed_error', 'unverified_claim'] satisfies Array<'confirmed_error' | 'unverified_claim'>).map((classification) => <div key={classification}>
+      <h5>{classification === 'confirmed_error' ? 'Reviewer reports confirmed errors' : 'Claims the reviewer could not verify'}</h5>
+      {review.findings.filter((finding) => finding.classification === classification).map((finding) => {
+        const key = `${review.id}:${finding.id}`
+        return <details key={finding.id} className="independent-review-finding"><summary>{finding.id}: {finding.title} ({finding.disposition.kind})</summary>
+          <p>{finding.location}</p><p>{finding.explanation}</p>
+          <ul>{finding.evidenceUrls.map((url, index) => <li key={url}><a href={url}>Primary evidence {index + 1}</a></li>)}</ul>
+          <p><strong>Proposed correction:</strong> {finding.correction}</p>
+          {finding.disposition.kind !== 'open' && <p>Human disposition by {finding.disposition.actor}: <a href={finding.disposition.evidenceUrl}>Read the decision</a></p>}
+          <label><input type="checkbox" disabled={sending || freshness !== 'current' || finding.disposition.kind !== 'open'} checked={selected.includes(key)} onChange={(event) => onToggle(key, event.currentTarget.checked)} /> Select {finding.id} for revision feedback</label>
+        </details>
+      })}
+    </div>)}
+  </>
+}
+
+export function ReviewRecordGroups({ projection, selected, sending, onToggle }: ReviewRecordGroupsProps) {
+  return groupReviewsByArticle(projection.entries).map((group) => {
+    const groupFreshness = group.entries.every((entry) => entry.freshness === 'current')
+      ? 'Visible article revision'
+      : group.entries.every((entry) => entry.freshness === 'stale')
+        ? 'Historical article revision'
+        : 'Visible revision unknown or mixed'
+    return <section className="review-revision-group" key={group.articleBlobSha} aria-label={`Reviews of article blob ${group.articleBlobSha}`}>
+      <header className="review-revision-header">
+        <div><h3>Reviewed revision <code>{group.articleBlobSha.slice(0, 12)}</code></h3><p>{groupFreshness} · {group.entries.length} review {group.entries.length === 1 ? 'record' : 'records'}</p></div>
+        <code className="review-revision-blob">{group.articleBlobSha}</code>
+      </header>
+      {group.entries.map((entry) => <article className="independent-review-record" key={entry.review.id}>
+        <h4>{entry.review.reviewer.name}</h4>
+        <p className="review-record-state">{entry.review.result === 'completed' ? 'Completed review' : 'Failed review'} · {entry.lifecycle === 'published' ? 'published' : 'proposed'} · {freshnessLabel(entry.freshness)}</p>
+        <dl className="review-record-summary">
+          <div><dt>Recorded reviewer claim</dt><dd>{entry.review.reviewer.name}</dd></div>
+          <div><dt>Recorded session claim</dt><dd>{entry.review.reviewer.sessionId ?? 'Not recorded'}</dd></div>
+          <div><dt>Review ID</dt><dd><code>{entry.review.id}</code></dd></div>
+          <div><dt>Reviewed at</dt><dd>{entry.review.reviewedAt}</dd></div>
+        </dl>
+        {entry.pullRequest
+          ? <p>Submitted through GitHub by <strong>{entry.pullRequest.author}</strong> in <a href={entry.pullRequest.url}>PR #{entry.pullRequest.number}</a> · {entry.pullRequest.merged ? 'merged' : entry.pullRequest.state}</p>
+          : <p>GitHub submission account not linked to this record.</p>}
+        <p className="review-identity-note">The repository records the reviewer and session claims above. GitHub authenticates the submitting account, not a separate person, model, or local session.</p>
+        <details><summary>Technical pins and scope</summary>
+          <dl><dt>Reviewed source commit</dt><dd><code>{entry.review.article.sourceCommitSha}</code></dd><dt>Article blob</dt><dd><code>{entry.review.article.blobSha}</code></dd><dt>Structured record blob</dt><dd><code>{entry.recordBlobSha}</code></dd><dt>Record ref</dt><dd><code>{entry.recordRef}</code></dd></dl>
+          <p>{entry.review.scope}</p><a href={entry.fullRecordUrl}>Read the full pinned review</a>{' | '}<a href={entry.recordUrl}>Read the structured record</a>
+        </details>
+        {entry.review.result === 'failed'
+          ? <p role="alert">Review failed: {entry.review.reason}. No clean-review claim is available.</p>
+          : <CompletedReviewFindings review={entry.review} freshness={entry.freshness} selected={selected} sending={sending} onToggle={onToggle} />}
+      </article>)}
+    </section>
+  })
+}
+
 export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscussionAvailabilityChange }: Props) {
   const dispatch = useAppDispatch()
   const [load, setLoad] = useState<LoadState>({ kind: 'loading' })
@@ -104,31 +212,7 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscu
       {visibleBlobSha && projection.currentBlobSha !== visibleBlobSha && <p role="alert">The visible article differs from current main. Reload the article before requesting changes.</p>}
       {projection.unavailable.map((reason) => <p role="alert" key={reason}>Review unavailable: {reason}</p>)}
       {projection.entries.length === 0 && <p>No eligible registered review was found. This is not a clean-review verdict.</p>}
-      {projection.entries.map((entry) => <div className="independent-review-record" key={entry.review.id}>
-        <h3>{entry.lifecycle === 'published' ? 'Published review record' : 'Proposed, unmerged review record'}</h3>
-        {entry.pullRequest && <p><a href={entry.pullRequest.url}>PR #{entry.pullRequest.number}</a> · {entry.pullRequest.merged ? 'merged' : entry.pullRequest.state} · submitted by GitHub account {entry.pullRequest.author}</p>}
-        <p>{entry.freshness === 'current' ? 'Matches visible article' : entry.freshness === 'stale' ? 'Stale: article changed; a fresh review is needed' : 'Visible revision unknown'}</p>
-        <details><summary>Review identity and scope</summary>
-          <dl><dt>Reviewer</dt><dd>{entry.review.reviewer.name}</dd><dt>Session</dt><dd>{entry.review.reviewer.sessionId ?? 'Unknown'}</dd><dt>Review timestamp</dt><dd>{entry.review.reviewedAt}</dd><dt>Reviewed source commit</dt><dd><code>{entry.review.article.sourceCommitSha}</code></dd><dt>Article blob</dt><dd><code>{entry.review.article.blobSha}</code></dd></dl>
-          <p>{entry.review.scope}</p><a href={entry.fullRecordUrl}>Read the full pinned review</a>{' | '}<a href={entry.recordUrl}>Read the structured record</a>
-        </details>
-        {entry.review.result === 'failed' ? <p role="alert">Review failed: {entry.review.reason}. No clean-review claim is available.</p> : <>
-          {entry.review.findings.length === 0 && <p>The reviewer reported no findings within the stated scope.</p>}
-          {(['confirmed_error', 'unverified_claim'] satisfies Array<'confirmed_error' | 'unverified_claim'>).map((classification) => <div key={classification}>
-            <h4>{classification === 'confirmed_error' ? 'Reviewer reports confirmed errors' : 'Claims the reviewer could not verify'}</h4>
-            {entry.review.result === 'completed' && entry.review.findings.filter((finding) => finding.classification === classification).map((finding) => {
-              const key = `${entry.review.id}:${finding.id}`
-              return <details key={finding.id} className="independent-review-finding"><summary>{finding.id}: {finding.title} ({finding.disposition.kind})</summary>
-                <p>{finding.location}</p><p>{finding.explanation}</p>
-                <ul>{finding.evidenceUrls.map((url, index) => <li key={url}><a href={url}>Primary evidence {index + 1}</a></li>)}</ul>
-                <p><strong>Proposed correction:</strong> {finding.correction}</p>
-                {finding.disposition.kind !== 'open' && <p>Human disposition by {finding.disposition.actor}: <a href={finding.disposition.evidenceUrl}>Read the decision</a></p>}
-                <label><input type="checkbox" disabled={sending || entry.freshness !== 'current' || finding.disposition.kind !== 'open'} checked={selected.includes(key)} onChange={(event) => { const checked = event.currentTarget.checked; changed(); setSelected((previous) => checked ? [...previous, key] : previous.filter((value) => value !== key)) }} /> Select {finding.id} for revision feedback</label>
-              </details>
-            })}
-          </div>)}
-        </>}
-      </div>)}
+      <ReviewRecordGroups projection={projection} selected={selected} sending={sending} onToggle={(key, checked) => { changed(); setSelected((previous) => checked ? [...previous, key] : previous.filter((value) => value !== key)) }} />
       <button type="button" disabled={sending || picked.length === 0} onClick={() => { changed(); setFeedback((previous) => [previous, ...picked.map(({ finding }) => finding.correction)].filter(Boolean).join('\n\n')) }}>Add selected corrections to feedback</button>
       <label htmlFor="independent-review-feedback">Revision feedback</label>
       <textarea id="independent-review-feedback" value={feedback} maxLength={30000} disabled={sending} onChange={(event) => { changed(); setFeedback(event.currentTarget.value) }} rows={6} />

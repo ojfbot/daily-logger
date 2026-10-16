@@ -88,7 +88,7 @@ async function fetchPRData(repo: string, number: number): Promise<PRData> {
 export function useGithubCache() {
   const commitCache = useRef(new Map<string, CacheEntry<CommitData>>())
   const prCacheRef = useRef(new Map<string, CacheEntry<PRData>>())
-  const [, forceUpdate] = useState(0)
+  const [cacheRevision, setCacheRevision] = useState(0)
 
   // Load sessionStorage on first call
   const initialized = useRef(false)
@@ -125,11 +125,11 @@ export function useGithubCache() {
       .then(data => {
         commitCache.current.set(key, { status: 'ok', data })
         saveCommitCache()
-        forceUpdate(n => n + 1)
+        setCacheRevision(n => n + 1)
       })
       .catch(err => {
         commitCache.current.set(key, { status: 'error', message: err instanceof Error ? err.message : 'Failed' })
-        forceUpdate(n => n + 1)
+        setCacheRevision(n => n + 1)
       })
 
     return { status: 'loading' }
@@ -144,15 +144,15 @@ export function useGithubCache() {
     fetchPRData(repo, number)
       .then(data => {
         prCacheRef.current.set(key, { status: 'ok', data })
-        forceUpdate(n => n + 1)
+        setCacheRevision(n => n + 1)
       })
       .catch(err => {
         prCacheRef.current.set(key, { status: 'error', message: err instanceof Error ? err.message : 'Failed' })
-        forceUpdate(n => n + 1)
+        setCacheRevision(n => n + 1)
       })
 
     return { status: 'loading' }
   }, [])
 
-  return { getCommit, getPR }
+  return { getCommit, getPR, cacheRevision }
 }

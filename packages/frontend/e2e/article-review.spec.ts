@@ -4,14 +4,15 @@ import { createReviewService } from '../../../api/_lib/article-review-service.js
 import { postSchema, requestRecordSchema } from '../../../shared/article-review.js'
 import { browserArticle, readArticleSnapshot } from '../../../tests/review-surface/article-snapshots.js'
 import { blob, createFixture, recordPath, review, seedOpenReview, today } from '../../../tests/review-surface/fixture.js'
+import type { CodeReference } from '../src/store/types.ts'
 
 type Fixture = ReturnType<typeof createFixture>
-async function mount(page: Page, fixture: Fixture, date: string, visibleBlob: string) {
+async function mount(page: Page, fixture: Fixture, date: string, visibleBlob: string, codeReferences: CodeReference[] = []) {
   const service = createReviewService(fixture.github)
   const baseURL = test.info().project.use.baseURL
   if (!baseURL) throw new Error('Browser base URL is required')
   const origin = new URL(baseURL).origin
-  const article = browserArticle(fixture.state.source, date)
+  const article = { ...browserArticle(fixture.state.source, date), codeReferences }
   expect(article.sourceBlobSha).toBe(visibleBlob)
   const browserWrites: string[] = []
   page.on('request', (request) => { if (request.method() !== 'GET') browserWrites.push(`${request.method()} ${new URL(request.url()).pathname}`) })
@@ -46,10 +47,10 @@ test('today: editor and agent agree; request changes preserves exact text and ex
   const fixture = createFixture()
   const { service, browserWrites } = await mount(page, fixture, today, blob)
   const panel = page.locator('.independent-reviews')
-  await expect(panel.getByText('Published review record')).toBeVisible()
+  await expect(panel.getByText('Completed review · published · Matches visible article')).toBeVisible()
   await expect(panel.getByText('Matches visible article')).toBeVisible()
-  await panel.getByText('Review identity and scope').click()
-  await expect(panel.getByText(review.article.sourceCommitSha, { exact: true })).toBeVisible()
+  await panel.getByText('Technical pins and scope').click()
+  await expect(panel.getByText(review.article.sourceCommitSha, { exact: true }).first()).toBeVisible()
   await panel.locator('.independent-review-finding summary').first().click()
   await panel.getByLabel('Select C1 for revision feedback').check()
   await panel.getByRole('button', { name: 'Add selected corrections to feedback' }).click()
@@ -94,7 +95,7 @@ test('historical T1 walkthrough: original pin can request correction, then chang
   fixture.state.source = 'ce04d6762fa5a8e5dff59388849e3ea164aff940'
   await page.route('**/api/articles/2026-10-13.json', (route) => route.fulfill({ json: browserArticle(fixture.state.source, '2026-10-13') }))
   await page.reload()
-  await expect(panel.getByText('Stale: article changed; a fresh review is needed')).toBeVisible()
+  await expect(panel.getByText('Historical article revision; a fresh review is needed')).toBeVisible()
   await panel.locator('.independent-review-finding summary').first().click()
   await expect(panel.getByLabel('Select C1 for revision feedback')).toBeDisabled()
   expect(browserWrites).toEqual(['POST /api/article-reviews'])
@@ -106,7 +107,7 @@ test('open review PR appears before merge and a saved section note survives relo
   seedOpenReview(fixture.state, 367)
   const { browserWrites } = await mount(page, fixture, today, blob)
   const panel = page.locator('.independent-reviews')
-  await expect(panel.getByText('Proposed, unmerged review record')).toBeVisible()
+  await expect(panel.getByText('Completed review · proposed · Matches visible article')).toBeVisible()
   await expect(panel.getByRole('link', { name: 'PR #367' }).first()).toBeVisible()
   await expect(panel.getByText('Corrections and saved discussion go to', { exact: false })).toContainText('PR #367')
 
@@ -125,7 +126,7 @@ test('open review PR appears before merge and a saved section note survives relo
   expect(fixture.state.calls.filter((call) => !call.startsWith('GET '))).toEqual(['POST /repos/ojfbot/daily-logger/issues/367/comments'])
 
   await page.reload()
-  await expect(panel.getByText('Proposed, unmerged review record')).toBeVisible()
+  await expect(panel.getByText('Completed review · proposed · Matches visible article')).toBeVisible()
   expect(await page.locator('.chat-message-user .chat-message-content').textContent()).toBe(exact)
   await expect(page.getByRole('link', { name: 'Saved on GitHub' })).toBeVisible()
   expect(browserWrites).toEqual(['POST /api/article-reviews'])
@@ -138,7 +139,7 @@ test('open review PR appears before merge and a saved section note survives relo
   await expect(page.getByRole('button', { name: 'Save note' })).toBeDisabled()
   fixture.state.outage = false
   await panel.getByRole('button', { name: 'Refresh reviews and request history' }).click()
-  await expect(panel.getByText('Proposed, unmerged review record')).toBeVisible()
+  await expect(panel.getByText('Completed review · proposed · Matches visible article')).toBeVisible()
   await expect(page.locator('.chat-message-receipt')).not.toContainText('Last observed; refresh could not verify current correspondence')
   await testInfo.attach('proposed-review-and-persistent-note', {
     body: JSON.stringify({ pullRequest: 367, articleBlob: blob, browserWrites, githubWrites: fixture.state.calls.filter((call) => !call.startsWith('GET ')) }, null, 2),
@@ -157,6 +158,46 @@ test('an article without a durable GitHub target disables new section discussion
   await expect(page.getByRole('button', { name: 'New chat thread for What shipped' })).toBeDisabled()
 })
 
+test('open PR and commit popovers replace loading data in place without another pointer transition', async ({ page }, testInfo) => {
+  const fixture = createFixture()
+  await mount(page, fixture, today, blob, [{ text: '13ea71c', type: 'commit', repo: 'daily-logger' }])
+
+  let releasePullRequest: () => void = () => undefined
+  const pullRequestResponse = new Promise<void>((resolve) => { releasePullRequest = resolve })
+  await page.route('https://api.github.com/repos/ojfbot/daily-logger/pulls/347', async (route) => {
+    await pullRequestResponse
+    await route.fulfill({ json: { number: 347, title: 'Preserve editorial feedback exactly', state: 'open', merged: false,
+      user: { login: 'ojfbot' }, created_at: '2026-10-11T12:00:00Z', html_url: 'https://github.com/ojfbot/daily-logger/pull/347',
+      additions: 21, deletions: 8, labels: [] } })
+  })
+
+  const pullRequestLink = page.locator('.article-content a[href="https://github.com/ojfbot/daily-logger/pull/347"]').first()
+  await pullRequestLink.hover()
+  const popover = page.locator('.commit-popover')
+  await expect(popover.getByText('Loading...', { exact: true })).toBeVisible()
+  releasePullRequest()
+  await expect(popover.getByText('Preserve editorial feedback exactly', { exact: true })).toBeVisible()
+  await expect(popover.getByText('Loading...', { exact: true })).toHaveCount(0)
+  await page.screenshot({ path: testInfo.outputPath('pr-popover-resolved-without-pointer-move.png') })
+
+  await page.mouse.move(0, 0)
+  let releaseCommit: () => void = () => undefined
+  const commitResponse = new Promise<void>((resolve) => { releaseCommit = resolve })
+  await page.route('https://api.github.com/repos/ojfbot/daily-logger/commits/13ea71c', async (route) => {
+    await commitResponse
+    await route.fulfill({ json: { sha: '13ea71c'.padEnd(40, '0'), html_url: 'https://github.com/ojfbot/daily-logger/commit/13ea71c',
+      commit: { message: 'Publish the October 12 article', author: { name: 'ojfbot', date: '2026-10-12T12:00:00Z' } } } })
+  })
+
+  const commitReference = page.locator('.article-content code').filter({ hasText: '13ea71c' }).first()
+  await commitReference.hover()
+  await expect(popover.getByText('Loading...', { exact: true })).toBeVisible()
+  releaseCommit()
+  await expect(popover.getByText('Publish the October 12 article', { exact: true })).toBeVisible()
+  await expect(popover.getByText('Loading...', { exact: true })).toHaveCount(0)
+  await page.screenshot({ path: testInfo.outputPath('commit-popover-resolved-without-pointer-move.png') })
+})
+
 test('narrow screen: proposed records, unknown data and network failure stay distinct and retain feedback', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const fixture = createFixture()
@@ -164,7 +205,7 @@ test('narrow screen: proposed records, unknown data and network failure stay dis
   fixture.state.registry.proposals = [{ date: today, path: recordPath, pullRequest: 999, headSha: fixture.state.prHead }]
   await mount(page, fixture, today, blob)
   const panel = page.locator('.independent-reviews')
-  await expect(panel.getByText('Proposed, unmerged review record')).toBeVisible()
+  await expect(panel.getByText('Completed review · proposed · Matches visible article')).toBeVisible()
   await panel.locator('.independent-review-finding summary').first().click()
   await panel.getByLabel('Select C1 for revision feedback').focus()
   await page.keyboard.press('Space')

@@ -14,13 +14,32 @@ export function useArticlePopovers(
   const [popover, setPopover] = useState<PopoverState>({ visible: false, anchor: null, variant: { kind: 'ref', type: 'config', label: '', detail: '', url: null } })
   const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const activeAnchor = useRef<HTMLElement | null>(null)
-  const { getCommit, getPR } = useGithubCache()
+  const { getCommit, getPR, cacheRevision } = useGithubCache()
 
   const hidePopover = useCallback(() => {
     if (showTimer.current) { clearTimeout(showTimer.current); showTimer.current = null }
     activeAnchor.current = null
     setPopover(p => ({ ...p, visible: false }))
   }, [])
+
+  useEffect(() => {
+    setPopover((current) => {
+      if (!current.visible) return current
+      if (current.variant.kind === 'commit') {
+        const latest = getCommit(current.variant.repo, current.variant.text)
+        return latest === current.variant.entry
+          ? current
+          : { ...current, variant: { ...current.variant, entry: latest } }
+      }
+      if (current.variant.kind === 'pr') {
+        const latest = getPR(current.variant.repo, current.variant.number)
+        return latest === current.variant.entry
+          ? current
+          : { ...current, variant: { ...current.variant, entry: latest } }
+      }
+      return current
+    })
+  }, [cacheRevision, getCommit, getPR])
 
   useEffect(() => {
     const el = contentRef.current
