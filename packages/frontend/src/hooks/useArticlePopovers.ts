@@ -19,12 +19,25 @@ export function useArticlePopovers(
   const hidePopover = useCallback(() => {
     if (showTimer.current) { clearTimeout(showTimer.current); showTimer.current = null }
     activeAnchor.current = null
-    setPopover(p => ({ ...p, visible: false }))
+    setPopover(p => p.visible || p.anchor ? { ...p, visible: false, anchor: null } : p)
   }, [])
 
   useEffect(() => {
     setPopover((current) => {
+      if (!current.visible || !current.anchor) return current
+      if (current.anchor.isConnected && contentRef.current?.contains(current.anchor)) return current
+      activeAnchor.current = null
+      return { ...current, visible: false, anchor: null }
+    })
+  })
+
+  useEffect(() => {
+    setPopover((current) => {
       if (!current.visible) return current
+      if (!current.anchor?.isConnected || !contentRef.current?.contains(current.anchor)) {
+        activeAnchor.current = null
+        return { ...current, visible: false, anchor: null }
+      }
       if (current.variant.kind === 'commit') {
         const latest = getCommit(current.variant.repo, current.variant.text)
         return latest === current.variant.entry
@@ -39,7 +52,7 @@ export function useArticlePopovers(
       }
       return current
     })
-  }, [cacheRevision, getCommit, getPR])
+  }, [cacheRevision, contentRef, getCommit, getPR])
 
   useEffect(() => {
     const el = contentRef.current
@@ -58,21 +71,21 @@ export function useArticlePopovers(
       if (ref.type === 'commit') element.classList.add('commit-hash')
 
       const onEnter = () => {
+        activeAnchor.current = element
         if (ref.type === 'commit' && ref.repo) {
           const entry = getCommit(ref.repo, ref.text)
           if (entry.status === 'ok') {
-            activeAnchor.current = element
             setPopover({ visible: true, anchor: element, variant: { kind: 'commit', entry, text: ref.text, repo: ref.repo } })
             return
           }
           showTimer.current = setTimeout(() => {
-            activeAnchor.current = element
+            if (activeAnchor.current !== element || !element.isConnected || !el.contains(element)) return
             const latest = getCommit(ref.repo!, ref.text)
             setPopover({ visible: true, anchor: element, variant: { kind: 'commit', entry: latest, text: ref.text, repo: ref.repo! } })
           }, SHOW_DELAY)
         } else {
           showTimer.current = setTimeout(() => {
-            activeAnchor.current = element
+            if (activeAnchor.current !== element || !element.isConnected || !el.contains(element)) return
             const resolved = resolveRef(ref)
             setPopover({ visible: true, anchor: element, variant: { kind: 'ref', type: ref.type, label: resolved.label, detail: resolved.detail, url: resolved.url } })
           }, SHOW_DELAY)
@@ -109,14 +122,14 @@ export function useArticlePopovers(
       prEl.classList.add('code-ref', 'ref-type-pr')
 
       const onEnter = () => {
+        activeAnchor.current = prEl
         const entry = getPR(repo, prNumber)
         if (entry.status === 'ok') {
-          activeAnchor.current = prEl
           setPopover({ visible: true, anchor: prEl, variant: { kind: 'pr', entry, repo, number: prNumber } })
           return
         }
         showTimer.current = setTimeout(() => {
-          activeAnchor.current = prEl
+          if (activeAnchor.current !== prEl || !prEl.isConnected || !el.contains(prEl)) return
           const latest = getPR(repo, prNumber)
           setPopover({ visible: true, anchor: prEl, variant: { kind: 'pr', entry: latest, repo, number: prNumber } })
         }, SHOW_DELAY)

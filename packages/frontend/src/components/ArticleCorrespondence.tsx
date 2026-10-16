@@ -83,10 +83,14 @@ export function ArticleCorrespondence({ projection }: { projection: ReviewProjec
     {projection.correspondence.length === 0 && <p>No correspondence was returned from the available sources. Check any source warnings above.</p>}
     {groups.map((group) => <section className="review-correspondence-source" key={group.key} aria-label={`${group.sourceKind === 'pilot_issue' ? 'Issue' : 'Pull request'} ${group.sourceNumber} correspondence`}>
       <header className="review-correspondence-source-header">
-        <h4>{group.pullRequest ? <a href={group.pullRequest.url}>PR #{group.sourceNumber}</a> : `Issue #${group.sourceNumber}`} · {sourceRole(group.sourceKind)}</h4>
+        <h4>{group.pullRequest
+          ? <a href={group.pullRequest.url}>PR #{group.sourceNumber}</a>
+          : group.sourceKind === 'pilot_issue' ? `Issue #${group.sourceNumber}` : `PR #${group.sourceNumber}`} · {sourceRole(group.sourceKind)}</h4>
         {group.pullRequest
           ? <dl><div><dt>State</dt><dd>{group.pullRequest.merged ? 'Merged' : group.pullRequest.state}</dd></div><div><dt>Current head</dt><dd><code>{group.pullRequest.headSha}</code></dd></div><div><dt>GitHub author</dt><dd>{group.pullRequest.author}</dd></div></dl>
-          : <p>Durable issue correspondence; no pull-request head applies.</p>}
+          : group.sourceKind === 'pilot_issue'
+            ? <p>Durable issue correspondence; no pull-request head applies.</p>
+            : <p>Pull-request metadata and head are unavailable from the current projection.</p>}
       </header>
       {group.items.length === 0 && <p>No correspondence was returned for this source.</p>}
       {group.items.map((item) => <details key={item.id} className="review-correspondence-item">
