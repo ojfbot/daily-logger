@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "if [ \"$(git rev-parse --is-shallow-repository)\" = \"true\" ]; then git fetch --unshallow --no-tags origin; fi && VITE_BASE_PATH=/ pnpm build:api && cd packages/frontend && VITE_BASE_PATH=/ pnpm build",
+  "buildCommand": "if [ \"$(git rev-parse --is-shallow-repository)\" = \"true\" ]; then git fetch --unshallow --no-tags https://github.com/ojfbot/daily-logger.git; fi && VITE_BASE_PATH=/ pnpm build:api && cd packages/frontend && VITE_BASE_PATH=/ pnpm build",
   "outputDirectory": "packages/frontend/dist",
   "framework": "vite",
   "rewrites": [
