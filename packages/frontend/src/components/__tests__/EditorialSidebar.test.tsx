@@ -46,6 +46,7 @@ async function click(label: string) {
 beforeEach(async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   vi.mocked(stampDraft).mockReset()
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json({ status: 'none' })))
   identity.login = 'editor'
   identity.includeInRevision = true
   identity.blob = 'a'.repeat(40)
@@ -132,6 +133,7 @@ describe('editorial revision notes', () => {
   })
 
   it('does not persist an untouched empty draft or allow whitespace-only additions', async () => {
+    expect(container.querySelector('label')?.textContent?.trim()).toBe('Edit suggestion')
     expect(sessionStorage.getItem('dl-editorial:editor:2026-10-10')).toBeNull()
     await enter(0, '   \n  ')
     expect(container.querySelector('button[aria-label="Add another edit suggestion"]')?.hasAttribute('disabled')).toBe(true)

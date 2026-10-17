@@ -5,7 +5,8 @@ import { useAppDispatch } from '../store/hooks.ts'
 import { hydrateCorrespondence } from '../store/chatSlice.ts'
 import { ArticleCorrespondence } from './ArticleCorrespondence.tsx'
 
-interface Props { date: string; visibleBlobSha: string | undefined; login: string; onDiscussionAvailabilityChange: (available: boolean) => void }
+export type DiscussionAvailability = 'loading' | 'ready' | 'stale' | 'unavailable'
+interface Props { date: string; visibleBlobSha: string | undefined; login: string; onDiscussionAvailabilityChange: (availability: DiscussionAvailability) => void }
 type LoadState = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; projection: ReviewProjection }
 const responseSchema = z.object({ url: z.url(), requestId: z.uuid(), reused: z.boolean() })
 
@@ -153,7 +154,7 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscu
   useEffect(() => {
     const controller = new AbortController()
     setLoad({ kind: 'loading' })
-    onDiscussionAvailabilityChange(false)
+    onDiscussionAvailabilityChange('loading')
     dispatch(hydrateCorrespondence({ date, visibleBlobSha: visibleBlobSha ?? null, login, items: [], complete: false }))
     fetch(`/api/article-reviews?date=${date}${visibleBlobSha ? `&visibleBlobSha=${visibleBlobSha}` : ''}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal })
       .then(async (response) => {
@@ -162,10 +163,11 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscu
       })
       .then((projection) => { if (!controller.signal.aborted) {
         setLoad({ kind: 'ready', projection })
-        onDiscussionAvailabilityChange(!!visibleBlobSha && projection.currentBlobSha === visibleBlobSha && !!projection.requestTarget)
+        onDiscussionAvailabilityChange(visibleBlobSha && projection.currentBlobSha && projection.currentBlobSha !== visibleBlobSha
+          ? 'stale' : visibleBlobSha && projection.currentBlobSha === visibleBlobSha && projection.requestTarget ? 'ready' : 'unavailable')
       } })
       .catch((error: unknown) => { if (!controller.signal.aborted) {
-        onDiscussionAvailabilityChange(false)
+        onDiscussionAvailabilityChange('unavailable')
         dispatch(hydrateCorrespondence({ date, visibleBlobSha: visibleBlobSha ?? null, login, items: [], complete: false }))
         setLoad({ kind: 'error', message: error instanceof Error ? error.message : 'Review data unavailable' })
       } })

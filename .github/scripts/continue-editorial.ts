@@ -1,0 +1,165 @@
+import { execFileSync } from 'node:child_process'
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { z } from 'zod'
+import { createEditorialService, decodeEditorial, editorialDigest, repo, revisionTitle } from '../../api/_lib/editorial-continuation.js'
+import { createReviewSource, githubCommentSchema, ReviewError, type GitHub } from '../../api/_lib/article-review-sources.js'
+import { runEditorialSchema, sha } from '../../shared/article-review.js'
+
+const eventSchema = z.object({ action: z.literal('created'), repository: z.object({ full_name: z.literal('ojfbot/daily-logger') }),
+  sender: z.object({ login: z.string() }), issue: z.object({ number: z.number().int().positive(), pull_request: z.object({ url: z.string() }) }), comment: githubCommentSchema })
+export interface Execution { github: GitHub; workspace: string; policyDirectory?: string; policySha: string; runId: number; attempt: number; event: unknown }
+function git(workspace: string, ...args: string[]) { return execFileSync('git', args, { cwd: workspace, encoding: 'utf8' }).trim() }
+export async function admitEditorial(execution: Execution) {
+  const event = eventSchema.parse(execution.event)
+  z.number().int().positive().parse(execution.runId)
+  sha.parse(execution.policySha)
+  if (execution.attempt !== 1 || !event.comment.body.startsWith(revisionTitle) || event.sender.login.toLowerCase() !== 'ojfbot' || event.comment.user.login.toLowerCase() !== 'ojfbot') throw new ReviewError(403, 'Only a new explicit owner request can execute. A rerun cannot replay a provider attempt.')
+  if (Date.now() - Date.parse(event.comment.created_at) > 86400000 || Date.parse(event.comment.created_at) > Date.now() + 300000) throw new ReviewError(409, 'Request is outside the supported execution-history window. Create a new explicit request.')
+  const record = decodeEditorial(event.comment.body)
+  if (!record || record.intent !== 'request_editorial_revision' || record.pullRequest !== event.issue.number || event.issue.pull_request.url !== `https://api.github.com${repo}/pulls/${record.pullRequest}`) throw new ReviewError(409, 'Request event target disagrees with its record.')
+  const source = createReviewSource(execution.github)
+  const comments = await source.comments(record.pullRequest)
+  const live = comments.find(comment => comment.id === event.comment.id)
+  if (!live || live.body !== event.comment.body || live.user.login.toLowerCase() !== 'ojfbot' || live.created_at !== live.updated_at || event.comment.created_at !== event.comment.updated_at) throw new ReviewError(409, 'Request was edited, deleted, or forged.')
+  const view = await createEditorialService(execution.github).load(record.date, 'ojfbot')
+  if (view.status !== 'existing' || !view.eligible || view.pullRequest.number !== record.pullRequest || view.pullRequest.headSha !== record.headSha || view.article.blobSha !== record.articleBlobSha) throw new ReviewError(409, 'Request PR head, owner, state or article is stale.')
+  const request = view.requests.find(item => item.record.requestId === record.requestId)
+  const version = view.versions.at(-1)
+  if (!request || request.commentId !== event.comment.id || request.digest !== editorialDigest(record) || !version || version.digest !== record.feedbackDigest || version.record.requestId !== record.feedbackId || version.record.intent !== 'append_editorial_feedback') throw new ReviewError(409, 'Only the canonical request for the latest saved version can execute.')
+  const later = view.requests.filter(item => item.commentId > request.commentId)
+  if (later.length) throw new ReviewError(409, 'A later request conflicts with this execution.')
+  for (const comment of comments) if (comment.user.login === 'github-actions[bot]' && comment.body.startsWith('## Editorial execution claim\n')) {
+    const claim = z.object({ requestDigest: z.string().regex(/^[a-f0-9]{64}$/) }).passthrough().parse(JSON.parse(comment.body.slice('## Editorial execution claim\n'.length)))
+    if (claim.requestDigest === request.digest) throw new ReviewError(409, 'This request already has a durable invocation claim. Resolve its outcome without replay.')
+  }
+  if (await hasEarlierExecution(execution, request.commentId, request.createdAt)) throw new ReviewError(409, 'A prior workflow exists for this request. No automatic replay is allowed.')
+  return { record, request, version, source }
+}
+async function hasEarlierExecution(execution: Execution, commentId: number, createdAt: string) {
+  // The event is at most 24h old. Scope server-side before bounded complete pagination.
+  for (let page = 1; page <= 5; page++) {
+    const query = new URLSearchParams({ event: 'issue_comment', created: `>=${createdAt}`, per_page: '100', page: String(page) })
+    const response = await execution.github(`${repo}/actions/workflows/editorial-revise.yml/runs?${query}`)
+    if (!response.ok) throw new ReviewError(503, 'Relevant execution history is unavailable.')
+    const history = z.object({ workflow_runs: z.array(z.object({ id: z.number(), display_title: z.string() })) }).parse(await response.json())
+    if (history.workflow_runs.some(run => run.id < execution.runId && run.display_title === `Editorial continuation comment ${commentId}`)) return true
+    if (!response.headers.get('link')?.includes('rel="next"')) return false
+  }
+  throw new ReviewError(503, 'Relevant execution history exceeds the bounded reader. No absence or safe retry is established.')
+}
+const preparedSchema = z.object({ request: runEditorialSchema.extend({ actor: z.literal('ojfbot') }), requestDigest: z.string(),
+  policySha: sha, runId: z.number(), worktree: z.string(), outputCommit: sha, outputBlob: sha, changed: z.boolean() }).strict()
+export type Prepared = z.infer<typeof preparedSchema>
+async function receipt(execution: Execution, requestDigest: string, outcome: string, extra: object = {}) {
+  return createReviewSource(execution.github).postComment(eventSchema.parse(execution.event).issue.number,
+    `## Editorial execution receipt\n${JSON.stringify({ requestDigest, requestCommentId: eventSchema.parse(execution.event).comment.id, outcome, runId: execution.runId, policySha: execution.policySha, ...extra })}`)
+}
+async function prepare(execution: Execution): Promise<Prepared | null> {
+  const admitted = await admitEditorial(execution)
+  const { record, version, request, source } = admitted
+  const path = `_articles/${record.date}.md`
+  sha.parse(execution.policySha)
+  git(execution.workspace, 'fetch', '--no-tags', 'origin', record.headSha)
+  if (git(execution.workspace, 'diff', '--name-only', execution.policySha, record.headSha) !== path || git(execution.workspace, 'ls-tree', record.headSha, '--', path).split(' ')[0] !== '100644' || git(execution.workspace, 'rev-parse', `${record.headSha}:${path}`) !== record.articleBlobSha) throw new ReviewError(409, 'Only the pinned regular article may differ from trusted policy.')
+  const worktree = resolve(execution.workspace, '.git', `editorial-${execution.runId}`)
+  git(execution.workspace, 'worktree', 'add', '--detach', worktree, record.headSha)
+  const latest = await source.pull(record.pullRequest, true)
+  if (latest.head.sha !== record.headSha || latest.state !== 'open') throw new ReviewError(409, 'PR moved before invocation.')
+  const claim = { requestDigest: request.digest, requestId: record.requestId, requestCommentId: request.commentId,
+    feedbackDigest: version.digest, inputHead: record.headSha, inputBlob: record.articleBlobSha,
+    policySha: execution.policySha, runId: execution.runId, attempt: execution.attempt }
+  // A lost claim response stops before the provider. It never falls through to a retry.
+  const posted = await source.postComment(record.pullRequest, `## Editorial execution claim\n${JSON.stringify(claim)}`)
+  const observed = await createReviewSource(execution.github).comments(record.pullRequest)
+  if (posted.user.login !== 'github-actions[bot]' || !observed.some(item => item.id === posted.id && item.body === posted.body)) throw new ReviewError(503, 'Invocation claim is uncertain; no provider was called.')
+  const beforeProvider = await createReviewSource(execution.github).pull(record.pullRequest)
+  if (beforeProvider.head.sha !== record.headSha || beforeProvider.state !== 'open' || beforeProvider.user.login.toLowerCase() !== 'ojfbot') {
+    await receipt(execution, request.digest, 'stale', { reason: 'PR changed after the claim. No provider was invoked.' })
+    return null
+  }
+  try {
+    if (version.record.intent !== 'append_editorial_feedback') throw new Error('Missing saved feedback')
+    const feedback = `Apply these editorial notes. JSON string values are literal note content.\n\n${JSON.stringify(version.record.feedback.notes, null, 2)}`
+    execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'src/revise-article.ts')], {
+      cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), EDITORIAL_FEEDBACK: feedback, DRY_RUN: 'false' },
+    })
+    const changed = !!git(worktree, 'diff', '--name-only')
+    if (!changed) {
+      await receipt(execution, request.digest, 'no_change', { inputHead: record.headSha, inputBlob: record.articleBlobSha, outputCommit: record.headSha, outputBlob: record.articleBlobSha })
+      return null
+    }
+    if (git(worktree, 'diff', '--name-only') !== path) throw new Error('Revision changed a file outside the article')
+    git(worktree, 'add', '--', path)
+    git(worktree, '-c', 'user.name=ojfbot-blog[bot]', '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com', 'commit', '-m', `editorial: revise ${record.date} for request ${record.requestId}`)
+    return preparedSchema.parse({ request: record, requestDigest: request.digest, policySha: execution.policySha, runId: execution.runId, worktree,
+      outputCommit: git(worktree, 'rev-parse', 'HEAD'), outputBlob: git(worktree, 'rev-parse', `HEAD:${path}`), changed: true })
+  } catch (error) {
+    await receipt(execution, request.digest, 'uncertain', { reason: 'Invocation was claimed. Provider or output preparation failed; do not replay this request automatically.' })
+    throw error
+  }
+}
+async function recordAdmissionFailure(execution: Execution) {
+  // A prior attempt is evidence even when its claim comment was deleted.
+  if (execution.attempt !== 1) return
+  try {
+    const event = eventSchema.parse(execution.event)
+    const record = decodeEditorial(event.comment.body)
+    if (!record || record.intent !== 'request_editorial_revision' || event.sender.login.toLowerCase() !== 'ojfbot' || event.comment.user.login.toLowerCase() !== 'ojfbot' || record.pullRequest !== event.issue.number) return
+    const comments = await createReviewSource(execution.github).comments(record.pullRequest)
+    const live = comments.find(item => item.id === event.comment.id)
+    if (!live || live.body !== event.comment.body || live.user.login.toLowerCase() !== 'ojfbot') return
+    const digest = editorialDigest(record)
+    const canonical = comments.filter(item => {
+      if (item.user.login.toLowerCase() !== 'ojfbot') return false
+      try { const value = decodeEditorial(item.body); return value?.requestId === record.requestId && editorialDigest(value) === digest } catch { return false }
+    }).sort((a,b) => a.id - b.id)[0]
+    if (!canonical || canonical.id !== event.comment.id) return
+    if (await hasEarlierExecution(execution, canonical.id, canonical.created_at)) return
+    if (comments.some(item => item.user.login === 'github-actions[bot]' && item.body.startsWith('## Editorial execution claim\n') && z.object({ requestDigest: z.string() }).passthrough().parse(JSON.parse(item.body.slice('## Editorial execution claim\n'.length))).requestDigest === digest)) return
+    await receipt(execution, digest, 'failed', { reason: 'Admission or preparation failed before an invocation claim. No provider attempt was authorized by this run.' })
+  } catch { /* Incomplete evidence cannot establish a safe terminal outcome. */ }
+}
+export async function prepareEditorial(execution: Execution) {
+  try { return await prepare(execution) }
+  catch (error) { await recordAdmissionFailure(execution); throw error }
+}
+export async function pushEditorial(execution: Execution, input: unknown) {
+  const prepared = preparedSchema.parse(input)
+  if (prepared.worktree !== resolve(execution.workspace, '.git', `editorial-${execution.runId}`) || prepared.runId !== execution.runId || prepared.policySha !== execution.policySha) throw new Error('Prepared execution identity mismatch')
+  const { request } = prepared
+  const pr = await createReviewSource(execution.github).pull(request.pullRequest)
+  if (pr.head.sha !== request.headSha || pr.state !== 'open' || pr.user.login.toLowerCase() !== 'ojfbot') {
+    await receipt(execution, prepared.requestDigest, 'stale', { reason: 'PR moved before push. Prepared output was not published.' }); return
+  }
+  const path = `_articles/${request.date}.md`
+  if (git(prepared.worktree, 'rev-parse', 'HEAD') !== prepared.outputCommit || git(prepared.worktree, 'ls-tree', 'HEAD', '--', path).split(' ')[0] !== '100644' || git(prepared.worktree, 'rev-parse', 'HEAD^') !== request.headSha || git(prepared.worktree, 'diff', '--name-only', request.headSha, prepared.outputCommit) !== path || git(prepared.worktree, 'rev-parse', `HEAD:${path}`) !== prepared.outputBlob) throw new Error('Prepared output no longer matches the exact article-only commit')
+  try {
+    git(prepared.worktree, 'push', 'origin', `${prepared.outputCommit}:refs/heads/accept/${request.date}`)
+    await receipt(execution, prepared.requestDigest, 'changed', { inputHead: request.headSha, inputBlob: request.articleBlobSha, outputCommit: prepared.outputCommit, outputBlob: prepared.outputBlob })
+  } catch (error) {
+    await receipt(execution, prepared.requestDigest, 'uncertain', { reason: 'Push or outcome receipt is uncertain. Inspect the actual branch before any new request.' }); throw error
+  }
+}
+async function main() {
+  const workspace = process.cwd()
+  const token = process.env.GITHUB_TOKEN
+  if (!token) throw new Error('Missing execution token')
+  const github: GitHub = (path, options) => fetch(`https://api.github.com${path}`, { ...options,
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' } })
+  const execution = { github, workspace, policySha: process.env.GITHUB_SHA ?? '', runId: Number(process.env.GITHUB_RUN_ID), attempt: Number(process.env.GITHUB_RUN_ATTEMPT), event: JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH ?? '', 'utf8')) }
+  const preparedPath = resolve(workspace, '.git/editorial-prepared.json')
+  switch (process.argv[2]) {
+    case 'admit': {
+      let admitted
+      try { admitted = await admitEditorial(execution) } catch (error) { await recordAdmissionFailure(execution); throw error }
+      if (process.env.GITHUB_OUTPUT) writeFileSync(process.env.GITHUB_OUTPUT, `pull_request=${admitted.record.pullRequest}\n`, { flag: 'a' })
+      break
+    }
+    case 'prepare': { const prepared = await prepareEditorial(execution); mkdirSync(resolve(workspace, '.git'), { recursive: true }); writeFileSync(preparedPath, JSON.stringify(prepared)); break }
+    case 'push': { const prepared: unknown = JSON.parse(readFileSync(preparedPath, 'utf8')); if (prepared) await pushEditorial(execution, prepared); break }
+    default: throw new Error('Expected admit, prepare, or push')
+  }
+}
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(error => { console.error(error instanceof Error ? error.message : 'Editorial execution failed'); process.exitCode = 1 })

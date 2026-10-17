@@ -1,6 +1,7 @@
 # Implementation notes
 
 ## Deviations
+- 2026-10-17 UIK-03: the design assumed native focus scrolling would keep a growing note visible; the mounted sticky sidebar clipped it to a 0.344 viewport ratio, so height changes now reveal only the active textarea with nearest scrolling; capped keystrokes do not trigger that scroll.
 - 2026-10-16 (popover refresh): the existing cache invalidated React after GitHub preview data arrived, but the visible popover retained its original loading snapshot. Exposed the cache revision to the article-popover hook and refreshed the open commit or PR entry in place; browser coverage holds the pointer stationary through both transitions.
 - 2026-10-16 (multiple-reviewer cycle UI): the repair assumed the existing PR head and workflow receipt could identify each revision cycle, but PR #369's raw receipt named the base commit and Sonnet while the generated article provenance named Opus and the branch later moved again. Grouped current structured PR/review data and labeled body claims unverified; left historical per-event output heads to a future structured producer receipt.
 - 2026-10-13 (daily-347 exact content follow-up): prior review treated preexisting root-note trimming as compatible, but issue #339 requires exact literal content; kept raw nonblank strings and trimmed only for blankness, with a real UI HTTP assertion failing on baccf6d before the correction.
@@ -164,3 +165,13 @@
 - The owner-posted exact-head review showed that selection absence during a partial source outage is not evidence that the finding became invalid, and that pruning during a pending request breaks retry deduplication. Preserve missing selections while any source is unavailable, freeze pruning during submission, and commit the previously handoff-only pending-timer control; prune and rotate identity only when complete or present evidence proves the selection is no longer current and open.
 - The partial-outage repair assumed a retained missing selection could safely wait for source recovery, but an actor/state census showed it could invisibly block a still-visible selection with no editor escape path. Keep unknown intent by default, expose a deliberate Clear selections action that preserves feedback, and rotate the request identity only when the editor uses that control.
 - The explicit-clear repair assumed the existing persistence effect's empty-state no-op was equivalent to clearing storage, but an empty-feedback clear left the prior actor/source draft intact and restored it on remount. Remove that exact keyed draft when the cleared state is empty, or overwrite it synchronously when feedback remains, so the deliberate clear survives reload without crossing actor/source boundaries.
+
+## Deviations
+
+- UIK-01 owner-only continuation assumed an offline dependency install; one tarball was absent, so the isolated candidate uses a local dependency copy from a checkout with an identical SHA-256 pnpm lockfile. No dependency files changed.
+- UIK-01 native consumer testing found the tsx CLI IPC socket unavailable in the sandbox; the consumer runs the same native revision script with `pnpm exec node --import tsx`, preserving trusted code and MOCK_LLM behavior.
+- UIK-01 found no core OPM renderer executable in the skill's specified instructions; the local receipt includes a deterministic renderer for the appended in-zoom, checks pinned prior OPL is unchanged, and preserves its existing generated diagrams.
+- UIK-01 production browser fixtures assumed generated `api/articles/` assets were present; the clone lacks them, so builds use an ignored non-article placeholder while all article endpoints are intercepted. No article/action-data builder was run.
+
+- UIK-01 continuation-focused browser proof did not cover the hosted aggregate runner's legacy editorial test, which still selected the removed `.chat-send-btn`. Keep its exact save/literal/once assertions, address the accessible `Save note` action, and verify the complete default ten-test browser suite.
+- The local CI-mode browser control could not launch the pinned Chromium1248 runtime from the existing cache. Use the unchanged default Playwright configuration's local Chrome channel for the full before/after command; retain the setup failure and leave hosted Chromium execution to CI.

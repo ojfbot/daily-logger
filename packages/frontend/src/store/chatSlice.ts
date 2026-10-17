@@ -3,6 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 import { z } from 'zod'
 import { commentSchema, writeReceiptSchema, type ArticleComment, type ReviewProjection } from '../../../../shared/article-review.ts'
 import type { AuthUser } from './authSlice.ts'
+import { readAssistantKey } from '../utils/assistantConfig.ts'
 
 type SaveState = { kind: 'unsaved'; error: string | null } | { kind: 'saving' } | { kind: 'saved'; url: string; observation: 'current' | 'unavailable' }
 export interface ChatMessage {
@@ -123,8 +124,9 @@ export const sendMessage = createAsyncThunk<void, {
     const assertContext = () => {
       if (!sameContext(getState(), actor, generation)) throw new Error('Account context changed. The assistant response will not be saved under another session.')
     }
-    const apiKey = localStorage.getItem('dl-anthropic-key')
-    if (!apiKey) throw new Error('No API key configured. Save a note without a key, or configure one before asking the assistant.')
+    const configuration = readAssistantKey()
+    if (configuration.kind === 'missing') throw new Error('No API key configured. Save a note without a key, or configure one before asking the assistant.')
+    if (configuration.kind === 'storage_unavailable') throw new Error('Assistant settings are unavailable in this browser. You can still save notes.')
     await dispatch(saveMessage({ kind: 'new', messageId: requestId, threadId: payload.threadId, visibleBlobSha: payload.visibleBlobSha,
       content: payload.message, speaker: { kind: 'human' } })).unwrap()
     assertContext()
@@ -144,7 +146,7 @@ export const sendMessage = createAsyncThunk<void, {
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         signal: controller.signal,
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01',
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': configuration.key, 'anthropic-version': '2023-06-01',
           'anthropic-dangerous-direct-browser-access': 'true' },
         body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2048, system: systemPrompt,
           messages: thread.messages.filter((message) => message.articleBlobSha === payload.visibleBlobSha && message.save.kind === 'saved')
@@ -281,9 +283,7 @@ const chatSlice = createSlice({
     removeThread(state, action: PayloadAction<string>) {
       const thread = state.threads[action.payload]
       if (!thread) return
-      if (thread.messages.length) { thread.isHidden = true; return }
-      delete state.threads[action.payload]
-      state.threadOrder = state.threadOrder.filter((id) => id !== action.payload)
+      thread.isHidden = true
     },
     restoreHiddenThreads(state, action: PayloadAction<string>) {
       for (const thread of Object.values(state.threads)) if (thread.date === action.payload) thread.isHidden = false
@@ -322,7 +322,13 @@ const chatSlice = createSlice({
       if (thread?.assistantRequestId === action.meta.requestId) { thread.isStreaming = false; thread.assistantRequestId = null }
     }).addCase(sendMessage.rejected, (state, action) => {
       const thread = state.threads[action.meta.arg.threadId]
-      if (thread?.assistantRequestId === action.meta.requestId) { thread.isStreaming = false; thread.assistantRequestId = null; thread.error = action.error.message ?? 'Assistant request failed.' }
+      if (thread?.assistantRequestId === action.meta.requestId) {
+        thread.isStreaming = false
+        thread.assistantRequestId = null
+        const error = action.error.message ?? 'Assistant request failed.'
+        const latest = thread.messages[thread.messages.length - 1]
+        thread.error = latest?.save.kind === 'unsaved' && latest.save.error === error ? null : error
+      }
     })
   },
 })

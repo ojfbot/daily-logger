@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
 import { extractToken } from './_lib/cookies.js'
 import { createReviewService, ReviewError } from './_lib/article-review-service.js'
+import { createEditorialService } from './_lib/editorial-continuation.js'
 import { date, postSchema, sha } from '../shared/article-review.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -26,10 +27,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!allowed.includes(login.toLowerCase())) return res.status(403).json({ error: 'Not authorized for editorial reviews' })
     const service = createReviewService(github, new Set(allowed))
     if (method === 'GET') {
-      const query = z.object({ date, visibleBlobSha: sha.optional() }).parse(req.query)
+      const query = z.object({ date, visibleBlobSha: sha.optional(), view: z.literal('editorial').optional() }).parse(req.query)
+      if (query.view === 'editorial') return res.status(200).json(await createEditorialService(github).load(query.date, login))
       return res.status(200).json(await service.load(query.date, query.visibleBlobSha ?? null))
     }
     const request = postSchema.parse(typeof req.body === 'string' ? JSON.parse(req.body) : req.body)
+    if (request.intent === 'append_editorial_feedback' || request.intent === 'request_editorial_revision') return res.status(200).json(await createEditorialService(github).write(request, login))
     return res.status(200).json(request.intent === 'request_changes' ? await service.requestChanges(request, login) : await service.comment(request, login))
   } catch (error) {
     if (error instanceof ReviewError) return res.status(error.status).json({ error: error.message })

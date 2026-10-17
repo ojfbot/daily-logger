@@ -30,10 +30,12 @@ async function mount(page: Page, fixture: Fixture, date: string, visibleBlob: st
       const request = route.request()
       if (request.method() === 'GET') {
         const url = new URL(request.url())
+        if (url.searchParams.get('view') === 'editorial') return route.fulfill({ json: { status: 'none' } })
         return route.fulfill({ json: await service.load(date, url.searchParams.get('visibleBlobSha')) })
       }
       expect(request.headers()['x-requested-with']).toBe('XMLHttpRequest')
       const input = postSchema.parse(request.postDataJSON())
+      if (input.intent === 'append_editorial_feedback' || input.intent === 'request_editorial_revision') throw new Error('Unexpected continuation in independent-review fixture')
       return route.fulfill({ json: input.intent === 'request_changes'
         ? await service.requestChanges(input, 'editor')
         : await service.comment(input, 'editor') })

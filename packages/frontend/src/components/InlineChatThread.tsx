@@ -1,62 +1,92 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
 import { saveMessage, sendMessage, collapseThread, expandThread, removeThread, setRevisionInclusion, clearStream } from '../store/chatSlice.ts'
 import type { ChatThread } from '../store/chatSlice.ts'
 import { ChatMessage } from './ChatMessage.tsx'
+import { refreshAssistantStatus, useAssistantStatus } from '../utils/assistantConfig.ts'
+import { useAssistantSettings } from './AssistantSettings.tsx'
+import type { DiscussionAvailability } from './IndependentArticleReviews.tsx'
+import '../styles/discussion-composer.css'
+import { useDiscussionDraft } from './DiscussionDrafts.tsx'
 
 interface Props {
   thread: ChatThread
   articleTitle: string
   visibleBlobSha?: string
-  discussionReady: boolean
+  discussionAvailability: DiscussionAvailability
+  onHide?: () => void
   extractSection: (heading: string) => { heading: string; content: string; codeRefs: string[] } | null
 }
 
-export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discussionReady, extractSection }: Props) {
+type InputError = { kind: 'validation'; message: string } | { kind: 'save'; messageId: string; message: string }
+
+export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discussionAvailability, extractSection, onHide }: Props) {
   const dispatch = useAppDispatch()
-  const [input, setInput] = useState('')
-  const [inputError, setInputError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
-  const [submittedMessageId, setSubmittedMessageId] = useState<string | null>(null)
-  const submissionActive = useRef(false)
-  const [showKeyPrompt, setShowKeyPrompt] = useState(false)
-  const [hasApiKey, setHasApiKey] = useState(() => !!localStorage.getItem('dl-anthropic-key'))
-  const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const toggleRef = useRef<HTMLButtonElement>(null)
+  const { input: draftInput, setInput, submittedMessageId, setSubmittedMessageId } = useDiscussionDraft(thread.id, inputRef, toggleRef)
+  const [inputError, setInputError] = useState<InputError | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const submissionActive = useRef(false)
+  const assistantStatus = useAssistantStatus()
+  const openSettings = useAssistantSettings()
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const { user } = useAppSelector((s) => s.auth)
+  const queuedSubmission = !!submittedMessageId && thread.messages.some((message) => message.id === submittedMessageId && message.actor === user?.login)
+  const input = queuedSubmission ? '' : draftInput
   const canEdit = !!user?.authorized
+  const discussionReady = discussionAvailability === 'ready'
   const busy = submitting || thread.isStreaming || thread.messages.some((message) => message.save.kind === 'saving')
   const canPost = canEdit && !!visibleBlobSha && discussionReady && !!input.trim() && !busy
   const threadNum = thread.messages.filter((message) => message.role === 'user').length
+  const panelId = `discussion-panel-${thread.id}`
+  const inputId = `discussion-input-${thread.id}`
+  const reasonId = `discussion-reason-${thread.id}`
+  const consequenceId = `discussion-consequence-${thread.id}`
+  const section = extractSection(thread.section)
+  const canAsk = canPost && assistantStatus === 'saved_unverified' && !!section
+  const commonReason = !canEdit ? 'An authorized GitHub account is required to save.'
+    : !visibleBlobSha ? 'Article source unavailable. Saving is paused.'
+      : busy ? thread.isStreaming ? 'Assistant request in progress. Response not saved yet.' : 'Saving correspondence…'
+        : discussionAvailability === 'loading' ? 'Loading correspondence…'
+          : discussionAvailability === 'stale' ? 'Article changed. Refresh before saving.'
+            : discussionAvailability === 'unavailable' ? 'Correspondence unavailable. Your draft is kept here.'
+              : !input.trim() ? 'Write a note or question.' : null
+  const actionReason = commonReason ?? (!section ? 'Section context unavailable. You can save a note.'
+    : assistantStatus !== 'saved_unverified' ? 'Save note works without an API key.' : null)
+  const visibleInputError = inputError && (inputError.kind === 'validation' || !thread.messages.some((message) => message.id === inputError.messageId)) ? inputError.message : null
 
-  useEffect(() => { if (!thread.isCollapsed) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) },
-    [thread.messages.length, thread.streamingContent, thread.isCollapsed])
-  useEffect(() => { if (!thread.isCollapsed) inputRef.current?.focus() }, [thread.isCollapsed])
+  useEffect(() => { if (!thread.isCollapsed && !thread.isHidden) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) },
+    [thread.messages.length, thread.streamingContent, thread.isCollapsed, thread.isHidden])
+  useLayoutEffect(() => {
+    if (thread.isCollapsed && panelRef.current?.contains(document.activeElement)) toggleRef.current?.focus()
+  }, [thread.isCollapsed])
 
   useEffect(() => {
-    if (submittedMessageId && thread.messages.some((message) => message.id === submittedMessageId && message.actor === user?.login)) {
+    if (queuedSubmission) {
       setInput('')
       setSubmittedMessageId(null)
     }
-  }, [submittedMessageId, thread.messages, user?.login])
+  }, [queuedSubmission, setInput, setSubmittedMessageId])
 
   async function handleSave() {
     if (!canPost || !visibleBlobSha || submissionActive.current) return
-    if (input.length > 30000) { setInputError('A note may contain at most 30,000 characters. Your text is retained.'); return }
+    if (input.length > 30000) { setInputError({ kind: 'validation', message: 'A note may contain at most 30,000 characters. Your text is retained.' }); return }
     submissionActive.current = true
     setSubmitting(true)
     setInputError(null)
     const messageId = crypto.randomUUID()
     setSubmittedMessageId(messageId)
     const result = await dispatch(saveMessage({ kind: 'new', messageId, threadId: thread.id, visibleBlobSha, content: input, speaker: { kind: 'human' } }))
-    if (saveMessage.rejected.match(result)) setInputError(result.error.message ?? 'The note was not saved.')
+    if (saveMessage.rejected.match(result)) setInputError({ kind: 'save', messageId, message: result.error.message ?? 'The note was not saved.' })
     submissionActive.current = false
     setSubmitting(false)
   }
   async function handleAsk() {
-    if (!canPost || !visibleBlobSha || submissionActive.current) return
-    if (input.length > 30000) { setInputError('A question may contain at most 30,000 characters. Your text is retained.'); return }
-    if (!hasApiKey) { setShowKeyPrompt(true); return }
+    if (!canAsk || !visibleBlobSha || submissionActive.current) return
+    if (input.length > 30000) { setInputError({ kind: 'validation', message: 'A question may contain at most 30,000 characters. Your text is retained.' }); return }
+    if (refreshAssistantStatus() !== 'saved_unverified') return
     const section = extractSection(thread.section)
     if (!section) return
     submissionActive.current = true
@@ -65,46 +95,25 @@ export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discuss
     const pending = dispatch(sendMessage({ threadId: thread.id, visibleBlobSha, sectionContent: section.content,
       articleTitle, codeReferences: section.codeRefs, message: input }))
     setSubmittedMessageId(pending.requestId)
-    const result = await pending
-    if (sendMessage.rejected.match(result)) setInputError(result.error.message ?? 'The assistant request was not completed.')
+    await pending
     submissionActive.current = false
     setSubmitting(false)
   }
-  function handleSaveKey(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const keyInput = new FormData(event.currentTarget).get('apiKey')
-    if (typeof keyInput === 'string' && keyInput.trim()) {
-      localStorage.setItem('dl-anthropic-key', keyInput.trim())
-      setHasApiKey(true)
-      setShowKeyPrompt(false)
-    }
-  }
-
-  if (thread.isCollapsed) return (
-    <div className="chat-thread chat-thread-collapsed">
-      <div className="chat-thread-collapsed-bar">
-        <button className="chat-thread-collapsed-label" onClick={() => dispatch(expandThread(thread.id))}>
-          Thread · {threadNum} {threadNum === 1 ? 'message' : 'messages'}
-        </button>
-        <button className="chat-thread-remove" onClick={() => dispatch(removeThread(thread.id))}
-          title="Hide thread locally; saved correspondence stays on GitHub" disabled={busy}>×</button>
-      </div>
-    </div>
-  )
 
   return (
-    <div className="chat-thread">
-      <div className="chat-thread-header">
-        <span className="chat-thread-label">Discussion</span>
-        <div className="chat-thread-actions">
-          <button onClick={() => dispatch(collapseThread(thread.id))} title="Collapse">—</button>
-          <button onClick={() => dispatch(removeThread(thread.id))} title="Hide thread locally; saved correspondence stays on GitHub" disabled={busy}>×</button>
-        </div>
+    <div className="chat-thread discussion-card">
+      <div className="discussion-header">
+        <button ref={toggleRef} id={`discussion-toggle-${thread.id}`} className="discussion-toggle" type="button"
+          aria-label={`Discussion about ${thread.section}`} aria-expanded={!thread.isCollapsed} aria-controls={panelId}
+          onClick={() => dispatch(thread.isCollapsed ? expandThread(thread.id) : collapseThread(thread.id))}>
+          <span>Discussion · {threadNum} {threadNum === 1 ? 'message' : 'messages'}</span><span aria-hidden="true">{thread.isCollapsed ? '+' : '−'}</span>
+        </button>
+        <button type="button" className="discussion-hide" aria-label="Hide discussion locally" aria-describedby={`discussion-hide-help-${thread.id}`}
+          onClick={() => { if (!busy) { onHide?.(); dispatch(removeThread(thread.id)) } }} disabled={busy}>×</button>
+        <span id={`discussion-hide-help-${thread.id}`} className="discussion-sr-only">Saved correspondence stays on GitHub. Unsent text stays here while hidden.</span>
       </div>
+      <div ref={panelRef} id={panelId} hidden={thread.isCollapsed}>
       <div className="chat-thread-messages">
-        {thread.messages.length === 0 && !thread.isStreaming && <div className="chat-empty">
-          Save a note to GitHub, or explicitly ask the assistant. Saving a note does not call a model or accept this article.
-        </div>}
         {thread.messages.map((message) => {
           const current = !!visibleBlobSha && message.articleBlobSha === visibleBlobSha
           const label = message.speaker.kind === 'human'
@@ -141,27 +150,30 @@ export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discuss
         {thread.error && <p role="alert">{thread.error}</p>}
         <div ref={messagesEndRef} />
       </div>
-      {!canEdit ? <p>Sign in with an authorized account to save correspondence.</p> : <>
-        {!visibleBlobSha && <p>Article source identity is unavailable. Saving is disabled.</p>}
-        {visibleBlobSha && !discussionReady && <p>GitHub correspondence is unavailable for this article. New saves and retries are disabled.</p>}
-        {showKeyPrompt && <form className="chat-key-prompt" onSubmit={handleSaveKey}>
-          <label>Anthropic API Key</label>
-          <input type="password" name="apiKey" placeholder="sk-ant-..." autoFocus />
-          <div className="chat-key-actions"><button type="submit">Save key</button>
-            <button type="button" onClick={() => setShowKeyPrompt(false)}>Cancel</button></div>
-        </form>}
+      {!canEdit ? <p>{commonReason}</p> : <>
+        <div className="assistant-config-status">
+          <p role="status">{assistantStatus === 'missing'
+            ? 'Assistant setup needed.'
+            : assistantStatus === 'saved_unverified' ? 'Key saved in this browser. Connection not verified.'
+              : 'Assistant settings are unavailable. Notes still work.'}</p>
+          <button type="button" onClick={(event) => openSettings(event.currentTarget)}>{assistantStatus === 'missing' ? 'Set up assistant' : 'Assistant settings'}</button>
+        </div>
         <div className="chat-input-area">
-          <textarea ref={inputRef} className="chat-input" value={input} onChange={(event) => setInput(event.target.value)}
-            onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); handleSave() } }}
+          <label htmlFor={inputId}>Note or question</label>
+          <textarea ref={inputRef} id={inputId} className="chat-input" value={input} onChange={(event) => { setInput(event.target.value); setInputError(null) }}
             placeholder="Write a note or question..." disabled={busy} rows={2} maxLength={30000} />
-          {inputError && <p role="alert">{inputError}</p>}
-          <p>Saved correspondence uses this GitHub repository's visibility. Do not include secrets.</p>
+          {visibleInputError && <p role="alert">{visibleInputError}</p>}
+          <p className="discussion-privacy">Saved notes follow this repository's GitHub visibility. Do not include secrets.</p>
+          <p id={reasonId} className="discussion-action-reason" role="status">{actionReason}</p>
+          <p id={consequenceId} className="discussion-consequence">{canAsk && 'Saves your question, then calls the assistant.'}</p>
           <div className="chat-input-actions">
-            <button className="chat-send-btn" onClick={handleSave} disabled={!canPost}>Save note</button>
-            <button onClick={handleAsk} disabled={!canPost || !extractSection(thread.section)}>Ask assistant</button>
+            <button type="button" className="discussion-action discussion-save" onClick={handleSave} disabled={!canPost} aria-describedby={reasonId}>Save note</button>
+            <button type="button" className="discussion-action" onClick={handleAsk} disabled={!canAsk} aria-describedby={`${reasonId} ${consequenceId}`}>Ask assistant</button>
           </div>
+          <details className="discussion-help"><summary>How discussion works</summary><p>Save note writes to GitHub without calling a model or accepting this article. Ask assistant saves your question first. Responses have their own save receipt. Press Enter for a new line.</p></details>
         </div>
       </>}
+      </div>
     </div>
   )
 }

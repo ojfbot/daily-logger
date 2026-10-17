@@ -1,0 +1,51 @@
+.discussion-card .discussion-header { display: flex; align-items: stretch; border-bottom: 1px solid var(--border); }
+.discussion-card .discussion-toggle,
+.discussion-card .discussion-hide {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.discussion-card .discussion-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+.discussion-card .discussion-hide { flex: 0 0 44px; min-width: 44px; font-size: 1.25rem; }
+.discussion-card .discussion-toggle:hover,
+.discussion-card .discussion-hide:not(:disabled):hover { background: var(--bg); }
+.discussion-card [hidden] { display: none !important; }
+.discussion-card .chat-thread-messages:has(> :only-child) { padding: 0; }
+.discussion-card .chat-input-area { gap: 0.5rem; font-family: var(--font-sans); }
+.discussion-card .chat-input-area label { display: block; font-weight: 700; }
+.discussion-card .chat-input { font-family: var(--font-sans); font-size: 1rem; line-height: 1.6; min-height: 6rem; min-width: 0; }
+.discussion-card .chat-input-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+.discussion-card .discussion-action {
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--text-secondary);
+  border-radius: 0.25rem;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.discussion-card .discussion-save { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.discussion-card button:disabled { cursor: not-allowed; background: var(--bg-alt); color: var(--text-secondary); border-color: var(--border); }
+.discussion-card .discussion-action:not(:disabled):hover { border-color: var(--accent); }
+.discussion-card :is(button, textarea, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.discussion-card .discussion-privacy,
+.discussion-card .discussion-action-reason,
+.discussion-card .discussion-consequence { font-size: 0.85rem; margin: 0; }
+.discussion-card :is(.discussion-action-reason, .discussion-consequence):empty { display: none; }
+.discussion-card .discussion-help { font-size: 0.85rem; }
+.discussion-card .discussion-help summary { cursor: pointer; padding: 0.5rem 0; }
+.discussion-card .discussion-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
