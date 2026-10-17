@@ -1,17 +1,17 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 133,
-    "totalCommits": 1609,
+    "articleCount": 134,
+    "totalCommits": 1637,
     "relatedTags": [
       "daily-logger",
-      "hardening",
-      "ci-cd",
-      "model-behavior-as-design",
-      "assistant-centric",
-      "provenance",
       "editorial-pipeline",
+      "hardening",
+      "model-behavior-as-design",
+      "provenance",
+      "ci-cd",
       "verification",
+      "assistant-centric",
       "morning-cockpit",
       "core",
       "graphql-federation",
@@ -1646,7 +1646,7 @@
   {
     "name": "lego-village-pipeline",
     "articleCount": 6,
-    "totalCommits": 106,
+    "totalCommits": 108,
     "relatedTags": [
       "daily-logger",
       "hardening",
