@@ -1514,19 +1514,6 @@ a:hover { border-bottom-color: var(--text); }
   justify-content: flex-end;
 }
 
-.chat-send-btn {
-  background: var(--accent);
-  border: none;
-  color: var(--accent-text);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  padding: 6px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  line-height: 1;
-  transition: background 150ms;
-}
-
 .chat-key-btn {
   background: none;
   border: 1px solid var(--amber);
@@ -1539,18 +1526,9 @@ a:hover { border-bottom-color: var(--text); }
   line-height: 1;
 }
 
-.chat-send-btn:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
 .chat-key-btn:hover {
   background: var(--amber);
   color: var(--accent-text);
-}
-
-.chat-send-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
 }
 
 /* API key prompt */
