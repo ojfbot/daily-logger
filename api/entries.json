@@ -2,7 +2,7 @@
   {
     "date": "2026-10-17",
     "title": "Friday's review engine: making article-review cycles legible and durable across editors and interruptions",
-    "summary": "Twenty-six commits across daily-logger on Friday closed seven PRs, hardening the article review UI against partial outages, stale state, and multi-cycle ambiguity.",
+    "summary": "Twenty-six commits in daily-logger across the October 16-17 reporting window accompanied seven merged PRs, hardening article review and reconciling the actions queue.",
     "tags": [
       {
         "name": "daily-logger",
@@ -43,22 +43,23 @@
     "commitCount": 26,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "edited",
     "decisions": [
       {
-        "title": "Reviewer identity is the claimed name in review data, not the authenticated GitHub sender",
+        "title": "Reviewer identity is the claimed name in review data, not the authenticated GitHub carrier",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Feedback selection survives interruption via deliberate clear-or-preserve semantics",
+        "title": "Feedback selection survives interruption via keyed storage, selective pruning, and deliberate clear",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Proposed reviews are discoverable before they merge via PR head validation",
+        "title": "Automatic discovery of eligible review PRs complements explicit proposal registration",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
@@ -138,6 +139,18 @@
           "model": "claude-sonnet-4-6",
           "promptVersion": "council-synthesis-v1-2026-10-10",
           "promptSha256": "1ac427b3ba4743c7a702f122ae59e8448295741a6356ec7d2f828c3b09e00542"
+        },
+        {
+          "role": "revision",
+          "model": "claude-opus-4-6",
+          "promptVersion": "editorial-revision-v1",
+          "promptSha256": "53a71c3e39b6fc9b14f82b4919dc4b17967e94c616e72cd608fa8c01dc59a62f"
+        },
+        {
+          "role": "revision",
+          "model": "claude-opus-4-6",
+          "promptVersion": "editorial-revision-v1",
+          "promptSha256": "53a71c3e39b6fc9b14f82b4919dc4b17967e94c616e72cd608fa8c01dc59a62f"
         }
       ],
       "runtime": {
@@ -492,6 +505,86 @@
         }
       }
     ],
+    "timeReferences": [
+      {
+        "text": "15:15Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-14T15:15:05.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/core",
+          "ref": "537",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/core/pull/537"
+        }
+      },
+      {
+        "text": "21:40Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-14T21:40:31.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/morning-cockpit",
+          "ref": "56",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/morning-cockpit/pull/56"
+        }
+      },
+      {
+        "text": "09:10Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-14T09:10:41.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "359",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/359"
+        }
+      },
+      {
+        "text": "15:15Z",
+        "occurrence": 1,
+        "precision": "minute",
+        "at": "2026-10-14T15:15:05.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/core",
+          "ref": "537",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/core/pull/537"
+        }
+      },
+      {
+        "text": "21:40Z",
+        "occurrence": 1,
+        "precision": "minute",
+        "at": "2026-10-14T21:40:31.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/morning-cockpit",
+          "ref": "56",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/morning-cockpit/pull/56"
+        }
+      },
+      {
+        "text": "09:10Z",
+        "occurrence": 1,
+        "precision": "minute",
+        "at": "2026-10-14T09:10:41.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "359",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/359"
+        }
+      }
+    ],
     "provenance": {
       "schemaVersion": 1,
       "run": {
@@ -543,87 +636,7 @@
         "runnerArch": "X64",
         "job": "generate"
       }
-    },
-    "timeReferences": [
-      {
-        "text": "15:15Z",
-        "occurrence": 0,
-        "at": "2026-10-14T15:15:05.000Z",
-        "precision": "minute",
-        "evidence": {
-          "kind": "github-pull-request",
-          "repo": "ojfbot/core",
-          "ref": "537",
-          "event": "merged",
-          "url": "https://github.com/ojfbot/core/pull/537"
-        }
-      },
-      {
-        "text": "21:40Z",
-        "occurrence": 0,
-        "at": "2026-10-14T21:40:31.000Z",
-        "precision": "minute",
-        "evidence": {
-          "kind": "github-pull-request",
-          "repo": "ojfbot/morning-cockpit",
-          "ref": "56",
-          "event": "merged",
-          "url": "https://github.com/ojfbot/morning-cockpit/pull/56"
-        }
-      },
-      {
-        "text": "09:10Z",
-        "occurrence": 0,
-        "at": "2026-10-14T09:10:41.000Z",
-        "precision": "minute",
-        "evidence": {
-          "kind": "github-pull-request",
-          "repo": "ojfbot/daily-logger",
-          "ref": "359",
-          "event": "merged",
-          "url": "https://github.com/ojfbot/daily-logger/pull/359"
-        }
-      },
-      {
-        "text": "15:15Z",
-        "occurrence": 1,
-        "at": "2026-10-14T15:15:05.000Z",
-        "precision": "minute",
-        "evidence": {
-          "kind": "github-pull-request",
-          "repo": "ojfbot/core",
-          "ref": "537",
-          "event": "merged",
-          "url": "https://github.com/ojfbot/core/pull/537"
-        }
-      },
-      {
-        "text": "21:40Z",
-        "occurrence": 1,
-        "at": "2026-10-14T21:40:31.000Z",
-        "precision": "minute",
-        "evidence": {
-          "kind": "github-pull-request",
-          "repo": "ojfbot/morning-cockpit",
-          "ref": "56",
-          "event": "merged",
-          "url": "https://github.com/ojfbot/morning-cockpit/pull/56"
-        }
-      },
-      {
-        "text": "09:10Z",
-        "occurrence": 1,
-        "at": "2026-10-14T09:10:41.000Z",
-        "precision": "minute",
-        "evidence": {
-          "kind": "github-pull-request",
-          "repo": "ojfbot/daily-logger",
-          "ref": "359",
-          "event": "merged",
-          "url": "https://github.com/ojfbot/daily-logger/pull/359"
-        }
-      }
-    ]
+    }
   },
   {
     "date": "2026-10-14",
@@ -710,6 +723,47 @@
       }
     ],
     "actions": [],
+    "timeReferences": [
+      {
+        "text": "05:21:37 UTC",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-14T05:21:37.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/lego-village-pipeline",
+          "ref": "47",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/lego-village-pipeline/pull/47"
+        }
+      },
+      {
+        "text": "15:15:05 UTC",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-14T15:15:05.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/core",
+          "ref": "537",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/core/pull/537"
+        }
+      },
+      {
+        "text": "21:40:31 UTC",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-14T21:40:31.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/morning-cockpit",
+          "ref": "56",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/morning-cockpit/pull/56"
+        }
+      }
+    ],
     "provenance": {
       "schemaVersion": 1,
       "run": {
@@ -755,48 +809,7 @@
         "runnerArch": "X64",
         "job": "generate"
       }
-    },
-    "timeReferences": [
-      {
-        "text": "05:21:37 UTC",
-        "occurrence": 0,
-        "at": "2026-10-14T05:21:37.000Z",
-        "precision": "second",
-        "evidence": {
-          "kind": "github-pull-request",
-          "repo": "ojfbot/lego-village-pipeline",
-          "ref": "47",
-          "event": "merged",
-          "url": "https://github.com/ojfbot/lego-village-pipeline/pull/47"
-        }
-      },
-      {
-        "text": "15:15:05 UTC",
-        "occurrence": 0,
-        "at": "2026-10-14T15:15:05.000Z",
-        "precision": "second",
-        "evidence": {
-          "kind": "github-pull-request",
-          "repo": "ojfbot/core",
-          "ref": "537",
-          "event": "merged",
-          "url": "https://github.com/ojfbot/core/pull/537"
-        }
-      },
-      {
-        "text": "21:40:31 UTC",
-        "occurrence": 0,
-        "at": "2026-10-14T21:40:31.000Z",
-        "precision": "second",
-        "evidence": {
-          "kind": "github-pull-request",
-          "repo": "ojfbot/morning-cockpit",
-          "ref": "56",
-          "event": "merged",
-          "url": "https://github.com/ojfbot/morning-cockpit/pull/56"
-        }
-      }
-    ]
+    }
   },
   {
     "date": "2026-10-13",
@@ -1504,8 +1517,8 @@
       {
         "text": "16:48Z",
         "occurrence": 0,
-        "at": "2026-10-07T16:48:15.000Z",
         "precision": "minute",
+        "at": "2026-10-07T16:48:15.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/daily-logger",
@@ -1582,8 +1595,8 @@
       {
         "text": "2026-10-06T15:28:56Z",
         "occurrence": 0,
-        "at": "2026-10-06T15:28:56.000Z",
         "precision": "second",
+        "at": "2026-10-06T15:28:56.000Z",
         "evidence": {
           "kind": "explicit-offset",
           "value": "2026-10-06T15:28:56Z"
@@ -1986,8 +1999,8 @@
       {
         "text": "20:41Z",
         "occurrence": 0,
-        "at": "2026-10-01T20:41:28.000Z",
         "precision": "minute",
+        "at": "2026-10-01T20:41:28.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/shell",
@@ -1999,8 +2012,8 @@
       {
         "text": "13:29Z",
         "occurrence": 0,
-        "at": "2026-10-01T13:29:16.000Z",
         "precision": "minute",
+        "at": "2026-10-01T13:29:16.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/cv-builder",
@@ -2012,8 +2025,8 @@
       {
         "text": "20:41Z",
         "occurrence": 1,
-        "at": "2026-10-01T20:41:22.000Z",
         "precision": "minute",
+        "at": "2026-10-01T20:41:22.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/TripPlanner",
@@ -2025,8 +2038,8 @@
       {
         "text": "20:41Z",
         "occurrence": 2,
-        "at": "2026-10-01T20:41:16.000Z",
         "precision": "minute",
+        "at": "2026-10-01T20:41:16.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/purefoy",
@@ -2038,8 +2051,8 @@
       {
         "text": "20:41Z",
         "occurrence": 3,
-        "at": "2026-10-01T20:41:09.000Z",
         "precision": "minute",
+        "at": "2026-10-01T20:41:09.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/lean-canvas",
@@ -2051,8 +2064,8 @@
       {
         "text": "20:41Z",
         "occurrence": 4,
-        "at": "2026-10-01T20:41:01.000Z",
         "precision": "minute",
+        "at": "2026-10-01T20:41:01.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/gastown-pilot",
@@ -2064,8 +2077,8 @@
       {
         "text": "20:40Z",
         "occurrence": 0,
-        "at": "2026-10-01T20:40:55.000Z",
         "precision": "minute",
+        "at": "2026-10-01T20:40:55.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/BlogEngine",
@@ -2077,8 +2090,8 @@
       {
         "text": "01:35Z",
         "occurrence": 0,
-        "at": "2026-10-02T01:35:08.000Z",
         "precision": "minute",
+        "at": "2026-10-02T01:35:08.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/core",
@@ -2090,8 +2103,8 @@
       {
         "text": "15:58Z",
         "occurrence": 0,
-        "at": "2026-10-01T15:58:56.000Z",
         "precision": "minute",
+        "at": "2026-10-01T15:58:56.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/daily-logger",
@@ -2175,8 +2188,8 @@
       {
         "text": "13:29Z",
         "occurrence": 0,
-        "at": "2026-10-01T13:29:16.000Z",
         "precision": "minute",
+        "at": "2026-10-01T13:29:16.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/cv-builder",
@@ -2188,8 +2201,8 @@
       {
         "text": "13:29Z",
         "occurrence": 1,
-        "at": "2026-10-01T13:29:16.000Z",
         "precision": "minute",
+        "at": "2026-10-01T13:29:16.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/cv-builder",
@@ -2290,8 +2303,8 @@
       {
         "text": "15:22Z",
         "occurrence": 0,
-        "at": "2026-09-29T15:22:13.000Z",
         "precision": "minute",
+        "at": "2026-09-29T15:22:13.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/daily-logger",
@@ -2384,8 +2397,8 @@
       {
         "text": "17:21Z",
         "occurrence": 0,
-        "at": "2026-09-28T17:21:11.000Z",
         "precision": "minute",
+        "at": "2026-09-28T17:21:11.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/daily-logger",
@@ -2474,8 +2487,8 @@
       {
         "text": "14:35Z",
         "occurrence": 0,
-        "at": "2026-09-27T14:35:44.000Z",
         "precision": "minute",
+        "at": "2026-09-27T14:35:44.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/daily-logger",
@@ -2575,8 +2588,8 @@
       {
         "text": "13:38Z",
         "occurrence": 0,
-        "at": "2026-09-26T13:38:49.000Z",
         "precision": "minute",
+        "at": "2026-09-26T13:38:49.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/daily-logger",
@@ -2667,8 +2680,8 @@
       {
         "text": "14:29Z",
         "occurrence": 0,
-        "at": "2026-09-25T14:29:20.000Z",
         "precision": "minute",
+        "at": "2026-09-25T14:29:20.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/daily-logger",
@@ -2988,8 +3001,8 @@
       {
         "text": "2026-08-16T16:56:30Z",
         "occurrence": 0,
-        "at": "2026-08-16T16:56:30.000Z",
         "precision": "second",
+        "at": "2026-08-16T16:56:30.000Z",
         "evidence": {
           "kind": "explicit-offset",
           "value": "2026-08-16T16:56:30Z"
@@ -6307,8 +6320,8 @@
       {
         "text": "22:29 UTC",
         "occurrence": 0,
-        "at": "2026-06-10T22:29:49.000Z",
         "precision": "minute",
+        "at": "2026-06-10T22:29:49.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/selfco-box",
@@ -6320,8 +6333,8 @@
       {
         "text": "22:29 UTC",
         "occurrence": 1,
-        "at": "2026-06-10T22:29:49.000Z",
         "precision": "minute",
+        "at": "2026-06-10T22:29:49.000Z",
         "evidence": {
           "kind": "github-pull-request",
           "repo": "ojfbot/selfco-box",
@@ -6375,8 +6388,8 @@
       {
         "text": "2026-06-10T02:05Z",
         "occurrence": 0,
-        "at": "2026-06-10T02:05:00.000Z",
         "precision": "minute",
+        "at": "2026-06-10T02:05:00.000Z",
         "evidence": {
           "kind": "explicit-offset",
           "value": "2026-06-10T02:05Z"
@@ -7346,8 +7359,8 @@
       {
         "text": "2026-05-05 04:15Z",
         "occurrence": 0,
-        "at": "2026-05-05T04:15:00.000Z",
         "precision": "minute",
+        "at": "2026-05-05T04:15:00.000Z",
         "evidence": {
           "kind": "explicit-offset",
           "value": "2026-05-05 04:15Z"
@@ -8096,8 +8109,8 @@
       {
         "text": "2026-04-27 11:09 UTC",
         "occurrence": 0,
-        "at": "2026-04-27T11:09:00.000Z",
         "precision": "minute",
+        "at": "2026-04-27T11:09:00.000Z",
         "evidence": {
           "kind": "explicit-offset",
           "value": "2026-04-27 11:09 UTC"

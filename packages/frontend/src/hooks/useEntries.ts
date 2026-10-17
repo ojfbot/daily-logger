@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
-import { fetchEntries, fetchTags, fetchRepos, fetchActions, fetchDoneActions } from '../store/articlesSlice.ts'
+import { fetchEntries, fetchTags, fetchRepos, fetchActions, fetchDoneActions, fetchProposedActions } from '../store/articlesSlice.ts'
 
 export function useEntries() {
   const dispatch = useAppDispatch()
-  const { entries, tags, repos, actions, doneActions, loading, error } = useAppSelector((s) => s.articles)
+  const { entries, tags, repos, actions, doneActions, proposedActions, loading, error } = useAppSelector((s) => s.articles)
 
   useEffect(() => {
     if (entries.length === 0 && !loading) {
@@ -13,8 +13,9 @@ export function useEntries() {
       dispatch(fetchRepos())
       dispatch(fetchActions())
       dispatch(fetchDoneActions())
+      dispatch(fetchProposedActions())
     }
   }, [dispatch, entries.length, loading])
 
-  return { entries, tags, repos, actions, doneActions, loading, error }
+  return { entries, tags, repos, actions, doneActions, proposedActions, loading, error }
 }

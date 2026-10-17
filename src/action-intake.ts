@@ -354,6 +354,7 @@ function assertSource(
   return parsed
 }
 
+/** Explicit one-time importer. The API builder never calls this parser. */
 export function projectActionIntake(args: {
   repoRoot: string
   articles: readonly ActionArticleSource[]
@@ -484,5 +485,19 @@ export function projectActionIntake(args: {
     reviewedActions,
     heldSuggestions,
     historicalHeldCount,
+  }
+}
+
+/** Validate the three frozen historical receipts without admitting anything from prose. */
+export function verifyRecordedAdmissions(repoRoot: string, actions: readonly CanonicalAction[]): void {
+  for (const record of loadAdmissionRecords(repoRoot)) {
+    assertBaseline(repoRoot, record)
+    const article = { path: record.source.articlePath, date: record.source.articleDate, content: readFileSync(join(repoRoot, record.source.articlePath), 'utf8') }
+    for (const item of record.items) {
+      assertSource(repoRoot, record, item, article)
+      assertPortableEvidence(repoRoot, item)
+      const action = actions.find(action => action.id === item.id)
+      if (!action || action.description !== item.description || action.command !== item.command || action.repo !== item.repo || !('review' in action) || !action.review || JSON.stringify(action.review.disposition) !== JSON.stringify(item.disposition)) throw new Error(`Historical reviewed action changed: ${item.id}`)
+    }
   }
 }

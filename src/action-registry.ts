@@ -1,0 +1,175 @@
+import { createHash, randomUUID } from 'node:crypto'
+import { existsSync, readFileSync, writeFileSync, renameSync, openSync, closeSync, unlinkSync } from 'node:fs'
+import { join } from 'node:path'
+import { readdirSync } from 'node:fs'
+import { detachArticleTime } from './article-time-frontmatter.js'
+import { isReviewedAction, legacyActionKey, type CanonicalAction } from './action-model.js'
+import { renderArticle } from './render-article.js'
+
+export const REGISTRY_PATH = 'actions/registry.json'
+export const ACTIONS_START = '<!-- ACTIONS_START -->'
+export const ACTIONS_END = '<!-- ACTIONS_END -->'
+export * from './action-registry-schema.js'
+import { ActionRegistrySchema, type ActionRegistry } from './action-registry-schema.js'
+
+export function sha256(value: string): string { return createHash('sha256').update(value).digest('hex') }
+export function registryBytes(registry: ActionRegistry): string { return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
+export function registryRevision(registry: ActionRegistry): string { return sha256(registryBytes(registry)) }
+export function actionStateDigest(registry: ActionRegistry, keys: readonly string[]): string { return sha256(JSON.stringify(registry.records.filter(record => keys.includes(record.key)).map(record => ({ key: record.key, state: record.state, history: record.history })))) }
+export function actionKey(action: CanonicalAction): string { return action.id ?? `legacy-${sha256(legacyActionKey(action))}` }
+export function normalizeWorkKey(repo: string, target: string, outcome: string): string { return [repo, target, outcome].map(value => value.toLowerCase().replace(/\s+/g, ' ').trim()).join('|') }
+
+export function readActionRegistry(repoRoot: string): ActionRegistry {
+  const path = join(repoRoot, REGISTRY_PATH)
+  if (!existsSync(path)) throw new Error('Action registry is missing. Run the explicit migration; markdown is never an admission fallback.')
+  return ActionRegistrySchema.parse(JSON.parse(readFileSync(path, 'utf8')))
+}
+
+export function writeActionRegistry(repoRoot: string, registry: ActionRegistry, expectedRevision: string, article?: { path: string; expected: string | null; next: string; publish: () => void }): void {
+  const path = join(repoRoot, REGISTRY_PATH)
+  const lock = `${path}.lock`
+  const descriptor = openSync(lock, 'wx')
+  const temporary = `${path}.${randomUUID()}.tmp`
+  let published = false
+  try {
+    if (registryRevision(readActionRegistry(repoRoot)) !== expectedRevision) throw new Error('Action registry changed during review; refresh before retrying')
+    if (article && (existsSync(article.path) ? readFileSync(article.path, 'utf8') : null) !== article.expected) throw new Error('Article changed during action review; refresh before retrying')
+    writeFileSync(temporary, registryBytes(registry), { flag: 'wx' })
+    if (article) { published = true; article.publish(); if (readFileSync(article.path, 'utf8') !== article.next) throw new Error('Article publication did not match its verified content') }
+    renameSync(temporary, path)
+  } catch (error) {
+    if (article && published) {
+      if (article.expected === null) { if (existsSync(article.path)) unlinkSync(article.path) }
+      else writeFileSync(article.path, article.expected)
+    }
+    throw error
+  } finally {
+    if (existsSync(temporary)) unlinkSync(temporary)
+    closeSync(descriptor)
+    unlinkSync(lock)
+  }
+}
+
+export function readArticleStatuses(repoRoot: string): Map<string, string> {
+  return new Map(readdirSync(join(repoRoot, '_articles')).filter(file => file.endsWith('.md')).map(file => [file.slice(0, -3), readFileSync(join(repoRoot, '_articles', file), 'utf8').match(/^status:\s*"?(\w+)/m)?.[1] ?? 'draft']))
+}
+
+export function acceptedActionState(record: ActionRegistry['records'][number], statuses: ReadonlyMap<string, string>, registry: ActionRegistry) {
+  return record.history.filter(item => statuses.get(item.articleDate) === 'accepted' && registry.articles.some(article => article.date === item.articleDate && article.status === 'accepted' && article.roundId === item.roundId)).at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed')
+}
+
+export function stripManagedActions(markdown: string): string {
+  const start = markdown.indexOf(ACTIONS_START)
+  const end = markdown.indexOf(ACTIONS_END)
+  if (start === -1 && end === -1) return markdown
+  if (start === -1 || end < start || markdown.indexOf(ACTIONS_START, start + 1) !== -1) throw new Error('Invalid managed action block')
+  return markdown.slice(0, start) + markdown.slice(end + ACTIONS_END.length)
+}
+export function articleActionDigest(markdown: string): string {
+  return sha256(detachArticleTime(stripManagedActions(markdown)).markdown.replace(/^(?:status|outcome|provenance):.*\n?/gm, '').trim())
+}
+
+export function setActionInclusion(registry: ActionRegistry, key: string, include: boolean, actor: string, instruction: string, articleStatuses: ReadonlyMap<string, string>): ActionRegistry {
+  const next = structuredClone(registry)
+  const record = next.records.find(item => item.key === key)
+  if (!record || record.origin !== 'suggested') throw new Error('Only a new suggestion has an admission checkbox; existing work requires a disposition')
+  if (registry.articles.some(article => articleStatuses.get(article.date) === 'accepted' && article.actionKeys.includes(key))) throw new Error('An accepted suggestion requires a disposition; its admission checkbox cannot close existing work')
+  if (!actor.trim() || !instruction.trim()) throw new Error('Inclusion changes require an identified operator instruction')
+  record.includeInIndex = include
+  record.inclusionOverride = { include, actor, instruction }
+  return ActionRegistrySchema.parse(next)
+}
+
+export function projectRegistry(registry: ActionRegistry, articleStatuses: ReadonlyMap<string, string>) {
+  const open: CanonicalAction[] = [], done: CanonicalAction[] = []
+  const proposed: Array<{ id: string; command: string; description: string; repo: string; sourceDate: string; status: 'proposed'; includeInIndex: boolean }> = []
+  const dispositions: Array<{ id: string; description: string; repo: string; sourceDate: string; state: string; reason: string }> = []
+  for (const record of registry.records) {
+    const original = record.original
+    const decision = record.history.filter(item => articleStatuses.get(item.articleDate) === 'accepted' && registry.articles.some(article => article.date === item.articleDate && article.status === 'accepted' && article.roundId === item.roundId)).at(-1)
+    const state = decision?.state ?? (record.origin === 'imported' ? original.status : 'proposed')
+    if (record.origin === 'suggested' && !record.includeInIndex && decision) continue
+    if (state === 'done') {
+      if (isReviewedAction(original)) throw new Error('Reviewed actions require an exact-ID settlement receipt')
+      done.push(original.status === 'done' ? original : { ...original, status: 'done', closedDate: decision?.articleDate ?? record.introducedBy, resolution: decision?.reason ?? '' })
+      continue
+    }
+    if (state === 'dismissed' || state === 'superseded' || state === 'deferred') {
+      dispositions.push({ id: record.key, description: original.description, repo: original.repo, sourceDate: original.sourceDate, state, reason: decision?.reason ?? '' })
+      continue
+    }
+    const description = [decision?.description ?? original.description, record.doneWhen ? `Done when: ${record.doneWhen}` : '', record.gates.length ? `Conditions: ${record.gates.join(' ')}` : ''].filter(Boolean).join(' ')
+    const active = description !== original.description ? { ...original, currentDescription: description } : original
+    if (record.origin === 'imported') { open.push(active); continue }
+    const accepted = registry.articles.some(article => article.status === 'accepted' && articleStatuses.get(article.date) === 'accepted' && article.actionKeys.includes(record.key) && record.history.some(decision => decision.roundId === article.roundId && decision.articleDate === article.date))
+    const status = articleStatuses.get(record.introducedBy)
+    if (accepted && record.includeInIndex) open.push(active)
+    else if (status === 'draft') {
+      if (record.state === 'open' || record.state === 'proposed') proposed.push({ id: record.key, command: original.command, description: original.description, repo: original.repo, sourceDate: original.sourceDate, status: 'proposed', includeInIndex: record.includeInIndex })
+    }
+  }
+  return { open, done, proposed, dispositions }
+}
+
+function escaped(value: string): string { return value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char] ?? char)) }
+export function articleActionRecords(registry: ActionRegistry, articleDate: string, statuses: ReadonlyMap<string, string>) {
+  const snapshot = registry.articles.find(article => article.date === articleDate)
+  return (snapshot?.actionKeys ?? []).map(key => {
+    const record = registry.records.find(item => item.key === key)
+    if (!record || !snapshot) throw new Error(`Missing action ${key}`)
+    const history = record.history.filter(item => (item.articleDate === articleDate && item.roundId === snapshot.roundId) || (statuses.get(item.articleDate) === 'accepted' && registry.articles.some(article => article.date === item.articleDate && article.status === 'accepted' && article.roundId === item.roundId)))
+    return { ...record, history, state: history.at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed' as const) }
+  })
+}
+export function renderArticleActions(markdown: string, registry: ActionRegistry, articleDate: string, statuses: ReadonlyMap<string, string>): string {
+  const snapshot = registry.articles.find(article => article.date === articleDate)
+  if (!snapshot) {
+    if (!Object.hasOwn(registry.baseline.articleActions, articleDate)) throw new Error(`Action review is missing for ${articleDate}; reconcile before publishing`)
+    return markdown
+  }
+  if (managedArticleDigest(markdown) !== snapshot.articleDigest) throw new Error(`Action review is stale for ${articleDate}; reconcile before publishing`)
+  if (snapshot.status !== statuses.get(articleDate)) throw new Error(`Action review status is stale for ${articleDate}; reconcile before publishing`)
+  const visible = articleActionRecords(registry, articleDate, statuses).map(record => ({ record, decision: record.history.at(-1), state: record.state }))
+  const active = visible.filter(item => item.state === 'open' || item.state === 'proposed')
+  const resolved = visible.filter(item => item.state !== 'open' && item.state !== 'proposed')
+  const lines = [ACTIONS_START, '> **Suggested actions**', ...active.flatMap(({ record, decision }) => [`> - \`${record.original.command}\` — ${decision?.description ?? record.original.description} (${record.original.repo})${record.includeInIndex ? '' : ' · Article only'}`, ...(record.doneWhen ? [`>   Done when: ${record.doneWhen}`] : []), ...(record.gates.length ? [`>   Conditions: ${record.gates.join(' ')}`] : [])])]
+  if (active.length === 0) lines.push('> No new verified suggestion. Existing work retains its documented next checkpoints.')
+  if (resolved.length) {
+    lines.push('', '<section class="action-history-card" aria-label="Resolved suggestions">', '<h3>Resolved suggestions</h3>')
+    for (const { record, decision, state } of resolved) {
+      lines.push(`<article><strong>${escaped(record.original.command)} · ${escaped(state)}</strong><p>${escaped(decision?.reason ?? '')}</p><details><summary>Original suggestion and evidence</summary><p>${escaped(record.original.description)}</p>${decision?.citations.map(citation => `<p>${escaped(citation.sourceId)}: ${escaped(citation.quote)}</p>`).join('') ?? ''}</details></article>`)
+    }
+    lines.push('</section>')
+  }
+  lines.push(ACTIONS_END)
+  const prose = unmanagedArticleProse(markdown).trimEnd()
+  return `${prose}\n\n${lines.join('\n')}\n`
+}
+
+function unmanagedArticleProse(markdown: string): string {
+  return stripManagedActions(markdown)
+    .replace(/^> \*\*Suggested actions\*\*[^\n]*\n(?:>[^\n]*(?:\n|$))*/gm, '')
+    .replace(/^The following block retains the original generator suggestions verbatim[^\n]*(?:\n|$)/gm, '')
+    .replace(/^\*\*Disposition of suggested actions:\*\*[^\n]*(?:\n|$)/gm, '')
+}
+export function managedArticleDigest(markdown: string): string {
+  return articleActionDigest(unmanagedArticleProse(markdown))
+}
+
+export function renderArticleActionHtml(markdown: string, registry: ActionRegistry, date: string, statuses: ReadonlyMap<string, string>): string {
+  const rendered = renderArticleActions(markdown, registry, date, statuses).replace(/^---[\s\S]*?---\n/, '')
+  if (!registry.articles.some(article => article.date === date)) return renderArticle(rendered)
+  // Only the escaped card freshly constructed from registry records bypasses
+  // Markdown's raw-HTML escaping. Authored HTML still goes through renderArticle.
+  const start = rendered.indexOf('\n<section class="action-history-card"', rendered.indexOf(ACTIONS_START))
+  if (start === -1) return renderArticle(rendered)
+  const end = rendered.indexOf(ACTIONS_END, start)
+  return renderArticle(rendered.slice(0, start)) + rendered.slice(start, end) + renderArticle(rendered.slice(end + ACTIONS_END.length))
+}
+
+export function readRegistryProjection(repoRoot: string) {
+  const statuses = readArticleStatuses(repoRoot)
+  const registry = readActionRegistry(repoRoot)
+  for (const [date] of statuses) renderArticleActions(readFileSync(join(repoRoot, '_articles', `${date}.md`), 'utf8'), registry, date, statuses)
+  return projectRegistry(registry, statuses)
+}

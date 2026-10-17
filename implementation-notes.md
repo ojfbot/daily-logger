@@ -195,3 +195,12 @@
 
 - UIK-01 consumer fixtures assumed acceptance branches shared the current policy tip; independent Claude controls showed normal main advancement both rejected valid article-only work and could hide a shared nonarticle change, so validate the PR change set from a unique trusted common ancestor and retain exact file/blob/output guards.
 - UIK-01 immediate refresh mocks batched over a real child unmount; delayed refresh with storage denied lost confirmation and frozen retry state. Retain the context projection while marking it unavailable, preserve receipts/in-memory identity, and reconcile only explicit same-submission retries against fresh matching history.
+## Deviations — action registry cutover (2026-10-17)
+
+- The migration assumed all historical completions had public IDs; 64 do not. Preserved those public rows and assigned internal keys instead of rewriting historical IDs.
+- The approved loop must resume after human revision inputs; removing the bot guard was rejected by automatic approval review. Retained the guard and added a tested exception only for changed feedback from a human sender.
+- The live model check initially lacked specific egress authority; automatic approval review blocked it. The operator then authorized the October 17 article, history, relevant documents, and linked GitHub discussions going to Anthropic for a dry run. No canonical state was written.
+- Full evidence fetching found an expired GITHUB_TOKEN in the local .env. The authorized test used the working gh login while retaining the existing Anthropic configuration; no credentials were changed or printed.
+- Independent review found that draft dispositions could leak into older published articles and become prematurely terminal during acceptance. Bound promotion and rendering to accepted round receipts, required a verdict for every carried identity, and added cross-day lifecycle tests.
+- Regenerating the existing static API also refreshes stale committed article metadata from already accepted source articles. Kept this derived output; no historical article prose or action membership was changed.
+- Multi-file filesystem renames cannot provide crash atomicity. Added input checks under a lock and rollback for ordinary write failures; Git commit consistency and stale receipt checks remain the publication boundary.

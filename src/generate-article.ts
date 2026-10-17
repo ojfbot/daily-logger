@@ -890,7 +890,7 @@ export function buildUserPrompt(ctx: BlogContext): string {
     parts.push('_Review each action against today\'s commits, merged PRs, and closed issues. If today\'s work addressed it, include it in `closedActions` — copy the `id`, `command`, `repo`, `sourceDate`, and `description` EXACTLY as shown below. Do NOT re-emit open actions in `suggestedActions`._')
     ordinaryActions.forEach((a) => {
       const id = a.id ?? actionId(a)
-      parts.push(`- **id:** \`${id}\` | [${a.sourceDate}] [${a.repo}] \`${a.command}\` — ${a.description}`)
+      parts.push(`- **id:** \`${id}\` | [${a.sourceDate}] [${a.repo}] \`${a.command}\` — ${('currentDescription' in a ? a.currentDescription : undefined) ?? a.description}`)
     })
     parts.push('')
   }
@@ -1050,6 +1050,7 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
       tags: fixture.tags.map((t) => t.name),
       summary: fixture.summary,
       body: assembleBody(fixture),
+      suggestedActions: fixture.suggestedActions,
       generationMode: 'mock',
     }
   }
@@ -1095,6 +1096,7 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
       summary: result.data.summary,
       body: assembleBody(result.data),
       closedActions: result.data.closedActions,
+      suggestedActions: result.data.suggestedActions,
       commitCount: result.data.commitCount,
       reposActive: result.data.reposActive,
       generationMode: 'model',

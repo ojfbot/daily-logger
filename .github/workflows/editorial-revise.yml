@@ -35,7 +35,7 @@ jobs:
       group: editorial-revise-${{ github.event.pull_request.number }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     permissions:
       contents: read
 
@@ -61,7 +61,7 @@ jobs:
           echo "article_path=_articles/${DATE}.md" >> "$GITHUB_OUTPUT"
           echo "📅 Article date: $DATE"
 
-      - name: Require article-only changes before running PR code
+      - name: Require article and action data only before running PR code
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
@@ -71,10 +71,20 @@ jobs:
           git fetch --no-tags origin "$HEAD_SHA"
           CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
           MODE=$(git ls-tree "$HEAD_SHA" -- "$ARTICLE_PATH" | cut -d ' ' -f 1)
-          if [[ "$CHANGED" != "$ARTICLE_PATH" || "$MODE" != '100644' ]]; then
-            echo "::error::Editorial automation accepts only the dated article file."
+          if [[ "$MODE" != '100644' || -z "$CHANGED" ]]; then
+            echo "::error::Editorial article must be a regular file."
             exit 1
           fi
+          while IFS= read -r FILE; do
+            if [[ "$FILE" != "$ARTICLE_PATH" && "$FILE" != 'actions/registry.json' ]]; then
+              echo "::error::Editorial automation accepts only the dated article and canonical action data."
+              exit 1
+            fi
+            if [[ "$(git ls-tree "$HEAD_SHA" -- "$FILE" | cut -d ' ' -f 1)" != '100644' ]]; then
+              echo "::error::Editorial changes must be regular files."
+              exit 1
+            fi
+          done <<< "$CHANGED"
           git checkout -B "$HEAD_BRANCH" "$HEAD_SHA"
 
       - name: Setup pnpm
@@ -97,6 +107,13 @@ jobs:
           OUTCOME: accepted
         run: pnpm exec tsx src/stamp-outcome.ts
 
+      - name: Reconcile actions before clean acceptance
+        env:
+          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: pnpm exec tsx scripts/reconcile-actions.ts
+
       - name: Commit stamped article
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -105,7 +122,7 @@ jobs:
         run: |
           git config user.name "ojfbot-blog[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$ARTICLE_PATH"
+          git add "$ARTICLE_PATH" actions/
           if git diff --cached --quiet; then
             echo "⏭ No outcome change to commit"
           else
@@ -126,7 +143,7 @@ jobs:
       group: editorial-revise-${{ github.event.pull_request.number }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: write
@@ -147,11 +164,10 @@ jobs:
         run: |
           git fetch --no-tags origin "$HEAD_SHA"
           AUTHOR=$(git log -1 --format='%an' "$HEAD_SHA")
-          if [[ "$AUTHOR" == *"[bot]"* ]]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "⏭ Last commit by bot ($AUTHOR) — skipping to prevent loop"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
+          SKIP=$(node .github/scripts/editorial-revision-admission.mjs "$AUTHOR")
+          echo "skip=$SKIP" >> "$GITHUB_OUTPUT"
+          if [[ "$SKIP" == 'true' ]]; then
+            echo "⏭ Bot revision remains blocked without changed human feedback"
           fi
 
       - name: Extract article date from branch name
@@ -167,7 +183,7 @@ jobs:
           echo "article_path=_articles/${DATE}.md" >> "$GITHUB_OUTPUT"
           echo "📅 Article date: $DATE"
 
-      - name: Require article-only changes before running PR code
+      - name: Require article and action data only before running PR code
         if: steps.guard.outputs.skip != 'true'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -178,10 +194,20 @@ jobs:
           git fetch --no-tags origin "$HEAD_SHA"
           CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
           MODE=$(git ls-tree "$HEAD_SHA" -- "$ARTICLE_PATH" | cut -d ' ' -f 1)
-          if [[ "$CHANGED" != "$ARTICLE_PATH" || "$MODE" != '100644' ]]; then
-            echo "::error::Editorial automation accepts only the dated article file."
+          if [[ "$MODE" != '100644' || -z "$CHANGED" ]]; then
+            echo "::error::Editorial article must be a regular file."
             exit 1
           fi
+          while IFS= read -r FILE; do
+            if [[ "$FILE" != "$ARTICLE_PATH" && "$FILE" != 'actions/registry.json' ]]; then
+              echo "::error::Editorial automation accepts only the dated article and canonical action data."
+              exit 1
+            fi
+            if [[ "$(git ls-tree "$HEAD_SHA" -- "$FILE" | cut -d ' ' -f 1)" != '100644' ]]; then
+              echo "::error::Editorial changes must be regular files."
+              exit 1
+            fi
+          done <<< "$CHANGED"
           git checkout -B "$HEAD_BRANCH" "$HEAD_SHA"
 
       - name: Extract editorial feedback from PR body
@@ -231,6 +257,7 @@ jobs:
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
           EDITORIAL_FEEDBACK: ${{ steps.feedback.outputs.feedback }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           pnpm exec tsx src/revise-article.ts > /tmp/revision-result.json
           echo "changed=$(jq -r '.changed' /tmp/revision-result.json)" >> "$GITHUB_OUTPUT"
@@ -243,7 +270,7 @@ jobs:
         run: |
           git config user.name "ojfbot-blog[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "${{ steps.date.outputs.article_path }}"
+          git add "${{ steps.date.outputs.article_path }}" actions/
           git commit -m "editorial: revise ${{ steps.date.outputs.date }} per feedback"
           gh auth setup-git
           git push origin "HEAD:refs/heads/${HEAD_BRANCH}"

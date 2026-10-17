@@ -20,11 +20,12 @@
  *   BLOGENGINE_API_URL   optional: POST to BlogEngine on completion
  */
 
-import { writeFileSync, readFileSync, existsSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
-import { CanonicalActionArraySchema, assertNoReviewedActionClosures, legacyActionKey } from './action-model.js'
+import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses } from './action-registry.js'
+import { collectActionSources, createActionAgents, mockActionAgents, reviewArticleActions } from './review-actions.js'
 import {
   ARTICLE_MODEL,
   ARTICLE_PROMPT_VERSION,
@@ -41,7 +42,6 @@ import {
   reviewDraft,
   synthesizeWithCouncil,
 } from './council.js'
-import { actionId, type ClosedAction } from './schema.js'
 import { shouldSkipRun } from './should-skip-run.js'
 import { verifyFileExistenceClaims } from './verify-claims.js'
 import { checkAnthropicCredits } from './check-anthropic-credits.js'
@@ -74,42 +74,6 @@ function packageVersion(): string | undefined {
   } catch {
     return undefined
   }
-}
-
-function persistClosedActions(closed: ClosedAction[], date: string): void {
-  if (closed.length === 0) return
-  const apiDir = join(REPO_ROOT, 'api')
-  const donePath = join(apiDir, 'done-actions.json')
-  const actionsPath = join(apiDir, 'actions.json')
-
-  // Load current open actions to validate matches
-  const openActions = existsSync(actionsPath)
-    ? CanonicalActionArraySchema.parse(JSON.parse(readFileSync(actionsPath, 'utf-8')))
-    : []
-  assertNoReviewedActionClosures(closed, openActions)
-  const openIds = new Set(openActions.map((a) => a.id ?? actionId(a)))
-  const openLegacyKeys = new Set(openActions.map(legacyActionKey))
-
-  // Append to done-actions.json (build-api.ts handles filtering actions.json)
-  const done: Record<string, unknown>[] = existsSync(donePath)
-    ? JSON.parse(readFileSync(donePath, 'utf-8'))
-    : []
-  let matched = 0
-  for (const c of closed) {
-    // Stamp id if missing
-    const id = c.id ?? actionId(c)
-    const legacyKey = legacyActionKey(c)
-    const isMatch = openIds.has(id) || openLegacyKeys.has(legacyKey)
-    if (!isMatch) {
-      console.warn(`     ⚠ closedAction does not match any open action: ${id} (${c.command} ${c.sourceDate})`)
-    } else {
-      matched++
-    }
-    done.push({ ...c, id, status: 'done', closedDate: date })
-  }
-  writeFileSync(donePath, JSON.stringify(done, null, 2) + '\n', 'utf-8')
-
-  console.log(`     ✓ Closed ${closed.length} action(s) → done-actions.json (${matched} matched, ${closed.length - matched} orphaned)`)
 }
 
 async function postToBlogEngine(markdown: string, apiUrl: string): Promise<void> {
@@ -286,7 +250,12 @@ export async function main() {
     console.warn('::warning title=Article provenance unavailable::Generated article will continue without provenance metadata')
   }
 
-  const prepared = prepareGeneratedTime({ date, markdown: toMarkdown(article), records: recordsFromContext(ctx), capture: timeCapture })
+  const registry = readActionRegistry(REPO_ROOT)
+  const originalMarkdown = toMarkdown(article)
+  const articlePath = join(REPO_ROOT, '_articles', `${date}.md`)
+  const previousArticle = existsSync(articlePath) ? readFileSync(articlePath, 'utf8') : null
+  const actionReview = await reviewArticleActions({ registry, articleStatuses: readArticleStatuses(REPO_ROOT), articleDate: date, markdown: originalMarkdown, feedback: '', sources: process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ repoRoot: REPO_ROOT, markdown: originalMarkdown, feedback: '', context: `${buildUserPrompt(ctx)}\nStructured draft candidates: ${JSON.stringify(article.suggestedActions ?? [])}` }), agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
+  const prepared = prepareGeneratedTime({ date, markdown: actionReview.markdown, records: recordsFromContext(ctx), capture: timeCapture })
   const markdown = prepared.markdown
   for (const warning of prepared.warnings) console.warn(`::warning::${date}: ${warning}`)
   if (prepared.unresolved.length) console.warn(`     ⚠ ${prepared.unresolved.length} time reference(s) unresolved; left as plain text`)
@@ -303,13 +272,8 @@ export async function main() {
   }
 
   // ── 4b. Write ──────────────────────────────────────────────────────────────
-  persistGeneratedTime({ repoRoot: REPO_ROOT, prepared })
+  writeActionRegistry(REPO_ROOT, actionReview.registry, registryRevision(registry), { path: articlePath, expected: previousArticle, next: markdown, publish: () => { persistGeneratedTime({ repoRoot: REPO_ROOT, prepared }) } })
   console.log(`     Written: _articles/${date}.md`)
-
-  // Persist closed actions from the article generation
-  if (article.closedActions && article.closedActions.length > 0) {
-    persistClosedActions(article.closedActions, date)
-  }
 
   if (blogEngineUrl) {
     console.log('     Posting to BlogEngine...')

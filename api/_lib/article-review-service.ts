@@ -162,7 +162,7 @@ export function createReviewService(github: GitHub, allowedActors: ReadonlySet<s
         const prs = await source.acceptPulls(articleDate)
         await boundedMap(prs.filter((pr) => trustedPullRequest(pr) && pr.head.ref === `accept/${articleDate}`), async (pr) => {
           const files = await source.files(pr.number)
-          if (files.length !== 1 || files[0]?.filename !== `_articles/${articleDate}.md` || !['added', 'modified'].includes(files[0].status)) return
+          if (!files.some(file => file.filename === `_articles/${articleDate}.md`) || files.some(file => ![`_articles/${articleDate}.md`, 'actions/registry.json'].includes(file.filename) || !['added', 'modified'].includes(file.status))) return
           pullRequests.set(pr.number, { pr, kind: 'acceptance_pr' })
         })
       } catch (error) { complete = false; unavailable.push(`Editorial PR history: ${detail(error)}`) }

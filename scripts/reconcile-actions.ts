@@ -1,0 +1,30 @@
+import { readFileSync, writeFileSync } from 'node:fs'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { readActionRegistry, registryRevision, writeActionRegistry, setActionInclusion, renderArticleActions, readArticleStatuses } from '../src/action-registry.js'
+import { collectActionSources, createActionAgents, mockActionAgents, reviewArticleActions } from '../src/review-actions.js'
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const articlePath = process.env.ARTICLE_PATH
+if (!articlePath) throw new Error('ARTICLE_PATH is required')
+const markdown = readFileSync(resolve(repoRoot, articlePath), 'utf8')
+const articleDate = markdown.match(/^date:\s*"?(\d{4}-\d{2}-\d{2})/m)?.[1]
+if (!articleDate) throw new Error('Article date is missing')
+if (resolve(repoRoot, articlePath) !== resolve(repoRoot, `_articles/${articleDate}.md`)) throw new Error('ARTICLE_PATH must identify the dated article in this repository')
+const registry = readActionRegistry(repoRoot)
+const feedback = process.env.EDITORIAL_FEEDBACK ?? ''
+const statuses = readArticleStatuses(repoRoot)
+if (process.env.ACTION_KEY) {
+  if (!['true', 'false'].includes(process.env.INCLUDE_IN_INDEX ?? '')) throw new Error('INCLUDE_IN_INDEX must be true or false')
+  const record = registry.records.find(record => record.key === process.env.ACTION_KEY)
+  if (record?.introducedBy !== articleDate || !registry.articles.find(article => article.date === articleDate)?.actionKeys.includes(process.env.ACTION_KEY)) throw new Error('The checkbox must belong to this article')
+}
+const reviewed = process.env.ACTION_KEY
+  ? { registry: setActionInclusion(registry, process.env.ACTION_KEY, process.env.INCLUDE_IN_INDEX !== 'false', process.env.ACTION_ACTOR ?? '', feedback, statuses), markdown }
+  : await reviewArticleActions({ registry, articleStatuses: statuses, articleDate, markdown, feedback, sources: process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ repoRoot, markdown, feedback }), agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
+reviewed.markdown = renderArticleActions(reviewed.markdown, reviewed.registry, articleDate, statuses)
+if (process.env.DRY_RUN !== 'true') {
+  if (readFileSync(resolve(repoRoot, articlePath), 'utf8') !== markdown) throw new Error('Article changed during action review')
+  writeActionRegistry(repoRoot, reviewed.registry, registryRevision(registry), { path: resolve(repoRoot, articlePath), expected: markdown, next: reviewed.markdown, publish: () => writeFileSync(resolve(repoRoot, articlePath), reviewed.markdown) })
+}
+console.log(JSON.stringify({ articleDate, beforeRevision: registryRevision(registry), afterRevision: registryRevision(reviewed.registry), dryRun: process.env.DRY_RUN === 'true', ...(process.argv.includes('--receipt') ? { registry: reviewed.registry, markdown: reviewed.markdown } : {}) }))

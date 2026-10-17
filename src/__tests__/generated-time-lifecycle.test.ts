@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -12,6 +12,8 @@ import { prepareGeneratedTime, persistGeneratedTime, readArticleTime } from '../
 import { detachArticleTime, preserveTimeDuringRevision } from '../article-time-frontmatter.js'
 import { stampOutcome } from '../stamp-outcome.js'
 import { buildApi } from '../build-api.js'
+import { readActionRegistry, registryRevision, writeActionRegistry } from '../action-registry.js'
+import { reviewArticleActions, mockActionAgents } from '../review-actions.js'
 
 const { createMessage } = vi.hoisted(() => ({ createMessage: vi.fn() }))
 vi.mock('@anthropic-ai/sdk', () => ({ default: class { messages = { create: createMessage } } }))
@@ -31,6 +33,7 @@ function fixture(withHistory = false) {
   const root = mkdtempSync(join(tmpdir(), 'generated-time-lifecycle-'))
   if (withHistory) execFileSync('git', ['-c', 'core.hooksPath=/dev/null', 'clone', '--shared', '--quiet', sourceRoot, root])
   else mkdirSync(join(root, 'action-admissions'))
+  if (withHistory) cpSync(join(sourceRoot, 'actions'), join(root, 'actions'), { recursive: true })
   roots.push(root)
   return root
 }
@@ -61,6 +64,9 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     const originalArtifact = readFileSync(persisted.artifactPath)
     expect(prepared.markdown).toContain(`time_records_sha256: ${prepared.digest}`)
     expect(prepared.markdown).not.toContain('time_references:')
+    const registry = readActionRegistry(root)
+    const review = await reviewArticleActions({ registry, articleStatuses: new Map(), articleDate: date, markdown: prepared.markdown, feedback: '', sources: [], agents: mockActionAgents })
+    writeActionRegistry(root, review.registry, registryRevision(registry))
     buildApi(root)
     const apiPath = join(root, 'api/articles', `${date}.json`)
     expect(articleJson.parse(JSON.parse(readFileSync(apiPath, 'utf8'))).timeReferences?.[0]?.at).toBe(at)
@@ -80,11 +86,11 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     expect(cli).toContain('"changed":true')
     expect(readFileSync(persisted.articlePath, 'utf8')).toContain(`time_records_sha256: ${prepared.digest}`)
     expect(readFileSync(persisted.artifactPath).equals(originalArtifact)).toBe(true)
-    git(root, 'add', `_articles/${date}.md`)
+    git(root, 'add', `_articles/${date}.md`, 'actions/registry.json')
     git(root, 'commit', '-qm', 'Ordinary one-file editorial revision')
     const revision = git(root, 'rev-parse', 'HEAD')
     // These are the same changed-path and regular-file conditions enforced by both editorial workflow gates.
-    expect(git(root, 'diff', '--name-only', generation, revision)).toBe(`_articles/${date}.md`)
+    expect(git(root, 'diff', '--name-only', generation, revision)).toBe(`_articles/${date}.md\nactions/registry.json`)
     expect(git(root, 'ls-tree', revision, '--', `_articles/${date}.md`)).toMatch(/^100644 blob /)
     buildApi(root)
     expect(articleJson.parse(JSON.parse(readFileSync(apiPath, 'utf8'))).timeReferences?.[0]).toMatchObject({ at, evidence: { repo: 'ojfbot/daily-logger', ref: '359', event: 'merged' } })

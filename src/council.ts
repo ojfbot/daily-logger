@@ -315,6 +315,8 @@ export async function synthesizeWithCouncil(
       tags: result.data.tags.map((t) => t.name),
       summary: result.data.summary,
       body: assembleBody(result.data),
+      suggestedActions: result.data.suggestedActions,
+      closedActions: result.data.closedActions,
     }
   }
 

@@ -205,7 +205,7 @@ describe('reviewed action intake', () => {
     const f = fixture()
     const before = readFileSync(join(f.root, 'api/actions.json'), 'utf8')
     rmSync(f.recordPath)
-    expect(() => buildApi(f.root)).toThrow(/Required action admission is missing/)
+    expect(() => buildApi(f.root)).toThrow(/Action registry is missing/)
     expect(readFileSync(join(f.root, 'api/actions.json'), 'utf8')).toBe(before)
   })
 

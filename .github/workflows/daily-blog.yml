@@ -175,7 +175,7 @@ jobs:
           fi
 
           git checkout -b "${BRANCH}"
-          git add _articles/ api/
+          git add _articles/ api/ actions/
 
           if git diff --staged --quiet; then
             echo "::notice::No article changes staged."

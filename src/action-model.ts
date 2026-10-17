@@ -67,6 +67,7 @@ export const LegacyCanonicalActionSchema = z.object({
   description: z.string().min(1),
   repo: z.string().min(1),
   status: z.enum(['open', 'done']),
+  currentDescription: z.string().min(1).optional(),
   sourceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   id: z.string().min(1).optional(),
   closedDate: z.string().optional(),

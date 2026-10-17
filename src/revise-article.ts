@@ -16,6 +16,9 @@ import { z } from 'zod'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { dirname } from 'node:path'
+import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses } from './action-registry.js'
+import { collectActionSources, createActionAgents, mockActionAgents, reviewArticleActions } from './review-actions.js'
 import { stampOutcome } from './stamp-outcome.js'
 import { detachArticleTime, preserveTimeDuringRevision, type RevisionResult } from './article-time-frontmatter.js'
 import {
@@ -36,7 +39,7 @@ Rules:
 1. Apply ONLY the changes described in the editorial feedback. Do not rewrite sections that are not mentioned in the feedback.
 2. Preserve the article's voice — first-person plural ("we"), direct, technical, didactic.
 3. Keep ALL YAML frontmatter fields intact (including title, date, tags, summary, status, and provenance). Do not modify the status or provenance fields.
-4. Preserve section structure: ## What shipped, ## The decisions, ## Roadmap pulse, ## What's next, and the > **Suggested actions** blockquote.
+4. Preserve section structure: ## What shipped, ## The decisions, ## Roadmap pulse, ## What's next. Suggested actions are managed separately after prose revision. Do not invent or preserve obsolete action instructions in prose.
 5. Preserve all markdown formatting: GFM links, backtick code references, blockquotes, headings, lists.
 6. Return the FULL revised article (not a diff), including the YAML frontmatter delimiters (---).
 7. In changesSummary, list each discrete change you made as a short sentence. If a feedback item required no change (e.g., the article already says what was requested), note "No change needed: ..." and explain why.
@@ -182,6 +185,14 @@ async function main() {
 
   try {
     result = await reviseArticle({ articleContent, feedback, mode: isMock ? 'mock' : 'model', dryRun: isDryRun })
+    const repoRoot = resolve(dirname(resolve(articlePath)), '..')
+    const registry = readActionRegistry(repoRoot)
+    const articleDate = result.revisedMarkdown.match(/^date:\s*"?(\d{4}-\d{2}-\d{2})/m)?.[1]
+    if (!articleDate) throw new Error('Article date is missing')
+    const actions = await reviewArticleActions({ registry, articleStatuses: readArticleStatuses(repoRoot), articleDate, markdown: result.revisedMarkdown, feedback, sources: isMock ? [] : collectActionSources({ repoRoot, markdown: result.revisedMarkdown, feedback }), agents: isMock ? mockActionAgents : createActionAgents() })
+    result.revisedMarkdown = actions.markdown
+    result.changed = result.revisedMarkdown.trim() !== articleContent.trim()
+    if (!isDryRun) writeActionRegistry(repoRoot, actions.registry, registryRevision(registry), { path: articlePath, expected: articleContent, next: result.revisedMarkdown, publish: () => writeFileSync(articlePath, result.revisedMarkdown, 'utf8') })
   } catch (err) {
     console.error(`\n❌ Revision failed: ${err instanceof Error ? err.message : err}`)
     process.exit(2)
@@ -195,7 +206,6 @@ async function main() {
   if (!isDryRun && result.changed) {
     // S18 (audit I2): a human-driven revision IS the 'edited' outcome — stamp it mechanically
     // (never via the LLM, whose prompt forbids touching frontmatter).
-    writeFileSync(articlePath, result.revisedMarkdown, 'utf-8')
     console.error(`\n✓ Written to ${articlePath} (outcome: edited)`)
   }
 
