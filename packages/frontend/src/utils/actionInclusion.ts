@@ -3,10 +3,21 @@ import { ActionRegistrySchema, type ActionRegistry } from '../../../../src/actio
 import { ghFetch } from './stampDraft.ts'
 
 const repo = 'repos/ojfbot/daily-logger'
-const fileSchema = z.object({ content: z.string(), sha: z.string() })
+const fileSchema = z.object({ content: z.string(), sha: z.string(), encoding: z.enum(['base64', 'none']).optional() })
 const refSchema = z.object({ object: z.object({ sha: z.string() }) })
 function decode(content: string): string { return new TextDecoder().decode(Uint8Array.from(atob(content.replace(/\n/g, '')), char => char.charCodeAt(0))) }
 function encode(content: string): string { return btoa(Array.from(new TextEncoder().encode(content), byte => String.fromCharCode(byte)).join('')) }
+async function readFile(path: string): Promise<z.infer<typeof fileSchema>> {
+  const response = await ghFetch(path)
+  if (!response.ok) throw new Error('Canonical editorial source unavailable')
+  const file = fileSchema.parse(await response.json())
+  if (file.encoding !== 'none') return file
+  const responseBlob = await ghFetch(`${repo}/git/blobs/${file.sha}`)
+  if (!responseBlob.ok) throw new Error('Canonical editorial blob unavailable')
+  const blob = fileSchema.extend({ encoding: z.literal('base64') }).parse(await responseBlob.json())
+  if (blob.sha !== file.sha) throw new Error('Canonical editorial blob changed')
+  return blob
+}
 const sameProse = (content: string) => content.replace(/^(?:status|outcome):.*\n?/gm, '')
 export interface EditorialActions { registry: ActionRegistry; sha: string; branchExists: boolean; draft: boolean }
 
@@ -16,18 +27,12 @@ export async function loadEditorialActions(date: string, visibleBlobSha: string)
   const branchResponse = await ghFetch(`${repo}/git/refs/heads/${branch}`)
   if (!branchResponse.ok && branchResponse.status !== 404) throw new Error('Could not check editorial branch')
   const ref = branchResponse.ok ? encodeURIComponent(branch) : 'main'
-  const articleResponse = await ghFetch(`${repo}/contents/_articles/${date}.md?ref=${ref}`)
-  if (!articleResponse.ok) throw new Error('Article source unavailable')
-  const article = fileSchema.parse(await articleResponse.json())
+  const article = await readFile(`${repo}/contents/_articles/${date}.md?ref=${ref}`)
   if (article.sha !== visibleBlobSha) {
-    const mainResponse = await ghFetch(`${repo}/contents/_articles/${date}.md?ref=main`)
-    if (!mainResponse.ok) throw new Error('Article source unavailable')
-    const main = fileSchema.parse(await mainResponse.json())
+    const main = await readFile(`${repo}/contents/_articles/${date}.md?ref=main`)
     if (main.sha !== visibleBlobSha || sameProse(decode(main.content)) !== sameProse(decode(article.content))) throw new Error('The editorial branch contains a different article version. Refresh its preview before changing actions.')
   }
-  const response = await ghFetch(`${repo}/contents/actions/registry.json?ref=${ref}`)
-  if (!response.ok) throw new Error('Canonical action state unavailable')
-  const file = fileSchema.parse(await response.json())
+  const file = await readFile(`${repo}/contents/actions/registry.json?ref=${ref}`)
   return { registry: ActionRegistrySchema.parse(JSON.parse(decode(file.content))), sha: file.sha, branchExists: branchResponse.ok, draft: /^status:\s*"?draft"?\s*$/m.test(decode(article.content)) }
 }
 

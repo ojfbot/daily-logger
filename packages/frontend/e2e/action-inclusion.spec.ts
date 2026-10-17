@@ -35,10 +35,10 @@ for (const conflict of [false, true]) {
     const article = { date, title: 'Action review', summary: 'Verified suggestions.', tags: [], reposActive: [], commitCount: 0, activityType: 'build', schemaVersion: 2, status: 'draft', sourceBlobSha: 'article-1', actionSuggestions: registry.records, bodyHtml: '<h2>What shipped</h2><p>Reviewed work.</p><h2>What’s next</h2><blockquote><strong>Suggested actions</strong><p>Review the exact acceptance checkpoint.</p></blockquote><section class="action-history-card" aria-label="Resolved suggestions"><h3>Resolved suggestions</h3><article>Earlier suggestion · completed</article></section>' }
     await page.route('**/api/entries.json', route => route.fulfill({ json: [article] }))
     await page.route(`**/api/articles/${date}.json`, route => route.fulfill({ json: article }))
-    await page.route('**/api/article-reviews**', route => route.fulfill({ json: { schemaVersion: 1, date, observedAt: '2026-10-18T12:00:00Z', sourceCommitSha: 'b'.repeat(40), currentBlobSha: article.sourceBlobSha, visibleBlobSha: article.sourceBlobSha, discovery: 'registered_and_eligible_pull_requests', requestTarget: null, entries: [], unavailable: [], requests: [], pullRequests: [], correspondence: [] } }))
+    await page.route('**/api/article-reviews**', route => new URL(route.request().url()).searchParams.get('view') === 'editorial' ? route.fulfill({ json: { status: 'none', ...(branch ? { stagedHeadSha: 'a'.repeat(40) } : {}) } }) : route.fulfill({ json: { schemaVersion: 1, date, observedAt: '2026-10-18T12:00:00Z', sourceCommitSha: 'b'.repeat(40), currentBlobSha: article.sourceBlobSha, visibleBlobSha: article.sourceBlobSha, discovery: 'registered_and_eligible_pull_requests', requestTarget: null, entries: [], unavailable: [], requests: [], pullRequests: [], correspondence: [] } }))
     await page.route('**/api/github/**', async route => {
       const request = route.request(), path = new URL(request.url()).pathname.replace('/api/github/', ''), method = request.method()
-      if (path.endsWith(`/git/refs/heads/accept/${date}`)) return route.fulfill({ status: branch ? 200 : 404, json: branch ? { object: { sha: 'branch-1' } } : {} })
+      if (path.endsWith(`/git/refs/heads/accept/${date}`) && method === 'GET') return route.fulfill({ status: branch ? 200 : 404, json: branch ? { object: { sha: 'a'.repeat(40) } } : {} })
       if (path.endsWith('/git/refs/heads/main')) return route.fulfill({ json: { object: { sha: 'main-1' } } })
       if (path.endsWith('/git/refs') && method === 'POST') { branch = true; branchCreations++; return route.fulfill({ status: 201, json: {} }) }
       if (path.endsWith(`/contents/_articles/${date}.md`)) {
@@ -58,6 +58,10 @@ for (const conflict of [false, true]) {
         }
         return route.fulfill({ json: { sha, content: Buffer.from(JSON.stringify(registry)).toString('base64') } })
       }
+      if (path.includes('/git/commits/') && method === 'GET') return route.fulfill({ json: { tree: { sha: 'tree-1' } } })
+      if (path.endsWith('/git/trees') && method === 'POST') { articleSource = request.postDataJSON().tree[0].content; return route.fulfill({ json: { sha: 'tree-2' } }) }
+      if (path.endsWith('/git/commits') && method === 'POST') return route.fulfill({ json: { sha: 'commit-1' } })
+      if (path.endsWith(`/git/refs/heads/accept/${date}`) && method === 'PATCH') { expect(request.postDataJSON().force).toBe(false); return route.fulfill({ json: {} }) }
       if (path.endsWith('/pulls') && method === 'GET') return route.fulfill({ json: [] })
       if (path.endsWith('/pulls') && method === 'POST') { opened = true; return route.fulfill({ status: 201, json: { number: 42, html_url: 'https://github.com/ojfbot/daily-logger/pull/42' } }) }
       return route.fulfill({ status: 500, json: { message: `Unexpected ${method} ${path}` } })

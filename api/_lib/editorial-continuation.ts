@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { editorialInputSchema, editorialProjectionSchema, editorialRecordSchema,
   type EditorialInput, type EditorialRecord, type EditorialHistory, type EditorialWriteFailureResponse } from '../../shared/article-review.js'
 import { createReviewSource, ReviewError, trustedPullRequest, type GitHub } from './article-review-sources.js'
+import { ActionRegistrySchema, isArticleInclusionChange } from '../../src/action-registry-schema.js'
+import { sha } from '../../shared/article-review.js'
 
 export const revisionTitle = '## Explicit editorial revision request\n'
 export const versionTitle = '## Superseding editorial feedback\n'
@@ -44,15 +46,34 @@ export function createEditorialService(github: GitHub) {
     const prs = (await source.acceptPulls(articleDate)).filter(pr => pr.head.ref === `accept/${articleDate}`)
     if (!prs.length) {
       const branch = await github(`${repo}/git/ref/heads/accept/${articleDate}`)
-      if (branch.status !== 404) throw new ReviewError(409, 'Acceptance branch exists or discovery is unavailable. Refresh before accepting.')
-      return editorialProjectionSchema.parse({ status: 'none' })
+      if (branch.status === 404) return editorialProjectionSchema.parse({ status: 'none' })
+      if (!branch.ok) throw new ReviewError(409, 'Acceptance branch discovery is unavailable. Refresh before accepting.')
+      const head = z.object({ object: z.object({ sha }) }).parse(await branch.json()).object.sha
+      const main = await source.main()
+      const compared = await github(`${repo}/compare/${main}...${head}?per_page=100`)
+      if (!compared.ok) throw new ReviewError(409, 'Cannot verify staged action choices. Refresh before accepting.')
+      const diff = z.object({ status: z.enum(['ahead', 'identical']), ahead_by: z.number().int().max(100), total_commits: z.number().int(), commits: z.array(z.unknown()),
+        merge_base_commit: z.object({ sha }), files: z.array(z.object({ filename: z.string(), status: z.literal('modified') })).max(1) }).parse(await compared.json())
+      if (diff.merge_base_commit.sha !== main || diff.total_commits !== diff.commits.length || diff.files.some(file => file.filename !== 'actions/registry.json')) throw new ReviewError(409, 'Acceptance branch contains changes beyond staged action choices. Reconcile it before accepting.')
+      const articlePath = `_articles/${articleDate}.md`
+      const [beforeArticle, afterArticle, beforeRegistry, afterRegistry] = await Promise.all([
+        source.regularFile(articlePath, main), source.regularFile(articlePath, head), source.regularFile('actions/registry.json', main), source.regularFile('actions/registry.json', head),
+      ])
+      if (!await source.onlyFileChanged('actions/registry.json', main, head) || beforeArticle.blobSha !== afterArticle.blobSha || !/^status:\s*"?draft"?\s*$/m.test(afterArticle.text) ||
+          !isArticleInclusionChange(ActionRegistrySchema.parse(JSON.parse(beforeRegistry.text)), ActionRegistrySchema.parse(JSON.parse(afterRegistry.text)), articleDate, actor)) throw new ReviewError(409, 'Acceptance branch contains changes beyond staged action choices. Reconcile it before accepting.')
+      const current = await github(`${repo}/git/ref/heads/accept/${articleDate}`)
+      if (!current.ok || z.object({ object: z.object({ sha }) }).parse(await current.json()).object.sha !== head || await source.main(true) !== main) throw new ReviewError(409, 'Staged action choices moved during discovery. Refresh before accepting.')
+      return editorialProjectionSchema.parse({ status: 'none', stagedHeadSha: head })
     }
     if (prs.length !== 1) throw new ReviewError(409, 'Ambiguous acceptance history. No new acceptance or continuation is enabled.')
     const pr = prs[0]
     if (!pr || !trustedPullRequest(pr)) throw new ReviewError(409, 'Acceptance PR is not a trusted same-repository target.')
     const files = await source.files(pr.number)
-    if (files.length !== 1 || files[0]?.filename !== `_articles/${articleDate}.md` || !['added', 'modified'].includes(files[0].status)) throw new ReviewError(409, 'Acceptance PR must change only its dated article.')
-    const article = await source.file(`_articles/${articleDate}.md`, pr.head.sha)
+    const articlePath = `_articles/${articleDate}.md`
+    if (!files.some(file => file.filename === articlePath) || files.some(file => ![articlePath, 'actions/registry.json'].includes(file.filename) || !['added', 'modified'].includes(file.status))) throw new ReviewError(409, 'Acceptance PR may change only its dated article and canonical action registry.')
+    const [article, registry] = await Promise.all([source.regularFile(articlePath, pr.head.sha), source.regularFile('actions/registry.json', pr.head.sha)])
+    ActionRegistrySchema.parse(JSON.parse(registry.text))
+    if (!/^status:\s*"?accepted"?\s*$/m.test(article.text)) throw new ReviewError(409, 'Continuation requires the accepted PR article.')
     const comments = await source.comments(pr.number)
     const versions: EditorialHistory[] = [], requests: EditorialHistory[] = []
     const seen = new Map<string, EditorialHistory>()

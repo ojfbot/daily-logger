@@ -6,8 +6,8 @@ run-name: "Editorial continuation comment ${{ github.event.comment.id || 'automa
 # and pushes the result back to the PR branch. The final push uses GH_PAT so
 # updated-head PR checks run without GITHUB_TOKEN workflow-run approval.
 # pull_request_target loads this policy from the trusted base, excludes foreign
-# repositories, and admits only a regular dated article before checking out head.
-# Every other head file must equal the pinned base, including scripts and lockfile.
+# repositories, and admits only a regular dated article and canonical registry before checking out head.
+# Other head files must equal the trusted common ancestor. Scripts and dependencies run from the pinned base policy.
 
 on:
   pull_request_target:
@@ -38,6 +38,9 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+      pull-requests: write
+      issues: read
+      actions: read
 
     steps:
       - name: Checkout PR branch
@@ -69,7 +72,12 @@ jobs:
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
           git fetch --no-tags origin "$HEAD_SHA"
-          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          ANCESTORS=$(git merge-base --all "$BASE_SHA" "$HEAD_SHA")
+          if [[ "$ANCESTORS" == *$'\n'* || -z "$ANCESTORS" ]]; then
+            echo "::error::A unique trusted common ancestor is required."
+            exit 1
+          fi
+          CHANGED=$(git diff --no-renames --name-only "$ANCESTORS" "$HEAD_SHA")
           MODE=$(git ls-tree "$HEAD_SHA" -- "$ARTICLE_PATH" | cut -d ' ' -f 1)
           if [[ "$MODE" != '100644' || -z "$CHANGED" ]]; then
             echo "::error::Editorial article must be a regular file."
@@ -85,6 +93,8 @@ jobs:
               exit 1
             fi
           done <<< "$CHANGED"
+          git worktree add --detach "$RUNNER_TEMP/editorial-policy" "$BASE_SHA"
+          echo "POLICY_DIRECTORY=$RUNNER_TEMP/editorial-policy" >> "$GITHUB_ENV"
           git checkout -B "$HEAD_BRANCH" "$HEAD_SHA"
 
       - name: Setup pnpm
@@ -99,20 +109,31 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm --dir "$POLICY_DIRECTORY" install --frozen-lockfile
+
+      - name: Validate registry changes within this article
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+          ACTOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EDITORIAL_WORKSPACE: ${{ github.workspace }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/scripts/check-editorial-actions.ts" "$BASE_SHA" "$HEAD_SHA" "$(basename "$ARTICLE_PATH" .md)" "$ACTOR" "$PR_NUMBER"
 
       - name: Stamp outcome on article frontmatter
         env:
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
           OUTCOME: accepted
-        run: pnpm exec tsx src/stamp-outcome.ts
+        run: ARTICLE_PATH="$GITHUB_WORKSPACE/$ARTICLE_PATH" pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/src/stamp-outcome.ts"
 
       - name: Reconcile actions before clean acceptance
         env:
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: pnpm exec tsx scripts/reconcile-actions.ts
+        run: ARTICLE_PATH="$GITHUB_WORKSPACE/$ARTICLE_PATH" ACTION_REPO_ROOT="$GITHUB_WORKSPACE" pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/scripts/reconcile-actions.ts"
 
       - name: Commit stamped article
         env:
@@ -122,7 +143,7 @@ jobs:
         run: |
           git config user.name "ojfbot-blog[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$ARTICLE_PATH" actions/
+          git add "$ARTICLE_PATH" actions/registry.json
           if git diff --cached --quiet; then
             echo "⏭ No outcome change to commit"
           else
@@ -130,6 +151,19 @@ jobs:
             gh auth setup-git
             git push origin "HEAD:refs/heads/${HEAD_BRANCH}"
           fi
+
+      - name: Record verified registry output
+        uses: actions/github-script@v7
+        env:
+          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+          INPUT_HEAD: ${{ github.event.pull_request.head.sha }}
+        with:
+          script: |
+            const { execFileSync } = await import('node:child_process');
+            const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+            const receipt = { date: process.env.ARTICLE_PATH.match(/([0-9-]+)\.md$/)[1], runId: Number(process.env.GITHUB_RUN_ID), policySha: process.env.GITHUB_SHA, inputHead: process.env.INPUT_HEAD, outputCommit: git('rev-parse', 'HEAD'), outputRegistryBlob: git('rev-parse', 'HEAD:actions/registry.json') };
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body: `## Verified action registry\n${JSON.stringify(receipt)}` });
+
 
   revise:
     name: Apply editorial revisions
@@ -147,6 +181,8 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      issues: read
+      actions: read
 
     steps:
       - name: Checkout PR branch
@@ -192,7 +228,12 @@ jobs:
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
           git fetch --no-tags origin "$HEAD_SHA"
-          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          ANCESTORS=$(git merge-base --all "$BASE_SHA" "$HEAD_SHA")
+          if [[ "$ANCESTORS" == *$'\n'* || -z "$ANCESTORS" ]]; then
+            echo "::error::A unique trusted common ancestor is required."
+            exit 1
+          fi
+          CHANGED=$(git diff --no-renames --name-only "$ANCESTORS" "$HEAD_SHA")
           MODE=$(git ls-tree "$HEAD_SHA" -- "$ARTICLE_PATH" | cut -d ' ' -f 1)
           if [[ "$MODE" != '100644' || -z "$CHANGED" ]]; then
             echo "::error::Editorial article must be a regular file."
@@ -208,6 +249,8 @@ jobs:
               exit 1
             fi
           done <<< "$CHANGED"
+          git worktree add --detach "$RUNNER_TEMP/editorial-policy" "$BASE_SHA"
+          echo "POLICY_DIRECTORY=$RUNNER_TEMP/editorial-policy" >> "$GITHUB_ENV"
           git checkout -B "$HEAD_BRANCH" "$HEAD_SHA"
 
       - name: Extract editorial feedback from PR body
@@ -216,7 +259,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const { extractEditorialFeedback } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/extract-editorial-feedback.mjs`);
+            const { extractEditorialFeedback } = await import(`${process.env.POLICY_DIRECTORY}/.github/scripts/extract-editorial-feedback.mjs`);
             const feedback = extractEditorialFeedback(context.payload.pull_request.body || '');
             core.setOutput('feedback', feedback);
             core.info(`Extracted ${feedback.length} chars of feedback`);
@@ -248,7 +291,19 @@ jobs:
 
       - name: Install dependencies
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
-        run: pnpm install --frozen-lockfile
+        run: pnpm --dir "$POLICY_DIRECTORY" install --frozen-lockfile
+
+      - name: Validate registry changes within this article
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+          ACTOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EDITORIAL_WORKSPACE: ${{ github.workspace }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/scripts/check-editorial-actions.ts" "$BASE_SHA" "$HEAD_SHA" "$(basename "$ARTICLE_PATH" .md)" "$ACTOR" "$PR_NUMBER"
 
       - name: Run editorial revision
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
@@ -259,8 +314,8 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          pnpm exec tsx src/revise-article.ts > /tmp/revision-result.json
-          echo "changed=$(jq -r '.changed' /tmp/revision-result.json)" >> "$GITHUB_OUTPUT"
+          ARTICLE_PATH="$GITHUB_WORKSPACE/$ARTICLE_PATH" pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/src/revise-article.ts" > /tmp/revision-result.json
+          echo "changed=$(jq -r '.changed or .registryChanged' /tmp/revision-result.json)" >> "$GITHUB_OUTPUT"
 
       - name: Commit revised article
         env:
@@ -270,10 +325,23 @@ jobs:
         run: |
           git config user.name "ojfbot-blog[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "${{ steps.date.outputs.article_path }}" actions/
+          git add "${{ steps.date.outputs.article_path }}" actions/registry.json
           git commit -m "editorial: revise ${{ steps.date.outputs.date }} per feedback"
           gh auth setup-git
           git push origin "HEAD:refs/heads/${HEAD_BRANCH}"
+
+      - name: Record verified registry output
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        uses: actions/github-script@v7
+        env:
+          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+          INPUT_HEAD: ${{ github.event.pull_request.head.sha }}
+        with:
+          script: |
+            const { execFileSync } = await import('node:child_process');
+            const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+            const receipt = { date: process.env.ARTICLE_PATH.match(/([0-9-]+)\.md$/)[1], runId: Number(process.env.GITHUB_RUN_ID), policySha: process.env.GITHUB_SHA, inputHead: process.env.INPUT_HEAD, outputCommit: git('rev-parse', 'HEAD'), outputRegistryBlob: git('rev-parse', 'HEAD:actions/registry.json') };
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body: `## Verified action registry\n${JSON.stringify(receipt)}` });
 
       - name: Post revision summary on PR
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
@@ -294,7 +362,7 @@ jobs:
               .map(c => `- ${c}`)
               .join('\n');
 
-            const status = result.changed
+            const status = result.changed || result.registryChanged
               ? '✅ **Revision applied** — changes committed to this branch.'
               : 'ℹ️ **No changes needed** — the article already reflects the feedback.';
 

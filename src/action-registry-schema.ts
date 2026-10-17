@@ -75,6 +75,24 @@ export const ActionRegistrySchema = z.object({
   }
 })
 export type ActionRegistry = z.infer<typeof ActionRegistrySchema>
+function explicitInclusionInstruction(instruction: string) { return instruction === 'Explicit editorial inclusion checkbox' || /^Explicit editorial inclusion instruction: \S[\s\S]*$/.test(instruction) }
+export function isArticleInclusionChange(before: ActionRegistry, after: ActionRegistry, articleDate: string, actor: string): boolean {
+  const snapshot = before.articles.find(article => article.date === articleDate)
+  if (!snapshot || snapshot.status !== 'draft' || before.records.length !== after.records.length) return false
+  const restored = structuredClone(after)
+  for (let index = 0; index < before.records.length; index++) {
+    const original = before.records[index]
+    const changed = restored.records[index]
+    if (!original || !changed || original.key !== changed.key) return false
+    if (JSON.stringify(original) === JSON.stringify(changed)) continue
+    if (original.origin !== 'suggested' || original.introducedBy !== articleDate || !snapshot.actionKeys.includes(original.key) ||
+        changed.inclusionOverride?.actor.toLowerCase() !== actor.toLowerCase() ||
+        !explicitInclusionInstruction(changed.inclusionOverride.instruction) || changed.inclusionOverride.include !== changed.includeInIndex) return false
+    changed.includeInIndex = original.includeInIndex
+    changed.inclusionOverride = original.inclusionOverride
+  }
+  return JSON.stringify(before) === JSON.stringify(restored)
+}
 export type ArticleActionSnapshot = z.infer<typeof ArticleActionSchema>
 export const ProposedActionSchema = z.object({ id: z.string(), command: z.string(), description: z.string(), repo: z.string(), sourceDate: date, status: z.literal('proposed'), includeInIndex: z.boolean() }).strict()
 export type ProposedAction = z.infer<typeof ProposedActionSchema>

@@ -44,6 +44,9 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
+      issues: read
+      pull-requests: read
+      actions: read
 
     steps:
       - name: Checkout
@@ -64,6 +67,33 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Verify acceptance registry against trusted policy
+        if: startsWith(github.head_ref, 'accept/')
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+          ACTOR: ${{ github.event.pull_request.user.login }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EDITORIAL_WORKSPACE: ${{ github.workspace }}
+        run: |
+          DATE="${HEAD_BRANCH#accept/}"
+          [[ "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
+          git fetch --no-tags origin "$BASE_SHA" "$HEAD_SHA"
+          POLICY_DIRECTORY="$RUNNER_TEMP/editorial-admission-policy"
+          git worktree add --detach "$POLICY_DIRECTORY" "$BASE_SHA"
+          pnpm --dir "$POLICY_DIRECTORY" install --frozen-lockfile
+          # A bot push starts checks just before its output receipt is appended.
+          # Wait only for that read-only proof; never invoke or replay a model here.
+          for ATTEMPT in 1 2 3 4 5 6; do
+            if pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/scripts/check-editorial-actions.ts" "$BASE_SHA" "$HEAD_SHA" "$DATE" "$ACTOR" "$PR_NUMBER"; then
+              exit 0
+            fi
+            if [[ "$ATTEMPT" == 6 ]]; then exit 1; fi
+            sleep 5
+          done
 
       - name: Type-check
         run: pnpm type-check

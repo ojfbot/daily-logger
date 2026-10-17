@@ -42,15 +42,15 @@ A moved head or empty history cannot fence an older in-flight append and cannot
 authorize discarding its input or submitting a new UUID.
 
 The consumer compares the pinned PR head against its unique common ancestor with
-the trusted default-branch policy commit. Only the dated regular article may differ,
-and its blob must equal the reviewed request. Missing or ambiguous ancestry blocks
+the trusted default-branch policy commit. Only the dated regular article and canonical registry may differ,
+and the article blob must equal the reviewed request. Missing or ambiguous ancestry blocks
 execution. Unrelated main commits do not become PR changes; even independent main
 changes to the same article do not replace the pinned PR input. This does not merge
 main into the acceptance branch or certify mergeability. Workflow code, the revision
 script and dependencies still run from the trusted policy checkout, never the PR.
 
 Only one request may be outstanding. A durable pre-provider claim prevents
-replay. No-change and changed outcomes are recorded with actual article identities.
+replay. No-change and changed outcomes are recorded with actual article and registry blob identities.
 A claimed failure or uncertain provider/push outcome remains blocked for diagnosis;
 this pilot provides no automatic replay or UI override for uncertainty. A workflow
 rerun cannot authorize another attempt. Requests must be at most 24 hours old to
@@ -118,3 +118,11 @@ MOCK_LLM mode and push only to a temporary local bare remote. Browser verificati
 uses pnpm exec playwright test --config playwright.continuation.config.ts after a
 production frontend build. These fixtures do not prove deployed GitHub delivery
 or authorize any live provider call, workflow execution, production publish or merge.
+
+Action registry cutover
+
+The consumer pins the regular dated article and actions/registry.json blobs at input and output. Registry changes may extend only this article's review history and snapshot; existing identities, earlier evidence, other article snapshots, and other dates' tracking choices stay intact. Missing pre-cutover registry data requires rebasing before any invocation claim. A verified round that changes only the registry is committed and published. No-change means both files are unchanged. Claims and terminal receipts retain both blob identities.
+
+Before the first acceptance, saved checkbox choices can exist on accept/<date> without a PR. Discovery recognizes this branch only after a complete regular-file tree comparison, unchanged draft article, and an inclusion-only registry comparison against current main. Acceptance creates a commit with that exact parent and uses a non-force ref update, so a concurrent branch advance blocks publication.
+
+Subsequent input registry blobs must match canonical ancestor state or an exact immutable bot-issued output receipt from this editorial workflow; an own-article explicit inclusion change is the only human overlay. Receipt checks bind workflow provenance, PR/request identity, trusted policy ancestry, output ancestry, and the regular registry blob. A hand-authored verification snapshot does not establish either agent ran. The required PR check repeats this admission on every acceptance head without model execution, with a short bounded wait for the output receipt. Ordinary human-reviewed source/data PRs retain the normal trusted-main authority.

@@ -102,13 +102,47 @@ export function createReviewSource(github: GitHub) {
   }
   async function file(path: string, ref: string) {
     const encodedPath = path.split('/').map(encodeURIComponent).join('/')
-    const data = z.object({ sha, content: z.string(), encoding: z.literal('base64'), type: z.literal('file') })
+    let data = z.object({ sha, content: z.string(), encoding: z.enum(['base64', 'none']), type: z.literal('file') })
       .parse(await json(`/contents/${encodedPath}?ref=${ref}`))
-    if (data.content.length > 700000) throw new ReviewError(503, 'Review record exceeds the bounded reader limit.')
+    if (data.encoding === 'none') {
+      const blob = z.object({ sha, content: z.string(), encoding: z.literal('base64') }).parse(await json(`/git/blobs/${data.sha}`))
+      if (blob.sha !== data.sha) throw new ReviewError(409, 'File blob identity changed.')
+      data = { ...data, ...blob }
+    }
+    if (data.content.length > (path === 'actions/registry.json' ? 16000000 : 700000)) throw new ReviewError(503, 'Review record exceeds the bounded reader limit.')
     return { blobSha: data.sha, text: Buffer.from(data.content, 'base64').toString('utf8') }
+  }
+  async function regularFile(path: string, ref: string) {
+    let treeSha = z.object({ tree: z.object({ sha }) }).parse(await json(`/git/commits/${ref}`)).tree.sha
+    const parts = path.split('/')
+    for (const [index, part] of parts.entries()) {
+      const tree = z.object({ truncated: z.literal(false), tree: z.array(z.object({ path: z.string(), mode: z.string(), sha })) }).parse(await json(`/git/trees/${treeSha}`))
+      const entry = tree.tree.find(entry => entry.path === part)
+      if (!entry || entry.mode !== (index === parts.length - 1 ? '100644' : '040000')) throw new ReviewError(409, 'Editorial inputs must be regular data files.')
+      treeSha = entry.sha
+    }
+    const result = await file(path, ref)
+    if (result.blobSha !== treeSha) throw new ReviewError(409, 'Editorial file disagrees with its pinned tree.')
+    return result
+  }
+  async function onlyFileChanged(path: string, before: string, after: string) {
+    let left = z.object({ tree: z.object({ sha }) }).parse(await json(`/git/commits/${before}`)).tree.sha
+    let right = z.object({ tree: z.object({ sha }) }).parse(await json(`/git/commits/${after}`)).tree.sha
+    const treeSchema = z.object({ truncated: z.literal(false), tree: z.array(z.object({ path: z.string(), mode: z.string(), sha })) })
+    for (const [index, part] of path.split('/').entries()) {
+      const [a, b] = await Promise.all([json(`/git/trees/${left}`), json(`/git/trees/${right}`)]).then(values => values.map(value => treeSchema.parse(value).tree))
+      if (!a || !b || JSON.stringify(a.filter(entry => entry.path !== part)) !== JSON.stringify(b.filter(entry => entry.path !== part))) return false
+      const nextA = a.find(entry => entry.path === part), nextB = b.find(entry => entry.path === part)
+      const mode = index === path.split('/').length - 1 ? '100644' : '040000'
+      if (!nextA || !nextB || nextA.mode !== mode || nextB.mode !== mode) return false
+      left = nextA.sha; right = nextB.sha
+    }
+    return true
   }
   return {
     file,
+    regularFile,
+    onlyFileChanged,
     main: async (fresh = false) => z.object({ object: z.object({ sha }) }).parse(await json('/git/ref/heads/main', undefined, fresh)).object.sha,
     pull: async (number: number, fresh = false) => githubPullRequestSchema.parse(await json(`/pulls/${number}`, undefined, fresh)),
     openPulls: () => list('/pulls?state=open&base=main&sort=updated&direction=desc', githubPullRequestSchema),

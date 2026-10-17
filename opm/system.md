@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `f884de2b6b8c84fdf3fd11580b2b9ac2a62e2fcb561444b59d8dc5cac3ef439c`.
+> Source SHA-256: `edd992c341485c5c39d9a0daa872dc12ca3a9e4b7d7f493062f0ec427124774a`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -442,6 +442,7 @@ flowchart TD
   n80("Continued Article Revising")
   n27["Claude API"]
   style n27 stroke-dasharray: 5 5
+  n22["Action Registry"]
   n0["Article — states: draft, accepted, rejected"]
   n81["Revision Outcome"]
   n4 -->|"requires (instrument)"| n70
@@ -459,7 +460,9 @@ flowchart TD
   n78 -->|"yields"| n79
   n79 -->|"object event"| n80
   n27 -->|"requires (instrument)"| n80
+  n22 -->|"requires (instrument)"| n80
   n80 <-->|"affects"| n0
+  n80 <-->|"affects"| n22
   n80 -->|"yields"| n81
 ```
 
@@ -481,6 +484,8 @@ Invocation Claiming requires GitHub. [src: .github/scripts/continue-editorial.ts
 Invocation Claiming yields Invocation Claim. [src: .github/scripts/continue-editorial.ts]
 Invocation Claim triggers Continued Article Revising. [src: .github/scripts/continue-editorial.ts]
 Continued Article Revising requires Claude API. [src: src/revise-article.ts]
+Continued Article Revising requires Action Registry. [src: src/revise-article.ts]
 Continued Article Revising affects Article. [src: src/revise-article.ts]
+Continued Article Revising affects Action Registry. [src: src/revise-article.ts]
 Continued Article Revising yields Revision Outcome. [src: .github/scripts/continue-editorial.ts]
 ```

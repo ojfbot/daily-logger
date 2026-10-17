@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { readActionRegistry, registryRevision, writeActionRegistry, setActionInclusion, renderArticleActions, readArticleStatuses } from '../src/action-registry.js'
 import { collectActionSources, createActionAgents, mockActionAgents, reviewArticleActions } from '../src/review-actions.js'
 
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const repoRoot = process.env.ACTION_REPO_ROOT ? resolve(process.env.ACTION_REPO_ROOT) : resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const articlePath = process.env.ARTICLE_PATH
 if (!articlePath) throw new Error('ARTICLE_PATH is required')
 const markdown = readFileSync(resolve(repoRoot, articlePath), 'utf8')
@@ -15,12 +15,13 @@ const registry = readActionRegistry(repoRoot)
 const feedback = process.env.EDITORIAL_FEEDBACK ?? ''
 const statuses = readArticleStatuses(repoRoot)
 if (process.env.ACTION_KEY) {
+  if (!feedback.trim()) throw new Error('An inclusion change requires the operator instruction in EDITORIAL_FEEDBACK')
   if (!['true', 'false'].includes(process.env.INCLUDE_IN_INDEX ?? '')) throw new Error('INCLUDE_IN_INDEX must be true or false')
   const record = registry.records.find(record => record.key === process.env.ACTION_KEY)
   if (record?.introducedBy !== articleDate || !registry.articles.find(article => article.date === articleDate)?.actionKeys.includes(process.env.ACTION_KEY)) throw new Error('The checkbox must belong to this article')
 }
 const reviewed = process.env.ACTION_KEY
-  ? { registry: setActionInclusion(registry, process.env.ACTION_KEY, process.env.INCLUDE_IN_INDEX !== 'false', process.env.ACTION_ACTOR ?? '', feedback, statuses), markdown }
+  ? { registry: setActionInclusion(registry, process.env.ACTION_KEY, process.env.INCLUDE_IN_INDEX !== 'false', process.env.ACTION_ACTOR ?? '', `Explicit editorial inclusion instruction: ${feedback.trim()}`, statuses), markdown }
   : await reviewArticleActions({ registry, articleStatuses: statuses, articleDate, markdown, feedback, sources: process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ repoRoot, markdown, feedback }), agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
 reviewed.markdown = renderArticleActions(reviewed.markdown, reviewed.registry, articleDate, statuses)
 if (process.env.DRY_RUN !== 'true') {

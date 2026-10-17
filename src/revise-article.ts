@@ -182,6 +182,7 @@ async function main() {
   console.error(`   Mode: ${isMock ? 'mock' : 'live'}${isDryRun ? ' (dry run)' : ''}`)
 
   let result: RevisionResult
+  let registryChanged = false
 
   try {
     result = await reviseArticle({ articleContent, feedback, mode: isMock ? 'mock' : 'model', dryRun: isDryRun })
@@ -192,6 +193,7 @@ async function main() {
     const actions = await reviewArticleActions({ registry, articleStatuses: readArticleStatuses(repoRoot), articleDate, markdown: result.revisedMarkdown, feedback, sources: isMock ? [] : collectActionSources({ repoRoot, markdown: result.revisedMarkdown, feedback }), agents: isMock ? mockActionAgents : createActionAgents() })
     result.revisedMarkdown = actions.markdown
     result.changed = result.revisedMarkdown.trim() !== articleContent.trim()
+    registryChanged = registryRevision(actions.registry) !== registryRevision(registry)
     if (!isDryRun) writeActionRegistry(repoRoot, actions.registry, registryRevision(registry), { path: articlePath, expected: articleContent, next: result.revisedMarkdown, publish: () => writeFileSync(articlePath, result.revisedMarkdown, 'utf8') })
   } catch (err) {
     console.error(`\n❌ Revision failed: ${err instanceof Error ? err.message : err}`)
@@ -213,6 +215,7 @@ async function main() {
     revisedMarkdown: result.revisedMarkdown,
     changesSummary: result.changesSummary,
     changed: result.changed,
+    registryChanged,
   }))
 }
 

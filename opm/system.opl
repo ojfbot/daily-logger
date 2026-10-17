@@ -172,5 +172,7 @@ Invocation Claiming requires GitHub. [src: .github/scripts/continue-editorial.ts
 Invocation Claiming yields Invocation Claim. [src: .github/scripts/continue-editorial.ts]
 Invocation Claim triggers Continued Article Revising. [src: .github/scripts/continue-editorial.ts]
 Continued Article Revising requires Claude API. [src: src/revise-article.ts]
+Continued Article Revising requires Action Registry. [src: src/revise-article.ts]
 Continued Article Revising affects Article. [src: src/revise-article.ts]
+Continued Article Revising affects Action Registry. [src: src/revise-article.ts]
 Continued Article Revising yields Revision Outcome. [src: .github/scripts/continue-editorial.ts]

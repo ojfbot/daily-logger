@@ -21,13 +21,17 @@ An instructed agent can change an unaccepted suggestion's inclusion:
 
 ```bash
 ARTICLE_PATH=_articles/2026-10-18.md ACTION_KEY=act-2026-10-18-0123456789abcdef \
-INCLUDE_IN_INDEX=false ACTION_ACTOR=operator \
+INCLUDE_IN_INDEX=false ACTION_ACTOR=ojfbot \
 EDITORIAL_FEEDBACK='Keep this suggestion in the article only.' pnpm actions:reconcile
 ```
 
+`ACTION_ACTOR` must identify the accepting GitHub account. The stored instruction and actor survive later review rounds; acceptance rejects choices attributed to another actor or unrelated registry edits.
+
 The reconciler allows one repair, with no SDK retries. Each provider call has a two-minute timeout. Linked GitHub discussions are bounded to 12 references. Up to eight goal documents include core’s fleet northstar and roadmap plus linked wayfinder, slice, and convoy documents. Remote evidence shares a 90-second collection budget. Missing sources cannot substantiate a disposition. Repository goal files and operator feedback supply goal evidence; the article itself does not prove its claims. Absent goal evidence yields no new admission.
 
-The explicit importer `pnpm actions:migrate` refuses to overwrite a registry. It is not part of generation or API builds. New articles without a receipt and edited articles with stale receipts fail before API output is written. The article and registry are staged in the same workflow commit.
+The explicit importer `pnpm actions:migrate` refuses to overwrite a registry. It is not part of generation or API builds. New articles without a receipt and edited articles with stale receipts fail before API output is written. The article and registry are staged in the same workflow commit. Both initial and continued editorial jobs execute the pinned trusted-base policy. Further acceptance rounds require an exact bot-issued output receipt with matching Actions provenance and Git ancestry, or an identified inclusion-only change. The existing required Test + pipeline smoke test checks every acceptance PR head without invoking models and waits up to 25 seconds for the post-push receipt. A lost or edited receipt fails closed and requires diagnosis; it never authorizes replay.
+
+Trusted main is the human-reviewed authority, including ordinary source/data PRs and this one-time import. These controls guard automated editorial admission; they are not a cryptographic restriction on a maintainer deliberately approving policy or state changes through a normal PR.
 
 After a terminated local process, confirm that no generation or reconciliation process owns `actions/registry.json.lock` before removing that stale lock. Rerun reconciliation to repair any interrupted article write before publication. CI uses ephemeral checkouts. Ordinary write exceptions restore the prior article and registry; process termination between renames requires this recovery.
 

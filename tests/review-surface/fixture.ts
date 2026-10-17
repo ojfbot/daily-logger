@@ -37,6 +37,28 @@ export function createFixture() {
     associatedPullNumbers: new Map<string, number[]>(), prComments: new Map<number, z.infer<typeof githubCommentSchema>[]>(),
     prReviews: new Map<number, unknown[]>(), prInlineComments: new Map<number, unknown[]>(),
     failRoutes: new Set<string>(), nextPageRoutes: new Set<string>(),
+    refs: new Map<string, string>(), fileModes: new Map<string, string>(), missingFiles: new Set<string>(), largeFiles: new Set<string>(),
+  }
+  const gitTrees = new Map<string, unknown[]>()
+  const hash = (text: string) => createHash('sha1').update(`blob ${Buffer.byteLength(text)}\0`).update(text).digest('hex')
+  const actionRegistry = JSON.stringify({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
+  function contentAt(ref: string, path: string) {
+    if (state.missingFiles.has(`${ref}:${path}`)) throw new Error('Missing file')
+    return state.refFiles.get(`${ref}:${path}`) ?? (path === 'reviews/registry.json' ? JSON.stringify(state.registry) : state.files.get(path) ??
+      (path === 'actions/registry.json' ? actionRegistry : path.startsWith('_articles/') ? readArticleSnapshot(ref, path.slice('_articles/'.length).replace(/\.md$/, '')).content : readFileSync(path, 'utf8')))
+  }
+  function treeFor(ref: string, directory = ''): string {
+    const paths = new Set([`_articles/${today}.md`, 'actions/registry.json', ...state.files.keys(), ...[...state.refFiles.keys()].filter(key => key.startsWith(`${ref}:`)).map(key => key.slice(ref.length + 1))])
+    const entries: Array<{ path: string; mode: string; sha: string }> = []
+    for (const name of [...new Set([...paths].filter(path => path.startsWith(directory)).map(path => path.slice(directory.length).split('/')[0]))].sort()) {
+      if (!name) continue
+      const path = `${directory}${name}`
+      if ([...paths].some(file => file.startsWith(`${path}/`))) entries.push({ path: name, mode: '040000', sha: treeFor(ref, `${path}/`) })
+      else {
+        try { entries.push({ path: name, mode: state.fileModes.get(`${ref}:${path}`) ?? '100644', sha: hash(contentAt(ref, path)) }) } catch { /* Missing fixture paths stay absent. */ }
+      }
+    }
+    const treeSha = hash(JSON.stringify(entries)); gitTrees.set(treeSha, entries); return treeSha
   }
   function pr(number: number) {
     return state.pullRequests.get(number) ?? { ...makePullRequest(number), head: { ...makePullRequest(number).head, sha: state.prHead } }
@@ -51,15 +73,24 @@ export function createFixture() {
     if (state.failRoutes.has(route)) return Response.json({ message: 'Unavailable' }, { status: 503 })
     const headers: HeadersInit = state.nextPageRoutes.has(route) ? { link: '<https://api.github.com/next>; rel="next"' } : {}
     if (method === 'GET' && route === '/git/ref/heads/main') return Response.json({ object: { sha: state.source } })
+    if (method === 'GET' && route.startsWith('/git/ref/heads/')) {
+      const ref = state.refs.get(route.slice('/git/ref/heads/'.length))
+      return Response.json(ref ? { object: { sha: ref } } : {}, { status: ref ? 200 : 404 })
+    }
+    if (method === 'GET' && route.startsWith('/git/commits/')) return Response.json({ tree: { sha: treeFor(route.slice('/git/commits/'.length)) } })
+    if (method === 'GET' && route.startsWith('/git/trees/')) return Response.json({ truncated: false, tree: gitTrees.get(route.slice('/git/trees/'.length)) ?? [] })
+    if (method === 'GET' && route.startsWith('/compare/')) return Response.json({ status: 'ahead', ahead_by: 1, total_commits: 1, commits: [{}], merge_base_commit: { sha: state.source }, files: [{ filename: 'actions/registry.json', status: 'modified' }] })
+    if (method === 'GET' && route.startsWith('/git/blobs/')) {
+      for (const [key, text] of state.refFiles) if (hash(text) === route.slice('/git/blobs/'.length)) return Response.json({ sha: hash(text), encoding: 'base64', content: Buffer.from(text).toString('base64') })
+      return Response.json({}, { status: 404 })
+    }
     if (method === 'GET' && route.startsWith('/contents/')) {
       const path = decodeURIComponent(route.slice('/contents/'.length))
       const ref = url.searchParams.get('ref') ?? ''
       try {
-        const text = state.refFiles.get(`${ref}:${path}`) ?? (path === 'reviews/registry.json' ? JSON.stringify(state.registry) : state.files.get(path) ??
-          (path.startsWith('_articles/') ? readArticleSnapshot(ref, path.slice('_articles/'.length).replace(/\.md$/, '')).content : readFileSync(path, 'utf8'))
-        )
+        const text = contentAt(ref, path)
         const hash = createHash('sha1').update(`blob ${Buffer.byteLength(text)}\0`).update(text).digest('hex')
-        return Response.json({ type: 'file', encoding: 'base64', content: Buffer.from(text).toString('base64'), sha: hash })
+        return Response.json({ type: 'file', encoding: state.largeFiles.has(path) ? 'none' : 'base64', content: state.largeFiles.has(path) ? '' : Buffer.from(text).toString('base64'), sha: hash })
       } catch { return Response.json({ message: 'Not found' }, { status: 404 }) }
     }
     if (method === 'GET' && route === '/pulls') {

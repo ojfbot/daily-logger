@@ -44,30 +44,29 @@ test('real stamper HTTP body reaches the workflow extractor without changing not
   const calls = []
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     calls.push({ url, options })
-    switch (calls.length) {
-      case 1: return new Response('{}', { status: 404 })
-      case 2: return Response.json({ content: btoa(article), sha: 'article-sha' })
-      case 3: return Response.json({ object: { sha: 'base-sha' } })
-      case 4: return Response.json({})
-      case 5: return Response.json({})
-      case 6: return Response.json({ number: 42, html_url: 'https://example.invalid/pull/42' })
-      default: throw new Error(`Unexpected request: ${url}`)
-    }
+    const method = options?.method ?? 'GET'
+    if (url.includes('/api/article-reviews')) return Response.json({ status: 'none' })
+    if (url.includes('/git/refs/heads/accept/') && method === 'GET') return new Response('{}', { status: 404 })
+    if (url.includes('/contents/')) return Response.json({ content: Buffer.from(article).toString('base64'), sha: 'article-sha' })
+    if (url.includes('/git/refs/heads/main')) return Response.json({ object: { sha: 'base-sha' } })
+    if (url.includes('/git/commits/') && method === 'GET') return Response.json({ tree: { sha: 'base-tree' } })
+    if (url.endsWith('/git/trees')) return Response.json({ sha: 'accepted-tree' })
+    if (url.endsWith('/git/commits')) return Response.json({ sha: 'accepted-commit' })
+    if (url.endsWith('/pulls')) return Response.json({ number: 42, html_url: 'https://example.invalid/pull/42' })
+    return Response.json({})
   })
 
   assert.deepEqual(await stampDraft(date, 'Friday', 'editor', { version: 2, notes }), {
     prNumber: 42, prUrl: 'https://example.invalid/pull/42',
   })
-  assert.equal(calls.length, 6)
-  const commit = calls[4]
-  assert.equal(commit.url, `/api/github/repos/ojfbot/daily-logger/contents/_articles/${date}.md`)
-  assert.equal(commit.options.method, 'PUT')
-  assert.deepEqual(JSON.parse(commit.options.body), {
-    message: `editorial: accept ${date} draft`,
-    content: btoa(article.replace('status: "draft"', 'status: "accepted"')),
-    sha: 'article-sha', branch: `accept/${date}`,
-  })
-  const pr = calls[5]
+  assert.equal(calls.length, 10)
+  const tree = calls.find(call => call.url.endsWith('/git/trees'))
+  assert.deepEqual(JSON.parse(tree.options.body), { base_tree: 'base-tree', tree: [{ path: `_articles/${date}.md`, mode: '100644', type: 'blob', content: article.replace('status: "draft"', 'status: "accepted"') }] })
+  const commit = calls.find(call => call.url.endsWith('/git/commits'))
+  assert.deepEqual(JSON.parse(commit.options.body), { message: `editorial: accept ${date} draft`, tree: 'accepted-tree', parents: ['base-sha'] })
+  const update = calls.find(call => call.options?.method === 'PATCH')
+  assert.deepEqual(JSON.parse(update.options.body), { sha: 'accepted-commit', force: false })
+  const pr = calls.find(call => call.url.endsWith('/pulls'))
   assert.equal(pr.url, '/api/github/repos/ojfbot/daily-logger/pulls')
   assert.equal(pr.options.method, 'POST')
   assert.equal(pr.options.credentials, 'same-origin')

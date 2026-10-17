@@ -5,27 +5,47 @@ import { dirname, resolve } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 import { createFixture, makePullRequest, makeComment, today } from './fixture.js'
 import { createEditorialService, repo } from '../../api/_lib/editorial-continuation.js'
+import { reviewArticleActions, mockActionAgents } from '../../src/review-actions.js'
+import { ActionRegistrySchema } from '../../src/action-registry-schema.js'
+import { admitActionRegistry } from '../../.github/scripts/editorial-action-registry.js'
 import { admitEditorial, prepareEditorial, pushEditorial, type Execution } from '../../.github/scripts/continue-editorial.js'
 const cleanups: string[] = []
 afterEach(() => { vi.unstubAllEnvs(); for (const path of cleanups.splice(0)) rmSync(path, { recursive: true, force: true }) })
 function git(cwd: string, ...args: string[]) { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim() }
-async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | null = null, ambiguousAncestry = false) {
+async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | 'missing-registry' | 'registry-symlink' | 'registry-executable' | 'cross-date-choice' | null = null, ambiguousAncestry = false) {
   vi.stubEnv('MOCK_LLM', 'true')
   vi.stubEnv('DRY_RUN', 'false')
   const root = mkdtempSync(resolve(tmpdir(), 'uik01-consumer-')); cleanups.push(root)
   const workspace = resolve(root, 'repo'), remote = resolve(root, 'remote.git')
   mkdirSync(workspace); git(workspace, 'init', '-q'); git(workspace, 'config', 'user.name', 'Fixture'); git(workspace, 'config', 'user.email', 'fixture@example.invalid')
   mkdirSync(resolve(workspace, '_articles'))
+  mkdirSync(resolve(workspace, 'actions'))
+  let registry = JSON.stringify({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [{ key: 'old', original: { id: 'old', command: '/pr-review', description: 'Prior tracked work', repo: 'daily-logger', sourceDate: '2026-10-01', status: 'open' }, origin: 'imported', workKey: 'daily-logger|old|review', state: 'open', introducedBy: '2026-10-01', includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: '', gates: [], history: [] }], articles: [] })
+  writeFileSync(resolve(workspace, 'actions/registry.json'), registry)
   const article = `---\ntitle: Fixture\ndate: ${today}\nstatus: accepted\ntags: []\nsummary: ${noChange ? 'unchanged' : '"Original"'}\n---\nLiteral body 雪\n`
   const path = `_articles/${today}.md`
   writeFileSync(resolve(workspace, 'package.json'), '{}')
   writeFileSync(resolve(workspace, path), article); git(workspace, 'add', '.'); git(workspace, 'commit', '-qm', 'policy')
   let policySha = git(workspace, 'rev-parse', 'HEAD')
   writeFileSync(resolve(workspace, path), `${article}\nAccepted branch text\n`)
+  if (noChange) {
+    const reviewed = await reviewArticleActions({ registry: ActionRegistrySchema.parse(JSON.parse(registry)), articleDate: today, articleStatuses: new Map([[today, 'accepted']]), markdown: readFileSync(resolve(workspace, path), 'utf8'), feedback: 'Earlier feedback', sources: [], agents: mockActionAgents })
+    registry = JSON.stringify(reviewed.registry)
+    writeFileSync(resolve(workspace, path), reviewed.markdown)
+    writeFileSync(resolve(workspace, 'actions/registry.json'), registry)
+    git(workspace, 'add', '.'); git(workspace, 'commit', '-qm', 'trusted earlier review'); policySha = git(workspace, 'rev-parse', 'HEAD')
+    writeFileSync(resolve(workspace, path), readFileSync(resolve(workspace, path), 'utf8').replace('Literal body 雪', 'Literal body 雪\nA later clarification.'))
+  }
+  if (corruption === 'missing-registry') rmSync(resolve(workspace, 'actions/registry.json'))
+  if (corruption === 'registry-symlink') { rmSync(resolve(workspace, 'actions/registry.json')); symlinkSync('../package.json', resolve(workspace, 'actions/registry.json')) }
+  if (corruption === 'cross-date-choice') {
+    const changed = ActionRegistrySchema.parse(JSON.parse(registry)); changed.records[0]!.includeInIndex = false; changed.records[0]!.inclusionOverride = { include: false, actor: 'ojfbot', instruction: 'Explicit editorial inclusion checkbox' }; registry = JSON.stringify(changed); writeFileSync(resolve(workspace, 'actions/registry.json'), registry)
+  }
   if (corruption === 'code') writeFileSync(resolve(workspace, 'package.json'), '{"scripts":{"postinstall":"blocked"}}')
   if (corruption === 'symlink') { rmSync(resolve(workspace, path)); symlinkSync('../package.json', resolve(workspace, path)) }
   git(workspace, 'add', '.'); git(workspace, '-c', 'user.name=ojfbot-blog[bot]', 'commit', '-qm', 'accepted by bot')
   if (corruption === 'executable') { chmodSync(resolve(workspace, path), 0o755); git(workspace, 'update-index', '--chmod=+x', path); git(workspace, 'commit', '-qm', 'invalid executable article') }
+  if (corruption === 'registry-executable') { git(workspace, 'update-index', '--chmod=+x', 'actions/registry.json'); git(workspace, 'commit', '-qm', 'invalid executable registry') }
   if (ambiguousAncestry) {
     const policyTree = git(workspace, 'rev-parse', `${policySha}^{tree}`)
     const articleTree = git(workspace, 'rev-parse', 'HEAD^{tree}')
@@ -36,7 +56,7 @@ async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executa
     git(workspace, 'checkout', '--detach', mergedHead)
   }
   const head = git(workspace, 'rev-parse', 'HEAD')
-  const projectedContent = corruption === 'blob' ? `${article}Different API-only article bytes\n` : execFileSync('git', ['show', `HEAD:${path}`], { cwd: workspace, encoding: 'utf8' })
+  const projectedContent = corruption === 'blob' ? `${article}Different API-only article bytes\n` : corruption === 'symlink' ? `${article}\nAccepted branch text\n` : execFileSync('git', ['show', `HEAD:${path}`], { cwd: workspace, encoding: 'utf8' })
   const blob = execFileSync('git', ['hash-object', '--stdin'], { cwd: workspace, input: projectedContent, encoding: 'utf8' }).trim()
   git(workspace, 'init', '--bare', '-q', remote); git(workspace, 'remote', 'add', 'origin', remote); git(workspace, 'push', '-q', 'origin', `${head}:refs/heads/accept/${today}`)
   const { state, github: fixtureGithub } = createFixture(); state.login = 'ojfbot'
@@ -44,6 +64,7 @@ async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executa
   state.acceptPullNumbers.push(42); state.pullFiles.set(42, [{ filename: path, status: 'modified' }])
   state.pullRequests.set(42, { ...pr, body: 'Original feedback receipt', head: { ...pr.head, sha: head, ref: `accept/${today}` } })
   state.refFiles.set(`${head}:${path}`, projectedContent)
+  state.refFiles.set(`${head}:actions/registry.json`, registry)
   const github: Execution['github'] = async (path, options) => path.startsWith(`${repo}/actions/workflows/editorial-revise.yml/runs?`) ? Response.json({ workflow_runs: [] }) : path === `${repo}/actions/runs/101` ? Response.json({ id: 101, event: 'issue_comment', head_branch: 'main', head_sha: execution.policySha, display_title: 'Editorial continuation comment 2', path: '.github/workflows/editorial-revise.yml' }) : fixtureGithub(path, options)
   const service = createEditorialService(github)
   const view = await service.load(today, 'ojfbot'); if (view.status !== 'existing') throw new Error('Missing acceptance')
@@ -76,7 +97,7 @@ it.each(['edited', 'actor', 'pr_author', 'payload', 'head', 'blob', 'ordinary', 
   await expect(admitEditorial(f.execution)).rejects.toThrow()
   expect(f.state.prComments.get(42)).toHaveLength(2)
 })
-it('actual consumer claims before native MOCK_LLM and pushes only the article to local bare remote', async () => {
+it('actual consumer claims before native MOCK_LLM and pushes the article and registry to local bare remote', async () => {
   const f = await setup(); f.state.login = 'github-actions[bot]'
   const prepared = await prepareEditorial(f.execution)
   expect(prepared).not.toBeNull()
@@ -84,17 +105,19 @@ it('actual consumer claims before native MOCK_LLM and pushes only the article to
   expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
   await pushEditorial(f.execution, prepared)
   expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(prepared.outputCommit)
-  expect(git(f.execution.workspace, '--git-dir', f.remote, 'diff', '--name-only', f.head, prepared.outputCommit)).toBe(f.path)
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'diff', '--name-only', f.head, prepared.outputCommit)).toBe(`${f.path}\nactions/registry.json`)
   expect(f.state.prComments.get(42)?.at(-1)?.body).toContain(`"outputCommit":"${prepared.outputCommit}"`)
   expect(f.state.prComments.get(42)?.at(-1)?.body).toContain('"outcome":"changed"')
   await expect(prepareEditorial(f.execution)).rejects.toThrow('invocation claim')
 })
-it('native MOCK_LLM no-change retains exact head and publishes an honest terminal receipt', async () => {
+it('native unchanged prose still publishes the new verified action receipt', async () => {
   const f = await setup(true); f.state.login = 'github-actions[bot]'
-  expect(await prepareEditorial(f.execution)).toBeNull()
-  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
-  expect(f.state.prComments.get(42)?.at(-1)?.body).toContain('"outcome":"no_change"')
-  expect(await createEditorialService(f.execution.github).load(today, 'ojfbot')).toMatchObject({ status: 'existing', outstanding: false })
+  const prepared = await prepareEditorial(f.execution)
+  if (!prepared) throw new Error('Missing verified output')
+  expect(git(prepared.worktree, 'diff', '--name-only', f.head, prepared.outputCommit)).toBe('actions/registry.json')
+  await pushEditorial(f.execution, prepared)
+  expect(f.state.prComments.get(42)?.at(-1)?.body).toContain('"outcome":"changed"')
+  expect(f.state.prComments.get(42)?.at(-1)?.body).toContain(`"outputRegistryBlob":"${prepared.outputRegistryBlob}"`)
   await expect(prepareEditorial(f.execution)).rejects.toThrow('invocation claim')
 })
 it('uncertain claim response stops before the native revision command and suppresses replay', async () => {
@@ -114,7 +137,7 @@ it('actual workflow admits before PR concurrency and retains legacy author guard
   const workflow = readFileSync('.github/workflows/editorial-revise.yml', 'utf8')
   expect(workflow).not.toMatch(/^concurrency:/m)
   expect(workflow).not.toContain('cancel-in-progress: true')
-  expect(workflow).toContain("if [[ \"$AUTHOR\" == *\"[bot]\"* ]]")
+  expect(workflow).toContain("editorial-revision-admission.mjs")
   expect(workflow).toContain('needs: admit-continuation')
   expect(workflow).toContain('editorial-revise-${{ needs.admit-continuation.outputs.pull_request }}')
   expect(workflow).toContain("github.event_name == 'pull_request_target'")
@@ -269,7 +292,7 @@ it.each(['unrelated code', 'same article'])('native continuation uses the pinned
   expect(git(prepared.worktree, 'rev-parse', 'HEAD^')).toBe(f.head)
   expect(readFileSync(resolve(prepared.worktree, f.path), 'utf8')).toContain('Accepted branch text')
   expect(readFileSync(resolve(prepared.worktree, f.path), 'utf8')).not.toContain('Different trusted main article')
-  expect(git(prepared.worktree, 'diff', '--name-only', f.head, prepared.outputCommit)).toBe(f.path)
+  expect(git(prepared.worktree, 'diff', '--name-only', f.head, prepared.outputCommit)).toBe(`${f.path}\nactions/registry.json`)
   await pushEditorial(f.execution, prepared)
   expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(prepared.outputCommit)
   expect(git(f.execution.workspace, 'rev-parse', `${f.execution.policySha}^{tree}`)).toBe(policyTree)
@@ -314,3 +337,37 @@ it('ambiguous criss-cross merge ancestry is rejected before claiming instead of 
   expect(f.state.prComments.get(42)?.some(comment => comment.body.startsWith('## Editorial execution claim\n'))).toBe(false)
   expect(git(workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
 })
+
+it.each(['missing-registry', 'registry-symlink', 'registry-executable', 'cross-date-choice'] as const)('native consumer rejects %s before invocation or a claim', async corruption => {
+  const f = await setup(false, corruption); f.state.login = 'github-actions[bot]'
+  await expect(prepareEditorial(f.execution)).rejects.toThrow()
+  expect(f.state.prComments.get(42)?.some(comment => comment.body.startsWith('## Editorial execution claim\n'))).toBe(false)
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
+})
+it.each([false, true])('both original workflow modes validate the actual Git registry delta; cross-date choice=%s', async corrupt => {
+  const f = await setup(false, corrupt ? 'cross-date-choice' : null)
+  {
+    const run = () => execFileSync(process.execPath, ['--import', import.meta.resolve('tsx'), resolve(process.cwd(), 'scripts/check-editorial-actions.ts'), f.execution.policySha, f.head, today, 'ojfbot', '42'], { cwd: f.execution.workspace, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+    if (corrupt) await expect(admitActionRegistry({ workspace: f.execution.workspace, base: f.execution.policySha, head: f.head, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github })).rejects.toThrow('trusted editorial output receipt')
+    else expect(run()).toBe('')
+  }
+})
+it.each(['initial', 'continued'])('only an exact %s workflow receipt authorizes prior output; forged snapshots cannot bypass either agent', async kind => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const prepared = await prepareEditorial(f.execution); if (!prepared) throw new Error('Missing verified output')
+  await pushEditorial(f.execution, prepared)
+  if (kind === 'initial') {
+    const comment = f.state.prComments.get(42)?.at(-1); if (!comment) throw new Error('Missing receipt')
+    comment.body = `## Verified action registry\n${JSON.stringify({ date: today, runId: 101, policySha: f.execution.policySha, inputHead: f.head, outputCommit: prepared.outputCommit, outputRegistryBlob: prepared.outputRegistryBlob })}`
+    const github = f.execution.github
+    f.execution.github = (path, options) => path.endsWith('/actions/runs/101') ? Promise.resolve(Response.json({ id: 101, event: 'pull_request_target', head_branch: `accept/${today}`, head_sha: f.head, display_title: 'Editorial continuation comment automatic', path: '.github/workflows/editorial-revise.yml', pull_requests: [{ number: 42, base: { sha: f.execution.policySha }, head: { sha: f.head } }] })) : github(path, options)
+  }
+  const input = { workspace: f.execution.workspace, base: f.execution.policySha, head: prepared.outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github }
+  await expect(admitActionRegistry(input)).resolves.toBeUndefined()
+  git(f.execution.workspace, 'checkout', '--detach', prepared.outputCommit)
+  const registryPath = resolve(f.execution.workspace, 'actions/registry.json')
+  const forged = ActionRegistrySchema.parse(JSON.parse(readFileSync(registryPath, 'utf8')))
+  forged.articles[0]!.verification.proposer = 'manual'
+  writeFileSync(registryPath, JSON.stringify(forged)); git(f.execution.workspace, 'add', '.'); git(f.execution.workspace, 'commit', '-qm', 'hand-authored snapshot')
+  await expect(admitActionRegistry({ ...input, head: git(f.execution.workspace, 'rev-parse', 'HEAD') })).rejects.toThrow('trusted editorial output receipt')
+}, 20_000)

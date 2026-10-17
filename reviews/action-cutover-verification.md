@@ -15,13 +15,16 @@ The initial migration registry had 213 records, no review receipts, and no histo
 
 ## Local checks
 
-- `pnpm test`: 533 tests pass across 46 files.
-- `pnpm exec playwright test`: 14 browser tests pass, including checked defaults, saved opt-out after reload, acceptance branch reuse, and conflict handling. GitHub writes are intercepted. Direct server-handler regressions separately prove editorial-branch `ref` forwarding, exact PR head/state filtering, and uncached readback. One scenario reads the actual reconciled October 17 API artifact and confirms all three cards, folded evidence, and the unchanged reporting-window commit count.
+- `pnpm test`: 737 tests pass across 53 files.
+- `pnpm exec playwright test`: 21 browser tests pass, including checked defaults, saved opt-out after reload, acceptance branch reuse, and conflict handling. GitHub writes are intercepted. Direct server-handler regressions separately prove editorial-branch `ref` forwarding, exact PR head/state filtering, and uncached readback. One scenario reads the actual reconciled October 17 API artifact and confirms all three cards, folded evidence, and the unchanged reporting-window commit count.
+- `VITE_BASE_PATH=/ pnpm --dir packages/frontend build` followed by `pnpm exec playwright test --config playwright.continuation.config.ts`: six additional production-bundle browser checks pass at desktop and narrow widths.
 - `pnpm type-check` and `pnpm --dir packages/frontend build`: pass.
 - `pnpm lint`: no errors; the existing `schema.test.ts:195` explicit-any warning remains.
 - Node feedback-extraction and revision-admission tests: nine pass.
 - Python editorial boundary tests: pass for article/registry changes and rejected code or symlink variants.
 - `git diff --check`: passes.
+
+The combined base includes accepted PR #378. Native continuation tests pin both blobs, publish registry-only rounds, preserve at-most-once invocation claims, and reject missing/symlink/executable registries, cross-date choices, and forged follow-up snapshots. Real service-to-stamper tests reject hidden tree changes and ref races. Both original workflow modes use trusted-base code, exact output receipts, and the existing required PR check on every acceptance head. GitHub Contents encoding=none is read through the exact immutable Git blob.
 
 The registry tests exercise later-article disposition, draft isolation, correction before promotion, rerunning both agents at promotion, sticky exclusion, terminal exclusion from every master feed, a non-replenishing admission limit, exact identity matching, source-line resolution and invalid-range rejection, unsupported completion, stale writers, rollback after injected failure, real generated-card HTML, and authored/registry HTML injection attempts.
 
@@ -40,3 +43,5 @@ Git is the publication boundary. An ordinary write exception restores prior arti
 The independent GPT reviewer found and helped resolve lifecycle, identity, and rendering gaps. The transcript-to-trail audit used this chat's recorded transcript. A review from another model family was not independently verified; no such claim is made here.
 
 Provider tool schemas use [strict tool decoding](https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use); application-side Zod validation still enforces every numeric, string, identity, and evidence constraint. The tool schema omits only provider-unsupported value constraints described in [the supported schema subset](https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations).
+
+Trusted main remains the human-reviewed authority for ordinary source/data PRs, including the one-time migration. Editorial output receipts constrain automated acceptance admission; they are not a cryptographic restriction on deliberate maintainer-approved policy or state changes. A receipt that was not appended or whose provenance cannot be read blocks continuation and acceptance checks without authorizing a provider replay.

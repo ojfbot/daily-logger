@@ -53,7 +53,7 @@ class EditorialBoundaryTests(unittest.TestCase):
                     head = git('rev-parse', 'HEAD')
                     git('checkout', '--detach', base)
                     result = subprocess.run(['bash', '-eo', 'pipefail', '-c', command], cwd=root,
-                                            env={**os.environ, 'BASE_SHA': base, 'ARTICLE_PATH': ARTICLE, 'HEAD_SHA': head, 'HEAD_BRANCH': 'accept/2026-10-09'},
+                                            env={**os.environ, 'BASE_SHA': base, 'ARTICLE_PATH': ARTICLE, 'HEAD_SHA': head, 'HEAD_BRANCH': 'accept/2026-10-09', 'RUNNER_TEMP': str(root), 'GITHUB_ENV': str(root / '.github-env')},
                                             capture_output=True, text=True)
                     self.assertEqual(result.returncode, 0 if change in ['article', 'article_and_registry'] else 1, result.stderr)
 
