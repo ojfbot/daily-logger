@@ -101,6 +101,9 @@ test(`continued feedback preserves identity and usable controls at ${viewport.wi
   writeFileSync(testInfo.outputPath('editor-geometry.json'), JSON.stringify({ viewport, geometry, targets, removalTarget, prose, focused }, null, 2))
   await panel.getByRole('button', { name: 'Save new feedback version', exact: true }).click()
   await expect(panel.getByText('Saved feedback version', { exact: false })).toBeVisible()
+  await page.waitForTimeout(500)
+  await expect(panel.getByText('Feedback version saved. No revision was requested.', { exact: false })).toBeVisible()
+  await expect(panel.getByRole('link', { name: 'Read receipt', exact: true })).toBeVisible()
   expect(writes).toHaveLength(1)
   expect(writes[0]).toMatchObject({ intent: 'append_editorial_feedback', feedback: { notes: [{ kind: 'root', content: 'Keep B' }, { kind: 'root', content: literal }] } })
   await expect(panel.getByRole('button', { name: 'Request another article revision', exact: true })).toBeDisabled()
@@ -120,6 +123,9 @@ test(`continued feedback preserves identity and usable controls at ${viewport.wi
   await panel.getByLabel('I reviewed this pinned PR-head article').check()
   await panel.getByRole('button', { name: 'Request another article revision', exact: true }).click()
   await expect(panel.getByText('A revision request is outstanding.', { exact: false })).toBeVisible()
+  await page.waitForTimeout(500)
+  await expect(panel.getByText('Revision requested for this saved feedback and PR head.', { exact: false })).toBeVisible()
+  await expect(panel.getByRole('link', { name: 'Read receipt', exact: true })).toBeVisible()
   expect(writes).toHaveLength(2)
   expect(writes[1]).toMatchObject({ intent: 'request_editorial_revision', headSha: pr.head.sha, pullRequest: 42 })
   expect(fixture.state.pullRequests.get(42)?.body).toBe('Original submitted notes 雪\n  ')
@@ -132,5 +138,104 @@ test(`continued feedback preserves identity and usable controls at ${viewport.wi
   await page.reload()
   await expect(page.getByRole('button', { name: 'ACCEPT DRAFT', exact: true })).toBeDisabled()
   expect(unexpected.filter(url => !/fonts\.(?:googleapis|gstatic)\.com/.test(url))).toEqual([])
+})
+}
+
+for (const viewport of [{ width: 1440, height: 900 }, { width: 320, height: 740 }]) {
+test(`denied-storage refresh and same-ID reconciliation retain in-memory editorial state at ${viewport.width}px`, async ({ page }, testInfo) => {
+  await page.setViewportSize(viewport)
+  await page.addInitScript(() => {
+    const methods: Array<'getItem' | 'setItem' | 'removeItem'> = ['getItem', 'setItem', 'removeItem']
+    for (const method of methods) {
+      const original = Storage.prototype[method]
+      Object.defineProperty(Storage.prototype, method, { value: function(this: Storage, ...args: string[]) {
+        if (this === window.sessionStorage) throw new DOMException('Fixture storage denied', 'SecurityError')
+        return Reflect.apply(original, this, args)
+      } })
+    }
+  })
+  const fixture = createFixture(); fixture.state.login = 'ojfbot'
+  const pr = makePullRequest(42)
+  fixture.state.acceptPullNumbers.push(42)
+  fixture.state.pullRequests.set(42, { ...pr, body: 'Original submitted notes 雪\n  ', head: { ...pr.head, ref: `accept/${today}` } })
+  fixture.state.pullFiles.set(42, [{ filename: `_articles/${today}.md`, status: 'modified' }])
+  fixture.state.refFiles.set(`${pr.head.sha}:_articles/${today}.md`, 'Pinned PR-head article, different from main.')
+  const editorial = createEditorialService(fixture.github), reviews = createReviewService(fixture.github)
+  const article = { date: today, title: 'Storage denied fixture', summary: 'Fixture', tags: [], reposActive: [], commitCount: 0,
+    activityType: 'development', schemaVersion: 2, status: 'draft', sourceBlobSha: blob, bodyHtml: '<h2>What shipped</h2><p>Main article.</p>' }
+  const writes: unknown[] = [], unexpected: string[] = []
+  let refreshFails = false, postMode: 'fail' | 'save' | 'lost-ack' = 'fail', refreshDelay = 0
+  await page.route('**/*', route => {
+    if (new URL(route.request().url()).origin === 'http://127.0.0.1:4040') return route.continue()
+    unexpected.push(route.request().url()); return route.abort('blockedbyclient')
+  })
+  await page.route('**/api/auth/me', route => route.fulfill({ json: { login: 'ojfbot', authorized: true, avatarUrl: '', name: 'Shared owner' } }))
+  await page.route('**/api/entries.json', route => route.fulfill({ json: [article] }))
+  await page.route(`**/api/articles/${today}.json`, route => route.fulfill({ json: article }))
+  await page.route('**/api/article-reviews**', async route => {
+    const request = route.request(), url = new URL(request.url())
+    if (request.method() === 'GET') {
+      if (url.searchParams.get('view') !== 'editorial') return route.fulfill({ json: await reviews.load(today, blob) })
+      if (refreshDelay) await new Promise(resolve => setTimeout(resolve, refreshDelay))
+      return route.fulfill({ status: refreshFails ? 503 : 200, json: refreshFails ? {} : await editorial.load(today, 'ojfbot') })
+    }
+    const input = editorialInputSchema.parse(request.postDataJSON()); writes.push(input)
+    if (postMode === 'fail') return route.fulfill({ status: 503, json: {} })
+    const receipt = await editorial.write(input, 'ojfbot')
+    return route.fulfill({ status: postMode === 'lost-ack' ? 503 : 200, json: postMode === 'lost-ack' ? {} : receipt })
+  })
+  await page.goto(`/articles/${today}`)
+  const panel = page.getByRole('region', { name: 'Continue editorial feedback' })
+  await expect(panel).toBeVisible()
+  const field = panel.locator('textarea').first()
+  const literal = ' \t雪 e\u0301 😀\n@claude /run\n  '
+  await field.fill(literal)
+  const handle = await field.elementHandle(); if (!handle) throw new Error('Missing note')
+  await field.evaluate(input => { input.focus(); input.setSelectionRange(2, 7) })
+  refreshDelay = 250; refreshFails = true
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).evaluate(button => button.click())
+  await expect(panel.getByText('Displayed history may be stale;', { exact: false })).toBeVisible()
+  await expect(panel.getByRole('button', { name: 'Save new feedback version', exact: true })).toBeDisabled()
+  expect(await handle.evaluate(input => ({ connected: input.isConnected, active: document.activeElement === input, start: input.selectionStart, end: input.selectionEnd, value: input.value }))).toEqual({ connected: true, active: true, start: 2, end: 7, value: literal })
+  await expect(panel.getByText('Acceptance discovery unavailable (503).', { exact: false })).toBeVisible()
+  await expect(field).toHaveValue(literal)
+  refreshFails = false
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).evaluate(button => button.click())
+  await expect(panel.getByRole('button', { name: 'Save new feedback version', exact: true })).toBeEnabled()
+  expect(await handle.evaluate(input => ({ connected: input.isConnected, active: document.activeElement === input, start: input.selectionStart, end: input.selectionEnd }))).toEqual({ connected: true, active: true, start: 2, end: 7 })
+  await panel.getByRole('button', { name: 'Save new feedback version', exact: true }).click()
+  await expect(panel.getByRole('button', { name: 'Retry same submission', exact: true })).toBeDisabled()
+  refreshFails = true
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).click()
+  await expect(panel.getByText('Acceptance discovery unavailable (503).', { exact: false })).toBeVisible()
+  await expect(panel.getByRole('button', { name: 'Retry same submission', exact: true })).toBeDisabled()
+  refreshFails = false
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).click()
+  await expect(panel.getByRole('button', { name: 'Retry same submission', exact: true })).toBeEnabled()
+  expect(writes).toHaveLength(1)
+  postMode = 'save'
+  await panel.getByRole('button', { name: 'Retry same submission', exact: true }).click()
+  await expect(panel.getByText('Feedback version saved. No revision was requested.', { exact: false })).toBeVisible()
+  await page.waitForTimeout(500)
+  await expect(panel.getByRole('link', { name: 'Read receipt', exact: true })).toBeVisible()
+  expect(writes).toHaveLength(2); expect(writes[1]).toEqual(writes[0])
+  expect(await handle.evaluate(input => input.isConnected)).toBe(true)
+  await expect(field).toHaveValue(literal)
+  await field.fill('Second saved version: acknowledgment lost 雪')
+  postMode = 'lost-ack'
+  await panel.getByRole('button', { name: 'Save new feedback version', exact: true }).click()
+  await expect(panel.getByRole('button', { name: 'Retry same submission', exact: true })).toBeDisabled()
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).click()
+  await expect(panel.getByText('Confirmed in refreshed history.', { exact: false })).toBeVisible()
+  await expect(panel.getByRole('button', { name: 'Retry same submission', exact: true })).toHaveCount(0)
+  expect(writes).toHaveLength(3)
+  expect(fixture.state.calls.filter(call => call.startsWith('POST '))).toHaveLength(2)
+  await testInfo.attach('retained-confirmation', { body: await page.screenshot({ path: testInfo.outputPath('retained-confirmation.png') }), contentType: 'image/png' })
+  await page.reload()
+  await expect(panel).toBeVisible()
+  await expect(field).toHaveValue('')
+  await expect(panel.getByText('Copy prior version to select the saved feedback before reviewing and requesting it.', { exact: true })).toBeVisible()
+  expect(unexpected.filter(url => !/fonts\.(?:googleapis|gstatic)\.com/.test(url))).toEqual([])
+  writeFileSync(testInfo.outputPath('denied-storage-writes.json'), JSON.stringify({ viewport, writes, githubWrites: fixture.state.calls.filter(call => call.startsWith('POST ')), unexpected }, null, 2))
 })
 }

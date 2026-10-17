@@ -6,8 +6,8 @@ import { EditorialInput as NoteInput } from './EditorialEditor.tsx'
 interface LocalNote { id: number; feedback: EditorialFeedback['notes'][number] }
 
 type Existing = Extract<EditorialProjection, { status: 'existing' }>
-export function EditorialContinuation({ view, date, login, visibleBlobSha, refresh }: {
-  view: Existing; date: string; login: string; visibleBlobSha?: string; refresh: () => Promise<void>
+export function EditorialContinuation({ view, date, login, visibleBlobSha, refresh, freshness = 'fresh', discoveryError = '' }: {
+  view: Existing; date: string; login: string; visibleBlobSha?: string; refresh: () => Promise<boolean | void>; freshness?: 'loading' | 'fresh' | 'unavailable'; discoveryError?: string
 }) {
   const key = `dl-editorial-continuation:${login}:${date}:${view.pullRequest.number}`
   const [notes, setNotes] = useState<LocalNote[]>(() => {
@@ -23,11 +23,35 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
   const reviewed = reviewedIdentity === articleIdentity
   const [message, setMessage] = useState('')
   const [receipt, setReceipt] = useState<string | null>(null)
-  const [retryReady, setRetryReady] = useState(() => { try { return !!sessionStorage.getItem(`${key}:pending`) } catch { return false } })
+  const [retryReady, setRetryReady] = useState(false)
+  const [draftEdited, setDraftEdited] = useState(false)
   useEffect(() => { try { sessionStorage.setItem(key, JSON.stringify({ version: 2, notes: notes.map(note => note.feedback).filter(note => note.content.trim()) })) } catch { /* In-memory draft remains available. */ } }, [key, notes])
   useEffect(() => {
     try { if (pending) sessionStorage.setItem(`${key}:pending`, JSON.stringify(pending)); else sessionStorage.removeItem(`${key}:pending`) } catch { /* Keep the frozen pending input in memory. */ }
   }, [key, pending])
+  const latest = view.versions.at(-1)
+  const pendingMatchesTarget = pending?.date === date && pending.pullRequest === view.pullRequest.number && pending.headSha === view.pullRequest.headSha &&
+    (pending.intent === 'append_editorial_feedback'
+      ? pending.visibleBlobSha === visibleBlobSha && pending.supersedes === (latest?.digest ?? view.originalDigest)
+      : pending.articleBlobSha === view.article.blobSha && pending.feedbackId === latest?.record.requestId && pending.feedbackDigest === latest?.digest)
+  useEffect(() => {
+    if (!pending || freshness !== 'fresh') return
+    const saved = [...view.versions, ...view.requests].find(item => {
+      const record = item.record
+      if (record.requestId !== pending.requestId || record.intent !== pending.intent || record.date !== pending.date || record.pullRequest !== pending.pullRequest || record.headSha !== pending.headSha) return false
+      return record.intent === 'append_editorial_feedback' && pending.intent === 'append_editorial_feedback'
+        ? record.visibleBlobSha === pending.visibleBlobSha && record.supersedes === pending.supersedes && JSON.stringify(record.feedback) === JSON.stringify(pending.feedback)
+        : record.intent === 'request_editorial_revision' && pending.intent === 'request_editorial_revision' && record.articleBlobSha === pending.articleBlobSha && record.feedbackId === pending.feedbackId && record.feedbackDigest === pending.feedbackDigest
+    })
+    if (!saved) return
+    setReceipt(saved.url); setPending(null); setRetryReady(false)
+    setMessage(saved.record.intent === 'append_editorial_feedback' ? 'Feedback version saved. Confirmed in refreshed history. No revision was requested.' : 'Revision request confirmed in refreshed history. Check execution receipts for its outcome.')
+  }, [pending, freshness, view])
+  async function refreshHistory() {
+    setRetryReady(false)
+    const refreshed = await refresh()
+    if (refreshed === true) setRetryReady(true)
+  }
   async function submit(input: EditorialInput) {
     try { sessionStorage.setItem(`${key}:pending`, JSON.stringify(input)) } catch { /* Frozen input remains in memory. */ }
     setPending(input); setRetryReady(false); setBusy(true); setMessage(''); setReceipt(null)
@@ -43,13 +67,13 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Submission is not confirmed. Refresh history before retrying.') }
     finally { setBusy(false) }
   }
-  const latest = view.versions.at(-1)
   const currentNotes = notes.map(note => note.feedback).filter(note => note.content.trim())
   const draftMatchesSaved = latest?.record.intent === 'append_editorial_feedback' && JSON.stringify(currentNotes) === JSON.stringify(latest.record.feedback.notes)
-  const canEdit = view.eligible && !view.outstanding && !busy && !pending
-  const editingReason = !view.eligible ? view.reason : view.outstanding ? 'A revision request is outstanding. Refresh its receipts before another save or request.' : busy ? 'Submission is in progress.' : pending ? 'Submission is unconfirmed. Refresh history before retrying the same submission.' : null
+  const canEditDraft = view.eligible && !view.outstanding && !busy && !pending
+  const canEdit = freshness === 'fresh' && canEditDraft
+  const editingReason = freshness === 'loading' ? 'Refreshing acceptance history. Displayed history may be stale; saves, requests and retries are disabled.' : freshness === 'unavailable' ? `${discoveryError || 'Acceptance history unavailable.'} Displayed history may be stale; saves, requests and retries are disabled.` : !view.eligible ? view.reason : view.outstanding ? 'A revision request is outstanding. Refresh its receipts before another save or request.' : busy ? 'Submission is in progress.' : pending ? (retryReady ? 'Submission is unconfirmed. Refreshed history has no matching receipt. Only the retained submission can be retried.' : 'Submission is unconfirmed. Refresh history before retrying the same submission.') : null
   const saveHelp = editingReason ? 'Saving is disabled. See the submission status below.' : (!visibleBlobSha ? 'Reload the main article before saving feedback.' : !currentNotes.length ? 'Enter feedback before saving a new version.' : 'Saving appends this complete version without starting a revision.')
-  const requestHelp = editingReason ? 'Revision requests are disabled. See the submission status below.' : (!latest ? 'Save a feedback version before requesting another revision.' : !draftMatchesSaved ? 'Save the edited full version before requesting it.' : !reviewed ? 'Review the pinned PR-head article before requesting its revision.' : 'Request uses the saved version and reviewed PR article shown here.')
+  const requestHelp = editingReason ? 'Revision requests are disabled. See the submission status below.' : (!latest ? 'Save a feedback version before requesting another revision.' : !draftMatchesSaved ? (!draftEdited && currentNotes.length === 0 ? 'Copy prior version to select the saved feedback before reviewing and requesting it.' : 'Save the edited full version before requesting it.') : !reviewed ? 'Review the pinned PR-head article before requesting its revision.' : 'Request uses the saved version and reviewed PR article shown here.')
   const base: Pick<EditorialInput, 'schemaVersion' | 'date' | 'pullRequest' | 'headSha'> = { schemaVersion: 1, date, pullRequest: view.pullRequest.number, headSha: view.pullRequest.headSha }
   return <section className="editorial-sidebar editorial-continuation" aria-label="Continue editorial feedback">
     <div className="editorial-heading">EDITORIAL</div>
@@ -71,7 +95,7 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
     {notes.map((note, index) => <div className="editorial-note" key={note.id}>
       <label className="editorial-note-label" htmlFor={`continued-editorial-note-${note.id}`}>{note.feedback.kind === 'section' ? `Section: ${note.feedback.section}` : 'Edit suggestion'}</label>
       <div className="editorial-suggestion">
-        <NoteInput id={`continued-editorial-note-${note.id}`} content={note.feedback.content} disabled={!canEdit} onChange={content => setNotes(previous => previous.map(item => item.id === note.id ? { ...item, feedback: { ...item.feedback, content } } : item))} />
+        <NoteInput id={`continued-editorial-note-${note.id}`} content={note.feedback.content} disabled={!canEditDraft} onChange={content => { setDraftEdited(true); setNotes(previous => previous.map(item => item.id === note.id ? { ...item, feedback: { ...item.feedback, content } } : item)) }} />
         {notes.length > 1 && <button className="editorial-remove-btn" disabled={!canEdit} aria-label={`Remove continued suggestion ${index + 1}`} onClick={() => setNotes(previous => previous.filter(item => item.id !== note.id))}>Remove</button>}
       </div>
     </div>)}
@@ -98,8 +122,9 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
     }}>Request another article revision</button>
     <p id="continued-request-help">{requestHelp}</p>
     {editingReason && <p id="continued-status" role="status">{editingReason}</p>}
-    {pending && <button className="editorial-action" disabled={busy || !retryReady} onClick={() => void submit(pending)}>Retry same submission</button>}
-    <button className="editorial-action" disabled={busy} onClick={() => void refresh()}>Refresh acceptance history</button>
+    {pending && freshness === 'fresh' && !pendingMatchesTarget && <p role="status">The submission target changed. Its frozen identity is retained; retry is disabled until the original outcome is reconciled.</p>}
+    {pending && <button className="editorial-action" disabled={busy || freshness !== 'fresh' || !retryReady || !pendingMatchesTarget || !view.eligible || view.outstanding} onClick={() => void submit(pending)}>Retry same submission</button>}
+    <button className="editorial-action" disabled={busy} onClick={() => void refreshHistory()}>Refresh acceptance history</button>
     {view.requests.map(item => <p key={item.commentId}><a href={item.url}>Explicit revision request</a>{item.duplicateUrls.map(url => <a key={url} href={url}>Duplicate delivery receipt</a>)} · {item.record.actor} · {item.createdAt}</p>)}
     {message && <p role="status">{message} {receipt && <a href={receipt}>Read receipt</a>}</p>}
   </section>

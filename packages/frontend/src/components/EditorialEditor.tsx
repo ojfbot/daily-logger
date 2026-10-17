@@ -108,15 +108,24 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
   const discoveryGeneration = useRef(0)
   const [discovery, setDiscovery] = useState<EditorialProjection | null>(null)
   const [discoveryError, setDiscoveryError] = useState('')
+  const [discoveryFreshness, setDiscoveryFreshness] = useState<'loading' | 'fresh' | 'unavailable'>('loading')
   async function refreshAcceptance() {
     const generation = ++discoveryGeneration.current
-    setDiscovery(null); setDiscoveryError('')
+    setDiscoveryFreshness('loading'); setDiscoveryError('')
     try {
       const response = await fetch(`/api/article-reviews?view=editorial&date=${date}`, { credentials: 'same-origin', cache: 'no-store' })
       if (!response.ok) throw new Error(`Acceptance discovery unavailable (${response.status}). Creation and continuation are disabled.`)
       const projection = editorialProjectionSchema.parse(await response.json())
-      if (generation === discoveryGeneration.current) setDiscovery(projection)
-    } catch (error) { if (generation === discoveryGeneration.current) setDiscoveryError(error instanceof Error ? error.message : 'Acceptance discovery unavailable.') }
+      if (generation !== discoveryGeneration.current) return false
+      setDiscovery(projection); setDiscoveryFreshness('fresh')
+      return true
+    } catch (error) {
+      if (generation === discoveryGeneration.current) {
+        setDiscoveryError(error instanceof Error ? error.message : 'Acceptance discovery unavailable.')
+        setDiscoveryFreshness('unavailable')
+      }
+      return false
+    }
   }
   useEffect(() => { void refreshAcceptance(); return () => { discoveryGeneration.current++ } }, [date, login])
 
@@ -140,7 +149,7 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
   const hasFeedback = suggestions.length > 0 || articleThreads.length > 0
 
   async function handleAccept() {
-    if (discovery?.status !== 'none') return
+    if (discoveryFreshness !== 'fresh' || discovery?.status !== 'none') return
     setState('loading')
     setErrorMsg(null)
 
@@ -181,7 +190,7 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
     }
   }
 
-  if (discovery?.status === 'existing') return <EditorialContinuation key={discovery.pullRequest.number} view={discovery} date={date} login={login} visibleBlobSha={visibleBlobSha} refresh={refreshAcceptance} />
+  if (discovery?.status === 'existing') return <EditorialContinuation key={`${login}:${date}:${discovery.pullRequest.number}`} view={discovery} date={date} login={login} visibleBlobSha={visibleBlobSha} refresh={refreshAcceptance} freshness={discoveryFreshness} discoveryError={discoveryError} />
 
   if (state === 'success' && prUrl) {
     return (
@@ -262,7 +271,7 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
       <button
         className={`stamp-draft-btn${state === 'error' ? ' stamp-error' : ''}${hasFeedback ? ' has-feedback' : ''}`}
         onClick={handleAccept}
-        disabled={state === 'loading' || discovery?.status !== 'none'}
+        disabled={state === 'loading' || discoveryFreshness !== 'fresh' || discovery?.status !== 'none'}
       >
         {state === 'loading'
           ? 'OPENING PR...'

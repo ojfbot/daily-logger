@@ -11,7 +11,7 @@ import { editorialProjectionSchema, editorialInputSchema, type EditorialProjecti
 vi.mock('../../store/hooks.ts', () => ({ useAppSelector: (select: (state: unknown) => unknown) => select({ auth: { user: { login: 'ojfbot', authorized: true } }, chat: { threads: {}, threadOrder: [] } }) }))
 let root: Root, container: HTMLDivElement
 beforeEach(() => { vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); sessionStorage.clear(); container = document.createElement('div'); document.body.append(container); root = createRoot(container) })
-afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals() })
+afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
 async function fixture() {
   const pr = { number: 42, html_url: 'https://github.com/ojfbot/daily-logger/pull/42', state: 'open', merged_at: null,
     body: 'Original preserved 雪\n  ', user: { login: 'ojfbot' }, author_association: 'OWNER',
@@ -154,4 +154,186 @@ it('removing an earlier continued note preserves the surviving DOM, focus, caret
   const posted = editorialInputSchema.parse(f.posts[0])
   if (posted.intent !== 'append_editorial_feedback') throw new Error('Wrong operation')
   expect(posted.feedback.notes).toEqual([{ kind: 'root', content: 'Keep B' }, { kind: 'root', content: literal }])
+})
+
+it('keeps visible save confirmation and receipt after discovery refresh without storage', async () => {
+  vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('Denied') })
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Denied') })
+  const f = await fixture()
+  const input = container.querySelector('textarea'); if (!input) throw new Error('Missing editor')
+  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
+  if (!setter) throw new Error('No setter')
+  await act(async () => { setter.call(input, 'literal 雪'); input.dispatchEvent(new Event('input', { bubbles: true })) })
+  let finishRefresh: (value: Response) => void = () => { throw new Error('Missing refresh') }
+  const refreshed = new Promise<Response>(resolve => { finishRefresh = resolve })
+  vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => {
+    if (options?.method === 'POST') {
+      const posted = editorialInputSchema.parse(JSON.parse(String(options.body))); f.posts.push(posted)
+      return Response.json(await f.service.write(posted, 'ojfbot'))
+    }
+    return refreshed
+  })
+  await act(async () => button('Save new feedback version').click())
+  await act(async () => finishRefresh(Response.json(await f.service.load(today, 'ojfbot'))))
+  expect(container.textContent).toContain('Feedback version saved. No revision was requested.')
+  expect([...container.querySelectorAll('a')].some(link => link.textContent === 'Read receipt')).toBe(true)
+  expect(container.querySelector('textarea')).toBe(input)
+  expect(input.value).toBe('literal 雪')
+  expect(f.posts).toHaveLength(1)
+  vi.restoreAllMocks()
+})
+
+function denyStorage() {
+  vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('Denied') })
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Denied') })
+  vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { throw new Error('Denied') })
+}
+async function editFirst(content: string) {
+  const input = container.querySelector('textarea'); if (!input) throw new Error('Missing editor')
+  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
+  if (!setter) throw new Error('Missing setter')
+  await act(async () => { setter.call(input, content); input.dispatchEvent(new Event('input', { bubbles: true })) })
+  return input
+}
+it('requires successful explicit refresh before exact same-ID retry without storage, and preserves its confirmation', async () => {
+  denyStorage()
+  const f = await fixture()
+  const input = await editFirst(' \t雪 e\u0301 😀\n  ')
+  let failRefresh = true, attempts = 0
+  vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => {
+    if (options?.method === 'POST') {
+      const posted = editorialInputSchema.parse(JSON.parse(String(options.body))); f.posts.push(posted)
+      if (++attempts === 1) return Response.json({}, { status: 503 })
+      return Response.json(await f.service.write(posted, 'ojfbot'))
+    }
+    return failRefresh ? Response.json({}, { status: 503 }) : Response.json(await f.service.load(today, 'ojfbot'))
+  })
+  await act(async () => button('Save new feedback version').click())
+  expect(button('Retry same submission').disabled).toBe(true)
+  await act(async () => button('Refresh acceptance history').click())
+  expect(button('Retry same submission').disabled).toBe(true)
+  expect(container.querySelector('textarea')).toBe(input)
+  expect(container.textContent).toContain('discovery unavailable')
+  failRefresh = false
+  await act(async () => button('Refresh acceptance history').click())
+  expect(button('Retry same submission').disabled).toBe(false)
+  expect(f.posts).toHaveLength(1)
+  await act(async () => button('Retry same submission').click())
+  expect(f.posts).toHaveLength(2)
+  expect(f.posts[1]).toEqual(f.posts[0])
+  expect(container.textContent).toContain('Feedback version saved.')
+  expect(container.querySelector('textarea')).toBe(input)
+  expect(f.state.calls.filter(call => call.startsWith('POST '))).toHaveLength(1)
+})
+it('reconciles persisted but lost acknowledgment through GET only without storage or a replay', async () => {
+  denyStorage()
+  const f = await fixture()
+  await editFirst('Keep the persisted original 雪')
+  vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => {
+    if (options?.method === 'POST') {
+      const posted = editorialInputSchema.parse(JSON.parse(String(options.body))); f.posts.push(posted)
+      await f.service.write(posted, 'ojfbot')
+      throw new Error('Acknowledgment lost')
+    }
+    return Response.json(await f.service.load(today, 'ojfbot'))
+  })
+  await act(async () => button('Save new feedback version').click())
+  expect(button('Retry same submission').disabled).toBe(true)
+  await act(async () => button('Refresh acceptance history').click())
+  expect(container.textContent).toContain('Confirmed in refreshed history.')
+  expect(container.querySelectorAll('a')).toSatisfy((links: NodeListOf<HTMLAnchorElement>) => [...links].some(link => link.textContent === 'Read receipt'))
+  expect(f.posts).toHaveLength(1)
+  expect([...container.querySelectorAll('button')].some(item => item.textContent === 'Retry same submission')).toBe(false)
+})
+it('retains DOM, draft and selection while refresh loads or fails; new writes stay disabled', async () => {
+  denyStorage()
+  const f = await fixture()
+  const input = await editFirst('Unsent literal 雪')
+  input.focus(); input.setSelectionRange(2, 6)
+  let finish: (response: Response) => void = () => { throw new Error('No deferred request') }
+  vi.stubGlobal('fetch', () => new Promise<Response>(resolve => { finish = resolve }))
+  await act(async () => button('Refresh acceptance history').click())
+  expect(container.querySelector('textarea')).toBe(input)
+  expect(document.activeElement).toBe(input)
+  expect([input.selectionStart, input.selectionEnd]).toEqual([2, 6])
+  expect(button('Save new feedback version').disabled).toBe(true)
+  expect(button('Request another article revision').disabled).toBe(true)
+  expect(container.textContent).toContain('Displayed history may be stale')
+  await act(async () => finish(Response.json({}, { status: 503 })))
+  expect(container.querySelector('textarea')).toBe(input)
+  expect(input.value).toBe('Unsent literal 雪')
+  expect(button('Save new feedback version').disabled).toBe(true)
+  expect(f.posts).toEqual([])
+})
+it('blocks frozen retries against a changed head and clears memory at the real date context boundary', async () => {
+  denyStorage()
+  const f = await fixture()
+  await editFirst('Old-context note')
+  const oldView = await f.service.load(today, 'ojfbot')
+  if (oldView.status !== 'existing') throw new Error('Missing PR')
+  const changed = { ...oldView, pullRequest: { ...oldView.pullRequest, headSha: 'e'.repeat(40) }, article: { ...oldView.article, blobSha: 'f'.repeat(40) } }
+  vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => options?.method === 'POST' ? Response.json({}, { status: 503 }) : Response.json(changed))
+  await act(async () => button('Save new feedback version').click())
+  await act(async () => button('Refresh acceptance history').click())
+  expect(button('Retry same submission').disabled).toBe(true)
+  expect(container.textContent).toContain('submission target changed')
+  await act(async () => root.render(createElement(EditorialSidebar, { date: '2000-01-02', articleTitle: 'Other date', visibleBlobSha: blob })))
+  expect(container.querySelector('textarea')?.value).toBe('')
+  expect([...container.querySelectorAll('button')].some(item => item.textContent === 'Retry same submission')).toBe(false)
+})
+it('tells an untouched fresh tab to copy the saved version rather than claiming it was edited', async () => {
+  denyStorage()
+  const f = await fixture()
+  const initial = await f.service.load(today, 'ojfbot')
+  if (initial.status !== 'existing') throw new Error('Missing PR')
+  await f.service.write({ schemaVersion: 1, intent: 'append_editorial_feedback', requestId: crypto.randomUUID(), date: today,
+    pullRequest: 42, headSha: initial.pullRequest.headSha, visibleBlobSha: blob, supersedes: initial.originalDigest,
+    feedback: { version: 2, notes: [{ kind: 'root', content: 'Saved version' }] } }, 'ojfbot')
+  await act(async () => button('Refresh acceptance history').click())
+  expect(container.textContent).toContain('Copy prior version to select the saved feedback')
+  expect(container.textContent).not.toContain('Save the edited full version')
+  await act(async () => button('Copy prior version').click())
+  expect(container.textContent).toContain('Review the pinned PR-head article before requesting its revision.')
+})
+
+it('a late old-date submission and its refresh cannot replace the current-date editor or receipt', async () => {
+  denyStorage()
+  const f = await fixture()
+  await editFirst('Old date pending text')
+  let finishPost: (value: Response) => void = () => { throw new Error('Missing post') }
+  const post = new Promise<Response>(resolve => { finishPost = resolve })
+  vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => options?.method === 'POST' ? post : Response.json(await f.service.load(today, 'ojfbot')))
+  await act(async () => button('Save new feedback version').click())
+  await act(async () => root.render(createElement(EditorialSidebar, { date: '2000-01-02', articleTitle: 'Next date', visibleBlobSha: blob })))
+  const current = await editFirst('Current date draft')
+  await act(async () => finishPost(Response.json({ requestId: crypto.randomUUID(), url: 'https://github.com/ojfbot/daily-logger/pull/42#issuecomment-999', reused: false, execution: 'not_started' })))
+  expect(container.querySelector('textarea')).toBe(current)
+  expect(current.value).toBe('Current date draft')
+  expect(container.textContent).not.toContain('Feedback version saved.')
+  expect([...container.querySelectorAll('a')].some(link => link.textContent === 'Read receipt')).toBe(false)
+})
+
+it('reconciles a persisted revision request with lost acknowledgment without a second model authorization', async () => {
+  denyStorage()
+  const f = await fixture()
+  await editFirst('Feedback for one explicit revision')
+  await act(async () => button('Save new feedback version').click())
+  const checkbox = container.querySelector<HTMLInputElement>('input[type=checkbox]'); if (!checkbox) throw new Error('Missing preview')
+  await act(async () => checkbox.click())
+  vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => {
+    if (options?.method === 'POST') {
+      const posted = editorialInputSchema.parse(JSON.parse(String(options.body))); f.posts.push(posted)
+      await f.service.write(posted, 'ojfbot')
+      return Response.json({}, { status: 503 })
+    }
+    return Response.json(await f.service.load(today, 'ojfbot'))
+  })
+  await act(async () => button('Request another article revision').click())
+  expect(button('Retry same submission').disabled).toBe(true)
+  await act(async () => button('Refresh acceptance history').click())
+  expect(container.textContent).toContain('Revision request confirmed in refreshed history.')
+  expect(container.textContent).toContain('outstanding')
+  expect(f.posts).toHaveLength(2)
+  expect(f.posts.filter(item => editorialInputSchema.parse(item).intent === 'request_editorial_revision')).toHaveLength(1)
+  expect(button('Request another article revision').disabled).toBe(true)
 })
