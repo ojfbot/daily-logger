@@ -12,6 +12,9 @@ vi.mock('../../store/hooks.ts', () => ({ useAppDispatch: () => dispatch }))
 
 let node: HTMLDivElement
 let root: Root
+const noCodeReferences: [] = []
+const noTimeReferences: [] = []
+const popoverRepos = ['daily-logger']
 
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
@@ -30,8 +33,8 @@ afterEach(async () => {
 
 function PopoverHarness({ html }: { html: string }) {
   const ref = useRef<HTMLDivElement>(null)
-  const state = useArticlePopovers(ref, [], ['daily-logger'])
-  return <><div ref={ref} dangerouslySetInnerHTML={{ __html: html }} /><Popover state={state} /></>
+  const popover = useArticlePopovers(ref, noCodeReferences, popoverRepos, noTimeReferences, html)
+  return <><div ref={ref} dangerouslySetInnerHTML={{ __html: html }} /><Popover state={popover.state} onMouseEnter={popover.keepOpen} onMouseLeave={popover.scheduleHide} /></>
 }
 
 function articleLink(number: number) {
