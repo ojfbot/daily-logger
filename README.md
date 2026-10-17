@@ -16,6 +16,8 @@ Each article lives at `/articles/YYYY-MM-DD`.
 
 ---
 
+Evidence-backed inline times show UTC, your device timezone, and an approximate day/night map. See [time reference behavior](docs/time-popovers.md) and [historical reconstruction](docs/backfill-time-references.md).
+
 ## How it works
 
 ```

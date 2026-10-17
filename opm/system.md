@@ -11,9 +11,9 @@ flowchart TD
   Jim["Jim"]
   GitHub["GitHub"]
   ClaudeAPI["Claude API"]
-  Article["Article<br/>{draft, accepted, rejected}"]
-  RunAdmission["Run Admission<br/>{generate, recover, complete}"]
-  CronFiring("Cron Firing")
+  Article["Article<br/>{draft, accepted, or rejected}"]
+  RunAdmission["Run Admission<br/>{generate, recover, or complete}"]
+  CronFiring["Cron Firing"]
   RunAdmitting("Run Admitting")
   RunEvidenceCapturing("Run Evidence Capturing")
   RunEvidence["Run Evidence"]
@@ -25,14 +25,14 @@ flowchart TD
   StaleContentCleaning("Stale Content Cleaning")
   CanonicalActionProjection["Canonical Action Projection"]
   FallbackChecking("Fallback Checking")
-  FallbackDecision["Fallback Decision<br/>{missing, active, complete, failed}"]
+  FallbackDecision["Fallback Decision<br/>{missing, active, complete, or failed}"]
   FallbackDispatching("Fallback Dispatching")
   WorkflowRun["Workflow Run"]
   EditorialAccepting("Editorial Accepting")
   APIBuilding("API Building")
   ActionProjecting("Action Projecting")
   ActionAdmission["Action Admission"]
-  ReviewedDisposition["Reviewed Disposition<br/>{deferred, completed-existing-evidence, pending-receipt}"]
+  ReviewedDisposition["Reviewed Disposition<br/>{deferred, completed-existing-evidence, or pending-receipt}"]
   CanonicalActions["Canonical Actions"]
   JSONAPI["JSON API"]
   FrontendRendering("Frontend Rendering")
@@ -46,6 +46,20 @@ flowchart TD
   SavedMessage["Saved Message"]
   ReviewRecords["Review Records"]
   Correspondence["Correspondence"]
+  TimeRecordPointer["Time Record Pointer"]
+  TimeRecording("Time Recording")
+  CommitContext["Commit Context"]
+  TimeEvidence["Time Evidence"]
+  TimeBackfilling("Time Backfilling")
+  TimeResolving("Time Resolving")
+  TimeReferences["Time References"]
+  TimeProjecting("Time Projecting")
+  ProjectedTimeReferences["Projected Time References"]
+  TimeVisualizing("Time Visualizing")
+  DeviceTimezone["Device Timezone"]
+  TimePopover["Time Popover"]
+  EditorialRevising("Editorial Revising")
+  TimeMetadataPreserving("Time Metadata Preserving")
 
   style GitHub stroke-dasharray: 5 5
   style ClaudeAPI stroke-dasharray: 5 5
@@ -103,9 +117,35 @@ flowchart TD
   ConversationSaving -- affects --> GitHub
   ReviewRecords -- part of --> ReviewProjection
   Correspondence -- part of --> ReviewProjection
+  Article -- exhibits --> TimeRecordPointer
+  Article -. instrument .-> TimeRecording
+  CommitContext -. instrument .-> TimeRecording
+  TimeRecording --> TimeEvidence
+  TimeRecording -- affects --> Article
+  Article -. instrument .-> TimeBackfilling
+  GitHub -. instrument .-> TimeBackfilling
+  TimeBackfilling --> TimeEvidence
+  TimeBackfilling -. invokes .-> TimeResolving
+  TimeEvidence -. instrument .-> TimeResolving
+  Article -. instrument .-> TimeResolving
+  TimeResolving --> TimeReferences
+  APIBuilding -. invokes .-> TimeProjecting
+  Article -. instrument .-> TimeProjecting
+  TimeEvidence -. instrument .-> TimeProjecting
+  TimeProjecting -. invokes .-> TimeResolving
+  TimeProjecting --> ProjectedTimeReferences
+  ProjectedTimeReferences -- part of --> JSONAPI
+  FrontendRendering -. invokes .-> TimeVisualizing
+  ProjectedTimeReferences -. instrument .-> TimeVisualizing
+  DeviceTimezone -. instrument .-> TimeVisualizing
+  TimeVisualizing --> TimePopover
+  Jim -. agent .-> EditorialRevising
+  EditorialRevising -. invokes .-> TimeMetadataPreserving
+  Article -. instrument .-> TimeMetadataPreserving
+  TimeMetadataPreserving -- affects --> Article
 ```
 
-**OPL paragraph.** Jim is physical. GitHub is environmental. Claude API is environmental. Article can be draft, accepted, or rejected. Draft is initial. Run Admission can be generate, recover, or complete. Cron Firing triggers Run Admitting. Run Admitting requires GitHub. Run Admitting yields Run Admission. Run Admitting invokes Run Evidence Capturing. Run Evidence Capturing requires GitHub. Run Evidence Capturing yields Run Evidence. Article Generating occurs if Run Admission is generate. Branch Recovering occurs if Run Admission is recover. Branch Recovering requires GitHub. Branch Recovering yields Article Completion. Article Generating yields Article Completion. Cleaner Admitting requires Article Completion. Cleaner Admitting yields Cleaner Admission. Cleaner Admission can be run or skip. Stale Content Cleaning occurs if Cleaner Admission is run. Stale Content Cleaning requires Canonical Action Projection. Stale Content Cleaning affects GitHub. Fallback Checking requires GitHub. Fallback Checking yields Fallback Decision. Fallback Decision can be missing, active, complete, or failed. Fallback Dispatching occurs if Fallback Decision is missing. Fallback Dispatching requires GitHub. Fallback Dispatching yields Workflow Run. Workflow Run triggers Run Admitting. Article Generating yields Article. Jim handles Editorial Accepting. Editorial Accepting changes Article from draft to accepted. API Building requires Article. Action Projecting requires Article. Action Projecting requires Action Admission. Action Projecting yields Canonical Action Projection. Reviewed Disposition can be deferred, completed-existing-evidence, or pending-receipt. Canonical Action Projection consists of Canonical Actions and Reviewed Disposition. API Building invokes Action Projecting. API Building requires Canonical Action Projection. API Building yields JSON API. Frontend Rendering requires JSON API. Frontend Rendering requires Canonical Action Projection. Frontend Rendering yields Rendered Site. API Building yields Article Fingerprint. Frontend Rendering invokes Independent Review Projecting. Independent Review Projecting requires GitHub. Independent Review Projecting requires Article Fingerprint. Independent Review Projecting yields Review Projection. Jim handles Revision Requesting. Revision Requesting requires Review Projection. Revision Requesting yields Revision Request. Revision Requesting affects GitHub. Conversation Saving requires GitHub. Conversation Saving requires Article Fingerprint. Conversation Saving requires Review Projection. Conversation Saving yields Saved Message. Conversation Saving affects GitHub. Review Projection consists of Review Records and Correspondence.
+**OPL paragraph.** Jim is physical. GitHub is environmental. Claude API is environmental. Article can be draft, accepted, or rejected. [src: src/schema.ts] Draft is initial. Run Admission can be generate, recover, or complete. [src: .github/scripts/daily_blog_schedule.py] Cron Firing triggers Run Admitting. [src: .github/workflows/daily-blog.yml] Run Admitting requires GitHub. [src: .github/scripts/daily_blog_schedule.py] Run Admitting yields Run Admission. [src: .github/scripts/daily_blog_schedule.py] Run Admitting invokes Run Evidence Capturing. [src: .github/scripts/daily_blog_schedule.py] Run Evidence Capturing requires GitHub. [src: .github/scripts/daily_blog_schedule.py] Run Evidence Capturing yields Run Evidence. [src: .github/scripts/daily_blog_schedule.py] Article Generating occurs if Run Admission is generate. [src: .github/workflows/daily-blog.yml] Branch Recovering occurs if Run Admission is recover. [src: .github/workflows/daily-blog.yml] Branch Recovering requires GitHub. [src: .github/workflows/daily-blog.yml] Branch Recovering yields Article Completion. [src: .github/workflows/daily-blog.yml] Article Generating yields Article Completion. [src: .github/workflows/daily-blog.yml] Cleaner Admitting requires Article Completion. [src: .github/scripts/daily_blog_schedule.py] Cleaner Admitting yields Cleaner Admission. [src: .github/scripts/daily_blog_schedule.py] Cleaner Admission can be run or skip. [src: .github/scripts/daily_blog_schedule.py] Stale Content Cleaning occurs if Cleaner Admission is run. [src: .github/workflows/daily-cleaner.yml] Stale Content Cleaning requires Canonical Action Projection. [src: src/cleaner.ts] Stale Content Cleaning affects GitHub. [src: .github/workflows/daily-cleaner.yml] Fallback Checking requires GitHub. [src: .github/scripts/daily_blog_schedule.py] Fallback Checking yields Fallback Decision. [src: .github/scripts/daily_blog_schedule.py] Fallback Decision can be missing, active, complete, or failed. [src: .github/scripts/daily_blog_schedule.py] Fallback Dispatching occurs if Fallback Decision is missing. [src: .github/scripts/daily_blog_schedule.py] Fallback Dispatching requires GitHub. [src: .github/scripts/daily_blog_schedule.py] Fallback Dispatching yields Workflow Run. [src: .github/scripts/daily_blog_schedule.py] Workflow Run triggers Run Admitting. [src: .github/workflows/daily-blog.yml] Article Generating yields Article. [src: src/index.ts] Jim handles Editorial Accepting. [src: .github/workflows/editorial-revise.yml] Editorial Accepting changes Article from draft to accepted. [src: packages/frontend/src/utils/stampDraft.ts] API Building requires Article. [src: src/build-api.ts] Action Projecting requires Article. [src: src/action-intake.ts] Action Projecting requires Action Admission. [src: action-admissions] Action Projecting yields Canonical Action Projection. [src: src/action-intake.ts] Reviewed Disposition can be deferred, completed-existing-evidence, or pending-receipt. [src: src/action-model.ts] Canonical Action Projection consists of Canonical Actions and Reviewed Disposition. [src: src/action-model.ts] API Building invokes Action Projecting. [src: src/build-api.ts] API Building requires Canonical Action Projection. [src: src/build-api.ts] API Building yields JSON API. Frontend Rendering requires JSON API. [src: packages/frontend] Frontend Rendering requires Canonical Action Projection. [src: packages/frontend/src/components/ActionsPage.tsx] Frontend Rendering yields Rendered Site. API Building yields Article Fingerprint. [src: src/build-api.ts] Frontend Rendering invokes Independent Review Projecting. [src: packages/frontend/src/components/IndependentArticleReviews.tsx] Independent Review Projecting requires GitHub. [src: api/_lib/article-review-service.ts] Independent Review Projecting requires Article Fingerprint. [src: api/_lib/article-review-service.ts] Independent Review Projecting yields Review Projection. [src: api/_lib/article-review-service.ts] Jim handles Revision Requesting. [src: packages/frontend/src/components/IndependentArticleReviews.tsx] Revision Requesting requires Review Projection. [src: api/_lib/article-review-service.ts] Revision Requesting yields Revision Request. [src: api/_lib/article-review-service.ts] Revision Requesting affects GitHub. [src: api/_lib/article-review-service.ts] Conversation Saving requires GitHub. [src: api/_lib/article-review-service.ts] Conversation Saving requires Article Fingerprint. [src: api/_lib/article-review-service.ts] Conversation Saving requires Review Projection. [src: api/_lib/article-review-service.ts] Conversation Saving yields Saved Message. [src: api/_lib/article-review-service.ts] Conversation Saving affects GitHub. [src: api/_lib/article-review-service.ts] Review Projection consists of Review Records and Correspondence. [src: shared/article-review.ts] Article exhibits Time Record Pointer. [src: src/article-time-metadata.ts] Time Recording requires Article. [src: src/article-time-metadata.ts] Time Recording requires Commit Context. [src: src/index.ts] Time Recording yields Time Evidence. [src: src/article-time-metadata.ts] Time Recording affects Article. [src: src/article-time-metadata.ts] Time Backfilling requires Article. [src: src/backfill-times.ts] Time Backfilling requires GitHub. [src: src/backfill-times.ts] Time Backfilling yields Time Evidence. [src: src/backfill-times.ts] Time Backfilling invokes Time Resolving. [src: src/backfill-times.ts] Time Resolving requires Time Evidence. [src: src/time-references.ts] Time Resolving requires Article. [src: src/time-references.ts] Time Resolving yields Time References. [src: src/time-references.ts] API Building invokes Time Projecting. [src: src/build-api.ts] Time Projecting requires Article. [src: src/article-time-metadata.ts] Time Projecting requires Time Evidence. [src: src/article-time-metadata.ts] Time Projecting invokes Time Resolving. [src: src/article-time-metadata.ts] Time Projecting yields Projected Time References. [src: src/article-time-metadata.ts] JSON API consists of Projected Time References. [src: src/build-api.ts] Frontend Rendering invokes Time Visualizing. [src: packages/frontend/src/hooks/useArticlePopovers.ts] Time Visualizing requires Projected Time References. [src: packages/frontend/src/utils/timeReferences.ts] Time Visualizing requires Device Timezone. [src: packages/frontend/src/utils/timeDisplay.ts] Time Visualizing yields Time Popover. [src: packages/frontend/src/components/TimePopoverContent.tsx] Jim handles Editorial Revising. [src: src/revise-article.ts] Editorial Revising invokes Time Metadata Preserving. [src: src/revise-article.ts] Time Metadata Preserving requires Article. [src: src/article-time-frontmatter.ts] Time Metadata Preserving affects Article. [src: src/article-time-frontmatter.ts]
 
 ## SD1.1 — Article Generating in-zoom
 
@@ -125,13 +165,18 @@ flowchart TD
   ClaudeAPI["Claude API"]
   CreditStatus["Credit Status"]
   Drafting("Drafting")
-  Article["Article"]
+  Article["Article<br/>{draft, accepted, or rejected}"]
   CouncilReviewing("Council Reviewing")
   CouncilCritiques["Council Critiques"]
   Synthesizing("Synthesizing")
   ClaimVerifying("Claim Verifying")
   ClaimReport["Claim Report"]
   ProvenanceAttaching("Provenance Attaching")
+  TimeRecording("Time Recording")
+  TimeEvidence["Time Evidence"]
+
+  style GitHub stroke-dasharray: 5 5
+  style ClaudeAPI stroke-dasharray: 5 5
 
   RunTiming -- part of --> RunEvidence
   GitHub -. instrument .-> ContextCollecting
@@ -163,6 +208,10 @@ flowchart TD
   Article -. instrument .-> ProvenanceAttaching
   RunEvidence -. instrument .-> ProvenanceAttaching
   ProvenanceAttaching -- affects --> Article
+  CommitContext -. instrument .-> TimeRecording
+  Article -. instrument .-> TimeRecording
+  TimeRecording --> TimeEvidence
+  TimeRecording -- affects --> Article
 ```
 
-**OPL paragraph.** Activity Decision can be skip or run. Run Timing can be available or unavailable. Run Evidence consists of Run Timing. Article Generating zooms into Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, and Provenance Attaching. Context Collecting requires GitHub. Context Collecting requires Canonical Action Projection. Context Collecting invokes Telemetry Collecting. Context Collecting yields Commit Context. Telemetry Collecting yields Telemetry Digest. Activity Assessing requires Commit Context. Activity Assessing yields Activity Decision. Credit Checking occurs if Activity Decision is run. Credit Checking requires Claude API. Credit Checking yields Credit Status. Drafting requires Claude API. Drafting requires Commit Context. Drafting requires Telemetry Digest. Drafting requires Credit Status. Drafting occurs if Activity Decision is run. Drafting yields Article. Council Reviewing requires Claude API. Council Reviewing requires Article. Council Reviewing yields Council Critiques. Synthesizing requires Claude API. Synthesizing consumes Council Critiques. Synthesizing affects Article. Claim Verifying requires Article. Claim Verifying requires Commit Context. Claim Verifying yields Claim Report. Claim Verifying affects Article. Provenance Attaching requires Article. Provenance Attaching requires Run Evidence. Provenance Attaching affects Article.
+**OPL paragraph.** Activity Decision can be skip or run. Run Timing can be available or unavailable. Run Evidence consists of Run Timing. Article Generating zooms into Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, Provenance Attaching, and Time Recording. [src: src/index.ts] Context Collecting requires GitHub. [src: src/collect-context.ts] Context Collecting requires Canonical Action Projection. [src: src/collect-context.ts] Context Collecting invokes Telemetry Collecting. [src: src/collect-context.ts] Context Collecting yields Commit Context. Telemetry Collecting yields Telemetry Digest. [src: src/collect-telemetry.ts] Activity Assessing requires Commit Context. [src: src/should-skip-run.ts] Activity Assessing yields Activity Decision. [src: src/should-skip-run.ts] Credit Checking occurs if Activity Decision is run. [src: src/index.ts] Credit Checking requires Claude API. [src: src/check-anthropic-credits.ts] Credit Checking yields Credit Status. [src: src/check-anthropic-credits.ts] Drafting requires Claude API. [src: src/generate-article.ts] Drafting requires Commit Context. Drafting requires Telemetry Digest. Drafting requires Credit Status. [src: src/index.ts] Drafting occurs if Activity Decision is run. [src: src/index.ts] Drafting yields Article. Council Reviewing requires Claude API. [src: src/index.ts] Council Reviewing requires Article. Council Reviewing yields Council Critiques. Synthesizing requires Claude API. [src: src/index.ts] Synthesizing consumes Council Critiques. Synthesizing affects Article. Claim Verifying requires Article. [src: src/verify-claims.ts] Claim Verifying requires Commit Context. Claim Verifying yields Claim Report. Claim Verifying affects Article. [src: src/index.ts] Provenance Attaching requires Article. [src: src/index.ts] Provenance Attaching requires Run Evidence. [src: src/index.ts] Provenance Attaching affects Article. [src: src/index.ts] Time Recording requires Commit Context. [src: src/index.ts] Time Recording requires Article. [src: src/index.ts] Time Recording yields Time Evidence. [src: src/article-time-metadata.ts] Time Recording affects Article. [src: src/index.ts]
