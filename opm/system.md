@@ -215,3 +215,64 @@ flowchart TD
 ```
 
 **OPL paragraph.** Activity Decision can be skip or run. Run Timing can be available or unavailable. Run Evidence consists of Run Timing. Article Generating zooms into Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, Provenance Attaching, and Time Recording. [src: src/index.ts] Context Collecting requires GitHub. [src: src/collect-context.ts] Context Collecting requires Canonical Action Projection. [src: src/collect-context.ts] Context Collecting invokes Telemetry Collecting. [src: src/collect-context.ts] Context Collecting yields Commit Context. Telemetry Collecting yields Telemetry Digest. [src: src/collect-telemetry.ts] Activity Assessing requires Commit Context. [src: src/should-skip-run.ts] Activity Assessing yields Activity Decision. [src: src/should-skip-run.ts] Credit Checking occurs if Activity Decision is run. [src: src/index.ts] Credit Checking requires Claude API. [src: src/check-anthropic-credits.ts] Credit Checking yields Credit Status. [src: src/check-anthropic-credits.ts] Drafting requires Claude API. [src: src/generate-article.ts] Drafting requires Commit Context. Drafting requires Telemetry Digest. Drafting requires Credit Status. [src: src/index.ts] Drafting occurs if Activity Decision is run. [src: src/index.ts] Drafting yields Article. Council Reviewing requires Claude API. [src: src/index.ts] Council Reviewing requires Article. Council Reviewing yields Council Critiques. Synthesizing requires Claude API. [src: src/index.ts] Synthesizing consumes Council Critiques. Synthesizing affects Article. Claim Verifying requires Article. [src: src/verify-claims.ts] Claim Verifying requires Commit Context. Claim Verifying yields Claim Report. Claim Verifying affects Article. [src: src/index.ts] Provenance Attaching requires Article. [src: src/index.ts] Provenance Attaching requires Run Evidence. [src: src/index.ts] Provenance Attaching affects Article. [src: src/index.ts] Time Recording requires Commit Context. [src: src/index.ts] Time Recording requires Article. [src: src/index.ts] Time Recording yields Time Evidence. [src: src/article-time-metadata.ts] Time Recording affects Article. [src: src/index.ts]
+
+## SD1.2 — Continued Editorial Revising in-zoom
+
+```mermaid
+flowchart TD
+  GitHub["GitHub"]
+  FeedbackVersionSaving("Feedback Version Saving")
+  ArticleFingerprint["Article Fingerprint"]
+  FeedbackVersion["Feedback Version"]
+  ExplicitRevisionRequesting("Explicit Revision Requesting")
+  PRArticleFingerprint["PR Article Fingerprint"]
+  ExplicitRevisionRequest["Explicit Revision Request"]
+  ExplicitRevisionAdmitting("Explicit Revision Admitting")
+  OwnerAccount["Owner Account"]
+  AdmittedRevision["Admitted Revision"]
+  InvocationClaiming("Invocation Claiming")
+  InvocationClaim["Invocation Claim"]
+  ContinuedArticleRevising("Continued Article Revising")
+  ClaudeAPI["Claude API"]
+  Article["Article"]
+  RevisionOutcome["Revision Outcome"]
+  GitHub -. instrument .-> FeedbackVersionSaving
+  ArticleFingerprint -. instrument .-> FeedbackVersionSaving
+  FeedbackVersionSaving --> FeedbackVersion
+  FeedbackVersion -. instrument .-> ExplicitRevisionRequesting
+  PRArticleFingerprint -. instrument .-> ExplicitRevisionRequesting
+  ExplicitRevisionRequesting --> ExplicitRevisionRequest
+  ExplicitRevisionRequest -. triggers .-> ExplicitRevisionAdmitting
+  OwnerAccount -. instrument .-> ExplicitRevisionAdmitting
+  GitHub -. instrument .-> ExplicitRevisionAdmitting
+  ExplicitRevisionAdmitting --> AdmittedRevision
+  AdmittedRevision -. triggers .-> InvocationClaiming
+  GitHub -. instrument .-> InvocationClaiming
+  InvocationClaiming --> InvocationClaim
+  InvocationClaim -. triggers .-> ContinuedArticleRevising
+  ClaudeAPI -. instrument .-> ContinuedArticleRevising
+  ContinuedArticleRevising -- affects --> Article
+  ContinuedArticleRevising --> RevisionOutcome
+  style GitHub stroke-dasharray: 5 5
+  style ClaudeAPI stroke-dasharray: 5 5
+```
+
+### OPL paragraph
+
+> Feedback Version Saving requires GitHub. [src: api/_lib/editorial-continuation.ts]
+> Feedback Version Saving requires Article Fingerprint. [src: api/_lib/editorial-continuation.ts]
+> Feedback Version Saving yields Feedback Version. [src: api/_lib/editorial-continuation.ts]
+> Explicit Revision Requesting requires Feedback Version. [src: packages/frontend/src/components/EditorialContinuation.tsx]
+> Explicit Revision Requesting requires PR Article Fingerprint. [src: api/_lib/editorial-continuation.ts]
+> Explicit Revision Requesting yields Explicit Revision Request. [src: api/_lib/editorial-continuation.ts]
+> Explicit Revision Request triggers Explicit Revision Admitting. [src: .github/workflows/editorial-revise.yml]
+> Explicit Revision Admitting requires Owner Account. [src: .github/scripts/continue-editorial.ts]
+> Explicit Revision Admitting requires GitHub. [src: .github/scripts/continue-editorial.ts]
+> Explicit Revision Admitting yields Admitted Revision. [src: .github/scripts/continue-editorial.ts]
+> Admitted Revision triggers Invocation Claiming. [src: .github/scripts/continue-editorial.ts]
+> Invocation Claiming requires GitHub. [src: .github/scripts/continue-editorial.ts]
+> Invocation Claiming yields Invocation Claim. [src: .github/scripts/continue-editorial.ts]
+> Invocation Claim triggers Continued Article Revising. [src: .github/scripts/continue-editorial.ts]
+> Continued Article Revising requires Claude API. [src: src/revise-article.ts]
+> Continued Article Revising affects Article. [src: src/revise-article.ts]
+> Continued Article Revising yields Revision Outcome. [src: .github/scripts/continue-editorial.ts]

@@ -19,13 +19,17 @@ async function setup() {
 
 function commentWorkflowPredicates(body: string) {
   const correspondence = readdirSync('.github/workflows').filter((file) => /(?:^|\n)  issue_comment:/.test(readFileSync(`.github/workflows/${file}`, 'utf8'))).sort()
-  expect(correspondence).toEqual(['claude.yml', 'pipeline-alert-commands.yml'])
+  expect(correspondence).toEqual(['claude.yml', 'editorial-revise.yml', 'pipeline-alert-commands.yml'])
   const claude = readFileSync('.github/workflows/claude.yml', 'utf8')
   const trigger = claude.match(/\(github.event_name == 'issue_comment' && contains\(github.event.comment.body, '([^']+)'\)\)/)?.[1]
   if (!trigger) throw new Error('Correspondence provider predicate changed; inspect its actual admission rule')
   const commands = readFileSync('.github/workflows/pipeline-alert-commands.yml', 'utf8')
   const prefix = commands.match(/startsWith\(github.event.comment.body, '([^']+)'\)/)?.[1]
   if (!prefix) throw new Error('Correspondence command predicate changed; inspect its actual admission rule')
+  const editorial = readFileSync('.github/workflows/editorial-revise.yml', 'utf8')
+  const editorialPrefix = editorial.match(/startsWith\(github.event.comment.body, '([^']+)'\)/)?.[1]
+  if (!editorialPrefix) throw new Error('Inspect continued editorial admission')
+  expect(body.startsWith(editorialPrefix)).toBe(false)
   return { providerMatches: body.toLowerCase().includes(trigger.toLowerCase()), commandMatches: body.toLowerCase().startsWith(prefix.toLowerCase()),
     workflowSha256: { claude: createHash('sha256').update(claude).digest('hex'), commands: createHash('sha256').update(commands).digest('hex') } }
 }

@@ -1,0 +1,48 @@
+.site-header:has(.assistant-settings-entry) { flex-wrap: wrap; gap: 0.75rem; }
+.assistant-settings-entry { font-size: 0.75rem; }
+
+.assistant-settings-dialog {
+  margin: auto;
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: 1.25rem;
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+.assistant-settings-dialog::backdrop { background: rgb(0 0 0 / 65%); }
+.assistant-settings-dialog p { margin: 0.75rem 0; }
+.assistant-settings-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.assistant-settings-heading h2 { font-size: 1.25rem; }
+.assistant-settings-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+.assistant-settings-dialog label { display: block; font-weight: 700; margin-bottom: 0.5rem; }
+.assistant-settings-dialog input {
+  width: 100%;
+  padding: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: var(--bg-alt);
+  color: var(--text);
+  font: inherit;
+}
+.assistant-settings-dialog button,
+.assistant-settings-entry,
+.assistant-config-status button {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: var(--bg-alt);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.assistant-settings-dialog :focus-visible,
+.assistant-settings-entry:focus-visible,
+.assistant-config-status button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.assistant-config-status { padding: 0.75rem 1rem; font-family: var(--font-sans); }
+.assistant-config-status p { margin: 0 0 0.5rem; }

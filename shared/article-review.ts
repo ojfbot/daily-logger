@@ -51,7 +51,6 @@ export const commentSchema = z.object({
   ]),
 }).strict()
 export const commentRecordSchema = commentSchema.extend({ actor: z.string().min(1) }).strict()
-export const postSchema = z.discriminatedUnion('intent', [requestSchema, commentSchema])
 export const pullRequestSchema = z.object({
   kind: z.enum(['review_pr', 'acceptance_pr']), number: z.number().int().positive(), url: githubUrl,
   state: z.enum(['open', 'closed']), merged: z.boolean(), headSha: sha, author: z.string().min(1),
@@ -94,3 +93,35 @@ export type ArticleComment = z.infer<typeof commentSchema>
 export type WriteReceipt = z.infer<typeof writeReceiptSchema>
 export type Correspondence = z.infer<typeof correspondenceSchema>
 export type ReviewPullRequest = z.infer<typeof pullRequestSchema>
+
+const digest = z.string().regex(/^[a-f0-9]{64}$/)
+const editorialTarget = z.object({ schemaVersion: z.literal(1), requestId: z.uuid(), date,
+  pullRequest: z.number().int().positive(), headSha: sha })
+export const appendEditorialSchema = editorialTarget.extend({ intent: z.literal('append_editorial_feedback'),
+  visibleBlobSha: sha, supersedes: digest, feedback: editorialFeedbackSchema }).strict()
+export const runEditorialSchema = editorialTarget.extend({ intent: z.literal('request_editorial_revision'),
+  articleBlobSha: sha, feedbackId: z.uuid(), feedbackDigest: digest }).strict()
+export const editorialInputSchema = z.discriminatedUnion('intent', [appendEditorialSchema, runEditorialSchema])
+export const editorialWriteFailureSchema = z.object({
+  error: z.string(), outcome: z.enum(['rejected_before_append', 'uncertain']), requestId: z.uuid(),
+  intent: z.union([appendEditorialSchema.shape.intent, runEditorialSchema.shape.intent]),
+}).strict()
+export type EditorialWriteFailureResponse = z.infer<typeof editorialWriteFailureSchema>
+export const editorialRecordSchema = z.discriminatedUnion('intent', [
+  appendEditorialSchema.extend({ actor: z.literal('ojfbot'), originalBody: z.string() }).strict(),
+  runEditorialSchema.extend({ actor: z.literal('ojfbot') }).strict(),
+])
+export const editorialHistorySchema = z.object({ record: editorialRecordSchema, digest,
+  commentId: z.number().int().positive(), url: githubUrl, createdAt: z.iso.datetime(), duplicateUrls: z.array(githubUrl) }).strict()
+export const editorialProjectionSchema = z.discriminatedUnion('status', [
+  z.object({ status: z.literal('none') }).strict(),
+  z.object({ status: z.literal('existing'), eligible: z.boolean(), reason: z.string(), originalBody: z.string(), originalDigest: digest,
+    pullRequest: pullRequestSchema, article: z.object({ blobSha: sha, text: z.string() }).strict(),
+    versions: z.array(editorialHistorySchema), requests: z.array(editorialHistorySchema), outstanding: z.boolean() }).strict(),
+])
+export const editorialWriteReceiptSchema = writeReceiptSchema.extend({ execution: z.enum(['not_started', 'requested']) }).strict()
+export const postSchema = z.discriminatedUnion('intent', [requestSchema, commentSchema, appendEditorialSchema, runEditorialSchema])
+export type EditorialInput = z.infer<typeof editorialInputSchema>
+export type EditorialRecord = z.infer<typeof editorialRecordSchema>
+export type EditorialProjection = z.infer<typeof editorialProjectionSchema>
+export type EditorialHistory = z.infer<typeof editorialHistorySchema>

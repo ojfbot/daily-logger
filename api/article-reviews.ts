@@ -2,7 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
 import { extractToken } from './_lib/cookies.js'
 import { createReviewService, ReviewError } from './_lib/article-review-service.js'
-import { date, postSchema, sha } from '../shared/article-review.js'
+import { createEditorialService, EditorialWriteFailure } from './_lib/editorial-continuation.js'
+import { date, editorialWriteFailureSchema, postSchema, sha } from '../shared/article-review.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'private, no-store')
@@ -26,14 +27,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!allowed.includes(login.toLowerCase())) return res.status(403).json({ error: 'Not authorized for editorial reviews' })
     const service = createReviewService(github, new Set(allowed))
     if (method === 'GET') {
-      const query = z.object({ date, visibleBlobSha: sha.optional() }).parse(req.query)
+      const query = z.object({ date, visibleBlobSha: sha.optional(), view: z.literal('editorial').optional() }).parse(req.query)
+      if (query.view === 'editorial') return res.status(200).json(await createEditorialService(github).load(query.date, login))
       return res.status(200).json(await service.load(query.date, query.visibleBlobSha ?? null))
     }
     const request = postSchema.parse(typeof req.body === 'string' ? JSON.parse(req.body) : req.body)
+    if (request.intent === 'append_editorial_feedback' || request.intent === 'request_editorial_revision') return res.status(200).json(await createEditorialService(github).write(request, login))
     return res.status(200).json(request.intent === 'request_changes' ? await service.requestChanges(request, login) : await service.comment(request, login))
   } catch (error) {
-    if (error instanceof ReviewError) return res.status(error.status).json({ error: error.message })
-    if (error instanceof z.ZodError || error instanceof SyntaxError) return res.status(400).json({ error: 'Invalid review request or source record. Submission is not confirmed; refresh request history before retrying.' })
-    return res.status(503).json({ error: 'Review source unavailable. A write response may be uncertain; refresh request history before retrying.' })
+    const cause = error instanceof EditorialWriteFailure ? error.cause : error
+    const status = cause instanceof ReviewError ? cause.status : cause instanceof z.ZodError || cause instanceof SyntaxError ? 400 : 503
+    const message = cause instanceof ReviewError ? cause.message : status === 400
+      ? 'Invalid review request or source record. Submission is not confirmed; refresh request history before retrying.'
+      : 'Review source unavailable. A write response may be uncertain; refresh request history before retrying.'
+    const detail = error instanceof EditorialWriteFailure ? editorialWriteFailureSchema.parse({ error: message,
+      outcome: error.outcome, requestId: error.requestId, intent: error.intent }) : { error: message }
+    return res.status(status).json(detail)
   }
 }

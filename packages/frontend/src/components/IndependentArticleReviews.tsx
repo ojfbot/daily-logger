@@ -5,7 +5,8 @@ import { useAppDispatch } from '../store/hooks.ts'
 import { hydrateCorrespondence } from '../store/chatSlice.ts'
 import { ArticleCorrespondence } from './ArticleCorrespondence.tsx'
 
-interface Props { date: string; visibleBlobSha: string | undefined; login: string; onDiscussionAvailabilityChange: (available: boolean) => void }
+export type DiscussionAvailability = 'loading' | 'ready' | 'stale' | 'unavailable'
+interface Props { date: string; visibleBlobSha: string | undefined; login: string; onDiscussionAvailabilityChange: (availability: DiscussionAvailability) => void }
 type LoadState = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; projection: ReviewProjection }
 const responseSchema = z.object({ url: z.url(), requestId: z.uuid(), reused: z.boolean() })
 
@@ -61,12 +62,23 @@ interface CompletedReviewFindingsProps {
   onToggle: (key: string, checked: boolean) => void
 }
 
+function CompletedReviewSummary({ review }: Pick<CompletedReviewFindingsProps, 'review'>) {
+  const confirmedErrors = review.findings.filter((finding) => finding.classification === 'confirmed_error').length
+  const unverifiedClaims = review.findings.filter((finding) => finding.classification === 'unverified_claim').length
+  return <>
+    <p className="review-finding-counts">Reviewer reported: {confirmedErrors} confirmed {confirmedErrors === 1 ? 'error' : 'errors'} · {unverifiedClaims} unverified {unverifiedClaims === 1 ? 'claim' : 'claims'}</p>
+    {review.findings.length === 0 && <p>The reviewer reported no findings within the stated scope.</p>}
+  </>
+}
+
 function CompletedReviewFindings({ review, freshness, selected, sending, onToggle }: CompletedReviewFindingsProps) {
   return <>
-    {review.findings.length === 0 && <p>The reviewer reported no findings within the stated scope.</p>}
-    {(['confirmed_error', 'unverified_claim'] satisfies Array<'confirmed_error' | 'unverified_claim'>).map((classification) => <div key={classification}>
+    {(['confirmed_error', 'unverified_claim'] satisfies Array<'confirmed_error' | 'unverified_claim'>).map((classification) => {
+      const findings = review.findings.filter((finding) => finding.classification === classification)
+      if (findings.length === 0) return null
+      return <div key={classification}>
       <h5>{classification === 'confirmed_error' ? 'Reviewer reports confirmed errors' : 'Claims the reviewer could not verify'}</h5>
-      {review.findings.filter((finding) => finding.classification === classification).map((finding) => {
+      {findings.map((finding) => {
         const key = `${review.id}:${finding.id}`
         return <details key={finding.id} className="independent-review-finding"><summary>{finding.id}: {finding.title} ({finding.disposition.kind})</summary>
           <p>{finding.location}</p><p>{finding.explanation}</p>
@@ -76,7 +88,7 @@ function CompletedReviewFindings({ review, freshness, selected, sending, onToggl
           <label><input type="checkbox" disabled={sending || freshness !== 'current' || finding.disposition.kind !== 'open'} checked={selected.includes(key)} onChange={(event) => onToggle(key, event.currentTarget.checked)} /> Select {finding.id} for revision feedback</label>
         </details>
       })}
-    </div>)}
+    </div>})}
   </>
 }
 
@@ -95,6 +107,7 @@ export function ReviewRecordGroups({ projection, selected, sending, onToggle }: 
       {group.entries.map((entry) => <article className="independent-review-record" key={entry.review.id}>
         <h4>{entry.review.reviewer.name}</h4>
         <p className="review-record-state">{entry.review.result === 'completed' ? 'Completed review' : 'Failed review'} · {entry.lifecycle === 'published' ? 'published' : 'proposed'} · {freshnessLabel(entry.freshness)}</p>
+        {entry.review.result === 'completed' && <CompletedReviewSummary review={entry.review} />}
         <dl className="review-record-summary">
           <div><dt>Recorded reviewer claim</dt><dd>{entry.review.reviewer.name}</dd></div>
           <div><dt>Recorded session claim</dt><dd>{entry.review.reviewer.sessionId ?? 'Not recorded'}</dd></div>
@@ -153,7 +166,7 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscu
   useEffect(() => {
     const controller = new AbortController()
     setLoad({ kind: 'loading' })
-    onDiscussionAvailabilityChange(false)
+    onDiscussionAvailabilityChange('loading')
     dispatch(hydrateCorrespondence({ date, visibleBlobSha: visibleBlobSha ?? null, login, items: [], complete: false }))
     fetch(`/api/article-reviews?date=${date}${visibleBlobSha ? `&visibleBlobSha=${visibleBlobSha}` : ''}`, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal })
       .then(async (response) => {
@@ -162,10 +175,11 @@ export function IndependentArticleReviews({ date, visibleBlobSha, login, onDiscu
       })
       .then((projection) => { if (!controller.signal.aborted) {
         setLoad({ kind: 'ready', projection })
-        onDiscussionAvailabilityChange(!!visibleBlobSha && projection.currentBlobSha === visibleBlobSha && !!projection.requestTarget)
+        onDiscussionAvailabilityChange(visibleBlobSha && projection.currentBlobSha && projection.currentBlobSha !== visibleBlobSha
+          ? 'stale' : visibleBlobSha && projection.currentBlobSha === visibleBlobSha && projection.requestTarget ? 'ready' : 'unavailable')
       } })
       .catch((error: unknown) => { if (!controller.signal.aborted) {
-        onDiscussionAvailabilityChange(false)
+        onDiscussionAvailabilityChange('unavailable')
         dispatch(hydrateCorrespondence({ date, visibleBlobSha: visibleBlobSha ?? null, login, items: [], complete: false }))
         setLoad({ kind: 'error', message: error instanceof Error ? error.message : 'Review data unavailable' })
       } })

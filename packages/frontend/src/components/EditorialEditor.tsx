@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAppSelector } from '../store/hooks.ts'
+import { editorialProjectionSchema, type EditorialProjection } from '../../../../shared/article-review.ts'
+import { EditorialContinuation } from './EditorialContinuation.tsx'
+import { EditorialInput } from './EditorialInput.tsx'
 import { stampDraft, type EditorialFeedback } from '../utils/stampDraft.ts'
 
 interface Props {
@@ -38,6 +41,30 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
   const [prUrl, setPrUrl] = useState<string | null>(null)
   const [prNumber, setPrNumber] = useState<number | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const discoveryGeneration = useRef(0)
+  const [discovery, setDiscovery] = useState<EditorialProjection | null>(null)
+  const [discoveryError, setDiscoveryError] = useState('')
+  const [discoveryFreshness, setDiscoveryFreshness] = useState<'loading' | 'fresh' | 'unavailable'>('loading')
+  async function refreshAcceptance() {
+    const generation = ++discoveryGeneration.current
+    setDiscoveryFreshness('loading'); setDiscoveryError('')
+    try {
+      const response = await fetch(`/api/article-reviews?view=editorial&date=${date}`, { credentials: 'same-origin', cache: 'no-store' })
+      if (!response.ok) throw new Error(`Acceptance discovery unavailable (${response.status}). Creation and continuation are disabled.`)
+      const projection = editorialProjectionSchema.parse(await response.json())
+      if (generation !== discoveryGeneration.current) return false
+      setDiscovery(projection); setDiscoveryFreshness('fresh')
+      return true
+    } catch (error) {
+      if (generation === discoveryGeneration.current) {
+        setDiscoveryError(error instanceof Error ? error.message : 'Acceptance discovery unavailable.')
+        setDiscoveryFreshness('unavailable')
+      }
+      return false
+    }
+  }
+  useEffect(() => { void refreshAcceptance(); return () => { discoveryGeneration.current++ } }, [date, login])
+
 
   useEffect(() => {
     try {
@@ -58,6 +85,7 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
   const hasFeedback = suggestions.length > 0 || articleThreads.length > 0
 
   async function handleAccept() {
+    if (discoveryFreshness !== 'fresh' || discovery?.status !== 'none') return
     setState('loading')
     setErrorMsg(null)
 
@@ -91,11 +119,14 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
       setPrUrl(result.prUrl)
       setPrNumber(result.prNumber)
       setState('success')
+      void refreshAcceptance()
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Failed to stamp draft')
       setState('error')
     }
   }
+
+  if (discovery?.status === 'existing') return <EditorialContinuation key={`${login}:${date}:${discovery.pullRequest.number}`} view={discovery} date={date} login={login} visibleBlobSha={visibleBlobSha} refresh={refreshAcceptance} freshness={discoveryFreshness} discoveryError={discoveryError} />
 
   if (state === 'success' && prUrl) {
     return (
@@ -108,6 +139,8 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
             View in GitHub
           </a>
         </div>
+        <p role="status">{discoveryError || 'Checking acceptance history for continuation...'}</p>
+        <button onClick={() => void refreshAcceptance()}>Refresh acceptance history</button>
       </div>
     )
   }
@@ -115,24 +148,22 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
   return (
     <div className="editorial-sidebar">
       <div className="editorial-heading">EDITORIAL</div>
+      {!discovery && <p role="status">{discoveryError || 'Checking existing acceptance history...'}</p>}
+      {discoveryError && <button onClick={() => void refreshAcceptance()}>Retry acceptance discovery</button>}
 
       {entries.map((entry, index) => (
         <div className="editorial-note" key={entry.id}>
           <label className="editorial-note-label" htmlFor={`editorial-note-${entry.id}`}>
-            Edit suggestion {index + 1}
+            Edit suggestion
           </label>
           <div className="editorial-suggestion">
-            <textarea
+            <EditorialInput
               id={`editorial-note-${entry.id}`}
-              className="editorial-input"
-              placeholder="Suggest an edit to this article..."
-              value={entry.content}
+              content={entry.content}
               disabled={state === 'loading'}
-              onChange={(e) => {
-                const content = e.currentTarget.value
+              onChange={(content) => {
                 setEntries((previous) => previous.map((note) => note.id === entry.id ? { ...note, content } : note))
               }}
-              rows={3}
             />
             {index === entries.length - 1 && (
               <button
@@ -176,7 +207,7 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
       <button
         className={`stamp-draft-btn${state === 'error' ? ' stamp-error' : ''}${hasFeedback ? ' has-feedback' : ''}`}
         onClick={handleAccept}
-        disabled={state === 'loading'}
+        disabled={state === 'loading' || discoveryFreshness !== 'fresh' || discovery?.status !== 'none'}
       >
         {state === 'loading'
           ? 'OPENING PR...'

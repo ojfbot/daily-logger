@@ -1,0 +1,323 @@
+import { writeFileSync } from 'node:fs'
+import { expect, test } from '@playwright/test'
+import { createFixture, makePullRequest, blob, today } from '../../../tests/review-surface/fixture.js'
+import { createEditorialService, EditorialWriteFailure } from '../../../api/_lib/editorial-continuation.js'
+import { createReviewService } from '../../../api/_lib/article-review-service.js'
+import { editorialInputSchema } from '../../../shared/article-review.js'
+
+for (const viewport of [{ width: 1440, height: 900 }, { width: 320, height: 740 }]) {
+test(`continued feedback preserves identity and usable controls at ${viewport.width}px`, async ({ page }, testInfo) => {
+  await page.setViewportSize(viewport)
+  const fixture = createFixture(); fixture.state.login = 'ojfbot'
+  const pr = makePullRequest(42)
+  fixture.state.acceptPullNumbers.push(42)
+  fixture.state.pullRequests.set(42, { ...pr, body: 'Original submitted notes 雪\n  ', head: { ...pr.head, ref: `accept/${today}` } })
+  fixture.state.pullFiles.set(42, [{ filename: `_articles/${today}.md`, status: 'modified' }])
+  fixture.state.refFiles.set(`${pr.head.sha}:_articles/${today}.md`, 'Pinned PR-head article. This differs from the main-visible article.')
+  const editorial = createEditorialService(fixture.github), reviews = createReviewService(fixture.github)
+  const writes: unknown[] = [], unexpected: string[] = []
+  let discoveryFails = false
+  const article = { date: today, title: 'Continued feedback fixture', summary: 'Fixture', tags: [], reposActive: [], commitCount: 0,
+    activityType: 'development', schemaVersion: 2, status: 'draft', sourceBlobSha: blob, bodyHtml: '<h2>What shipped</h2><p>Main-visible article.</p>' }
+  await page.route('**/*', route => {
+    if (new URL(route.request().url()).origin === 'http://127.0.0.1:4040') return route.continue()
+    unexpected.push(route.request().url()); return route.abort('blockedbyclient')
+  })
+  await page.route('**/api/auth/me', route => route.fulfill({ json: { login: 'ojfbot', authorized: true, avatarUrl: '', name: 'Shared owner account' } }))
+  await page.route('**/api/entries.json', route => route.fulfill({ json: [article] }))
+  await page.route(`**/api/articles/${today}.json`, route => route.fulfill({ json: article }))
+  await page.route('**/api/github/**', route => { unexpected.push(route.request().url()); return route.fulfill({ status: 500, json: {} }) })
+  await page.route('**/api/article-reviews**', async route => {
+    try {
+      const request = route.request(), url = new URL(request.url())
+      if (request.method() === 'GET') {
+        if (url.searchParams.get('view') === 'editorial') return route.fulfill({ status: discoveryFails ? 503 : 200, json: discoveryFails ? { error: 'Fixture outage' } : await editorial.load(today, 'ojfbot') })
+        return route.fulfill({ json: await reviews.load(today, blob) })
+      }
+      expect(request.headers()['x-requested-with']).toBe('XMLHttpRequest')
+      const input = editorialInputSchema.parse(request.postDataJSON()); writes.push(input)
+      return route.fulfill({ json: await editorial.write(input, 'ojfbot') })
+    } catch (error) { return route.fulfill({ status: 409, json: { error: String(error) } }) }
+  })
+  await page.goto(`/articles/${today}`)
+  await expect(page.locator('.editorial-sidebar')).toBeVisible()
+  await testInfo.attach('initial-observed-state', { body: await page.screenshot({ fullPage: true, path: testInfo.outputPath('initial-observed-state.png') }), contentType: 'image/png' })
+  const panel = page.getByRole('region', { name: 'Continue editorial feedback' })
+  await expect(panel).toBeVisible()
+  const geometry = await panel.locator('textarea').first().evaluate(input => {
+    const row = input.closest('.editorial-note')
+    const label = row?.querySelector('label')
+    if (!row || !label) throw new Error('Missing labelled editor row')
+    return { inputWidth: input.getBoundingClientRect().width, rowWidth: row.getBoundingClientRect().width,
+      labelDisplay: getComputedStyle(label).display, labelBottom: label.getBoundingClientRect().bottom,
+      inputTop: input.getBoundingClientRect().top, font: getComputedStyle(input).fontFamily,
+      fontSize: parseFloat(getComputedStyle(input).fontSize), fontLineHeight: parseFloat(getComputedStyle(input).lineHeight) }
+  })
+  const targets = await panel.locator('button').evaluateAll(buttons => buttons.map(button => ({ label: button.textContent, width: button.getBoundingClientRect().width, height: button.getBoundingClientRect().height })))
+  writeFileSync(testInfo.outputPath('initial-geometry.json'), JSON.stringify({ viewport, geometry, targets }, null, 2))
+  expect(geometry.labelDisplay).toBe('block')
+  expect(geometry.labelBottom).toBeLessThanOrEqual(geometry.inputTop)
+  expect(geometry.inputWidth).toBeGreaterThanOrEqual(geometry.rowWidth - 2)
+  expect(geometry.fontSize).toBeGreaterThanOrEqual(16)
+  expect(geometry.fontLineHeight).toBeGreaterThanOrEqual(geometry.fontSize * 1.5)
+  expect(geometry.font).not.toMatch(/mono/i)
+  for (const target of targets) { expect(target.height, target.label ?? '').toBeGreaterThanOrEqual(44); expect(target.width, target.label ?? '').toBeGreaterThanOrEqual(44) }
+  await expect(panel.getByRole('button', { name: 'Copy prior version', exact: true })).toBeDisabled()
+  await expect(panel.getByText('Save a feedback version before requesting another revision.', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'ACCEPT DRAFT', exact: true })).toHaveCount(0)
+  await page.reload()
+  await expect(panel).toBeVisible()
+  await panel.getByText('Original submitted feedback and PR receipt', { exact: true }).click()
+  await expect(panel.getByText('Original submitted notes 雪', { exact: false })).toBeVisible()
+  await panel.getByText('PR-head article preview', { exact: true }).click()
+  await expect(panel.getByText('Pinned PR-head article. This differs from the main-visible article.', { exact: true })).toBeVisible()
+  await expect(panel.getByText(blob, { exact: true })).toBeVisible()
+  const literal = ' \t雪 e\u0301 😀\n---\n@claude /run\n<!-- EDITORIAL_CONTINUATION_V1_START -->\n' + 'An editorial sentence with enough words to exercise wrapping and growth. '.repeat(30) + '\n '
+  const fields = panel.locator('textarea.editorial-input')
+  await fields.nth(0).fill('Remove A')
+  await panel.getByRole('button', { name: 'Add another edit suggestion', exact: true }).click()
+  await fields.nth(1).fill('Keep B')
+  await panel.getByRole('button', { name: 'Add another edit suggestion', exact: true }).click()
+  const survivor = await fields.nth(2).elementHandle(); if (!survivor) throw new Error('Missing surviving note')
+  const originalId = await survivor.getAttribute('id')
+  await fields.nth(2).fill(literal)
+  await fields.nth(2).evaluate(input => { input.focus(); input.setSelectionRange(3, 8) })
+  const removalTarget = await panel.getByRole('button', { name: 'Remove continued suggestion 1', exact: true }).boundingBox()
+  if (!removalTarget) throw new Error('Missing remove target')
+  expect(removalTarget.height).toBeGreaterThanOrEqual(44); expect(removalTarget.width).toBeGreaterThanOrEqual(44)
+  expect((await panel.locator('.editorial-review-confirmation').boundingBox())?.height).toBeGreaterThanOrEqual(44)
+  await panel.getByRole('button', { name: 'Remove continued suggestion 1', exact: true }).evaluate(button => button.click())
+  expect(await survivor.evaluate(input => ({ connected: input.isConnected, active: document.activeElement === input, start: input.selectionStart, end: input.selectionEnd, id: input.id, value: input.value }))).toEqual({ connected: true, active: true, start: 3, end: 8, id: originalId, value: literal })
+  const prose = await fields.nth(1).evaluate(input => ({ height: input.getBoundingClientRect().height, scroll: input.scrollHeight, client: input.clientHeight, outline: parseFloat(getComputedStyle(input).outlineWidth), viewport: window.visualViewport?.height ?? innerHeight }))
+  expect(prose.height).toBeGreaterThan(128)
+  expect(prose.height).toBeLessThanOrEqual(prose.viewport * .6 + 2)
+  expect(prose.scroll).toBeGreaterThan(prose.client)
+  expect(prose.outline).toBeGreaterThanOrEqual(2)
+  expect(await panel.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
+  await fields.nth(1).press('Tab')
+  const focused = await page.evaluate(() => ({ tag: document.activeElement?.tagName, outline: document.activeElement ? parseFloat(getComputedStyle(document.activeElement).outlineWidth) : 0 }))
+  expect(focused.tag).toBe('BUTTON'); expect(focused.outline).toBeGreaterThanOrEqual(2)
+  await testInfo.attach('focused-editor', { body: await page.screenshot({ path: testInfo.outputPath('focused-editor.png') }), contentType: 'image/png' })
+  writeFileSync(testInfo.outputPath('editor-geometry.json'), JSON.stringify({ viewport, geometry, targets, removalTarget, prose, focused }, null, 2))
+  await panel.getByRole('button', { name: 'Save new feedback version', exact: true }).click()
+  await expect(panel.getByText('Saved feedback version', { exact: false })).toBeVisible()
+  await page.waitForTimeout(500)
+  await expect(panel.getByText('Feedback version saved. No revision was requested.', { exact: false })).toBeVisible()
+  await expect(panel.getByRole('link', { name: 'Read receipt', exact: true })).toBeVisible()
+  expect(writes).toHaveLength(1)
+  expect(writes[0]).toMatchObject({ intent: 'append_editorial_feedback', feedback: { notes: [{ kind: 'root', content: 'Keep B' }, { kind: 'root', content: literal }] } })
+  await expect(panel.getByRole('button', { name: 'Request another article revision', exact: true })).toBeDisabled()
+  await page.reload()
+  await expect(panel).toBeVisible()
+  await panel.getByText('Saved feedback version', { exact: false }).click()
+  const savedLiteral = panel.locator('pre').filter({ hasText: '@claude /run' })
+  await expect(savedLiteral).toBeVisible()
+  expect(await savedLiteral.textContent()).toBe(literal)
+  await expect(panel.getByLabel('Edit suggestion', { exact: true }).nth(1)).toHaveValue(literal)
+  await expect(panel.getByText('Review the pinned PR-head article before requesting its revision.', { exact: true })).toBeVisible()
+  await panel.getByLabel('Edit suggestion', { exact: true }).nth(1).fill('Unsaved change')
+  await expect(panel.getByRole('button', { name: 'Request another article revision', exact: true })).toBeDisabled()
+  await expect(panel.getByText('Save the edited full version before requesting it.', { exact: true })).toBeVisible()
+  await panel.getByRole('button', { name: 'Copy prior version', exact: true }).click()
+  await expect(panel.getByLabel('Edit suggestion', { exact: true }).nth(1)).toHaveValue(literal)
+  await panel.getByLabel('I reviewed this pinned PR-head article').check()
+  await panel.getByRole('button', { name: 'Request another article revision', exact: true }).click()
+  await expect(panel.getByText('A revision request is outstanding.', { exact: false })).toBeVisible()
+  await page.waitForTimeout(500)
+  await expect(panel.getByText('Revision requested for this saved feedback and PR head.', { exact: false })).toBeVisible()
+  await expect(panel.getByRole('link', { name: 'Read receipt', exact: true })).toBeVisible()
+  expect(writes).toHaveLength(2)
+  expect(writes[1]).toMatchObject({ intent: 'request_editorial_revision', headSha: pr.head.sha, pullRequest: 42 })
+  expect(fixture.state.pullRequests.get(42)?.body).toBe('Original submitted notes 雪\n  ')
+  expect(fixture.state.calls.filter(call => !call.startsWith('GET '))).toEqual(Array(2).fill('POST /repos/ojfbot/daily-logger/issues/42/comments'))
+  await panel.getByText('A revision request is outstanding.', { exact: false }).scrollIntoViewIfNeeded()
+  await testInfo.attach('continued-feedback-and-request', { body: await page.screenshot({ fullPage: true, path: testInfo.outputPath('continued-feedback-and-request.png') }), contentType: 'image/png' })
+  writeFileSync(testInfo.outputPath('intercepted-writes.json'), JSON.stringify({ writes, githubWrites: fixture.state.calls.filter(call => !call.startsWith('GET ')), unexpected }, null, 2))
+  await testInfo.attach('intercepted-writes', { body: JSON.stringify({ writes, githubWrites: fixture.state.calls.filter(call => !call.startsWith('GET ')), unexpected }, null, 2), contentType: 'application/json' })
+  discoveryFails = true
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'ACCEPT DRAFT', exact: true })).toBeDisabled()
+  expect(unexpected.filter(url => !/fonts\.(?:googleapis|gstatic)\.com/.test(url))).toEqual([])
+})
+}
+
+for (const viewport of [{ width: 1440, height: 900 }, { width: 320, height: 740 }]) {
+test(`denied-storage refresh and same-ID reconciliation retain in-memory editorial state at ${viewport.width}px`, async ({ page }, testInfo) => {
+  await page.setViewportSize(viewport)
+  await page.addInitScript(() => {
+    const methods: Array<'getItem' | 'setItem' | 'removeItem'> = ['getItem', 'setItem', 'removeItem']
+    for (const method of methods) {
+      const original = Storage.prototype[method]
+      Object.defineProperty(Storage.prototype, method, { value: function(this: Storage, ...args: string[]) {
+        if (this === window.sessionStorage) throw new DOMException('Fixture storage denied', 'SecurityError')
+        return Reflect.apply(original, this, args)
+      } })
+    }
+  })
+  const fixture = createFixture(); fixture.state.login = 'ojfbot'
+  const pr = makePullRequest(42)
+  fixture.state.acceptPullNumbers.push(42)
+  fixture.state.pullRequests.set(42, { ...pr, body: 'Original submitted notes 雪\n  ', head: { ...pr.head, ref: `accept/${today}` } })
+  fixture.state.pullFiles.set(42, [{ filename: `_articles/${today}.md`, status: 'modified' }])
+  fixture.state.refFiles.set(`${pr.head.sha}:_articles/${today}.md`, 'Pinned PR-head article, different from main.')
+  const editorial = createEditorialService(fixture.github), reviews = createReviewService(fixture.github)
+  const article = { date: today, title: 'Storage denied fixture', summary: 'Fixture', tags: [], reposActive: [], commitCount: 0,
+    activityType: 'development', schemaVersion: 2, status: 'draft', sourceBlobSha: blob, bodyHtml: '<h2>What shipped</h2><p>Main article.</p>' }
+  const writes: unknown[] = [], unexpected: string[] = []
+  let refreshFails = false, postMode: 'fail' | 'save' | 'lost-ack' = 'fail', refreshDelay = 0
+  await page.route('**/*', route => {
+    if (new URL(route.request().url()).origin === 'http://127.0.0.1:4040') return route.continue()
+    unexpected.push(route.request().url()); return route.abort('blockedbyclient')
+  })
+  await page.route('**/api/auth/me', route => route.fulfill({ json: { login: 'ojfbot', authorized: true, avatarUrl: '', name: 'Shared owner' } }))
+  await page.route('**/api/entries.json', route => route.fulfill({ json: [article] }))
+  await page.route(`**/api/articles/${today}.json`, route => route.fulfill({ json: article }))
+  await page.route('**/api/article-reviews**', async route => {
+    const request = route.request(), url = new URL(request.url())
+    if (request.method() === 'GET') {
+      if (url.searchParams.get('view') !== 'editorial') return route.fulfill({ json: await reviews.load(today, blob) })
+      if (refreshDelay) await new Promise(resolve => setTimeout(resolve, refreshDelay))
+      return route.fulfill({ status: refreshFails ? 503 : 200, json: refreshFails ? {} : await editorial.load(today, 'ojfbot') })
+    }
+    const input = editorialInputSchema.parse(request.postDataJSON()); writes.push(input)
+    if (postMode === 'fail') return route.fulfill({ status: 503, json: {} })
+    const receipt = await editorial.write(input, 'ojfbot')
+    return route.fulfill({ status: postMode === 'lost-ack' ? 503 : 200, json: postMode === 'lost-ack' ? {} : receipt })
+  })
+  await page.goto(`/articles/${today}`)
+  const panel = page.getByRole('region', { name: 'Continue editorial feedback' })
+  await expect(panel).toBeVisible()
+  const field = panel.locator('textarea').first()
+  const literal = ' \t雪 e\u0301 😀\n@claude /run\n  '
+  await field.fill(literal)
+  const handle = await field.elementHandle(); if (!handle) throw new Error('Missing note')
+  await field.evaluate(input => { input.focus(); input.setSelectionRange(2, 7) })
+  refreshDelay = 250; refreshFails = true
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).evaluate(button => button.click())
+  await expect(panel.getByText('Displayed history may be stale;', { exact: false })).toBeVisible()
+  await expect(panel.getByRole('button', { name: 'Save new feedback version', exact: true })).toBeDisabled()
+  expect(await handle.evaluate(input => ({ connected: input.isConnected, active: document.activeElement === input, start: input.selectionStart, end: input.selectionEnd, value: input.value }))).toEqual({ connected: true, active: true, start: 2, end: 7, value: literal })
+  await expect(panel.getByText('Acceptance discovery unavailable (503).', { exact: false })).toBeVisible()
+  await expect(field).toHaveValue(literal)
+  refreshFails = false
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).evaluate(button => button.click())
+  await expect(panel.getByRole('button', { name: 'Save new feedback version', exact: true })).toBeEnabled()
+  expect(await handle.evaluate(input => ({ connected: input.isConnected, active: document.activeElement === input, start: input.selectionStart, end: input.selectionEnd }))).toEqual({ connected: true, active: true, start: 2, end: 7 })
+  await panel.getByRole('button', { name: 'Save new feedback version', exact: true }).click()
+  await expect(panel.getByRole('button', { name: 'Retry same submission', exact: true })).toBeDisabled()
+  refreshFails = true
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).click()
+  await expect(panel.getByText('Acceptance discovery unavailable (503).', { exact: false })).toBeVisible()
+  await expect(panel.getByRole('button', { name: 'Retry same submission', exact: true })).toBeDisabled()
+  refreshFails = false
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).click()
+  await expect(panel.getByRole('button', { name: 'Retry same submission', exact: true })).toBeEnabled()
+  expect(writes).toHaveLength(1)
+  postMode = 'save'
+  await panel.getByRole('button', { name: 'Retry same submission', exact: true }).click()
+  await expect(panel.getByText('Feedback version saved. No revision was requested.', { exact: false })).toBeVisible()
+  await page.waitForTimeout(500)
+  await expect(panel.getByRole('link', { name: 'Read receipt', exact: true })).toBeVisible()
+  expect(writes).toHaveLength(2); expect(writes[1]).toEqual(writes[0])
+  expect(await handle.evaluate(input => input.isConnected)).toBe(true)
+  await expect(field).toHaveValue(literal)
+  await field.fill('Second saved version: acknowledgment lost 雪')
+  postMode = 'lost-ack'
+  await panel.getByRole('button', { name: 'Save new feedback version', exact: true }).click()
+  await expect(panel.getByRole('button', { name: 'Retry same submission', exact: true })).toBeDisabled()
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).click()
+  await expect(panel.getByText('Confirmed in refreshed history.', { exact: false })).toBeVisible()
+  await expect(panel.getByRole('button', { name: 'Retry same submission', exact: true })).toHaveCount(0)
+  expect(writes).toHaveLength(3)
+  expect(fixture.state.calls.filter(call => call.startsWith('POST '))).toHaveLength(2)
+  await testInfo.attach('retained-confirmation', { body: await page.screenshot({ path: testInfo.outputPath('retained-confirmation.png') }), contentType: 'image/png' })
+  await page.reload()
+  await expect(panel).toBeVisible()
+  await expect(field).toHaveValue('')
+  await expect(panel.getByText('Copy prior version to select the saved feedback before reviewing and requesting it.', { exact: true })).toBeVisible()
+  expect(unexpected.filter(url => !/fonts\.(?:googleapis|gstatic)\.com/.test(url))).toEqual([])
+  writeFileSync(testInfo.outputPath('denied-storage-writes.json'), JSON.stringify({ viewport, writes, githubWrites: fixture.state.calls.filter(call => call.startsWith('POST ')), unexpected }, null, 2))
+})
+}
+
+for (const viewport of [{ width: 1440, height: 900 }, { width: 320, height: 740 }]) {
+test(`phase-bound correction and frozen uncertain retry at ${viewport.width}px`, async ({ page }, testInfo) => {
+  await page.setViewportSize(viewport)
+  const fixture = createFixture(); fixture.state.login = 'ojfbot'
+  const pr = makePullRequest(42)
+  fixture.state.acceptPullNumbers.push(42)
+  fixture.state.pullRequests.set(42, { ...pr, body: 'Original retained body', head: { ...pr.head, ref: `accept/${today}` } })
+  fixture.state.pullFiles.set(42, [{ filename: `_articles/${today}.md`, status: 'modified' }])
+  fixture.state.refFiles.set(`${pr.head.sha}:_articles/${today}.md`, 'Pinned article')
+  const editorial = createEditorialService(fixture.github), reviews = createReviewService(fixture.github)
+  const article = { date: today, title: 'D1 phase fixture', summary: 'Fixture', tags: [], reposActive: [], commitCount: 0,
+    activityType: 'development', schemaVersion: 2, status: 'draft', sourceBlobSha: blob, bodyHtml: '<h2>What shipped</h2><p>Main article.</p>' }
+  const writes: ReturnType<typeof editorialInputSchema.parse>[] = [], unexpected: string[] = []
+  let mode: 'save' | 'uncertain' | 'reject-retry' = 'save'
+  await page.route('**/*', route => {
+    if (new URL(route.request().url()).origin === 'http://127.0.0.1:4040') return route.continue()
+    unexpected.push(route.request().url()); return route.abort('blockedbyclient')
+  })
+  await page.route('**/api/auth/me', route => route.fulfill({ json: { login: 'ojfbot', authorized: true, avatarUrl: '', name: 'Fixture owner' } }))
+  await page.route('**/api/entries.json', route => route.fulfill({ json: [article] }))
+  await page.route(`**/api/articles/${today}.json`, route => route.fulfill({ json: article }))
+  await page.route('**/api/article-reviews**', async route => {
+    const request = route.request(), url = new URL(request.url())
+    if (request.method() === 'GET') return route.fulfill({ json: url.searchParams.get('view') === 'editorial' ? await editorial.load(today, 'ojfbot') : await reviews.load(today, blob) })
+    const input = editorialInputSchema.parse(request.postDataJSON()); writes.push(input)
+    if (mode === 'uncertain') return route.fulfill({ status: 503, json: {} })
+    if (mode === 'reject-retry') return route.fulfill({ status: 409, json: { error: 'Retry rejected before append', outcome: 'rejected_before_append', requestId: input.requestId, intent: input.intent } })
+    try { return route.fulfill({ json: await editorial.write(input, 'ojfbot') }) }
+    catch (error) {
+      // The real service proves the append phase; the route mirrors handler serialization.
+      if (error instanceof EditorialWriteFailure) return route.fulfill({ status: 400, json: { error: error.cause instanceof Error ? error.cause.message : 'Editorial write failed', outcome: error.outcome, requestId: error.requestId, intent: error.intent } })
+      throw error
+    }
+  })
+  await page.goto(`/articles/${today}`)
+  const panel = page.getByRole('region', { name: 'Continue editorial feedback' }), field = panel.locator('textarea').first()
+  const save = panel.getByRole('button', { name: 'Save new feedback version', exact: true }), retry = panel.getByRole('button', { name: 'Retry same submission', exact: true })
+  await expect(panel).toBeVisible()
+  await field.fill('x'.repeat(46_000))
+  await save.click()
+  await expect(panel.getByText('Submission was rejected before append.', { exact: false })).toBeVisible()
+  await expect(field).toBeEnabled()
+  await expect(save).toBeEnabled()
+  expect(fixture.state.calls.filter(call => call.startsWith('POST '))).toHaveLength(0)
+  await field.fill('Corrected literal 雪')
+  await save.click()
+  await expect(panel.getByText('Feedback version saved. No revision was requested.', { exact: false })).toBeVisible()
+  expect(writes).toHaveLength(2)
+  expect(writes[0]?.requestId).not.toBe(writes[1]?.requestId)
+  mode = 'uncertain'
+  await field.fill('Frozen uncertain original 雪')
+  await save.click()
+  await expect(retry).toBeDisabled()
+  await field.fill('Independent draft after uncertain submission')
+  await panel.getByRole('button', { name: 'Add another edit suggestion', exact: true }).click()
+  await panel.getByRole('button', { name: 'Remove continued suggestion 2', exact: true }).click()
+  await expect(save).toBeDisabled()
+  await page.reload()
+  await expect(field).toHaveValue('Independent draft after uncertain submission')
+  expect(writes).toHaveLength(3)
+  await expect(retry).toBeDisabled()
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).click()
+  await expect(retry).toBeEnabled()
+  mode = 'reject-retry'
+  await retry.click()
+  await expect(retry).toBeDisabled()
+  expect(writes[3]).toEqual(writes[2])
+  await expect(field).toHaveValue('Independent draft after uncertain submission')
+  await expect(field).toBeEnabled()
+  await expect(save).toBeDisabled()
+  await expect(panel.getByText('manual GitHub diagnosis', { exact: false })).toBeVisible()
+  const retained = await page.evaluate(date => {
+    const key = Object.keys(sessionStorage).find(key => key.startsWith('dl-editorial-continuation:') && key.endsWith(`:${date}:42:pending`))
+    return key ? sessionStorage.getItem(key) : null
+  }, today)
+  expect(JSON.parse(retained ?? 'null')).toEqual(writes[2])
+  expect(unexpected.filter(url => !/fonts\.(?:googleapis|gstatic)\.com/.test(url))).toEqual([])
+  await testInfo.attach('D1-phase-and-frozen-retry', { body: await page.screenshot({ fullPage: true, path: testInfo.outputPath('D1-phase-and-frozen-retry.png') }), contentType: 'image/png' })
+  writeFileSync(testInfo.outputPath('D1-transition-evidence.json'), JSON.stringify({ viewport, writes, retained: JSON.parse(retained ?? 'null'), githubWrites: fixture.state.calls.filter(call => call.startsWith('POST ')), unexpected }, null, 2))
+})
+}
