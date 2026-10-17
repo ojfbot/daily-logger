@@ -190,3 +190,6 @@
 - Final merge preflight assumed the reviewed base could merge after its checks passed; strict branch protection required the eight newer editorial commits on main. Rebased the four approved time-overlay commits onto current main without conflicts, preserved the newer article, review and action data, and reran checks instead of bypassing protection.
 
 - UIK-01 integration assumed the previously accepted base remained current; timezone PR #372 merged during review, so merge its accepted main without rewriting published UI history and reverify the combined product, model and dependency graph.
+
+- UIK-01 consumer fixtures assumed acceptance branches shared the current policy tip; independent Claude controls showed normal main advancement both rejected valid article-only work and could hide a shared nonarticle change, so validate the PR change set from a unique trusted common ancestor and retain exact file/blob/output guards.
+- UIK-01 immediate refresh mocks batched over a real child unmount; delayed refresh with storage denied lost confirmation and frozen retry state. Retain the context projection while marking it unavailable, preserve receipts/in-memory identity, and reconcile only explicit same-submission retries against fresh matching history.
