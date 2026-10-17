@@ -1,0 +1,414 @@
+[
+  {
+    "date": "2026-02-27",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "11:00 UTC",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      }
+    ]
+  },
+  {
+    "date": "2026-03-03",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "9am",
+        "reason": "unsupported-time-format"
+      }
+    ]
+  },
+  {
+    "date": "2026-03-04",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "11pm",
+        "reason": "unsupported-time-format"
+      }
+    ]
+  },
+  {
+    "date": "2026-03-16",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "11pm",
+        "reason": "unsupported-time-format"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-07",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "2am",
+        "reason": "unsupported-time-format"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-27",
+    "resolved": 1,
+    "unresolved": []
+  },
+  {
+    "date": "2026-05-05",
+    "resolved": 1,
+    "unresolved": []
+  },
+  {
+    "date": "2026-06-10",
+    "resolved": 1,
+    "unresolved": []
+  },
+  {
+    "date": "2026-06-11",
+    "resolved": 2,
+    "unresolved": []
+  },
+  {
+    "date": "2026-07-26",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "16:37Z",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-27",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "16:37Z",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      }
+    ]
+  },
+  {
+    "date": "2026-08-14",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "03:00 UTC",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      }
+    ]
+  },
+  {
+    "date": "2026-08-17",
+    "resolved": 1,
+    "unresolved": []
+  },
+  {
+    "date": "2026-09-26",
+    "resolved": 1,
+    "unresolved": []
+  },
+  {
+    "date": "2026-09-27",
+    "resolved": 1,
+    "unresolved": []
+  },
+  {
+    "date": "2026-09-28",
+    "resolved": 1,
+    "unresolved": []
+  },
+  {
+    "date": "2026-09-29",
+    "resolved": 1,
+    "unresolved": []
+  },
+  {
+    "date": "2026-09-30",
+    "resolved": 1,
+    "unresolved": []
+  },
+  {
+    "date": "2026-10-01",
+    "resolved": 2,
+    "unresolved": []
+  },
+  {
+    "date": "2026-10-02",
+    "resolved": 9,
+    "unresolved": []
+  },
+  {
+    "date": "2026-10-03",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "09:00 UTC",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "09:00 UTC",
+        "occurrence": 1,
+        "reason": "missing-evidence"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-04",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "09:00 UTC",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "3:30 AM",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "3:30 AM",
+        "reason": "unsupported-time-format"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-06",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "03:30 America/Chicago",
+        "reason": "unsupported-time-format"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-07",
+    "resolved": 1,
+    "unresolved": [
+      {
+        "text": "10:22",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30 America/Chicago",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "10:22",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30",
+        "reason": "unsupported-time-format"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-08",
+    "resolved": 1,
+    "unresolved": [
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-09",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "10:22",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "10:22",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "03:30",
+        "reason": "unsupported-time-format"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-13",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "5:01",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "5:27",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "5:09",
+        "reason": "unsupported-time-format"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-14",
+    "resolved": 3,
+    "unresolved": [
+      {
+        "text": "09:00 UTC",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "09:00 UTC",
+        "occurrence": 1,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "05:16:30 UTC",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "09:02 UTC",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "09:00 UTC",
+        "occurrence": 2,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "04:00",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "00:16:30",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "00:21:37",
+        "reason": "unsupported-time-format"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-15",
+    "resolved": 6,
+    "unresolved": [
+      {
+        "text": "09:00 UTC",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "09:00 UTC",
+        "occurrence": 1,
+        "reason": "missing-evidence"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-16",
+    "resolved": 0,
+    "unresolved": [
+      {
+        "text": "09:00 UTC",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "09:00 UTC",
+        "occurrence": 1,
+        "reason": "missing-evidence"
+      }
+    ]
+  }
+]

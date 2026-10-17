@@ -42,10 +42,11 @@ export function ArticlePage() {
     }
   }, [date, articleCache, dispatch])
 
-  const codeReferences = article?.codeReferences ?? entry?.codeReferences ?? []
-  const reposActive = article?.reposActive ?? entry?.reposActive ?? []
+  const codeReferences = useMemo(() => article?.codeReferences ?? entry?.codeReferences ?? [], [article?.codeReferences, entry?.codeReferences])
+  const reposActive = useMemo(() => article?.reposActive ?? entry?.reposActive ?? [], [article?.reposActive, entry?.reposActive])
+  const timeReferences = useMemo(() => article?.timeReferences ?? [], [article?.timeReferences])
 
-  const popoverState = useArticlePopovers(contentRef, codeReferences, reposActive)
+  const popover = useArticlePopovers(contentRef, codeReferences, reposActive, timeReferences, article?.bodyHtml)
   const { extractSection } = useSectionContent(contentRef)
 
   const displayEntry = article ?? entry
@@ -225,7 +226,7 @@ export function ArticlePage() {
           {buttonPortals}
           {inlineThreadPortals}
 
-          <Popover state={popoverState} />
+          <Popover state={popover.state} onMouseEnter={popover.keepOpen} onMouseLeave={popover.scheduleHide} />
 
           {related.length > 0 && (
             <div className="related-articles related-section">

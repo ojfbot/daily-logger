@@ -1,0 +1,555 @@
+{
+  "schemaVersion": 1,
+  "articles": {
+    "2026-02-27": {
+      "bodySha256": "0df7c691083473c6434da72369c94c6d95fde6e491f2d7f82b8a064c25a4bc2f",
+      "references": []
+    },
+    "2026-03-03": {
+      "bodySha256": "1a40c799b8ad43f3a6daa6b8366ab4fc4345da8eca5653312219fd5ae8fe5c64",
+      "references": []
+    },
+    "2026-03-04": {
+      "bodySha256": "55a9ac74a918e0c7f88be6ed7d915ec98a0e1bc0761e277ad16aaf75cca93da3",
+      "references": []
+    },
+    "2026-03-16": {
+      "bodySha256": "ca484563ade3032b8190d48ed40b7e3979dda5a2aeb95fc3fe4147ea498d4454",
+      "references": []
+    },
+    "2026-04-07": {
+      "bodySha256": "bd3029d7b765e616835859958900b5fcde2ddbbfd30c5ef13aa87a7b269d3d56",
+      "references": []
+    },
+    "2026-04-27": {
+      "bodySha256": "d7aee74fe6677c81627b3af1a58fe12b17860670b78c497afed61e945c68b5ae",
+      "references": [
+        {
+          "text": "2026-04-27 11:09 UTC",
+          "occurrence": 0,
+          "at": "2026-04-27T11:09:00.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "explicit-offset",
+            "value": "2026-04-27 11:09 UTC"
+          }
+        }
+      ]
+    },
+    "2026-05-05": {
+      "bodySha256": "7d3b3333a6375537d053b6686795cd3786637242495e1ae08c765b43abe03ca9",
+      "references": [
+        {
+          "text": "2026-05-05 04:15Z",
+          "occurrence": 0,
+          "at": "2026-05-05T04:15:00.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "explicit-offset",
+            "value": "2026-05-05 04:15Z"
+          }
+        }
+      ]
+    },
+    "2026-06-10": {
+      "bodySha256": "35db5bedff6894e55944c7ab72a747e60f73df3299f68901d013d42ff842cdb4",
+      "references": [
+        {
+          "text": "2026-06-10T02:05Z",
+          "occurrence": 0,
+          "at": "2026-06-10T02:05:00.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "explicit-offset",
+            "value": "2026-06-10T02:05Z"
+          }
+        }
+      ]
+    },
+    "2026-06-11": {
+      "bodySha256": "74ddce2fb00074e1350ae2a829eb820e383dd935b8100b135d57fe5fffcecebf",
+      "references": [
+        {
+          "text": "22:29 UTC",
+          "occurrence": 0,
+          "at": "2026-06-10T22:29:49.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/selfco-box",
+            "ref": "4",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/selfco-box/pull/4"
+          }
+        },
+        {
+          "text": "22:29 UTC",
+          "occurrence": 1,
+          "at": "2026-06-10T22:29:49.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/selfco-box",
+            "ref": "4",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/selfco-box/pull/4"
+          }
+        }
+      ]
+    },
+    "2026-07-26": {
+      "bodySha256": "46ef645f94b5dac82a75ced88faf14a9e479dc32e8e1687ea9d6d3c88d8004d0",
+      "references": []
+    },
+    "2026-07-27": {
+      "bodySha256": "4d258122eb25358d12ff8bbd4c8d43d3e394468d1167d78244c9e6aafec4ce80",
+      "references": []
+    },
+    "2026-08-14": {
+      "bodySha256": "255d58e1487e05d3c0e18b1ec979795b6e8a10eb6b6b1c1646d5b7562be9ac96",
+      "references": []
+    },
+    "2026-08-17": {
+      "bodySha256": "45333c810aef3626944069d39f999efbef9d1b1961c483eb3aa268de8b9cbb7c",
+      "references": [
+        {
+          "text": "2026-08-16T16:56:30Z",
+          "occurrence": 0,
+          "at": "2026-08-16T16:56:30.000Z",
+          "precision": "second",
+          "evidence": {
+            "kind": "explicit-offset",
+            "value": "2026-08-16T16:56:30Z"
+          }
+        }
+      ]
+    },
+    "2026-09-26": {
+      "bodySha256": "cb750fe3df03444218a9bac1e3d754e26d5658c45fcab1f4eaee6b221194c0b0",
+      "references": [
+        {
+          "text": "14:29Z",
+          "occurrence": 0,
+          "at": "2026-09-25T14:29:20.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/daily-logger",
+            "ref": "281",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/daily-logger/pull/281"
+          }
+        }
+      ]
+    },
+    "2026-09-27": {
+      "bodySha256": "6cbe7063402d87d0db188669048962b4331509fb82e6cdaa501219d94e45a06a",
+      "references": [
+        {
+          "text": "13:38Z",
+          "occurrence": 0,
+          "at": "2026-09-26T13:38:49.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/daily-logger",
+            "ref": "283",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/daily-logger/pull/283"
+          }
+        }
+      ]
+    },
+    "2026-09-28": {
+      "bodySha256": "c757212e787ad1d0da99571e86e33a12b411411a9de47edf97dd63734c1d56e5",
+      "references": [
+        {
+          "text": "14:35Z",
+          "occurrence": 0,
+          "at": "2026-09-27T14:35:44.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/daily-logger",
+            "ref": "285",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/daily-logger/pull/285"
+          }
+        }
+      ]
+    },
+    "2026-09-29": {
+      "bodySha256": "f2422b8b654ed52a248820cfc08cb04d2e2c32346defe728ecd1110174ef21b2",
+      "references": [
+        {
+          "text": "17:21Z",
+          "occurrence": 0,
+          "at": "2026-09-28T17:21:11.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/daily-logger",
+            "ref": "286",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/daily-logger/pull/286"
+          }
+        }
+      ]
+    },
+    "2026-09-30": {
+      "bodySha256": "d5085fd85ecb8e2d566e1501312b72ebcb146f8565ecd381e0947c2a5875a8c0",
+      "references": [
+        {
+          "text": "15:22Z",
+          "occurrence": 0,
+          "at": "2026-09-29T15:22:13.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/daily-logger",
+            "ref": "287",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/daily-logger/pull/287"
+          }
+        }
+      ]
+    },
+    "2026-10-01": {
+      "bodySha256": "62fad5b0820e2b711bbec071fe8da0a5363e0aa0a93f2887a6d9d4ccdec965f6",
+      "references": [
+        {
+          "text": "13:29Z",
+          "occurrence": 0,
+          "at": "2026-10-01T13:29:16.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/cv-builder",
+            "ref": "157",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/cv-builder/pull/157"
+          }
+        },
+        {
+          "text": "13:29Z",
+          "occurrence": 1,
+          "at": "2026-10-01T13:29:16.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/cv-builder",
+            "ref": "157",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/cv-builder/pull/157"
+          }
+        }
+      ]
+    },
+    "2026-10-02": {
+      "bodySha256": "ddbdede81ddf6526b1743bb03182492e7f7496a2ccd36d4c36cd54a3a7a33122",
+      "references": [
+        {
+          "text": "20:41Z",
+          "occurrence": 0,
+          "at": "2026-10-01T20:41:28.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/shell",
+            "ref": "80",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/shell/pull/80"
+          }
+        },
+        {
+          "text": "13:29Z",
+          "occurrence": 0,
+          "at": "2026-10-01T13:29:16.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/cv-builder",
+            "ref": "157",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/cv-builder/pull/157"
+          }
+        },
+        {
+          "text": "20:41Z",
+          "occurrence": 1,
+          "at": "2026-10-01T20:41:22.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/TripPlanner",
+            "ref": "58",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/TripPlanner/pull/58"
+          }
+        },
+        {
+          "text": "20:41Z",
+          "occurrence": 2,
+          "at": "2026-10-01T20:41:16.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/purefoy",
+            "ref": "61",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/purefoy/pull/61"
+          }
+        },
+        {
+          "text": "20:41Z",
+          "occurrence": 3,
+          "at": "2026-10-01T20:41:09.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/lean-canvas",
+            "ref": "22",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/lean-canvas/pull/22"
+          }
+        },
+        {
+          "text": "20:41Z",
+          "occurrence": 4,
+          "at": "2026-10-01T20:41:01.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/gastown-pilot",
+            "ref": "19",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/gastown-pilot/pull/19"
+          }
+        },
+        {
+          "text": "20:40Z",
+          "occurrence": 0,
+          "at": "2026-10-01T20:40:55.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/BlogEngine",
+            "ref": "59",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/BlogEngine/pull/59"
+          }
+        },
+        {
+          "text": "01:35Z",
+          "occurrence": 0,
+          "at": "2026-10-02T01:35:08.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/core",
+            "ref": "497",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/core/pull/497"
+          }
+        },
+        {
+          "text": "15:58Z",
+          "occurrence": 0,
+          "at": "2026-10-01T15:58:56.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/daily-logger",
+            "ref": "290",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/daily-logger/pull/290"
+          }
+        }
+      ]
+    },
+    "2026-10-03": {
+      "bodySha256": "4b50842e7841fc5b3b3eae42dc3ceacfe00e42880782e6eaf33dad84d5125a8c",
+      "references": []
+    },
+    "2026-10-04": {
+      "bodySha256": "799451d1da548e27915213bfe5cb48b7509959177b0c0f934fd915225bbaefe8",
+      "references": []
+    },
+    "2026-10-06": {
+      "bodySha256": "9b300cbba34f7b15957394e5d726ad7d3f3dba45bb20c2015197ee0291c64cf8",
+      "references": []
+    },
+    "2026-10-07": {
+      "bodySha256": "4d49f4d5f5b931a160634bb38f7f2cce815c7f02cef3356df9a4cabd318d42ab",
+      "references": [
+        {
+          "text": "2026-10-06T15:28:56Z",
+          "occurrence": 0,
+          "at": "2026-10-06T15:28:56.000Z",
+          "precision": "second",
+          "evidence": {
+            "kind": "explicit-offset",
+            "value": "2026-10-06T15:28:56Z"
+          }
+        }
+      ]
+    },
+    "2026-10-08": {
+      "bodySha256": "20576ba59fd447713bdcbb52a3a12141da51b48b52ec7598a927fb8941dd4811",
+      "references": [
+        {
+          "text": "16:48Z",
+          "occurrence": 0,
+          "at": "2026-10-07T16:48:15.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/daily-logger",
+            "ref": "311",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/daily-logger/pull/311"
+          }
+        }
+      ]
+    },
+    "2026-10-09": {
+      "bodySha256": "1a3dc4f85ca7c8c6dbb529b412990813513949d740938b0531979ea4b00f7fbc",
+      "references": []
+    },
+    "2026-10-13": {
+      "bodySha256": "e6a1ab7831ef1c910dc2d9bb339f0bcc8e119cfedcb61caaa0e2835daedbbcb6",
+      "references": []
+    },
+    "2026-10-14": {
+      "bodySha256": "0fe44dc233d3ae40526ca18859ff417fb9d76d446afd66eae9e37a27bd6c30c0",
+      "references": [
+        {
+          "text": "05:21:37 UTC",
+          "occurrence": 0,
+          "at": "2026-10-14T05:21:37.000Z",
+          "precision": "second",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/lego-village-pipeline",
+            "ref": "47",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/lego-village-pipeline/pull/47"
+          }
+        },
+        {
+          "text": "15:15:05 UTC",
+          "occurrence": 0,
+          "at": "2026-10-14T15:15:05.000Z",
+          "precision": "second",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/core",
+            "ref": "537",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/core/pull/537"
+          }
+        },
+        {
+          "text": "21:40:31 UTC",
+          "occurrence": 0,
+          "at": "2026-10-14T21:40:31.000Z",
+          "precision": "second",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/morning-cockpit",
+            "ref": "56",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/morning-cockpit/pull/56"
+          }
+        }
+      ]
+    },
+    "2026-10-15": {
+      "bodySha256": "c73e2789855c1e044b644926d26092bd1b3199b2741be35237cf08295347bbbd",
+      "references": [
+        {
+          "text": "15:15Z",
+          "occurrence": 0,
+          "at": "2026-10-14T15:15:05.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/core",
+            "ref": "537",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/core/pull/537"
+          }
+        },
+        {
+          "text": "21:40Z",
+          "occurrence": 0,
+          "at": "2026-10-14T21:40:31.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/morning-cockpit",
+            "ref": "56",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/morning-cockpit/pull/56"
+          }
+        },
+        {
+          "text": "09:10Z",
+          "occurrence": 0,
+          "at": "2026-10-14T09:10:41.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/daily-logger",
+            "ref": "359",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/daily-logger/pull/359"
+          }
+        },
+        {
+          "text": "15:15Z",
+          "occurrence": 1,
+          "at": "2026-10-14T15:15:05.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/core",
+            "ref": "537",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/core/pull/537"
+          }
+        },
+        {
+          "text": "21:40Z",
+          "occurrence": 1,
+          "at": "2026-10-14T21:40:31.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/morning-cockpit",
+            "ref": "56",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/morning-cockpit/pull/56"
+          }
+        },
+        {
+          "text": "09:10Z",
+          "occurrence": 1,
+          "at": "2026-10-14T09:10:41.000Z",
+          "precision": "minute",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/daily-logger",
+            "ref": "359",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/daily-logger/pull/359"
+          }
+        }
+      ]
+    },
+    "2026-10-16": {
+      "bodySha256": "15135677f7b3ba292217cfe459f86484ec916b21bc00dfce590e1c767922eade",
+      "references": []
+    }
+  }
+}

@@ -12,8 +12,12 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk'
+import { z } from 'zod'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { stampOutcome } from './stamp-outcome.js'
+import { detachArticleTime, preserveTimeDuringRevision, type RevisionResult } from './article-time-frontmatter.js'
 import {
   appendAuthoringStage,
   preserveProvenanceFrontmatter,
@@ -21,7 +25,7 @@ import {
 } from './run-provenance.js'
 
 export const REVISION_MODEL = 'claude-opus-4-6'
-export const REVISION_PROMPT_VERSION = 'editorial-revision-v1'
+export const REVISION_PROMPT_VERSION = 'editorial-revision-v2-recorded-time-protected'
 const MAX_TOKENS = 8192
 
 export const REVISION_SYSTEM_PROMPT = `You are a careful editor revising a daily development blog article for the ojfbot project.
@@ -58,11 +62,7 @@ const REVISE_TOOL: Anthropic.Tool = {
   },
 }
 
-interface RevisionResult {
-  revisedMarkdown: string
-  changesSummary: string[]
-  changed: boolean
-}
+const RevisionResponseSchema = z.object({ revisedMarkdown: z.string().min(1), changesSummary: z.array(z.string()).min(1) })
 
 function mockRevise(original: string): RevisionResult {
   const revised = original.replace(
@@ -103,9 +103,9 @@ ${feedback}`
     throw new Error('Claude did not return a tool_use response')
   }
 
-  const input = toolBlock.input as { revisedMarkdown: string; changesSummary: string[] }
+  const input = RevisionResponseSchema.parse(toolBlock.input)
   if (typeof input.revisedMarkdown === 'string') {
-    input.revisedMarkdown = preserveProvenanceFrontmatter(articleContent, input.revisedMarkdown)
+    input.revisedMarkdown = preserveProvenanceFrontmatter(articleContent, detachArticleTime(input.revisedMarkdown).markdown)
   }
 
   if (!input.revisedMarkdown || !input.revisedMarkdown.startsWith('---')) {
@@ -128,6 +128,22 @@ ${feedback}`
     changesSummary: input.changesSummary,
     changed: input.revisedMarkdown.trim() !== articleContent.trim(),
   }
+}
+
+export async function reviseArticle(input: { articleContent: string; feedback: string; mode: 'mock' | 'model'; dryRun: boolean }): Promise<RevisionResult> {
+  return preserveTimeDuringRevision({ originalMarkdown: input.articleContent, revise: async (modelMarkdown) => {
+    const revision = input.mode === 'mock' ? mockRevise(modelMarkdown) : await revise(modelMarkdown, input.feedback)
+    if (revision.changed) {
+      revision.revisedMarkdown = appendAuthoringStage(revision.revisedMarkdown, {
+        role: 'revision',
+        model: input.mode === 'mock' ? 'mock-llm' : REVISION_MODEL,
+        promptVersion: input.mode === 'mock' ? 'mock-editorial-revision-v1' : REVISION_PROMPT_VERSION,
+        promptSha256: promptSha256(input.mode === 'mock' ? 'daily-logger mock editorial revision v1' : REVISION_SYSTEM_PROMPT),
+      })
+      if (!input.dryRun) revision.revisedMarkdown = stampOutcome(revision.revisedMarkdown, 'edited')
+    }
+    return revision
+  } })
 }
 
 async function main() {
@@ -165,7 +181,7 @@ async function main() {
   let result: RevisionResult
 
   try {
-    result = isMock ? mockRevise(articleContent) : await revise(articleContent, feedback)
+    result = await reviseArticle({ articleContent, feedback, mode: isMock ? 'mock' : 'model', dryRun: isDryRun })
   } catch (err) {
     console.error(`\n❌ Revision failed: ${err instanceof Error ? err.message : err}`)
     process.exit(2)
@@ -176,21 +192,9 @@ async function main() {
     console.error(`  - ${change}`)
   }
 
-  if (result.changed) {
-    result.revisedMarkdown = appendAuthoringStage(result.revisedMarkdown, {
-      role: 'revision',
-      model: isMock ? 'mock-llm' : REVISION_MODEL,
-      promptVersion: isMock ? 'mock-editorial-revision-v1' : REVISION_PROMPT_VERSION,
-      promptSha256: promptSha256(
-        isMock ? 'daily-logger mock editorial revision v1' : REVISION_SYSTEM_PROMPT,
-      ),
-    })
-  }
-
   if (!isDryRun && result.changed) {
     // S18 (audit I2): a human-driven revision IS the 'edited' outcome — stamp it mechanically
     // (never via the LLM, whose prompt forbids touching frontmatter).
-    result.revisedMarkdown = stampOutcome(result.revisedMarkdown, 'edited')
     writeFileSync(articlePath, result.revisedMarkdown, 'utf-8')
     console.error(`\n✓ Written to ${articlePath} (outcome: edited)`)
   }
@@ -202,7 +206,9 @@ async function main() {
   }))
 }
 
-main().catch((err) => {
-  console.error('\n❌ Fatal:', err)
-  process.exit(2)
-})
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error('\n❌ Fatal:', err)
+    process.exit(2)
+  })
+}
