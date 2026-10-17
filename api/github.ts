@@ -27,6 +27,8 @@ const ALLOWED_REPO_PREFIX = '/repos/ojfbot/daily-logger/'
  * 4. Request path restricted to ojfbot/daily-logger repo only
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Cache-Control', 'private, no-store')
+  res.setHeader('Vary', 'Cookie')
   // ── Health check (no auth required) ─────────────────────────────────────
   if (!req.query.path) {
     return res.status(200).json({ ok: true, fn: 'github-proxy' })
@@ -73,7 +75,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ── Proxy to GitHub API ──────────────────────────────────────────────────
-  const githubUrl = `https://api.github.com${githubPath}`
+  const githubUrl = new URL(`https://api.github.com${githubPath}`)
+  for (const [key, value] of Object.entries(req.query)) {
+    if (key === 'path') continue
+    for (const item of Array.isArray(value) ? value : [value]) {
+      if (typeof item === 'string') githubUrl.searchParams.append(key, item)
+    }
+  }
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
@@ -92,7 +100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     fetchOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body)
   }
 
-  const ghResponse = await fetch(githubUrl, fetchOptions)
+  const ghResponse = await fetch(githubUrl.toString(), fetchOptions)
 
   // Forward rate limit headers for observability
   const rateLimitHeaders = ['x-ratelimit-limit', 'x-ratelimit-remaining', 'x-ratelimit-reset']

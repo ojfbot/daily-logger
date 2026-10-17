@@ -15,8 +15,8 @@ The initial migration registry had 213 records, no review receipts, and no histo
 
 ## Local checks
 
-- `pnpm test`: 531 tests pass across 45 files.
-- `pnpm exec playwright test`: 14 browser tests pass, including checked defaults, saved opt-out after reload, acceptance branch reuse, and conflict handling. GitHub writes are intercepted. One scenario reads the actual reconciled October 17 API artifact and confirms all three cards, folded evidence, and the unchanged reporting-window commit count.
+- `pnpm test`: 533 tests pass across 46 files.
+- `pnpm exec playwright test`: 14 browser tests pass, including checked defaults, saved opt-out after reload, acceptance branch reuse, and conflict handling. GitHub writes are intercepted. Direct server-handler regressions separately prove editorial-branch `ref` forwarding, exact PR head/state filtering, and uncached readback. One scenario reads the actual reconciled October 17 API artifact and confirms all three cards, folded evidence, and the unchanged reporting-window commit count.
 - `pnpm type-check` and `pnpm --dir packages/frontend build`: pass.
 - `pnpm lint`: no errors; the existing `schema.test.ts:195` explicit-any warning remains.
 - Node feedback-extraction and revision-admission tests: nine pass.

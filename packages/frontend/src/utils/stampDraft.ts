@@ -45,6 +45,7 @@ export async function ghFetch(path: string, options?: RequestInit): Promise<Resp
   }
 
   return fetch(url, {
+    cache: 'no-store',
     ...options,
     headers,
     credentials: 'same-origin',
