@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, symlinkSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, symlinkSync, chmodSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 import { createFixture, makePullRequest, makeComment, today } from './fixture.js'
 import { createEditorialService, repo } from '../../api/_lib/editorial-continuation.js'
@@ -9,7 +9,7 @@ import { admitEditorial, prepareEditorial, pushEditorial, type Execution } from 
 const cleanups: string[] = []
 afterEach(() => { vi.unstubAllEnvs(); for (const path of cleanups.splice(0)) rmSync(path, { recursive: true, force: true }) })
 function git(cwd: string, ...args: string[]) { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim() }
-async function setup(noChange = false, corruption: 'code' | 'symlink' | null = null) {
+async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | null = null, ambiguousAncestry = false) {
   vi.stubEnv('MOCK_LLM', 'true')
   vi.stubEnv('DRY_RUN', 'false')
   const root = mkdtempSync(resolve(tmpdir(), 'uik01-consumer-')); cleanups.push(root)
@@ -20,19 +20,31 @@ async function setup(noChange = false, corruption: 'code' | 'symlink' | null = n
   const path = `_articles/${today}.md`
   writeFileSync(resolve(workspace, 'package.json'), '{}')
   writeFileSync(resolve(workspace, path), article); git(workspace, 'add', '.'); git(workspace, 'commit', '-qm', 'policy')
-  const policySha = git(workspace, 'rev-parse', 'HEAD')
+  let policySha = git(workspace, 'rev-parse', 'HEAD')
   writeFileSync(resolve(workspace, path), `${article}\nAccepted branch text\n`)
   if (corruption === 'code') writeFileSync(resolve(workspace, 'package.json'), '{"scripts":{"postinstall":"blocked"}}')
   if (corruption === 'symlink') { rmSync(resolve(workspace, path)); symlinkSync('../package.json', resolve(workspace, path)) }
   git(workspace, 'add', '.'); git(workspace, '-c', 'user.name=ojfbot-blog[bot]', 'commit', '-qm', 'accepted by bot')
-  const head = git(workspace, 'rev-parse', 'HEAD'), blob = git(workspace, 'rev-parse', `HEAD:${path}`)
+  if (corruption === 'executable') { chmodSync(resolve(workspace, path), 0o755); git(workspace, 'update-index', '--chmod=+x', path); git(workspace, 'commit', '-qm', 'invalid executable article') }
+  if (ambiguousAncestry) {
+    const policyTree = git(workspace, 'rev-parse', `${policySha}^{tree}`)
+    const articleTree = git(workspace, 'rev-parse', 'HEAD^{tree}')
+    const left = git(workspace, 'commit-tree', policyTree, '-p', policySha, '-m', 'left ancestor')
+    const right = git(workspace, 'commit-tree', policyTree, '-p', policySha, '-m', 'right ancestor')
+    const mergedHead = git(workspace, 'commit-tree', articleTree, '-p', left, '-p', right, '-m', 'merged acceptance')
+    policySha = git(workspace, 'commit-tree', policyTree, '-p', right, '-p', left, '-m', 'merged policy')
+    git(workspace, 'checkout', '--detach', mergedHead)
+  }
+  const head = git(workspace, 'rev-parse', 'HEAD')
+  const projectedContent = corruption === 'blob' ? `${article}Different API-only article bytes\n` : execFileSync('git', ['show', `HEAD:${path}`], { cwd: workspace, encoding: 'utf8' })
+  const blob = execFileSync('git', ['hash-object', '--stdin'], { cwd: workspace, input: projectedContent, encoding: 'utf8' }).trim()
   git(workspace, 'init', '--bare', '-q', remote); git(workspace, 'remote', 'add', 'origin', remote); git(workspace, 'push', '-q', 'origin', `${head}:refs/heads/accept/${today}`)
   const { state, github: fixtureGithub } = createFixture(); state.login = 'ojfbot'
   const pr = makePullRequest(42)
   state.acceptPullNumbers.push(42); state.pullFiles.set(42, [{ filename: path, status: 'modified' }])
   state.pullRequests.set(42, { ...pr, body: 'Original feedback receipt', head: { ...pr.head, sha: head, ref: `accept/${today}` } })
-  state.refFiles.set(`${head}:${path}`, execFileSync('git', ['show', `HEAD:${path}`], { cwd: workspace, encoding: 'utf8' }))
-  const github: Execution['github'] = async (path, options) => path.startsWith(`${repo}/actions/workflows/editorial-revise.yml/runs?`) ? Response.json({ workflow_runs: [] }) : path === `${repo}/actions/runs/101` ? Response.json({ id: 101, event: 'issue_comment', head_branch: 'main', head_sha: policySha, display_title: 'Editorial continuation comment 2', path: '.github/workflows/editorial-revise.yml' }) : fixtureGithub(path, options)
+  state.refFiles.set(`${head}:${path}`, projectedContent)
+  const github: Execution['github'] = async (path, options) => path.startsWith(`${repo}/actions/workflows/editorial-revise.yml/runs?`) ? Response.json({ workflow_runs: [] }) : path === `${repo}/actions/runs/101` ? Response.json({ id: 101, event: 'issue_comment', head_branch: 'main', head_sha: execution.policySha, display_title: 'Editorial continuation comment 2', path: '.github/workflows/editorial-revise.yml' }) : fixtureGithub(path, options)
   const service = createEditorialService(github)
   const view = await service.load(today, 'ojfbot'); if (view.status !== 'existing') throw new Error('Missing acceptance')
   const versionId = crypto.randomUUID()
@@ -171,8 +183,9 @@ it('incomplete relevant history blocks invocation and cannot establish a safe ad
   expect(f.state.prComments.get(42)).toHaveLength(2)
 })
 
-it.each<'code' | 'symlink'>(['code', 'symlink'])('actual new consumer rejects %s bytes before claiming or invoking the revision script', async corruption => {
+it.each<'code' | 'symlink' | 'executable' | 'blob'>(['code', 'symlink', 'executable', 'blob'])('actual new consumer rejects %s bytes after main diverges before claiming or invoking the revision script', async corruption => {
   const f = await setup(false, corruption); f.state.login = 'github-actions[bot]'
+  advancePolicy(f, { 'api/entries.json': '{"main":"advanced"}' })
   await expect(prepareEditorial(f.execution)).rejects.toThrow('Only the pinned regular article')
   expect(f.state.prComments.get(42)?.some(comment => comment.body.startsWith('## Editorial execution claim\n'))).toBe(false)
   expect(f.state.prComments.get(42)?.at(-1)?.body).toContain('"outcome":"failed"')
@@ -232,4 +245,72 @@ it('the earliest workflow delivery can proceed while a later duplicate cannot', 
   expect((await admitEditorial(f.execution)).request.commentId).toBe(f.comment.id)
   await expect(admitEditorial({ ...f.execution, runId: 102 })).rejects.toThrow('prior workflow')
   expect(f.state.prComments.get(42)).toHaveLength(2)
+})
+
+function advancePolicy(fixture: Awaited<ReturnType<typeof setup>>, files: Record<string, string>) {
+  const workspace = fixture.execution.workspace
+  git(workspace, 'checkout', '--detach', fixture.execution.policySha)
+  for (const [path, content] of Object.entries(files)) {
+    mkdirSync(dirname(resolve(workspace, path)), { recursive: true })
+    writeFileSync(resolve(workspace, path), content)
+  }
+  git(workspace, 'add', '.')
+  git(workspace, 'commit', '-qm', 'trusted main advances independently')
+  fixture.execution.policySha = git(workspace, 'rev-parse', 'HEAD')
+}
+it.each(['unrelated code', 'same article'])('native continuation uses the pinned PR article when trusted main advances in %s', async kind => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  advancePolicy(f, kind === 'unrelated code'
+    ? { 'api/entries.json': '{"new":"published"}', 'src/revise-article.ts': 'throw new Error("fixture main code must not execute")' }
+    : { [f.path]: 'Different trusted main article; never substitute this for the reviewed input.\n' })
+  const policyTree = git(f.execution.workspace, 'rev-parse', `${f.execution.policySha}^{tree}`)
+  const prepared = await prepareEditorial(f.execution)
+  if (!prepared) throw new Error('Missing output')
+  expect(git(prepared.worktree, 'rev-parse', 'HEAD^')).toBe(f.head)
+  expect(readFileSync(resolve(prepared.worktree, f.path), 'utf8')).toContain('Accepted branch text')
+  expect(readFileSync(resolve(prepared.worktree, f.path), 'utf8')).not.toContain('Different trusted main article')
+  expect(git(prepared.worktree, 'diff', '--name-only', f.head, prepared.outputCommit)).toBe(f.path)
+  await pushEditorial(f.execution, prepared)
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(prepared.outputCommit)
+  expect(git(f.execution.workspace, 'rev-parse', `${f.execution.policySha}^{tree}`)).toBe(policyTree)
+  expect(git(f.execution.workspace, 'rev-parse', 'HEAD')).toBe(f.execution.policySha)
+  expect(f.state.prComments.get(42)?.at(-1)?.body).toContain('"outcome":"changed"')
+  expect(f.state.prComments.get(42)?.at(-1)?.body).toContain(`"inputHead":"${f.head}"`)
+  expect(await createEditorialService(f.execution.github).load(today, 'ojfbot')).toMatchObject({ status: 'existing', outstanding: false })
+})
+
+it('nonarticle PR changes remain rejected when trusted main independently publishes the same code', async () => {
+  const f = await setup(false, 'code'); f.state.login = 'github-actions[bot]'
+  // A two-dot comparison hides this package change because both tips now contain it.
+  advancePolicy(f, { 'package.json': '{"scripts":{"postinstall":"blocked"}}' })
+  expect(git(f.execution.workspace, 'diff', '--name-only', f.execution.policySha, f.head)).toBe(f.path)
+  await expect(prepareEditorial(f.execution)).rejects.toThrow('Only the pinned regular article')
+  expect(f.state.prComments.get(42)?.some(comment => comment.body.startsWith('## Editorial execution claim\n'))).toBe(false)
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
+})
+it('an identical article subsequently published on main still allows revision of the PR change set', async () => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  advancePolicy(f, { [f.path]: git(f.execution.workspace, 'show', `${f.head}:${f.path}`) + '\n' })
+  expect(git(f.execution.workspace, 'diff', '--name-only', f.execution.policySha, f.head)).toBe('')
+  const prepared = await prepareEditorial(f.execution)
+  if (!prepared) throw new Error('Missing prepared revision')
+  await pushEditorial(f.execution, prepared)
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(prepared.outputCommit)
+})
+it('unrelated trusted policy history is rejected before a claim without a provider or branch write', async () => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const tree = git(f.execution.workspace, 'rev-parse', `${f.execution.policySha}^{tree}`)
+  f.execution.policySha = git(f.execution.workspace, 'commit-tree', tree, '-m', 'unrelated trusted history')
+  await expect(prepareEditorial(f.execution)).rejects.toThrow('unique common ancestor')
+  expect(f.state.prComments.get(42)?.some(comment => comment.body.startsWith('## Editorial execution claim\n'))).toBe(false)
+  expect(f.state.prComments.get(42)?.at(-1)?.body).toContain('"outcome":"failed"')
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
+})
+it('ambiguous criss-cross merge ancestry is rejected before claiming instead of choosing a favorable base', async () => {
+  const f = await setup(false, null, true); f.state.login = 'github-actions[bot]'
+  const workspace = f.execution.workspace
+  expect(git(workspace, 'merge-base', '--all', f.execution.policySha, f.head).split('\n')).toHaveLength(2)
+  await expect(prepareEditorial(f.execution)).rejects.toThrow('unique common ancestor')
+  expect(f.state.prComments.get(42)?.some(comment => comment.body.startsWith('## Editorial execution claim\n'))).toBe(false)
+  expect(git(workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
 })

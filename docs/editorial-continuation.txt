@@ -15,12 +15,56 @@ one saved version to one reviewed PR head and article blob. It authorizes one
 attempt through trusted default-branch workflow code. Human merge stays separate.
 The original automatic bot-author loop guard remains on the automatic PR events.
 
+The consumer compares the pinned PR head against its unique common ancestor with
+the trusted default-branch policy commit. Only the dated regular article may differ,
+and its blob must equal the reviewed request. Missing or ambiguous ancestry blocks
+execution. Unrelated main commits do not become PR changes; even independent main
+changes to the same article do not replace the pinned PR input. This does not merge
+main into the acceptance branch or certify mergeability. Workflow code, the revision
+script and dependencies still run from the trusted policy checkout, never the PR.
+
 Only one request may be outstanding. A durable pre-provider claim prevents
 replay. No-change and changed outcomes are recorded with actual article identities.
 A claimed failure or uncertain provider/push outcome remains blocked for diagnosis;
 this pilot provides no automatic replay or UI override for uncertainty. A workflow
-rerun cannot authorize another attempt. A request older than 24 hours needs a fresh
-explicit request after diagnosis. Complete execution history must be available.
+rerun cannot authorize another attempt. Requests must be at most 24 hours old to
+execute. Expiry does not clear an outstanding request or authorize a fresh attempt.
+Complete execution history must be available.
+
+Operator diagnosis and unresolved pilot limits
+
+For an uncertain or missing receipt, stop further revision attempts. Preserve the
+request and feedback digests, comment IDs, input head/blob, claim (including any
+lost-response evidence), Actions run IDs/attempts/logs and current remote branch
+head. Inspect those records together to determine whether invocation or publication
+may have happened. A changed branch alone does not prove which invocation produced
+it, and absent comments alone do not prove that a provider was never called.
+
+There is no supported UI or workflow command to unblock an unresolved request in
+this pilot. Do not delete correspondence, fabricate a terminal receipt, rerun the
+workflow or recreate the branch to force progress. Record the diagnosis on the same
+PR and obtain a separately reviewed recovery decision before proceeding outside
+this pilot. Closing the PR makes it ineligible; it neither resets execution history
+nor proves the invocation outcome, and is not a safe retry procedure.
+
+An undelivered event, cancelled run or dropped pending run can leave a request
+outstanding without a claim or receipt. GitHub concurrency retains at most one
+pending run per PR group even with cancel-in-progress disabled; a later eligible
+job can replace a pending one. Legacy automatic PR events share that group with
+continued requests. The web path prevents another outstanding request; direct
+owner comments can bypass submission checks and make history ambiguous. Consumer
+admission rejects unresolved concurrent request history, but is not a durable queue
+or recovery mechanism. Inspect Actions runs as
+well as PR comments; do not infer that the request was never invoked from silence.
+
+Every issue/PR comment creates an issue_comment workflow event, including unrelated
+comments whose jobs skip. The run name still labels automatic PR events as comment
+automatic. The history reader scopes to this workflow's issue_comment runs created
+at or after the request timestamp and reads at most five pages of 100 runs. Recent
+unrelated/skipped events can exhaust that bound. An outage or incomplete history
+fails closed before invocation and cannot establish a safe admission-failure receipt;
+this is a capacity/diagnostic limit, not evidence that the request never ran. The
+local pagination fixtures do not verify GitHub's live server-side filter semantics.
 
 The initial acceptance stamper has its existing branch-existence guard. The editor
 also resolves acceptance history before enabling it. Failed or ambiguous discovery

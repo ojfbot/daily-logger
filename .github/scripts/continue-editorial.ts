@@ -62,7 +62,14 @@ async function prepare(execution: Execution): Promise<Prepared | null> {
   const path = `_articles/${record.date}.md`
   sha.parse(execution.policySha)
   git(execution.workspace, 'fetch', '--no-tags', 'origin', record.headSha)
-  if (git(execution.workspace, 'diff', '--name-only', execution.policySha, record.headSha) !== path || git(execution.workspace, 'ls-tree', record.headSha, '--', path).split(' ')[0] !== '100644' || git(execution.workspace, 'rev-parse', `${record.headSha}:${path}`) !== record.articleBlobSha) throw new ReviewError(409, 'Only the pinned regular article may differ from trusted policy.')
+  // Validate the PR's changes, not unrelated commits subsequently published on main.
+  // Each merge base is reachable from the trusted policy; ambiguity cannot prove one PR change set.
+  let ancestors: string[]
+  try { ancestors = git(execution.workspace, 'merge-base', '--all', execution.policySha, record.headSha).split('\n') }
+  catch { throw new ReviewError(409, 'A unique common ancestor with trusted policy is required.') }
+  const ancestor = ancestors[0]
+  if (ancestors.length !== 1 || !ancestor) throw new ReviewError(409, 'A unique common ancestor with trusted policy is required.')
+  if (git(execution.workspace, 'diff', '--no-renames', '--name-only', ancestor, record.headSha) !== path || git(execution.workspace, 'ls-tree', record.headSha, '--', path).split(' ')[0] !== '100644' || git(execution.workspace, 'rev-parse', `${record.headSha}:${path}`) !== record.articleBlobSha) throw new ReviewError(409, 'Only the pinned regular article may differ from the trusted common ancestor.')
   const worktree = resolve(execution.workspace, '.git', `editorial-${execution.runId}`)
   git(execution.workspace, 'worktree', 'add', '--detach', worktree, record.headSha)
   const latest = await source.pull(record.pullRequest, true)
