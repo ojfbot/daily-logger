@@ -98,7 +98,9 @@ test('restores notes and submits the surviving note with section feedback once',
 
   await page.getByRole('button', { name: 'New chat thread for What shipped' }).click()
   await page.getByPlaceholder('Write a note or question...').fill('Section note')
-  await page.locator('.chat-thread .chat-send-btn').click()
+  const saveNote = page.getByRole('button', { name: 'Save note', exact: true })
+  await expect(saveNote).toBeEnabled()
+  await saveNote.click()
   await expect(page.locator('.chat-thread-messages')).toContainText('Section note')
   await expect(page.getByRole('link', { name: 'Saved on GitHub' })).toBeVisible()
   expect(savedNote).toMatchObject({ content: 'Section note', visibleBlobSha: article.sourceBlobSha, speaker: { kind: 'human' } })

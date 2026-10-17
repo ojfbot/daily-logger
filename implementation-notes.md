@@ -172,3 +172,6 @@
 - UIK-01 native consumer testing found the tsx CLI IPC socket unavailable in the sandbox; the consumer runs the same native revision script with `pnpm exec node --import tsx`, preserving trusted code and MOCK_LLM behavior.
 - UIK-01 found no core OPM renderer executable in the skill's specified instructions; the local receipt includes a deterministic renderer for the appended in-zoom, checks pinned prior OPL is unchanged, and preserves its existing generated diagrams.
 - UIK-01 production browser fixtures assumed generated `api/articles/` assets were present; the clone lacks them, so builds use an ignored non-article placeholder while all article endpoints are intercepted. No article/action-data builder was run.
+
+- UIK-01 continuation-focused browser proof did not cover the hosted aggregate runner's legacy editorial test, which still selected the removed `.chat-send-btn`. Keep its exact save/literal/once assertions, address the accessible `Save note` action, and verify the complete default ten-test browser suite.
+- The local CI-mode browser control could not launch the pinned Chromium1248 runtime from the existing cache. Use the unchanged default Playwright configuration's local Chrome channel for the full before/after command; retain the setup failure and leave hosted Chromium execution to CI.
