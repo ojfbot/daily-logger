@@ -20,8 +20,8 @@
  *   BLOGENGINE_API_URL   optional: POST to BlogEngine on completion
  */
 
-import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'fs'
-import { join, dirname } from 'path'
+import { writeFileSync, readFileSync, existsSync } from 'fs'
+import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
 import { CanonicalActionArraySchema, assertNoReviewedActionClosures, legacyActionKey } from './action-model.js'
@@ -45,6 +45,8 @@ import { actionId, type ClosedAction } from './schema.js'
 import { shouldSkipRun } from './should-skip-run.js'
 import { verifyFileExistenceClaims } from './verify-claims.js'
 import { checkAnthropicCredits } from './check-anthropic-credits.js'
+import { recordsFromContext } from './time-references.js'
+import { prepareGeneratedTime, persistGeneratedTime } from './article-time-metadata.js'
 import {
   buildArticleProvenance,
   captureRunEvidence,
@@ -56,7 +58,6 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
-const ARTICLES_DIR = join(REPO_ROOT, '_articles')
 
 function todayUTC(): string {
   return new Date().toISOString().slice(0, 10)
@@ -128,7 +129,7 @@ async function postToBlogEngine(markdown: string, apiUrl: string): Promise<void>
   }
 }
 
-async function main() {
+export async function main() {
   const date = process.env.DATE_OVERRIDE?.trim().slice(0, 10) || todayUTC()
   const isDryRun = process.env.DRY_RUN === 'true'
   const skipCouncil = process.env.SKIP_COUNCIL === 'true'
@@ -155,6 +156,7 @@ async function main() {
   // ── 1. Collect ─────────────────────────────────────────────────────────────
   console.log('1/4  Collecting GitHub context...')
   const ctx = await collectContext(date)
+  const timeCapture = { observedAt: new Date().toISOString(), window: null }
   console.log()
 
   // ── Skip gate ──────────────────────────────────────────────────────────────
@@ -284,7 +286,10 @@ async function main() {
     console.warn('::warning title=Article provenance unavailable::Generated article will continue without provenance metadata')
   }
 
-  const markdown = toMarkdown(article)
+  const prepared = prepareGeneratedTime({ date, markdown: toMarkdown(article), records: recordsFromContext(ctx), capture: timeCapture })
+  const markdown = prepared.markdown
+  for (const warning of prepared.warnings) console.warn(`::warning::${date}: ${warning}`)
+  if (prepared.unresolved.length) console.warn(`     ⚠ ${prepared.unresolved.length} time reference(s) unresolved; left as plain text`)
 
   if (isDryRun) {
     if (personas.length > 0 && !skipCouncil) {
@@ -298,12 +303,7 @@ async function main() {
   }
 
   // ── 4b. Write ──────────────────────────────────────────────────────────────
-  if (!existsSync(ARTICLES_DIR)) {
-    mkdirSync(ARTICLES_DIR, { recursive: true })
-  }
-
-  const outPath = join(ARTICLES_DIR, `${date}.md`)
-  writeFileSync(outPath, markdown, 'utf-8')
+  persistGeneratedTime({ repoRoot: REPO_ROOT, prepared })
   console.log(`     Written: _articles/${date}.md`)
 
   // Persist closed actions from the article generation
@@ -319,7 +319,9 @@ async function main() {
   console.log('\n✓ Done.')
 }
 
-main().catch((err) => {
-  console.error('\n❌ Fatal:', err)
-  process.exit(1)
-})
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error('\n❌ Fatal:', err)
+    process.exit(1)
+  })
+}

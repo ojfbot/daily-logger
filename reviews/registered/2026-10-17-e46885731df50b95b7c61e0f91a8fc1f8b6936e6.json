@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-post-revision-20261017-e46885731df5",
+  "article": {
+    "date": "2026-10-17",
+    "sourceCommitSha": "e46885731df50b95b7c61e0f91a8fc1f8b6936e6",
+    "blobSha": "551f3cafedd951dc5a1be14178868fd5b7eeb2d5"
+  },
+  "reviewer": {
+    "name": "Codex post-revision verification: October 17 accuracy and action usefulness",
+    "sessionId": "01a135fd-dad7-7691-b64c-c81a899337b9"
+  },
+  "reviewedAt": "2026-10-17T17:52:35.549Z",
+  "scope": "Focused verification of eleven confirmed corrections and three unsupported claims in the accepted article, with independent Standards and Spec approval, exact-source checks, public preview and production body parity. No remaining material findings in this correction scope. Original human dispositions, action settlement, PR #372, UI kaizen and full-runner qualification remain separate. Independent Codex contexts; no cross-model or distinct-account assurance.",
+  "fullRecordBlobSha": "4940221a54077e070eb1cebfb1b7fc9cbebde20c",
+  "fullRecordPath": "reviews/articles/2026-10-17-e46885731df50b95b7c61e0f91a8fc1f8b6936e6.md",
+  "result": "completed",
+  "findings": []
+}

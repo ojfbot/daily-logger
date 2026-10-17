@@ -1712,6 +1712,62 @@ a:hover { border-bottom-color: var(--text); }
   transform: scale(1);
 }
 
+/* Time uses the article popover shell; the map is a fixed Greenwich-centered projection. */
+.time-ref {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1px dotted var(--blue);
+  padding: 0;
+  cursor: help;
+  line-height: inherit;
+}
+.time-ref:hover { color: var(--blue); border-bottom-style: solid; }
+.time-ref:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.time-popover {
+  width: 374px;
+  min-width: 0;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  padding: 12px;
+  border-left-color: var(--blue);
+  pointer-events: auto;
+  font-family: var(--font-sans);
+}
+.time-popover-heading { font-size: 0.9rem; font-weight: 500; margin-bottom: 9px; }
+.time-world-map { display: block; width: 100%; height: auto; border: 1px solid var(--border); }
+.time-map-ocean { fill: #233b48; }
+.time-map-land { fill: #b9c1ae; }
+.time-map-grid { fill: none; stroke: #e7ece0; stroke-opacity: 0.16; stroke-width: 0.5; }
+.time-map-night { fill: #071320; fill-opacity: 0.72; }
+.time-map-utc { stroke: #ffd084; stroke-width: 2; stroke-dasharray: 4 2; }
+.time-map-viewer { stroke: #6dbdff; stroke-width: 2; }
+.time-map-sun { fill: #fff0b6; stroke: #233b48; stroke-width: 1; }
+.time-map-label { font: 8px var(--font-mono); fill: #fff; paint-order: stroke; stroke: #233b48; stroke-width: 2px; }
+.time-clock { margin-top: 9px; }
+.time-clock + .time-clock { border-top: 1px solid var(--border); padding-top: 7px; }
+.time-clock-label, .time-clock-value { display: flex; align-items: center; gap: 6px; }
+.time-clock-label { font-size: 0.75rem; }
+.time-clock-label > span { margin-left: auto; font-family: var(--font-mono); font-size: 0.7rem; }
+.time-clock-label i { display: inline-block; width: 15px; border-top: 3px solid #1565c0; }
+.time-clock-utc .time-clock-label i { border-top: 3px dashed #b66300; }
+.time-clock-value { justify-content: space-between; gap: 12px; margin-top: 1px; font-family: var(--font-mono); }
+.time-clock-value time { font-size: 1.1rem; font-weight: 500; }
+.time-clock-viewer .time-clock-value time { font-size: 1.2rem; font-weight: 700; }
+.time-clock-utc { color: var(--text-secondary); }
+.time-clock-utc .time-clock-value time { font-size: 1rem; }
+.time-clock-value > span { font-size: 0.75rem; }
+.time-clock-zone { display: block; font-size: 0.75rem; overflow-wrap: anywhere; color: var(--text-secondary); }
+.time-popover-note { margin-top: 8px; color: var(--text-secondary); font-size: 0.7rem; line-height: 1.4; }
+[data-theme="dark"] .time-clock-viewer .time-clock-label i { border-top-color: #6dbdff; }
+[data-theme="dark"] .time-clock-utc .time-clock-label i { border-top-color: #ffd084; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .time-clock-viewer .time-clock-label i { border-top-color: #6dbdff; }
+  :root:not([data-theme="light"]) .time-clock-utc .time-clock-label i { border-top-color: #ffd084; }
+}
+
 /* Type badge */
 .commit-popover-type {
   font-size: 0.6rem;

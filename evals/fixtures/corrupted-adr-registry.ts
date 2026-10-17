@@ -9,8 +9,8 @@
  *
  * This is a representative SLICE with the real truncation patterns, not the
  * full 162-entry dump (fixture-hygiene rule, evals/README.md). Healthy
- * entries 0008–0012 use the actual asset-foundry titles/statuses so the
- * fixture stays evidence-derived, not invented.
+ * entry 0012 keeps its actual asset-foundry title/status. This small slice
+ * keeps all corruption examples inside the 1,500-character diagnostic prefix.
  */
 
 import type { ADRRegistryEntry, BlogContext } from '../../src/types.js'
@@ -42,39 +42,7 @@ export const CORRUPTED_ADR_REGISTRY: ADRRegistryEntry[] = [
     name: '0007-game-agnostic-contract.md',
     number: 7,
   },
-  // ── healthy entries, real titles/statuses from asset-foundry ──
-  {
-    repo: 'asset-foundry',
-    path: 'decisions/adr/0008-persistent-state-store.md',
-    name: '0008-persistent-state-store.md',
-    number: 8,
-    title: 'Persistent state store — SQLite by default, Postgres opt-in',
-    status: 'Accepted',
-  },
-  {
-    repo: 'asset-foundry',
-    path: 'decisions/adr/0009-mcp-transport-stance.md',
-    name: '0009-mcp-transport-stance.md',
-    number: 9,
-    title: 'MCP transport stance — stdio first, HTTP+SSE second, shared registry',
-    status: 'Accepted',
-  },
-  {
-    repo: 'asset-foundry',
-    path: 'decisions/adr/0010-ui-host-integration.md',
-    name: '0010-ui-host-integration.md',
-    number: 10,
-    title: 'UI host integration — Frame Module Federation + HTTP transport',
-    status: 'Accepted',
-  },
-  {
-    repo: 'asset-foundry',
-    path: 'decisions/adr/0011-layered-blender-access.md',
-    name: '0011-layered-blender-access.md',
-    number: 11,
-    title: 'Layered Blender access — kernel MCP + foundry domain (peer transports)',
-    status: 'Accepted',
-  },
+  // One healthy entry keeps the real title/status control.
   {
     repo: 'asset-foundry',
     path: 'decisions/adr/0012-research-curator-subagent.md',

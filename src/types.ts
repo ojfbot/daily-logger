@@ -6,6 +6,9 @@ export type { TelemetrySummary }
 
 export interface CommitInfo {
   hash: string
+  fullHash?: string
+  authoredAt?: string
+  committedAt?: string
   message: string
   author: string
   date: string
