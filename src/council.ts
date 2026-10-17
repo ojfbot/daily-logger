@@ -27,7 +27,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
 const PERSONAS_DIR = join(REPO_ROOT, 'personas')
 export const COUNCIL_MODEL = 'claude-sonnet-4-6'
-export const COUNCIL_SYNTHESIS_PROMPT_VERSION = 'council-synthesis-v1-2026-10-10'
+export const COUNCIL_SYNTHESIS_PROMPT_VERSION = 'council-synthesis-v1-2026-10-16-no-model-time-metadata'
 
 // ─── Persona loader ───────────────────────────────────────────────────────────
 

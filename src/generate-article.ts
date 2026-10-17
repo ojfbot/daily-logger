@@ -8,7 +8,7 @@ import { formatArticleFooter } from './run-provenance.js'
 import { isReviewedAction } from './action-model.js'
 
 export const ARTICLE_MODEL = 'claude-sonnet-4-6'
-export const ARTICLE_PROMPT_VERSION = 'article-v2-2026-10-10'
+export const ARTICLE_PROMPT_VERSION = 'article-v2-2026-10-16-no-model-time-metadata'
 // 8 k output budget — enough headroom on high-activity days (64+ commits) to
 // avoid mid-response cutoff.
 const MAX_TOKENS = 8192
@@ -813,7 +813,7 @@ export function buildUserPrompt(ctx: BlogContext): string {
     } else {
       recentMerged.forEach((pr) => {
         parts.push(
-          `- [${pr.repo}] [#${pr.number}: ${pr.title}](${pr.url}) MERGED ${pr.mergedAt!.slice(0, 19)}`
+          `- [${pr.repo}] [#${pr.number}: ${pr.title}](${pr.url}) MERGED ${pr.mergedAt!}`
         )
         if (pr.body && !describedMergedPRs.has(mergedEvidenceKey(pr))) parts.push(mergedEvidence.get(mergedEvidenceKey(pr)) ?? '')
       })
@@ -838,7 +838,7 @@ export function buildUserPrompt(ctx: BlogContext): string {
     } else {
       closedNotMergedRecent.slice(0, 20).forEach((pr) => {
         parts.push(
-          `- [${pr.repo}] #${pr.number} CLOSED-WITHOUT-MERGE ${pr.updatedAt.slice(0, 19)}: ${pr.title}`
+          `- [${pr.repo}] #${pr.number} CLOSED-WITHOUT-MERGE (closed: ${pr.closedAt ?? 'unavailable'}, last updated: ${pr.updatedAt}): ${pr.title}`
         )
         if (pr.body) parts.push(`  > ${pr.body.slice(0, 200).replace(/\n/g, ' ')}`)
       })
@@ -1153,6 +1153,7 @@ async function callClaudeForArticle(
 export function toMarkdown(article: GeneratedArticle & { schemaVersion?: number }): string {
   const esc = (s: string) => s.replace(/"/g, '\\"')
 
+  const persistedBody = ['', normalizeArticleMarkdown(article.body), '', '---', '', formatArticleFooter(article.provenance), ''].join('\n')
   const lines = [
     '---',
     `title: "${esc(article.title)}"`,
@@ -1177,16 +1178,7 @@ export function toMarkdown(article: GeneratedArticle & { schemaVersion?: number 
     lines.push(`provenance: ${JSON.stringify(article.provenance)}`)
   }
 
-  lines.push(
-    '---',
-    '',
-    normalizeArticleMarkdown(article.body),
-    '',
-    '---',
-    '',
-    formatArticleFooter(article.provenance),
-    '',
-  )
+  lines.push('---', persistedBody)
 
   return lines.join('\n')
 }

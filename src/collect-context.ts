@@ -127,7 +127,7 @@ export function parseCommitTrailers(message: string): Pick<CommitInfo, 'sessionU
 function getCommits(org: string, repo: string, since: string): CommitInfo[] {
   type GHCommit = {
     sha: string
-    commit: { message: string; author: { name: string; date: string } }
+    commit: { message: string; author: { name: string; date: string }; committer?: { date: string } }
     html_url: string
   }
   const data = ghApi<GHCommit[]>(
@@ -136,6 +136,9 @@ function getCommits(org: string, repo: string, since: string): CommitInfo[] {
   if (!data) return []
   return data.map((c) => ({
     hash: c.sha.slice(0, 7),
+    fullHash: c.sha,
+    authoredAt: c.commit.author.date,
+    committedAt: c.commit.committer?.date,
     // First line only; strip Claude co-author trailers
     message: c.commit.message
       .split('\n')[0]
