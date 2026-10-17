@@ -4,7 +4,7 @@
     "asserted-not-verified/corpus-frontmatter-enums-valid": {
       "cluster": "failure:asserted-not-verified",
       "status": "pass",
-      "tests": 85,
+      "tests": 135,
       "failedTests": []
     },
     "asserted-not-verified/uncorroborated-file-claims-flagged": {
@@ -58,7 +58,7 @@
     "silent-stall/corpus-posts-exist-and-are-nondegenerate": {
       "cluster": "failure:silent-stall",
       "status": "pass",
-      "tests": 86,
+      "tests": 136,
       "failedTests": []
     }
   },
