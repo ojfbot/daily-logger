@@ -64,6 +64,14 @@ retried, preserve the frozen input and inspect the acceptance PR's GitHub commen
 and relevant Actions runs. Continue editing local notes, but do not reset storage,
 open a new tab, or use a different UUID as a recovery procedure. This pilot has no
 cancel/fence operation, durable attempt ledger or supported reset for uncertainty.
+The submission lock is per tab, not shared across tabs or enforced by a server
+compare-and-swap. A fresh tab can submit another UUID; competing feedback versions
+with the same parent can make history fail closed and require manual diagnosis.
+
+Manual inspection alone does not unblock the tab. Even if the operator believes a
+write never landed, this pilot has no supported reset: new writes remain blocked
+until a matching receipt is confirmed or a separately reviewed recovery decision
+provides a safe way forward.
 
 For an uncertain or missing receipt, stop further revision attempts. Preserve the
 request and feedback digests, comment IDs, input head/blob, claim (including any
