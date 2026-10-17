@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useAppSelector } from '../store/hooks.ts'
+import { editorialProjectionSchema, type EditorialProjection } from '../../../../shared/article-review.ts'
+import { EditorialContinuation } from './EditorialContinuation.tsx'
 import { stampDraft, type EditorialFeedback } from '../utils/stampDraft.ts'
 
 interface Props {
@@ -42,7 +44,7 @@ function fitEditorialInput(input: HTMLTextAreaElement) {
   }
 }
 
-function EditorialInput({ id, content, disabled, onChange }: {
+export function EditorialInput({ id, content, disabled, onChange }: {
   id: string
   content: string
   disabled: boolean
@@ -103,6 +105,21 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
   const [prUrl, setPrUrl] = useState<string | null>(null)
   const [prNumber, setPrNumber] = useState<number | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const discoveryGeneration = useRef(0)
+  const [discovery, setDiscovery] = useState<EditorialProjection | null>(null)
+  const [discoveryError, setDiscoveryError] = useState('')
+  async function refreshAcceptance() {
+    const generation = ++discoveryGeneration.current
+    setDiscovery(null); setDiscoveryError('')
+    try {
+      const response = await fetch(`/api/article-reviews?view=editorial&date=${date}`, { credentials: 'same-origin', cache: 'no-store' })
+      if (!response.ok) throw new Error(`Acceptance discovery unavailable (${response.status}). Creation and continuation are disabled.`)
+      const projection = editorialProjectionSchema.parse(await response.json())
+      if (generation === discoveryGeneration.current) setDiscovery(projection)
+    } catch (error) { if (generation === discoveryGeneration.current) setDiscoveryError(error instanceof Error ? error.message : 'Acceptance discovery unavailable.') }
+  }
+  useEffect(() => { void refreshAcceptance(); return () => { discoveryGeneration.current++ } }, [date, login])
+
 
   useEffect(() => {
     try {
@@ -123,6 +140,7 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
   const hasFeedback = suggestions.length > 0 || articleThreads.length > 0
 
   async function handleAccept() {
+    if (discovery?.status !== 'none') return
     setState('loading')
     setErrorMsg(null)
 
@@ -156,11 +174,14 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
       setPrUrl(result.prUrl)
       setPrNumber(result.prNumber)
       setState('success')
+      void refreshAcceptance()
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Failed to stamp draft')
       setState('error')
     }
   }
+
+  if (discovery?.status === 'existing') return <EditorialContinuation key={discovery.pullRequest.number} view={discovery} date={date} login={login} visibleBlobSha={visibleBlobSha} refresh={refreshAcceptance} />
 
   if (state === 'success' && prUrl) {
     return (
@@ -173,6 +194,8 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
             View in GitHub
           </a>
         </div>
+        <p role="status">{discoveryError || 'Checking acceptance history for continuation...'}</p>
+        <button onClick={() => void refreshAcceptance()}>Refresh acceptance history</button>
       </div>
     )
   }
@@ -180,6 +203,8 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
   return (
     <div className="editorial-sidebar">
       <div className="editorial-heading">EDITORIAL</div>
+      {!discovery && <p role="status">{discoveryError || 'Checking existing acceptance history...'}</p>}
+      {discoveryError && <button onClick={() => void refreshAcceptance()}>Retry acceptance discovery</button>}
 
       {entries.map((entry, index) => (
         <div className="editorial-note" key={entry.id}>
@@ -237,7 +262,7 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
       <button
         className={`stamp-draft-btn${state === 'error' ? ' stamp-error' : ''}${hasFeedback ? ' has-feedback' : ''}`}
         onClick={handleAccept}
-        disabled={state === 'loading'}
+        disabled={state === 'loading' || discovery?.status !== 'none'}
       >
         {state === 'loading'
           ? 'OPENING PR...'

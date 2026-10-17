@@ -46,6 +46,7 @@ async function click(label: string) {
 beforeEach(async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   vi.mocked(stampDraft).mockReset()
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json({ status: 'none' })))
   identity.login = 'editor'
   identity.includeInRevision = true
   identity.blob = 'a'.repeat(40)

@@ -1,0 +1,35 @@
+Continued editorial feedback pilot
+
+The API keeps its existing cookie authentication, ALLOWED_USERS and CSRF checks.
+The new feedback-save and explicit revision-request operations additionally require
+the authenticated GitHub account and original acceptance-PR author to be ojfbot.
+The workflow independently requires the actual owner comment author and original
+acceptance-PR author to be ojfbot. A valid explicit owner request on GitHub is
+eligible independently of the web allowlist. This shared account proves no distinct
+human or agent identity. No Actions copy of ALLOWED_USERS is configured.
+
+Saving a complete superseding feedback version appends correspondence to the same
+acceptance PR. The original body and earlier comments are never edited. Saving,
+copying, typing and refreshing invoke no model. The separate Request action binds
+one saved version to one reviewed PR head and article blob. It authorizes one
+attempt through trusted default-branch workflow code. Human merge stays separate.
+The original automatic bot-author loop guard remains on the automatic PR events.
+
+Only one request may be outstanding. A durable pre-provider claim prevents
+replay. No-change and changed outcomes are recorded with actual article identities.
+A claimed failure or uncertain provider/push outcome remains blocked for diagnosis;
+this pilot provides no automatic replay or UI override for uncertainty. A workflow
+rerun cannot authorize another attempt. A request older than 24 hours needs a fresh
+explicit request after diagnosis. Complete execution history must be available.
+
+The initial acceptance stamper has its existing branch-existence guard. The editor
+also resolves acceptance history before enabling it. Failed or ambiguous discovery
+disables acceptance. Main-visible article identity is shown separately from the
+pinned PR article reviewed for a continued revision.
+
+Local verification uses pnpm exec vitest run tests/review-surface and the existing
+editor/sidebar tests. The consumer fixtures execute the native revision script in
+MOCK_LLM mode and push only to a temporary local bare remote. Browser verification
+uses pnpm exec playwright test --config playwright.continuation.config.ts after a
+production frontend build. These fixtures do not prove deployed GitHub delivery
+or authorize any live provider call, workflow execution, production publish or merge.

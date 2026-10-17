@@ -1,4 +1,5 @@
 name: Editorial Revision
+run-name: "Editorial continuation comment ${{ github.event.comment.id || 'automatic' }}"
 
 # Triggered when an editorial accept PR is opened or its body is edited.
 # Extracts feedback from the PR body, calls Claude to revise the article,
@@ -12,10 +13,8 @@ on:
   pull_request_target:
     types: [opened, edited]
     branches: [main]
-
-concurrency:
-  group: editorial-revise-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  issue_comment:
+    types: [created]
 
 jobs:
   # S18 (audit I2): outcome capture on the accept path. Opening an accept/<date> PR with no
@@ -26,11 +25,15 @@ jobs:
   stamp-accept:
     name: Stamp accepted outcome
     if: >-
+      github.event_name == 'pull_request_target' &&
       github.event.action == 'opened' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       startsWith(github.head_ref, 'accept/') &&
       !contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_START') &&
       !contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_V2_START')
+    concurrency:
+      group: editorial-revise-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -114,10 +117,14 @@ jobs:
   revise:
     name: Apply editorial revisions
     if: >-
+      github.event_name == 'pull_request_target' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       startsWith(github.head_ref, 'accept/') &&
       (contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_START') ||
        contains(github.event.pull_request.body, 'EDITORIAL_FEEDBACK_V2_START'))
+    concurrency:
+      group: editorial-revise-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -316,3 +323,68 @@ jobs:
                 body,
               });
             }
+
+  admit-continuation:
+    if: >-
+      github.event_name == 'issue_comment' && github.event.action == 'created' &&
+      github.repository == 'ojfbot/daily-logger' && github.event.issue.pull_request &&
+      github.event.sender.login == 'ojfbot' && github.event.comment.user.login == 'ojfbot' &&
+      startsWith(github.event.comment.body, '## Explicit editorial revision request')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
+    outputs:
+      pull_request: ${{ steps.admit.outputs.pull_request }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - run: corepack enable && corepack prepare pnpm@9.15.4 --activate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: admit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm exec tsx .github/scripts/continue-editorial.ts admit
+
+  continue-editorial:
+    needs: admit-continuation
+    concurrency:
+      group: editorial-revise-${{ needs.admit-continuation.outputs.pull_request }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - run: corepack enable && corepack prepare pnpm@9.15.4 --activate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Claim request and prepare revision from trusted code
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: pnpm exec tsx .github/scripts/continue-editorial.ts prepare
+      - name: Push validated article and record outcome
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh auth setup-git
+          pnpm exec tsx .github/scripts/continue-editorial.ts push

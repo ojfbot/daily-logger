@@ -38,6 +38,7 @@ test('restores notes and submits the surviving note with section feedback once',
     return route.fulfill({ status: 500, json: { error: 'No provider call expected' } })
   })
   await page.route('**/api/article-reviews**', (route) => {
+    if (new URL(route.request().url()).searchParams.get('view') === 'editorial') return route.fulfill({ json: { status: 'none' } })
     if (route.request().method() === 'POST') {
       const message = commentSchema.parse(route.request().postDataJSON())
       savedNote = message
@@ -163,7 +164,7 @@ test('editorial prose grows, stays viewport bounded and preserves note identity'
   })
   await page.route('**/api/entries.json', (route) => route.fulfill({ json: [article] }))
   await page.route(`**/api/articles/${date}.json`, (route) => route.fulfill({ json: article }))
-  await page.route('**/api/article-reviews**', (route) => route.fulfill({ json: {
+  await page.route('**/api/article-reviews**', (route) => new URL(route.request().url()).searchParams.get('view') === 'editorial' ? route.fulfill({ json: { status: 'none' } }) : route.fulfill({ json: {
     schemaVersion: 1, date, observedAt: '2026-10-16T12:00:00Z', sourceCommitSha: 'b'.repeat(40),
     currentBlobSha: article.sourceBlobSha, visibleBlobSha: article.sourceBlobSha,
     discovery: 'registered_and_eligible_pull_requests', requestTarget: { issueNumber: 357, kind: 'pilot_issue', contextUrl: 'https://github.com/ojfbot/daily-logger/issues/357' },
