@@ -64,4 +64,3 @@ export function EditorialInput({ id, content, disabled, onChange }: {
     rows={3}
   />
 }
-
