@@ -2,6 +2,9 @@ import { useLayoutEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { TYPE_LABELS, type CodeReferenceType } from '../utils/codeRefUtils.ts'
 import type { CacheEntry, CommitData, PRData } from '../hooks/useGithubCache.ts'
+import type { TimeReference } from '../../../../src/time-reference-schema.ts'
+import type { ClockDisplay } from '../utils/timeDisplay.ts'
+import { TimePopoverContent } from './TimePopoverContent.tsx'
 
 export interface PopoverState {
   visible: boolean
@@ -10,15 +13,29 @@ export interface PopoverState {
     | { kind: 'ref'; type: CodeReferenceType; label: string; detail: string; url: string | null }
     | { kind: 'commit'; entry: CacheEntry<CommitData>; text: string; repo: string }
     | { kind: 'pr'; entry: CacheEntry<PRData>; repo: string; number: number }
+    | { kind: 'time'; reference: TimeReference; viewer: ClockDisplay; tooltipId: string }
 }
 
-export function Popover({ state }: { state: PopoverState }) {
+export function Popover({ state, onMouseEnter, onMouseLeave }: { state: PopoverState; onMouseEnter?: () => void; onMouseLeave?: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
     if (!state.visible || !state.anchor || !ref.current) return
-    positionPopover(ref.current, state.anchor)
-  }, [state])
+    const pop = ref.current
+    const anchor = state.anchor
+    const reposition = () => positionPopover(pop, anchor)
+    reposition()
+    if (onMouseEnter) pop.addEventListener('mouseenter', onMouseEnter)
+    if (onMouseLeave) pop.addEventListener('mouseleave', onMouseLeave)
+    window.addEventListener('resize', reposition)
+    window.addEventListener('scroll', reposition, true)
+    return () => {
+      window.removeEventListener('resize', reposition)
+      window.removeEventListener('scroll', reposition, true)
+      if (onMouseEnter) pop.removeEventListener('mouseenter', onMouseEnter)
+      if (onMouseLeave) pop.removeEventListener('mouseleave', onMouseLeave)
+    }
+  }, [state, onMouseEnter, onMouseLeave])
 
   if (!state.visible || !state.anchor) return null
 
@@ -33,7 +50,9 @@ export function Popover({ state }: { state: PopoverState }) {
   let meta = ''
   let url = ''
 
-  if (variant.kind === 'ref') {
+  if (variant.kind === 'time') {
+    typeBadge = ''; typeClass = ''; sha = ''
+  } else if (variant.kind === 'ref') {
     typeBadge = TYPE_LABELS[variant.type]
     typeClass = `ref-type-${variant.type}`
     sha = variant.label
@@ -78,16 +97,19 @@ export function Popover({ state }: { state: PopoverState }) {
   const popover = (
     <div
       ref={ref}
-      className="commit-popover visible"
+      className={`commit-popover visible${variant.kind === 'time' ? ' time-popover' : ''}`}
+      id={variant.kind === 'time' ? variant.tooltipId : undefined}
       role="tooltip"
       data-url={url}
       onClick={() => { if (url) window.open(url, '_blank', 'noopener') }}
     >
+      {variant.kind === 'time' ? <TimePopoverContent reference={variant.reference} viewer={variant.viewer} /> : <>
       <div className={`commit-popover-type ${typeClass}`}>{typeBadge}</div>
       <div className="commit-popover-sha">{sha}</div>
       {message && <div className={messageClass}>{message}</div>}
       {prLine && <div className="commit-popover-pr">{prLine}</div>}
       <div className="commit-popover-meta">{meta}</div>
+      </>}
     </div>
   )
 
@@ -100,10 +122,16 @@ function positionPopover(pop: HTMLElement, anchor: HTMLElement): void {
 
   pop.style.left = '-9999px'
   pop.style.top = '-9999px'
+  pop.style.maxHeight = `${window.innerHeight - 24}px`
   const popRect = pop.getBoundingClientRect()
 
-  let top = rect.top - popRect.height - gap
-  if (top < 12) top = rect.bottom + gap
+  const above = Math.max(0, rect.top - gap - 12)
+  const below = Math.max(0, window.innerHeight - rect.bottom - gap - 12)
+  const placeAbove = above >= popRect.height || above >= below
+  const available = placeAbove ? above : below
+  pop.style.maxHeight = `${Math.max(1, available)}px`
+  const height = Math.min(popRect.height, available)
+  const top = placeAbove ? rect.top - height - gap : rect.bottom + gap
 
   let left = rect.left + rect.width / 2 - popRect.width / 2
   left = Math.max(12, Math.min(left, window.innerWidth - popRect.width - 12))
