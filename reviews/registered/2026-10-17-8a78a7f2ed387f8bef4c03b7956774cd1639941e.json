@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261017-8a78a7f2ed38",
+  "article": {
+    "date": "2026-10-17",
+    "sourceCommitSha": "8a78a7f2ed387f8bef4c03b7956774cd1639941e",
+    "blobSha": "f1b45babfecce8f80ec5ae0a56b7c0320e289e04"
+  },
+  "reviewer": {
+    "name": "Codex independent accuracy and action-usefulness review",
+    "sessionId": "01a135fd-dad7-7691-b64c-c81a899337b9"
+  },
+  "reviewedAt": "2026-10-17T17:28:29.949141Z",
+  "scope": "Visible October17 original draft, human correction context, implementation accuracy, source chronology and every suggested action. Eleven confirmed directions and three bounded unverified claims. Independent Codex contexts; no cross-model/account-provenance assurance. Article acceptance, action settlement, individual human dispositions and separate UI kaizen remain distinct.",
+  "fullRecordBlobSha": "b3f966d08c1b7f8a9b592f374bda13f8940323e2",
+  "fullRecordPath": "reviews/articles/2026-10-17-8a78a7f2ed387f8bef4c03b7956774cd1639941e.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Production and preview availability are conflated",
+      "location": "What shipped / daily-logger #370",
+      "explanation": "The visible draft says daily-logger has no stable hosted endpoint. Production is live at log.jim.software. PR #370 also links successful workflow and Git-integrated Vercel previews. Its documented limitation concerns live authenticated editorial testing under the preview OAuth callback configuration. The first human revision in PR #376 fixes production but still overstates the preview limitation.",
+      "correction": "State that production is live and previews build and serve public pages. Qualify live signed-in preview behavior separately as unverified under the recorded OAuth callback limitation. Preserve the human feedback and its first revision as history.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/370#issuecomment-6229103806",
+        "https://github.com/ojfbot/daily-logger/pull/376",
+        "https://log.jim.software/articles/2026-10-17"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "A superseded ADR suggestion is resurrected as a delivery gate",
+      "location": "What shipped / #369-#371; What's next item 1; Suggested actions /adr",
+      "explanation": "The article declares an ADR-0038 amendment necessary before a second review cycle and attributes that decision to PR #369. PR #373 explicitly records the mandatory ADR/deadline recommendation as superseded, not implemented. PR #369 already requires independent review and fresh checks before merging, and PR #371 rejects a mandatory second-PR architecture. The accepted October 15 review also records an earlier complete revise/accept/verify cycle.",
+      "correction": "Remove the invented prerequisite and urgency. Continue the existing supervised correction loop: remaining material findings keep acceptance on hold and require another correction and fresh review. Preserve the original suggestion text/ID as historical, with a superseded disposition; any future architecture amendment remains optional work requiring its own evidence and authority.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/373",
+        "https://github.com/ojfbot/daily-logger/pull/369#issuecomment-6222830171",
+        "https://github.com/ojfbot/daily-logger/pull/371",
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/reviews/articles/2026-10-15-df3a8ecccbea37b0bf20b65f50becd90b9632c1e.md"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "PR #372 has documented review and verification conditions",
+      "location": "Roadmap pulse / daily-logger #372; What's next item 2; Suggested actions /pr-review",
+      "explanation": "The article says no blocker is documented and calls its state prioritization lag. The pre-publication a6d9d01 handoff documents the outstanding exact-head separate review, five-second lifecycle-test sensitivity and unqualified authenticated preview. The later clean rebase e95c0d1 handoff preserves those conditions explicitly. Green builds and a source-year check alone do not grant readiness or merge authority.",
+      "correction": "Describe a source-validation/generation/revision repair awaiting a review of its exact accepted-base overlay, resolution or explicit bounded treatment of the timing concern, and truthful preview coverage. The e95c0d1 handoff is later than a6d9d01 but already within the original reporting window; preserve that chronology. Keep draft-to-ready and merge conditional on the owner decision.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/372#issuecomment-6229104425",
+        "https://github.com/ojfbot/daily-logger/pull/372#issuecomment-6230699948"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The described sender field is not the implemented record model",
+      "location": "The decisions / Reviewer identity; What shipped and decisions / durable discussion",
+      "explanation": "The article presents reviewer and sender as two concrete fields. The accepted shared schema has reviewer.name/sessionId and links GitHub submission through pullRequest.author; correspondence uses author. There is no sender field in this contract. The component explicitly labels reviewer/session claims separately from the authenticated GitHub carrier. Saved discussion envelopes carry date, visible article blob, requestId, threadId, actor and a nullable section label; PR plus section alone is not their message identity.",
+      "correction": "Explain the real separation using reviewer.name/sessionId, pullRequest.author when linked, and correspondence author. Keep missing carrier attribution explicitly unknown. Do not invent a sender field or distinct account/model provenance. Explain the actual discussion envelope and GitHub PR carrier rather than reducing durable message identity to a PR/section pair.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/shared/article-review.ts",
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/packages/frontend/src/components/IndependentArticleReviews.tsx",
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/docs/review-pilot/correspondence.md"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Feedback preservation is explained using an invented preflight flag",
+      "location": "The decisions / Feedback selection survives interruption",
+      "explanation": "The article says a binary context flag is set before dispatch and determines clear versus preserve. The accepted component instead keys saved drafts by actor/date/article blob, retains missing-source selections, prunes only present noncurrent/nonopen findings, skips pruning while sending, and exposes deliberate Clear selections. It preserves feedback and request identity across uncertain sends rather than using the described preflight switch.",
+      "correction": "Describe those concrete storage, selection, in-flight and retry rules. Distinguish unavailable evidence from evidence that a finding is no longer eligible, and do not claim a general timeout/navigation guarantee beyond the tested paths.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/packages/frontend/src/components/IndependentArticleReviews.tsx",
+        "https://github.com/ojfbot/daily-logger/pull/370#issuecomment-6229103806"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "GitHub outage degradation is already documented",
+      "location": "The decisions / Section discussion is durable",
+      "explanation": "The article says graceful degradation on GitHub unavailability is not documented in PR #368. That PR explicitly says failed refresh preserves prior receipts as last observed and disables new writes until recovery. The current correspondence documentation and controlled ready/outage/recovery tests also describe that boundary. Proposal discovery failures are reported as unavailable entries with disabled writes; this must not be conflated with a later POST conflict/rejection response.",
+      "correction": "State the implemented last-observed/read-only failure behavior and its controlled-test evidence. Leave production rate-limit resilience and broader availability guarantees unqualified; do not turn lack of a new ADR into an implementation absence. Distinguish GET availability disclosures from write-time rejection/conflict checks.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/368",
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/docs/review-pilot/correspondence.md",
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/tests/review-surface/pr-correspondence.test.ts"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Design draft relationships do not authorize closing HOUSE-WORLD R0",
+      "location": "Roadmap pulse / LEGO drafts; What's next; Suggested actions /close-pr",
+      "explanation": "PR #45 explicitly preserves HOUSE-WORLD R0/HANDOFF037 and points to PR #46 for the current interface source. PR #46 remains a nonoperative R6 review with explicit import/owner gates and dedicated follow-up roles. Replacing the current interface source does not establish that the separate R0 brief is superseded or should be closed. Calling all three drafts ownerless noise that can safely be ignored is unsupported by those records.",
+      "correction": "Keep PR #44, PR #45 and PR #46 as distinct bounded design artifacts with their actual review/import/owner gates. Preserve the original closure suggestion text and ID but mark it unsupported/superseded as an execution instruction; do not close or park these PRs from this article cycle.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/46",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/44"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "Merge dates and accepted commit associations are mixed",
+      "location": "What shipped / merge weekdays and per-section commit lists",
+      "explanation": "The seven merge timestamps are October 16 and early October 17, not Thursday. October 16 2026 is Friday. Several of the 26 commit IDs are filed under the wrong PR group: c5870b7/aa2b26a/995a7c4 belong to the actions/build PR #373, 4f7fab5 to UI370, and 0c70774/d6af8cc to editorial369. The total 26 commits and seven merged PRs is correct; the attribution and calendar framing are not.",
+      "correction": "Use the anchored October 16 09:00 UTC to October 17 09:00 UTC reporting window, with explicit full UTC dates when useful. Keep all 26 original commit IDs exactly once and regroup them by accepted PR ancestry. Avoid a new unsupported count or claims that all work changed the UI.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/src/activity-window.ts",
+        "https://github.com/ojfbot/daily-logger/compare/c5870b726ad09beac82586dd89313129aa6ecb2a...bfc272ea9a3389ecb4ab247708a73008ba81df5f",
+        "https://github.com/ojfbot/daily-logger/compare/083884b9ed553725534ce7d180e520dc9d0910dd...c5870b726ad09beac82586dd89313129aa6ecb2a",
+        "https://github.com/ojfbot/daily-logger/compare/738f8ddd7cf5acd761d78e137a091b9f5d0d4073...061324ad4738c2594978bc059aa9578cc876a62d"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C9",
+      "classification": "confirmed_error",
+      "title": "The GitHub identity follow-up has explicit conditional triggers",
+      "location": "Roadmap pulse / morning-cockpit #57; What's next final paragraph",
+      "explanation": "The article describes an indefinite deferral with no trigger and says work cannot advance until an owner session is scheduled. Issue57 instead names future GitHub-source emission, canonical resource identity and producer/credential boundaries as explicit decision triggers. Its comments add producer/runtime and trace obligations. It does not require provisioning accounts before the accepted existing-source inspector or unrelated article work can proceed.",
+      "correction": "Keep GitHub adapter/producer identity and optional credential research separate from the accepted Dolt/handoff inspector. Report the recorded conditions and any genuinely unknown ownership/scheduling without asserting that no trigger exists or making account setup a current dependency.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/morning-cockpit/issues/57",
+        "https://github.com/ojfbot/morning-cockpit/issues/57#issuecomment-6104499698",
+        "https://github.com/ojfbot/morning-cockpit/issues/57#issuecomment-6116402335"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C10",
+      "classification": "confirmed_error",
+      "title": "Open registered proposals existed before automatic discovery",
+      "location": "The decisions / Proposed reviews are discoverable",
+      "explanation": "The article says the UI could only show reviews merged into main before PR #368. The pre-368 service already reads registry.proposals at their pinned open-PR heads and returns proposed entries after validation. PR #368 adds automatic bounded discovery of eligible review-data PRs and persistent correspondence; it does not introduce the first ability to read any unmerged review.",
+      "correction": "Describe the missing automatic discovery and durable correspondence that PR #368 actually supplies. Distinguish explicitly registered pinned proposals from automatic eligible-PR discovery, and review registration from article acceptance.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/bcdeb7e6c66fc5db742faf4524ceef16f264086b/api/_lib/article-review-service.ts",
+        "https://github.com/ojfbot/daily-logger/pull/368"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C11",
+      "classification": "confirmed_error",
+      "title": "Action identity drift is described as universally silent despite enforced checks",
+      "location": "The decisions / Action queue identity",
+      "explanation": "The article says any action identity drift causes silent matching failure and false reopening. PR #373 delivers admission checks that throw before API publication and a continuous check conserving all 85 baseline identities plus historic completion objects. Those controls deliberately make covered drift visible; universal silent-failure wording hides that delivered value.",
+      "correction": "Explain the real risk and the implemented admission/conservation gates. Distinguish the verified baseline of 85 open and 125 completed actions after PR #373 from today’s queue of 88 open and 125 completed actions after three new suggestions. Keep the three new IDs intact and do not claim the new suggestions are settled merely because the article is corrected.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/373",
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/scripts/check-action-intake.ts"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "A historical attribution overwrite is asserted without evidence",
+      "location": "The decisions / Reviewer identity",
+      "explanation": "The article says GitHub sender attribution was overwriting model attribution. The reviewed source and PR describe ambiguity in presentation and separate recorded claims; no retained incident or data-corruption receipt establishes the claimed overwrite.",
+      "correction": "Describe the observed presentation ambiguity and implemented distinction. Remove the historical overwrite claim unless an exact incident and source evidence can be cited.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/370",
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/docs/review-pilot/correspondence.md"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "Provider SLA and rate-limit assertions exceed retained evidence",
+      "location": "The decisions / Section discussion is durable",
+      "explanation": "The article introduces a numerical availability/SLA comparison and operational rate-limit speculation without a cited service agreement, measured workload or production incident. This review does not establish a provider SLA or throughput guarantee.",
+      "correction": "Remove the unsupported numerical SLA comparison. State only the existing dependency and observed failure controls; qualify untested availability/rate-limit behavior as unknown.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/368",
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/docs/review-pilot/correspondence.md"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U3",
+      "classification": "unverified_claim",
+      "title": "Legacy telemetry freeze is generalized to the current stream",
+      "location": "Roadmap pulse / Skill telemetry",
+      "explanation": "The source distinguishes the legacy stream frozen May 12 from the primary skill-dispositions ledger and exports source/freshness fields. This review has no captured run input establishing that every telemetry stream is frozen, the current catalog denominator is 23, or that no owner/roadmap exists. Existing caveats do not validate those broader claims.",
+      "correction": "Name the legacy freeze precisely, report the actual selected source/freshness only when captured, and keep the 1/14/7-percent figures source-qualified or explicitly unverified. Do not infer absence of ownership or a universal broken stream from stale samples.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/src/collect-telemetry.ts",
+        "https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/src/generate-article.ts"
+      ],
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
