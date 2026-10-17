@@ -332,4 +332,45 @@ describe('review UI state transitions', () => {
     expect([...node.querySelectorAll('button')]
       .find((button) => button.textContent === 'Request changes on #357')?.disabled).toBe(false)
   })
+
+  it('defers pruning a finding that closes while its revision request is in flight', async () => {
+    let current = reviewProjection()
+    let completePost: (response: Response) => void = () => undefined
+    const onDiscussionAvailabilityChange = () => undefined
+    vi.stubGlobal('fetch', vi.fn((_url: string, init?: RequestInit) => init?.method === 'POST'
+      ? new Promise<Response>((resolve) => { completePost = resolve })
+      : Promise.resolve(Response.json(current))))
+    await act(async () => root.render(<IndependentArticleReviews
+      date="2026-10-16"
+      visibleBlobSha={reviewSha}
+      login="editor"
+      onDiscussionAvailabilityChange={onDiscussionAvailabilityChange}
+    />))
+
+    await act(async () => reviewerCheckbox('Reviewer A')?.click())
+    await act(async () => [...node.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Add selected corrections to feedback')?.click())
+    const draftKey = `dl-review-request:editor:2026-10-16:${reviewSha}`
+    const before = JSON.parse(sessionStorage.getItem(draftKey) ?? 'null') as { selected: string[]; feedback: string; requestId: string }
+    expect(before.selected).toEqual(['review-a:C1'])
+    expect(before.feedback).toContain('Fix C1')
+
+    await act(async () => [...node.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Request changes on #357')?.click())
+    current = reviewProjection({ accepted: true })
+    await act(async () => window.dispatchEvent(new Event('focus')))
+
+    const during = JSON.parse(sessionStorage.getItem(draftKey) ?? 'null') as { selected: string[]; feedback: string; requestId: string }
+    expect(during.selected).toEqual(before.selected)
+    expect(during.feedback).toBe(before.feedback)
+    expect(during.requestId).toBe(before.requestId)
+    expect(reviewerCheckbox('Reviewer A')?.checked).toBe(true)
+    expect(reviewerCheckbox('Reviewer A')?.disabled).toBe(true)
+
+    await act(async () => completePost(Response.json({}, { status: 503 })))
+    const afterFailure = JSON.parse(sessionStorage.getItem(draftKey) ?? 'null') as { selected: string[]; feedback: string; requestId: string }
+    expect(afterFailure.selected).toEqual([])
+    expect(afterFailure.feedback).toBe(before.feedback)
+    expect(afterFailure.requestId).not.toBe(before.requestId)
+  })
 })
