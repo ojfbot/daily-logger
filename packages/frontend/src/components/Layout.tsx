@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
 import { toggleTheme } from '../store/themeSlice.ts'
 import { SearchOverlay } from './SearchOverlay.tsx'
 import { AuthButton } from './AuthButton.tsx'
+import { AssistantSettings, AssistantSettingsButton } from './AssistantSettings.tsx'
 
 interface LayoutProps {
   children: ReactNode
@@ -23,6 +24,7 @@ export function Layout({ children }: LayoutProps) {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (e.defaultPrevented) return
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         setSearchOpen((prev) => !prev)
@@ -35,9 +37,10 @@ export function Layout({ children }: LayoutProps) {
   const isActive = (path: string) => location.pathname === path || location.pathname === path + '/'
 
   return (
-    <>
+    <AssistantSettings onOpen={() => { setSearchOpen(false); setMenuOpen(false) }}>
       <header className="site-header">
         <Link to="/" className="site-title">ojfbot/dev-log</Link>
+        <AssistantSettingsButton />
         <button
           className="nav-toggle"
           aria-label="Menu"
@@ -66,6 +69,6 @@ export function Layout({ children }: LayoutProps) {
         <a href="https://github.com/ojfbot/daily-logger">ojfbot/daily-logger</a> — self-documenting development system
       </footer>
       <SearchOverlay open={searchOpen} onClose={closeSearch} />
-    </>
+    </AssistantSettings>
   )
 }

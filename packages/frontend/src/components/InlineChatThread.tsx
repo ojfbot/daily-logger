@@ -3,6 +3,8 @@ import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
 import { saveMessage, sendMessage, collapseThread, expandThread, removeThread, setRevisionInclusion, clearStream } from '../store/chatSlice.ts'
 import type { ChatThread } from '../store/chatSlice.ts'
 import { ChatMessage } from './ChatMessage.tsx'
+import { refreshAssistantStatus, useAssistantStatus } from '../utils/assistantConfig.ts'
+import { useAssistantSettings } from './AssistantSettings.tsx'
 
 interface Props {
   thread: ChatThread
@@ -19,8 +21,8 @@ export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discuss
   const [submitting, setSubmitting] = useState(false)
   const [submittedMessageId, setSubmittedMessageId] = useState<string | null>(null)
   const submissionActive = useRef(false)
-  const [showKeyPrompt, setShowKeyPrompt] = useState(false)
-  const [hasApiKey, setHasApiKey] = useState(() => !!localStorage.getItem('dl-anthropic-key'))
+  const assistantStatus = useAssistantStatus()
+  const openSettings = useAssistantSettings()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const { user } = useAppSelector((s) => s.auth)
@@ -53,10 +55,10 @@ export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discuss
     submissionActive.current = false
     setSubmitting(false)
   }
-  async function handleAsk() {
+  async function handleAsk(opener: HTMLButtonElement) {
     if (!canPost || !visibleBlobSha || submissionActive.current) return
     if (input.length > 30000) { setInputError('A question may contain at most 30,000 characters. Your text is retained.'); return }
-    if (!hasApiKey) { setShowKeyPrompt(true); return }
+    if (refreshAssistantStatus() !== 'saved_unverified') { openSettings(opener); return }
     const section = extractSection(thread.section)
     if (!section) return
     submissionActive.current = true
@@ -69,15 +71,6 @@ export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discuss
     if (sendMessage.rejected.match(result)) setInputError(result.error.message ?? 'The assistant request was not completed.')
     submissionActive.current = false
     setSubmitting(false)
-  }
-  function handleSaveKey(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const keyInput = new FormData(event.currentTarget).get('apiKey')
-    if (typeof keyInput === 'string' && keyInput.trim()) {
-      localStorage.setItem('dl-anthropic-key', keyInput.trim())
-      setHasApiKey(true)
-      setShowKeyPrompt(false)
-    }
   }
 
   if (thread.isCollapsed) return (
@@ -144,12 +137,13 @@ export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discuss
       {!canEdit ? <p>Sign in with an authorized account to save correspondence.</p> : <>
         {!visibleBlobSha && <p>Article source identity is unavailable. Saving is disabled.</p>}
         {visibleBlobSha && !discussionReady && <p>GitHub correspondence is unavailable for this article. New saves and retries are disabled.</p>}
-        {showKeyPrompt && <form className="chat-key-prompt" onSubmit={handleSaveKey}>
-          <label>Anthropic API Key</label>
-          <input type="password" name="apiKey" placeholder="sk-ant-..." autoFocus />
-          <div className="chat-key-actions"><button type="submit">Save key</button>
-            <button type="button" onClick={() => setShowKeyPrompt(false)}>Cancel</button></div>
-        </form>}
+        <div className="assistant-config-status">
+          <p role="status">{assistantStatus === 'missing'
+            ? 'Assistant setup needed. You can save notes without an API key.'
+            : assistantStatus === 'saved_unverified' ? 'API key saved in this browser. Connection not verified.'
+              : 'Assistant settings are unavailable in this browser. You can still save notes.'}</p>
+          <button type="button" onClick={(event) => openSettings(event.currentTarget)}>{assistantStatus === 'missing' ? 'Set up assistant' : 'Assistant settings'}</button>
+        </div>
         <div className="chat-input-area">
           <textarea ref={inputRef} className="chat-input" value={input} onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); handleSave() } }}
@@ -158,7 +152,7 @@ export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discuss
           <p>Saved correspondence uses this GitHub repository's visibility. Do not include secrets.</p>
           <div className="chat-input-actions">
             <button className="chat-send-btn" onClick={handleSave} disabled={!canPost}>Save note</button>
-            <button onClick={handleAsk} disabled={!canPost || !extractSection(thread.section)}>Ask assistant</button>
+            <button onClick={(event) => handleAsk(event.currentTarget)} disabled={!canPost || !extractSection(thread.section)}>Ask assistant</button>
           </div>
         </div>
       </>}
