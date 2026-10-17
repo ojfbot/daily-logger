@@ -1,0 +1,13 @@
+{
+  "executedScript": {
+    "file": "verify-october.executed.mjs",
+    "sha256": "cd2eafd4966df6529855d9829830dc4a5657c80a8a789c72961d1aa7c68bcbfd",
+    "browserAssertionsExecuted": true
+  },
+  "portableScript": {
+    "file": "verify-october.mjs",
+    "sha256": "555e6f2d542c93598bd2f71e4743220febfbb38e76441d73fb2eaffb54c25634",
+    "browserAssertionsExecuted": false,
+    "change": "Only command-line input/output path packaging changed. Browser controls and assertions are identical."
+  }
+}

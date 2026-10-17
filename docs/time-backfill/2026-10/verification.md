@@ -19,3 +19,5 @@ The three actual event popovers display Chicago dates/times correctly: October 1
 Clearly labelled synthetic controls exercise the November 1 repeated Chicago hour (06:30Z and 07:30Z both become 01:30, with distinct -05/-06 offsets) and separate coincident UTC meridians at 320×568. The map stays within that viewport. Scrolling the narrow popover to lower captions did not stay scrolled, so this run does **not** qualify mobile internal scrolling. It changes no UI code. This is recorded for the existing shared audit, alongside the separately documented approximate-range runtime gap.
 
 These local browser fixtures do not establish deployment, production OAuth, authenticated editorial writes, article acceptance, or provider identity. Independent native/browser contributors ran separate review contexts; model identity is not independently authenticated. No generation model or automated review provider was called.
+
+[Browser report and exact per-date inventory](browser/public-verification.md) include portable rerun instructions, original executed-script provenance, and screenshots of the three real event popovers.
