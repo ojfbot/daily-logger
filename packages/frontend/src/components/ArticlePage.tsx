@@ -12,6 +12,7 @@ import { Popover } from './Popover.tsx'
 import { SectionChatButton } from './SectionChatButton.tsx'
 import { SectionChatZone } from './SectionChatZone.tsx'
 import { IndependentArticleReviews } from './IndependentArticleReviews.tsx'
+import type { DiscussionAvailability } from './IndependentArticleReviews.tsx'
 import { EditorialSidebar } from './EditorialSidebar.tsx'
 import { ArticleProvenanceDetails } from './ArticleProvenanceDetails.tsx'
 
@@ -24,11 +25,14 @@ export function ArticlePage() {
   const authUser = useAppSelector((s) => s.auth.user)
   const contentRef = useRef<HTMLDivElement>(null)
   const [sectionHeadings, setSectionHeadings] = useState<string[]>([])
-  const [discussionReady, setDiscussionReady] = useState(false)
+  const [discussionObservation, setDiscussionObservation] = useState<{ context: string; availability: DiscussionAvailability } | null>(null)
   const isMobile = useIsMobile()
 
   const entry = entries.find((e) => e.date === date)
   const article = date ? articleCache[date] : undefined
+  const discussionContext = `${authUser?.login}:${date}:${article?.sourceBlobSha ?? 'unknown'}`
+  const discussionAvailability = discussionObservation?.context === discussionContext ? discussionObservation.availability : 'loading'
+  const discussionReady = discussionAvailability === 'ready'
 
   useEffect(() => {
     if (date && !articleCache[date]) {
@@ -46,9 +50,9 @@ export function ArticlePage() {
 
   useEffect(() => {
     dispatch(clearCorrespondence())
-    setDiscussionReady(false)
+    setDiscussionObservation(null)
   }, [dispatch, authUser?.login, authUser?.authorized])
-  const updateDiscussionAvailability = useCallback((available: boolean) => setDiscussionReady(available), [])
+  const updateDiscussionAvailability = useCallback((availability: DiscussionAvailability) => setDiscussionObservation({ context: discussionContext, availability }), [discussionContext])
 
   // Inject chat buttons into h2 headings + section-end portal targets for inline threads
   useEffect(() => {
@@ -130,7 +134,7 @@ export function ArticlePage() {
             date={date}
             articleTitle={displayEntry?.title ?? ''}
             visibleBlobSha={article?.sourceBlobSha}
-            discussionReady={discussionReady}
+            discussionAvailability={discussionAvailability}
             extractSection={extractSection}
           />,
           target,
@@ -140,7 +144,7 @@ export function ArticlePage() {
     }
     return portals
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMobile, article?.bodyHtml, article?.sourceBlobSha, date, discussionReady, sectionHeadings, displayEntry?.title, extractSection])
+  }, [isMobile, article?.bodyHtml, article?.sourceBlobSha, date, discussionAvailability, sectionHeadings, displayEntry?.title, extractSection])
 
   const isDraft = displayEntry?.status === 'draft'
 
@@ -243,7 +247,7 @@ export function ArticlePage() {
                 date={date}
                 articleTitle={displayEntry?.title ?? ''}
                 visibleBlobSha={article?.sourceBlobSha}
-                discussionReady={discussionReady}
+                discussionAvailability={discussionAvailability}
                 extractSection={extractSection}
               />
             ))}

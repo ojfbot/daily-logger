@@ -27,7 +27,7 @@ function Threads() {
   return createElement(Fragment, null, ids.map((id) => {
     const thread = threads[id]
     return thread && createElement('section', { key: id, 'data-thread': id }, createElement(InlineChatThread, { thread,
-      articleTitle: 'Fixture', visibleBlobSha: blob, discussionReady: true,
+      articleTitle: 'Fixture', visibleBlobSha: blob, discussionAvailability: 'ready',
       extractSection: () => ({ heading: 'What shipped', content: 'Fixture context', codeRefs: [] }) }))
   }))
 }
@@ -111,12 +111,13 @@ describe('browser-local assistant settings', () => {
   it('saves across mounted threads, stays unverified, and never resumes Ask', async () => {
     await mount()
     await type('Question retained')
-    await click('Ask assistant', section())
+    const opener = button('Set up assistant', section())
+    await act(async () => opener.click())
     await save()
     for (const index of [0, 1]) expect(section(index).textContent).toContain('Connection not verified')
     expect(dialog().open).toBe(false)
     expect(textarea().value).toBe('Question retained')
-    expect(document.activeElement).toBe(button('Ask assistant', section()))
+    expect(document.activeElement === opener).toBe(true)
     expect(field().value).toBe('')
     expect(fetch).not.toHaveBeenCalled()
   })
@@ -209,12 +210,15 @@ describe('browser-local assistant settings', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
-  it('re-reads a removed key before Ask and retains the question without sending it', async () => {
+  it('disables Ask after key removal and retains the question through independent setup', async () => {
     localStorage.setItem('dl-anthropic-key', key)
     await mount()
     localStorage.removeItem('dl-anthropic-key')
     await type('Unsent question')
     await click('Ask assistant', section())
+    expect(button('Ask assistant', section()).disabled).toBe(true)
+    expect(dialog().open).toBe(false)
+    await click('Set up assistant', section())
     expect(dialog().open).toBe(true)
     expect(textarea().value).toBe('Unsent question')
     expect(fetch).not.toHaveBeenCalled()

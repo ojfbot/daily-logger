@@ -283,9 +283,7 @@ const chatSlice = createSlice({
     removeThread(state, action: PayloadAction<string>) {
       const thread = state.threads[action.payload]
       if (!thread) return
-      if (thread.messages.length) { thread.isHidden = true; return }
-      delete state.threads[action.payload]
-      state.threadOrder = state.threadOrder.filter((id) => id !== action.payload)
+      thread.isHidden = true
     },
     restoreHiddenThreads(state, action: PayloadAction<string>) {
       for (const thread of Object.values(state.threads)) if (thread.date === action.payload) thread.isHidden = false
@@ -324,7 +322,13 @@ const chatSlice = createSlice({
       if (thread?.assistantRequestId === action.meta.requestId) { thread.isStreaming = false; thread.assistantRequestId = null }
     }).addCase(sendMessage.rejected, (state, action) => {
       const thread = state.threads[action.meta.arg.threadId]
-      if (thread?.assistantRequestId === action.meta.requestId) { thread.isStreaming = false; thread.assistantRequestId = null; thread.error = action.error.message ?? 'Assistant request failed.' }
+      if (thread?.assistantRequestId === action.meta.requestId) {
+        thread.isStreaming = false
+        thread.assistantRequestId = null
+        const error = action.error.message ?? 'Assistant request failed.'
+        const latest = thread.messages[thread.messages.length - 1]
+        thread.error = latest?.save.kind === 'unsaved' && latest.save.error === error ? null : error
+      }
     })
   },
 })
