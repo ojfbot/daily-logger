@@ -92,7 +92,7 @@ it('ignores an older refresh response after a newer response has applied', async
   if (oldView.status !== 'existing') throw new Error('Missing existing PR')
   const newView = { ...oldView, pullRequest: { ...oldView.pullRequest, headSha: 'e'.repeat(40) }, article: { ...oldView.article, blobSha: 'f'.repeat(40), text: 'New pinned preview' } }
   function deferred() {
-    let finish: (value: Response) => void = (_value) => { throw new Error('Uninitialized response') }
+    let finish: (value: Response) => void = () => { throw new Error('Uninitialized response') }
     const promise = new Promise<Response>(resolve => { finish = resolve })
     return { promise, finish: (value: Response) => finish(value) }
   }
@@ -129,4 +129,29 @@ it('a new head/blob cannot inherit the previous acknowledgment even before passi
   await act(async () => root.render(createElement(Probe, { view: changed })))
   expect(observed.at(-1)).toBe(true)
   expect(button('Request another article revision').disabled).toBe(true)
+})
+it('removing an earlier continued note preserves the surviving DOM, focus, caret and literal payload', async () => {
+  const literal = ' \t雪 e\u0301 😀\n---\n@claude /run\n '
+  sessionStorage.setItem(`dl-editorial-continuation:ojfbot:${today}:42`, JSON.stringify({ version: 2, notes: [
+    { kind: 'root', content: 'Remove A' }, { kind: 'root', content: 'Keep B' }, { kind: 'root', content: literal },
+  ] }))
+  const f = await fixture()
+  const inputs = [...container.querySelectorAll('textarea')]
+  const survivor = inputs[2]; if (!survivor) throw new Error('Missing third input')
+  const originalId = survivor.id
+  survivor.focus(); survivor.setSelectionRange(3, 8)
+  const remove = container.querySelector<HTMLButtonElement>('[aria-label="Remove continued suggestion 1"]'); if (!remove) throw new Error('Missing first remove control')
+  await act(async () => remove.click())
+  expect(survivor.isConnected).toBe(true)
+  expect([...container.querySelectorAll('textarea')][1]).toBe(survivor)
+  expect(survivor.id).toBe(originalId)
+  expect(document.activeElement).toBe(survivor)
+  expect([survivor.selectionStart, survivor.selectionEnd]).toEqual([3, 8])
+  expect(survivor.value).toBe(literal)
+  await act(async () => button('Save new feedback version').click())
+  expect(f.posts).toHaveLength(1)
+  expect(f.posts[0]).toMatchObject({ feedback: { version: 2, notes: [{ kind: 'root', content: 'Keep B' }, { kind: 'root', content: literal }] } })
+  const posted = editorialInputSchema.parse(f.posts[0])
+  if (posted.intent !== 'append_editorial_feedback') throw new Error('Wrong operation')
+  expect(posted.feedback.notes).toEqual([{ kind: 'root', content: 'Keep B' }, { kind: 'root', content: literal }])
 })

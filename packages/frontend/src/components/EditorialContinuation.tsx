@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { editorialFeedbackSchema, editorialInputSchema, editorialWriteReceiptSchema, type EditorialInput, type EditorialProjection } from '../../../../shared/article-review.ts'
+import type { EditorialFeedback } from '../utils/stampDraft.ts'
 import { EditorialInput as NoteInput } from './EditorialEditor.tsx'
+
+interface LocalNote { id: number; feedback: EditorialFeedback['notes'][number] }
 
 type Existing = Extract<EditorialProjection, { status: 'existing' }>
 export function EditorialContinuation({ view, date, login, visibleBlobSha, refresh }: {
   view: Existing; date: string; login: string; visibleBlobSha?: string; refresh: () => Promise<void>
 }) {
   const key = `dl-editorial-continuation:${login}:${date}:${view.pullRequest.number}`
-  const [notes, setNotes] = useState<import('../utils/stampDraft.ts').EditorialFeedback['notes']>(() => {
-    try { return editorialFeedbackSchema.parse(JSON.parse(sessionStorage.getItem(key) ?? 'null')).notes } catch { return [{ kind: 'root', content: '' }] }
+  const [notes, setNotes] = useState<LocalNote[]>(() => {
+    try { return editorialFeedbackSchema.parse(JSON.parse(sessionStorage.getItem(key) ?? 'null')).notes.map((feedback, id) => ({ id, feedback })) } catch { return [{ id: 0, feedback: { kind: 'root', content: '' } }] }
   })
+  const nextId = useRef(notes.length)
   const [pending, setPending] = useState<EditorialInput | null>(() => {
     try { return editorialInputSchema.parse(JSON.parse(sessionStorage.getItem(`${key}:pending`) ?? 'null')) } catch { return null }
   })
@@ -20,7 +24,7 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
   const [message, setMessage] = useState('')
   const [receipt, setReceipt] = useState<string | null>(null)
   const [retryReady, setRetryReady] = useState(() => { try { return !!sessionStorage.getItem(`${key}:pending`) } catch { return false } })
-  useEffect(() => { try { sessionStorage.setItem(key, JSON.stringify({ version: 2, notes: notes.filter(note => note.content.trim()) })) } catch { /* In-memory draft remains available. */ } }, [key, notes])
+  useEffect(() => { try { sessionStorage.setItem(key, JSON.stringify({ version: 2, notes: notes.map(note => note.feedback).filter(note => note.content.trim()) })) } catch { /* In-memory draft remains available. */ } }, [key, notes])
   useEffect(() => {
     try { if (pending) sessionStorage.setItem(`${key}:pending`, JSON.stringify(pending)); else sessionStorage.removeItem(`${key}:pending`) } catch { /* Keep the frozen pending input in memory. */ }
   }, [key, pending])
@@ -40,11 +44,14 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
     finally { setBusy(false) }
   }
   const latest = view.versions.at(-1)
-  const currentNotes = notes.filter(note => note.content.trim())
+  const currentNotes = notes.map(note => note.feedback).filter(note => note.content.trim())
   const draftMatchesSaved = latest?.record.intent === 'append_editorial_feedback' && JSON.stringify(currentNotes) === JSON.stringify(latest.record.feedback.notes)
   const canEdit = view.eligible && !view.outstanding && !busy && !pending
+  const editingReason = !view.eligible ? view.reason : view.outstanding ? 'A revision request is outstanding. Refresh its receipts before another save or request.' : busy ? 'Submission is in progress.' : pending ? 'Submission is unconfirmed. Refresh history before retrying the same submission.' : null
+  const saveHelp = editingReason ? 'Saving is disabled. See the submission status below.' : (!visibleBlobSha ? 'Reload the main article before saving feedback.' : !currentNotes.length ? 'Enter feedback before saving a new version.' : 'Saving appends this complete version without starting a revision.')
+  const requestHelp = editingReason ? 'Revision requests are disabled. See the submission status below.' : (!latest ? 'Save a feedback version before requesting another revision.' : !draftMatchesSaved ? 'Save the edited full version before requesting it.' : !reviewed ? 'Review the pinned PR-head article before requesting its revision.' : 'Request uses the saved version and reviewed PR article shown here.')
   const base: Pick<EditorialInput, 'schemaVersion' | 'date' | 'pullRequest' | 'headSha'> = { schemaVersion: 1, date, pullRequest: view.pullRequest.number, headSha: view.pullRequest.headSha }
-  return <section className="editorial-sidebar" aria-label="Continue editorial feedback">
+  return <section className="editorial-sidebar editorial-continuation" aria-label="Continue editorial feedback">
     <div className="editorial-heading">EDITORIAL</div>
     <p><a href={view.pullRequest.url}>PR #{view.pullRequest.number}</a> · {view.pullRequest.merged ? 'merged' : view.pullRequest.state}</p>
     <p>{view.reason} Owner requests on GitHub are eligible independently of the web allowlist.</p>
@@ -60,33 +67,39 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
       <p>Head <code>{view.pullRequest.headSha}</code> · article blob <code>{view.article.blobSha}</code></p>
       <pre className="review-correspondence-text" tabIndex={0}>{view.article.text}</pre>
     </details>
-    <label><input type="checkbox" checked={reviewed} disabled={!canEdit} onChange={event => setReviewedIdentity(event.currentTarget.checked ? articleIdentity : null)} />I reviewed this pinned PR-head article</label>
-    {notes.map((note, index) => <div className="editorial-note" key={index}>
-      <label htmlFor={`continued-editorial-note-${index}`}>{note.kind === 'section' ? `Section: ${note.section}` : 'Edit suggestion'}</label>
-      <NoteInput id={`continued-editorial-note-${index}`} content={note.content} disabled={!canEdit} onChange={content => setNotes(previous => previous.map((item, n) => n === index ? { ...item, content } : item))} />
-      {notes.length > 1 && <button disabled={!canEdit} aria-label={`Remove continued suggestion ${index + 1}`} onClick={() => setNotes(previous => previous.filter((_, n) => n !== index))}>Remove</button>}
+    <label className="editorial-review-confirmation"><input type="checkbox" checked={reviewed} disabled={!canEdit} onChange={event => setReviewedIdentity(event.currentTarget.checked ? articleIdentity : null)} />I reviewed this pinned PR-head article</label>
+    {notes.map((note, index) => <div className="editorial-note" key={note.id}>
+      <label className="editorial-note-label" htmlFor={`continued-editorial-note-${note.id}`}>{note.feedback.kind === 'section' ? `Section: ${note.feedback.section}` : 'Edit suggestion'}</label>
+      <div className="editorial-suggestion">
+        <NoteInput id={`continued-editorial-note-${note.id}`} content={note.feedback.content} disabled={!canEdit} onChange={content => setNotes(previous => previous.map(item => item.id === note.id ? { ...item, feedback: { ...item.feedback, content } } : item))} />
+        {notes.length > 1 && <button className="editorial-remove-btn" disabled={!canEdit} aria-label={`Remove continued suggestion ${index + 1}`} onClick={() => setNotes(previous => previous.filter(item => item.id !== note.id))}>Remove</button>}
+      </div>
     </div>)}
-    <button disabled={!canEdit} onClick={() => setNotes(previous => [...previous, { kind: 'root', content: '' }])}>Add another edit suggestion</button>
+    <button className="editorial-action" disabled={!canEdit} onClick={() => {
+      const note: LocalNote = { id: nextId.current++, feedback: { kind: 'root', content: '' } }
+      setNotes(previous => [...previous, note])
+    }}>Add another edit suggestion</button>
     <p>This full version supersedes active feedback. Original text and every saved version remain history. Saving text starts no acceptance or model run.</p>
-    <button disabled={!canEdit || !latest} onClick={() => {
-      if (latest?.record.intent === 'append_editorial_feedback') setNotes(latest.record.feedback.notes)
+    <button className="editorial-action" disabled={!canEdit || !latest} onClick={() => {
+      if (latest?.record.intent === 'append_editorial_feedback') setNotes(latest.record.feedback.notes.map(feedback => ({ id: nextId.current++, feedback })))
     }}>Copy prior version</button>
-    <button disabled={!canEdit || !notes.some(note => note.content.trim()) || !visibleBlobSha} onClick={() => {
+    <button className="editorial-action editorial-action-primary" aria-describedby={editingReason ? 'continued-save-help continued-status' : 'continued-save-help'} disabled={!canEdit || !currentNotes.length || !visibleBlobSha} onClick={() => {
       if (!visibleBlobSha) return
       void submit({ ...base, intent: 'append_editorial_feedback', requestId: crypto.randomUUID(), visibleBlobSha,
-        supersedes: latest?.digest ?? view.originalDigest, feedback: { version: 2, notes: notes.filter(note => note.content.trim()) } })
+        supersedes: latest?.digest ?? view.originalDigest, feedback: { version: 2, notes: currentNotes } })
     }}>Save new feedback version</button>
+    <p id="continued-save-help">{saveHelp}</p>
     {latest && <p>Selected saved version <code>{latest.record.requestId}</code> · digest <code>{latest.digest}</code> · <a href={latest.url}>Feedback receipt</a></p>}
-    {latest && !draftMatchesSaved && <p>Save the edited full version before requesting it.</p>}
     <p>Request another revision authorizes one model attempt for the selected saved version and this exact PR article. Human merge remains separate.</p>
-    <button disabled={!canEdit || !latest || !reviewed || !draftMatchesSaved} onClick={() => {
+    <button className="editorial-action editorial-action-primary" aria-describedby={editingReason ? 'continued-request-help continued-status' : 'continued-request-help'} disabled={!canEdit || !latest || !reviewed || !draftMatchesSaved} onClick={() => {
       if (!latest) return
       void submit({ ...base, intent: 'request_editorial_revision', requestId: crypto.randomUUID(), articleBlobSha: view.article.blobSha,
         feedbackId: latest.record.requestId, feedbackDigest: latest.digest })
     }}>Request another article revision</button>
-    {view.outstanding && <p role="status">A revision request is outstanding. Refresh its receipts before another save or request.</p>}
-    {pending && <button disabled={busy || !retryReady} onClick={() => void submit(pending)}>Retry same submission</button>}
-    <button disabled={busy} onClick={() => void refresh()}>Refresh acceptance history</button>
+    <p id="continued-request-help">{requestHelp}</p>
+    {editingReason && <p id="continued-status" role="status">{editingReason}</p>}
+    {pending && <button className="editorial-action" disabled={busy || !retryReady} onClick={() => void submit(pending)}>Retry same submission</button>}
+    <button className="editorial-action" disabled={busy} onClick={() => void refresh()}>Refresh acceptance history</button>
     {view.requests.map(item => <p key={item.commentId}><a href={item.url}>Explicit revision request</a>{item.duplicateUrls.map(url => <a key={url} href={url}>Duplicate delivery receipt</a>)} · {item.record.actor} · {item.createdAt}</p>)}
     {message && <p role="status">{message} {receipt && <a href={receipt}>Read receipt</a>}</p>}
   </section>
