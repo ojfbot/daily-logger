@@ -136,12 +136,14 @@
   {
     "date": "2026-10-01",
     "resolved": 2,
-    "unresolved": []
+    "unresolved": [],
+    "policyWithheld": []
   },
   {
     "date": "2026-10-02",
     "resolved": 9,
-    "unresolved": []
+    "unresolved": [],
+    "policyWithheld": []
   },
   {
     "date": "2026-10-03",
@@ -157,7 +159,8 @@
         "occurrence": 1,
         "reason": "missing-evidence"
       }
-    ]
+    ],
+    "policyWithheld": []
   },
   {
     "date": "2026-10-04",
@@ -184,7 +187,8 @@
         "text": "3:30 AM",
         "reason": "unsupported-time-format"
       }
-    ]
+    ],
+    "policyWithheld": []
   },
   {
     "date": "2026-10-06",
@@ -194,7 +198,8 @@
         "text": "03:30 America/Chicago",
         "reason": "unsupported-time-format"
       }
-    ]
+    ],
+    "policyWithheld": []
   },
   {
     "date": "2026-10-07",
@@ -264,7 +269,8 @@
         "text": "03:30",
         "reason": "unsupported-time-format"
       }
-    ]
+    ],
+    "policyWithheld": []
   },
   {
     "date": "2026-10-08",
@@ -282,7 +288,8 @@
         "text": "04:00",
         "reason": "unsupported-time-format"
       }
-    ]
+    ],
+    "policyWithheld": []
   },
   {
     "date": "2026-10-09",
@@ -312,7 +319,8 @@
         "text": "03:30",
         "reason": "unsupported-time-format"
       }
-    ]
+    ],
+    "policyWithheld": []
   },
   {
     "date": "2026-10-13",
@@ -330,7 +338,8 @@
         "text": "5:09",
         "reason": "unsupported-time-format"
       }
-    ]
+    ],
+    "policyWithheld": []
   },
   {
     "date": "2026-10-14",
@@ -377,7 +386,8 @@
         "text": "00:21:37",
         "reason": "unsupported-time-format"
       }
-    ]
+    ],
+    "policyWithheld": []
   },
   {
     "date": "2026-10-15",
@@ -393,7 +403,8 @@
         "occurrence": 1,
         "reason": "missing-evidence"
       }
-    ]
+    ],
+    "policyWithheld": []
   },
   {
     "date": "2026-10-16",
@@ -408,6 +419,59 @@
         "text": "09:00 UTC",
         "occurrence": 1,
         "reason": "missing-evidence"
+      }
+    ],
+    "policyWithheld": []
+  },
+  {
+    "date": "2026-10-17",
+    "resolved": 3,
+    "unresolved": [
+      {
+        "text": "09:00 UTC",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "09:00 UTC",
+        "occurrence": 1,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "18:21Z",
+        "occurrence": 0,
+        "reason": "clock-mismatch"
+      },
+      {
+        "text": "06:30Z",
+        "occurrence": 0,
+        "reason": "missing-evidence"
+      },
+      {
+        "text": "19:28",
+        "reason": "unsupported-time-format"
+      },
+      {
+        "text": "18:15",
+        "reason": "unsupported-time-format"
+      }
+    ],
+    "policyWithheld": [
+      {
+        "reference": {
+          "text": "19:42Z",
+          "occurrence": 0,
+          "precision": "minute",
+          "at": "2026-10-16T19:42:31.000Z",
+          "evidence": {
+            "kind": "github-pull-request",
+            "repo": "ojfbot/daily-logger",
+            "ref": "371",
+            "event": "merged",
+            "url": "https://github.com/ojfbot/daily-logger/pull/371"
+          }
+        },
+        "reason": "approximate-range"
       }
     ]
   }

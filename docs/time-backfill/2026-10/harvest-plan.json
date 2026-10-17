@@ -1,0 +1,801 @@
+{
+  "schemaVersion": 1,
+  "month": "2026-10",
+  "base": "faac3c9bb310bc0fc1c1ec445433e310e0498558",
+  "articleDates": [
+    "2026-10-01",
+    "2026-10-02",
+    "2026-10-03",
+    "2026-10-04",
+    "2026-10-06",
+    "2026-10-07",
+    "2026-10-08",
+    "2026-10-09",
+    "2026-10-10",
+    "2026-10-11",
+    "2026-10-12",
+    "2026-10-13",
+    "2026-10-14",
+    "2026-10-15",
+    "2026-10-16",
+    "2026-10-17"
+  ],
+  "requests": [
+    {
+      "kind": "commit",
+      "repo": "ojfbot/core",
+      "ref": "c96119a",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/core",
+      "ref": "f5ff6a0d",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/core",
+      "ref": "f9539f92",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/cv-builder",
+      "ref": "e5cecf3",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-02"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/daily-logger",
+      "ref": "04ebca3",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-08"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/daily-logger",
+      "ref": "52fbf1c",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-07"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/daily-logger",
+      "ref": "7539019",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-04"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/daily-logger",
+      "ref": "80e93ef",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-06"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/daily-logger",
+      "ref": "8291687",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-06"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/daily-logger",
+      "ref": "a6d9d01",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-17"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/daily-logger",
+      "ref": "c61e581",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-08"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/daily-logger",
+      "ref": "ce04d6762fa5a8e5dff59388849e3ea164aff940",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/daily-logger",
+      "ref": "e95c0d1",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-17"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/lego-village-pipeline",
+      "ref": "435f7ef",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-15"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/morning-cockpit",
+      "ref": "5485897700",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/morning-cockpit",
+      "ref": "b1849348",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/morning-cockpit",
+      "ref": "c96119a",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/morning-cockpit",
+      "ref": "f5ff6a0d",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "commit",
+      "repo": "ojfbot/morning-cockpit",
+      "ref": "f9539f92",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/BlogEngine",
+      "ref": "59",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-02"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/core",
+      "ref": "307",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-02"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/core",
+      "ref": "497",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-02"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/core",
+      "ref": "525",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-13",
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/core",
+      "ref": "526",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/core",
+      "ref": "527",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-13",
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/core",
+      "ref": "533",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/core",
+      "ref": "534",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/core",
+      "ref": "535",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/core",
+      "ref": "536",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/core",
+      "ref": "537",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14",
+        "2026-10-15"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/cv-builder",
+      "ref": "157",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-01",
+        "2026-10-02"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/cv-builder",
+      "ref": "19",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-01"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/cv-builder",
+      "ref": "59",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-01"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "289",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-03"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "290",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-02"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "292",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-03"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "293",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-03"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "294",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-03"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "295",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-03"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "296",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-03"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "297",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-04"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "298",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-04"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "299",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-04"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "303",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-06"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "305",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-07",
+        "2026-10-08"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "307",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-07"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "308",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-07",
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "309",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-07",
+        "2026-10-08",
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "310",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-08"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "311",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-08"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "313",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "315",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "316",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "317",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "318",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "319",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "320",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "321",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "322",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "324",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "325",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-09"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "343",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-13"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "347",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-13"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "354",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "356",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "359",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-15"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "366",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-17"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "367",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-16",
+        "2026-10-17"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "368",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-16",
+        "2026-10-17"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "369",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-17"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "370",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-17"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "371",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-17"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "372",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-17"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/daily-logger",
+      "ref": "373",
+      "alreadyCovered": false,
+      "dates": [
+        "2026-10-17"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/gastown-pilot",
+      "ref": "19",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-02"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/lean-canvas",
+      "ref": "22",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-02"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/lego-village-pipeline",
+      "ref": "44",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/lego-village-pipeline",
+      "ref": "45",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/lego-village-pipeline",
+      "ref": "46",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/lego-village-pipeline",
+      "ref": "47",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/morning-cockpit",
+      "ref": "56",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14",
+        "2026-10-15"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/morning-cockpit",
+      "ref": "58",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-14"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/purefoy",
+      "ref": "61",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-02"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/shell",
+      "ref": "80",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-02"
+      ]
+    },
+    {
+      "kind": "pull",
+      "repo": "ojfbot/TripPlanner",
+      "ref": "58",
+      "alreadyCovered": true,
+      "dates": [
+        "2026-10-02"
+      ]
+    }
+  ]
+}
