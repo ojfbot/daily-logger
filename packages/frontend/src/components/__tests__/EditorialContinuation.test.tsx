@@ -337,3 +337,228 @@ it('reconciles a persisted revision request with lost acknowledgment without a s
   expect(f.posts.filter(item => editorialInputSchema.parse(item).intent === 'request_editorial_revision')).toHaveLength(1)
   expect(button('Request another article revision').disabled).toBe(true)
 })
+
+const pendingKey = `dl-editorial-continuation:ojfbot:${today}:42:pending`
+type Intent = 'append_editorial_feedback' | 'request_editorial_revision'
+async function prepareIntent(intent: Intent) {
+  const f = await fixture()
+  await editFirst('Frozen original 雪')
+  if (intent === 'request_editorial_revision') {
+    await act(async () => button('Save new feedback version').click())
+    const checkbox = container.querySelector<HTMLInputElement>('input[type=checkbox]')
+    if (!checkbox) throw new Error('Missing preview')
+    await act(async () => checkbox.click())
+    f.posts.length = 0
+  }
+  return { ...f, label: intent === 'append_editorial_feedback' ? 'Save new feedback version' : 'Request another article revision' }
+}
+function rejection(input: ReturnType<typeof editorialInputSchema.parse>, extra: object = {}) {
+  return Response.json({ error: 'Encoded feedback exceeds the limit', outcome: 'rejected_before_append', requestId: input.requestId, intent: input.intent, ...extra }, { status: 400 })
+}
+for (const intent of ['append_editorial_feedback', 'request_editorial_revision'] satisfies Intent[]) {
+  it(`${intent}: releases only the live first bound rejection and uses a new UUID`, async () => {
+    const f = await prepareIntent(intent)
+    vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => {
+      const input = editorialInputSchema.parse(JSON.parse(String(options?.body))); f.posts.push(input)
+      return rejection(input)
+    })
+    await act(async () => button(f.label).click())
+    expect(sessionStorage.getItem(pendingKey)).toBeNull()
+    expect(container.textContent).toContain('Encoded feedback exceeds the limit')
+    expect(container.querySelector('textarea')?.disabled).toBe(false)
+    expect(button(f.label).disabled).toBe(false)
+    await act(async () => button(f.label).click())
+    expect(f.posts).toHaveLength(2)
+    expect(editorialInputSchema.parse(f.posts[0]).requestId).not.toBe(editorialInputSchema.parse(f.posts[1]).requestId)
+  })
+  for (const remount of [false, true]) {
+    it(`${intent}: unknown then rejected retry retains frozen input and edits${remount ? ' across remount' : ''}`, async () => {
+      const f = await prepareIntent(intent)
+      let attempts = 0
+      vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => {
+        if (options?.method !== 'POST') return Response.json(await f.service.load(today, 'ojfbot'))
+        const input = editorialInputSchema.parse(JSON.parse(String(options.body))); f.posts.push(input)
+        return ++attempts === 1 ? Response.json({}, { status: 503 }) : rejection(input)
+      })
+      await act(async () => button(f.label).click())
+      const frozen = sessionStorage.getItem(pendingKey)
+      await editFirst('Independent new local text')
+      await act(async () => button('Add another edit suggestion').click())
+      expect(container.querySelectorAll('textarea')).toHaveLength(2)
+      await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Remove continued suggestion 2"]')?.click())
+      if (remount) {
+        await act(async () => root.render(null))
+        await act(async () => root.render(createElement(EditorialSidebar, { date: today, articleTitle: 'Remount', visibleBlobSha: blob })))
+      }
+      expect(f.posts).toHaveLength(1)
+      expect(button('Retry same submission').disabled).toBe(true)
+      await act(async () => button('Refresh acceptance history').click())
+      await act(async () => button('Retry same submission').click())
+      expect(f.posts[1]).toEqual(f.posts[0])
+      expect(sessionStorage.getItem(pendingKey)).toBe(frozen)
+      expect(button('Save new feedback version').disabled).toBe(true)
+      expect(button('Request another article revision').disabled).toBe(true)
+      expect(container.querySelector('textarea')?.value).toBe('Independent new local text')
+      expect(container.querySelector('textarea')?.disabled).toBe(false)
+      expect(container.textContent).toContain('manual GitHub diagnosis')
+      if (intent === 'request_editorial_revision') {
+        await act(async () => button('Copy prior version').click())
+        expect(container.querySelector('textarea')?.value).toBe('Frozen original 雪')
+        expect(sessionStorage.getItem(pendingKey)).toBe(frozen)
+      }
+    })
+  }
+}
+it.each(['not-json', '{"requestId":"broken"}', '  '])('preserves unreadable pending evidence %s and allows only local operations', async raw => {
+  sessionStorage.setItem(pendingKey, raw)
+  await fixture()
+  expect(sessionStorage.getItem(pendingKey)).toBe(raw)
+  expect(button('Save new feedback version').disabled).toBe(true)
+  expect(button('Request another article revision').disabled).toBe(true)
+  await editFirst('Still editable')
+  await act(async () => button('Add another edit suggestion').click())
+  expect(container.querySelectorAll('textarea')).toHaveLength(2)
+  expect(container.textContent).toContain('retained submission cannot be read')
+  expect(sessionStorage.getItem(pendingKey)).toBe(raw)
+})
+for (const intent of ['append_editorial_feedback', 'request_editorial_revision'] satisfies Intent[]) {
+it.each(['unbound', 'uuid', 'intent', 'extra', 'invalid-json', 'receipt-uuid', 'receipt-execution'])(`${intent}: keeps %s response uncertain`, async mode => {
+  const f = await prepareIntent(intent)
+  vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => {
+    const input = editorialInputSchema.parse(JSON.parse(String(options?.body))); f.posts.push(input)
+    if (mode === 'unbound') return Response.json({ error: 'No binding' }, { status: 400 })
+    if (mode === 'uuid') return rejection(input, { requestId: crypto.randomUUID() })
+    if (mode === 'intent') return rejection(input, { intent: intent === 'append_editorial_feedback' ? 'request_editorial_revision' : 'append_editorial_feedback' })
+    if (mode === 'extra') return rejection(input, { unexpected: true })
+    if (mode === 'invalid-json') return new Response('Not JSON', { status: 400 })
+    return Response.json({ requestId: mode === 'receipt-uuid' ? crypto.randomUUID() : input.requestId, url: 'https://github.com/ojfbot/daily-logger/pull/42#issuecomment-1', reused: false, execution: mode === 'receipt-execution' ? (intent === 'append_editorial_feedback' ? 'requested' : 'not_started') : (intent === 'append_editorial_feedback' ? 'not_started' : 'requested') })
+  })
+  await act(async () => button(f.label).click())
+  expect(sessionStorage.getItem(pendingKey)).not.toBeNull()
+  expect(button('Save new feedback version').disabled).toBe(true)
+  expect(button('Retry same submission').disabled).toBe(true)
+})
+}
+function deferred<T>() {
+  let finish: (value: T) => void = () => { throw new Error('Uninitialized') }
+  const promise = new Promise<T>(resolve => { finish = resolve })
+  return { promise, finish: (value: T) => finish(value) }
+}
+it('an old POST cannot clear a newer pending submission after history reconciles it', async () => {
+  const f = await prepareIntent('append_editorial_feedback')
+  const initial = await f.service.load(today, 'ojfbot')
+  if (initial.status !== 'existing') throw new Error('Missing view')
+  await act(async () => root.render(createElement(EditorialContinuation, { view: initial, date: today, login: 'ojfbot', visibleBlobSha: blob, refresh: async () => true })))
+  const first = deferred<Response>(), second = deferred<Response>()
+  vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => {
+    if (options?.method !== 'POST') return Response.json(await f.service.load(today, 'ojfbot'))
+    const input = editorialInputSchema.parse(JSON.parse(String(options.body))); f.posts.push(input)
+    if (f.posts.length === 1) { await f.service.write(input, 'ojfbot'); return first.promise }
+    return second.promise
+  })
+  await act(async () => button(f.label).click())
+  const firstInput = editorialInputSchema.parse(f.posts[0])
+  const history = await f.service.load(today, 'ojfbot')
+  if (history.status !== 'existing') throw new Error('Missing history')
+  // A fresh full projection may arrive independently of this outstanding POST.
+  await act(async () => root.render(createElement(EditorialContinuation, { view: history, date: today, login: 'ojfbot', visibleBlobSha: blob, refresh: async () => true })))
+  await editFirst('New pending draft')
+  await act(async () => button(f.label).click())
+  const newer = sessionStorage.getItem(pendingKey)
+  await act(async () => first.finish(Response.json({ requestId: firstInput.requestId, url: 'https://github.com/ojfbot/daily-logger/pull/42#issuecomment-1', reused: false, execution: 'not_started' })))
+  expect(sessionStorage.getItem(pendingKey)).toBe(newer)
+  expect(button('Save new feedback version').disabled).toBe(true)
+  expect(container.textContent).toContain('Submission is in progress')
+  await act(async () => second.finish(Response.json({}, { status: 503 })))
+})
+it('a GET started before a retry cannot authorize a later retry of the same input', async () => {
+  const f = await prepareIntent('append_editorial_feedback')
+  vi.stubGlobal('fetch', async () => Response.json({}, { status: 503 }))
+  await act(async () => button(f.label).click())
+  const view = await f.service.load(today, 'ojfbot')
+  if (view.status !== 'existing') throw new Error('Missing view')
+  const oldGet = deferred<boolean>(), newGet = deferred<boolean>()
+  let count = 0
+  const refresh = () => ++count === 1 ? oldGet.promise : newGet.promise
+  await act(async () => root.render(createElement(EditorialContinuation, { view, date: today, login: 'ojfbot', visibleBlobSha: blob, refresh })))
+  await act(async () => { button('Refresh acceptance history').click(); button('Refresh acceptance history').click() })
+  await act(async () => newGet.finish(true))
+  await act(async () => button('Retry same submission').click())
+  expect(button('Retry same submission').disabled).toBe(true)
+  await act(async () => oldGet.finish(true))
+  expect(button('Retry same submission').disabled).toBe(true)
+})
+for (const intent of ['append_editorial_feedback', 'request_editorial_revision'] satisfies Intent[]) {
+  it(`${intent}: edits while posting remain local and success preserves the edited draft`, async () => {
+    const f = await prepareIntent(intent), response = deferred<Response>()
+    vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => {
+      if (options?.method !== 'POST') return Response.json(await f.service.load(today, 'ojfbot'))
+      f.posts.push(editorialInputSchema.parse(JSON.parse(String(options.body))))
+      return response.promise
+    })
+    await act(async () => { button(f.label).click(); button(f.label).click() })
+    expect(f.posts).toHaveLength(1)
+    const posted = editorialInputSchema.parse(f.posts[0])
+    await editFirst('Edited while first POST is in flight')
+    await act(async () => button('Add another edit suggestion').click())
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Remove continued suggestion 2"]')?.click())
+    expect(container.querySelector('textarea')?.disabled).toBe(false)
+    expect(button('Save new feedback version').disabled).toBe(true)
+    expect(JSON.parse(sessionStorage.getItem(pendingKey) ?? 'null')).toEqual(posted)
+    await act(async () => response.finish(Response.json(await f.service.write(posted, 'ojfbot'))))
+    expect(container.querySelector('textarea')?.value).toBe('Edited while first POST is in flight')
+    expect(sessionStorage.getItem(pendingKey)).toBeNull()
+  })
+  it(`${intent}: reconciles a full historical match after the head moved with no replay`, async () => {
+    const f = await prepareIntent(intent)
+    let pending: ReturnType<typeof editorialInputSchema.parse> | undefined
+    vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => {
+      pending = editorialInputSchema.parse(JSON.parse(String(options?.body)))
+      return Response.json({}, { status: 503 })
+    })
+    await act(async () => button(f.label).click())
+    if (!pending) throw new Error('Missing submitted input')
+    await f.service.write(pending, 'ojfbot')
+    const history = await f.service.load(today, 'ojfbot')
+    if (history.status !== 'existing') throw new Error('Missing history')
+    const changed = { ...history, pullRequest: { ...history.pullRequest, headSha: 'e'.repeat(40) }, article: { ...history.article, blobSha: 'f'.repeat(40) } }
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    await act(async () => root.render(createElement(EditorialContinuation, { view: changed, date: today, login: 'ojfbot', visibleBlobSha: blob, refresh: async () => true })))
+    expect(sessionStorage.getItem(pendingKey)).toBeNull()
+    expect(container.textContent).toContain('confirmed in refreshed history'.replace('confirmed', intent === 'append_editorial_feedback' ? 'Confirmed' : 'confirmed'))
+    expect(fetch).not.toHaveBeenCalled()
+  })
+}
+it.each(['success', 'rejected'])('%s settlement blocks new writes and preserves same-UUID different stored payload', async outcome => {
+  const f = await prepareIntent('append_editorial_feedback'), response = deferred<Response>()
+  vi.stubGlobal('fetch', async (_url: string, options?: RequestInit) => {
+    const posted = editorialInputSchema.parse(JSON.parse(String(options?.body))); f.posts.push(posted)
+    return response.promise
+  })
+  await act(async () => button(f.label).click())
+  const input = editorialInputSchema.parse(f.posts[0])
+  if (input.intent !== 'append_editorial_feedback') throw new Error('Wrong intent')
+  const different = { ...input, feedback: { version: 2, notes: [{ kind: 'root', content: 'Different stored evidence' }] } }
+  sessionStorage.setItem(pendingKey, JSON.stringify(different))
+  await act(async () => response.finish(outcome === 'rejected' ? rejection(input) : Response.json({ requestId: input.requestId, url: 'https://github.com/ojfbot/daily-logger/pull/42#issuecomment-1', reused: false, execution: 'not_started' })))
+  expect(sessionStorage.getItem(pendingKey)).toBe(JSON.stringify(different))
+  expect(button('Save new feedback version').disabled).toBe(true)
+  expect(button('Request another article revision').disabled).toBe(true)
+  expect(container.textContent).toContain('Stored submission evidence changed')
+})
+it('local note controls remain enabled with stale history and an outstanding request', async () => {
+  const f = await prepareIntent('request_editorial_revision')
+  await act(async () => button(f.label).click())
+  const view = await f.service.load(today, 'ojfbot')
+  if (view.status !== 'existing') throw new Error('Missing history')
+  await act(async () => root.render(createElement(EditorialContinuation, { view, date: today, login: 'ojfbot', visibleBlobSha: blob, freshness: 'unavailable', refresh: async () => false })))
+  await editFirst('Useful unsent edits')
+  await act(async () => button('Add another edit suggestion').click())
+  expect(container.querySelectorAll('textarea')).toHaveLength(2)
+  expect(button('Copy prior version').disabled).toBe(false)
+  await act(async () => button('Copy prior version').click())
+  expect(container.querySelector('textarea')?.value).toBe('Frozen original 雪')
+  expect(button('Save new feedback version').disabled).toBe(true)
+  expect(button('Request another article revision').disabled).toBe(true)
+})

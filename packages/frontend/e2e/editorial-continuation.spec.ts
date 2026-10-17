@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 import { createFixture, makePullRequest, blob, today } from '../../../tests/review-surface/fixture.js'
-import { createEditorialService } from '../../../api/_lib/editorial-continuation.js'
+import { createEditorialService, EditorialWriteFailure } from '../../../api/_lib/editorial-continuation.js'
 import { createReviewService } from '../../../api/_lib/article-review-service.js'
 import { editorialInputSchema } from '../../../shared/article-review.js'
 
@@ -237,5 +237,87 @@ test(`denied-storage refresh and same-ID reconciliation retain in-memory editori
   await expect(panel.getByText('Copy prior version to select the saved feedback before reviewing and requesting it.', { exact: true })).toBeVisible()
   expect(unexpected.filter(url => !/fonts\.(?:googleapis|gstatic)\.com/.test(url))).toEqual([])
   writeFileSync(testInfo.outputPath('denied-storage-writes.json'), JSON.stringify({ viewport, writes, githubWrites: fixture.state.calls.filter(call => call.startsWith('POST ')), unexpected }, null, 2))
+})
+}
+
+for (const viewport of [{ width: 1440, height: 900 }, { width: 320, height: 740 }]) {
+test(`phase-bound correction and frozen uncertain retry at ${viewport.width}px`, async ({ page }, testInfo) => {
+  await page.setViewportSize(viewport)
+  const fixture = createFixture(); fixture.state.login = 'ojfbot'
+  const pr = makePullRequest(42)
+  fixture.state.acceptPullNumbers.push(42)
+  fixture.state.pullRequests.set(42, { ...pr, body: 'Original retained body', head: { ...pr.head, ref: `accept/${today}` } })
+  fixture.state.pullFiles.set(42, [{ filename: `_articles/${today}.md`, status: 'modified' }])
+  fixture.state.refFiles.set(`${pr.head.sha}:_articles/${today}.md`, 'Pinned article')
+  const editorial = createEditorialService(fixture.github), reviews = createReviewService(fixture.github)
+  const article = { date: today, title: 'D1 phase fixture', summary: 'Fixture', tags: [], reposActive: [], commitCount: 0,
+    activityType: 'development', schemaVersion: 2, status: 'draft', sourceBlobSha: blob, bodyHtml: '<h2>What shipped</h2><p>Main article.</p>' }
+  const writes: ReturnType<typeof editorialInputSchema.parse>[] = [], unexpected: string[] = []
+  let mode: 'save' | 'uncertain' | 'reject-retry' = 'save'
+  await page.route('**/*', route => {
+    if (new URL(route.request().url()).origin === 'http://127.0.0.1:4040') return route.continue()
+    unexpected.push(route.request().url()); return route.abort('blockedbyclient')
+  })
+  await page.route('**/api/auth/me', route => route.fulfill({ json: { login: 'ojfbot', authorized: true, avatarUrl: '', name: 'Fixture owner' } }))
+  await page.route('**/api/entries.json', route => route.fulfill({ json: [article] }))
+  await page.route(`**/api/articles/${today}.json`, route => route.fulfill({ json: article }))
+  await page.route('**/api/article-reviews**', async route => {
+    const request = route.request(), url = new URL(request.url())
+    if (request.method() === 'GET') return route.fulfill({ json: url.searchParams.get('view') === 'editorial' ? await editorial.load(today, 'ojfbot') : await reviews.load(today, blob) })
+    const input = editorialInputSchema.parse(request.postDataJSON()); writes.push(input)
+    if (mode === 'uncertain') return route.fulfill({ status: 503, json: {} })
+    if (mode === 'reject-retry') return route.fulfill({ status: 409, json: { error: 'Retry rejected before append', outcome: 'rejected_before_append', requestId: input.requestId, intent: input.intent } })
+    try { return route.fulfill({ json: await editorial.write(input, 'ojfbot') }) }
+    catch (error) {
+      // The real service proves the append phase; the route mirrors handler serialization.
+      if (error instanceof EditorialWriteFailure) return route.fulfill({ status: 400, json: { error: error.cause instanceof Error ? error.cause.message : 'Editorial write failed', outcome: error.outcome, requestId: error.requestId, intent: error.intent } })
+      throw error
+    }
+  })
+  await page.goto(`/articles/${today}`)
+  const panel = page.getByRole('region', { name: 'Continue editorial feedback' }), field = panel.locator('textarea').first()
+  const save = panel.getByRole('button', { name: 'Save new feedback version', exact: true }), retry = panel.getByRole('button', { name: 'Retry same submission', exact: true })
+  await expect(panel).toBeVisible()
+  await field.fill('x'.repeat(46_000))
+  await save.click()
+  await expect(panel.getByText('Submission was rejected before append.', { exact: false })).toBeVisible()
+  await expect(field).toBeEnabled()
+  await expect(save).toBeEnabled()
+  expect(fixture.state.calls.filter(call => call.startsWith('POST '))).toHaveLength(0)
+  await field.fill('Corrected literal 雪')
+  await save.click()
+  await expect(panel.getByText('Feedback version saved. No revision was requested.', { exact: false })).toBeVisible()
+  expect(writes).toHaveLength(2)
+  expect(writes[0]?.requestId).not.toBe(writes[1]?.requestId)
+  mode = 'uncertain'
+  await field.fill('Frozen uncertain original 雪')
+  await save.click()
+  await expect(retry).toBeDisabled()
+  await field.fill('Independent draft after uncertain submission')
+  await panel.getByRole('button', { name: 'Add another edit suggestion', exact: true }).click()
+  await panel.getByRole('button', { name: 'Remove continued suggestion 2', exact: true }).click()
+  await expect(save).toBeDisabled()
+  await page.reload()
+  await expect(field).toHaveValue('Independent draft after uncertain submission')
+  expect(writes).toHaveLength(3)
+  await expect(retry).toBeDisabled()
+  await panel.getByRole('button', { name: 'Refresh acceptance history', exact: true }).click()
+  await expect(retry).toBeEnabled()
+  mode = 'reject-retry'
+  await retry.click()
+  await expect(retry).toBeDisabled()
+  expect(writes[3]).toEqual(writes[2])
+  await expect(field).toHaveValue('Independent draft after uncertain submission')
+  await expect(field).toBeEnabled()
+  await expect(save).toBeDisabled()
+  await expect(panel.getByText('manual GitHub diagnosis', { exact: false })).toBeVisible()
+  const retained = await page.evaluate(date => {
+    const key = Object.keys(sessionStorage).find(key => key.startsWith('dl-editorial-continuation:') && key.endsWith(`:${date}:42:pending`))
+    return key ? sessionStorage.getItem(key) : null
+  }, today)
+  expect(JSON.parse(retained ?? 'null')).toEqual(writes[2])
+  expect(unexpected.filter(url => !/fonts\.(?:googleapis|gstatic)\.com/.test(url))).toEqual([])
+  await testInfo.attach('D1-phase-and-frozen-retry', { body: await page.screenshot({ fullPage: true, path: testInfo.outputPath('D1-phase-and-frozen-retry.png') }), contentType: 'image/png' })
+  writeFileSync(testInfo.outputPath('D1-transition-evidence.json'), JSON.stringify({ viewport, writes, retained: JSON.parse(retained ?? 'null'), githubWrites: fixture.state.calls.filter(call => call.startsWith('POST ')), unexpected }, null, 2))
 })
 }
