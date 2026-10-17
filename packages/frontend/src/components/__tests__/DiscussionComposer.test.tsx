@@ -1,15 +1,17 @@
 // @vitest-environment jsdom
-import { act, createElement, Fragment } from 'react'
+import { act, createElement, Fragment, useLayoutEffect } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { Provider } from 'react-redux'
+import { renderToString } from 'react-dom/server'
+import { Provider, useSelector } from 'react-redux'
 import { configureStore, createAction } from '@reduxjs/toolkit'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SectionChatZone } from '../SectionChatZone.tsx'
 import { AssistantSettings, AssistantSettingsButton } from '../AssistantSettings.tsx'
 import { IndependentArticleReviews, type DiscussionAvailability } from '../IndependentArticleReviews.tsx'
-import chat, { createThread, type ChatRoot } from '../../store/chatSlice.ts'
+import chat, { clearCorrespondence, createThread, type ChatRoot } from '../../store/chatSlice.ts'
 import type { AuthUser } from '../../store/authSlice.ts'
 import { commentSchema, projectionSchema } from '../../../../../shared/article-review.ts'
+import { DiscussionDrafts, usePageDiscussionDrafts } from '../DiscussionDrafts.tsx'
 
 const id = '00000000-0000-4000-8000-000000000041'
 const blob = 'a'.repeat(40)
@@ -21,18 +23,29 @@ function makeStore() {
   return store
 }
 let node: HTMLDivElement, root: Root, store: ReturnType<typeof makeStore>
+let activeOwner: ReturnType<typeof usePageDiscussionDrafts> | null = null
+const committedDrafts: Array<{ scope: string; input: string | null }> = []
 beforeEach(() => {
   localStorage.clear(); sessionStorage.clear()
+  committedDrafts.length = 0
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => { throw new Error('Unexpected request blocked') }))
   Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value() {} })
   node = document.createElement('div'); document.body.append(node); root = createRoot(node); store = makeStore()
 })
 afterEach(async () => { await act(async () => root.unmount()); node.remove(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
-async function render(availability: DiscussionAvailability = 'ready', source: string | undefined = blob, sectionAvailable = true, date = '2026-10-17') {
-  await act(async () => root.render(createElement(Provider, { store, children: createElement(AssistantSettings, { children: createElement(Fragment, null,
-    createElement(AssistantSettingsButton), createElement(SectionChatZone, { date, section: 'What shipped', articleTitle: 'Fixture', visibleBlobSha: source,
-      discussionAvailability: availability, extractSection: () => sectionAvailable ? { heading: 'What shipped', content: 'Claim', codeRefs: [] } : null })) }) })))
+async function render(availability: DiscussionAvailability = 'ready', source: string | undefined = blob, sectionAvailable = true, date = '2026-10-17', mobile = false) {
+  await act(async () => root.render(createElement(Provider, { store, children: createElement(DraftPage, { availability, source, sectionAvailable, date, mobile }) })))
+}
+function DraftPage({ availability, source, sectionAvailable, date, mobile }: { availability: DiscussionAvailability; source: string | undefined; sectionAvailable: boolean; date: string; mobile: boolean }) {
+  const user = useSelector((state: ChatRoot) => state.auth.user)
+  const scope = JSON.stringify([user?.login.toLowerCase() ?? null, !!user?.authorized, date, source])
+  const owner = usePageDiscussionDrafts(scope)
+  activeOwner = owner
+  useLayoutEffect(() => { committedDrafts.push({ scope, input: node.querySelector('textarea')?.value ?? null }) })
+  return createElement(DiscussionDrafts, { owner, children: createElement(AssistantSettings, { children: createElement(Fragment, null,
+    createElement(AssistantSettingsButton), createElement(mobile ? 'article' : 'aside', null, createElement(SectionChatZone, { date, section: 'What shipped', articleTitle: 'Fixture', visibleBlobSha: source,
+      discussionAvailability: availability, extractSection: () => sectionAvailable ? { heading: 'What shipped', content: 'Claim', codeRefs: [] } : null }))) }) })
 }
 function button(text: string) {
   const result = Array.from(node.querySelectorAll('button')).find((element) => element.textContent === text)
@@ -49,6 +62,70 @@ async function click(element: HTMLElement) { await act(async () => element.click
 function receipt(body: string) { const message = commentSchema.parse(JSON.parse(body)); return Response.json({ requestId: message.requestId, url: 'https://github.com/ojfbot/daily-logger/issues/357#fixture', reused: false }) }
 
 describe('discussion composer and mounted local recovery', () => {
+  it('fails clearly when a thread is mounted without page ownership', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    expect(() => renderToString(createElement(Provider, { store, children: createElement(SectionChatZone, {
+      date: '2026-10-17', section: 'What shipped', articleTitle: 'Fixture', visibleBlobSha: blob, discussionAvailability: 'ready', extractSection: () => null,
+    }) }))).toThrow('Discussion drafts require a page-owned provider.')
+  })
+  it('retains exact unsent text across replacement of the responsive placement', async () => {
+    const literal = ' \n雪\t@claude <!-- sample -->\n '
+    await render(); await enter(literal)
+    await render('ready', blob, true, '2026-10-17', true)
+    expect(textarea().value).toBe(literal)
+    await render()
+    expect(textarea().value).toBe(literal)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('keeps a queued uncertain Save once through a layout remount and retries the same identity', async () => {
+    let release: (response: Response) => void = () => { throw new Error('No save') }
+    const pending = new Promise<Response>((resolve) => { release = resolve })
+    let first = true
+    const fetchMock = vi.fn<typeof fetch>(async (_url, options) => {
+      if (first) { first = false; return pending }
+      return receipt(String(options?.body))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    await render(); const literal = ' Queued\n雪\t '; await enter(literal); await click(button('Save note'))
+    await render('ready', blob, true, '2026-10-17', true)
+    expect(textarea().value).toBe('')
+    expect(store.getState().chat.threads[id]?.messages).toHaveLength(1)
+    await act(async () => { release(Response.json({ error: 'Uncertain save' }, { status: 503 })); await pending })
+    await render(); expect(textarea().value).toBe('')
+    await click(button('Retry saving note'))
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock.mock.calls[0]?.[1]?.body).toBe(fetchMock.mock.calls[1]?.[1]?.body)
+    expect(store.getState().chat.threads[id]?.messages).toHaveLength(1)
+    expect(store.getState().chat.threads[id]?.messages[0]?.content).toBe(literal)
+  })
+
+  it('ignores a late old-account Save and an old clear after account A to B to A', async () => {
+    let release: (response: Response) => void = () => { throw new Error('No save') }
+    const pending = new Promise<Response>((resolve) => { release = resolve })
+    const fetchMock = vi.fn<typeof fetch>(async () => pending); vi.stubGlobal('fetch', fetchMock)
+    await render(); const oldOwner = activeOwner
+    if (!oldOwner) throw new Error('Missing draft owner')
+    await enter('Old account question'); await click(button('Save note'))
+    for (const login of ['another-editor', account.login]) await act(async () => {
+      store.dispatch(changeUser({ ...account, login })); store.dispatch(clearCorrespondence()); store.dispatch(createThread({ id, date: '2026-10-17', section: 'What shipped' }))
+    })
+    await enter('New account A draft')
+    await act(async () => { oldOwner.update(id, (draft) => ({ ...draft, input: '' })); release(receipt(String(fetchMock.mock.calls[0]?.[1]?.body))); await pending })
+    expect(textarea().value).toBe('New account A draft')
+    expect(store.getState().chat.threads[id]?.messages).toHaveLength(0)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(committedDrafts.filter((item) => item.scope.includes('another-editor')).every((item) => item.input !== 'Old account question')).toBe(true)
+  })
+
+  it('clears source and date scopes permanently instead of reviving cached prior text', async () => {
+    await render(); await enter('Version A text')
+    await render('ready', 'b'.repeat(40)); expect(textarea().value).toBe('')
+    expect(committedDrafts.filter((item) => item.scope.includes('b'.repeat(40))).every((item) => item.input === '')).toBe(true)
+    await render(); expect(textarea().value).toBe('')
+    await enter('Date A text'); await render('ready', blob, true, '2026-10-18'); await render(); expect(textarea().value).toBe('')
+    expect(sessionStorage.length).toBe(0); expect(localStorage.length).toBe(0); expect(fetch).not.toHaveBeenCalled()
+  })
   it('labels the composer and leaves Enter and IME composition to normal multiline editing', async () => {
     await render(); await enter('First line')
     expect(textarea().labels?.[0]?.textContent).toBe('Note or question')

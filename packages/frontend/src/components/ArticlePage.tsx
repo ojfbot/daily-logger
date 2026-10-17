@@ -15,6 +15,7 @@ import { IndependentArticleReviews } from './IndependentArticleReviews.tsx'
 import type { DiscussionAvailability } from './IndependentArticleReviews.tsx'
 import { EditorialSidebar } from './EditorialSidebar.tsx'
 import { ArticleProvenanceDetails } from './ArticleProvenanceDetails.tsx'
+import { DiscussionDrafts, usePageDiscussionDrafts } from './DiscussionDrafts.tsx'
 
 export function ArticlePage() {
   const { date } = useParams<{ date: string }>()
@@ -30,6 +31,7 @@ export function ArticlePage() {
 
   const entry = entries.find((e) => e.date === date)
   const article = date ? articleCache[date] : undefined
+  const drafts = usePageDiscussionDrafts(JSON.stringify([authUser?.login.toLowerCase() ?? null, !!authUser?.authorized, date ?? null, article?.sourceBlobSha ?? null]))
   const discussionContext = `${authUser?.login}:${date}:${article?.sourceBlobSha ?? 'unknown'}`
   const discussionAvailability = discussionObservation?.context === discussionContext ? discussionObservation.availability : 'loading'
   const discussionReady = discussionAvailability === 'ready'
@@ -176,7 +178,7 @@ export function ArticlePage() {
   if (articleLoading && !article) return <div className="loading">Loading article...</div>
 
   return (
-    <>
+    <DiscussionDrafts owner={drafts}>
       {displayEntry && (
         <div className="article-header">
           <div className="entry-date">
@@ -259,6 +261,6 @@ export function ArticlePage() {
         )}
       </div>
 
-    </>
+    </DiscussionDrafts>
   )
 }

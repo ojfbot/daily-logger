@@ -7,6 +7,7 @@ import { refreshAssistantStatus, useAssistantStatus } from '../utils/assistantCo
 import { useAssistantSettings } from './AssistantSettings.tsx'
 import type { DiscussionAvailability } from './IndependentArticleReviews.tsx'
 import '../styles/discussion-composer.css'
+import { useDiscussionDraft } from './DiscussionDrafts.tsx'
 
 interface Props {
   thread: ChatThread
@@ -21,18 +22,19 @@ type InputError = { kind: 'validation'; message: string } | { kind: 'save'; mess
 
 export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discussionAvailability, extractSection, onHide }: Props) {
   const dispatch = useAppDispatch()
-  const [input, setInput] = useState('')
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const toggleRef = useRef<HTMLButtonElement>(null)
+  const { input: draftInput, setInput, submittedMessageId, setSubmittedMessageId } = useDiscussionDraft(thread.id, inputRef, toggleRef)
   const [inputError, setInputError] = useState<InputError | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [submittedMessageId, setSubmittedMessageId] = useState<string | null>(null)
   const submissionActive = useRef(false)
   const assistantStatus = useAssistantStatus()
   const openSettings = useAssistantSettings()
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
-  const toggleRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const { user } = useAppSelector((s) => s.auth)
+  const queuedSubmission = !!submittedMessageId && thread.messages.some((message) => message.id === submittedMessageId && message.actor === user?.login)
+  const input = queuedSubmission ? '' : draftInput
   const canEdit = !!user?.authorized
   const discussionReady = discussionAvailability === 'ready'
   const busy = submitting || thread.isStreaming || thread.messages.some((message) => message.save.kind === 'saving')
@@ -62,11 +64,11 @@ export function InlineChatThread({ thread, articleTitle, visibleBlobSha, discuss
   }, [thread.isCollapsed])
 
   useEffect(() => {
-    if (submittedMessageId && thread.messages.some((message) => message.id === submittedMessageId && message.actor === user?.login)) {
+    if (queuedSubmission) {
       setInput('')
       setSubmittedMessageId(null)
     }
-  }, [submittedMessageId, thread.messages, user?.login])
+  }, [queuedSubmission, setInput, setSubmittedMessageId])
 
   async function handleSave() {
     if (!canPost || !visibleBlobSha || submissionActive.current) return

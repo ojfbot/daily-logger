@@ -10,6 +10,7 @@ import chat, { createThread, sendMessage, type ChatRoot } from '../../store/chat
 import { commentSchema } from '../../../../../shared/article-review.ts'
 import { readAssistantKey, removeAssistantKey, saveAssistantKey } from '../../utils/assistantConfig.ts'
 import type { AuthUser } from '../../store/authSlice.ts'
+import { DiscussionDrafts, usePageDiscussionDrafts } from '../DiscussionDrafts.tsx'
 
 const key = 'UIK04-SYNTHETIC-NOT-A-CREDENTIAL'
 const ids = ['00000000-0000-4000-8000-000000000041', '00000000-0000-4000-8000-000000000042']
@@ -34,10 +35,14 @@ function Threads() {
 async function mount() {
   const store = makeStore()
   for (const id of ids) store.dispatch(createThread({ id, section: 'What shipped', date: '2026-10-17' }))
-  await act(async () => root.render(createElement(Provider, { store, children: createElement(AssistantSettings, {
-    children: createElement(Fragment, null, createElement(AssistantSettingsButton), createElement(Threads)),
-  }) })))
+  await act(async () => root.render(createElement(Provider, { store, children: createElement(DraftSettingsPage) })))
   return store
+}
+function DraftSettingsPage() {
+  const owner = usePageDiscussionDrafts('settings-fixture')
+  return createElement(DiscussionDrafts, { owner, children: createElement(AssistantSettings, {
+    children: createElement(Fragment, null, createElement(AssistantSettingsButton), createElement(Threads)),
+  }) })
 }
 function section(index = 0) {
   const element = container.querySelector(`[data-thread="${ids[index]}"]`)

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, createElement } from 'react'
+import { act, createElement, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider, useSelector } from 'react-redux'
 import { InlineChatThread } from '../InlineChatThread.tsx'
@@ -8,6 +8,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import chatReducer, { createThread, hydrateCorrespondence, clearCorrespondence, setRevisionInclusion, saveMessage, sendMessage, type ChatRoot } from '../../store/chatSlice.ts'
 import type { AuthUser } from '../../store/authSlice.ts'
 import { commentSchema, type Correspondence } from '../../../../../shared/article-review.ts'
+import { DiscussionDrafts, usePageDiscussionDrafts } from '../DiscussionDrafts.tsx'
+
+function DraftPage({ children }: { children: ReactNode }) {
+  const owner = usePageDiscussionDrafts('persistence-fixture')
+  return createElement(DiscussionDrafts, { owner, children })
+}
 
 const blob = 'a'.repeat(40)
 const threadId = '00000000-0000-4000-8000-000000000001'
@@ -45,7 +51,7 @@ describe('durable section conversation', () => {
     const prior = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollIntoView')
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: vi.fn() })
     try {
-      await act(async () => root.render(createElement(Provider, { store, children: createElement(Thread) })))
+      await act(async () => root.render(createElement(Provider, { store, children: createElement(DraftPage, { children: createElement(Thread) }) })))
       const textarea = container.querySelector('textarea')
       if (!textarea) throw new Error('Missing discussion input')
       const content = failure === 'too long' ? 'x'.repeat(30001) : 'Retain these exact bytes \n '
