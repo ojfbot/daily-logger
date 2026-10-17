@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { editorialFeedbackSchema, editorialInputSchema, editorialWriteReceiptSchema, type EditorialInput, type EditorialProjection } from '../../../../shared/article-review.ts'
 import type { EditorialFeedback } from '../utils/stampDraft.ts'
-import { EditorialInput as NoteInput } from './EditorialEditor.tsx'
+import { EditorialInput as NoteInput } from './EditorialInput.tsx'
 
 interface LocalNote { id: number; feedback: EditorialFeedback['notes'][number] }
 
