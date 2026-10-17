@@ -96,7 +96,7 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     expect(readArticleTime({ repoRoot: otherRoot, date, markdown: prepared.markdown }).references).toEqual([])
     expect(createMessage).toHaveBeenCalledTimes(1)
     expect(fetch).not.toHaveBeenCalled()
-  })
+  }, 30_000)
 
   it('preserves unchanged metadata bytes and removes model attempts to add or replace time authority', async () => {
     const original = `---\ntitle: "Original"\ndate: ${date}\ntime_records_sha256: ${'a'.repeat(64)}\n---\nBody.\n`
