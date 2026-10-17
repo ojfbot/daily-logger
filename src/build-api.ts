@@ -17,6 +17,8 @@ import { fileURLToPath } from 'url'
 import { renderArticle } from './render-article.js'
 import { ARTICLE_OUTCOMES, type CodeReference } from './schema.js'
 import { parseArticleProvenance, type ArticleProvenance } from './run-provenance.js'
+import { readArticleTime } from './article-time-metadata.js'
+import type { TimeReference } from './time-references.js'
 import {
   CanonicalActionArraySchema,
   assertNoReviewedActionClosures,
@@ -53,6 +55,7 @@ interface EntryData {
   decisions?: Array<{ title: string; summary: string; repo: string; pillar?: string; relatedTags: string[] }>
   actions?: CanonicalAction[]
   codeReferences?: CodeReference[]
+  timeReferences?: TimeReference[]
   provenance?: ArticleProvenance
 }
 
@@ -250,6 +253,10 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
     const body = content.replace(/^---[\s\S]*?---\n/, '')
     const date = (fm.date as string) ?? file.replace('.md', '')
 
+    const timeMetadata = readArticleTime({ repoRoot, date: file.replace(/\.md$/, ''), markdown: content })
+    for (const warning of timeMetadata.warnings) console.warn(`::warning::${date}: ${warning}`)
+    for (const missing of timeMetadata.unresolved) console.warn(`::warning::${date}: time ${missing.text} occurrence ${missing.occurrence}: ${missing.reason}`)
+
     // Tags
     let tags: TypedTag[]
     if (fm.schemaVersion === 2 && Array.isArray(fm.tags)) {
@@ -301,6 +308,7 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
       decisions,
       actions,
       codeReferences: codeRefsByDate[date],
+      ...(timeMetadata.references.length > 0 ? { timeReferences: timeMetadata.references } : {}),
       provenance: fm.provenance as ArticleProvenance | undefined,
     }
     entries.push(entry)
