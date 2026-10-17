@@ -1,6 +1,7 @@
 # Implementation notes
 
 ## Deviations
+- 2026-10-17 UIK-03: the design assumed native focus scrolling would keep a growing note visible; the mounted sticky sidebar clipped it to a 0.344 viewport ratio, so height changes now reveal only the active textarea with nearest scrolling; capped keystrokes do not trigger that scroll.
 - 2026-10-16 (popover refresh): the existing cache invalidated React after GitHub preview data arrived, but the visible popover retained its original loading snapshot. Exposed the cache revision to the article-popover hook and refreshed the open commit or PR entry in place; browser coverage holds the pointer stationary through both transitions.
 - 2026-10-16 (multiple-reviewer cycle UI): the repair assumed the existing PR head and workflow receipt could identify each revision cycle, but PR #369's raw receipt named the base commit and Sonnet while the generated article provenance named Opus and the branch later moved again. Grouped current structured PR/review data and labeled body claims unverified; left historical per-event output heads to a future structured producer receipt.
 - 2026-10-13 (daily-347 exact content follow-up): prior review treated preexisting root-note trimming as compatible, but issue #339 requires exact literal content; kept raw nonblank strings and trimmed only for blankness, with a real UI HTTP assertion failing on baccf6d before the correction.

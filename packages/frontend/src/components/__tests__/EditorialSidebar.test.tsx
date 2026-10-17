@@ -132,6 +132,7 @@ describe('editorial revision notes', () => {
   })
 
   it('does not persist an untouched empty draft or allow whitespace-only additions', async () => {
+    expect(container.querySelector('label')?.textContent?.trim()).toBe('Edit suggestion')
     expect(sessionStorage.getItem('dl-editorial:editor:2026-10-10')).toBeNull()
     await enter(0, '   \n  ')
     expect(container.querySelector('button[aria-label="Add another edit suggestion"]')?.hasAttribute('disabled')).toBe(true)

@@ -2140,20 +2140,27 @@ a:hover { border-bottom-color: var(--text); }
 .editorial-input {
   flex: 1;
   min-width: 0;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text);
   background: var(--bg-alt);
   border: 1.5px solid var(--border);
   border-radius: 4px;
-  padding: 8px 10px;
+  padding: 12px;
   resize: vertical;
-  min-height: 60px;
+  min-height: min(8rem, calc(var(--editorial-viewport-height, 100dvh) * .4));
+  max-height: min(40rem, calc(var(--editorial-viewport-height, 100dvh) * .6));
+  overflow-y: auto;
+  overflow-wrap: anywhere;
   transition: border-color 150ms;
 }
 .editorial-input:focus {
-  outline: none;
   border-color: var(--accent);
+}
+.editorial-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .editorial-input::placeholder {
   color: var(--text-secondary);
