@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "act-2026-10-17-adr-761b78",
+    "description": "Record the re-entry path for post-revision verification failure as an amendment to ADR-0038: define whether remaining material findings in a verification PR block merge, open a new correction PR, or return to review registration. PR #369 called this out as an unrecorded decision. The second article cycle is the next place it becomes load-bearing.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-17",
+    "state": "dismissed",
+    "reason": "The accepted October 17 article and its review (s22, s24) record this action's premise as superseded. PR #373 closed the 'design' October 16 action with disposition 'superseded, not implemented' (s8 L89). The article itself (s1 L132) states the mandatory ADR prerequisite 'repeats an earlier generated recommendation already recorded as superseded in PR #373'. The independent review (s22 L24-32) confirms the mandatory-prerequisite premise is a confirmed error. No owner decision to reopen this work exists."
+  },
+  {
+    "id": "act-2026-10-17-close-pr-ebb20f",
+    "description": "Close or explicitly park lego-village-pipeline #45 with a named owner and reason. It is superseded by #46 for the R6 addendum and is currently noise in the roadmap pulse with no disposition.",
+    "repo": "lego-village-pipeline",
+    "sourceDate": "2026-10-17",
+    "state": "dismissed",
+    "reason": "s12 (the live API state for lego-village-pipeline #45) confirms the PR remains open (s12 L1: state=open; merged_at=none). The PR description (s12 L3-5) explicitly states it preserves the earlier HOUSE-WORLD R0 study and points to PR #46 for the current interface source — not a supersession. The accepted October 17 article (s1 L106) and the independent review (s22 L74-82) both record the closure premise as unsupported: 'PR #45 explicitly preserves HOUSE-WORLD R0/HANDOFF037 and points to PR #46 for the current interface source... Replacing the current interface source does not establish that the separate R0 brief is superseded or should be closed.' No operator decision authorizing closure exists."
+  }
+]

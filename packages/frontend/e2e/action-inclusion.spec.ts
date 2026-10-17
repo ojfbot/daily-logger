@@ -1,8 +1,22 @@
 import { expect, test } from '@playwright/test'
 import { applyVerifiedActionReview } from '../../../src/review-actions.js'
 import { ActionRegistrySchema } from '../../../src/action-registry-schema.js'
+import { readFileSync } from 'node:fs'
 
 const date = '2026-10-18'
+test('the reconciled October 17 article renders completed and dismissed cards without raw API metadata', async ({ page }) => {
+  const reviewed = JSON.parse(readFileSync(new URL('../../../api/articles/2026-10-17.json', import.meta.url), 'utf8'))
+  await page.route('**/api/entries.json', route => route.fulfill({ json: [reviewed] }))
+  await page.route('**/api/articles/2026-10-17.json', route => route.fulfill({ json: reviewed }))
+  await page.route('**/api/article-reviews**', route => route.fulfill({ status: 503, json: {} }))
+  await page.goto('/articles/2026-10-17')
+  const card = page.getByRole('region', { name: 'Resolved suggestions' })
+  await expect(card).toBeVisible()
+  await expect(card.locator('article > strong')).toHaveText(['/adr · Dismissed', '/pr-review · Completed', '/close-pr · Dismissed'])
+  await expect(card.locator('details[open]')).toHaveCount(0)
+  await expect(card).not.toContainText('repository_url')
+  expect(reviewed.commitCount).toBe(26)
+})
 const source = `---\ntitle: "Action review"\ndate: ${date}\nstatus: "draft"\n---\n## What's next\nReview the next checkpoint.\n`
 function fixture() {
   return applyVerifiedActionReview({

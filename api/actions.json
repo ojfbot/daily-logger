@@ -1,29 +1,5 @@
 [
   {
-    "command": "/adr",
-    "description": "Record the re-entry path for post-revision verification failure as an amendment to ADR-0038: define whether remaining material findings in a verification PR block merge, open a new correction PR, or return to review registration. PR #369 called this out as an unrecorded decision. The second article cycle is the next place it becomes load-bearing.",
-    "repo": "daily-logger",
-    "status": "open",
-    "sourceDate": "2026-10-17",
-    "id": "act-2026-10-17-adr-761b78"
-  },
-  {
-    "command": "/pr-review",
-    "description": "Review daily-logger #372 (local-time world map popovers for article times): verify the source-year desync fix, confirm the popover correctly binds to the event named in the current article rather than the visible clock match, and promote from draft to ready if passing. Nothing is documented as blocking this — current state is prioritization lag.",
-    "repo": "daily-logger",
-    "status": "open",
-    "sourceDate": "2026-10-17",
-    "id": "act-2026-10-17-pr-review-a34469"
-  },
-  {
-    "command": "/close-pr",
-    "description": "Close or explicitly park lego-village-pipeline #45 with a named owner and reason. It is superseded by #46 for the R6 addendum and is currently noise in the roadmap pulse with no disposition.",
-    "repo": "lego-village-pipeline",
-    "status": "open",
-    "sourceDate": "2026-10-17",
-    "id": "act-2026-10-17-close-pr-ebb20f"
-  },
-  {
     "id": "act-2026-10-15-investigate-66e04675dca0",
     "command": "/investigate",
     "invocation": "/investigate morning-cockpit#57 — multi-account GitHub identity boundary for source-record contracts",

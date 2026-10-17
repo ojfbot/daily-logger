@@ -11,12 +11,12 @@ Recorded October 17, 2026. This verifies the proposed cutover; it does not merge
 - Three protected reviewed records keep their authority restrictions.
 - Two consecutive API builds produce identical bytes.
 
-The migration registry has 213 records, no review receipts, and no history changes. Its SHA-256 revision is `30819f5cb3f65a2180f620fe6f4a0e46df8d6a62ddd4e207c1269c6fdc9f65b1`. October 17 remains unchanged in this PR. Its explicit reconciliation is tested with a dry run.
+The initial migration registry had 213 records, no review receipts, and no history changes. Its SHA-256 revision is `30819f5cb3f65a2180f620fe6f4a0e46df8d6a62ddd4e207c1269c6fdc9f65b1`. The same PR then applies the independently verified October 17 receipt. Its three original rows remain immutable: the repeated unsupported ADR prerequisite and unsupported closure instruction are dismissed, and the #372 review is completed from its actual merge and delivery evidence. The open feed becomes 85, completed becomes 126, and two separate dispositions are recorded. No new identity is admitted.
 
 ## Local checks
 
-- `pnpm test`: 530 tests pass across 45 files.
-- `pnpm exec playwright test`: 13 browser tests pass, including checked defaults, saved opt-out after reload, acceptance branch reuse, and conflict handling. GitHub writes are intercepted.
+- `pnpm test`: 531 tests pass across 45 files.
+- `pnpm exec playwright test`: 14 browser tests pass, including checked defaults, saved opt-out after reload, acceptance branch reuse, and conflict handling. GitHub writes are intercepted. One scenario reads the actual reconciled October 17 API artifact and confirms all three cards, folded evidence, and the unchanged reporting-window commit count.
 - `pnpm type-check` and `pnpm --dir packages/frontend build`: pass.
 - `pnpm lint`: no errors; the existing `schema.test.ts:195` explicit-any warning remains.
 - Node feedback-extraction and revision-admission tests: nine pass.
@@ -29,7 +29,7 @@ The registry tests exercise later-article disposition, draft isolation, correcti
 
 The operator explicitly authorized sending the October 17 article, action history, relevant goal/review documents, and linked GitHub discussions to Anthropic for a no-write test. Early attempts failed closed on malformed output, invalid quotes, and report-only evidence. A structurally successful attempt still retained a disproved claim in #372's active wording. This was treated as a failed quality check, not acceptance. Repeated quote-copying failures led to source-line selection: application code now resolves evidence text before verification.
 
-`scripts/check-action-review.ts` checks the final receipt for the exact three expected dispositions, preserved original objects, unchanged canonical state, a rendered history card, and current #372 wording with overlay, timing, preview, and owner-decision gates. Final receipt result is recorded separately in the decision trail.
+`scripts/check-action-review.ts` checks the final receipt for the exact three expected dispositions, preserved original objects, unchanged canonical state, a rendered history card, and fresh #372 merge evidence instead of historical draft handoffs. The live quality check passes; [its result](action-cutover-live-result.json) records the model identities, source digests, states, and unchanged canonical state during the dry run. The verified receipt was then applied separately to this feature branch.
 
 ## Limits
 
@@ -38,3 +38,5 @@ Independent model agreement cannot establish source truth or semantic novelty by
 Git is the publication boundary. An ordinary write exception restores prior article bytes; process termination between filesystem renames can leave local files and a stale lock requiring the recovery described in [Action intake](../docs/action-intake.md).
 
 The independent GPT reviewer found and helped resolve lifecycle, identity, and rendering gaps. The transcript-to-trail audit used this chat's recorded transcript. A review from another model family was not independently verified; no such claim is made here.
+
+Provider tool schemas use [strict tool decoding](https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use); application-side Zod validation still enforces every numeric, string, identity, and evidence constraint. The tool schema omits only provider-unsupported value constraints described in [the supported schema subset](https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations).

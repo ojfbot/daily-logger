@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { isReviewedAction } from './action-model.js'
+import { EXCLUDED_REPOS, KNOWN_REPOS } from './fleet.js'
 import {
   ActionRegistrySchema, CitationSchema, managedArticleDigest, normalizeWorkKey,
   renderArticleActions, sha256, stripManagedActions, actionStateDigest, acceptedActionState,
@@ -39,8 +40,10 @@ export function resolveActionSourceLines(value: unknown, sources: readonly Actio
     const source = sources.find(source => source.id === citation.sourceId)
     if (!source) throw new Error(`Unknown citation source: ${citation.sourceId}`)
     const lines = source.content.split('\n')
-    if (citation.endLine < citation.startLine || citation.endLine > lines.length || citation.endLine - citation.startLine > 15) throw new Error(`Invalid citation range for ${citation.sourceId}; choose 1–16 lines within 1–${lines.length}`)
-    return { sourceId: source.id, quote: lines.slice(citation.startLine - 1, citation.endLine).join('\n') }
+    if (citation.endLine < citation.startLine || citation.endLine > lines.length) throw new Error(`Invalid citation range for ${citation.sourceId}; choose lines within 1–${lines.length}`)
+    const quote = lines.slice(citation.startLine - 1, citation.endLine).join('\n')
+    if (quote.length > 16000) throw new Error(`Evidence selection for ${citation.sourceId} is too broad; select at most 16000 characters of relevant source lines`)
+    return { sourceId: source.id, quote }
   }
   return ActionProposalSchema.parse({ ...proposal, changes: proposal.changes.map(change => ({ ...change, citations: change.citations.map(resolve) })), suggestions: proposal.suggestions.map(candidate => ({ ...candidate, factCitations: candidate.factCitations.map(resolve), goalCitations: candidate.goalCitations.map(resolve) })) })
 }
@@ -57,6 +60,7 @@ Reconcile the current article's actions, preserving original IDs. Do not clean u
 This workflow authorizes evidence-backed TRACKING dispositions of ordinary suggestions. Preserving an original row or ID does not mean retaining open state. A disproved suggestion is dismissed; an explicitly replaced obligation is superseded. Neither disposition closes a GitHub PR or executes the suggested command. Historical report language about an earlier article cycle's limited settlement authority does not override this tracking policy. Records explicitly marked with executionAuthority/settlementAuthority none remain protected by their separate receipt contract.
 The original description is immutable audit history, NOT the wording to publish. change.description is the current actionable wording: correct every disproved claim and retain all known owner/evidence gates. The verifier must reject an open description that repeats a disproved claim even when the action identity is correct. Use changes to refine currentActionKeys; suggestions are for novel work or relevant existing work outside the current set.
 For open changes, publish a concise current instruction, without retelling the original mistake or quoting obsolete wording. Put historical explanation in reason. Independently verify the state enum as well as the description: pass is inappropriate when an open entry describes an unsupported, retired or superseded instruction with no remaining actionable obligation.
+Honor an explicitly recorded reviewed disposition for the same obligation instead of substituting another retirement label. A historical handoff SHA is not the current PR head: use fresh GitHub head metadata or ask the next action to resolve and review the current head, without pinning a stale SHA.
 Completed means its exact completion condition has delivery evidence. Dismissed means the premise is disproved.
 Superseded requires a demonstrated replacement of this obligation, not replacement of an interface source.
 Open work retains owner decisions, evidence conditions, blockers and dependency ordering. Article acceptance grants no execution, settlement, PR readiness or merge authority.
@@ -72,10 +76,15 @@ export function createActionAgents(): ActionAgents {
   const client = new Anthropic({ timeout: 120000, maxRetries: 0 })
   async function call(role: 'proposer' | 'verifier', prompt: string, sources: ActionSource[]): Promise<unknown> {
     const schema = role === 'proposer' ? LineProposalSchema : ActionVerificationSchema
+    // Strict tool decoding supports types but not these Zod value constraints.
+    // Keep every original constraint in the application-side parse below.
+    const unsupported = new Set(['$schema', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'minLength', 'maxLength', 'maxItems'])
+    const wireSchema = z.record(z.string(), z.unknown()).parse(JSON.parse(JSON.stringify(z.toJSONSchema(schema), (key, value) => unsupported.has(key) ? undefined : value)))
+    const tool = { name: 'review_actions', description: 'Return the structured action review.', strict: true, input_schema: { ...wireSchema, type: 'object' as const } }
     const response = await client.messages.create({
       model: role === 'proposer' ? 'claude-sonnet-4-6' : 'claude-opus-4-6', max_tokens: 12000,
       system: `${RULES}\nYou are the independent action ${role}. ${role === 'verifier' ? 'Check every proposed disposition and candidate against the actual sources. The proposer rationale is not evidence. Reject unsupported conclusions, duplicate work, mandatory architecture work presented without authority, omitted owner gates, and inappropriate commands. Return a verdict for every item. Do not invent replacements.' : 'Return structured dispositions and candidates with exact source quotes. Existing work can remain open without a change record.'}`,
-      tools: [{ name: 'review_actions', description: 'Return the structured action review.', input_schema: { ...z.toJSONSchema(schema), type: 'object' } }],
+      tools: [tool],
       tool_choice: { type: 'tool', name: 'review_actions' }, messages: [{ role: 'user', content: prompt }],
     })
     console.warn(`Action ${role}: stop=${response.stop_reason}; output_tokens=${response.usage?.output_tokens ?? 'unavailable'}`)
@@ -85,6 +94,17 @@ export function createActionAgents(): ActionAgents {
     return role === 'proposer' ? resolveActionSourceLines(result.input, sources) : result.input
   }
   return { identity: { proposer: 'claude-sonnet-4-6', verifier: 'claude-opus-4-6' }, propose: (prompt, sources) => call('proposer', prompt, sources), verify: (prompt, sources) => call('verifier', prompt, sources) }
+}
+
+export function actionGithubReferences(input: { markdown: string; feedback: string; context?: string }) {
+  const refs = new Map<string, { repo: string; kind: string; number: string }>()
+  for (const match of `${input.context ?? ''}\n${input.markdown}\n${input.feedback}`.matchAll(/https:\/\/github\.com\/ojfbot\/([\w-]+)\/(pull|issues)\/(\d+)/g)) { if (EXCLUDED_REPOS.has(match[1])) continue; const id = `${match[1]}#${match[3]}`; refs.delete(id); refs.set(id, { repo: match[1], kind: match[2], number: match[3] }) }
+  for (const match of `${input.markdown}\n${input.feedback}`.matchAll(/\b([\w-]+)\s+#(\d+)/g)) {
+    if (!KNOWN_REPOS.has(match[1]) || EXCLUDED_REPOS.has(match[1])) continue
+    const id = `${match[1]}#${match[2]}`, ref = refs.get(id) ?? { repo: match[1], kind: 'pull', number: match[2] }
+    refs.delete(id); refs.set(id, ref)
+  }
+  return [...refs].reverse().slice(0, 12)
 }
 
 export function collectActionSources(input: { repoRoot: string; markdown: string; feedback: string; context?: string }): ActionSource[] {
@@ -107,8 +127,6 @@ export function collectActionSources(input: { repoRoot: string; markdown: string
     }
   }
   if (existsSync(reviewDir)) visit(reviewDir, 0)
-  const refs = new Map<string, { repo: string; kind: string; number: string }>()
-  for (const match of `${input.context ?? ''}\n${input.markdown}\n${input.feedback}`.matchAll(/https:\/\/github\.com\/ojfbot\/([\w-]+)\/(pull|issues)\/(\d+)/g)) { const id = `${match[1]}#${match[3]}`; refs.delete(id); refs.set(id, { repo: match[1], kind: match[2], number: match[3] }) }
   // Full discussions are collected for bounded relevant references. An unavailable source is never substituted with a preview.
   const evidenceDeadline = Date.now() + 90000
   const api = (endpoint: string) => {
@@ -120,12 +138,17 @@ export function collectActionSources(input: { repoRoot: string; markdown: string
     ['fleet-goal', { repo: 'core', path: 'decisions/northstar/l2-ojfbot.md', ref: 'main' }],
     ['fleet-roadmap', { repo: 'core', path: 'decisions/northstar/roadmap-l2-ojfbot.md', ref: 'main' }],
   ])
-  for (const [id, ref] of [...refs].reverse().slice(0, 12)) {
+  for (const [id, ref] of actionGithubReferences(input)) {
     try {
       const base = `repos/ojfbot/${ref.repo}`
       const content = [api(`${base}/issues/${ref.number}`), api(`${base}/issues/${ref.number}/comments?per_page=100`)]
-      if (ref.kind === 'pull') content.push(api(`${base}/pulls/${ref.number}`), api(`${base}/pulls/${ref.number}/reviews?per_page=100`), api(`${base}/pulls/${ref.number}/comments?per_page=100`))
-      sources.push({ id: `github:${id}`, kind: 'github', locator: `https://github.com/ojfbot/${ref.repo}/${ref.kind}/${ref.number}`, content: content.map(renderGithubEvidence).join('\n') })
+      const [issue] = z.array(z.object({ pull_request: z.unknown().optional() })).parse(JSON.parse(content[0]))
+      const kind = issue?.pull_request != null ? 'pull' : 'issues'
+      if (kind === 'pull') content.push(api(`${base}/pulls/${ref.number}`), api(`${base}/pulls/${ref.number}/reviews?per_page=100`), api(`${base}/pulls/${ref.number}/comments?per_page=100`))
+      const [current] = z.array(z.object({ state: z.enum(['open', 'closed']), merged_at: z.string().nullable().optional(), head: z.object({ sha: z.string() }).optional() })).parse(JSON.parse(content[2] ?? content[0]))
+      if (!current) throw new Error('Current GitHub state unavailable')
+      const observation = `CURRENT API STATE ${id}: state=${current.merged_at ? 'merged' : current.state}; head=${current.head?.sha ?? 'not-a-PR'}; merged_at=${current.merged_at ?? 'none'}. Current API state outranks historical handoff wording.`
+      sources.push({ id: `github:${id}`, kind: 'github', locator: `https://github.com/ojfbot/${ref.repo}/${kind}/${ref.number}`, content: [observation, ...content.map(renderGithubEvidence)].join('\n') })
     } catch { console.warn(`::warning::Action evidence unavailable for ${id}; candidates requiring it must be held`) }
   }
   for (const source of sources) {
@@ -136,6 +159,7 @@ export function collectActionSources(input: { repoRoot: string; markdown: string
     if (repo) for (const match of source.content.matchAll(/\b(decisions\/(?:northstar|wayfinder|convoy)\/[\w./-]+\.md)/g)) goalFiles.set(`${repo}:${match[1]}`, { repo, path: match[1], ref: 'main' })
   }
   for (const { repo, path, ref } of [...goalFiles.values()].slice(0, 8)) {
+    if (EXCLUDED_REPOS.has(repo)) continue
     try {
       const [file] = z.array(z.object({ type: z.literal('file'), sha: z.string(), encoding: z.literal('base64'), content: z.string() })).parse(JSON.parse(api(`repos/ojfbot/${repo}/contents/${path}?ref=${encodeURIComponent(ref)}`)))
       if (!file) throw new Error('Goal file unavailable')
@@ -194,6 +218,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     if (!verdict) throw new Error('Candidate has no independent verdict')
     if (verdict.verdict !== 'pass') { rejected.push({ description: candidate.description, reason: verdict.reason }); continue }
     if (!checkedCitations(candidate.factCitations, input.sources, ['repository', 'github'])) { rejected.push({ description: candidate.description, reason: `Missing exact primary factual evidence. ${verdict.reason}` }); continue }
+    if (!checkedCitations([...candidate.factCitations, ...candidate.goalCitations], input.sources, ['repository', 'github'])) { rejected.push({ description: candidate.description, reason: 'A contextual citation is missing or does not match its exact source' }); continue }
     const workKey = normalizeWorkKey(candidate.repo, candidate.target, candidate.outcome)
     if (candidate.existingKey && !verdict.existingKey) { rejected.push({ description: candidate.description, reason: 'Proposer and verifier disagree about an existing identity; no new admission' }); continue }
     const existingKey = verdict.existingKey ?? next.records.find(record => record.workKey === workKey)?.key
@@ -228,7 +253,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   }
   const usedSources = new Set(next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.map(citation => citation.sourceId))))
   const retainedSources = [...new Map([...(previous?.sources ?? []), ...input.sources.filter(source => usedSources.has(source.id))].map(source => [source.id, source])).values()]
-  const snapshot = { date: input.articleDate, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], stateDigest: actionStateDigest(next, [...keys]), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: 'action-review-v2-source-lines', proposalSha256: sha256(JSON.stringify(input.proposal)), verdicts: [...input.verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...input.verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason }))] }, sources: retainedSources, rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
+  const snapshot = { date: input.articleDate, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], stateDigest: actionStateDigest(next, [...keys]), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: 'action-review-v3-strict-source-lines', proposalSha256: sha256(JSON.stringify(input.proposal)), verdicts: [...input.verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...input.verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason }))] }, sources: retainedSources, rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
   next.articles = [...next.articles.filter(article => article.date !== input.articleDate), snapshot]
   return ActionRegistrySchema.parse(next)
 }
@@ -237,7 +262,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   input = { ...input, articleStatuses: new Map(input.articleStatuses).set(input.articleDate, input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft') }
   const previous = input.registry.articles.find(article => article.date === input.articleDate)
   input = { ...input, sources: [...new Map([...(previous?.sources ?? []), ...input.sources].map(source => [source.id, source])).values()].sort((a, b) => a.id.localeCompare(b.id)) }
-  const inputHash = sha256(JSON.stringify({ version: 2, statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
+  const inputHash = sha256(JSON.stringify({ version: 3, statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
   if (previous?.roundId === inputHash && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys)) return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true }
   const sourceAliases = new Map(input.sources.map((source, index) => [`s${index + 1}`, source.id]))
   const modelSources = input.sources.map((source, index) => ({ ...source, id: `s${index + 1}` }))

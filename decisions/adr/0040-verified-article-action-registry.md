@@ -30,6 +30,6 @@ The importer freezes 88 open and 125 completed rows at `faac3c9bb310bc0fc1c1ec44
 
 The cutover needs one merge, without a second runtime writer or a gradual compatibility period. Model latency and source availability can block a review. This is preferable to publishing a suggestion the verifier cannot support. Independent model agreement does not prove semantic equivalence or source truth; exact evidence checks, preserved history, bounded admission, regression tests, and human article acceptance provide separate controls.
 
-The initial migration preserves the October 17 article and its queue rows. Its next explicit reconciliation converts its active block and retains resolved suggestions in a history card. Historical article cleanup is outside this delivery.
+The migration preserves the October 17 original queue rows. This delivery then reconciles that current article: its repeated unsupported prerequisite and closure instruction are dismissed, and the #372 review is completed from fresh merge evidence. Its resolved suggestions move into the history card. Historical article cleanup is outside this delivery.
 
 Verification commands and operational limits are recorded in [Action intake](../../docs/action-intake.md).

@@ -1,0 +1,64 @@
+{
+  "result": "pass",
+  "articleDate": "2026-10-17",
+  "canonicalUnchanged": true,
+  "originalRecords": 213,
+  "newIdentities": 0,
+  "roundId": "8842871c4e5b3ee8bab8903ff9a5899c41b3124c2bb9d22bb5c24db6356b74dd",
+  "verification": {
+    "proposer": "claude-sonnet-4-6",
+    "verifier": "claude-opus-4-6",
+    "promptVersion": "action-review-v3-strict-source-lines",
+    "proposalSha256": "2ac2b3dd761f8466a598a198047bf65a202e1b15e4320c34b9d5743e96b020b7",
+    "verdicts": [
+      {
+        "item": "act-2026-10-17-adr-761b78",
+        "verdict": "pass",
+        "reason": "The premise is disproved by multiple independent sources. PR #373 (s8 L89) explicitly records the mandatory ADR/deadline recommendation as 'superseded, not implemented'. The accepted article (s1 L132) confirms 'The mandatory ADR prerequisite repeats an earlier generated recommendation already recorded as superseded in PR #373'. The independent review finding C2 (s22 L26-32) confirms this as a confirmed error. Dismissed is the correct disposition for a disproved premise."
+      },
+      {
+        "item": "act-2026-10-17-pr-review-a34469",
+        "verdict": "pass",
+        "reason": "PR #372 is confirmed merged per s7 L1: 'state=merged; head=520de8deff1fd5853029afb156376fd8ab4d7b1a; merged_at=2026-10-17T19:58:13Z'. The closure review at e95c0d1 (s7 L240-241) confirmed all five earlier blocking findings closed and recommended merge after the timeout condition. The PR description (s7 L27) records production deployment success and live article verification. The original action requested review, source-year desync verification, event binding confirmation and draft-to-ready promotion — all of which occurred through the documented review chain culminating in merge. Done is correct."
+      },
+      {
+        "item": "act-2026-10-17-close-pr-ebb20f",
+        "verdict": "pass",
+        "reason": "The closure premise is disproved. s12 L1 confirms lego-village-pipeline #45 remains open. s12 L3 states 'This PR preserves the earlier HOUSE-WORLD R0 study.' The independent review C7 finding (s22 L77-78) confirms: 'PR #45 explicitly preserves HOUSE-WORLD R0/HANDOFF037... Replacing the current interface source does not establish that the separate R0 brief is superseded or should be closed.' The article (s1 L106) also states '#45 preserves HOUSE-WORLD R0/HANDOFF037... it is not superseded merely because #46 replaces the current interface source.' Dismissed is the correct disposition for an unsupported premise."
+      }
+    ]
+  },
+  "states": {
+    "act-2026-10-17-adr-761b78": "dismissed",
+    "act-2026-10-17-pr-review-a34469": "done",
+    "act-2026-10-17-close-pr-ebb20f": "dismissed"
+  },
+  "currentReview": "PR #372 merged on October 17 at 19:58:13Z. The source-year desync fix and event-binding correctness were independently reviewed and verified at exact head before merge. Production deployment succeeded and live article verification confirmed correct local-time conversions. Draft-to-ready promotion occurred after Claude's closure review cleared all earlier blockers; merge was authorized by the owner.",
+  "sources": [
+    {
+      "id": "article@c1c889ab5647a9876c76fb9ebff7d69b689fbc0dd8af17aad0e29932c74f66d3",
+      "kind": "report",
+      "locator": "current revised article"
+    },
+    {
+      "id": "github:daily-logger#372@248139b6c72edaf26c6fd2f94f484c961a56221a5abba78765f3864bae01b637",
+      "kind": "github",
+      "locator": "https://github.com/ojfbot/daily-logger/pull/372"
+    },
+    {
+      "id": "github:daily-logger#373@f40c0ea8daad914e07252a58eb419b15ea84569ee118f8b09061b39ebc0f5a15",
+      "kind": "github",
+      "locator": "https://github.com/ojfbot/daily-logger/pull/373"
+    },
+    {
+      "id": "github:lego-village-pipeline#45@6698652a5fbe0673fc0f1b66954cadcd781bdab4e2b55d3ce2a4e4857dfb98ef",
+      "kind": "github",
+      "locator": "https://github.com/ojfbot/lego-village-pipeline/pull/45"
+    },
+    {
+      "id": "review:reviews/articles/2026-10-17-8a78a7f2ed387f8bef4c03b7956774cd1639941e.md@2eac790dfb84a07c27e68a0dcc3aaabd6d7ec4fd3f3b2da32aa891e45a0f3fd8",
+      "kind": "repository",
+      "locator": "reviews/articles/2026-10-17-8a78a7f2ed387f8bef4c03b7956774cd1639941e.md"
+    }
+  ]
+}

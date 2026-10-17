@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ActionRegistrySchema, articleActionRecords, projectRegistry, readActionRegistry, registryBytes, registryRevision, renderArticleActions, renderArticleActionHtml, setActionInclusion, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
-import { ActionVerificationSchema, applyVerifiedActionReview, reviewArticleActions, renderGithubEvidence, resolveActionSourceLines, type ActionProposal, type ActionVerification } from '../review-actions.js'
+import { ActionVerificationSchema, actionGithubReferences, applyVerifiedActionReview, reviewArticleActions, renderGithubEvidence, resolveActionSourceLines, type ActionProposal, type ActionVerification } from '../review-actions.js'
 
 const articleDate = '2026-10-17'
 const articleStatuses = new Map([[articleDate, 'accepted']])
@@ -23,12 +23,18 @@ const roots: string[] = []
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
 
 describe('canonical action review and publication', () => {
+  it('collects bare repository/PR references and preserves explicit issue identity', () => {
+    const refs = actionGithubReferences({ markdown: 'Review daily-logger #372. See core #524 at https://github.com/ojfbot/core/issues/524. Ignore unknown-repository #1 and https://github.com/ojfbot/selfco/issues/1.', feedback: '' })
+    expect(refs.map(([, ref]) => ref)).toEqual([{ repo: 'core', kind: 'issues', number: '524' }, { repo: 'daily-logger', kind: 'pull', number: '372' }])
+  })
   it('resolves bounded source-line selections into exact evidence before verification', () => {
     const source: ActionSource = { id: 's1', kind: 'github', locator: 'source', content: 'Heading\nThe **exact** primary evidence.\nA second source line.' }
     const proposal = { changes: [{ ...propose().changes[0], citations: [{ sourceId: 's1', startLine: 2, endLine: 3 }] }], suggestions: [] }
     expect(resolveActionSourceLines(proposal, [source]).changes[0].citations).toEqual([{ sourceId: 's1', quote: 'The **exact** primary evidence.\nA second source line.' }])
     expect(() => resolveActionSourceLines({ ...proposal, changes: [{ ...proposal.changes[0], citations: [{ sourceId: 's1', startLine: 2, endLine: 99 }] }] }, [source])).toThrow(/Invalid citation range/)
     expect(() => resolveActionSourceLines(proposal, [])).toThrow(/Unknown citation source/)
+    const longer = { ...source, content: Array.from({ length: 20 }, () => 'A complete short evidence line.').join('\n') }
+    expect(resolveActionSourceLines({ ...proposal, changes: [{ ...proposal.changes[0], citations: [{ sourceId: 's1', startLine: 1, endLine: 20 }] }] }, [longer]).changes[0].citations[0].quote).toBe(longer.content)
   })
   it('keeps draft suggestions proposed and commits dispositions only with acceptance', () => {
     const reviewed = apply()
@@ -55,7 +61,7 @@ describe('canonical action review and publication', () => {
     expect(renderArticleActions(markdown, second, articleDate, articleStatuses)).toContain('Article only')
     const completed = applyVerifiedActionReview({ registry: second, articleDate, articleStatuses: new Map([[articleDate, 'draft']]), markdown, sources, roundId: 'e'.repeat(64), proposal: { changes: [...propose().changes, { ...propose().changes[0], actionKey: key, state: 'done', description: candidate.description }], suggestions: [] }, verification: { changes: [...verify().changes, { actionKey: key, verdict: 'pass', reason: 'Delivery evidence checked.' }], suggestions: [] } })
     expect(projectRegistry(completed, articleStatuses).done).toEqual([])
-    expect(renderArticleActions(markdown, completed, articleDate, articleStatuses)).toContain('/implement · done')
+    expect(renderArticleActions(markdown, completed, articleDate, articleStatuses)).toContain('/implement · Completed')
   })
 
   it('uses one result for retries without re-running agents or adding history', async () => {
@@ -103,7 +109,7 @@ describe('canonical action review and publication', () => {
     const registry = seed(); registry.records[0].original.description = '<script>alert(1)</script>'
     const prose = markdown + '\n<img src=x onerror=alert(2)>\n'
     const proposal = propose(); proposal.changes[0].reason = '<img src=x onerror=alert(3)>'
-    const hostileSource: ActionSource = { id: '<img src=x onerror=alert(4)>', kind: 'github', locator: 'test', content: '<script>alert(5)</script>' }
+    const hostileSource: ActionSource = { id: '<img src=x onerror=alert(4)>', kind: 'github', locator: '<script>alert(6)</script>', content: '<script>alert(5)</script>' }
     proposal.changes[0].citations.push({ sourceId: hostileSource.id, quote: hostileSource.content })
     const reviewed = applyVerifiedActionReview({ registry, articleStatuses, articleDate, markdown: prose, sources: [...sources, hostileSource], roundId: 'd'.repeat(64), proposal, verification: verify() })
     const html = renderArticleActionHtml(prose, reviewed, articleDate, articleStatuses)
@@ -112,7 +118,8 @@ describe('canonical action review and publication', () => {
     expect(html).not.toContain('<img')
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
     expect(html).toContain('&lt;img src=x onerror=alert(3)&gt;')
-    expect(html).toContain('&lt;script&gt;alert(5)&lt;/script&gt;')
+    expect(html).not.toContain('alert(5)')
+    expect(html).toContain('&lt;script&gt;alert(6)&lt;/script&gt;')
   })
 
   it('requires a verified snapshot for new articles and prevents using opt-out to close accepted work', () => {
@@ -206,6 +213,9 @@ describe('canonical action review and publication', () => {
     expect(next.records).toHaveLength(2)
     expect(next.records[1].history.at(-1)?.description).toBe(candidate.description)
     expect(next.articles[0].rejected.at(-1)?.reason).toContain('lacks a matching target and outcome')
+    const inventedGoal = apply(registry, { ...proposal, suggestions: [{ ...candidate, existingKey: key, goalCitations: [{ sourceId: 'invented', quote: 'Unverifiable goal claim.' }] }] }, verification)
+    expect(inventedGoal.articles[0].rejected.at(-1)?.reason).toContain('contextual citation')
+    expect(inventedGoal.records[1].history.flatMap(decision => decision.citations).some(citation => citation.sourceId === 'invented')).toBe(false)
   })
 
   it('does not replenish the two-identity budget after suggestions are disposed of', () => {

@@ -20,7 +20,7 @@ import { readArticleTime } from './article-time-metadata.js'
 import type { TimeReference } from './time-references.js'
 import { type CanonicalAction } from './action-model.js'
 import { verifyRecordedAdmissions } from './action-intake.js'
-import { readActionRegistry, projectRegistry, renderArticleActions, articleActionRecords, renderArticleActionHtml } from './action-registry.js'
+import { readActionRegistry, projectRegistry, renderArticleActions, articleActionRecords, renderArticleActionHtml, stripManagedActions } from './action-registry.js'
 
 import { KNOWN_REPOS } from './fleet.js'
 
@@ -250,10 +250,11 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
     if (!source) throw new Error(`Article source disappeared during API build: ${file}`)
     const content = source.content
     const fm = parseFrontmatter(content)
-    const body = content.replace(/^---[\s\S]*?---\n/, '')
+    const narrative = stripManagedActions(content)
+    const body = narrative.replace(/^---[\s\S]*?---\n/, '')
     const date = (fm.date as string) ?? file.replace('.md', '')
 
-    const timeMetadata = readArticleTime({ repoRoot, date: file.replace(/\.md$/, ''), markdown: content })
+    const timeMetadata = readArticleTime({ repoRoot, date: file.replace(/\.md$/, ''), markdown: narrative })
     for (const warning of timeMetadata.warnings) console.warn(`::warning::${date}: ${warning}`)
     for (const missing of timeMetadata.unresolved) console.warn(`::warning::${date}: time ${missing.text} occurrence ${missing.occurrence}: ${missing.reason}`)
 

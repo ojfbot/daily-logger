@@ -14,22 +14,25 @@ const path = process.argv[2]
 if (!path) throw new Error('Pass the --receipt JSON from the October 17 dry run')
 const receipt = z.object({ articleDate: z.literal('2026-10-17'), beforeRevision: z.string(), dryRun: z.literal(true), registry: ActionRegistrySchema, markdown: z.string() }).parse(JSON.parse(readFileSync(path, 'utf8')))
 const before = readActionRegistry(resolve('.'))
-if (registryRevision(before) !== receipt.beforeRevision) throw new Error('Canonical registry changed during the dry run')
+const canonicalUnchanged = registryRevision(before) === receipt.beforeRevision
+const receiptApplied = registryRevision(before) === registryRevision(receipt.registry)
+if (!canonicalUnchanged && !receiptApplied) throw new Error('Canonical registry changed independently of the reviewed receipt')
 for (const original of before.records) {
   const after = receipt.registry.records.find(record => record.key === original.key)
   if (!after || JSON.stringify(original.original) !== JSON.stringify(after.original)) throw new Error(`Original identity changed: ${original.key}`)
 }
 const states = {
-  'act-2026-10-17-adr-761b78': 'superseded',
-  'act-2026-10-17-pr-review-a34469': 'open',
+  'act-2026-10-17-adr-761b78': 'dismissed',
+  'act-2026-10-17-pr-review-a34469': 'done',
   'act-2026-10-17-close-pr-ebb20f': 'dismissed',
 }
 for (const [key, state] of Object.entries(states)) if (receipt.registry.records.find(record => record.key === key)?.state !== state) throw new Error(`Incorrect reviewed disposition: ${key}`)
 const active = receipt.markdown.slice(receipt.markdown.indexOf(ACTIONS_START)).split('<section class="action-history-card"')[0]
 if (/Nothing is documented as blocking|prioritization lag|\/adr|\/close-pr/.test(active)) throw new Error('Disproved original wording remains in the active block')
-for (const condition of [/overlay/i, /timing|five.second/i, /preview/i, /owner|approval|decision/i]) if (!condition.test(active)) throw new Error(`Active #372 recommendation lost a gate: ${condition}`)
+if (/\/pr-review[^\n]*#372/.test(active)) throw new Error('The merged #372 review remains in the active block')
+if (!receipt.registry.articles.flatMap(article => article.sources).some(source => source.id.startsWith('github:daily-logger#372@') && source.content.startsWith('CURRENT API STATE daily-logger#372: state=merged;'))) throw new Error('Fresh #372 merge evidence was not collected')
 const snapshot = receipt.registry.articles.find(article => article.date === receipt.articleDate)
 if (!snapshot || snapshot.verification.proposer !== 'claude-sonnet-4-6' || snapshot.verification.verifier !== 'claude-opus-4-6') throw new Error('The live independent model receipt is missing')
 const html = renderArticleActionHtml(receipt.markdown, receipt.registry, receipt.articleDate, readArticleStatuses(resolve('.')))
 if (!html.includes('<section class="action-history-card"') || html.includes('&lt;section class=&quot;action-history-card')) throw new Error('Resolved history is not a rendered card')
-console.log(JSON.stringify({ result: 'pass', articleDate: receipt.articleDate, canonicalUnchanged: true, originalRecords: before.records.length, newIdentities: receipt.registry.records.length - before.records.length, roundId: snapshot.roundId, verification: snapshot.verification, states, currentReview: receipt.registry.records.find(record => record.key === 'act-2026-10-17-pr-review-a34469')?.history.at(-1)?.description, sources: snapshot.sources.map(source => ({ id: source.id, kind: source.kind, locator: source.locator })) }, null, 2))
+console.log(JSON.stringify({ result: 'pass', articleDate: receipt.articleDate, canonicalUnchanged, receiptApplied, originalRecords: before.records.length, newIdentities: receipt.registry.records.length - before.records.length, roundId: snapshot.roundId, verification: snapshot.verification, states, currentReview: receipt.registry.records.find(record => record.key === 'act-2026-10-17-pr-review-a34469')?.history.at(-1)?.description, sources: snapshot.sources.map(source => ({ id: source.id, kind: source.kind, locator: source.locator })) }, null, 2))
