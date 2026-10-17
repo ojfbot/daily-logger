@@ -48,8 +48,9 @@ this pilot. Closing the PR makes it ineligible; it neither resets execution hist
 nor proves the invocation outcome, and is not a safe retry procedure.
 
 An undelivered event, cancelled run or dropped pending run can leave a request
-outstanding without a claim or receipt. GitHub concurrency retains at most one
-pending run per PR group even with cancel-in-progress disabled; a later eligible
+outstanding without a claim or receipt. The current default-single concurrency
+configuration retains at most one pending run per PR group even with
+cancel-in-progress disabled; a later eligible
 job can replace a pending one. Legacy automatic PR events share that group with
 continued requests. The web path prevents another outstanding request; direct
 owner comments can bypass submission checks and make history ambiguous. Consumer
