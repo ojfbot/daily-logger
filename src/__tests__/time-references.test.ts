@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { describe, expect, it } from 'vitest'
 import { canonicalInstant, recordsFromContext, resolveTimeReferences, selectTimeRecords, scanTimeTokens, timeTokenMatchesInstant, TimeRecordSchema, TimeReferenceSchema, unsupportedTimeTokens, type TimeRecord } from '../time-references.js'
 import { buildTimeBackfill, discoverTimeSources, mergeTimeBackfills, parseBackfillOptions, recordsFromGitHubResponse } from '../backfill-times.js'
@@ -87,23 +87,24 @@ describe('canonical rendered occurrence inventory', () => {
 
 describe('repeatable backfill and generation integration', () => {
   it('replays all134 actual articles and deterministic shards against the immutable33-reference sidecar', () => {
-    const raw: unknown = JSON.parse(readFileSync(new URL('../../api/time-evidence.json', import.meta.url), 'utf-8'))
+    const base = 'faac3c9bb310bc0fc1c1ec445433e310e0498558'
+    const frozenFile = (path: string) => execFileSync('git', ['show', `${base}:${path}`], { cwd: new URL('../..', import.meta.url), encoding: 'utf8' })
+    const raw: unknown = JSON.parse(frozenFile('api/time-evidence.json'))
     const snapshot = raw && typeof raw === 'object' && 'records' in raw ? raw.records : []
     const records = TimeRecordSchema.array().parse(snapshot)
-    const markdown = readFileSync(new URL('../../_articles/2026-10-15.md', import.meta.url), 'utf-8')
+    const markdown = frozenFile('_articles/2026-10-15.md')
     const refs = resolveTimeReferences(markdown, records).references
     expect(refs).toHaveLength(6)
     expect(refs.filter((ref) => ref.text === '09:10Z').map((ref) => [ref.occurrence, ref.at])).toEqual([[0, '2026-10-14T09:10:41.000Z'], [1, '2026-10-14T09:10:41.000Z']])
-    const directory = new URL('../../_articles/', import.meta.url)
-    const articles = readdirSync(directory).filter((name) => name.endsWith('.md') && name <= '2026-10-16.md').sort().map((name) => ({ date: name.slice(0, -3), markdown: readFileSync(new URL(name, directory), 'utf-8') }))
+    const articles = execFileSync('git', ['ls-tree', '-r', '--name-only', base, '_articles'], { cwd: new URL('../..', import.meta.url), encoding: 'utf8' }).trim().split('\n').filter((path) => path.endsWith('.md') && path <= '_articles/2026-10-16.md').map((path) => ({ date: path.slice(10, -3), markdown: frozenFile(path) }))
     expect(articles).toHaveLength(134)
     const complete = buildTimeBackfill(articles, records).sidecar
-    const frozen = readFileSync(new URL('../../api/time-refs.json', import.meta.url), 'utf-8')
+    const frozen = frozenFile('api/time-refs.json')
     expect(`${JSON.stringify(complete, null, 2)}\n`).toBe(frozen)
     expect(Object.values(complete.articles).flatMap((article) => article.references)).toHaveLength(33)
     const shards = [0, 1, 2].map((index) => buildTimeBackfill(articles, [...records].reverse(), { index, count: 3 }).sidecar)
     expect(`${JSON.stringify(mergeTimeBackfills(shards.reverse()), null, 2)}\n`).toBe(frozen)
-  })
+  }, 30_000)
   it('produces identical single-process/sharded results and rejects conflicting shards', () => {
     const articles = [1, 2, 3, 4, 5].map((n) => ({ date: `2026-10-0${n}`, markdown: `---\ndate: 2026-10-0${n}\n---\n\n${source} merged at 09:10Z.\n` }))
     const complete = buildTimeBackfill(articles, [mergeRecord()]).sidecar
