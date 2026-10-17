@@ -15,6 +15,32 @@ one saved version to one reviewed PR head and article blob. It authorizes one
 attempt through trusted default-branch workflow code. Human merge stays separate.
 The original automatic bot-author loop guard remains on the automatic PR events.
 
+Local notes stay editable while saving, awaiting confirmation, stale, or blocked
+by an outstanding request. Editing, adding/removing notes and copying a prior
+version change only the local draft. An unresolved submitted input retains its
+original UUID and exact payload; local edits do not change an eligible exact retry.
+
+An editorial write failure after valid input parsing includes a strict bound
+response: error, requestId, intent and outcome. rejected_before_append means this
+invocation failed before attempting its GitHub comment append; uncertain means
+the append was attempted and its final result is unconfirmed. Encoding finishes
+before that boundary. GitHub acknowledgment parsing, author validation and the
+complete post-append history load remain uncertain failure phases. HTTP status
+alone is insufficient: both 400 and 409 may follow a durable append. Early
+authentication, CSRF and parser failures retain generic responses and cannot
+release a pending input.
+
+Only a matching explicit rejected_before_append response to the still-live first
+invocation can release its pending input so the owner can correct and save again.
+A retry can have an earlier uncertain append, so rejection of that retry retains
+the same frozen input. Every restored pending input is uncertain; an unreadable
+nonempty stored input is preserved and blocks new writes. Malformed, unbound or
+mismatched responses also retain uncertainty. A fresh explicit history refresh
+can enable an otherwise eligible exact retry or acknowledge a complete historical
+record, including one on an older head. Refresh and remount never submit a POST.
+A moved head or empty history cannot fence an older in-flight append and cannot
+authorize discarding its input or submitting a new UUID.
+
 The consumer compares the pinned PR head against its unique common ancestor with
 the trusted default-branch policy commit. Only the dated regular article may differ,
 and its blob must equal the reviewed request. Missing or ambiguous ancestry blocks
@@ -32,6 +58,12 @@ execute. Expiry does not clear an outstanding request or authorize a fresh attem
 Complete execution history must be available.
 
 Operator diagnosis and unresolved pilot limits
+
+If a submitted comment remains uncertain and cannot be reconciled or safely
+retried, preserve the frozen input and inspect the acceptance PR's GitHub comments
+and relevant Actions runs. Continue editing local notes, but do not reset storage,
+open a new tab, or use a different UUID as a recovery procedure. This pilot has no
+cancel/fence operation, durable attempt ledger or supported reset for uncertainty.
 
 For an uncertain or missing receipt, stop further revision attempts. Preserve the
 request and feedback digests, comment IDs, input head/blob, claim (including any

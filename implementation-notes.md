@@ -1,6 +1,8 @@
 # Implementation notes
 
 ## Deviations
+- 2026-10-17 UIK D1 model: the available core renderer would regenerate the legacy compatibility view with 676 lines of unrelated format churn; the repair classifies response failures without changing pipeline inputs, correspondence outputs or steps, so leave both OPM files unchanged and describe the bounded response contract in the existing continuation document.
+- 2026-10-17 UIK D1: Claude's status-only rejection release assumed 4xx proved no write; actual handler/service probes returned 400/409 after durable appends and an older append crossed a moved-head/empty-history observation, so use a bound phase-aware failure response and release only a still-live initial invocation's explicit pre-append rejection; retain retry/remount uncertainty.
 - 2026-10-17 UIK-03: the design assumed native focus scrolling would keep a growing note visible; the mounted sticky sidebar clipped it to a 0.344 viewport ratio, so height changes now reveal only the active textarea with nearest scrolling; capped keystrokes do not trigger that scroll.
 - 2026-10-16 (time pointer formatting): the storage reader accepted CRLF frontmatter while the editorial protection helper recognized LF only. Independent controls showed pointer replacement could cross that gap; aligned stripping, restoration and body hashing across both line endings before publication.
 - 2026-10-16 (unqualified time sources): the resolver treated a repository's appearance in a compound heading or clause as a qualifier. With another repository's evidence absent, that manufactured uniqueness; require an independently explicit qualifier or a single repository heading within the project namespace.

@@ -6,11 +6,11 @@ import { createFixture, makePullRequest, seedOpenReview, makeComment, today } fr
 vi.mock('../../api/_lib/cookies.js', () => ({ extractToken: () => 'fixture-token' }))
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs() })
 async function invoke(method = 'GET', body?: unknown, csrf = true) {
-  const req = Object.assign(new IncomingMessage(new Socket()), { query: { date: today, view: 'editorial' }, body })
+  const req = Object.assign(new IncomingMessage(new Socket()), { query: { date: today, view: 'editorial' }, cookies: {}, body })
   req.method = method
   if (csrf) req.headers['x-requested-with'] = 'XMLHttpRequest'
   let output: unknown
-  const res = Object.assign(new ServerResponse(req), { status(n: number) { res.statusCode = n; return res }, json(value: unknown) { output = value; return res } })
+  const res = Object.assign(new ServerResponse(req), { status(n: number) { res.statusCode = n; return res }, json(value: unknown) { output = value; return res }, send() { throw new Error('Unexpected send') }, redirect() { throw new Error('Unexpected redirect') } })
   await handler(req, res)
   return { status: res.statusCode, output }
 }

@@ -102,6 +102,11 @@ export const appendEditorialSchema = editorialTarget.extend({ intent: z.literal(
 export const runEditorialSchema = editorialTarget.extend({ intent: z.literal('request_editorial_revision'),
   articleBlobSha: sha, feedbackId: z.uuid(), feedbackDigest: digest }).strict()
 export const editorialInputSchema = z.discriminatedUnion('intent', [appendEditorialSchema, runEditorialSchema])
+export const editorialWriteFailureSchema = z.object({
+  error: z.string(), outcome: z.enum(['rejected_before_append', 'uncertain']), requestId: z.uuid(),
+  intent: z.union([appendEditorialSchema.shape.intent, runEditorialSchema.shape.intent]),
+}).strict()
+export type EditorialWriteFailureResponse = z.infer<typeof editorialWriteFailureSchema>
 export const editorialRecordSchema = z.discriminatedUnion('intent', [
   appendEditorialSchema.extend({ actor: z.literal('ojfbot'), originalBody: z.string() }).strict(),
   runEditorialSchema.extend({ actor: z.literal('ojfbot') }).strict(),
