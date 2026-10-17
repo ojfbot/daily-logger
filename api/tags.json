@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 87
+    "count": 88
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 73
+    "count": 74
   },
   {
     "name": "core",
@@ -17,7 +17,7 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 56
+    "count": 57
   },
   {
     "name": "shell",
@@ -30,24 +30,24 @@
     "count": 37
   },
   {
+    "name": "model-behavior-as-design",
+    "type": "concept",
+    "count": 31
+  },
+  {
     "name": "rest-day",
     "type": "activity",
     "count": 31
   },
   {
-    "name": "model-behavior-as-design",
-    "type": "concept",
+    "name": "hardening",
+    "type": "practice",
     "count": 30
   },
   {
     "name": "adr",
     "type": "practice",
     "count": 30
-  },
-  {
-    "name": "hardening",
-    "type": "practice",
-    "count": 29
   },
   {
     "name": "tooling-for-iteration",
@@ -180,14 +180,14 @@
     "count": 7
   },
   {
-    "name": "ojfbot",
+    "name": "provenance",
     "type": "concept",
     "count": 6
   },
   {
-    "name": "provenance",
+    "name": "ojfbot",
     "type": "concept",
-    "count": 5
+    "count": 6
   },
   {
     "name": "skill-telemetry",
@@ -233,6 +233,11 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
+  },
+  {
+    "name": "editorial-pipeline",
+    "type": "concept",
+    "count": 4
   },
   {
     "name": "seh-study",
@@ -288,11 +293,6 @@
     "name": "node-template",
     "type": "repo",
     "count": 4
-  },
-  {
-    "name": "editorial-pipeline",
-    "type": "concept",
-    "count": 3
   },
   {
     "name": "workstation-yuri",
@@ -353,6 +353,11 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "verification",
+    "type": "concept",
+    "count": 2
   },
   {
     "name": "mc-ux-01",
@@ -513,11 +518,6 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
-  },
-  {
-    "name": "verification",
-    "type": "concept",
-    "count": 1
   },
   {
     "name": "graphql-federation",
