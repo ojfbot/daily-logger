@@ -7,7 +7,7 @@
 1. Sweeping the last 24 h of commits and PRs (both open and closed) across all ojfbot repos via the GitHub API
 2. Aggregating Claude Code skill telemetry (skill-dispositions ledger, suggestion follow-through tracking, and PR skill comments) alongside commit/PR data
 3. Feeding that context to Claude Sonnet with a project-aware system prompt (normal live runs skip generation when no meaningful activity is found; dry runs and `FORCE_RUN` bypass the skip gate)
-4. Committing the resulting article to `articles/YYYY-MM-DD.md` (with a dedicated skill telemetry section)
+4. Committing the resulting article to `_articles/YYYY-MM-DD.md` (with a dedicated skill telemetry section)
 5. Optionally POSTing the article to BlogEngine's API when `BLOGENGINE_API_URL` is set
 The workflow runs on a daily cron scheduled in America/Chicago time and can also be triggered manually with a date override or dry-run flag.
 
@@ -117,7 +117,7 @@ For longer-lived context (roadmap phases, architectural decisions), add a `ROADM
 
 ## Article format
 
-Articles are committed as `articles/YYYY-MM-DD.md` with YAML frontmatter:
+Articles are committed as `_articles/YYYY-MM-DD.md` with YAML frontmatter:
 
 ```yaml
 ---
