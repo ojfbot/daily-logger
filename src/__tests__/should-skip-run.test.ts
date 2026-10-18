@@ -70,6 +70,12 @@ function makeCtx(overrides: Partial<BlogContext> = {}): BlogContext {
 }
 
 describe('shouldSkipRun', () => {
+  it('excludes generated inclusion choices while retaining implementation work', () => {
+    const choice = makeCommit('editor', 'daily-logger', 'editorial: exclude action act-2026-05-10-aabbccddeeff0011')
+    expect(shouldSkipRun(makeCtx({ commits: [choice] })).skip).toBe(true)
+    const implementation = makeCommit('editor', 'daily-logger', 'feat: implement action inclusion controls')
+    expect(shouldSkipRun(makeCtx({ commits: [choice, implementation] })).skip).toBe(false)
+  })
   it('skips when there is no activity at all', () => {
     const decision = shouldSkipRun(makeCtx())
     expect(decision.skip).toBe(true)

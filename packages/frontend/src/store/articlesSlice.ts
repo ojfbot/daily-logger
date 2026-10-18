@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import type { EntryData, TagCount, RepoStats, ActionItem } from './types.ts'
+import type { ActionRecord, ProposedAction } from '../../../../src/action-registry-schema.ts'
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
 
@@ -12,6 +13,7 @@ async function fetchJSON<T>(path: string): Promise<T> {
 export interface ArticleDetail extends EntryData {
   bodyHtml: string
   sourceBlobSha?: string
+  actionSuggestions?: ActionRecord[]
 }
 
 export const fetchEntries = createAsyncThunk('articles/fetchEntries', () =>
@@ -34,6 +36,8 @@ export const fetchDoneActions = createAsyncThunk('articles/fetchDoneActions', ()
   fetchJSON<ActionItem[]>('/api/done-actions.json').catch(() => []),
 )
 
+export const fetchProposedActions = createAsyncThunk('articles/fetchProposedActions', () => fetchJSON<ProposedAction[]>('/api/proposed-actions.json'))
+
 export const fetchArticle = createAsyncThunk(
   'articles/fetchArticle',
   (date: string) => fetchJSON<ArticleDetail>(`/api/articles/${date}.json`),
@@ -45,10 +49,12 @@ interface ArticlesState {
   repos: RepoStats[]
   actions: ActionItem[]
   doneActions: ActionItem[]
+  proposedActions: ProposedAction[]
   articleCache: Record<string, ArticleDetail>
   articleLoading: boolean
   loading: boolean
   error: string | null
+  proposedError: string | null
 }
 
 const initialState: ArticlesState = {
@@ -57,10 +63,12 @@ const initialState: ArticlesState = {
   repos: [],
   actions: [],
   doneActions: [],
+  proposedActions: [],
   articleCache: {},
   articleLoading: false,
   loading: false,
   error: null,
+  proposedError: null,
 }
 
 export const articlesSlice = createSlice({
@@ -76,6 +84,8 @@ export const articlesSlice = createSlice({
       .addCase(fetchRepos.fulfilled, (state, action) => { state.repos = action.payload })
       .addCase(fetchActions.fulfilled, (state, action) => { state.actions = action.payload })
       .addCase(fetchDoneActions.fulfilled, (state, action) => { state.doneActions = action.payload })
+      .addCase(fetchProposedActions.fulfilled, (state, action) => { state.proposedActions = action.payload; state.proposedError = null })
+      .addCase(fetchProposedActions.rejected, (state) => { state.proposedError = 'Proposed action state could not be loaded' })
       .addCase(fetchArticle.pending, (state) => { state.articleLoading = true })
       .addCase(fetchArticle.fulfilled, (state, action) => {
         state.articleCache[action.payload.date] = action.payload

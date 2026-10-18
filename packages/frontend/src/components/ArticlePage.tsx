@@ -16,6 +16,7 @@ import type { DiscussionAvailability } from './IndependentArticleReviews.tsx'
 import { EditorialSidebar } from './EditorialSidebar.tsx'
 import { ArticleProvenanceDetails } from './ArticleProvenanceDetails.tsx'
 import { DiscussionDrafts, usePageDiscussionDrafts } from './DiscussionDrafts.tsx'
+import { ArticleActions } from './ArticleActions.tsx'
 
 export function ArticlePage() {
   const { date } = useParams<{ date: string }>()
@@ -27,6 +28,7 @@ export function ArticlePage() {
   const contentRef = useRef<HTMLDivElement>(null)
   const [sectionHeadings, setSectionHeadings] = useState<string[]>([])
   const [discussionObservation, setDiscussionObservation] = useState<{ context: string; availability: DiscussionAvailability } | null>(null)
+  const [actionChoicesReady, setActionChoicesReady] = useState(false)
   const isMobile = useIsMobile()
 
   const entry = entries.find((e) => e.date === date)
@@ -215,6 +217,8 @@ export function ArticlePage() {
             !articleLoading && <article className="article-content"><p>Article not found.</p></article>
           )}
 
+          {date && <ArticleActions date={date} records={article?.actionSuggestions ?? []} login={authUser?.authorized ? authUser.login : undefined} visibleBlobSha={article?.sourceBlobSha} draft={isDraft} onReadyChange={setActionChoicesReady} />}
+
           {/* Static article JSON is public; auth controls disclosure density, not data security. */}
           {authUser?.authorized && (
             <ArticleProvenanceDetails
@@ -256,7 +260,7 @@ export function ArticlePage() {
             ))}
             {authUser?.authorized && <IndependentArticleReviews key={`${authUser.login}:${date}:${article?.sourceBlobSha ?? 'unknown'}`} date={date} visibleBlobSha={article?.sourceBlobSha} login={authUser.login} onDiscussionAvailabilityChange={updateDiscussionAvailability} />}
             {isDraft && (
-              <EditorialSidebar date={date} articleTitle={displayEntry?.title ?? ''} visibleBlobSha={article?.sourceBlobSha} />
+              <EditorialSidebar date={date} articleTitle={displayEntry?.title ?? ''} visibleBlobSha={article?.sourceBlobSha} actionChoicesReady={!article?.actionSuggestions?.some(record => record.origin === 'suggested' && record.introducedBy === date && ['open', 'proposed'].includes(record.state)) || actionChoicesReady} />
             )}
           </div>
         )}

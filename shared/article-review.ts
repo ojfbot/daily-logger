@@ -114,7 +114,7 @@ export const editorialRecordSchema = z.discriminatedUnion('intent', [
 export const editorialHistorySchema = z.object({ record: editorialRecordSchema, digest,
   commentId: z.number().int().positive(), url: githubUrl, createdAt: z.iso.datetime(), duplicateUrls: z.array(githubUrl) }).strict()
 export const editorialProjectionSchema = z.discriminatedUnion('status', [
-  z.object({ status: z.literal('none') }).strict(),
+  z.object({ status: z.literal('none'), stagedHeadSha: sha.optional() }).strict(),
   z.object({ status: z.literal('existing'), eligible: z.boolean(), reason: z.string(), originalBody: z.string(), originalDigest: digest,
     pullRequest: pullRequestSchema, article: z.object({ blobSha: sha, text: z.string() }).strict(),
     versions: z.array(editorialHistorySchema), requests: z.array(editorialHistorySchema), outstanding: z.boolean() }).strict(),

@@ -150,13 +150,17 @@ describe('editorial revision notes', () => {
   it('preserves nonblank root-note whitespace through the real HTTP PR body and omits blank notes', async () => {
     const actual = await vi.importActual<typeof import('../../utils/stampDraft.ts')>('../../utils/stampDraft.ts')
     vi.mocked(stampDraft).mockImplementation(actual.stampDraft)
-    const request = vi.fn<typeof fetch>()
-      .mockResolvedValueOnce(new Response('{}', { status: 404 }))
-      .mockResolvedValueOnce(Response.json({ content: btoa('---\nstatus: "draft"\n---\nFriday'), sha: 'article-sha' }))
-      .mockResolvedValueOnce(Response.json({ object: { sha: 'main-sha' } }))
-      .mockResolvedValueOnce(Response.json({}))
-      .mockResolvedValueOnce(Response.json({}))
-      .mockResolvedValueOnce(Response.json({ number: 42, html_url: 'https://github.com/ojfbot/daily-logger/pull/42' }))
+    const request = vi.fn<typeof fetch>(async (input, options) => {
+      const path = String(input), method = options?.method ?? 'GET'
+      if (path.includes('/api/article-reviews')) return Response.json({ status: 'none' })
+      if (path.includes('/git/refs/heads/accept/') && method === 'GET') return new Response('{}', { status: 404 })
+      if (path.includes('/contents/')) return Response.json({ content: btoa('---\nstatus: "draft"\n---\nFriday'), sha: 'article-sha' })
+      if (path.includes('/git/refs/heads/main')) return Response.json({ object: { sha: 'main-sha' } })
+      if (path.includes('/git/commits/') && method === 'GET') return Response.json({ tree: { sha: 'tree-sha' } })
+      if (path.endsWith('/git/trees') || path.endsWith('/git/commits')) return Response.json({ sha: 'prepared-sha' })
+      if (path.endsWith('/pulls')) return Response.json({ number: 42, html_url: 'https://github.com/ojfbot/daily-logger/pull/42' })
+      return Response.json({})
+    })
     vi.stubGlobal('fetch', request)
     const literal = ' \t\nHTTP first\n---\n## Section: Not a section\n<!-- EDITORIAL_FEEDBACK_END -->\n雪\n \t '
     await enter(0, literal)

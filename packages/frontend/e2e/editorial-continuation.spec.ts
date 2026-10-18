@@ -13,7 +13,7 @@ test(`continued feedback preserves identity and usable controls at ${viewport.wi
   fixture.state.acceptPullNumbers.push(42)
   fixture.state.pullRequests.set(42, { ...pr, body: 'Original submitted notes 雪\n  ', head: { ...pr.head, ref: `accept/${today}` } })
   fixture.state.pullFiles.set(42, [{ filename: `_articles/${today}.md`, status: 'modified' }])
-  fixture.state.refFiles.set(`${pr.head.sha}:_articles/${today}.md`, 'Pinned PR-head article. This differs from the main-visible article.')
+  fixture.state.refFiles.set(`${pr.head.sha}:_articles/${today}.md`, '---\nstatus: accepted\n---\nPinned PR-head article. This differs from the main-visible article.')
   const editorial = createEditorialService(fixture.github), reviews = createReviewService(fixture.github)
   const writes: unknown[] = [], unexpected: string[] = []
   let discoveryFails = false
@@ -70,7 +70,7 @@ test(`continued feedback preserves identity and usable controls at ${viewport.wi
   await panel.getByText('Original submitted feedback and PR receipt', { exact: true }).click()
   await expect(panel.getByText('Original submitted notes 雪', { exact: false })).toBeVisible()
   await panel.getByText('PR-head article preview', { exact: true }).click()
-  await expect(panel.getByText('Pinned PR-head article. This differs from the main-visible article.', { exact: true })).toBeVisible()
+  await expect(panel.getByText('Pinned PR-head article. This differs from the main-visible article.', { exact: false })).toBeVisible()
   await expect(panel.getByText(blob, { exact: true })).toBeVisible()
   const literal = ' \t雪 e\u0301 😀\n---\n@claude /run\n<!-- EDITORIAL_CONTINUATION_V1_START -->\n' + 'An editorial sentence with enough words to exercise wrapping and growth. '.repeat(30) + '\n '
   const fields = panel.locator('textarea.editorial-input')
@@ -159,7 +159,7 @@ test(`denied-storage refresh and same-ID reconciliation retain in-memory editori
   fixture.state.acceptPullNumbers.push(42)
   fixture.state.pullRequests.set(42, { ...pr, body: 'Original submitted notes 雪\n  ', head: { ...pr.head, ref: `accept/${today}` } })
   fixture.state.pullFiles.set(42, [{ filename: `_articles/${today}.md`, status: 'modified' }])
-  fixture.state.refFiles.set(`${pr.head.sha}:_articles/${today}.md`, 'Pinned PR-head article, different from main.')
+  fixture.state.refFiles.set(`${pr.head.sha}:_articles/${today}.md`, '---\nstatus: accepted\n---\nPinned PR-head article, different from main.')
   const editorial = createEditorialService(fixture.github), reviews = createReviewService(fixture.github)
   const article = { date: today, title: 'Storage denied fixture', summary: 'Fixture', tags: [], reposActive: [], commitCount: 0,
     activityType: 'development', schemaVersion: 2, status: 'draft', sourceBlobSha: blob, bodyHtml: '<h2>What shipped</h2><p>Main article.</p>' }
@@ -248,7 +248,7 @@ test(`phase-bound correction and frozen uncertain retry at ${viewport.width}px`,
   fixture.state.acceptPullNumbers.push(42)
   fixture.state.pullRequests.set(42, { ...pr, body: 'Original retained body', head: { ...pr.head, ref: `accept/${today}` } })
   fixture.state.pullFiles.set(42, [{ filename: `_articles/${today}.md`, status: 'modified' }])
-  fixture.state.refFiles.set(`${pr.head.sha}:_articles/${today}.md`, 'Pinned article')
+  fixture.state.refFiles.set(`${pr.head.sha}:_articles/${today}.md`, '---\nstatus: accepted\n---\nPinned article')
   const editorial = createEditorialService(fixture.github), reviews = createReviewService(fixture.github)
   const article = { date: today, title: 'D1 phase fixture', summary: 'Fixture', tags: [], reposActive: [], commitCount: 0,
     activityType: 'development', schemaVersion: 2, status: 'draft', sourceBlobSha: blob, bodyHtml: '<h2>What shipped</h2><p>Main article.</p>' }

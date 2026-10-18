@@ -13,12 +13,12 @@ ARTICLE = '_articles/2026-10-09.md'
 class EditorialBoundaryTests(unittest.TestCase):
     def test_article_only_allowed_and_code_or_symlink_changes_rejected(self):
         workflow = WORKFLOW.read_text()
-        blocks = re.findall(r'      - name: Require article-only changes before running PR code\n(.*?)(?=      - name:)', workflow, re.S)
+        blocks = re.findall(r'      - name: Require article and action data only before running PR code\n(.*?)(?=      - name:)', workflow, re.S)
         self.assertEqual(len(blocks), 2)
         for block in blocks:
             command = block.split('        run: |\n', 1)[1]
             command = '\n'.join(line[10:] for line in command.splitlines())
-            for change in ['article', 'code', 'symlink']:
+            for change in ['article', 'article_and_registry', 'code', 'symlink', 'registry_symlink', 'other_action_file']:
                 with self.subTest(change=change), tempfile.TemporaryDirectory() as directory:
                     root = Path(directory)
                     def git(*args):
@@ -29,6 +29,8 @@ class EditorialBoundaryTests(unittest.TestCase):
                     (root / '_articles').mkdir()
                     (root / ARTICLE).write_text('original article')
                     (root / 'package.json').write_text('{}')
+                    (root / 'actions/articles').mkdir(parents=True)
+                    (root / 'actions/articles/2026-10-09.json').write_text('{}')
                     git('add', '.')
                     git('commit', '-qm', 'base')
                     base = git('rev-parse', 'HEAD')
@@ -38,15 +40,22 @@ class EditorialBoundaryTests(unittest.TestCase):
                         (root / 'package.json').write_text('{"scripts":{"postinstall":"malicious"}}')
                     if change == 'symlink':
                         (root / ARTICLE).unlink()
-                        (root / ARTICLE).symlink_to('../package.json')
+                        (root / ARTICLE).symlink_to('../../package.json')
+                    if change == 'article_and_registry':
+                        (root / 'actions/articles/2026-10-09.json').write_text('{"updated":true}')
+                    if change == 'registry_symlink':
+                        (root / 'actions/articles/2026-10-09.json').unlink()
+                        (root / 'actions/articles/2026-10-09.json').symlink_to('../../package.json')
+                    if change == 'other_action_file':
+                        (root / 'actions/execute.ts').write_text('throw new Error("unexpected code")')
                     git('add', '.')
                     git('commit', '-qm', 'accept draft')
                     head = git('rev-parse', 'HEAD')
                     git('checkout', '--detach', base)
                     result = subprocess.run(['bash', '-eo', 'pipefail', '-c', command], cwd=root,
-                                            env={**os.environ, 'BASE_SHA': base, 'ARTICLE_PATH': ARTICLE, 'HEAD_SHA': head, 'HEAD_BRANCH': 'accept/2026-10-09'},
+                                            env={**os.environ, 'BASE_SHA': base, 'ARTICLE_PATH': ARTICLE, 'HEAD_SHA': head, 'HEAD_BRANCH': 'accept/2026-10-09', 'RUNNER_TEMP': str(root), 'GITHUB_ENV': str(root / '.github-env')},
                                             capture_output=True, text=True)
-                    self.assertEqual(result.returncode, 0 if change == 'article' else 1, result.stderr)
+                    self.assertEqual(result.returncode, 0 if change in ['article', 'article_and_registry'] else 1, result.stderr)
 
                     if change == 'article':
                         self.assertEqual(git('rev-parse', 'HEAD'), head)
