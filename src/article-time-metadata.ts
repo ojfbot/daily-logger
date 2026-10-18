@@ -68,6 +68,7 @@ export function parseTimeReferenceSidecar(raw: unknown) { return TimeReferenceSi
 /** Legacy claims have no authority: current prose must independently resolve to the same source, event, day and instant. */
 export function articleTimeMetadata(input: {
   content: string
+  bindingContent?: string
   records?: TimeRecord[]
   sidecar?: { bodySha256: string; references: TimeReference[] }
 }): ArticleTimeResult {
@@ -90,7 +91,7 @@ export function articleTimeMetadata(input: {
     }
   }
   if (input.sidecar) {
-    if (input.sidecar.bodySha256 !== articleBodySha256(input.content)) warnings.push('Stale time-reference backfill; current prose has changed')
+    if (input.sidecar.bodySha256 !== articleBodySha256(input.bindingContent ?? input.content)) warnings.push('Stale time-reference backfill; current prose has changed')
     else {
       const parsed = TimeReferenceSchema.array().max(512).safeParse(input.sidecar.references)
       if (parsed.success) groups.push(parsed.data)
@@ -211,7 +212,7 @@ export function persistGeneratedTime(input: { repoRoot: string; prepared: Prepar
 }
 
 /** Admission uses the caller's root exclusively; neither cache candidates nor model fields supply source facts. */
-export function readArticleTime(input: { repoRoot: string; date: string; markdown: string }): ArticleTimeResult {
+export function readArticleTime(input: { repoRoot: string; date: string; markdown: string; bindingMarkdown?: string }): ArticleTimeResult {
   const warnings: string[] = []
   const empty = () => ({ ...resolveTimeReferences(input.markdown, []), warnings: boundedWarnings(warnings) })
   if (!validDate(input.date) || articleDate(input.markdown) !== input.date) { warnings.push('Invalid or mismatched article date; no Git time evidence admitted'); return empty() }
@@ -245,6 +246,6 @@ export function readArticleTime(input: { repoRoot: string; date: string; markdow
     if (!parsed.success) throw new Error('Invalid historical sidecar')
     sidecar = parsed.data.articles[input.date]
   } catch { warnings.push('Historical time-reference backfill unavailable or invalid') }
-  const result = articleTimeMetadata({ content: input.markdown, records, sidecar })
+  const result = articleTimeMetadata({ content: input.markdown, bindingContent: input.bindingMarkdown, records, sidecar })
   return { ...result, warnings: boundedWarnings([...warnings, ...result.warnings]) }
 }

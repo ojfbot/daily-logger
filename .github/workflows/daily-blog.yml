@@ -36,6 +36,9 @@ env:
   DAILY_BLOG_SCHEDULE: '30 3 * * *'
   DAILY_BLOG_TIMEZONE: America/Chicago
 
+env:
+  ACTION_REVIEW_DISABLED: ${{ vars.ACTION_REVIEW_DISABLED }}
+
 jobs:
   generate:
     name: Generate & open PR
@@ -175,7 +178,7 @@ jobs:
           fi
 
           git checkout -b "${BRANCH}"
-          git add _articles/ api/
+          git add _articles/ api/ "actions/articles/$DATE.json"
 
           if git diff --staged --quiet; then
             echo "::notice::No article changes staged."

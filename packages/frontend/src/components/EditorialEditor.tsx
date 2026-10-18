@@ -9,6 +9,7 @@ interface Props {
   date: string
   articleTitle: string
   visibleBlobSha?: string
+  actionChoicesReady?: boolean
 }
 
 type StampState = 'idle' | 'loading' | 'success' | 'error'
@@ -32,7 +33,7 @@ function readDraft(key: string): string[] {
   return ['']
 }
 
-export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: Props & { login: string }) {
+export function EditorialEditor({ date, articleTitle, visibleBlobSha, login, actionChoicesReady = true }: Props & { login: string }) {
   const { threads, threadOrder } = useAppSelector((s) => s.chat)
   const storageKey = `dl-editorial:${login}:${date}`
   const [entries, setEntries] = useState<Note[]>(() => readDraft(storageKey).map((content, id) => ({ id, content })))
@@ -85,7 +86,7 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
   const hasFeedback = suggestions.length > 0 || articleThreads.length > 0
 
   async function handleAccept() {
-    if (discoveryFreshness !== 'fresh' || discovery?.status !== 'none') return
+    if (!actionChoicesReady || discoveryFreshness !== 'fresh' || discovery?.status !== 'none') return
     setState('loading')
     setErrorMsg(null)
 
@@ -207,7 +208,7 @@ export function EditorialEditor({ date, articleTitle, visibleBlobSha, login }: P
       <button
         className={`stamp-draft-btn${state === 'error' ? ' stamp-error' : ''}${hasFeedback ? ' has-feedback' : ''}`}
         onClick={handleAccept}
-        disabled={state === 'loading' || discoveryFreshness !== 'fresh' || discovery?.status !== 'none'}
+        disabled={state === 'loading' || !actionChoicesReady || discoveryFreshness !== 'fresh' || discovery?.status !== 'none'}
       >
         {state === 'loading'
           ? 'OPENING PR...'

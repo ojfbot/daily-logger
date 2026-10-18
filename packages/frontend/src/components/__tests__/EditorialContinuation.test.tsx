@@ -1,5 +1,6 @@
 /// <reference types="node" />
 // @vitest-environment jsdom
+import { emptyActionFile } from '../../../../../src/__tests__/action-store-fixture.js'
 import { act, createElement, useLayoutEffect } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
@@ -33,7 +34,10 @@ async function fixture() {
     if (path.includes('/pulls/42')) return Response.json(pr)
     if (path.includes('/pulls?')) return Response.json([pr])
     if (path.includes('/git/ref/heads/main')) return Response.json({ object: { sha: 'c'.repeat(40) } })
-    if (path.includes('/contents/')) return Response.json({ type: 'file', encoding: 'base64', sha: path.endsWith('c'.repeat(40)) ? blob : 'd'.repeat(40), content: Buffer.from('Pinned revised article, different from main').toString('base64') })
+    if (path.includes('/git/commits/')) return Response.json({ tree: { sha: 'f'.repeat(40) } })
+    if (path.includes('/git/trees/')) return Response.json({ truncated: false, tree: path.endsWith('f'.repeat(40)) ? [{ path: '_articles', mode: '040000', sha: '0'.repeat(40) }, { path: 'actions', mode: '040000', sha: '1'.repeat(40) }] : path.endsWith('0'.repeat(40)) ? [{ path: `${today}.md`, mode: '100644', sha: 'd'.repeat(40) }] : path.endsWith('1'.repeat(40)) ? [{ path: 'articles', mode: '040000', sha: '2'.repeat(40) }] : [{ path: `${today}.json`, mode: '100644', sha: 'e'.repeat(40) }] })
+    if (path.includes('/contents/actions/articles/')) return Response.json({ type: 'file', encoding: 'base64', sha: 'e'.repeat(40), content: Buffer.from(JSON.stringify(emptyActionFile(today))).toString('base64') })
+    if (path.includes('/contents/')) return Response.json({ type: 'file', encoding: 'base64', sha: path.endsWith('c'.repeat(40)) ? blob : 'd'.repeat(40), content: Buffer.from('---\nstatus: accepted\n---\nPinned revised article, different from main').toString('base64') })
     throw new Error(`Unexpected ${path}`)
   } }
   const service = createEditorialService(f.github)

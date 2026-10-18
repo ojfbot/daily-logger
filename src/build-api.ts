@@ -14,18 +14,13 @@ import { createHash } from 'crypto'
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
-import { renderArticle } from './render-article.js'
 import { ARTICLE_OUTCOMES, type CodeReference } from './schema.js'
 import { parseArticleProvenance, type ArticleProvenance } from './run-provenance.js'
 import { readArticleTime } from './article-time-metadata.js'
 import type { TimeReference } from './time-references.js'
-import {
-  CanonicalActionArraySchema,
-  assertNoReviewedActionClosures,
-  legacyActionKey,
-  type CanonicalAction,
-} from './action-model.js'
-import { projectActionIntake, type ActionIntakeProjection } from './action-intake.js'
+import { type CanonicalAction } from './action-model.js'
+import { verifyRecordedAdmissions } from './action-intake.js'
+import { readActionRegistry, projectRegistry, renderArticleActions, articleActionRecords, renderArticleActionHtml, stripManagedActions } from './action-registry.js'
 
 import { KNOWN_REPOS } from './fleet.js'
 
@@ -209,7 +204,8 @@ function classifyTag(name: string): TypedTag {
 
 export interface BuildApiResult {
   openActions: readonly CanonicalAction[]
-  intake: ActionIntakeProjection
+  proposedActions: ReturnType<typeof projectRegistry>['proposed']
+  intake: { reviewedActions: readonly CanonicalAction[]; historicalHeldCount: number }
 }
 
 export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
@@ -240,8 +236,12 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
       content,
     }
   })
-  const intake = projectActionIntake({ repoRoot, articles: articleSources })
-  const allActions: CanonicalAction[] = []
+  const registry = readActionRegistry(repoRoot)
+  verifyRecordedAdmissions(repoRoot, registry.records.map(record => record.original))
+  const statuses = new Map(articleSources.map(source => [source.date, String(parseFrontmatter(source.content).status ?? 'draft')]))
+  const projection = projectRegistry(registry, statuses)
+  const openActions = projection.open
+  const intake = { reviewedActions: registry.records.filter(record => 'review' in record.original && record.original.review).map(record => record.original), historicalHeldCount: registry.baseline.heldSuggestions.length }
   const tagCounts = new Map<string, { type: string; count: number }>()
   const repoStats = new Map<string, { articleCount: number; totalCommits: number; tags: Set<string> }>()
 
@@ -250,10 +250,11 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
     if (!source) throw new Error(`Article source disappeared during API build: ${file}`)
     const content = source.content
     const fm = parseFrontmatter(content)
-    const body = content.replace(/^---[\s\S]*?---\n/, '')
+    const narrative = stripManagedActions(content)
+    const body = narrative.replace(/^---[\s\S]*?---\n/, '')
     const date = (fm.date as string) ?? file.replace('.md', '')
 
-    const timeMetadata = readArticleTime({ repoRoot, date: file.replace(/\.md$/, ''), markdown: content })
+    const timeMetadata = readArticleTime({ repoRoot, date: file.replace(/\.md$/, ''), markdown: narrative, bindingMarkdown: content })
     for (const warning of timeMetadata.warnings) console.warn(`::warning::${date}: ${warning}`)
     for (const missing of timeMetadata.unresolved) console.warn(`::warning::${date}: time ${missing.text} occurrence ${missing.occurrence}: ${missing.reason}`)
 
@@ -277,8 +278,8 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
       : countCommitsInBody(body)
 
     // Actions
-    const actions = [...(intake.byArticlePath.get(source.path) ?? [])]
-    allActions.push(...actions)
+    const snapshot = registry.articles.find(snapshot => snapshot.date === date)
+    const actions = snapshot ? registry.records.filter(record => snapshot.actionKeys.includes(record.key)).map(record => record.original) : registry.baseline.articleActions[date] ?? []
 
     // Decisions
     const decisions = extractDecisionsFromBody(body)
@@ -340,16 +341,8 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
     }
   }
 
-  const donePath = join(apiDir, 'done-actions.json')
-  const doneItems = existsSync(donePath)
-    ? CanonicalActionArraySchema.parse(JSON.parse(readFileSync(donePath, 'utf-8')))
-    : []
-  assertNoReviewedActionClosures(doneItems, allActions)
-  const doneIds = new Set(doneItems.flatMap((item) => item.id ? [item.id] : []))
-  const doneLegacyKeys = new Set(doneItems.map(legacyActionKey))
-  const openActions = allActions.filter(
-    (action) => !(action.id && doneIds.has(action.id)) && !doneLegacyKeys.has(legacyActionKey(action)),
-  )
+  // Validate every action binding before writing any projection.
+  for (const source of articleSources) renderArticleActions(source.content, registry, source.date, statuses)
 
   // No output changes occur until all admissions, source proofs, evidence and
   // closure guards have passed.
@@ -361,15 +354,14 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
     const source = articleSources.find((article) => article.path === `_articles/${file}`)
     if (!source) throw new Error(`Article source disappeared during API write: ${file}`)
     const content = source.content
-    const body = content.replace(/^---[\s\S]*?---\n/, '')
     const date = file.replace('.md', '')
     const entry = entries.find((e) => e.date === date)
     if (!entry) continue
 
-    const bodyHtml = renderArticle(body)
+    const bodyHtml = renderArticleActionHtml(content, registry, date, statuses)
     writeFileSync(
       join(articlesApiDir, `${date}.json`),
-      JSON.stringify({ ...entry, sourceBlobSha: createHash('sha1').update(`blob ${Buffer.byteLength(content)}\0`).update(content).digest('hex'), bodyHtml }, null, 2),
+      JSON.stringify({ ...entry, actionSuggestions: articleActionRecords(registry, date, statuses), sourceBlobSha: createHash('sha1').update(`blob ${Buffer.byteLength(content)}\0`).update(content).digest('hex'), bodyHtml }, null, 2),
     )
   }
   console.log(`  articles/    — ${files.length} per-article JSON files`)
@@ -377,6 +369,9 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
   // Write entries.json
   writeFileSync(join(apiDir, 'entries.json'), JSON.stringify(entries, null, 2))
   writeFileSync(join(apiDir, 'actions.json'), JSON.stringify(openActions, null, 2))
+  writeFileSync(join(apiDir, 'done-actions.json'), JSON.stringify(projection.done, null, 2))
+  writeFileSync(join(apiDir, 'proposed-actions.json'), JSON.stringify(projection.proposed, null, 2))
+  writeFileSync(join(apiDir, 'action-dispositions.json'), JSON.stringify(projection.dispositions, null, 2))
 
   // Write tags.json
   const tagsArr: TagCount[] = [...tagCounts.entries()]
@@ -397,11 +392,11 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
 
   console.log(`API built:`)
   console.log(`  entries.json — ${entries.length} articles`)
-  console.log(`  actions.json — ${openActions.length} open actions (${allActions.length - openActions.length} filtered as done)`)
+  console.log(`  actions.json — ${openActions.length} open; ${projection.done.length} completed; ${projection.proposed.length} proposed`)
   console.log(`    reviewed — ${intake.reviewedActions.length} admitted; ${intake.historicalHeldCount} historical held`)
   console.log(`  tags.json    — ${tagsArr.length} unique tags`)
   console.log(`  repos.json   — ${reposArr.length} repos`)
-  return { openActions, intake }
+  return { openActions, proposedActions: projection.proposed, intake }
 }
 
 // Run directly

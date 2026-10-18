@@ -42,6 +42,7 @@ vi.mock('../../hooks/useEntries.ts', () => ({
       },
     }],
     doneActions: [],
+    proposedActions: [],
     loading: false,
     error: null,
   }),

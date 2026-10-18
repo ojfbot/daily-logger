@@ -13,7 +13,7 @@ function occurredInWindow(timestamp: string | undefined, window: ActivityWindow)
 
 function isArticleEditorialCommit(commit: CommitInfo): boolean {
   return commit.repo === 'daily-logger' &&
-    (ARTICLE_EDITORIAL_COMMIT.test(commit.message) || ARTICLE_EDITORIAL_MERGE.test(commit.message))
+    (ARTICLE_EDITORIAL_COMMIT.test(commit.message) || ARTICLE_EDITORIAL_MERGE.test(commit.message) || /^editorial: (?:include|exclude) action act-\d{4}-\d{2}-\d{2}-[a-f0-9]{16}(?: \(#\d+\))?$/.test(commit.message))
 }
 
 function generatedPRKind(pr: RecentPRInfo): 'article' | 'clean' | null {

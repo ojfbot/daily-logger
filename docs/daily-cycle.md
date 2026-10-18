@@ -24,14 +24,16 @@ identified in this investigation. Its intake remains unresolved, not disproven.
 | Activity-window bounds | `src/activity-window.ts` |
 | Issue query, ordering, and body previews | `src/collect-context.ts` |
 | Article prompt and suggested output | `src/generate-article.ts` |
-| Action identities, reviewed dispositions, and closure guard | `src/action-model.ts`, `src/schema.ts`, `src/index.ts` |
+| Action identities, reviewed dispositions, and closure guard | `actions/registry.json`, `src/action-registry-schema.ts`, `src/review-actions.ts` |
 | Reviewed argument-bearing admission and source proof | `action-admissions/`, `src/action-intake.ts`, `docs/action-intake.md` |
-| Cross-article canonical projection | `src/build-api.ts`, `api/actions.json`, `api/done-actions.json` |
+| Cross-article canonical projection | `src/action-registry.ts`, `src/build-api.ts`, `api/actions.json`, `api/done-actions.json`, `api/proposed-actions.json` |
 
 The October 15 repair admits only its three reviewed argument-bearing suggestions.
-It preserves the existing 85 action rows and IDs, while 138 earlier omissions remain
-held pending a separate admission decision. Reviewed dispositions are context, not
-execution or settlement authority; only `api/done-actions.json` records closure.
+The registry cutover preserves 88 open and 125 completed rows, while 138 earlier
+omissions remain held pending a separate admission decision. Protected reviewed
+dispositions are context, not execution or settlement authority. Verified article
+receipts govern new admission and ordinary dispositions. Static APIs project those
+records; prose does not admit or close work. See [Action intake](action-intake.md).
 
 The October 10 source snapshot fetches 30 recently updated open issue/PR records
 per repo before excluding PRs. It prioritizes active issues and retains at most

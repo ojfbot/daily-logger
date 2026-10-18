@@ -6,6 +6,12 @@
 
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;700&display=swap');
 
+.action-history-card, .article-action-options { border: 1px solid var(--border); background: var(--bg-alt); padding: 1rem; margin: 1.5rem 0; }
+.action-history-card { overflow-wrap: anywhere; }
+.action-history-card article + article, .article-action-option + .article-action-option { border-top: 1px solid var(--border); margin-top: 1rem; padding-top: 1rem; }
+.article-action-option label { display: flex; align-items: center; gap: .6rem; min-height: 44px; }
+.article-action-option input { width: 18px; height: 18px; accent-color: var(--text); }
+
 /* ─── Color tokens ───────────────────────────────────────────────────────── */
 
 :root {

@@ -30,7 +30,8 @@ import type {
   CleanProposal,
   StructuredCleanContext,
 } from './types.js'
-import { CanonicalActionArraySchema, isReviewedAction } from './action-model.js'
+import { isReviewedAction } from './action-model.js'
+import { readRegistryProjection } from './action-registry.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
@@ -132,18 +133,11 @@ export function loadStructuredContext(date: string, org: string): StructuredClea
   }
 
   // Read open actions
-  const actionsPath = join(API_DIR, 'actions.json')
-  let openActions: CleanOpenAction[] = []
-  if (existsSync(actionsPath)) {
-    openActions = CanonicalActionArraySchema.parse(JSON.parse(readFileSync(actionsPath, 'utf-8')))
-  }
+  const projection = readRegistryProjection(REPO_ROOT)
+  const openActions: CleanOpenAction[] = projection.open
 
   // Read done actions
-  const donePath = join(API_DIR, 'done-actions.json')
-  let doneActions: CleanDoneAction[] = []
-  if (existsSync(donePath)) {
-    doneActions = CanonicalActionArraySchema.parse(JSON.parse(readFileSync(donePath, 'utf-8')))
-  }
+  const doneActions: CleanDoneAction[] = projection.done
 
   const todayEntry = entries.find((e) => e.date === date)
   if (!todayEntry && entries.length === 0) {
@@ -197,7 +191,7 @@ export function formatActions(
       if (kind === 'done' && 'resolution' in a && a.resolution) {
         return `- ${a.command} — "${a.description.slice(0, 80)}" — resolved ${a.closedDate}: "${a.resolution}"`
       }
-      return `- ${a.command} — "${a.description.slice(0, 100)}"`
+      return `- ${a.command} — "${('currentDescription' in a ? a.currentDescription : undefined) ?? a.description}"`
     })
     .join('\n')
 }

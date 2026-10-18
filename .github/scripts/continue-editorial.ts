@@ -6,6 +6,16 @@ import { z } from 'zod'
 import { createEditorialService, decodeEditorial, editorialDigest, repo, revisionTitle } from '../../api/_lib/editorial-continuation.js'
 import { createReviewSource, githubCommentSchema, ReviewError, type GitHub } from '../../api/_lib/article-review-sources.js'
 import { runEditorialSchema, sha } from '../../shared/article-review.js'
+import { ArticleActionFileSchema } from '../../src/action-registry-schema.js'
+import { editorialProofSchema, verifyEditorialProof } from '../../shared/editorial-action-proof.js'
+import { admitActionRegistry } from './editorial-action-registry.js'
+
+const registryPath = (articlePath: string) => `actions/articles/${articlePath.match(/([0-9-]+)\.md$/)?.[1]}.json`
+function editorialPaths(articlePath: string, changed: string) { return changed.split('\n').filter(Boolean).every(path => [articlePath, registryPath(articlePath)].includes(path)) }
+function regularBlob(workspace: string, ref: string, path: string) {
+  if (git(workspace, 'ls-tree', ref, '--', path).split(' ')[0] !== '100644') throw new ReviewError(409, 'Only the pinned regular article and canonical registry are allowed; rebase pre-cutover acceptance branches before requesting revision.')
+  return git(workspace, 'rev-parse', `${ref}:${path}`)
+}
 
 const eventSchema = z.object({ action: z.literal('created'), repository: z.object({ full_name: z.literal('ojfbot/daily-logger') }),
   sender: z.object({ login: z.string() }), issue: z.object({ number: z.number().int().positive(), pull_request: z.object({ url: z.string() }) }), comment: githubCommentSchema })
@@ -50,9 +60,15 @@ async function hasEarlierExecution(execution: Execution, commentId: number, crea
   throw new ReviewError(503, 'Relevant execution history exceeds the bounded reader. No absence or safe retry is established.')
 }
 const preparedSchema = z.object({ request: runEditorialSchema.extend({ actor: z.literal('ojfbot') }), requestDigest: z.string(),
-  policySha: sha, runId: z.number(), worktree: z.string(), outputCommit: sha, outputBlob: sha, changed: z.boolean() }).strict()
+  policySha: sha, runId: z.number(), worktree: z.string(), inputRegistryBlob: sha, outputCommit: sha, outputBlob: sha, outputRegistryBlob: sha, changed: z.boolean() }).strict()
 export type Prepared = z.infer<typeof preparedSchema>
 async function receipt(execution: Execution, requestDigest: string, outcome: string, extra: object = {}) {
+  if (outcome === 'changed' || outcome === 'no_change') {
+    const record = decodeEditorial(eventSchema.parse(execution.event).comment.body)!
+    const manifest = editorialProofSchema.parse({ repository: 'ojfbot/daily-logger', date: record.date, pullRequest: record.pullRequest, requestDigest, requestCommentId: eventSchema.parse(execution.event).comment.id, outcome, runId: execution.runId, runAttempt: execution.attempt, policySha: execution.policySha, ...extra })
+    writeFileSync(resolve(execution.workspace, '.git/editorial-output.json'), JSON.stringify(manifest))
+    return
+  }
   return createReviewSource(execution.github).postComment(eventSchema.parse(execution.event).issue.number,
     `## Editorial execution receipt\n${JSON.stringify({ requestDigest, requestCommentId: eventSchema.parse(execution.event).comment.id, outcome, runId: execution.runId, policySha: execution.policySha, ...extra })}`)
 }
@@ -69,13 +85,15 @@ async function prepare(execution: Execution): Promise<Prepared | null> {
   catch { throw new ReviewError(409, 'A unique common ancestor with trusted policy is required.') }
   const ancestor = ancestors[0]
   if (ancestors.length !== 1 || !ancestor) throw new ReviewError(409, 'A unique common ancestor with trusted policy is required.')
-  if (git(execution.workspace, 'diff', '--no-renames', '--name-only', ancestor, record.headSha) !== path || git(execution.workspace, 'ls-tree', record.headSha, '--', path).split(' ')[0] !== '100644' || git(execution.workspace, 'rev-parse', `${record.headSha}:${path}`) !== record.articleBlobSha) throw new ReviewError(409, 'Only the pinned regular article may differ from the trusted common ancestor.')
+  if (!editorialPaths(path, git(execution.workspace, 'diff', '--no-renames', '--name-only', ancestor, record.headSha)) || regularBlob(execution.workspace, record.headSha, path) !== record.articleBlobSha) throw new ReviewError(409, 'Only the pinned regular article and canonical registry may differ from the trusted common ancestor.')
+  const inputRegistryBlob = regularBlob(execution.workspace, record.headSha, registryPath(path))
+  await admitActionRegistry({ workspace: execution.workspace, base: execution.policySha, head: record.headSha, date: record.date, actor: record.actor, pullRequest: record.pullRequest, github: execution.github })
   const worktree = resolve(execution.workspace, '.git', `editorial-${execution.runId}`)
   git(execution.workspace, 'worktree', 'add', '--detach', worktree, record.headSha)
   const latest = await source.pull(record.pullRequest, true)
   if (latest.head.sha !== record.headSha || latest.state !== 'open') throw new ReviewError(409, 'PR moved before invocation.')
   const claim = { requestDigest: request.digest, requestId: record.requestId, requestCommentId: request.commentId,
-    feedbackDigest: version.digest, inputHead: record.headSha, inputBlob: record.articleBlobSha,
+    feedbackDigest: version.digest, inputHead: record.headSha, inputBlob: record.articleBlobSha, inputRegistryBlob,
     policySha: execution.policySha, runId: execution.runId, attempt: execution.attempt }
   // A lost claim response stops before the provider. It never falls through to a retry.
   const posted = await source.postComment(record.pullRequest, `## Editorial execution claim\n${JSON.stringify(claim)}`)
@@ -94,14 +112,16 @@ async function prepare(execution: Execution): Promise<Prepared | null> {
     })
     const changed = !!git(worktree, 'diff', '--name-only')
     if (!changed) {
-      await receipt(execution, request.digest, 'no_change', { inputHead: record.headSha, inputBlob: record.articleBlobSha, outputCommit: record.headSha, outputBlob: record.articleBlobSha })
+      await receipt(execution, request.digest, 'no_change', { inputHead: record.headSha, inputBlob: record.articleBlobSha, inputRegistryBlob, outputCommit: record.headSha, outputBlob: record.articleBlobSha, outputRegistryBlob: inputRegistryBlob })
       return null
     }
-    if (git(worktree, 'diff', '--name-only') !== path) throw new Error('Revision changed a file outside the article')
-    git(worktree, 'add', '--', path)
+    const paths = git(worktree, 'diff', '--name-only')
+    if (!editorialPaths(path, paths) || !paths.split('\n').includes(registryPath(path))) throw new Error('Revision must reconcile the canonical registry and may change only the dated article and registry')
+    ArticleActionFileSchema.parse(JSON.parse(readFileSync(resolve(worktree, registryPath(path)), 'utf8')))
+    git(worktree, 'add', '--', path, registryPath(path))
     git(worktree, '-c', 'user.name=ojfbot-blog[bot]', '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com', 'commit', '-m', `editorial: revise ${record.date} for request ${record.requestId}`)
-    return preparedSchema.parse({ request: record, requestDigest: request.digest, policySha: execution.policySha, runId: execution.runId, worktree,
-      outputCommit: git(worktree, 'rev-parse', 'HEAD'), outputBlob: git(worktree, 'rev-parse', `HEAD:${path}`), changed: true })
+    return preparedSchema.parse({ request: record, requestDigest: request.digest, policySha: execution.policySha, runId: execution.runId, worktree, inputRegistryBlob,
+      outputCommit: git(worktree, 'rev-parse', 'HEAD'), outputBlob: regularBlob(worktree, 'HEAD', path), outputRegistryBlob: regularBlob(worktree, 'HEAD', registryPath(path)), changed: true })
   } catch (error) {
     await receipt(execution, request.digest, 'uncertain', { reason: 'Invocation was claimed. Provider or output preparation failed; do not replay this request automatically.' })
     throw error
@@ -141,13 +161,22 @@ export async function pushEditorial(execution: Execution, input: unknown) {
     await receipt(execution, prepared.requestDigest, 'stale', { reason: 'PR moved before push. Prepared output was not published.' }); return
   }
   const path = `_articles/${request.date}.md`
-  if (git(prepared.worktree, 'rev-parse', 'HEAD') !== prepared.outputCommit || git(prepared.worktree, 'ls-tree', 'HEAD', '--', path).split(' ')[0] !== '100644' || git(prepared.worktree, 'rev-parse', 'HEAD^') !== request.headSha || git(prepared.worktree, 'diff', '--name-only', request.headSha, prepared.outputCommit) !== path || git(prepared.worktree, 'rev-parse', `HEAD:${path}`) !== prepared.outputBlob) throw new Error('Prepared output no longer matches the exact article-only commit')
+  const changedPaths = git(prepared.worktree, 'diff', '--name-only', request.headSha, prepared.outputCommit)
+  if (git(prepared.worktree, 'rev-parse', 'HEAD') !== prepared.outputCommit || git(prepared.worktree, 'rev-parse', 'HEAD^') !== request.headSha ||
+      !editorialPaths(path, changedPaths) || !changedPaths.split('\n').includes(registryPath(path)) || regularBlob(prepared.worktree, request.headSha, registryPath(path)) !== prepared.inputRegistryBlob ||
+      regularBlob(prepared.worktree, 'HEAD', path) !== prepared.outputBlob || regularBlob(prepared.worktree, 'HEAD', registryPath(path)) !== prepared.outputRegistryBlob) throw new Error('Prepared output no longer matches the exact article and registry commit')
   try {
     git(prepared.worktree, 'push', 'origin', `${prepared.outputCommit}:refs/heads/accept/${request.date}`)
-    await receipt(execution, prepared.requestDigest, 'changed', { inputHead: request.headSha, inputBlob: request.articleBlobSha, outputCommit: prepared.outputCommit, outputBlob: prepared.outputBlob })
+    await receipt(execution, prepared.requestDigest, 'changed', { inputHead: request.headSha, inputBlob: request.articleBlobSha, inputRegistryBlob: prepared.inputRegistryBlob, outputCommit: prepared.outputCommit, outputBlob: prepared.outputBlob, outputRegistryBlob: prepared.outputRegistryBlob })
   } catch (error) {
     await receipt(execution, prepared.requestDigest, 'uncertain', { reason: 'Push or outcome receipt is uncertain. Inspect the actual branch before any new request.' }); throw error
   }
+}
+export async function finalizeEditorial(execution: Execution, artifactId: number) {
+  const manifest = editorialProofSchema.parse(JSON.parse(readFileSync(resolve(execution.workspace, '.git/editorial-output.json'), 'utf8')))
+  const receipt = { ...manifest, artifactId }
+  if (!await verifyEditorialProof(execution.github, receipt)) throw new Error('The uploaded editorial artifact does not bind this output')
+  await createReviewSource(execution.github).postComment(manifest.pullRequest, `## Editorial execution receipt\n${JSON.stringify(receipt)}`)
 }
 async function main() {
   const workspace = process.cwd()
@@ -165,6 +194,11 @@ async function main() {
       break
     }
     case 'prepare': { const prepared = await prepareEditorial(execution); mkdirSync(resolve(workspace, '.git'), { recursive: true }); writeFileSync(preparedPath, JSON.stringify(prepared)); break }
+    case 'finalize': {
+      const artifactId = z.number().int().positive().parse(Number(process.env.EDITORIAL_ARTIFACT_ID))
+      await finalizeEditorial(execution, artifactId)
+      break
+    }
     case 'push': { const prepared: unknown = JSON.parse(readFileSync(preparedPath, 'utf8')); if (prepared) await pushEditorial(execution, prepared); break }
     default: throw new Error('Expected admit, prepare, or push')
   }

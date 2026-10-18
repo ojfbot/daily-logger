@@ -167,7 +167,7 @@ describe('buildUserPrompt — reviewed canonical actions', () => {
     const prompt = buildUserPrompt(ctx)
     expect(prompt).toContain('Reviewed canonical actions — context only (1)')
     expect(prompt).toContain(invocation)
-    expect(prompt).toContain('Do not recommend, redispatch, or add them to `closedActions`')
+    expect(prompt).toContain('Do not recommend, redispatch, or propose a settlement for them')
     expect(prompt).not.toContain('Open actions from previous runs')
   })
 })

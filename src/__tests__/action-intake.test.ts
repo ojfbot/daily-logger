@@ -4,9 +4,12 @@ import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSyn
 import { tmpdir } from 'os'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { projectActionIntake } from '../action-intake.js'
 import { buildApi } from '../build-api.js'
+
+// Real Git evidence checks perform several subprocesses per case.
+vi.setConfig({ testTimeout: 20_000 })
 
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const suggestions = [
@@ -205,7 +208,7 @@ describe('reviewed action intake', () => {
     const f = fixture()
     const before = readFileSync(join(f.root, 'api/actions.json'), 'utf8')
     rmSync(f.recordPath)
-    expect(() => buildApi(f.root)).toThrow(/Required action admission is missing/)
+    expect(() => buildApi(f.root)).toThrow(/Action registry is missing/)
     expect(readFileSync(join(f.root, 'api/actions.json'), 'utf8')).toBe(before)
   })
 

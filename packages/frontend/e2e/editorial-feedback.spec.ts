@@ -63,7 +63,14 @@ test('restores notes and submits the surviving note with section feedback once',
       await route.fulfill({ json: { object: { sha: 'fixture-main-sha' } } })
     } else if (request.method() === 'POST' && path.endsWith('/git/refs')) {
       await route.fulfill({ status: 201, json: {} })
-    } else if (request.method() === 'PUT' && path.endsWith(`/_articles/${date}.md`)) {
+    } else if (request.method() === 'GET' && path.includes('/git/commits/')) {
+      await route.fulfill({ json: { tree: { sha: 'fixture-tree' } } })
+    } else if (request.method() === 'POST' && path.endsWith('/git/trees')) {
+      await route.fulfill({ json: { sha: 'fixture-new-tree' } })
+    } else if (request.method() === 'POST' && path.endsWith('/git/commits')) {
+      await route.fulfill({ json: { sha: 'fixture-commit' } })
+    } else if (request.method() === 'PATCH' && path.endsWith(`/git/refs/heads/accept/${date}`)) {
+      expect(request.postDataJSON().force).toBe(false)
       await route.fulfill({ json: {} })
     } else if (request.method() === 'POST' && path.endsWith('/pulls')) {
       pullRequestBody = z.object({ body: z.string() }).parse(request.postDataJSON()).body
@@ -129,10 +136,13 @@ test('restores notes and submits the surviving note with section feedback once',
   })
   expect(githubCalls).toEqual([
     `GET repos/ojfbot/daily-logger/git/refs/heads/accept/${date}`,
-    `GET repos/ojfbot/daily-logger/contents/_articles/${date}.md`,
     'GET repos/ojfbot/daily-logger/git/refs/heads/main',
+    `GET repos/ojfbot/daily-logger/contents/_articles/${date}.md`,
     'POST repos/ojfbot/daily-logger/git/refs',
-    `PUT repos/ojfbot/daily-logger/contents/_articles/${date}.md`,
+    'GET repos/ojfbot/daily-logger/git/commits/fixture-main-sha',
+    'POST repos/ojfbot/daily-logger/git/trees',
+    'POST repos/ojfbot/daily-logger/git/commits',
+    `PATCH repos/ojfbot/daily-logger/git/refs/heads/accept/${date}`,
     'POST repos/ojfbot/daily-logger/pulls',
   ])
   expect(pullRequestBody).not.toContain('Remove this note')
@@ -207,6 +217,8 @@ test('editorial prose grows, stays viewport bounded and preserves note identity'
   // The same mounted node keeps focus, caret and literal text as a wrapped edit grows.
   await first.focus()
   await first.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(20, 20))
+  await first.scrollIntoViewIfNeeded()
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
   const scrollBefore = await page.evaluate(() => ({ document: document.documentElement.scrollTop, column: document.querySelector('.chat-column')?.scrollTop }))
   await first.pressSequentially('inserted ')
   expect(await page.evaluate(() => ({ document: document.documentElement.scrollTop, column: document.querySelector('.chat-column')?.scrollTop }))).toEqual(scrollBefore)
