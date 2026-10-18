@@ -14,5 +14,13 @@
     "sourceDate": "2026-10-17",
     "state": "dismissed",
     "reason": "s12 (the live API state for lego-village-pipeline #45) confirms the PR remains open (s12 L1: state=open; merged_at=none). The PR description (s12 L3-5) explicitly states it preserves the earlier HOUSE-WORLD R0 study and points to PR #46 for the current interface source — not a supersession. The accepted October 17 article (s1 L106) and the independent review (s22 L74-82) both record the closure premise as unsupported: 'PR #45 explicitly preserves HOUSE-WORLD R0/HANDOFF037 and points to PR #46 for the current interface source... Replacing the current interface source does not establish that the separate R0 brief is superseded or should be closed.' No operator decision authorizing closure exists."
+  },
+  {
+    "id": "act-2026-10-18-investigate-8dd281",
+    "description": "Disposition the four unclaimed UI kaizen observations from daily-logger #357: locate them in the session transcript, classify each as bug / UX debt / feature request, and file as discrete issues or park with a named revival condition. Also disposition lego-village-pipeline #45 — it is superseded by #46 and currently adds noise to the roadmap pulse without a close condition.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-18",
+    "state": "dismissed",
+    "reason": "The operator explicitly rejects both original premises. UIK-01–04 were already coordinated under #357 and delivered within #378's documented limits. LEGO #45 preserves the distinct HOUSE-WORLD R0/HANDOFF-037 record; replacement of the interface pickup by #46 does not supersede that record. Its second-steward check and James's merge control remain. This tracking dismissal neither closes a GitHub issue/PR nor repurposes the identity to the separately owned range/list follow-up."
   }
 ]
