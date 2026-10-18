@@ -1,0 +1,964 @@
+{
+  "schemaVersion": 1,
+  "month": "2026-10",
+  "base": "faac3c9bb310bc0fc1c1ec445433e310e0498558",
+  "transportNotes": "The unauthenticated GitHub REST endpoint was rate limited. Timestamp observations use the connected GitHub API. Its commit projection omits author/committer timestamps; those are read from the matching immutable Git object, not inferred from created_at. Headers/ETags are unavailable through the connector. No provider model or credential configuration is used.",
+  "observations": [
+    {
+      "request": {
+        "kind": "commit",
+        "repo": "ojfbot/core",
+        "ref": "c96119a"
+      },
+      "observedAt": "2026-10-17T20:19:21.411Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/core/commits/c96119a",
+      "outcome": "unavailable",
+      "reason": "Error: GitHub API error 422: {\"message\":\"No commit found for SHA: c96119a\",\"documentation_url\":\"https://docs.github.com/rest/commits/commits#get-a-commit\",\"status\":\"422\"}",
+      "projectionSha256": "17d162053cec16fc7fa05e2d80139459c2ba170d16bddd0b75faf050b4bb95c4"
+    },
+    {
+      "request": {
+        "kind": "commit",
+        "repo": "ojfbot/core",
+        "ref": "f5ff6a0d"
+      },
+      "observedAt": "2026-10-17T20:19:21.914Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/core/commits/f5ff6a0d",
+      "outcome": "unavailable",
+      "reason": "Error: GitHub API error 422: {\"message\":\"No commit found for SHA: f5ff6a0d\",\"documentation_url\":\"https://docs.github.com/rest/commits/commits#get-a-commit\",\"status\":\"422\"}",
+      "projectionSha256": "9b822c6a8054341b8a0b918c9ee314b58825d25471e3b6f5133fdd3e98e940eb"
+    },
+    {
+      "request": {
+        "kind": "commit",
+        "repo": "ojfbot/daily-logger",
+        "ref": "7539019"
+      },
+      "observedAt": "2026-10-17T20:19:22.364Z",
+      "transport": "github-connector-plus-git-object",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/commits/7539019",
+      "outcome": "observed",
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/commit/75390193fc0415aebabb0ab34f1d6bf584b687f0",
+        "commitSha": "75390193fc0415aebabb0ab34f1d6bf584b687f0"
+      },
+      "headersAvailable": false,
+      "response": {
+        "sha": "75390193fc0415aebabb0ab34f1d6bf584b687f0",
+        "commit": {
+          "author": {
+            "date": "2026-10-03T09:49:11-05:00"
+          },
+          "committer": {
+            "date": "2026-10-03T09:52:21-05:00"
+          }
+        }
+      },
+      "timestampSource": {
+        "kind": "immutable-git-object",
+        "objectSha": "75390193fc0415aebabb0ab34f1d6bf584b687f0",
+        "format": "git show -s --format=%H%n%aI%n%cI"
+      },
+      "projectionSha256": "56e7729e1b491f419105adafca96b0c3ab5c79cb97fe13a383a2fa8fd065401f"
+    },
+    {
+      "request": {
+        "kind": "commit",
+        "repo": "ojfbot/daily-logger",
+        "ref": "80e93ef"
+      },
+      "observedAt": "2026-10-17T20:19:22.860Z",
+      "transport": "github-connector-plus-git-object",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/commits/80e93ef",
+      "outcome": "observed",
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/commit/80e93efcf55329cdff4fcc332b1ea4004efd866b",
+        "commitSha": "80e93efcf55329cdff4fcc332b1ea4004efd866b"
+      },
+      "headersAvailable": false,
+      "response": {
+        "sha": "80e93efcf55329cdff4fcc332b1ea4004efd866b",
+        "commit": {
+          "author": {
+            "date": "2026-10-05T20:55:01-05:00"
+          },
+          "committer": {
+            "date": "2026-10-05T21:36:24-05:00"
+          }
+        }
+      },
+      "timestampSource": {
+        "kind": "immutable-git-object",
+        "objectSha": "80e93efcf55329cdff4fcc332b1ea4004efd866b",
+        "format": "git show -s --format=%H%n%aI%n%cI"
+      },
+      "projectionSha256": "d5a59113d4c7c7bfa22c6fd22df557126bd8c8e8530bee8e532f157510c4a5e9"
+    },
+    {
+      "request": {
+        "kind": "commit",
+        "repo": "ojfbot/daily-logger",
+        "ref": "8291687"
+      },
+      "observedAt": "2026-10-17T20:19:23.382Z",
+      "transport": "github-connector-plus-git-object",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/commits/8291687",
+      "outcome": "observed",
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/commit/82916875c26430e1aced3a19ddf7e587b0af6b46",
+        "commitSha": "82916875c26430e1aced3a19ddf7e587b0af6b46"
+      },
+      "headersAvailable": false,
+      "response": {
+        "sha": "82916875c26430e1aced3a19ddf7e587b0af6b46",
+        "commit": {
+          "author": {
+            "date": "2026-10-05T20:27:05-05:00"
+          },
+          "committer": {
+            "date": "2026-10-05T20:30:04-05:00"
+          }
+        }
+      },
+      "timestampSource": {
+        "kind": "immutable-git-object",
+        "objectSha": "82916875c26430e1aced3a19ddf7e587b0af6b46",
+        "format": "git show -s --format=%H%n%aI%n%cI"
+      },
+      "projectionSha256": "bc5cce3e671bcd119b304050e56f7cbe842b65e5ff5b2a3e6ddecf3c51148d60"
+    },
+    {
+      "request": {
+        "kind": "commit",
+        "repo": "ojfbot/daily-logger",
+        "ref": "a6d9d01"
+      },
+      "observedAt": "2026-10-17T20:19:24.131Z",
+      "transport": "github-connector-plus-git-object",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/commits/a6d9d01",
+      "outcome": "observed",
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/commit/a6d9d016a9290b4ced49a127a7b72eb971a700f2",
+        "commitSha": "a6d9d016a9290b4ced49a127a7b72eb971a700f2"
+      },
+      "headersAvailable": false,
+      "response": {
+        "sha": "a6d9d016a9290b4ced49a127a7b72eb971a700f2",
+        "commit": {
+          "author": {
+            "date": "2026-10-16T22:03:12-05:00"
+          },
+          "committer": {
+            "date": "2026-10-16T22:03:12-05:00"
+          }
+        }
+      },
+      "timestampSource": {
+        "kind": "immutable-git-object",
+        "objectSha": "a6d9d016a9290b4ced49a127a7b72eb971a700f2",
+        "format": "git show -s --format=%H%n%aI%n%cI"
+      },
+      "projectionSha256": "42ca32bb0772a1b03ab0dd1be4f62eff0487d99f708dc14601e0065c8e698694"
+    },
+    {
+      "request": {
+        "kind": "commit",
+        "repo": "ojfbot/daily-logger",
+        "ref": "e95c0d1"
+      },
+      "observedAt": "2026-10-17T20:19:24.560Z",
+      "transport": "github-connector-plus-git-object",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/commits/e95c0d1",
+      "outcome": "observed",
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/commit/e95c0d1f2cb4d5a5cadd73545c72dad57c46c84b",
+        "commitSha": "e95c0d1f2cb4d5a5cadd73545c72dad57c46c84b"
+      },
+      "headersAvailable": false,
+      "response": {
+        "sha": "e95c0d1f2cb4d5a5cadd73545c72dad57c46c84b",
+        "commit": {
+          "author": {
+            "date": "2026-10-17T01:25:25-05:00"
+          },
+          "committer": {
+            "date": "2026-10-17T01:25:25-05:00"
+          }
+        }
+      },
+      "timestampSource": {
+        "kind": "immutable-git-object",
+        "objectSha": "e95c0d1f2cb4d5a5cadd73545c72dad57c46c84b",
+        "format": "git show -s --format=%H%n%aI%n%cI"
+      },
+      "projectionSha256": "8a4f26c2b30ee4de8a5f50f907e61273d1a9d75fb125b5c549a4df14e6205e28"
+    },
+    {
+      "request": {
+        "kind": "commit",
+        "repo": "ojfbot/morning-cockpit",
+        "ref": "5485897700"
+      },
+      "observedAt": "2026-10-17T20:19:25.328Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/morning-cockpit/commits/5485897700",
+      "outcome": "unavailable",
+      "reason": "Error: GitHub API error 422: {\"message\":\"No commit found for SHA: 5485897700\",\"documentation_url\":\"https://docs.github.com/rest/commits/commits#get-a-commit\",\"status\":\"422\"}",
+      "projectionSha256": "d3e9f96ee89b644ab236943ca61200378af04b5301df9269a1adc8a4acc49470"
+    },
+    {
+      "request": {
+        "kind": "commit",
+        "repo": "ojfbot/morning-cockpit",
+        "ref": "f9539f92"
+      },
+      "observedAt": "2026-10-17T20:19:25.709Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/morning-cockpit/commits/f9539f92",
+      "outcome": "unavailable",
+      "reason": "Error: GitHub API error 422: {\"message\":\"No commit found for SHA: f9539f92\",\"documentation_url\":\"https://docs.github.com/rest/commits/commits#get-a-commit\",\"status\":\"422\"}",
+      "projectionSha256": "b35250c67596b32ce3beb57f8ff45870bcb77212b7b979c6e9e4d078f03a59de"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/core",
+        "ref": "307"
+      },
+      "observedAt": "2026-10-17T20:19:26.118Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/core/pulls/307",
+      "outcome": "unavailable",
+      "reason": "Error: GitHub API error 404: {\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/pulls/pulls#get-a-pull-request\",\"status\":\"404\"}",
+      "projectionSha256": "d3e8f72736ecda0b18299da7127945775e90acd2747eed13d583a0f14d9e1554"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/cv-builder",
+        "ref": "19"
+      },
+      "observedAt": "2026-10-17T20:19:26.427Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/cv-builder/pulls/19",
+      "outcome": "unavailable",
+      "reason": "Error: GitHub API error 404: {\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/pulls/pulls#get-a-pull-request\",\"status\":\"404\"}",
+      "projectionSha256": "d3e8f72736ecda0b18299da7127945775e90acd2747eed13d583a0f14d9e1554"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/cv-builder",
+        "ref": "59"
+      },
+      "observedAt": "2026-10-17T20:19:26.848Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/cv-builder/pulls/59",
+      "outcome": "unavailable",
+      "reason": "Error: GitHub API error 404: {\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/pulls/pulls#get-a-pull-request\",\"status\":\"404\"}",
+      "projectionSha256": "d3e8f72736ecda0b18299da7127945775e90acd2747eed13d583a0f14d9e1554"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "297"
+      },
+      "observedAt": "2026-10-17T20:19:27.140Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/297",
+      "outcome": "observed",
+      "response": {
+        "number": 297,
+        "created_at": "2026-10-03T14:12:11Z",
+        "merged_at": "2026-10-03T14:12:20Z",
+        "closed_at": "2026-10-03T14:12:20Z",
+        "updated_at": "2026-10-03T14:12:42Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/297",
+        "headSha": "583c34cbef465fe8c3b3e6f12ddd3561809a75de",
+        "mergeCommitSha": "13c34637f8d50ed1e4c2abf1bc9ef5cd1a9ffba1"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "62475315e7cacf5a711238e1ca5957e704009e23a2111befe34a43948b80760e"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "298"
+      },
+      "observedAt": "2026-10-17T20:19:27.596Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/298",
+      "outcome": "observed",
+      "response": {
+        "number": 298,
+        "created_at": "2026-10-03T14:18:14Z",
+        "merged_at": "2026-10-03T14:52:22Z",
+        "closed_at": "2026-10-03T14:52:22Z",
+        "updated_at": "2026-10-03T14:52:22Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/298",
+        "headSha": "7450993682388f57ea68acb449bab6b74fa285b3",
+        "mergeCommitSha": "75390193fc0415aebabb0ab34f1d6bf584b687f0"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "81d68de6e691a42d9ee4613330f58aaffea42beeea6c56294acf0cdd8014c333"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "299"
+      },
+      "observedAt": "2026-10-17T20:19:28.100Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/299",
+      "outcome": "observed",
+      "response": {
+        "number": 299,
+        "created_at": "2026-10-03T15:01:07Z",
+        "merged_at": "2026-10-03T15:05:48Z",
+        "closed_at": "2026-10-03T15:05:48Z",
+        "updated_at": "2026-10-03T15:09:14Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/299",
+        "headSha": "43376d17101f8b163492eafe5b4cc36d9acda352",
+        "mergeCommitSha": "cf1d2ba05a7aff414464fd904652286482c069f5"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "9a260371cfccb180dd13ee1adfa0bc5111f2095dc694a1478ed4a878b2d6051f"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "303"
+      },
+      "observedAt": "2026-10-17T20:19:28.528Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/303",
+      "outcome": "observed",
+      "response": {
+        "number": 303,
+        "created_at": "2026-10-04T14:25:13Z",
+        "merged_at": "2026-10-06T01:30:04Z",
+        "closed_at": "2026-10-06T01:30:04Z",
+        "updated_at": "2026-10-06T01:31:28Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/303",
+        "headSha": "a7080ba31bd170b9fbec6a5a15ebf880b700d7cd",
+        "mergeCommitSha": "82916875c26430e1aced3a19ddf7e587b0af6b46"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "b25af0dce41fb2f06ecc73d4fe4b815aff985874c594018b1599fd4c69e07681"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "305"
+      },
+      "observedAt": "2026-10-17T20:19:29.039Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/305",
+      "outcome": "observed",
+      "response": {
+        "number": 305,
+        "created_at": "2026-10-05T17:23:47Z",
+        "merged_at": null,
+        "closed_at": "2026-10-08T22:02:02Z",
+        "updated_at": "2026-10-08T22:02:02Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/305",
+        "headSha": "d265001cc163bed73038b808830edf8340862535",
+        "mergeCommitSha": null
+      },
+      "headersAvailable": false,
+      "projectionSha256": "3b250653a3c5777d0623799582ec041fa566a9d8352816c0ec717849ec255d23"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "308"
+      },
+      "observedAt": "2026-10-17T20:19:29.494Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/308",
+      "outcome": "observed",
+      "response": {
+        "number": 308,
+        "created_at": "2026-10-06T15:33:21Z",
+        "merged_at": "2026-10-08T22:06:02Z",
+        "closed_at": "2026-10-08T22:06:02Z",
+        "updated_at": "2026-10-08T22:06:58Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/308",
+        "headSha": "8d0e84fa9bcee9d684d2347f635f7ff3356bda2f",
+        "mergeCommitSha": "0ede144e74bf9f28fe19dd5a6d27653188577cc0"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "8c9a2273831dd09ae0cc68694f9143f9ef86fab4d1adc28429605feb26400f0e"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "309"
+      },
+      "observedAt": "2026-10-17T20:19:29.944Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/309",
+      "outcome": "observed",
+      "response": {
+        "number": 309,
+        "created_at": "2026-10-06T22:04:34Z",
+        "merged_at": "2026-10-09T01:43:37Z",
+        "closed_at": "2026-10-09T01:43:37Z",
+        "updated_at": "2026-10-09T01:43:37Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/309",
+        "headSha": "5d44e8c83170034c31e29fcb22464c336f49febe",
+        "mergeCommitSha": "b4eb9ac107d0a908883e4db39a4b272595157254"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "2d3067946c9c32531e92e751f2c0c371ca221a7e6935cdbc684dbe68dbf82c35"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "313"
+      },
+      "observedAt": "2026-10-17T20:19:30.368Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/313",
+      "outcome": "observed",
+      "response": {
+        "number": 313,
+        "created_at": "2026-10-08T22:13:16Z",
+        "merged_at": "2026-10-09T01:33:17Z",
+        "closed_at": "2026-10-09T01:33:17Z",
+        "updated_at": "2026-10-09T01:33:17Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/313",
+        "headSha": "5a8135c226081629dd2db3f6e0e734d54c128aeb",
+        "mergeCommitSha": "f20b2f7ac81b42e58de75e8f68d15fe84617569c"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "1ef657e4cae2d3ca3b6920412bc5781c7dfec07d615fc0a21ec2f8c4b2858fb2"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "315"
+      },
+      "observedAt": "2026-10-17T20:19:30.839Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/315",
+      "outcome": "observed",
+      "response": {
+        "number": 315,
+        "created_at": "2026-10-08T22:41:21Z",
+        "merged_at": "2026-10-08T22:56:16Z",
+        "closed_at": "2026-10-08T22:56:16Z",
+        "updated_at": "2026-10-08T22:56:16Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/315",
+        "headSha": "6f54e19aa43300957873574cd112e3767a0a7171",
+        "mergeCommitSha": "7dc5c9b3da929eb8723a50bd1db1d945265c9a4c"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "77babe13a7bc19c3826c880d10c7b1a24efa91e65dec4cfc4bc5262425e6dfe0"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "316"
+      },
+      "observedAt": "2026-10-17T20:19:31.282Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/316",
+      "outcome": "observed",
+      "response": {
+        "number": 316,
+        "created_at": "2026-10-08T23:06:10Z",
+        "merged_at": "2026-10-08T23:28:10Z",
+        "closed_at": "2026-10-08T23:28:10Z",
+        "updated_at": "2026-10-08T23:28:10Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/316",
+        "headSha": "2af0f054a14ba8fe9e9b14f9e637610b1ad98639",
+        "mergeCommitSha": "0ad565ee9d867af91d0da66134484cfb9d0e7ced"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "1f78a408e62cb35aabd14473ae510db0b725661f311c0bac38136ba1f247789b"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "317"
+      },
+      "observedAt": "2026-10-17T20:19:31.768Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/317",
+      "outcome": "observed",
+      "response": {
+        "number": 317,
+        "created_at": "2026-10-08T23:44:13Z",
+        "merged_at": "2026-10-09T00:18:52Z",
+        "closed_at": "2026-10-09T00:18:52Z",
+        "updated_at": "2026-10-09T00:18:53Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/317",
+        "headSha": "7da8deaadf5b5836a202682bb21900b4c3ed9e62",
+        "mergeCommitSha": "a3cf635a8e37b05cf7ee259307cef3cee9f69263"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "bdbbf9632a3322b4d576389f8bd537ff2bc701c24da3e6167366504a2942b9f0"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "318"
+      },
+      "observedAt": "2026-10-17T20:19:32.188Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/318",
+      "outcome": "observed",
+      "response": {
+        "number": 318,
+        "created_at": "2026-10-08T23:44:20Z",
+        "merged_at": "2026-10-09T00:07:44Z",
+        "closed_at": "2026-10-09T00:07:44Z",
+        "updated_at": "2026-10-09T00:07:44Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/318",
+        "headSha": "9b8e7ea1262cfdca681aa2ad252b4e68149ac7fb",
+        "mergeCommitSha": "51ebdcc13ff8e0c602befffcf73e0717c3e2cf52"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "7fcb3ec6f978f40774f9c467204d875dd0ec31cf6aa4688052c6518f5d9a086b"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "319"
+      },
+      "observedAt": "2026-10-17T20:19:32.610Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/319",
+      "outcome": "observed",
+      "response": {
+        "number": 319,
+        "created_at": "2026-10-09T00:21:44Z",
+        "merged_at": "2026-10-09T01:18:58Z",
+        "closed_at": "2026-10-09T01:18:58Z",
+        "updated_at": "2026-10-09T01:22:00Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/319",
+        "headSha": "1ffbffa2940d41c61f4ccc58e442aabacd4d14f5",
+        "mergeCommitSha": "897cefe51c5b6c187982c149126e1f43d2d67e95"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "316377e4411fd0850c62999574a031b1b7674075c598f3560429b6b1532cc850"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "320"
+      },
+      "observedAt": "2026-10-17T20:19:33.002Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/320",
+      "outcome": "observed",
+      "response": {
+        "number": 320,
+        "created_at": "2026-10-09T01:58:03Z",
+        "merged_at": "2026-10-09T02:12:54Z",
+        "closed_at": "2026-10-09T02:12:54Z",
+        "updated_at": "2026-10-09T02:14:15Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/320",
+        "headSha": "9e68b0145dc8f6f86896839cfdf2f92d383ba481",
+        "mergeCommitSha": "4c151fa048bd4767b21fe5f8e03b3a4895c457e0"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "65a426e87746111e5669f36e8db011fb03d905dd046d8fe6e2eee483799e1ae3"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "321"
+      },
+      "observedAt": "2026-10-17T20:19:33.384Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/321",
+      "outcome": "observed",
+      "response": {
+        "number": 321,
+        "created_at": "2026-10-09T02:16:17Z",
+        "merged_at": "2026-10-09T02:16:44Z",
+        "closed_at": "2026-10-09T02:16:44Z",
+        "updated_at": "2026-10-09T02:17:04Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/321",
+        "headSha": "b2bd633f29fbba8b2550e57bdc3b16eb4a31ee43",
+        "mergeCommitSha": "a348be6a1b54a1022a004f0e900110322690caff"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "a3bb1a5f5f25dd401d2d0213f97dd1dfb1228e96b9f988316c42f21ae7d0351d"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "322"
+      },
+      "observedAt": "2026-10-17T20:19:33.768Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/322",
+      "outcome": "observed",
+      "response": {
+        "number": 322,
+        "created_at": "2026-10-09T02:42:56Z",
+        "merged_at": "2026-10-09T02:46:08Z",
+        "closed_at": "2026-10-09T02:46:08Z",
+        "updated_at": "2026-10-09T02:47:41Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/322",
+        "headSha": "f687d4aa0782b2d4a639c479f1677bb592fc134b",
+        "mergeCommitSha": "c44f936f77fa1a1e9eaa4538b86e3ea55384a1c3"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "7e620616283a9b878e811e468e910179e8ad0428775806f1ca5bb30fb55c4dea"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "324"
+      },
+      "observedAt": "2026-10-17T20:19:34.258Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/324",
+      "outcome": "observed",
+      "response": {
+        "number": 324,
+        "created_at": "2026-10-09T03:07:00Z",
+        "merged_at": "2026-10-09T03:12:57Z",
+        "closed_at": "2026-10-09T03:12:58Z",
+        "updated_at": "2026-10-09T03:15:19Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/324",
+        "headSha": "5cc5063975c39b3a7e7f131b8b606f14aba0468d",
+        "mergeCommitSha": "6f2383f0094804c4a07bccc32f9de01ec79b7e20"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "fe4756640adb15186cb8a8fddcfa271efacee76d7c9beec46fb243f2c81239f4"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "325"
+      },
+      "observedAt": "2026-10-17T20:19:34.917Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/325",
+      "outcome": "observed",
+      "response": {
+        "number": 325,
+        "created_at": "2026-10-09T03:16:44Z",
+        "merged_at": "2026-10-09T03:18:27Z",
+        "closed_at": "2026-10-09T03:18:27Z",
+        "updated_at": "2026-10-09T03:18:27Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/325",
+        "headSha": "834fc5b7e2a5704c86b43da8bf0fb74752c43059",
+        "mergeCommitSha": "e2e3ebb48644c5231b3a7653c7ed4316efca6dce"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "d84016e04279955f339c56b5c7e8157c963fecf136bdfc3a2fb76d68468c98fe"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "343"
+      },
+      "observedAt": "2026-10-17T20:19:35.344Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/343",
+      "outcome": "observed",
+      "response": {
+        "number": 343,
+        "created_at": "2026-10-11T02:06:26Z",
+        "merged_at": "2026-10-13T22:27:54Z",
+        "closed_at": "2026-10-13T22:27:54Z",
+        "updated_at": "2026-10-13T22:36:03Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/343",
+        "headSha": "0096f3a116bd107f5219cada0b5d10345033bb57",
+        "mergeCommitSha": "8a8951b457addd625d03aa9f6c6a9f7d12f68769"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "55235bf0efd009f08bb8e2ad8ea07cea31608362ac83906156be99da9ce19bf7"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "347"
+      },
+      "observedAt": "2026-10-17T20:19:35.966Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/347",
+      "outcome": "observed",
+      "response": {
+        "number": 347,
+        "created_at": "2026-10-11T18:59:45Z",
+        "merged_at": "2026-10-13T21:54:27Z",
+        "closed_at": "2026-10-13T21:54:27Z",
+        "updated_at": "2026-10-13T22:35:40Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/347",
+        "headSha": "a365e3bbefaec4c87e276746b5ff995695d8d7bb",
+        "mergeCommitSha": "8c5fbc520a9378e11323b8b09d6afcb41d37fb6b"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "91300bad69894c8101a743758918d2b445a41139f8761ddad31ce804e5393c24"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "366"
+      },
+      "observedAt": "2026-10-17T20:19:36.899Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/366",
+      "outcome": "observed",
+      "response": {
+        "number": 366,
+        "created_at": "2026-10-16T13:33:24Z",
+        "merged_at": "2026-10-16T13:34:59Z",
+        "closed_at": "2026-10-16T13:34:59Z",
+        "updated_at": "2026-10-16T13:34:59Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/366",
+        "headSha": "31db97026d4068ae88282ac4012d8e5d0a508689",
+        "mergeCommitSha": "bcdeb7e6c66fc5db742faf4524ceef16f264086b"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "145b663604ae9764aa71db077fcbe2b63e8a1271bd78d1da6dcf2791b25ae84c"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "367"
+      },
+      "observedAt": "2026-10-17T20:19:37.341Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/367",
+      "outcome": "observed",
+      "response": {
+        "number": 367,
+        "created_at": "2026-10-16T17:26:46Z",
+        "merged_at": "2026-10-16T18:21:35Z",
+        "closed_at": "2026-10-16T18:21:35Z",
+        "updated_at": "2026-10-16T18:22:16Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/367",
+        "headSha": "70613703522a0d256e0d213df643514ab763933b",
+        "mergeCommitSha": "738f8ddd7cf5acd761d78e137a091b9f5d0d4073"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "73f2ba8b8b3afb8e31f75ae693de0e11cf9b537c76cff85ee0188cb0b3eb9292"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "368"
+      },
+      "observedAt": "2026-10-17T20:19:37.942Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/368",
+      "outcome": "observed",
+      "response": {
+        "number": 368,
+        "created_at": "2026-10-16T17:59:00Z",
+        "merged_at": "2026-10-16T18:15:07Z",
+        "closed_at": "2026-10-16T18:15:07Z",
+        "updated_at": "2026-10-16T18:15:11Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/368",
+        "headSha": "c58a7ebcc29744c54074c2d59d4071bbf78e546b",
+        "mergeCommitSha": "3e2bc3992270639cbb9ced744e052efd81f9d8a5"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "15391bfb450e544a27427f75930684941cdcf346976cbcd975fd2744ddb73993"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "369"
+      },
+      "observedAt": "2026-10-17T20:19:38.382Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/369",
+      "outcome": "observed",
+      "response": {
+        "number": 369,
+        "created_at": "2026-10-16T18:57:05Z",
+        "merged_at": "2026-10-16T19:28:00Z",
+        "closed_at": "2026-10-16T19:28:00Z",
+        "updated_at": "2026-10-16T19:51:43Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/369",
+        "headSha": "08ff9c7d5916a76a2460ca8f3ccc20c65e0f6a98",
+        "mergeCommitSha": "061324ad4738c2594978bc059aa9578cc876a62d"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "4404c1298de40eb8c30aaa33ee5fa4622960cef31dcfb0f5bfea37359ddc5279"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "370"
+      },
+      "observedAt": "2026-10-17T20:19:38.981Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/370",
+      "outcome": "observed",
+      "response": {
+        "number": 370,
+        "created_at": "2026-10-16T19:19:57Z",
+        "merged_at": "2026-10-17T06:22:23Z",
+        "closed_at": "2026-10-17T06:22:23Z",
+        "updated_at": "2026-10-17T06:22:23Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/370",
+        "headSha": "1753578eaf8281d2f417467f9f52593aeead2302",
+        "mergeCommitSha": "bfc272ea9a3389ecb4ab247708a73008ba81df5f"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "ad4a4f164086f61485b635059faa1d07a4a1c07d838608d7029862e6543146e3"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "371"
+      },
+      "observedAt": "2026-10-17T20:19:39.413Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/371",
+      "outcome": "observed",
+      "response": {
+        "number": 371,
+        "created_at": "2026-10-16T19:35:54Z",
+        "merged_at": "2026-10-16T19:42:31Z",
+        "closed_at": "2026-10-16T19:42:31Z",
+        "updated_at": "2026-10-16T19:42:31Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/371",
+        "headSha": "f5c9423c5829c5aebc89ee1278fa920f3deedb6c",
+        "mergeCommitSha": "083884b9ed553725534ce7d180e520dc9d0910dd"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "326faf5ac4b857ed74b512ee400504bb3cc61bd7437be4db8a749b4401d5a3ef"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "372"
+      },
+      "observedAt": "2026-10-17T20:19:39.830Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/372",
+      "outcome": "observed",
+      "response": {
+        "number": 372,
+        "created_at": "2026-10-16T19:58:13Z",
+        "merged_at": "2026-10-17T19:58:13Z",
+        "closed_at": "2026-10-17T19:58:13Z",
+        "updated_at": "2026-10-17T20:04:40Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/372",
+        "headSha": "520de8deff1fd5853029afb156376fd8ab4d7b1a",
+        "mergeCommitSha": "faac3c9bb310bc0fc1c1ec445433e310e0498558"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "9dc3497126162528e2566bd2ed6dd9614733b7994feb826f1f436b232748b02d"
+    },
+    {
+      "request": {
+        "kind": "pull",
+        "repo": "ojfbot/daily-logger",
+        "ref": "373"
+      },
+      "observedAt": "2026-10-17T20:19:40.309Z",
+      "transport": "github-connector",
+      "sourceUrl": "https://api.github.com/repos/ojfbot/daily-logger/pulls/373",
+      "outcome": "observed",
+      "response": {
+        "number": 373,
+        "created_at": "2026-10-16T20:42:14Z",
+        "merged_at": "2026-10-16T21:05:02Z",
+        "closed_at": "2026-10-16T21:05:02Z",
+        "updated_at": "2026-10-16T21:11:46Z"
+      },
+      "sourcePins": {
+        "htmlUrl": "https://github.com/ojfbot/daily-logger/pull/373",
+        "headSha": "9716af07b0b91ffabe7a658d6168003f87c5c65c",
+        "mergeCommitSha": "c5870b726ad09beac82586dd89313129aa6ecb2a"
+      },
+      "headersAvailable": false,
+      "projectionSha256": "0e549af62be0f92a16e0dd026a77e1cc3f8a3a5ce45a88b508b1252a383c1800"
+    }
+  ]
+}

@@ -1,5 +1,227 @@
 [
   {
+    "date": "2026-10-18",
+    "title": "Saturday's timestamp archaeology: backfilling October's time evidence and hardening the editorial loop",
+    "summary": "Nineteen commits across daily-logger and core on Saturday closed nine PRs, adding source-backed local-time world map popovers, backfilling October timestamp evidence, and hardening the editorial review cycle.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "provenance",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core"
+    ],
+    "commitCount": 18,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Timestamp backfill as a metadata-only, byte-preserving operation",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Diagnostic prefix boundary as a first-class test fixture constraint",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Agent orientation as the first line of defence against timestamp coverage errors",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Appended feedback without losing original note — PR correspondence model",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Review daily-logger #381 (reconcile article suggestions through a verified action registry): check CI status first — this PR is already open, not to be created. Verify registry integrity checks pass, confirm suggestion-state transitions are covered by tests, and merge if green. This closes the correctness gap where a disproved suggestion can remain active in the published article and action queue simultaneously.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-10-18",
+        "id": "act-2026-10-18-pr-review-0de366"
+      },
+      {
+        "command": "/validate",
+        "description": "Run the supervised session-led research pilot from core #538 before the 2026-10-18 America/Chicago morning checkpoint: execute the session, retain source qualifications, verify vault capture and retrieval, and leave a human-review receipt on the issue before the window closes. Do not treat the issue's existence as the validation.",
+        "repo": "core",
+        "status": "open",
+        "sourceDate": "2026-10-18",
+        "id": "act-2026-10-18-validate-f1e787"
+      },
+      {
+        "command": "/investigate",
+        "description": "Disposition the four unclaimed UI kaizen observations from daily-logger #357: locate them in the session transcript, classify each as bug / UX debt / feature request, and file as discrete issues or park with a named revival condition. Also disposition lego-village-pipeline #45 — it is superseded by #46 and currently adds noise to the roadmap pulse without a close condition.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-10-18",
+        "id": "act-2026-10-18-investigate-8dd281"
+      }
+    ],
+    "timeReferences": [
+      {
+        "text": "19:58Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-17T19:58:13.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "372",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/372"
+        }
+      },
+      {
+        "text": "05:21Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-18T05:21:10.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "379",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/379"
+        }
+      },
+      {
+        "text": "22:40Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-17T22:40:21.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "378",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/378"
+        }
+      },
+      {
+        "text": "21:54Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-17T21:54:23.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "380",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/380"
+        }
+      },
+      {
+        "text": "20:27Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-17T20:27:55.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/core",
+          "ref": "539",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/core/pull/539"
+        }
+      },
+      {
+        "text": "2026-10-17T19:12:20Z",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-17T19:12:20.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-10-17T19:12:20Z"
+        }
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-10-18T09:03:16.587Z",
+        "runId": "39113784447",
+        "runNumber": 243,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/39113784447",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "a3214af5042d6a2c04f935b4a9b0e10e72e330f0",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-10-18T09:02:38.000Z",
+          "startedAt": "2026-10-18T09:02:38.000Z",
+          "expectedAt": "2026-10-18T08:30:00.000Z",
+          "dispatchDelaySeconds": 1958,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v2-2026-10-16-no-model-time-metadata",
+          "promptSha256": "de48d9d8cd69320fabcbaed7fc907990d36181ab72a8395b0b5c0886ac9f6e8b"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "1ac427b3ba4743c7a702f122ae59e8448295741a6356ec7d2f828c3b09e00542"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.21.0",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-17",
     "title": "Friday's review engine: making article-review cycles legible and durable across editors and interruptions",
     "summary": "Twenty-six commits in daily-logger across the October 16-17 reporting window accompanied seven merged PRs, hardening article review and reconciling the actions queue.",
@@ -101,6 +323,47 @@
         "status": "open",
         "sourceDate": "2026-10-17",
         "id": "act-2026-10-17-close-pr-ebb20f"
+      }
+    ],
+    "timeReferences": [
+      {
+        "text": "06:22Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-17T06:22:23.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "370",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/370"
+        }
+      },
+      {
+        "text": "21:05Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-16T21:05:02.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "373",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/373"
+        }
+      },
+      {
+        "text": "13:34Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-16T13:34:59.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "366",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/366"
+        }
       }
     ],
     "provenance": {

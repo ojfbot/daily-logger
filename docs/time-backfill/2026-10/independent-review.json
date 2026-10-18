@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "kind": "independent-review-excerpt",
+  "contributorClaim": "Independent native Codex review context; exact model not separately recorded",
+  "identityQualification": "This is a review claim, not authenticated model/account provenance",
+  "scope": "Independent offline metadata-only October replay review; no readiness, merge or publication approval.",
+  "frozenInputBase": "faac3c9bb310bc0fc1c1ec445433e310e0498558",
+  "reviewedFileSha256": {
+    "scripts/backfill-time-month.mjs": "d947ee91150a92ab83c0bfc25318d4e619e42debaf36faefc1a2ce3a3e9350f6",
+    "docs/time-backfill/2026-10/harvest-plan.json": "b0a442b17fcc4ca18357dd89b7f5a3bd541537bcd206d30b506d84c19ce105fc",
+    "docs/time-backfill/2026-10/source-observations.json": "181b8f92fe2c25276975fea73b9b038351db8c8819a92be8931e1be698b55e0a",
+    "docs/time-backfill/2026-10/adjudications.json": "aa026e7e7e3e9472b7adfcd4c295883985938e255090bb0807c120b77fcc9778",
+    "docs/time-backfill/2026-10/manifest.json": "d39164a87a35955fc3a6e78dbe47741739889378f4420b27af43c3ff9afa9f41",
+    "docs/time-backfill/2026-10/README.md": "b3f445c2d2b509ba5e1316174f62894630d6296ea3e63799c8ae2c2626d7218c",
+    "api/time-evidence.json": "07d186177fb154e87367e71faef7593f07e8134d3c43769b3a8317007026138b",
+    "api/time-refs.json": "51d6d1496de02c30a16d5779c9b167ddd9233f2efb2680999f0b55b00be73410",
+    "api/time-refs-report.json": "877ccb8c474af8842044d001a1dabb336b1da4341db451e26b8c21a1297bd29b"
+  },
+  "findings": [],
+  "closedFindings": [
+    {
+      "finding": "Apply could mutate an earlier metadata target before detecting unrelated edits in a later target.",
+      "basis": "Original source ordering review; fixed implementation directly tested with a dirty second target and all3metadata SHA256s unchanged.",
+      "status": "closed"
+    },
+    {
+      "finding": "External lexical --out symlink could write manifest.json inside the source checkout without --apply.",
+      "basis": "Concrete disposable-fixture reproduction saved in output-symlink.json. Latestrealpath guard now rejects before any fixture write; metadata files unchanged.",
+      "status": "closed"
+    }
+  ],
+  "results": {
+    "all135OriginalArticleBytesPreserved": true,
+    "sixProductionHelpersMatchFrozenBase": {
+      "src/article-time-metadata.ts": true,
+      "src/time-references.ts": true,
+      "src/time-reference-schema.ts": true,
+      "src/time-reference-text.ts": true,
+      "src/render-article.ts": true,
+      "src/backfill-times.ts": true
+    },
+    "normalReplayMatchesAllThreeCandidateMetadataBytes": {
+      "api/time-evidence.json": true,
+      "api/time-refs.json": true,
+      "api/time-refs-report.json": true
+    },
+    "candidateManifestMatchesIndependentReplayBytes": true,
+    "repeatReplayBytesIdentical": true,
+    "repeatApplyBytesIdentical": true,
+    "finalDirtySecondTargetRejectedBeforeAnyMetadataWrite": true,
+    "finalOutsideSymlinkOutputRejectedBeforeWrite": true,
+    "incorrectCoverageCommitPinTimestampObjectAndPullIdentityRejectedBeforeMetadataWrites": true,
+    "priorOctoberReferencesPreserved": 22,
+    "priorOutsideOctoberReferencesPreserved": 11,
+    "newExactOctober17References": 3,
+    "supportedOccurrencesLeftPlain": 17,
+    "freshObservedGroups": 33,
+    "freshUnavailableGroups": 7,
+    "factsBefore": 194,
+    "factsAfter": 315,
+    "completeFreshSourceGroupsMissingFacts": [],
+    "fiveCommitGroupsMatchImmutableLocalGitObjectTimestamps": true,
+    "approximateEndpoint1942": "Raw-resolved; policy-withheld and plain.",
+    "approximateEndpoint1821": "Clock-mismatch parser-unresolved; also approximate and plain."
+  },
+  "limits": [
+    "Saved connector projections and digests establish consistency, not authenticated provider/account identity; no independent online PR lookup was performed.",
+    "Three metadata renames are not a cross-file filesystem transaction; I/O interruption may leave a retryable partial state, and concurrent writers are not supported.",
+    "This verifies the read candidate files by SHA256, not an eventual commit ID; root still owns exact commit freeze and publication decisions.",
+    "No original source checkout edits, network/provider calls, Git commits or remote operations by this reviewer. --apply controls ran only in a disposable private/tmp fixture.",
+    "No independent live deployed UI or authenticated deployment check; task scope was metadata-only."
+  ]
+}

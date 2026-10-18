@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "month": "2026-10",
+  "base": "faac3c9bb310bc0fc1c1ec445433e310e0498558",
+  "scope": "Occurrence eligibility for the frozen metadata-only October backfill; not a parser/schema extension.",
+  "decisions": [
+    {
+      "date": "2026-10-03",
+      "articleBlobSha": "733a07c61fe0dd43b9d9c384088d62efdefdb13c",
+      "text": "09:00 UTC",
+      "occurrence": 0,
+      "decision": "leave-plain",
+      "reason": "schedule-or-example",
+      "explanation": "A recurring schedule or DST illustration has no single observed event instant."
+    },
+    {
+      "date": "2026-10-03",
+      "articleBlobSha": "733a07c61fe0dd43b9d9c384088d62efdefdb13c",
+      "text": "09:00 UTC",
+      "occurrence": 1,
+      "decision": "leave-plain",
+      "reason": "schedule-or-example",
+      "explanation": "A recurring schedule or DST illustration has no single observed event instant."
+    },
+    {
+      "date": "2026-10-04",
+      "articleBlobSha": "04f7370e6d65685aa3793a91a67ee8a5bc5a2899",
+      "text": "09:00 UTC",
+      "occurrence": 0,
+      "decision": "leave-plain",
+      "reason": "schedule-or-example",
+      "explanation": "A recurring schedule or DST illustration has no single observed event instant."
+    },
+    {
+      "date": "2026-10-14",
+      "articleBlobSha": "9f355b32d62f6fbeb0698417903cde46a29e0611",
+      "text": "09:00 UTC",
+      "occurrence": 0,
+      "decision": "leave-plain",
+      "reason": "reporting-bound",
+      "explanation": "A reporting-window boundary is not a Git event instant."
+    },
+    {
+      "date": "2026-10-14",
+      "articleBlobSha": "9f355b32d62f6fbeb0698417903cde46a29e0611",
+      "text": "09:00 UTC",
+      "occurrence": 1,
+      "decision": "leave-plain",
+      "reason": "reporting-bound",
+      "explanation": "A reporting-window boundary is not a Git event instant."
+    },
+    {
+      "date": "2026-10-14",
+      "articleBlobSha": "9f355b32d62f6fbeb0698417903cde46a29e0611",
+      "text": "05:16:30 UTC",
+      "occurrence": 0,
+      "decision": "leave-plain",
+      "reason": "unsupported-source-grammar",
+      "explanation": "The exact core PR536 event is described as It merged across a sentence boundary; the existing parser has no subject at this token."
+    },
+    {
+      "date": "2026-10-14",
+      "articleBlobSha": "9f355b32d62f6fbeb0698417903cde46a29e0611",
+      "text": "09:02 UTC",
+      "occurrence": 0,
+      "decision": "leave-plain",
+      "reason": "unsupported-event-kind",
+      "explanation": "Generation capture or handoff posting is not a supported Git commit/PR lifecycle event; no lifecycle timestamp is substituted."
+    },
+    {
+      "date": "2026-10-14",
+      "articleBlobSha": "9f355b32d62f6fbeb0698417903cde46a29e0611",
+      "text": "09:00 UTC",
+      "occurrence": 2,
+      "decision": "leave-plain",
+      "reason": "reporting-bound",
+      "explanation": "A reporting-window boundary is not a Git event instant."
+    },
+    {
+      "date": "2026-10-15",
+      "articleBlobSha": "2da806aa48b403d9d20901ef0096df26900c49bc",
+      "text": "09:00 UTC",
+      "occurrence": 0,
+      "decision": "leave-plain",
+      "reason": "reporting-bound",
+      "explanation": "A reporting-window boundary is not a Git event instant."
+    },
+    {
+      "date": "2026-10-15",
+      "articleBlobSha": "2da806aa48b403d9d20901ef0096df26900c49bc",
+      "text": "09:00 UTC",
+      "occurrence": 1,
+      "decision": "leave-plain",
+      "reason": "reporting-bound",
+      "explanation": "A reporting-window boundary is not a Git event instant."
+    },
+    {
+      "date": "2026-10-16",
+      "articleBlobSha": "fa90734e5624cefbcc717549c572fcfaa8f330af",
+      "text": "09:00 UTC",
+      "occurrence": 0,
+      "decision": "leave-plain",
+      "reason": "reporting-bound",
+      "explanation": "A reporting-window boundary is not a Git event instant."
+    },
+    {
+      "date": "2026-10-16",
+      "articleBlobSha": "fa90734e5624cefbcc717549c572fcfaa8f330af",
+      "text": "09:00 UTC",
+      "occurrence": 1,
+      "decision": "leave-plain",
+      "reason": "reporting-bound",
+      "explanation": "A reporting-window boundary is not a Git event instant."
+    },
+    {
+      "date": "2026-10-17",
+      "articleBlobSha": "551f3cafedd951dc5a1be14178868fd5b7eeb2d5",
+      "text": "09:00 UTC",
+      "occurrence": 0,
+      "decision": "leave-plain",
+      "reason": "reporting-bound",
+      "explanation": "A reporting-window boundary is not a Git event instant."
+    },
+    {
+      "date": "2026-10-17",
+      "articleBlobSha": "551f3cafedd951dc5a1be14178868fd5b7eeb2d5",
+      "text": "09:00 UTC",
+      "occurrence": 1,
+      "decision": "leave-plain",
+      "reason": "reporting-bound",
+      "explanation": "A reporting-window boundary is not a Git event instant."
+    },
+    {
+      "date": "2026-10-17",
+      "articleBlobSha": "551f3cafedd951dc5a1be14178868fd5b7eeb2d5",
+      "text": "06:22Z",
+      "occurrence": 0,
+      "decision": "eligible-if-authoritative",
+      "reason": "exact-merge-event",
+      "explanation": "The article names this PR and merge day. Require the independent resolver to match the fresh merge record and visible minute, retaining the returned seconds.",
+      "expectedSource": {
+        "kind": "github-pull-request",
+        "repo": "ojfbot/daily-logger",
+        "ref": "370",
+        "event": "merged",
+        "day": "2026-10-17"
+      }
+    },
+    {
+      "date": "2026-10-17",
+      "articleBlobSha": "551f3cafedd951dc5a1be14178868fd5b7eeb2d5",
+      "text": "21:05Z",
+      "occurrence": 0,
+      "decision": "eligible-if-authoritative",
+      "reason": "exact-merge-event",
+      "explanation": "The article names this PR and merge day. Require the independent resolver to match the fresh merge record and visible minute, retaining the returned seconds.",
+      "expectedSource": {
+        "kind": "github-pull-request",
+        "repo": "ojfbot/daily-logger",
+        "ref": "373",
+        "event": "merged",
+        "day": "2026-10-16"
+      }
+    },
+    {
+      "date": "2026-10-17",
+      "articleBlobSha": "551f3cafedd951dc5a1be14178868fd5b7eeb2d5",
+      "text": "19:42Z",
+      "occurrence": 0,
+      "decision": "leave-plain",
+      "reason": "approximate-range",
+      "explanation": "This token is an upper endpoint of an approximate multi-PR range, not an exact asserted instant. Keep complete source groups but omit this occurrence from the sidecar."
+    },
+    {
+      "date": "2026-10-17",
+      "articleBlobSha": "551f3cafedd951dc5a1be14178868fd5b7eeb2d5",
+      "text": "18:21Z",
+      "occurrence": 0,
+      "decision": "leave-plain",
+      "reason": "approximate-range",
+      "explanation": "This token is an upper endpoint of an approximate multi-PR range, not an exact asserted instant. Keep complete source groups but omit this occurrence from the sidecar."
+    },
+    {
+      "date": "2026-10-17",
+      "articleBlobSha": "551f3cafedd951dc5a1be14178868fd5b7eeb2d5",
+      "text": "13:34Z",
+      "occurrence": 0,
+      "decision": "eligible-if-authoritative",
+      "reason": "exact-merge-event",
+      "explanation": "The article names this PR and merge day. Require the independent resolver to match the fresh merge record and visible minute, retaining the returned seconds.",
+      "expectedSource": {
+        "kind": "github-pull-request",
+        "repo": "ojfbot/daily-logger",
+        "ref": "366",
+        "event": "merged",
+        "day": "2026-10-16"
+      }
+    },
+    {
+      "date": "2026-10-17",
+      "articleBlobSha": "551f3cafedd951dc5a1be14178868fd5b7eeb2d5",
+      "text": "06:30Z",
+      "occurrence": 0,
+      "decision": "leave-plain",
+      "reason": "unsupported-event-kind",
+      "explanation": "Generation capture or handoff posting is not a supported Git commit/PR lifecycle event; no lifecycle timestamp is substituted."
+    }
+  ]
+}
