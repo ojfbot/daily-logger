@@ -16,7 +16,7 @@ The frozen baseline contains 216 identities. October 17's three verified disposi
 - `pnpm type-check` and `pnpm --dir packages/frontend type-check`: pass.
 - Explicit TypeScript checking of the trusted editorial scripts, output-proof helper, and rebind CLI: passes.
 - `pnpm lint`: zero errors. The existing explicit-any warning at `src/__tests__/schema.test.ts:195` remains.
-- `pnpm exec playwright test`: 21 browser journeys pass, including the actual October 17 card artifact, checked defaults, saved opt-out after reload, acceptance branch reuse, and conflicting saves.
+- `pnpm exec playwright test`: 21 browser journeys pass, including the actual October 17 card artifact, checked defaults, saved opt-out after reload, acceptance branch reuse, and conflicting saves. GitHub requests are intercepted in these browser tests; live authenticated preview behavior was not verified in this correction pass.
 - `VITE_BASE_PATH=/ pnpm --dir packages/frontend build` and the continuation Playwright configuration: production build and six browser journeys pass.
 - Nine Node feedback extraction and admission tests pass. The executable Python test passes both original workflow boundaries against real Git article, dated-state, code, and symlink changes.
 - `git diff --check`: passes.
@@ -48,3 +48,7 @@ Editorial receipts are bound by hash to immutable artifacts from the first attem
 Separate unmerged branches cannot reserve identities globally. The composed registry rejects duplicate work keys before API publication; reconciliation is required when their states meet. Model agreement and exact matching cannot prove semantic novelty. Goal evidence, immutable identity history, independent verification, bounded admissions, and owner review remain separate controls.
 
 Claude's posted independent review found material gaps missed by the original GPT audit. A subsequent GPT audit identified the body-line hash exclusions, which are now fixed and tested. This record does not claim Claude approved the corrected head.
+
+## Hosted observation
+
+All applicable checks passed on pushed head `75e6bc764e6c822be48b7185371dddcf5a646f8d`, including [Test + pipeline smoke test and browser regression](https://github.com/ojfbot/daily-logger/actions/runs/39136840468), the deployment build, secret scan, skill audit, and Vercel preview. Editorial execution jobs correctly skipped this non-acceptance branch. Later edits to this verification record are documentation only; they do not establish a new live provider or authenticated-preview result.
