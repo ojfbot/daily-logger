@@ -1,5 +1,29 @@
 [
   {
+    "command": "/pr-review",
+    "description": "Review daily-logger #381 (reconcile article suggestions through a verified action registry): check CI status first — this PR is already open, not to be created. Verify registry integrity checks pass, confirm suggestion-state transitions are covered by tests, and merge if green. This closes the correctness gap where a disproved suggestion can remain active in the published article and action queue simultaneously.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-10-18",
+    "id": "act-2026-10-18-pr-review-0de366"
+  },
+  {
+    "command": "/validate",
+    "description": "Run the supervised session-led research pilot from core #538 before the 2026-10-18 America/Chicago morning checkpoint: execute the session, retain source qualifications, verify vault capture and retrieval, and leave a human-review receipt on the issue before the window closes. Do not treat the issue's existence as the validation.",
+    "repo": "core",
+    "status": "open",
+    "sourceDate": "2026-10-18",
+    "id": "act-2026-10-18-validate-f1e787"
+  },
+  {
+    "command": "/investigate",
+    "description": "Disposition the four unclaimed UI kaizen observations from daily-logger #357: locate them in the session transcript, classify each as bug / UX debt / feature request, and file as discrete issues or park with a named revival condition. Also disposition lego-village-pipeline #45 — it is superseded by #46 and currently adds noise to the roadmap pulse without a close condition.",
+    "repo": "daily-logger",
+    "status": "open",
+    "sourceDate": "2026-10-18",
+    "id": "act-2026-10-18-investigate-8dd281"
+  },
+  {
     "command": "/adr",
     "description": "Record the re-entry path for post-revision verification failure as an amendment to ADR-0038: define whether remaining material findings in a verification PR block merge, open a new correction PR, or return to review registration. PR #369 called this out as an unrecorded decision. The second article cycle is the next place it becomes load-bearing.",
     "repo": "daily-logger",

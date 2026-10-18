@@ -2,22 +2,22 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 88
+    "count": 89
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 74
+    "count": 75
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 71
+    "count": 72
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 57
+    "count": 58
   },
   {
     "name": "shell",
@@ -32,17 +32,17 @@
   {
     "name": "model-behavior-as-design",
     "type": "concept",
+    "count": 32
+  },
+  {
+    "name": "hardening",
+    "type": "practice",
     "count": 31
   },
   {
     "name": "rest-day",
     "type": "activity",
     "count": 31
-  },
-  {
-    "name": "hardening",
-    "type": "practice",
-    "count": 30
   },
   {
     "name": "adr",
@@ -150,6 +150,11 @@
     "count": 8
   },
   {
+    "name": "provenance",
+    "type": "concept",
+    "count": 7
+  },
+  {
     "name": "lego-village-pipeline",
     "type": "repo",
     "count": 7
@@ -180,14 +185,14 @@
     "count": 7
   },
   {
-    "name": "provenance",
+    "name": "ojfbot",
     "type": "concept",
     "count": 6
   },
   {
-    "name": "ojfbot",
+    "name": "editorial-pipeline",
     "type": "concept",
-    "count": 6
+    "count": 5
   },
   {
     "name": "skill-telemetry",
@@ -233,11 +238,6 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
-  },
-  {
-    "name": "editorial-pipeline",
-    "type": "concept",
-    "count": 4
   },
   {
     "name": "seh-study",
