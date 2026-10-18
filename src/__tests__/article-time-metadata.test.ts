@@ -24,6 +24,13 @@ describe('independent source admission repair controls', () => {
     expect(result).toEqual({ references: [reference], warnings: [], unresolved: [] })
     expect(result.references[0]?.at).toBe('2026-10-14T09:10:41.000Z')
   })
+  it('uses binding bytes only for sidecar freshness while independently resolving narrative facts', () => {
+    const bindingContent = `${content}\n<!-- managed output -->\n`
+    const bound = { ...sidecar(), bodySha256: articleBodySha256(bindingContent) }
+    expect(articleTimeMetadata({ content, bindingContent, sidecar: bound, records }).references).toEqual([reference])
+    expect(articleTimeMetadata({ content: content.replaceAll('359', '360'), bindingContent, sidecar: bound, records }).references).toEqual([])
+    expect(articleTimeMetadata({ content, bindingContent: `${bindingContent}changed`, sidecar: bound, records }).warnings.join(' ')).toContain('Stale')
+  })
 })
 
 describe('legacy time candidate admission', () => {

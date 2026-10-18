@@ -1,6 +1,6 @@
 # Action registry cutover verification
 
-Recorded October 18, 2026, after Claude's independent review of PR #381 at `3bc6f2f`. This record covers local verification of the corrections. Hosted checks and Claude's follow-up review remain separate observations.
+Recorded October 18, 2026, after Claude's independent review of PR #381 and the round-three patch brief. This record covers local verification of the corrections. Hosted checks and Claude's follow-up review remain separate observations.
 
 ## Historical conservation
 
@@ -12,7 +12,7 @@ The frozen baseline contains 216 identities. October 17's three verified disposi
 
 ## Local checks
 
-- `pnpm test`: 765 tests pass across 57 files.
+- `pnpm test`: 782 tests pass across 58 files.
 - `pnpm type-check` and `pnpm --dir packages/frontend type-check`: pass.
 - Explicit TypeScript checking of the trusted editorial scripts, output-proof helper, and rebind CLI: passes.
 - `pnpm lint`: zero errors. The existing explicit-any warning at `src/__tests__/schema.test.ts:195` remains.
@@ -27,17 +27,27 @@ New storage tests perform a real merge of acceptance on day D and generation on 
 
 New evidence and lifecycle tests cover the XSS reproducer, normalized proxy paths, private-repository access, optional rejected changes, provider failure, pending draft publication, semantic holds without repair, current-source selection, source-author authority, source and prompt budgets, deterministic editorial rebind, and authored lines named `status`, `outcome`, or `provenance`. Rejection memory suppresses equivalent work across dates while its evidence is unchanged. Changed evidence requires another independent verdict. Exact held historical suggestions stay unadmitted even if both injected agents pass them.
 
+Round three first reproduced eight active-field HTML injections, mixed trusted and third-party terminal citations, an apply-phase storage error causing a second model pair, and the stale time-binding warning from the actual API builder. The build-level fixture needs the repository's real Git and portable admission evidence. Once complete, it failed on the stale warning before the fix and now checks all three October 17 merge references in generated entries.
+
+Active fields now fold newlines and escape HTML, including managed delimiters. Marker-shaped fields rerender byte-identically with exactly one managed block. The only raw card match is the last generated card inside that block. New reviews require every completion, dismissal, and supersession citation to be authoritative. Only current API facts and member-authored body or review text carry GitHub authority; metadata does not. An independent audit reproduced the missing dismissal check and marker-shaped text failure, which are now covered. Explicit operator dismissal remains supported. The v5 evidence policy invalidates older caches.
+
+Registry validation and rendering run outside the format-repair scope. An oversized verified output makes one proposer/verifier pair, admits nothing, and leaves a pending draft. Bogus or missing artifact claims are skipped; provider outages still fail closed.
+
 ## Bounded size
 
-[The local size check](action-cutover-size-check.json) builds the current prompt with an injected capture using all current article statuses and the earlier authorized receipt sources. Run `pnpm check:action-size /path/to/authorized-receipt.json` to reproduce it. It calls no provider and writes no article or queue state.
+[The local size check](action-cutover-size-check.json) builds the current prompts with an injected capture using all current article statuses and the earlier authorized receipt sources. Run `pnpm check:action-size /path/to/authorized-receipt.json` to reproduce it. The verifier measurement uses an empty proposal and does not predict the size of a live proposal. It calls no provider and writes no article or queue state.
 
-The frozen baseline is 556,370 bytes. The October 17 dated file is 31,618 bytes. The proposer prompt is 540,404 bytes for 247,734 bytes of source material. Enforced limits are 128 KiB per source, 384 KiB total sources, 640 KiB per complete proposer or verifier prompt, and 64 KiB per dated file. Earlier rounds remain in Git; dated state retains current decisions and cited excerpts rather than full discussions. Exceeding a limit preserves a pending daily draft with no new admissions.
+The frozen baseline is 556,370 bytes. The October 17 dated file is 31,618 bytes. The proposer prompt is 540,450 bytes for 247,734 bytes of source material. Enforced limits are 128 KiB per source, 384 KiB total sources, 640 KiB per complete proposer or verifier prompt, and 64 KiB per dated file. Earlier rounds remain in Git; dated state retains current decisions and cited excerpts rather than full discussions. Exceeding a limit preserves a pending daily draft with no new admissions.
+
+CI also runs `pnpm check:action-size` without a receipt, network, provider, or output write. Both actual prompt paths use a small repository-source fixture. The measured fixed context is 274,454 proposer bytes and 274,423 verifier bytes against a 327,680-byte budget. `action-budget.test.ts` proves the same CLI succeeds normally, preserves input bytes, and exits unsuccessfully after a completion condition expands the fixed context beyond 320 KiB. This budget detects growth but does not prove token-window fit. Relevance-scoped records and a total token-aware ceiling are tracked in [issue #386](https://github.com/ojfbot/daily-logger/issues/386), owned by ojfbot.
 
 ## Live quality receipt
 
-The operator previously authorized an October 17 Anthropic dry run. Its proposer was Sonnet 4.6 and its independent verifier was Opus 4.6. The [original result](action-cutover-live-result.json) remains an immutable record of that test. This correction pass made no new live provider calls.
+The operator previously authorized an October 17 Anthropic dry run. Its proposer was Sonnet 4.6 and its independent verifier was Opus 4.6. The [original result](action-cutover-live-result.json) remains an immutable record of that test. This correction pass made no new live provider calls. The v5 prompt and new evidence policy were tested with injected agents only.
 
 `scripts/check-action-review.ts` verifies the preserved receipt against all current original objects and exact action histories. The storage conversion retains its model round and evidence hashes. An explicit editorial rebind records the reporting-window prose clarification without changing those decisions. October 17's three inherited GitHub time references were independently re-adjudicated against the current body; the [follow-up receipt](../docs/time-backfill/2026-10/oct17-action-cutover.json) records them. No stale-backfill warning remains for that article.
+
+October 17 is a one-time v3 cutover snapshot, preserved for owner review in this ordinary source/data PR. Its terminal decisions include report citations and persisted excerpts without the transient GitHub trust metadata. Projection retains that explicit legacy receipt; it does not retroactively certify those decisions under v5. Every future reconciliation uses v5, and an older snapshot cannot satisfy its review cache. The independent audit called out this prospective boundary. A fresh live round would need separate authorization and has not been performed.
 
 ## Authority and recovery limits
 
@@ -51,4 +61,4 @@ Claude's posted independent review found material gaps missed by the original GP
 
 ## Hosted observation
 
-All applicable checks passed on pushed head `75e6bc764e6c822be48b7185371dddcf5a646f8d`, including [Test + pipeline smoke test and browser regression](https://github.com/ojfbot/daily-logger/actions/runs/39136840468), the deployment build, secret scan, skill audit, and Vercel preview. Editorial execution jobs correctly skipped this non-acceptance branch. Later edits to this verification record are documentation only; they do not establish a new live provider or authenticated-preview result.
+Before round three, all applicable checks passed on pushed head `75e6bc764e6c822be48b7185371dddcf5a646f8d`, including [Test + pipeline smoke test and browser regression](https://github.com/ojfbot/daily-logger/actions/runs/39136840468), the deployment build, secret scan, skill audit, and Vercel preview. Editorial execution jobs correctly skipped this non-acceptance branch. Round three changes implementation, tests, and generated entries; that earlier green head does not verify these changes. Its hosted result must be observed separately after pushing.

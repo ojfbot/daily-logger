@@ -132,6 +132,7 @@ export function projectRegistry(registry: ActionRegistry, articleStatuses: Reado
 }
 
 function escaped(value: string): string { return value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char] ?? char)) }
+function oneLine(value: string): string { return escaped(value.replace(/\s*[\r\n]+\s*/g, ' ')) }
 export function articleActionRecords(registry: ActionRegistry, articleDate: string, statuses: ReadonlyMap<string, string>) {
   const snapshot = registry.articles.find(article => article.date === articleDate)
   return (snapshot?.actionKeys ?? []).map(key => {
@@ -156,7 +157,7 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
   const visible = articleActionRecords(registry, articleDate, statuses).map(record => ({ record, decision: record.history.at(-1), state: record.state }))
   const active = visible.filter(item => item.state === 'open' || item.state === 'proposed')
   const resolved = visible.filter(item => item.state !== 'open' && item.state !== 'proposed')
-  const lines = [ACTIONS_START, '> **Suggested actions**', ...active.flatMap(({ record, decision }) => [`> - \`${record.original.command}\` — ${decision?.description ?? record.original.description} (${record.original.repo})${record.includeInIndex ? '' : ' · Article only'}`, ...(record.doneWhen ? [`>   Done when: ${record.doneWhen}`] : []), ...(record.gates.length ? [`>   Conditions: ${record.gates.join(' ')}`] : [])])]
+  const lines = [ACTIONS_START, '> **Suggested actions**', ...active.flatMap(({ record, decision }) => [`> - \`${oneLine(record.original.command)}\` — ${oneLine(decision?.description ?? record.original.description)} (${oneLine(record.original.repo)})${record.includeInIndex ? '' : ' · Article only'}`, ...(record.doneWhen ? [`>   Done when: ${oneLine(record.doneWhen)}`] : []), ...(record.gates.length ? [`>   Conditions: ${record.gates.map(oneLine).join(' ')}`] : [])])]
   if (active.length === 0) lines.push('> No new verified suggestion. Existing work retains its documented next checkpoints.')
   if (resolved.length) {
     lines.push('', '<section class="action-history-card" aria-label="Resolved suggestions">', '<h3>Resolved suggestions</h3>')
@@ -206,8 +207,8 @@ export function renderArticleActionHtml(markdown: string, registry: ActionRegist
   // Markdown's raw-HTML escaping. Authored HTML still goes through renderArticle.
   const blockStart = rendered.indexOf(ACTIONS_START)
   const end = rendered.indexOf(ACTIONS_END, blockStart)
-  const start = rendered.indexOf('\n<section class="action-history-card"', blockStart)
-  if (start === -1 || end === -1 || start >= end) return renderArticle(rendered)
+  const start = rendered.lastIndexOf('\n<section class="action-history-card"', end)
+  if (blockStart === -1 || end === -1 || start <= blockStart || start >= end) return renderArticle(rendered)
   return renderArticle(rendered.slice(0, start)) + rendered.slice(start, end) + renderArticle(rendered.slice(end + ACTIONS_END.length))
 }
 

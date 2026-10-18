@@ -18,7 +18,11 @@ export async function verifyEditorialProof(github: GitHub, value: unknown): Prom
   const parsed = editorialProofSchema.extend({ artifactId: z.number().int().positive() }).safeParse(value)
   if (!parsed.success) return false
   const response = await github(`/repos/ojfbot/daily-logger/actions/artifacts/${parsed.data.artifactId}`)
+  if (response.status === 404 || response.status === 410) return false
   if (!response.ok) throw new Error('Editorial output artifact is unavailable; no admission or safe retry is established')
-  const artifact = z.object({ id: z.number(), name: z.string(), expired: z.boolean(), workflow_run: z.object({ id: z.number(), head_sha: sha }) }).parse(await response.json())
+  const decoded: unknown = await response.json().catch(() => null)
+  const result = z.object({ id: z.number(), name: z.string(), expired: z.boolean(), workflow_run: z.object({ id: z.number(), head_sha: sha }) }).safeParse(decoded)
+  if (!result.success) return false
+  const artifact = result.data
   return artifact.id === parsed.data.artifactId && !artifact.expired && artifact.name === editorialProofName(parsed.data) && artifact.workflow_run.id === parsed.data.runId && artifact.workflow_run.head_sha === (parsed.data.requestCommentId ? parsed.data.policySha : parsed.data.inputHead)
 }

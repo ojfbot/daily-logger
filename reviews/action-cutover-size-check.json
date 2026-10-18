@@ -1,14 +1,16 @@
 {
   "schemaVersion": 1,
-  "method": "Build the current proposer context using only the previously authorized receipt sources and an injected local capture. No remote calls or state writes.",
+  "method": "Build current prompts from the previously authorized sources, with an empty proposal for the verifier measurement. No provider calls or article/queue writes.",
   "baselineBytes": 556370,
   "articleFileBytes": 31618,
   "sourceBytes": 247734,
-  "proposerPromptBytes": 540404,
+  "proposerPromptBytes": 540450,
+  "verifierPromptBytes": 540419,
   "limits": {
     "source": 131072,
     "totalSources": 393216,
     "prompt": 655360,
-    "articleFile": 65536
+    "articleFile": 65536,
+    "fixedContext": 327680
   }
 }

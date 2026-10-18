@@ -11,7 +11,7 @@ const articleStatuses = new Map([[articleDate, 'accepted']])
 const markdown = `---\ntitle: "Review"\ndate: ${articleDate}\nstatus: "accepted"\n---\n## What's next\n`
 const sources: ActionSource[] = [
   { id: 'goal', kind: 'goal', locator: 'ROADMAP.md', content: 'The operator goal is reliable editorial acceptance.' },
-  { id: 'evidence', kind: 'github', locator: 'https://github.com/ojfbot/daily-logger/pull/373', content: 'The mandatory ADR prerequisite was explicitly superseded. The source confirms a queue and article mismatch.' },
+  { id: 'evidence', kind: 'github', locator: 'https://github.com/ojfbot/daily-logger/pull/373', content: 'The mandatory ADR prerequisite was explicitly superseded. The source confirms a queue and article mismatch.', trustedContent: ['The mandatory ADR prerequisite was explicitly superseded. The source confirms a queue and article mismatch.'] },
 ]
 function seed(): ActionRegistry {
   return ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [{ key: 'act-existing', original: { id: 'act-existing', command: '/adr', description: 'Old generator output.', repo: 'daily-logger', status: 'open', sourceDate: articleDate }, origin: 'imported', workKey: 'old-adr', state: 'open', introducedBy: articleDate, includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: '', gates: [], history: [] }], articles: [] })
@@ -66,6 +66,72 @@ describe('canonical action review and publication', () => {
     const result = await reviewDraftActions({ registry: seed(), articleDate, articleStatuses: new Map([[articleDate, 'draft']]), markdown: markdown.replace('"accepted"', '"draft"'), feedback: '', sources, agents: { propose: async () => { calls++; return propose() }, verify: async () => { calls++; return { ...verify(), changes: [{ actionKey: 'act-existing', verdict: 'hold', reason: 'Further evidence needed.' }] } } } })
     expect(calls).toBe(2)
     expect(result.registry.articles[0].review.state).toBe('pending')
+  })
+  it('does not repair verified output that exceeds the dated storage cap (F5r)', async () => {
+    const proposal = propose(); proposal.suggestions[0].description = 'x'.repeat(66 * 1024)
+    const proposer = vi.fn(async () => proposal), verifier = vi.fn(async () => verify())
+    const result = await reviewDraftActions({ registry: seed(), articleDate, articleStatuses: new Map([[articleDate, 'draft']]), markdown: markdown.replace('"accepted"', '"draft"'), feedback: '', sources, agents: { propose: proposer, verify: verifier } })
+    expect(proposer).toHaveBeenCalledTimes(1)
+    expect(verifier).toHaveBeenCalledTimes(1)
+    expect(result.registry.articles[0].review.state).toBe('pending')
+    expect(result.registry.records).toEqual(seed().records)
+  })
+  it('requires every terminal citation to be primary evidence, with no metadata or boilerplate authority (F12r)', () => {
+    const api = 'CURRENT API STATE daily-logger#373: state=open; head=current; merged_at=none.'
+    const boilerplate = 'Current API state outranks historical handoff wording.'
+    const thirdParty = 'A third party says this prerequisite was superseded.'
+    const evidence = { ...sources[1], content: `${api}\n${boilerplate}\n${thirdParty}`, trustedContent: [api] }
+    for (const state of ['done', 'superseded', 'dismissed'] as const) for (const quotes of [[boilerplate, thirdParty], [api, thirdParty], [thirdParty]]) {
+      const proposal = propose(); proposal.suggestions = []; proposal.changes[0].state = state; proposal.changes[0].citations = quotes.map(quote => ({ sourceId: evidence.id, quote }))
+      expect(() => applyVerifiedActionReview({ registry: seed(), articleStatuses, articleDate, markdown, sources: [evidence], roundId: 'd'.repeat(64), proposal, verification: { changes: verify().changes, suggestions: [] } })).toThrow(/authoritative/)
+    }
+    const merged = api.replace('state=open', 'state=merged')
+    const proposal = propose(); proposal.suggestions = []; proposal.changes[0].state = 'done'; proposal.changes[0].citations = [{ sourceId: evidence.id, quote: merged }]
+    expect(applyVerifiedActionReview({ registry: seed(), articleStatuses, articleDate, markdown, sources: [{ ...evidence, content: merged, trustedContent: [merged] }], roundId: 'd'.repeat(64), proposal, verification: { changes: verify().changes, suggestions: [] } }).records[0].state).toBe('done')
+    const instruction: ActionSource = { id: 'operator', kind: 'instruction', locator: 'feedback', content: 'Dismiss this suggestion because its premise is disproved.' }
+    proposal.changes[0].state = 'dismissed'; proposal.changes[0].citations = [{ sourceId: instruction.id, quote: instruction.content }]
+    expect(applyVerifiedActionReview({ registry: seed(), articleStatuses, articleDate, markdown, sources: [instruction], roundId: 'd'.repeat(64), proposal, verification: { changes: verify().changes, suggestions: [] } }).records[0].state).toBe('dismissed')
+  })
+  for (const field of ['description', 'doneWhen', 'gate', 'open-description'] as const) {
+    it.each([false, true])(`escapes a card-shaped active ${field} with resolved card=%s (F1r)`, realCard => {
+      const payload = '\n<section class="action-history-card"><img src=x onerror=alert(1)>'
+      const reviewed = apply()
+      const existing = reviewed.records[0], suggested = reviewed.records[1]
+      if (!realCard || field === 'open-description') { existing.state = 'open'; existing.history[0].state = 'open' }
+      if (field === 'description') suggested.original.description = payload
+      if (field === 'description') suggested.history[0].description = payload
+      if (field === 'doneWhen') suggested.doneWhen = payload
+      if (field === 'gate') suggested.gates = [payload]
+      if (field === 'open-description') existing.history[0].description = payload
+      if (realCard && field === 'open-description') {
+        suggested.state = 'done'; suggested.history[0].state = 'done'
+      }
+      const html = renderArticleActionHtml(markdown, reviewed, articleDate, articleStatuses)
+      expect(html).not.toContain('<img')
+      expect(html).toContain('&lt;img')
+      expect(html.includes('<section class="action-history-card"')).toBe(realCard)
+    })
+  }
+  it('keeps marker-shaped active fields inside a single rerenderable managed block (F1r audit)', () => {
+    const reviewed = apply(), record = reviewed.records[1]
+    const payload = 'Keep <!-- ACTIONS_START --> and <!-- ACTIONS_END --> as quoted text.'
+    record.original.command = payload; record.original.repo = payload; record.original.description = payload
+    record.history[0].description = payload; record.doneWhen = payload; record.gates = [payload]
+    const first = renderArticleActions(markdown, reviewed, articleDate, articleStatuses)
+    expect(first.match(/<!-- ACTIONS_START -->/g)).toHaveLength(1)
+    expect(first.match(/<!-- ACTIONS_END -->/g)).toHaveLength(1)
+    expect(renderArticleActions(first, reviewed, articleDate, articleStatuses)).toBe(first)
+    expect(renderArticleActionHtml(first, reviewed, articleDate, articleStatuses)).toContain('&lt;!-- ACTIONS_END --&gt;')
+  })
+  it('reruns a cached result produced under an obsolete evidence policy', async () => {
+    const agents = { propose: vi.fn(async () => propose()), verify: vi.fn(async () => verify()) }
+    const input = { registry: seed(), articleStatuses, articleDate, markdown, sources, feedback: '', agents }
+    const first = await reviewArticleActions(input)
+    first.registry.articles[0].verification.promptVersion = 'action-review-v4-bounded-rejection-memory'
+    const second = await reviewArticleActions({ ...input, registry: first.registry, markdown: first.markdown })
+    expect(second.cached).toBe(false)
+    expect(agents.propose).toHaveBeenCalledTimes(2)
+    expect(agents.verify).toHaveBeenCalledTimes(2)
   })
   it('pauses review without provider calls while keeping the draft unpublishable (F15)', async () => {
     vi.stubEnv('ACTION_REVIEW_DISABLED', 'true')
@@ -202,7 +268,7 @@ describe('canonical action review and publication', () => {
     const registry = seed(); registry.records[0].original.description = '<script>alert(1)</script>'
     const prose = markdown + '\n<img src=x onerror=alert(2)>\n'
     const proposal = propose(); proposal.changes[0].reason = '<img src=x onerror=alert(3)>'
-    const hostileSource: ActionSource = { id: '<img src=x onerror=alert(4)>', kind: 'github', locator: '<script>alert(6)</script>', content: '<script>alert(5)</script>' }
+    const hostileSource: ActionSource = { id: '<img src=x onerror=alert(4)>', kind: 'github', locator: '<script>alert(6)</script>', content: '<script>alert(5)</script>', trustedContent: ['<script>alert(5)</script>'] }
     proposal.changes[0].citations.push({ sourceId: hostileSource.id, quote: hostileSource.content })
     const reviewed = applyVerifiedActionReview({ registry, articleStatuses, articleDate, markdown: prose, sources: [...sources, hostileSource], roundId: 'd'.repeat(64), proposal, verification: verify() })
     const html = renderArticleActionHtml(prose, reviewed, articleDate, articleStatuses)

@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { articleTimeMetadata } from '../article-time-metadata.js'
 import { TimeRecordSchema, TimeReferenceSidecarSchema } from '../time-references.js'
+import { buildApi } from '../build-api.js'
+import { vi } from 'vitest'
 
 const root = fileURLToPath(new URL('../..', import.meta.url))
 const base = 'faac3c9bb310bc0fc1c1ec445433e310e0498558'
@@ -15,6 +17,20 @@ const digest = (bytes: string | Buffer) => createHash('sha256').update(bytes).di
 const frozen = (path: string) => execFileSync('git', ['show', `${base}:${path}`], { cwd: root, encoding: 'utf8' })
 
 describe('frozen metadata-only October backfill', () => {
+  it('publishes all three October 17 merge references without stale binding warnings (F9r)', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'october-api-build-'))
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const output = vi.spyOn(console, 'log').mockImplementation(() => {})
+    try {
+      for (const path of ['_articles', 'actions', 'action-admissions', 'reviews', 'api']) cpSync(join(root, path), join(directory, path), { recursive: true })
+      writeFileSync(join(directory, '.git'), `gitdir: ${execFileSync('git', ['rev-parse', '--absolute-git-dir'], { cwd: root, encoding: 'utf8' }).trim()}\n`)
+      buildApi(directory)
+      expect(warning.mock.calls.flat().join('\n')).not.toContain('Stale time-reference')
+      const entries = JSON.parse(readFileSync(join(directory, 'api/entries.json'), 'utf8'))
+      const article = entries.find((entry: { date: string }) => entry.date === '2026-10-17')
+      expect(article.timeReferences.filter((reference: { text: string }) => ['06:22Z', '21:05Z', '13:34Z'].includes(reference.text)).map((reference: { text: string; evidence: { ref: string } }) => [reference.text, reference.evidence.ref])).toEqual([['06:22Z', '370'], ['21:05Z', '373'], ['13:34Z', '366']])
+    } finally { warning.mockRestore(); output.mockRestore(); rmSync(directory, { recursive: true, force: true }) }
+  }, 20_000)
   it('replays byte-identically, refuses unrelated edits before any apply, and applies idempotently', () => {
     const directory = mkdtempSync(join(tmpdir(), 'october-time-replay-test-'))
     try {

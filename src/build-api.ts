@@ -254,7 +254,7 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
     const body = narrative.replace(/^---[\s\S]*?---\n/, '')
     const date = (fm.date as string) ?? file.replace('.md', '')
 
-    const timeMetadata = readArticleTime({ repoRoot, date: file.replace(/\.md$/, ''), markdown: narrative })
+    const timeMetadata = readArticleTime({ repoRoot, date: file.replace(/\.md$/, ''), markdown: narrative, bindingMarkdown: content })
     for (const warning of timeMetadata.warnings) console.warn(`::warning::${date}: ${warning}`)
     for (const missing of timeMetadata.unresolved) console.warn(`::warning::${date}: time ${missing.text} occurrence ${missing.occurrence}: ${missing.reason}`)
 

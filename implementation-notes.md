@@ -232,3 +232,5 @@
 - 2026-10-18: Scoping rejection prose to one article would have weakened cross-date repeat prevention. Kept global rejection fingerprints keyed to work and source evidence, plus an exact historical-hold guard; changed evidence still goes through independent verification.
 
 - 2026-10-18: The frozen monthly Git replay passed alone but exceeded its thirty-second test limit under full-suite filesystem load. Scoped that integration case to sixty seconds; no production timeout or assertion changed. Compact model context also keeps accepted corrected wording and ownership/evidence gates for earlier actions instead of resurfacing original generator wording.
+
+- 2026-10-18: Claude's round-two probes disproved the earlier complete-fix claims for card rendering, time-reference publication, citation authority, and repair scope. Reproduced each defect, tested the real API build, and added terminal dismissal and managed-delimiter cases found by the follow-up audit. Prompt relevance and token-window fit remain tracked in #386 while a receipt-free CI size budget bounds fixed-context growth.
