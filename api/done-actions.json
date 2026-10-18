@@ -1130,5 +1130,15 @@
     "id": "act-2026-10-16-design-890f08",
     "closedDate": "2026-10-16",
     "resolution": "Superseded, not implemented. The accepted article correction documents retaining failed/pinned evidence, returning remaining corrections to existing editorial authority and reviewing changed bytes before merge. ADR-0038 already documents human merge when satisfied and the bot-head guard: a feedback-only edit after a successful bot-authored revision skips the model. No ADR amendment, mandatory second verification PR or before-second-cycle gate was adopted or implemented; docs/decisions was the wrong destination. Automatic post-acceptance recovery remains unqualified, and stampDraft still refuses non-drafts and existing accept/date branches. Evidence: https://github.com/ojfbot/daily-logger/blob/061324ad4738c2594978bc059aa9578cc876a62d/_articles/2026-10-16.md#L68-L74 ; https://github.com/ojfbot/daily-logger/blob/061324ad4738c2594978bc059aa9578cc876a62d/_articles/2026-10-16.md#L104-L117 ; https://github.com/ojfbot/daily-logger/blob/083884b9ed553725534ce7d180e520dc9d0910dd/decisions/adr/0038-editorial-revision-workflow.md ; https://github.com/ojfbot/daily-logger/blob/083884b9ed553725534ce7d180e520dc9d0910dd/.github/workflows/editorial-revise.yml#L136-L151 ; https://github.com/ojfbot/daily-logger/blob/083884b9ed553725534ce7d180e520dc9d0910dd/packages/frontend/src/utils/stampDraft.ts#L54-L88 ."
+  },
+  {
+    "command": "/pr-review",
+    "description": "Review daily-logger #381 (reconcile article suggestions through a verified action registry): check CI status first — this PR is already open, not to be created. Verify registry integrity checks pass, confirm suggestion-state transitions are covered by tests, and merge if green. This closes the correctness gap where a disproved suggestion can remain active in the published article and action queue simultaneously.",
+    "repo": "daily-logger",
+    "status": "done",
+    "sourceDate": "2026-10-18",
+    "id": "act-2026-10-18-pr-review-0de366",
+    "closedDate": "2026-10-18",
+    "resolution": "The current API reports #381 merged. The owner receipt records landing c88039f1167a824be7ef27f65453ec3dd83f55f8, passing checks on the exact landing candidate and post-merge tree equality. This completes the original review/merge request; live authenticated article-cycle verification remains separate and is not claimed complete."
   }
 ]

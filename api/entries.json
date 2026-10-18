@@ -2,7 +2,7 @@
   {
     "date": "2026-10-18",
     "title": "Saturday's timestamp archaeology: backfilling October's time evidence and hardening the editorial loop",
-    "summary": "Nineteen commits across daily-logger and core on Saturday closed nine PRs, adding source-backed local-time world map popovers, backfilling October timestamp evidence, and hardening the editorial review cycle.",
+    "summary": "Eighteen daily-logger mainline commits plus one core commit across eight daily-logger PRs and one core PR on Saturday closed nine PRs total, adding source-backed local-time world map popovers, backfilling October timestamp evidence with a documented coverage census of 42 recognized occurrences and 25 admitted references, and hardening the editorial review cycle.",
     "tags": [
       {
         "name": "daily-logger",
@@ -44,7 +44,8 @@
     "commitCount": 18,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "edited",
     "decisions": [
       {
         "title": "Timestamp backfill as a metadata-only, byte-preserving operation",
@@ -59,13 +60,19 @@
         "relatedTags": []
       },
       {
-        "title": "Agent orientation as the first line of defence against timestamp coverage errors",
+        "title": "Agent orientation as a documented aid against timestamp coverage errors",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Appended feedback without losing original note — PR correspondence model",
+        "title": "Appended feedback as PR comments without losing original note — PR correspondence model",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0068 as accepted skill-suggestion policy",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
@@ -151,6 +158,19 @@
         }
       },
       {
+        "text": "22:06:59Z",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-17T22:06:59.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "375",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/375"
+        }
+      },
+      {
         "text": "20:27Z",
         "occurrence": 0,
         "precision": "minute",
@@ -161,16 +181,6 @@
           "ref": "539",
           "event": "merged",
           "url": "https://github.com/ojfbot/core/pull/539"
-        }
-      },
-      {
-        "text": "2026-10-17T19:12:20Z",
-        "occurrence": 0,
-        "precision": "second",
-        "at": "2026-10-17T19:12:20.000Z",
-        "evidence": {
-          "kind": "explicit-offset",
-          "value": "2026-10-17T19:12:20Z"
         }
       }
     ],
@@ -210,6 +220,12 @@
           "model": "claude-sonnet-4-6",
           "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
           "promptSha256": "1ac427b3ba4743c7a702f122ae59e8448295741a6356ec7d2f828c3b09e00542"
+        },
+        {
+          "role": "revision",
+          "model": "claude-opus-4-6",
+          "promptVersion": "editorial-revision-v2-recorded-time-protected",
+          "promptSha256": "53a71c3e39b6fc9b14f82b4919dc4b17967e94c616e72cd608fa8c01dc59a62f"
         }
       ],
       "runtime": {
