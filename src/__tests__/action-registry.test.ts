@@ -1,9 +1,9 @@
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ActionRegistrySchema, articleActionRecords, projectRegistry, readActionRegistry, registryBytes, registryRevision, renderArticleActions, renderArticleActionHtml, setActionInclusion, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
-import { ActionVerificationSchema, actionGithubReferences, applyVerifiedActionReview, reviewArticleActions, renderGithubEvidence, resolveActionSourceLines, type ActionProposal, type ActionVerification } from '../review-actions.js'
+import { ActionVerificationSchema, actionGithubReferences, applyVerifiedActionReview, reviewArticleActions, reviewDraftActions, renderGithubEvidence, resolveActionSourceLines, type ActionProposal, type ActionVerification } from '../review-actions.js'
 
 const articleDate = '2026-10-17'
 const articleStatuses = new Map([[articleDate, 'accepted']])
@@ -20,9 +20,67 @@ function propose(): ActionProposal { return { changes: [{ actionKey: 'act-existi
 function verify(): ActionVerification { return { changes: [{ actionKey: 'act-existing', verdict: 'pass', reason: 'The exact prerequisite is superseded.' }], suggestions: [{ candidateIndex: 0, verdict: 'pass', reason: 'A bounded step toward the operator goal.', existingKey: null }] } }
 function apply(registry = seed(), proposal = propose(), verification = verify()) { return applyVerifiedActionReview({ registry, articleStatuses, articleDate, markdown, sources, roundId: 'd'.repeat(64), proposal, verification }) }
 const roots: string[] = []
-afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
+afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); vi.unstubAllEnvs() })
 
 describe('canonical action review and publication', () => {
+  it('does not treat third-party GitHub comments as terminal evidence (F12)', () => {
+    const proposal = propose()
+    const untrusted = sources.map(source => source.kind === 'github' ? { ...source, trustedContent: ['CURRENT API STATE: state=open; head=current.'] } : source)
+    expect(() => applyVerifiedActionReview({ registry: seed(), articleStatuses, articleDate, markdown, sources: untrusted, roundId: 'd'.repeat(64), proposal, verification: verify() })).toThrow(/OWNER\/MEMBER\/COLLABORATOR/)
+    const trusted = sources.map(source => source.kind === 'github' ? { ...source, trustedContent: [source.content] } : source)
+    expect(applyVerifiedActionReview({ registry: seed(), articleStatuses, articleDate, markdown, sources: trusted, roundId: 'd'.repeat(64), proposal, verification: verify() }).records[0].state).toBe('superseded')
+  })
+  it('sends only the fresh source version to both agents and does not revive older CURRENT API STATE text (F11)', async () => {
+    const first = await reviewArticleActions({ registry: seed(), articleStatuses, articleDate, markdown, sources, feedback: '', agents: { propose: async () => propose(), verify: async () => verify() } })
+    first.registry.articles[0].sources.push({ id: `github:stale@${'a'.repeat(64)}`, kind: 'github', locator: 'old source', content: 'CURRENT API STATE: obsolete open handoff.' })
+    const prompts: string[] = []
+    await reviewArticleActions({ registry: first.registry, articleStatuses, articleDate, markdown: first.markdown, sources, feedback: 'Fresh review', agents: { propose: async prompt => { prompts.push(prompt); return propose() }, verify: async prompt => { prompts.push(prompt); return verify() } } })
+    expect(prompts).toHaveLength(2)
+    expect(prompts.every(prompt => !prompt.includes('obsolete open handoff'))).toBe(true)
+  })
+  it('drops a held optional closure and rejects an invalid identity link without losing the article (F4)', async () => {
+    const registry = seed(); registry.records[0].introducedBy = '2026-10-16'
+    const result = await reviewDraftActions({ registry, articleDate, articleStatuses: new Map([[articleDate, 'draft']]), markdown: markdown.replace('"accepted"', '"draft"'), feedback: '', sources, agents: {
+      propose: async () => ({ changes: propose().changes, suggestions: [{ ...candidate, existingKey: 'missing' }] }),
+      verify: async () => ({ changes: [{ actionKey: 'act-existing', verdict: 'hold', reason: 'No authoritative closure evidence.' }], suggestions: [{ candidateIndex: 0, verdict: 'pass', reason: 'Bad identity link.', existingKey: 'missing' }] }),
+    } })
+    expect(result.markdown).toContain('Suggested actions')
+    expect(result.registry.records).toEqual(registry.records)
+    expect(result.registry.articles[0].review.state).toBe('verified')
+    expect(result.registry.articles[0].rejected).toHaveLength(2)
+  })
+  it('retains the daily draft with zero admissions when a provider fails and blocks acceptance (F4)', async () => {
+    const registry = { ...seed(), records: [] }
+    let calls = 0
+    const result = await reviewDraftActions({ registry, articleDate, articleStatuses: new Map([[articleDate, 'draft']]), markdown: markdown.replace('"accepted"', '"draft"'), feedback: '', sources, agents: { propose: async () => { calls++; throw new Error('529 provider unavailable') }, verify: async () => { throw new Error('Verifier must not run') } } })
+    expect(calls).toBe(1)
+    expect(result.markdown).toContain('Action review pending')
+    expect(result.registry.records).toEqual([])
+    expect(result.registry.articles[0].review).toEqual({ state: 'pending', reason: '529 provider unavailable' })
+    expect(projectRegistry(result.registry, new Map([[articleDate, 'draft']])).open).toEqual([])
+    expect(() => renderArticleActions(result.markdown.replace('"draft"', '"accepted"'), result.registry, articleDate, articleStatuses)).toThrow()
+  })
+  it('does not renegotiate a semantic hold with another pair of model calls (F5)', async () => {
+    let calls = 0
+    const result = await reviewDraftActions({ registry: seed(), articleDate, articleStatuses: new Map([[articleDate, 'draft']]), markdown: markdown.replace('"accepted"', '"draft"'), feedback: '', sources, agents: { propose: async () => { calls++; return propose() }, verify: async () => { calls++; return { ...verify(), changes: [{ actionKey: 'act-existing', verdict: 'hold', reason: 'Further evidence needed.' }] } } } })
+    expect(calls).toBe(2)
+    expect(result.registry.articles[0].review.state).toBe('pending')
+  })
+  it('pauses review without provider calls while keeping the draft unpublishable (F15)', async () => {
+    vi.stubEnv('ACTION_REVIEW_DISABLED', 'true')
+    const proposeAgent = vi.fn()
+    const result = await reviewDraftActions({ registry: seed(), articleDate, articleStatuses: new Map([[articleDate, 'draft']]), markdown: markdown.replace('"accepted"', '"draft"'), feedback: '', sources, agents: { propose: proposeAgent, verify: vi.fn() } })
+    expect(proposeAgent).not.toHaveBeenCalled()
+    expect(result.registry.articles[0].review.state).toBe('pending')
+  })
+  it('escapes a card-shaped authored section after the managed block when no resolved card exists (F1)', () => {
+    const prose = `${markdown}\n---\n\n*Generated by [daily-logger](https://github.com/ojfbot/daily-logger).*\n\n<section class="action-history-card"><img src=x onerror=alert(1)></section>\n`
+    const reviewed = applyVerifiedActionReview({ registry: { ...seed(), records: [] }, articleStatuses, articleDate, markdown: prose, sources: [], roundId: 'd'.repeat(64), proposal: { changes: [], suggestions: [] }, verification: { changes: [], suggestions: [] } })
+    const html = renderArticleActionHtml(prose, reviewed, articleDate, articleStatuses)
+    expect(html).not.toContain('<section class="action-history-card"')
+    expect(html).not.toContain('<img')
+    expect(html).toContain('&lt;img')
+  })
   it('collects bare repository/PR references and preserves explicit issue identity', () => {
     const refs = actionGithubReferences({ markdown: 'Review daily-logger #372. See core #524 at https://github.com/ojfbot/core/issues/524. Ignore unknown-repository #1 and https://github.com/ojfbot/selfco/issues/1.', feedback: '' })
     expect(refs.map(([, ref]) => ref)).toEqual([{ repo: 'core', kind: 'issues', number: '524' }, { repo: 'daily-logger', kind: 'pull', number: '372' }])

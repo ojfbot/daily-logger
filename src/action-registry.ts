@@ -129,6 +129,10 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
   }
   if (managedArticleDigest(markdown) !== snapshot.articleDigest) throw new Error(`Action review is stale for ${articleDate}; reconcile before publishing`)
   if (snapshot.status !== statuses.get(articleDate)) throw new Error(`Action review status is stale for ${articleDate}; reconcile before publishing`)
+  if (snapshot.review.state === 'pending') {
+    if (snapshot.status !== 'draft') throw new Error(`Action review is pending for ${articleDate}; acceptance is blocked`)
+    return `${unmanagedArticleProse(markdown).trimEnd()}\n\n${ACTIONS_START}\n> **Suggested actions**\n> Action review pending. No new action or disposition has been admitted. Reconcile before accepting this article.\n${ACTIONS_END}\n`
+  }
   const visible = articleActionRecords(registry, articleDate, statuses).map(record => ({ record, decision: record.history.at(-1), state: record.state }))
   const active = visible.filter(item => item.state === 'open' || item.state === 'proposed')
   const resolved = visible.filter(item => item.state !== 'open' && item.state !== 'proposed')
@@ -166,9 +170,10 @@ export function renderArticleActionHtml(markdown: string, registry: ActionRegist
   if (!registry.articles.some(article => article.date === date)) return renderArticle(rendered)
   // Only the escaped card freshly constructed from registry records bypasses
   // Markdown's raw-HTML escaping. Authored HTML still goes through renderArticle.
-  const start = rendered.indexOf('\n<section class="action-history-card"', rendered.indexOf(ACTIONS_START))
-  if (start === -1) return renderArticle(rendered)
-  const end = rendered.indexOf(ACTIONS_END, start)
+  const blockStart = rendered.indexOf(ACTIONS_START)
+  const end = rendered.indexOf(ACTIONS_END, blockStart)
+  const start = rendered.indexOf('\n<section class="action-history-card"', blockStart)
+  if (start === -1 || end === -1 || start >= end) return renderArticle(rendered)
   return renderArticle(rendered.slice(0, start)) + rendered.slice(start, end) + renderArticle(rendered.slice(end + ACTIONS_END.length))
 }
 

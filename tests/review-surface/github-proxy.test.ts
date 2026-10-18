@@ -21,6 +21,11 @@ async function invoke(query: Record<string, string | string[]>) {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('authenticated GitHub proxy query forwarding', () => {
+  it.each(['repos/ojfbot/daily-logger/../selfco/contents/secret.md', 'repos/ojfbot/daily-logger/%2e%2e/selfco/issues', 'repos/ojfbot/daily-logger/../../core/issues'])('rejects normalized paths outside the allowed repository: %s', async path => {
+    const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher)
+    expect((await invoke({ path })).status).toBe(403)
+    expect(fetcher).not.toHaveBeenCalled()
+  })
   it('reads the editorial registry instead of main and prevents stale readback caching', async () => {
     let observed: URL | undefined
     vi.stubGlobal('fetch', async (url: string) => {

@@ -25,7 +25,7 @@ import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
 import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses } from './action-registry.js'
-import { collectActionSources, createActionAgents, mockActionAgents, reviewArticleActions } from './review-actions.js'
+import { collectActionSources, createActionAgents, mockActionAgents, reviewDraftActions } from './review-actions.js'
 import {
   ARTICLE_MODEL,
   ARTICLE_PROMPT_VERSION,
@@ -254,7 +254,7 @@ export async function main() {
   const originalMarkdown = toMarkdown(article)
   const articlePath = join(REPO_ROOT, '_articles', `${date}.md`)
   const previousArticle = existsSync(articlePath) ? readFileSync(articlePath, 'utf8') : null
-  const actionReview = await reviewArticleActions({ registry, articleStatuses: readArticleStatuses(REPO_ROOT), articleDate: date, markdown: originalMarkdown, feedback: '', sources: process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ repoRoot: REPO_ROOT, markdown: originalMarkdown, feedback: '', context: `${buildUserPrompt(ctx)}\nStructured draft candidates: ${JSON.stringify(article.suggestedActions ?? [])}` }), agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
+  const actionReview = await reviewDraftActions({ registry, articleStatuses: readArticleStatuses(REPO_ROOT), articleDate: date, markdown: originalMarkdown, feedback: '', sources: process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ repoRoot: REPO_ROOT, markdown: originalMarkdown, feedback: '', context: `${buildUserPrompt(ctx)}\nStructured draft candidates: ${JSON.stringify(article.suggestedActions ?? [])}` }), agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
   const prepared = prepareGeneratedTime({ date, markdown: actionReview.markdown, records: recordsFromContext(ctx), capture: timeCapture })
   const markdown = prepared.markdown
   for (const warning of prepared.warnings) console.warn(`::warning::${date}: ${warning}`)

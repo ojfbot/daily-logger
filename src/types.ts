@@ -1,4 +1,4 @@
-import type { ClosedAction as ClosedActionType, ActionItem as ActionItemType } from './schema.js'
+import type { ActionItem as ActionItemType } from './schema.js'
 import type { CanonicalAction } from './action-model.js'
 import type { TelemetrySummary } from './collect-telemetry.js'
 import type { ArticleProvenance } from './run-provenance.js'
@@ -134,7 +134,6 @@ export interface GeneratedArticle {
   summary: string
   body: string
   suggestedActions?: ActionItemType[]
-  closedActions?: ClosedActionType[]
   commitCount?: number
   reposActive?: string[]
   provenance?: ArticleProvenance

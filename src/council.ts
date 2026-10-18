@@ -316,7 +316,6 @@ export async function synthesizeWithCouncil(
       summary: result.data.summary,
       body: assembleBody(result.data),
       suggestedActions: result.data.suggestedActions,
-      closedActions: result.data.closedActions,
     }
   }
 

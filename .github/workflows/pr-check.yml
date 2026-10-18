@@ -65,9 +65,6 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
       - name: Verify acceptance registry against trusted policy
         if: startsWith(github.head_ref, 'accept/')
         env:
@@ -94,6 +91,9 @@ jobs:
             if [[ "$ATTEMPT" == 6 ]]; then exit 1; fi
             sleep 5
           done
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Type-check
         run: pnpm type-check

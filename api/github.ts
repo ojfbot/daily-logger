@@ -43,9 +43,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // ── Construct GitHub API path from query parameter ──────────────────────
   const rawPath = req.query.path!
   const githubPath = '/' + (Array.isArray(rawPath) ? rawPath.join('/') : rawPath)
+  const githubUrl = new URL(`https://api.github.com${githubPath}`)
 
   // ── Path restriction: only allow requests to our repo ────────────────────
-  if (!githubPath.startsWith(ALLOWED_REPO_PREFIX)) {
+  if (githubUrl.origin !== 'https://api.github.com' || !githubUrl.pathname.startsWith(ALLOWED_REPO_PREFIX)) {
     return res.status(403).json({ error: 'Request path not allowed — only ojfbot/daily-logger is permitted' })
   }
 
@@ -75,7 +76,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ── Proxy to GitHub API ──────────────────────────────────────────────────
-  const githubUrl = new URL(`https://api.github.com${githubPath}`)
   for (const [key, value] of Object.entries(req.query)) {
     if (key === 'path') continue
     for (const item of Array.isArray(value) ? value : [value]) {

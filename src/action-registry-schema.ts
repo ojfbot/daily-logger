@@ -10,6 +10,7 @@ export const ActionSourceSchema = z.object({
   kind: z.enum(['repository', 'github', 'goal', 'instruction', 'report']),
   locator: z.string().min(1),
   content: z.string(),
+  trustedContent: z.array(z.string()).optional(),
 }).strict()
 export type ActionSource = z.infer<typeof ActionSourceSchema>
 export const ActionStateSchema = z.enum(['proposed', 'open', 'done', 'dismissed', 'superseded', 'deferred'])
@@ -41,6 +42,7 @@ export type ActionRecord = z.infer<typeof ActionRecordSchema>
 const ArticleActionSchema = z.object({
   date,
   status: z.enum(['draft', 'accepted', 'rejected']),
+  review: z.discriminatedUnion('state', [z.object({ state: z.literal('verified') }).strict(), z.object({ state: z.literal('pending'), reason: z.string().min(1) }).strict()]).default({ state: 'verified' }),
   articleDigest: digest,
   roundId: digest,
   actionKeys: z.array(z.string()),
@@ -60,6 +62,7 @@ export const ActionRegistrySchema = z.object({
   const days = registry.articles.map(article => article.date)
   if (new Set(days).size !== days.length) context.addIssue({ code: 'custom', message: 'Duplicate article action snapshot' })
   for (const article of registry.articles) {
+    if (article.review.state === 'pending' && article.status !== 'draft') context.addIssue({ code: 'custom', message: `Pending action review cannot publish: ${article.date}` })
     if (new Set(article.actionKeys).size !== article.actionKeys.length || article.actionKeys.some(key => !keys.includes(key))) context.addIssue({ code: 'custom', message: `Invalid action references for ${article.date}` })
   }
   for (const record of registry.records) {

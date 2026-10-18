@@ -125,18 +125,9 @@ Action items in the \`actions\` fields must be:
 - **Command-linked**: prefer \`/plan-feature\`, \`/techdebt\`, \`/investigate\`, \`/validate\`, \`/adr\`, \`/hardening\`, \`/pr-review\`, \`/roadmap\`, \`/scaffold\`, \`/sweep\` when applicable. Use plain imperative when no skill fits.
 - Never filler. If you can't find a specific action, name the concrete next step in plain English.
 
-## Action triage
+## Action context
 
-You will receive a list of open actions from previous runs, each with an \`id\`. For each:
-1. Check if today's commits, merged PRs, or closed issues address it
-2. If resolved: add to \`closedActions\` with:
-   - The \`id\` field — copy the exact ID string from the open action list (e.g. \`act-2026-04-11-validate-a1b2c3\`)
-   - The \`command\`, \`repo\`, \`sourceDate\` — copy verbatim from the open action
-   - A one-sentence \`resolution\` explaining what was done
-   - The \`description\` — copy the EXACT text from the open action. Do NOT paraphrase, shorten, or rephrase. The system matches on description text; any deviation breaks the match and the action stays open forever.
-3. If still open: do NOT re-emit it in \`suggestedActions\` — it carries forward automatically
-4. Only emit NEW actions in \`suggestedActions\` — actions specific to today's work
-5. Be aggressive about closing: if a PR was merged, an ADR was written, or a validation passed, close it. Check merged PRs carefully — a merged PR often resolves an action even if the action predates it by days.
+Open actions are continuity context. Do not emit closure decisions or tracking dispositions in the article. A separate proposer and independent verifier reconcile the canonical action registry after drafting. Only put novel grounded candidate ideas in \`suggestedActions\`; do not repeat existing work.
 
 ## Output
 
@@ -405,22 +396,6 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
             sourceDate: { type: 'string', description: 'Today\'s date YYYY-MM-DD.' },
           },
           required: ['command', 'description', 'repo', 'status', 'sourceDate'],
-        },
-      },
-      closedActions: {
-        type: 'array',
-        description: 'Actions from previous runs that today\'s work resolved. Copy id, command, description, repo, sourceDate EXACTLY from the open action list — do not paraphrase the description.',
-        items: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', description: 'The action ID from the open actions list (e.g. act-2026-04-11-validate-a1b2c3). Copy exactly.' },
-            command: { type: 'string', description: 'Original slash command. Copy exactly from open action.' },
-            description: { type: 'string', description: 'EXACT original description text. Copy verbatim — do not paraphrase.' },
-            repo: { type: 'string', description: 'Original target repo. Copy exactly.' },
-            sourceDate: { type: 'string', description: 'Original date YYYY-MM-DD. Copy exactly.' },
-            resolution: { type: 'string', description: 'One sentence: what was done to resolve this.' },
-          },
-          required: ['id', 'command', 'description', 'repo', 'sourceDate', 'resolution'],
         },
       },
       commitCount: {
@@ -887,7 +862,7 @@ export function buildUserPrompt(ctx: BlogContext): string {
 
   if (ordinaryActions.length > 0) {
     parts.push(`## Open actions from previous runs (${ordinaryActions.length})`)
-    parts.push('_Review each action against today\'s commits, merged PRs, and closed issues. If today\'s work addressed it, include it in `closedActions` — copy the `id`, `command`, `repo`, `sourceDate`, and `description` EXACTLY as shown below. Do NOT re-emit open actions in `suggestedActions`._')
+    parts.push('_These identities provide continuity context. The separate verified action review owns tracking dispositions. Do not repeat existing work in `suggestedActions`._')
     ordinaryActions.forEach((a) => {
       const id = a.id ?? actionId(a)
       parts.push(`- **id:** \`${id}\` | [${a.sourceDate}] [${a.repo}] \`${a.command}\` — ${('currentDescription' in a ? a.currentDescription : undefined) ?? a.description}`)
@@ -897,7 +872,7 @@ export function buildUserPrompt(ctx: BlogContext): string {
 
   if (reviewedActions.length > 0) {
     parts.push(`## Reviewed canonical actions — context only (${reviewedActions.length})`)
-    parts.push('_These records are visible for continuity but carry no execution or settlement authority. Do not recommend, redispatch, or add them to `closedActions`. Preserve their exact IDs and wait for a separately accepted settlement receipt._')
+    parts.push('_These records are visible for continuity but carry no execution or settlement authority. Do not recommend, redispatch, or propose a settlement for them. Preserve their exact IDs and wait for a separately accepted settlement receipt._')
     reviewedActions.forEach((action) => {
       const disposition = action.review.disposition
       const detail = disposition.kind === 'deferred'
@@ -1095,7 +1070,6 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
       tags: result.data.tags.map((t) => t.name),
       summary: result.data.summary,
       body: assembleBody(result.data),
-      closedActions: result.data.closedActions,
       suggestedActions: result.data.suggestedActions,
       commitCount: result.data.commitCount,
       reposActive: result.data.reposActive,
