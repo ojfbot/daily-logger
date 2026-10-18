@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261018-d540e2c5d7aa",
+  "article": {
+    "date": "2026-10-18",
+    "sourceCommitSha": "d540e2c5d7aa21b3916c3db1527e993e66c705bd",
+    "blobSha": "37ed3e485c3ae98cee05e15963dad6b150391a01"
+  },
+  "reviewer": {
+    "name": "Codex scheduled independent article review (recorded gpt-6.1-sol / high)",
+    "sessionId": "01a14ede-d080-72e2-8074-2d9f49c4e916"
+  },
+  "reviewedAt": "2026-10-18T12:02:00Z",
+  "scope": "Existing scheduled exact-visible-source accuracy/action-usefulness review: ten confirmed findings and two unverified claim groups, all open. Review time is approximate as recorded in the full report. Separate coordinator appendix documents publication/revision authority and post-generation UI follow-up. Article remains draft; no acceptance, action settlement, cross-model or independent GitHub-principal assurance.",
+  "fullRecordBlobSha": "4dfdbf07bf5acc448a44aa898e432524c624d730",
+  "fullRecordPath": "reviews/articles/2026-10-18-d540e2c5d7aa21b3916c3db1527e993e66c705bd.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "A review checkpoint became a hard deadline to execute the pilot",
+      "location": "lines 100, 110 and 118. Quote: \"The checkpoint is a hard deadline, not a suggestion\" and the requirement to complete investigation, capture, retrieval and a human-review receipt that morning.",
+      "explanation": "[core #538's October 17 registration receipt](https://github.com/ojfbot/core/issues/538#issuecomment-6240496170) says the next October 18 owner action is to inspect actual run/collection/article, record observed/not-observed/unknown, and **assign** the supervised S40 session. Its [full issue contract](https://github.com/ojfbot/core/issues/538) names a first review checkpoint, owner/reviewer `@ojfbot`, a manually supervised maximum 45-minute S40 case, and separate gated S41/S42 slices. It does not make completed S40 artifacts due before that morning window closes. The receipt explicitly reports no model call or worker execution started.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/issues/538#issuecomment-6240496170",
+        "https://github.com/ojfbot/core/issues/538"
+      ],
+      "correction": "Describe the morning intake/review checkpoint and assignment of a bounded human-only session. Preserve the manual supervision, budget and successor-slice gates. Remove the invented completion deadline and do not imply the article schedules or authorizes execution.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The four UI observations are tracked and delivered, rather than ownerless transcript fragments",
+      "location": "lines 101, 112 and 119. Quotes: \"not yet claimed repaired\", \"floating in a session transcript with no issue, no owner\", and the instruction to file discrete issues.",
+      "explanation": "the [October 17 intake](https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6237566107) assigns UIK-01 through UIK-04, a coordinator, individual session owners, source pins and explicit next steps. It requires one shared intake, with separate issues only for concrete independent deliverables. The [production delivery receipt at 22:43Z](https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6242513716) reports merged #378, exact-source conservation, fresh hosted checks and actual read-side UI smoke. Its delivered scope includes continued feedback, empty-input controls, readable inputs and assistant setup guidance. This predates article generation. The article's own #378 shipment describes those repairs.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6237566107",
+        "https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6242513716"
+      ],
+      "correction": "Report UIK-01\u201304 as coordinated under #357 and delivered within #378's documented limits. Retain live submission/provider delivery, physical-device accessibility, per-tab concurrency and recovery limitations. Follow remaining identified findings through the existing intake rather than instructing duplicate filing.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "LEGO #45 is a distinct preserved R0 brief, with an existing review boundary",
+      "location": "lines 96 and 119. Quote: \"it is superseded by #46 and currently adds noise ... without a close condition.\"",
+      "explanation": "[PR #45's pinned HOUSE-WORLD R0 receipt](https://github.com/ojfbot/lego-village-pipeline/blob/bbaeec06ef09d60a39c7fdfa8163054667ac17ee/docs/design/review/HOUSE-WORLD-R0-RECEIPT.md) preserves a bounded study. Its [current PR contract](https://github.com/ojfbot/lego-village-pipeline/pull/45) points to #46 for current interface pickup while explicitly preserving the R0 study, naming second-steward verification and James's merge control. The [specific pickup correction](https://github.com/ojfbot/lego-village-pipeline/pull/45#issuecomment-6150667522) redirects the interface source without closing the distinct brief. The [already reviewed October 17 correction](https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/reviews/articles/2026-10-17-e46885731df50b95b7c61e0f91a8fc1f8b6936e6.md) explicitly bounds the same unsupported supersession premise.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/lego-village-pipeline/blob/bbaeec06ef09d60a39c7fdfa8163054667ac17ee/docs/design/review/HOUSE-WORLD-R0-RECEIPT.md",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/45#issuecomment-6150667522",
+        "https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/reviews/articles/2026-10-17-e46885731df50b95b7c61e0f91a8fc1f8b6936e6.md"
+      ],
+      "correction": "Distinguish replacement of the current interface source from supersession of the R0/HANDOFF-037 record. Remove the new disposition demand from this article's action. Preserve the respective owner and review/import gates. #44 and #46 also already describe close-or-supersede exits; their analysis-draft lifecycle is not undocumented.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The backfill has a documented coverage census and a known unresolved runtime gap",
+      "location": "lines 25, 67 and 91. Quote: \"that denominator is not tracked as a single metric today.\" The timestamp discussion omits the separate runtime admission defect.",
+      "explanation": "the [pinned backfill README](https://github.com/ojfbot/daily-logger/blob/24b1327a3f5e0f9112412c8feaabe05c9f6b3b47/docs/time-backfill/2026-10/README.md) and [manifest summary](https://github.com/ojfbot/daily-logger/blob/24b1327a3f5e0f9112412c8feaabe05c9f6b3b47/docs/time-backfill/2026-10/manifest.json) enumerate 42 recognized occurrences, 25 admitted references, 17 supported occurrences left plain, 39 unsupported spellings and seven unavailable source groups. A token census is available, although it does not make every token semantically bindable. The [UIK-09 reproduction](https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6240542708) shows new-format generation can admit an approximate range endpoint. Historical adjudication withholds that endpoint for this sidecar; the runtime resolver is not repaired by the backfill or orientation documentation.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/24b1327a3f5e0f9112412c8feaabe05c9f6b3b47/docs/time-backfill/2026-10/README.md",
+        "https://github.com/ojfbot/daily-logger/blob/24b1327a3f5e0f9112412c8feaabe05c9f6b3b47/docs/time-backfill/2026-10/manifest.json",
+        "https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6240542708"
+      ],
+      "correction": "Report the available coverage categories rather than presenting 25/16 as the only available accounting. State that the metadata-only backfill leaves the source/grammar decision for approximate intervals open under #357. Do not imply that byte preservation or documentation closes the production gap.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The backfill does not read a now-complete indexed event log, and the script path is wrong",
+      "location": "lines 25 and 67. Quotes: \"original Friday generation pass ... before those source events were fully indexed\", \"re-reads the original raw source events from the indexed event log\", and \"scripts/backfill/\".",
+      "explanation": "the [frozen README's source-record section](https://github.com/ojfbot/daily-logger/blob/24b1327a3f5e0f9112412c8feaabe05c9f6b3b47/docs/time-backfill/2026-10/README.md) describes fresh GitHub-connector PR timestamp observations and immutable local Git author/committer timestamps, frozen into minimal projections. It records 121 additional facts and seven unavailable groups, not a delayed-index repair. [The actual script](https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/scripts/backfill-time-month.mjs) consumes frozen files offline. Its path is `scripts/backfill-time-month.mjs`. The three admitted merge instants are October 16 and 17, not a documented Friday generation/indexing incident.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/24b1327a3f5e0f9112412c8feaabe05c9f6b3b47/docs/time-backfill/2026-10/README.md",
+        "https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/scripts/backfill-time-month.mjs"
+      ],
+      "correction": "Describe a fresh source-backed observation harvest followed by deterministic offline replay and semantic occurrence adjudication. Remove the invented historical indexing cause and use the actual script path.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "The 1,500-character diagnostic prefix is not an article scanner or model visibility limit",
+      "location": "lines 42 and 73. Quotes: \"when scanning article text\" and \"evidence the production system can never see\".",
+      "explanation": "[production generation](https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/src/generate-article.ts#L1062) sends the complete `userPrompt` to the model, then passes `userPrompt.slice(0, 1500)` to validation for a fallback diagnostic. [The model call](https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/src/generate-article.ts#L1142) does not use that slice. [The validator](https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/src/schema.ts#L260) retains it as a failure stub's `rawContext`; it is not scanning published article text for corruption. The [eval](https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/evals/tasks/no-validation-gate/null-tool-output-yields-stub.eval.ts#L20) supplies the same diagnostic prefix. [#380](https://github.com/ojfbot/daily-logger/pull/380) changes only fixture and snapshot and explicitly makes no universal diagnostic-retention claim.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/src/generate-article.ts#L1062",
+        "https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/src/generate-article.ts#L1142",
+        "https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/src/schema.ts#L260",
+        "https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/evals/tasks/no-validation-gate/null-tool-output-yields-stub.eval.ts#L20",
+        "https://github.com/ojfbot/daily-logger/pull/380"
+      ],
+      "correction": "Say the fixture marker moved beyond the retained failure-diagnostic prefix and shrinking the representative fixture restores the stub assertions. Preserve the real 300-to-304 assertion result. Remove the invented article-scanning mechanism and the claim that the model cannot receive later prompt evidence.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Superseding feedback versions are PR comments, not growth of the PR description",
+      "location": "line 85. Quote: \"The tradeoff is that the PR body grows with each appended round\".",
+      "explanation": "[the delivered continuation service](https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/api/_lib/editorial-continuation.ts#L126) validates the original PR body and parent digest, then calls `postComment` at line 141. [History loading](https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/api/_lib/editorial-continuation.ts#L56) reads those comments and rejects conflicting original-body changes.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/api/_lib/editorial-continuation.ts#L126",
+        "https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/api/_lib/editorial-continuation.ts#L56"
+      ],
+      "correction": "Explain that attributed full feedback versions append to the same PR's comment history while the original description is preserved and checked. Mention the actual unresolved-submission/per-tab recovery boundary if describing tradeoffs.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "ADR-0068 is accepted policy, rather than an open prerequisite awaiting closure",
+      "location": "line 114. Quote: \"ADR-0068 has been open since May and is the stated prerequisite before the funnel is interpretable as signal\".",
+      "explanation": "[ADR-0068 at pinned core main](https://github.com/ojfbot/core/blob/a252d40c4c6e92b7244d30379704a2dc9893e1fd/decisions/adr/0068-follow-skill-suggestions.md) is dated May 5 with `Status: Accepted`. Its June 13 correction strikes the invalid 0.8% baseline and calls for re-derivation under corroborated suggestion identity after the instrumentation slice. That is a different obligation from closing an open ADR-0068.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/blob/a252d40c4c6e92b7244d30379704a2dc9893e1fd/decisions/adr/0068-follow-skill-suggestions.md"
+      ],
+      "correction": "Name the accepted skill-suggestion policy and its explicit baseline-provenance correction. Identify any still-open instrumentation or measurement work by its actual source; do not invent an ADR closure gate or infer retirement authority.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C9",
+      "classification": "confirmed_error",
+      "title": "The shipment chronology and repository-specific PR total contradict the receipts",
+      "location": "opening line 11 says the popover feature \"shipped Friday\"; line 91 says \"daily-logger ... nine PRs merged\".",
+      "explanation": "[#372](https://github.com/ojfbot/daily-logger/pull/372) merged `2026-10-17T19:58:13Z`, Saturday at 14:58 America/Chicago, as its own shipment paragraph correctly states. The nine PRs enumerated by this article comprise eight daily-logger PRs, #372 and #374\u2013#380, plus [core #539](https://github.com/ojfbot/core/pull/539). #379's `05:21Z Sunday` is Saturday night in Chicago; its UTC label is not itself an error.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/372",
+        "https://github.com/ojfbot/core/pull/539"
+      ],
+      "correction": "State that #372 shipped Saturday and distinguish eight daily-logger PRs from nine across both repositories. Keep the reporting window and UTC/local calendar labels explicit. The frontmatter's cross-repository nineteen-commit statement is supported by eighteen daily-logger mainline commits plus one core commit; it should not be reduced simply because the API's separate `commitCount` field is 18.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C10",
+      "classification": "confirmed_error",
+      "title": "Two commits attributed to the backfill belong to earlier feature/review PRs",
+      "location": "lines 27\u201330 under #379 list `faac3c9` and `82d185f` as backfill commits.",
+      "explanation": "[#379's exact reviewed source](https://github.com/ojfbot/daily-logger/commit/24b1327a3f5e0f9112412c8feaabe05c9f6b3b47) consists of the two backfill commits subsequently landed as `7766270` and `a3214af`. [`faac3c9`](https://github.com/ojfbot/daily-logger/commit/faac3c9bb310bc0fc1c1ec445433e310e0498558) is the #372 synchronization/delivery commit, documented by that PR. [`82d185f`](https://github.com/ojfbot/daily-logger/commit/82d185f3ff2d73dc552d6b79687ac69a8c091087) verifies the accepted October 17 article under #377. These are preserved base history for the backfill, not contributions introduced by #379.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/commit/24b1327a3f5e0f9112412c8feaabe05c9f6b3b47",
+        "https://github.com/ojfbot/daily-logger/commit/faac3c9bb310bc0fc1c1ec445433e310e0498558",
+        "https://github.com/ojfbot/daily-logger/commit/82d185f3ff2d73dc552d6b79687ac69a8c091087"
+      ],
+      "correction": "Move those IDs to their actual PR groups. Retain #372's separately documented integration-test timeout change when describing that feature's final qualification; a list of selected feature commits should not erase its acceptance condition.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The telemetry sample, selected source, freeze and quality denominator are not established",
+      "location": "line 114. Quotes: \"11% conversion\", \"0% quality gate coverage\", \"1 of 35+ skills invoked\", and \"known-frozen data source whose newest event is 2026-10-17T19:12:20Z\".",
+      "explanation": "[the pinned collector](https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/src/collect-telemetry.ts#L5) distinguishes primary dispositions from the legacy stream frozen May 12. [Source selection and newest-event calculation](https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/src/collect-telemetry.ts#L153) export separate fields. A newest event from the preceding afternoon does not establish a frozen source. This review did not obtain the generation run's retained telemetry input or independently reproduce these counts and denominators. The earlier accepted October 17 record deliberately leaves selected-source provenance unknown; it is not evidence for this new sample.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/src/collect-telemetry.ts#L5",
+        "https://github.com/ojfbot/daily-logger/blob/d540e2c5d7aa21b3916c3db1527e993e66c705bd/src/collect-telemetry.ts#L153"
+      ],
+      "correction": "Retain and cite the actual selected-source/freshness/count input before calling the source frozen or interpreting conversion. Otherwise label these as unverified generated numbers and remove behavioral conclusions. The known legacy freeze is not evidence that every telemetry stream is frozen.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "Comparative throughput, priorities and a 30-minute merge estimate lack evidence",
+      "location": "lines 91, 94, 104 and 108. Quotes: \"typical weekday ... two to four PRs\", \"roughly double the recent peak\", \"critical-path item\", and \"30 minutes including review\".",
+      "explanation": "[open #381](https://github.com/ojfbot/daily-logger/pull/381) documents substantive verified-action work and owner review. Its exact-head [hosted run](https://github.com/ojfbot/daily-logger/actions/runs/39078123695) succeeded at `3bc6f2f2bb7f89f884c1b53050f01bb38d65ff1b` by `2026-10-17T23:14:01Z`, before this article's run. Thus a green receipt was available, although fresh current-head checks remain appropriate. No bounded weekday/peak dataset, operator priority decision or review-duration measurement was retained for the article's stronger claims.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/381",
+        "https://github.com/ojfbot/daily-logger/actions/runs/39078123695"
+      ],
+      "correction": "Link the known head-specific validation receipt and retain owner review. Present prioritization as a recommendation and duration as an explicitly unsupported estimate, or omit them. Do not make green CI alone human merge authority.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
