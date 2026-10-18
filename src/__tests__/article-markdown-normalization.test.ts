@@ -33,7 +33,7 @@ describe('article Markdown before commit', () => {
     expect(md).toContain('Opening.\nNext paragraph.')
     expect(md).toContain('Use `<port>`.')
     expect(md).toContain(code)
-    expect(md).toContain(`> - \`/doc-refactor\` — ${action} (daily-logger)`)
+    expect(md).not.toContain(`> - \`/doc-refactor\` — ${action} (daily-logger)`)
     expect(committed(body)).toBe(md)
     const html = marked.parse(md)
     expect(html).toContain('<h3>Details</h3>')

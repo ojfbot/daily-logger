@@ -223,3 +223,12 @@
 - Claude's independent review reproduced a card-shaped HTML escape gap and evidence collection outside the private-repository opt-in policy that earlier tests missed. Added the missing render/proxy and visibility boundary cases before proceeding.
 - A required carried-action hold and an unrelated optional closure shared the same fatal path. Optional non-passing changes and bad identity links are now rejected without losing the article; provider failures keep a zero-admission pending draft, and semantic holds do not renegotiate with a second model pair.
 - The original monolithic registry stored complete discussions and repeated every history in both prompts. The operator approved replacing growing shared state with a frozen baseline plus bounded article files, within the same cutover.
+
+- 2026-10-18: Claude F3/F8 showed that compacting full evidence still left one shared append file. After the operator approved bounded per-article files, froze the 216-row accepted-main import and moved every active writer, checkbox, allowlist, and output proof to the exact dated file in the same cutover.
+- 2026-10-18: Main advanced with three October 18 identities and October 17 time bindings during this PR. Conserved those IDs, re-adjudicated all three inherited event references against the corrected article, and retained the earlier model receipt without replaying providers.
+- 2026-10-18: Full-suite load exposed two real Git integration cases exceeding Vitest's implicit five-second timeout. Set a bounded twenty-second timeout for those integration files; all assertions and production timeouts remain intact.
+- 2026-10-18: Immutable Actions output artifacts have a 90-day authority window. Kept expiration fail-closed for old unmerged PRs and documented preservation plus a fresh trusted-main branch, instead of adding a second mutable trust store or replaying an old invocation.
+
+- 2026-10-18: Scoping rejection prose to one article would have weakened cross-date repeat prevention. Kept global rejection fingerprints keyed to work and source evidence, plus an exact historical-hold guard; changed evidence still goes through independent verification.
+
+- 2026-10-18: The frozen monthly Git replay passed alone but exceeded its thirty-second test limit under full-suite filesystem load. Scoped that integration case to sixty seconds; no production timeout or assertion changed. Compact model context also keeps accepted corrected wording and ownership/evidence gates for earlier actions instead of resurfacing original generator wording.

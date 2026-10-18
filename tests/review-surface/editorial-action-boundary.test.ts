@@ -1,7 +1,8 @@
+import { actionFile } from '../../src/__tests__/action-store-fixture.js'
 import { afterEach, expect, it, vi } from 'vitest'
 import { createFixture, today } from './fixture.js'
 import { createEditorialService, repo } from '../../api/_lib/editorial-continuation.js'
-import { ActionRegistrySchema, isArticleInclusionChange } from '../../src/action-registry-schema.js'
+import { ActionRegistrySchema, isArticleFileInclusionChange } from '../../src/action-registry-schema.js'
 import { applyVerifiedActionReview } from '../../src/review-actions.js'
 import { stampDraft } from '../../packages/frontend/src/utils/stampDraft.ts'
 import { loadEditorialActions } from '../../packages/frontend/src/utils/actionInclusion.ts'
@@ -21,7 +22,7 @@ function setup() {
   record.includeInIndex = false; record.inclusionOverride = { include: false, actor: 'ojfbot', instruction: 'Explicit editorial inclusion checkbox' }
   state.refs.set(`accept/${today}`, head)
   state.refFiles.set(`${state.source}:${articlePath}`, article); state.refFiles.set(`${head}:${articlePath}`, article)
-  state.refFiles.set(`${state.source}:actions/registry.json`, JSON.stringify(before)); state.refFiles.set(`${head}:actions/registry.json`, JSON.stringify(after))
+  state.refFiles.set(`${state.source}:actions/articles/${today}.json`, JSON.stringify(actionFile(before, today))); state.refFiles.set(`${head}:actions/articles/${today}.json`, JSON.stringify(actionFile(after, today)))
   return { state, github, head, articlePath, article, before, after }
 }
 it('recognizes only verified staged choices and returns the exact branch head', async () => {
@@ -31,15 +32,15 @@ it('recognizes only verified staged choices and returns the exact branch head', 
 })
 it.each(['other-date', 'history', 'baseline', 'actor', 'instruction', 'hidden-file', 'symlink', 'article', 'truncated-tree'])('staged-choice discovery rejects %s', async kind => {
   const f = setup(), record = f.after.records[0]; if (!record) throw new Error('Missing suggestion')
-  if (kind === 'other-date') { const previous = f.before.records[0]; if (!previous) throw new Error('Missing original'); previous.introducedBy = '2026-10-13'; record.introducedBy = previous.introducedBy; f.before.articles.push({ ...f.before.articles[0]!, date: '2026-10-13', actionKeys: [record.key] }); f.after.articles = structuredClone(f.before.articles) }
+  if (kind === 'other-date') f.state.refFiles.set(`${f.head}:actions/articles/2026-10-13.json`, '{}')
   if (kind === 'history') record.history[0]!.reason = 'An unrelated rewrite'
-  if (kind === 'baseline') f.after.baseline.openSha256 = 'f'.repeat(64)
+  if (kind === 'baseline') f.state.refFiles.set(`${f.head}:actions/registry.json`, 'mutated imported baseline')
   if (kind === 'actor') record.inclusionOverride!.actor = 'someone-else'
   if (kind === 'instruction') record.inclusionOverride!.instruction = 'Unproven approval'
   if (kind === 'hidden-file') f.state.refFiles.set(`${f.head}:unreported.ts`, 'unreported code')
-  if (kind === 'symlink') f.state.fileModes.set(`${f.head}:actions/registry.json`, '120000')
+  if (kind === 'symlink') f.state.fileModes.set(`${f.head}:actions/articles/${today}.json`, '120000')
   if (kind === 'article') f.state.refFiles.set(`${f.head}:${f.articlePath}`, `${f.article}Unreviewed prose`)
-  f.state.refFiles.set(`${f.state.source}:actions/registry.json`, JSON.stringify(f.before)); f.state.refFiles.set(`${f.head}:actions/registry.json`, JSON.stringify(f.after))
+  f.state.refFiles.set(`${f.state.source}:actions/articles/${today}.json`, JSON.stringify(actionFile(f.before, today))); f.state.refFiles.set(`${f.head}:actions/articles/${today}.json`, JSON.stringify(actionFile(f.after, today)))
   const github: typeof f.github = async (path, options) => kind === 'truncated-tree' && path.includes('/git/trees/') ? Response.json({ truncated: true, tree: [] }) : f.github(path, options)
   await expect(createEditorialService(github).load(today, 'ojfbot')).rejects.toThrow()
 })
@@ -80,17 +81,18 @@ it.each([false, true])('real discovery binds the acceptance commit to its proven
 })
 it('registry deltas cannot smuggle edits to another date or prior evidence', () => {
   const f = setup()
-  expect(isArticleInclusionChange(f.before, f.after, today, 'OJFBOT')).toBe(true)
+  expect(isArticleFileInclusionChange(actionFile(f.before, today), actionFile(f.after, today), 'OJFBOT')).toBe(true)
   f.after.records[0]!.history[0]!.description = 'Changed prior decision'
+  expect(isArticleFileInclusionChange(actionFile(f.before, today), actionFile(f.after, today), 'OJFBOT')).toBe(false)
 })
 it('an instructed agent can retain an identified instruction through acceptance admission', async () => {
   const f = setup()
   f.after.records[0]!.inclusionOverride!.instruction = 'Explicit editorial inclusion instruction: Keep this suggestion in the article only.'
-  f.state.refFiles.set(`${f.head}:actions/registry.json`, JSON.stringify(f.after))
+  f.state.refFiles.set(`${f.head}:actions/articles/${today}.json`, JSON.stringify(actionFile(f.after, today)))
   expect(await createEditorialService(f.github).load(today, 'ojfbot')).toMatchObject({ stagedHeadSha: f.head })
 })
 it('large canonical registries use their exact immutable Git blob in both service and browser reader', async () => {
-  const f = setup(); f.state.largeFiles.add('actions/registry.json')
+  const f = setup(); f.state.largeFiles.add(`actions/articles/${today}.json`)
   expect(await createEditorialService(f.github).load(today, 'ojfbot')).toMatchObject({ stagedHeadSha: f.head })
   vi.stubGlobal('fetch', (input: string, options?: RequestInit) => {
     const url = new URL(input, 'http://fixture')
@@ -98,6 +100,20 @@ it('large canonical registries use their exact immutable Git blob in both servic
     return f.github(url.pathname.replace('/api/github', '') + url.search.replace(encodeURIComponent(`accept/${today}`), f.head), options)
   })
   const article = await (await f.github(`${repo}/contents/${f.articlePath}?ref=${f.head}`)).json()
-  expect((await loadEditorialActions(today, article.sha)).registry.records[0]?.includeInIndex).toBe(false)
+  expect((await loadEditorialActions(today, article.sha)).file.suggestions[0]?.includeInIndex).toBe(false)
   expect(f.state.calls.some(call => call.includes('/git/blobs/'))).toBe(true)
+})
+
+it.each(['status', 'outcome'])('body %s changes cannot masquerade as status-only staging (F17)', async key => {
+  const f = setup()
+  f.state.refFiles.set(`${f.state.source}:${f.articlePath}`, `${f.article}\n${key}: before`)
+  f.state.refFiles.set(`main:${f.articlePath}`, `${f.article}\n${key}: before`)
+  f.state.refFiles.set(`${f.head}:${f.articlePath}`, `${f.article}\n${key}: after`)
+  vi.stubGlobal('fetch', (input: string, options?: RequestInit) => {
+    const url = new URL(input, 'http://fixture')
+    if (url.pathname.endsWith(`/git/refs/heads/accept/${today}`)) return Response.json({ object: { sha: f.head } })
+    return f.github(url.pathname.replace('/api/github', '') + url.search.replace(encodeURIComponent(`accept/${today}`), f.head), options)
+  })
+  const main = await (await f.github(`${repo}/contents/${f.articlePath}?ref=${f.state.source}`)).json()
+  await expect(loadEditorialActions(today, main.sha)).rejects.toThrow('different article version')
 })

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { applyVerifiedActionReview } from '../../../src/review-actions.js'
-import { ActionRegistrySchema } from '../../../src/action-registry-schema.js'
+import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry } from '../../../src/action-registry-schema.js'
 import { readFileSync } from 'node:fs'
 
 const date = '2026-10-18'
@@ -30,7 +30,7 @@ function fixture() {
 
 for (const conflict of [false, true]) {
   test(conflict ? 'rejects a conflicting checkbox save and keeps the server choice' : 'retains opt-out through reload and acceptance on the same editorial branch', async ({ page }, testInfo) => {
-    let registry = fixture(), sha = 'registry-1', branch = false, articleSource = source
+    let registry = fixture(), file = splitActionRegistry(registry).files[0], sha = 'registry-1', branch = false, articleSource = source
     let branchCreations = 0, writes = 0, opened = false
     const article = { date, title: 'Action review', summary: 'Verified suggestions.', tags: [], reposActive: [], commitCount: 0, activityType: 'build', schemaVersion: 2, status: 'draft', sourceBlobSha: 'article-1', actionSuggestions: registry.records, bodyHtml: '<h2>What shipped</h2><p>Reviewed work.</p><h2>What’s next</h2><blockquote><strong>Suggested actions</strong><p>Review the exact acceptance checkpoint.</p></blockquote><section class="action-history-card" aria-label="Resolved suggestions"><h3>Resolved suggestions</h3><article>Earlier suggestion · completed</article></section>' }
     await page.route('**/api/entries.json', route => route.fulfill({ json: [article] }))
@@ -45,7 +45,7 @@ for (const conflict of [false, true]) {
         if (method === 'PUT') { articleSource = Buffer.from(request.postDataJSON().content, 'base64').toString('utf8'); return route.fulfill({ json: {} }) }
         return route.fulfill({ json: { sha: 'article-1', content: Buffer.from(articleSource).toString('base64') } })
       }
-      if (path.endsWith('/contents/actions/registry.json')) {
+      if (path.endsWith(`/contents/actions/articles/${date}.json`)) {
         if (method === 'PUT') {
           writes++
           const body = request.postDataJSON()
@@ -53,10 +53,10 @@ for (const conflict of [false, true]) {
           expect(body.branch).toBe(`accept/${date}`)
           expect(request.headers()['x-requested-with']).toBe('XMLHttpRequest')
           if (conflict) return route.fulfill({ status: 409, json: { message: 'SHA conflict' } })
-          registry = ActionRegistrySchema.parse(JSON.parse(Buffer.from(body.content, 'base64').toString('utf8'))); sha = 'registry-2'
+          file = ArticleActionFileSchema.parse(JSON.parse(Buffer.from(body.content, 'base64').toString('utf8'))); sha = 'registry-2'
           return route.fulfill({ json: {} })
         }
-        return route.fulfill({ json: { sha, content: Buffer.from(JSON.stringify(registry)).toString('base64') } })
+        return route.fulfill({ json: { sha, content: Buffer.from(JSON.stringify(file)).toString('base64') } })
       }
       if (path.includes('/git/commits/') && method === 'GET') return route.fulfill({ json: { tree: { sha: 'tree-1' } } })
       if (path.endsWith('/git/trees') && method === 'POST') { articleSource = request.postDataJSON().tree[0].content; return route.fulfill({ json: { sha: 'tree-2' } }) }
@@ -73,15 +73,15 @@ for (const conflict of [false, true]) {
     if (conflict) {
       await expect(page.getByRole('alert').filter({ hasText: 'not confirmed' })).toBeVisible()
       await expect(checkbox).toBeDisabled()
-      expect(registry.records[0].includeInIndex).toBe(true)
+      expect(file.suggestions[0].includeInIndex).toBe(true)
     } else {
       await expect(checkbox).toBeEnabled(); await expect(checkbox).not.toBeChecked()
-      expect(registry.records[0].inclusionOverride?.actor).toBe('dev')
+      expect(file.suggestions[0].inclusionOverride?.actor).toBe('dev')
       await page.reload(); await expect(checkbox).toBeEnabled(); await expect(checkbox).not.toBeChecked()
       await page.getByRole('button', { name: 'ACCEPT DRAFT', exact: true }).click()
       await expect(page.locator('.stamp-success')).toContainText('PR #42 opened')
       expect(opened).toBe(true); expect(branchCreations).toBe(1); expect(articleSource).toContain('status: "accepted"')
-      expect(registry.records[0].includeInIndex).toBe(false)
+      expect(file.suggestions[0].includeInIndex).toBe(false)
       await testInfo.attach('action-review', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' })
     }
     expect(writes).toBe(1)

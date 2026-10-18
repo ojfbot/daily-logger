@@ -8,6 +8,7 @@ import { buildApi } from '../src/build-api.js'
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const registry = readActionRegistry(repoRoot)
+if (sha256(readFileSync(join(repoRoot, 'actions/registry.json'), 'utf8')) !== '436e4b24a8e5cf93101691586231e2fc9fa2110570a86203c2cfda37ad64df97') throw new Error('Frozen imported action baseline changed')
 const baselineFile = (path: string) => execFileSync('git', ['show', `${registry.baseline.commit}:${path}`], { cwd: repoRoot, encoding: 'utf8' })
 const openBytes = baselineFile('api/actions.json')
 const doneBytes = baselineFile('api/done-actions.json')
@@ -19,7 +20,7 @@ for (const original of [...baselineOpen, ...baselineDone]) {
   if (!record || record.origin !== 'imported' || JSON.stringify(record.original) !== JSON.stringify(original)) throw new Error(`Historical action changed: ${actionKey(original)}`)
 }
 if (registry.records.filter(record => record.origin === 'imported').length !== baselineOpen.length + baselineDone.length) throw new Error('Unexplained historical admission')
-if (registry.baseline.commit !== 'faac3c9bb310bc0fc1c1ec445433e310e0498558' || sha256(JSON.stringify(registry.baseline.heldSuggestions)) !== 'cdc1a342eb80c6bda38df66f85bdcb920dbc190716615dd4fc1c041adbb02676' || sha256(JSON.stringify(registry.baseline.articleActions)) !== '17c1e8e03c48100c95486d3f9fb1cf68a40702504cbdc0f8c1ddc439d1205eae') throw new Error('Historical holds changed without a separate admission decision')
+if (registry.baseline.commit !== 'd540e2c5d7aa21b3916c3db1527e993e66c705bd' || sha256(JSON.stringify(registry.baseline.heldSuggestions)) !== 'cdc1a342eb80c6bda38df66f85bdcb920dbc190716615dd4fc1c041adbb02676') throw new Error('Historical holds changed without a separate admission decision')
 if (registry.records.filter(record => isReviewedAction(record.original)).length !== 3) throw new Error('Restricted reviewed action set changed')
 for (const record of registry.records) {
   for (const decision of record.history) {
@@ -28,7 +29,7 @@ for (const record of registry.records) {
     for (const citation of decision.citations) {
       const source = snapshot.sources.find(source => source.id === citation.sourceId)
       if (!source?.content.includes(citation.quote)) throw new Error(`Disposition evidence is missing: ${record.key}`)
-      if (!source.id.endsWith(`@${sha256(source.content)}`)) throw new Error(`Disposition source digest does not match: ${record.key}`)
+      if (!source.id.endsWith(`@${source.fullContentSha256 ?? sha256(source.content)}`)) throw new Error(`Disposition source digest does not match: ${record.key}`)
     }
   }
 }

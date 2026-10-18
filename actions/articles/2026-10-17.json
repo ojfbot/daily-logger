@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-17",
+  "suggestions": [],
+  "decisions": [
+    {
+      "key": "act-2026-10-17-adr-761b78",
+      "decision": {
+        "roundId": "8842871c4e5b3ee8bab8903ff9a5899c41b3124c2bb9d22bb5c24db6356b74dd",
+        "articleDate": "2026-10-17",
+        "state": "dismissed",
+        "description": "The mandatory ADR prerequisite premise is disproved. PR #373 explicitly records this recommendation as superseded, not implemented. The existing supervised correction loop governs: remaining material findings keep acceptance on hold, requiring another correction and fresh review. Any future architecture amendment remains optional work requiring its own evidence and authority.",
+        "reason": "The accepted October 17 article and its review (s22, s24) record this action's premise as superseded. PR #373 closed the 'design' October 16 action with disposition 'superseded, not implemented' (s8 L89). The article itself (s1 L132) states the mandatory ADR prerequisite 'repeats an earlier generated recommendation already recorded as superseded in PR #373'. The independent review (s22 L24-32) confirms the mandatory-prerequisite premise is a confirmed error. No owner decision to reopen this work exists.",
+        "citations": [
+          {
+            "sourceId": "github:daily-logger#373@f40c0ea8daad914e07252a58eb419b15ea84569ee118f8b09061b39ebc0f5a15",
+            "quote": "The three existing October 16 records close with distinct resolutions: the bounded Git-free validation is completed with its existing 385-native/six-controlled-browser evidence; dated review registration and legacy routes are completed with actual read receipts and [issue #357 correspondence](https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6223720569); the invented mandatory ADR/deadline recommendation is **superseded, not implemented**. No article suggestions or human finding dispositions are rewritten."
+          },
+          {
+            "sourceId": "article@c1c889ab5647a9876c76fb9ebff7d69b689fbc0dd8af17aad0e29932c74f66d3",
+            "quote": "**1. Complete this article’s authorized review and correction cycle.** The existing supervised correction loop continues: remaining material findings keep acceptance on hold, requiring another correction and fresh review. The mandatory ADR prerequisite repeats an earlier generated recommendation already recorded as superseded in PR [#373](https://github.com/ojfbot/daily-logger/pull/373). Any future architecture amendment for the re-entry path remains optional work requiring its own evidence and authority."
+          },
+          {
+            "sourceId": "review:reviews/articles/2026-10-17-8a78a7f2ed387f8bef4c03b7956774cd1639941e.md@2eac790dfb84a07c27e68a0dcc3aaabd6d7ec4fd3f3b2da32aa891e45a0f3fd8",
+            "quote": "### C2: A superseded ADR suggestion is resurrected as a delivery gate\n\nConfirmed error. Location: What shipped / #369-#371; What's next item 1; Suggested actions /adr. Human disposition: open.\n\nThe article declares an ADR-0038 amendment necessary before a second review cycle and attributes that decision to PR #369. PR #373 explicitly records the mandatory ADR/deadline recommendation as superseded, not implemented. PR #369 already requires independent review and fresh checks before merging, and PR #371 rejects a mandatory second-PR architecture. The accepted October 15 review also records an earlier complete revise/accept/verify cycle.\n\nProposed correction: Remove the invented prerequisite and urgency. Continue the existing supervised correction loop: remaining material findings keep acceptance on hold and require another correction and fresh review. Preserve the original suggestion text/ID as historical, with a superseded disposition; any future architecture amendment remains optional work requiring its own evidence and authority.\n\nEvidence: [Source 1](https://github.com/ojfbot/daily-logger/pull/373), [Source 2](https://github.com/ojfbot/daily-logger/pull/369#issuecomment-6222830171), [Source 3](https://github.com/ojfbot/daily-logger/pull/371), [Source 4](https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/reviews/articles/2026-10-15-df3a8ecccbea37b0bf20b65f50becd90b9632c1e.md)."
+          }
+        ],
+        "verifiedBy": "claude-opus-4-6",
+        "verificationReason": "The premise is disproved by multiple independent sources. PR #373 (s8 L89) explicitly records the mandatory ADR/deadline recommendation as 'superseded, not implemented'. The accepted article (s1 L132) confirms 'The mandatory ADR prerequisite repeats an earlier generated recommendation already recorded as superseded in PR #373'. The independent review finding C2 (s22 L26-32) confirms this as a confirmed error. Dismissed is the correct disposition for a disproved premise."
+      }
+    },
+    {
+      "key": "act-2026-10-17-pr-review-a34469",
+      "decision": {
+        "roundId": "8842871c4e5b3ee8bab8903ff9a5899c41b3124c2bb9d22bb5c24db6356b74dd",
+        "articleDate": "2026-10-17",
+        "state": "done",
+        "description": "PR #372 merged on October 17 at 19:58:13Z. The source-year desync fix and event-binding correctness were independently reviewed and verified at exact head before merge. Production deployment succeeded and live article verification confirmed correct local-time conversions. Draft-to-ready promotion occurred after Claude's closure review cleared all earlier blockers; merge was authorized by the owner.",
+        "reason": "s7 (the PR #372 API source) confirms: state=merged, merged_at=2026-10-17T19:58:13Z (s7 L1). The PR description (s7 L22) records passing hosted CI (511 native tests, 11 browser journeys). Claude's closure review at e95c0d1 (s7 L238-292) confirmed all five earlier blocking findings closed with one remaining timeout condition, recommending merge after an explicit timeout fix. That fix was applied (s7 L14), and the production deployment succeeded with live article verification (s7 L26-27). The original action's 'Nothing is documented as blocking' wording was a confirmed error corrected by the article (s1 L134), but the underlying review intent is now completed by actual merge.",
+        "citations": [
+          {
+            "sourceId": "github:daily-logger#372@248139b6c72edaf26c6fd2f94f484c961a56221a5abba78765f3864bae01b637",
+            "quote": "CURRENT API STATE daily-logger#372: state=merged; head=520de8deff1fd5853029afb156376fd8ab4d7b1a; merged_at=2026-10-17T19:58:13Z. Current API state outranks historical handoff wording."
+          },
+          {
+            "sourceId": "github:daily-logger#372@248139b6c72edaf26c6fd2f94f484c961a56221a5abba78765f3864bae01b637",
+            "quote": "- [Claude’s closure review](https://github.com/ojfbot/daily-logger/pull/372#issuecomment-6239356737) at parent `e95c0d1` independently closes the earlier source-admission, source-selection, revision-preservation and prompt-budget blockers and recommends merge after this timeout condition.\n- The reviewed parent passed 11 controlled browser journeys, API/frontend builds and data conservation. This follow-up changes only the integration-test budget; previously executed controls are attributed to their original source.\n\n## Notes\n\nThe user has authorized readiness, merge and production verification. #370 is merged. Strict branch protection required synchronization onto current main `82d185f3ff2d73dc552d6b79687ac69a8c091087`; the four approved commits were rebased without conflicts and the required deviation was recorded. Product source is byte-identical to approved `a5c2bb0`; the newer article, action and review data and all 33 historical bindings are conserved. Fresh local and hosted checks pass on this synchronized head. Delivered through the normal merge-triggered pipeline: merged by rebase as `faac3c9bb310bc0fc1c1ec445433e310e0498558`, with a tree identical to this checked candidate. [Production deployment 39064721741](https://github.com/ojfbot/daily-logger/actions/runs/39064721741) passed. [Live article verification](https://log.jim.software/articles/2026-10-15) confirmed historical America/Chicago conversions (15:15Z → 10:15, 21:40Z → 16:40, 09:10Z → 04:10 on October 14), map display, one active anchor while switching, pinned-map clicks and Escape dismissal. The public API retains 33 historical references across the current 135 articles."
+          },
+          {
+            "sourceId": "github:daily-logger#372@248139b6c72edaf26c6fd2f94f484c961a56221a5abba78765f3864bae01b637",
+            "quote": "## Closure review: PR #372 at exact head `e95c0d1`\n\n**Recommendation: merge once one condition is met.** All five earlier blocking findings are closed at this head. One required-check stability problem remains. Give the generated-time lifecycle integration test an explicit timeout, then mark the PR ready and merge. No other change is requested.\n\n**Head verification.** I checked the remote head `e95c0d1f2cb4d5a5cadd73545c72dad57c46c84b`. Its merge base is `bfc272e`, the rebased #370 that was accepted first, as the handoff required. The PR contains exactly three non-merge commits. It merges cleanly onto current `main` (`82d185f`, 8 editorial commits ahead), confirmed with `git merge-tree`."
+          }
+        ],
+        "verifiedBy": "claude-opus-4-6",
+        "verificationReason": "PR #372 is confirmed merged per s7 L1: 'state=merged; head=520de8deff1fd5853029afb156376fd8ab4d7b1a; merged_at=2026-10-17T19:58:13Z'. The closure review at e95c0d1 (s7 L240-241) confirmed all five earlier blocking findings closed and recommended merge after the timeout condition. The PR description (s7 L27) records production deployment success and live article verification. The original action requested review, source-year desync verification, event binding confirmation and draft-to-ready promotion — all of which occurred through the documented review chain culminating in merge. Done is correct."
+      }
+    },
+    {
+      "key": "act-2026-10-17-close-pr-ebb20f",
+      "decision": {
+        "roundId": "8842871c4e5b3ee8bab8903ff9a5899c41b3124c2bb9d22bb5c24db6356b74dd",
+        "articleDate": "2026-10-17",
+        "state": "dismissed",
+        "description": "The closure premise is disproved. PR #45 explicitly preserves HOUSE-WORLD R0/HANDOFF037 as a distinct bounded design artifact and is not superseded merely because PR #46 replaces the current interface source. The closure instruction has no evidential basis.",
+        "reason": "s12 (the live API state for lego-village-pipeline #45) confirms the PR remains open (s12 L1: state=open; merged_at=none). The PR description (s12 L3-5) explicitly states it preserves the earlier HOUSE-WORLD R0 study and points to PR #46 for the current interface source — not a supersession. The accepted October 17 article (s1 L106) and the independent review (s22 L74-82) both record the closure premise as unsupported: 'PR #45 explicitly preserves HOUSE-WORLD R0/HANDOFF037 and points to PR #46 for the current interface source... Replacing the current interface source does not establish that the separate R0 brief is superseded or should be closed.' No operator decision authorizing closure exists.",
+        "citations": [
+          {
+            "sourceId": "github:lego-village-pipeline#45@6698652a5fbe0673fc0f1b66954cadcd781bdab4e2b55d3ce2a4e4857dfb98ef",
+            "quote": "CURRENT API STATE lego-village-pipeline#45: state=open; head=bd88923891eb51c64b337c7b79a5c169b413c102; merged_at=none. Current API state outranks historical handoff wording.\n{\"url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45\",\"repository_url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline\",\"labels_url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45/labels{/name}\",\"comments_url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45/comments\",\"events_url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45/events\",\"html_url\":\"https://github.com/ojfbot/lego-village-pipeline/pull/45\",\"id\":5805954112,\"node_id\":\"PR_kwDOUfcPeM8AAAABH3ieTw\",\"number\":45,\"title\":\"Design brief: HOUSE-WORLD R0 and HANDOFF-037\",\"user\":{\"login\":\"ojfbot\",\"id\":151410806,\"node_id\":\"U_kgDOCQZYdg\",\"avatar_url\":\"https://avatars.githubusercontent.com/u/151410806?v=4\",\"gravatar_id\":\"\",\"url\":\"https://api.github.com/users/ojfbot\",\"html_url\":\"https://github.com/ojfbot\",\"followers_url\":\"https://api.github.com/users/ojfbot/followers\",\"following_url\":\"https://api.github.com/users/ojfbot/following{/other_user}\",\"gists_url\":\"https://api.github.com/users/ojfbot/gists{/gist_id}\",\"starred_url\":\"https://api.github.com/users/ojfbot/starred{/owner}{/repo}\",\"subscriptions_url\":\"https://api.github.com/users/ojfbot/subscriptions\",\"organizations_url\":\"https://api.github.com/users/ojfbot/orgs\",\"repos_url\":\"https://api.github.com/users/ojfbot/repos\",\"events_url\":\"https://api.github.com/users/ojfbot/events{/privacy}\",\"received_events_url\":\"https://api.github.com/users/ojfbot/received_events\",\"type\":\"User\",\"user_view_type\":\"public\",\"site_admin\":false},\"labels\":[],\"state\":\"open\",\"locked\":false,\"assignees\":[],\"milestone\":null,\"comments\":1,\"created_at\":\"2026-10-11T22:46:02Z\",\"updated_at\":\"2026-10-13T16:52:33Z\",\"closed_at\":null,\"assignee\":null,\"author_association\":\"OWNER\",\"active_lock_reason\":null,\"draft\":true,\"pull_request\":{\"url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/pulls/45\",\"html_url\":\"https://github.com/ojfbot/lego-village-pipeline/pull/45\",\"diff_url\":\"https://github.com/ojfbot/lego-village-pipeline/pull/45.diff\",\"patch_url\":\"https://github.com/ojfbot/lego-village-pipeline/pull/45.patch\",\"merged_at\":null},\"closed_by\":null,\"reactions\":{\"url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45/reactions\",\"total_count\":0,\"+1\":0,\"-1\":0,\"laugh\":0,\"hooray\":0,\"confused\":0,\"heart\":0,\"rocket\":0,\"eyes\":0},\"timeline_url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45/timeline\",\"performed_via_github_app\":null,\"state_reason\":null}\n## Latest Claude Design pickup — R6 addendum (2026-10-13)\n\nThe current interface source and Codex follow-up are on [PR #46](https://github.com/ojfbot/lego-village-pipeline/pull/46), branch **`corr/review-dt-design-r6`**. This PR preserves the earlier HOUSE-WORLD R0 study."
+          },
+          {
+            "sourceId": "article@c1c889ab5647a9876c76fb9ebff7d69b689fbc0dd8af17aad0e29932c74f66d3",
+            "quote": "**lego-village-pipeline #45** [DRAFT] — Preserves HOUSE-WORLD R0/HANDOFF037 and points to #46 for the current interface source. The R0 brief is a distinct bounded design artifact; it is not superseded merely because #46 replaces the current interface source."
+          },
+          {
+            "sourceId": "review:reviews/articles/2026-10-17-8a78a7f2ed387f8bef4c03b7956774cd1639941e.md@2eac790dfb84a07c27e68a0dcc3aaabd6d7ec4fd3f3b2da32aa891e45a0f3fd8",
+            "quote": "### C7: Design draft relationships do not authorize closing HOUSE-WORLD R0\n\nConfirmed error. Location: Roadmap pulse / LEGO drafts; What's next; Suggested actions /close-pr. Human disposition: open.\n\nPR #45 explicitly preserves HOUSE-WORLD R0/HANDOFF037 and points to PR #46 for the current interface source. PR #46 remains a nonoperative R6 review with explicit import/owner gates and dedicated follow-up roles. Replacing the current interface source does not establish that the separate R0 brief is superseded or should be closed. Calling all three drafts ownerless noise that can safely be ignored is unsupported by those records.\n\nProposed correction: Keep PR #44, PR #45 and PR #46 as distinct bounded design artifacts with their actual review/import/owner gates. Preserve the original closure suggestion text and ID but mark it unsupported/superseded as an execution instruction; do not close or park these PRs from this article cycle.\n\nEvidence: [Source 1](https://github.com/ojfbot/lego-village-pipeline/pull/45), [Source 2](https://github.com/ojfbot/lego-village-pipeline/pull/46), [Source 3](https://github.com/ojfbot/lego-village-pipeline/pull/44)."
+          }
+        ],
+        "verifiedBy": "claude-opus-4-6",
+        "verificationReason": "The closure premise is disproved. s12 L1 confirms lego-village-pipeline #45 remains open. s12 L3 states 'This PR preserves the earlier HOUSE-WORLD R0 study.' The independent review C7 finding (s22 L77-78) confirms: 'PR #45 explicitly preserves HOUSE-WORLD R0/HANDOFF037... Replacing the current interface source does not establish that the separate R0 brief is superseded or should be closed.' The article (s1 L106) also states '#45 preserves HOUSE-WORLD R0/HANDOFF037... it is not superseded merely because #46 replaces the current interface source.' Dismissed is the correct disposition for an unsupported premise."
+      }
+    }
+  ],
+  "snapshot": {
+    "date": "2026-10-17",
+    "status": "accepted",
+    "review": {
+      "state": "verified"
+    },
+    "articleDigest": "c6ae41497badaa15a4dd641a115f458534e6ae0d5ed03040b32566963aedb99d",
+    "roundId": "8842871c4e5b3ee8bab8903ff9a5899c41b3124c2bb9d22bb5c24db6356b74dd",
+    "actionKeys": [
+      "act-2026-10-17-adr-761b78",
+      "act-2026-10-17-pr-review-a34469",
+      "act-2026-10-17-close-pr-ebb20f"
+    ],
+    "stateDigest": "5ea3f36b401449a2e6be312654334da26bb824a873c0406ccc550ed5fe6fa232",
+    "verification": {
+      "proposer": "claude-sonnet-4-6",
+      "verifier": "claude-opus-4-6",
+      "promptVersion": "action-review-v3-strict-source-lines",
+      "proposalSha256": "2ac2b3dd761f8466a598a198047bf65a202e1b15e4320c34b9d5743e96b020b7",
+      "verdicts": [
+        {
+          "item": "act-2026-10-17-adr-761b78",
+          "verdict": "pass",
+          "reason": "The premise is disproved by multiple independent sources. PR #373 (s8 L89) explicitly records the mandatory ADR/deadline recommendation as 'superseded, not implemented'. The accepted article (s1 L132) confirms 'The mandatory ADR prerequisite repeats an earlier generated recommendation already recorded as superseded in PR #373'. The independent review finding C2 (s22 L26-32) confirms this as a confirmed error. Dismissed is the correct disposition for a disproved premise."
+        },
+        {
+          "item": "act-2026-10-17-pr-review-a34469",
+          "verdict": "pass",
+          "reason": "PR #372 is confirmed merged per s7 L1: 'state=merged; head=520de8deff1fd5853029afb156376fd8ab4d7b1a; merged_at=2026-10-17T19:58:13Z'. The closure review at e95c0d1 (s7 L240-241) confirmed all five earlier blocking findings closed and recommended merge after the timeout condition. The PR description (s7 L27) records production deployment success and live article verification. The original action requested review, source-year desync verification, event binding confirmation and draft-to-ready promotion — all of which occurred through the documented review chain culminating in merge. Done is correct."
+        },
+        {
+          "item": "act-2026-10-17-close-pr-ebb20f",
+          "verdict": "pass",
+          "reason": "The closure premise is disproved. s12 L1 confirms lego-village-pipeline #45 remains open. s12 L3 states 'This PR preserves the earlier HOUSE-WORLD R0 study.' The independent review C7 finding (s22 L77-78) confirms: 'PR #45 explicitly preserves HOUSE-WORLD R0/HANDOFF037... Replacing the current interface source does not establish that the separate R0 brief is superseded or should be closed.' The article (s1 L106) also states '#45 preserves HOUSE-WORLD R0/HANDOFF037... it is not superseded merely because #46 replaces the current interface source.' Dismissed is the correct disposition for an unsupported premise."
+        }
+      ]
+    },
+    "sources": [
+      {
+        "id": "article@c1c889ab5647a9876c76fb9ebff7d69b689fbc0dd8af17aad0e29932c74f66d3",
+        "kind": "report",
+        "locator": "current revised article",
+        "content": "**1. Complete this article’s authorized review and correction cycle.** The existing supervised correction loop continues: remaining material findings keep acceptance on hold, requiring another correction and fresh review. The mandatory ADR prerequisite repeats an earlier generated recommendation already recorded as superseded in PR [#373](https://github.com/ojfbot/daily-logger/pull/373). Any future architecture amendment for the re-entry path remains optional work requiring its own evidence and authority.\n\n**lego-village-pipeline #45** [DRAFT] — Preserves HOUSE-WORLD R0/HANDOFF037 and points to #46 for the current interface source. The R0 brief is a distinct bounded design artifact; it is not superseded merely because #46 replaces the current interface source.",
+        "fullContentSha256": "c1c889ab5647a9876c76fb9ebff7d69b689fbc0dd8af17aad0e29932c74f66d3"
+      },
+      {
+        "id": "github:daily-logger#372@248139b6c72edaf26c6fd2f94f484c961a56221a5abba78765f3864bae01b637",
+        "kind": "github",
+        "locator": "https://github.com/ojfbot/daily-logger/pull/372",
+        "content": "CURRENT API STATE daily-logger#372: state=merged; head=520de8deff1fd5853029afb156376fd8ab4d7b1a; merged_at=2026-10-17T19:58:13Z. Current API state outranks historical handoff wording.\n\n- [Claude’s closure review](https://github.com/ojfbot/daily-logger/pull/372#issuecomment-6239356737) at parent `e95c0d1` independently closes the earlier source-admission, source-selection, revision-preservation and prompt-budget blockers and recommends merge after this timeout condition.\n- The reviewed parent passed 11 controlled browser journeys, API/frontend builds and data conservation. This follow-up changes only the integration-test budget; previously executed controls are attributed to their original source.\n\n## Notes\n\nThe user has authorized readiness, merge and production verification. #370 is merged. Strict branch protection required synchronization onto current main `82d185f3ff2d73dc552d6b79687ac69a8c091087`; the four approved commits were rebased without conflicts and the required deviation was recorded. Product source is byte-identical to approved `a5c2bb0`; the newer article, action and review data and all 33 historical bindings are conserved. Fresh local and hosted checks pass on this synchronized head. Delivered through the normal merge-triggered pipeline: merged by rebase as `faac3c9bb310bc0fc1c1ec445433e310e0498558`, with a tree identical to this checked candidate. [Production deployment 39064721741](https://github.com/ojfbot/daily-logger/actions/runs/39064721741) passed. [Live article verification](https://log.jim.software/articles/2026-10-15) confirmed historical America/Chicago conversions (15:15Z → 10:15, 21:40Z → 16:40, 09:10Z → 04:10 on October 14), map display, one active anchor while switching, pinned-map clicks and Escape dismissal. The public API retains 33 historical references across the current 135 articles.\n\n## Closure review: PR #372 at exact head `e95c0d1`\n\n**Recommendation: merge once one condition is met.** All five earlier blocking findings are closed at this head. One required-check stability problem remains. Give the generated-time lifecycle integration test an explicit timeout, then mark the PR ready and merge. No other change is requested.\n\n**Head verification.** I checked the remote head `e95c0d1f2cb4d5a5cadd73545c72dad57c46c84b`. Its merge base is `bfc272e`, the rebased #370 that was accepted first, as the handoff required. The PR contains exactly three non-merge commits. It merges cleanly onto current `main` (`82d185f`, 8 editorial commits ahead), confirmed with `git merge-tree`.",
+        "fullContentSha256": "248139b6c72edaf26c6fd2f94f484c961a56221a5abba78765f3864bae01b637"
+      },
+      {
+        "id": "github:daily-logger#373@f40c0ea8daad914e07252a58eb419b15ea84569ee118f8b09061b39ebc0f5a15",
+        "kind": "github",
+        "locator": "https://github.com/ojfbot/daily-logger/pull/373",
+        "content": "The three existing October 16 records close with distinct resolutions: the bounded Git-free validation is completed with its existing 385-native/six-controlled-browser evidence; dated review registration and legacy routes are completed with actual read receipts and [issue #357 correspondence](https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6223720569); the invented mandatory ADR/deadline recommendation is **superseded, not implemented**. No article suggestions or human finding dispositions are rewritten.",
+        "fullContentSha256": "f40c0ea8daad914e07252a58eb419b15ea84569ee118f8b09061b39ebc0f5a15"
+      },
+      {
+        "id": "github:lego-village-pipeline#45@6698652a5fbe0673fc0f1b66954cadcd781bdab4e2b55d3ce2a4e4857dfb98ef",
+        "kind": "github",
+        "locator": "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+        "content": "CURRENT API STATE lego-village-pipeline#45: state=open; head=bd88923891eb51c64b337c7b79a5c169b413c102; merged_at=none. Current API state outranks historical handoff wording.\n{\"url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45\",\"repository_url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline\",\"labels_url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45/labels{/name}\",\"comments_url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45/comments\",\"events_url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45/events\",\"html_url\":\"https://github.com/ojfbot/lego-village-pipeline/pull/45\",\"id\":5805954112,\"node_id\":\"PR_kwDOUfcPeM8AAAABH3ieTw\",\"number\":45,\"title\":\"Design brief: HOUSE-WORLD R0 and HANDOFF-037\",\"user\":{\"login\":\"ojfbot\",\"id\":151410806,\"node_id\":\"U_kgDOCQZYdg\",\"avatar_url\":\"https://avatars.githubusercontent.com/u/151410806?v=4\",\"gravatar_id\":\"\",\"url\":\"https://api.github.com/users/ojfbot\",\"html_url\":\"https://github.com/ojfbot\",\"followers_url\":\"https://api.github.com/users/ojfbot/followers\",\"following_url\":\"https://api.github.com/users/ojfbot/following{/other_user}\",\"gists_url\":\"https://api.github.com/users/ojfbot/gists{/gist_id}\",\"starred_url\":\"https://api.github.com/users/ojfbot/starred{/owner}{/repo}\",\"subscriptions_url\":\"https://api.github.com/users/ojfbot/subscriptions\",\"organizations_url\":\"https://api.github.com/users/ojfbot/orgs\",\"repos_url\":\"https://api.github.com/users/ojfbot/repos\",\"events_url\":\"https://api.github.com/users/ojfbot/events{/privacy}\",\"received_events_url\":\"https://api.github.com/users/ojfbot/received_events\",\"type\":\"User\",\"user_view_type\":\"public\",\"site_admin\":false},\"labels\":[],\"state\":\"open\",\"locked\":false,\"assignees\":[],\"milestone\":null,\"comments\":1,\"created_at\":\"2026-10-11T22:46:02Z\",\"updated_at\":\"2026-10-13T16:52:33Z\",\"closed_at\":null,\"assignee\":null,\"author_association\":\"OWNER\",\"active_lock_reason\":null,\"draft\":true,\"pull_request\":{\"url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/pulls/45\",\"html_url\":\"https://github.com/ojfbot/lego-village-pipeline/pull/45\",\"diff_url\":\"https://github.com/ojfbot/lego-village-pipeline/pull/45.diff\",\"patch_url\":\"https://github.com/ojfbot/lego-village-pipeline/pull/45.patch\",\"merged_at\":null},\"closed_by\":null,\"reactions\":{\"url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45/reactions\",\"total_count\":0,\"+1\":0,\"-1\":0,\"laugh\":0,\"hooray\":0,\"confused\":0,\"heart\":0,\"rocket\":0,\"eyes\":0},\"timeline_url\":\"https://api.github.com/repos/ojfbot/lego-village-pipeline/issues/45/timeline\",\"performed_via_github_app\":null,\"state_reason\":null}\n## Latest Claude Design pickup — R6 addendum (2026-10-13)\n\nThe current interface source and Codex follow-up are on [PR #46](https://github.com/ojfbot/lego-village-pipeline/pull/46), branch **`corr/review-dt-design-r6`**. This PR preserves the earlier HOUSE-WORLD R0 study.",
+        "fullContentSha256": "6698652a5fbe0673fc0f1b66954cadcd781bdab4e2b55d3ce2a4e4857dfb98ef"
+      },
+      {
+        "id": "review:reviews/articles/2026-10-17-8a78a7f2ed387f8bef4c03b7956774cd1639941e.md@2eac790dfb84a07c27e68a0dcc3aaabd6d7ec4fd3f3b2da32aa891e45a0f3fd8",
+        "kind": "repository",
+        "locator": "reviews/articles/2026-10-17-8a78a7f2ed387f8bef4c03b7956774cd1639941e.md",
+        "content": "### C2: A superseded ADR suggestion is resurrected as a delivery gate\n\nConfirmed error. Location: What shipped / #369-#371; What's next item 1; Suggested actions /adr. Human disposition: open.\n\nThe article declares an ADR-0038 amendment necessary before a second review cycle and attributes that decision to PR #369. PR #373 explicitly records the mandatory ADR/deadline recommendation as superseded, not implemented. PR #369 already requires independent review and fresh checks before merging, and PR #371 rejects a mandatory second-PR architecture. The accepted October 15 review also records an earlier complete revise/accept/verify cycle.\n\nProposed correction: Remove the invented prerequisite and urgency. Continue the existing supervised correction loop: remaining material findings keep acceptance on hold and require another correction and fresh review. Preserve the original suggestion text/ID as historical, with a superseded disposition; any future architecture amendment remains optional work requiring its own evidence and authority.\n\nEvidence: [Source 1](https://github.com/ojfbot/daily-logger/pull/373), [Source 2](https://github.com/ojfbot/daily-logger/pull/369#issuecomment-6222830171), [Source 3](https://github.com/ojfbot/daily-logger/pull/371), [Source 4](https://github.com/ojfbot/daily-logger/blob/8a78a7f2ed387f8bef4c03b7956774cd1639941e/reviews/articles/2026-10-15-df3a8ecccbea37b0bf20b65f50becd90b9632c1e.md).\n\n### C7: Design draft relationships do not authorize closing HOUSE-WORLD R0\n\nConfirmed error. Location: Roadmap pulse / LEGO drafts; What's next; Suggested actions /close-pr. Human disposition: open.\n\nPR #45 explicitly preserves HOUSE-WORLD R0/HANDOFF037 and points to PR #46 for the current interface source. PR #46 remains a nonoperative R6 review with explicit import/owner gates and dedicated follow-up roles. Replacing the current interface source does not establish that the separate R0 brief is superseded or should be closed. Calling all three drafts ownerless noise that can safely be ignored is unsupported by those records.\n\nProposed correction: Keep PR #44, PR #45 and PR #46 as distinct bounded design artifacts with their actual review/import/owner gates. Preserve the original closure suggestion text and ID but mark it unsupported/superseded as an execution instruction; do not close or park these PRs from this article cycle.\n\nEvidence: [Source 1](https://github.com/ojfbot/lego-village-pipeline/pull/45), [Source 2](https://github.com/ojfbot/lego-village-pipeline/pull/46), [Source 3](https://github.com/ojfbot/lego-village-pipeline/pull/44).",
+        "fullContentSha256": "2eac790dfb84a07c27e68a0dcc3aaabd6d7ec4fd3f3b2da32aa891e45a0f3fd8"
+      }
+    ],
+    "rejected": [],
+    "binding": {
+      "mode": "editorial-rebind",
+      "fromDigest": "1776e054054fdf6aa1146bdfadf9cb676a2466bcb579583b4910475ca1bdea0e",
+      "actor": "ojfbot",
+      "instructionSha256": "36995d2087e662b3f2c382077ffa3f0a630fc86fe77bb58e4e695e81b0d77161"
+    }
+  }
+}

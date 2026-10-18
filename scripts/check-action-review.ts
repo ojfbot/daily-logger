@@ -16,9 +16,12 @@ const receipt = z.object({ articleDate: z.literal('2026-10-17'), beforeRevision:
 const before = readActionRegistry(resolve('.'))
 const canonicalUnchanged = registryRevision(before) === receipt.beforeRevision
 const receiptApplied = registryRevision(before) === registryRevision(receipt.registry)
-if (!canonicalUnchanged && !receiptApplied) throw new Error('Canonical registry changed independently of the reviewed receipt')
+const historicalExtension = before.baseline.commit === 'd540e2c5d7aa21b3916c3db1527e993e66c705bd' && before.records.filter(record => !receipt.registry.records.some(old => old.key === record.key)).every(record => record.origin === 'imported' && record.original.sourceDate > receipt.articleDate)
+if (!canonicalUnchanged && !receiptApplied && !historicalExtension) throw new Error('Canonical registry changed independently of the reviewed receipt')
 for (const original of before.records) {
   const after = receipt.registry.records.find(record => record.key === original.key)
+  if (!after && historicalExtension && original.original.sourceDate > receipt.articleDate) continue
+  if (after && historicalExtension && JSON.stringify(original.history) !== JSON.stringify(after.history)) throw new Error(`Verified action decisions changed during storage conversion: ${original.key}`)
   if (!after || JSON.stringify(original.original) !== JSON.stringify(after.original)) throw new Error(`Original identity changed: ${original.key}`)
 }
 const states = {
@@ -26,7 +29,7 @@ const states = {
   'act-2026-10-17-pr-review-a34469': 'done',
   'act-2026-10-17-close-pr-ebb20f': 'dismissed',
 }
-for (const [key, state] of Object.entries(states)) if (receipt.registry.records.find(record => record.key === key)?.state !== state) throw new Error(`Incorrect reviewed disposition: ${key}`)
+for (const [key, state] of Object.entries(states)) if (receipt.registry.records.find(record => record.key === key)?.state !== state || before.records.find(record => record.key === key)?.state !== state) throw new Error(`Incorrect reviewed disposition: ${key}`)
 const active = receipt.markdown.slice(receipt.markdown.indexOf(ACTIONS_START)).split('<section class="action-history-card"')[0]
 if (/Nothing is documented as blocking|prioritization lag|\/adr|\/close-pr/.test(active)) throw new Error('Disproved original wording remains in the active block')
 if (/\/pr-review[^\n]*#372/.test(active)) throw new Error('The merged #372 review remains in the active block')
@@ -35,4 +38,4 @@ const snapshot = receipt.registry.articles.find(article => article.date === rece
 if (!snapshot || snapshot.verification.proposer !== 'claude-sonnet-4-6' || snapshot.verification.verifier !== 'claude-opus-4-6') throw new Error('The live independent model receipt is missing')
 const html = renderArticleActionHtml(receipt.markdown, receipt.registry, receipt.articleDate, readArticleStatuses(resolve('.')))
 if (!html.includes('<section class="action-history-card"') || html.includes('&lt;section class=&quot;action-history-card')) throw new Error('Resolved history is not a rendered card')
-console.log(JSON.stringify({ result: 'pass', articleDate: receipt.articleDate, canonicalUnchanged, receiptApplied, originalRecords: before.records.length, newIdentities: receipt.registry.records.length - before.records.length, roundId: snapshot.roundId, verification: snapshot.verification, states, currentReview: receipt.registry.records.find(record => record.key === 'act-2026-10-17-pr-review-a34469')?.history.at(-1)?.description, sources: snapshot.sources.map(source => ({ id: source.id, kind: source.kind, locator: source.locator })) }, null, 2))
+console.log(JSON.stringify({ result: 'pass', articleDate: receipt.articleDate, canonicalUnchanged, receiptApplied, originalRecords: before.records.length, newIdentities: receipt.registry.records.filter(record => record.origin === 'suggested' && record.introducedBy === receipt.articleDate).length, roundId: snapshot.roundId, verification: snapshot.verification, states, currentReview: receipt.registry.records.find(record => record.key === 'act-2026-10-17-pr-review-a34469')?.history.at(-1)?.description, sources: snapshot.sources.map(source => ({ id: source.id, kind: source.kind, locator: source.locator })) }, null, 2))

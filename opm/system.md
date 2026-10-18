@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `edd992c341485c5c39d9a0daa872dc12ca3a9e4b7d7f493062f0ec427124774a`.
+> Source SHA-256: `2e67c1b452ccc6348438ef976db0c618144c8fef404ab0eea8e919db85216177`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -52,11 +52,11 @@ flowchart TD
   n26("Suggestion Verifying")
   n28("Editorial Revising")
   n29["Draft Suggestion — states: proposed, open, done, dismissed, superseded, deferred"]
-  n82["Action Records"]
-  n83["Article Action Receipts"]
+  n83["Imported Action Baseline"]
+  n82["Article Action Files — states: pending, verified"]
   n30("Inclusion Choosing")
   n31["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
-  n84["Canonical Actions"]
+  n87["Canonical Actions"]
   n32["JSON API"]
   n33("Frontend Rendering")
   n34["Rendered Site"]
@@ -67,8 +67,8 @@ flowchart TD
   n39["Revision Request"]
   n40("Conversation Saving")
   n41["Saved Message"]
-  n85["Review Records"]
-  n86["Correspondence"]
+  n88["Review Records"]
+  n89["Correspondence"]
   n42["Time Record Pointer"]
   n43("Time Recording")
   n44["Commit Context"]
@@ -123,13 +123,13 @@ flowchart TD
   n7 -->|"invokes"| n23
   n28 -->|"invokes"| n23
   n19 -->|"invokes"| n23
-  n82 -->|"part of"| n22
   n83 -->|"part of"| n22
+  n82 -->|"part of"| n22
   n22 -->|"requires (instrument)"| n30
   n4 -->|"requires (instrument)"| n30
   n30 <-->|"affects"| n22
   n18 -->|"handles (human)"| n30
-  n84 -->|"part of"| n13
+  n87 -->|"part of"| n13
   n31 -->|"part of"| n13
   n20 -->|"invokes"| n21
   n13 -->|"requires (instrument)"| n20
@@ -151,8 +151,8 @@ flowchart TD
   n37 -->|"requires (instrument)"| n40
   n40 -->|"yields"| n41
   n40 <-->|"affects"| n4
-  n85 -->|"part of"| n37
-  n86 -->|"part of"| n37
+  n88 -->|"part of"| n37
+  n89 -->|"part of"| n37
   n0 -->|"exhibits"| n42
   n0 -->|"requires (instrument)"| n43
   n44 -->|"requires (instrument)"| n43
@@ -236,7 +236,7 @@ Article Generating invokes Action Reconciling. [src: src/index.ts]
 Editorial Revising invokes Action Reconciling. [src: src/revise-article.ts]
 Editorial Accepting invokes Action Reconciling. [src: .github/workflows/editorial-revise.yml]
 Draft Suggestion can be proposed, open, done, dismissed, superseded, or deferred. [src: src/action-registry-schema.ts]
-Action Registry consists of Action Records and Article Action Receipts. [src: src/action-registry-schema.ts]
+Action Registry consists of Imported Action Baseline and Article Action Files. [src: src/action-registry-schema.ts]
 Inclusion Choosing requires Action Registry. [src: packages/frontend/src/utils/actionInclusion.ts]
 Inclusion Choosing requires GitHub. [src: packages/frontend/src/utils/actionInclusion.ts]
 Inclusion Choosing affects Action Registry. [src: packages/frontend/src/utils/actionInclusion.ts]
@@ -445,6 +445,13 @@ flowchart TD
   n22["Action Registry"]
   n0["Article — states: draft, accepted, rejected"]
   n81["Revision Outcome"]
+  n82["Article Action Files — states: pending, verified"]
+  n23("Action Reconciling")
+  n83["Imported Action Baseline"]
+  n21("Action Projecting")
+  n84("Editorial Output Binding")
+  n85["Editorial Output Artifact"]
+  n86("Editorial Rebinding")
   n4 -->|"requires (instrument)"| n70
   n35 -->|"requires (instrument)"| n70
   n70 -->|"yields"| n71
@@ -464,6 +471,13 @@ flowchart TD
   n80 <-->|"affects"| n0
   n80 <-->|"affects"| n22
   n80 -->|"yields"| n81
+  n23 -->|"yields"| n82
+  n83 -->|"requires (instrument)"| n21
+  n4 -->|"requires (instrument)"| n84
+  n84 -->|"yields"| n85
+  n85 -->|"requires (instrument)"| n75
+  n0 -->|"requires (instrument)"| n86
+  n86 <-->|"affects"| n82
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -488,4 +502,12 @@ Continued Article Revising requires Action Registry. [src: src/revise-article.ts
 Continued Article Revising affects Article. [src: src/revise-article.ts]
 Continued Article Revising affects Action Registry. [src: src/revise-article.ts]
 Continued Article Revising yields Revision Outcome. [src: .github/scripts/continue-editorial.ts]
+Article Action Files can be pending or verified. [src: src/action-registry-schema.ts]
+Action Reconciling yields Article Action Files. [src: src/review-actions.ts]
+Action Projecting requires Imported Action Baseline. [src: src/action-registry.ts]
+Editorial Output Binding requires GitHub. [src: shared/editorial-action-proof.ts]
+Editorial Output Binding yields Editorial Output Artifact. [src: scripts/write-action-output.ts]
+Explicit Revision Admitting requires Editorial Output Artifact. [src: .github/scripts/editorial-action-registry.ts]
+Editorial Rebinding requires Article. [src: src/action-registry.ts]
+Editorial Rebinding affects Article Action Files. [src: src/action-registry.ts]
 ```

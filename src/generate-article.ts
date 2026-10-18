@@ -119,7 +119,7 @@ All three TypeScript apps share an identical extracted shell:
 
 ## Action item standards
 
-Action items in the \`actions\` fields must be:
+Candidates in the \`suggestedActions\` field must be:
 - **Specific**: tied to today's actual shipped work, not generic
 - **Executable**: the reader could act on this within 30 minutes of reading
 - **Command-linked**: prefer \`/plan-feature\`, \`/techdebt\`, \`/investigate\`, \`/validate\`, \`/adr\`, \`/hardening\`, \`/pr-review\`, \`/roadmap\`, \`/scaffold\`, \`/sweep\` when applicable. Use plain imperative when no skill fits.
@@ -489,14 +489,6 @@ export function assembleBody(s: StructuredArticle | ArticleDataV2): string {
 }
 
 function assembleBodyV1(s: StructuredArticle): string {
-  const formatActions = (acts?: string[]): string => {
-    const items =
-      acts && acts.length > 0
-        ? acts.map((a) => `> ${a.startsWith('- ') ? a : `- ${a}`}`)
-        : ['> - `/roadmap` — review this section and queue the next concrete action']
-    return ['> **Suggested actions**', ...items].join('\n')
-  }
-
   const sections: Array<[string, string, string[] | undefined]> = [
     ['What shipped', s.whatShipped, s.actions?.whatShipped],
     ['The decisions', s.theDecisions, s.actions?.theDecisions],
@@ -510,8 +502,8 @@ function assembleBodyV1(s: StructuredArticle): string {
     parts.push(s.lede.trim(), '')
   }
 
-  for (const [heading, content, acts] of sections) {
-    parts.push(`## ${heading}`, '', content.trim(), '', formatActions(acts), '')
+  for (const [heading, content] of sections) {
+    parts.push(`## ${heading}`, '', content.trim(), '')
   }
 
   return parts.join('\n').trimEnd()
@@ -620,12 +612,6 @@ function assembleBodyV2(s: ArticleDataV2): string {
   // ── What's next ──
   parts.push("## What's next", '')
   parts.push(linkifyPRRefs((s.whatsNext ?? 'Review the roadmap and queue the next action.').trim(), knownRepos), '')
-
-  // ── Suggested actions (unified from suggestedActions array) ──
-  const actionLines = s.suggestedActions.length > 0
-    ? s.suggestedActions.map((a) => `> - \`${a.command}\` — ${a.description} (${a.repo})`)
-    : ['> - `/roadmap` — review phase progress and queue the next concrete action']
-  parts.push('> **Suggested actions**', ...actionLines, '')
 
   return parts.join('\n').trimEnd()
 }

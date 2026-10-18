@@ -54,6 +54,7 @@ interface ArticlesState {
   articleLoading: boolean
   loading: boolean
   error: string | null
+  proposedError: string | null
 }
 
 const initialState: ArticlesState = {
@@ -67,6 +68,7 @@ const initialState: ArticlesState = {
   articleLoading: false,
   loading: false,
   error: null,
+  proposedError: null,
 }
 
 export const articlesSlice = createSlice({
@@ -82,8 +84,8 @@ export const articlesSlice = createSlice({
       .addCase(fetchRepos.fulfilled, (state, action) => { state.repos = action.payload })
       .addCase(fetchActions.fulfilled, (state, action) => { state.actions = action.payload })
       .addCase(fetchDoneActions.fulfilled, (state, action) => { state.doneActions = action.payload })
-      .addCase(fetchProposedActions.fulfilled, (state, action) => { state.proposedActions = action.payload })
-      .addCase(fetchProposedActions.rejected, (state) => { state.error = 'Proposed action state could not be loaded' })
+      .addCase(fetchProposedActions.fulfilled, (state, action) => { state.proposedActions = action.payload; state.proposedError = null })
+      .addCase(fetchProposedActions.rejected, (state) => { state.proposedError = 'Proposed action state could not be loaded' })
       .addCase(fetchArticle.pending, (state) => { state.articleLoading = true })
       .addCase(fetchArticle.fulfilled, (state, action) => {
         state.articleCache[action.payload.date] = action.payload

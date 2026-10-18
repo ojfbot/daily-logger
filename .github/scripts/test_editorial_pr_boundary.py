@@ -29,8 +29,8 @@ class EditorialBoundaryTests(unittest.TestCase):
                     (root / '_articles').mkdir()
                     (root / ARTICLE).write_text('original article')
                     (root / 'package.json').write_text('{}')
-                    (root / 'actions').mkdir()
-                    (root / 'actions/registry.json').write_text('{}')
+                    (root / 'actions/articles').mkdir(parents=True)
+                    (root / 'actions/articles/2026-10-09.json').write_text('{}')
                     git('add', '.')
                     git('commit', '-qm', 'base')
                     base = git('rev-parse', 'HEAD')
@@ -40,12 +40,12 @@ class EditorialBoundaryTests(unittest.TestCase):
                         (root / 'package.json').write_text('{"scripts":{"postinstall":"malicious"}}')
                     if change == 'symlink':
                         (root / ARTICLE).unlink()
-                        (root / ARTICLE).symlink_to('../package.json')
+                        (root / ARTICLE).symlink_to('../../package.json')
                     if change == 'article_and_registry':
-                        (root / 'actions/registry.json').write_text('{"updated":true}')
+                        (root / 'actions/articles/2026-10-09.json').write_text('{"updated":true}')
                     if change == 'registry_symlink':
-                        (root / 'actions/registry.json').unlink()
-                        (root / 'actions/registry.json').symlink_to('../package.json')
+                        (root / 'actions/articles/2026-10-09.json').unlink()
+                        (root / 'actions/articles/2026-10-09.json').symlink_to('../../package.json')
                     if change == 'other_action_file':
                         (root / 'actions/execute.ts').write_text('throw new Error("unexpected code")')
                     git('add', '.')

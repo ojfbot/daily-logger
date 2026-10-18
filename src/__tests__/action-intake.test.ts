@@ -4,9 +4,12 @@ import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSyn
 import { tmpdir } from 'os'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { projectActionIntake } from '../action-intake.js'
 import { buildApi } from '../build-api.js'
+
+// Real Git evidence checks perform several subprocesses per case.
+vi.setConfig({ testTimeout: 20_000 })
 
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const suggestions = [

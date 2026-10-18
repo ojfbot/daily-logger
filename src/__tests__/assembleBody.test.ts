@@ -62,55 +62,15 @@ describe('assembleBody — lede', () => {
   })
 })
 
-describe('assembleBody — suggested actions', () => {
-  it('every section ends with a > **Suggested actions** blockquote', () => {
+describe('assembleBody — action ownership', () => {
+  it('leaves canonical actions to independent reconciliation and invents no fallback', () => {
     const body = assembleBody(base)
-    // Count occurrences
-    const count = (body.match(/> \*\*Suggested actions\*\*/g) ?? []).length
-    expect(count).toBe(4)
-  })
-
-  it('injects a fallback action when actions are missing', () => {
-    const { actions: _a, ...withoutActions } = base
-    const body = assembleBody(withoutActions)
-    expect(body).toContain('> **Suggested actions**')
-    expect(body).toContain('/roadmap')
-  })
-
-  it('injects a fallback for a specific missing sub-key', () => {
-    const body = assembleBody({
-      ...base,
-      actions: { ...base.actions, whatShipped: undefined },
-    })
-    // Still four blockquotes
-    const count = (body.match(/> \*\*Suggested actions\*\*/g) ?? []).length
-    expect(count).toBe(4)
-  })
-
-  it('renders provided action items with > prefix', () => {
-    const body = assembleBody(base)
-    expect(body).toContain('> - `/techdebt` — scan for drift introduced by the merged PR')
-  })
-
-  it('auto-prefixes action items that are missing the "- " dash', () => {
-    const body = assembleBody({
-      ...base,
-      actions: {
-        ...base.actions,
-        whatShipped: ['`/techdebt` — no dash prefix'],
-      },
-    })
-    expect(body).toContain('> - `/techdebt` — no dash prefix')
-  })
-
-  it('suggested actions appear AFTER the section content, not before', () => {
-    const body = assembleBody(base)
-    const contentIdx = body.indexOf('Something shipped.')
-    const actionsIdx = body.indexOf('> **Suggested actions**')
-    expect(contentIdx).toBeLessThan(actionsIdx)
+    expect(body).toContain('## What shipped')
+    expect(body).not.toContain('Suggested actions')
+    expect(body).not.toContain('/techdebt')
+    expect(assembleBody({ ...base, actions: undefined })).not.toContain('/roadmap')
   })
 })
-
 describe('assembleBody — section content', () => {
   it('includes the prose content for each section', () => {
     const body = assembleBody(base)
@@ -211,11 +171,11 @@ describe('assembleBody — v2 schema', () => {
     expect(body).toContain('`structured-output`')
   })
 
-  it('renders suggested actions from suggestedActions array', () => {
+  it('keeps structured candidates out of canonical article rendering', () => {
     const body = assembleBody(baseV2)
-    expect(body).toContain('> **Suggested actions**')
-    expect(body).toContain('`/validate`')
-    expect(body).toContain('Run schema validation against today.')
+    expect(body).not.toContain('> **Suggested actions**')
+    expect(body).not.toContain('`/validate`')
+    expect(body).not.toContain('Run schema validation against today.')
   })
 
   it('includes lede before first heading', () => {
@@ -238,10 +198,10 @@ describe('assembleBody — v2 schema', () => {
     expect(body).toContain('No major architectural decisions today')
   })
 
-  it('handles empty suggestedActions with fallback', () => {
+  it('does not manufacture a roadmap fallback for empty candidates', () => {
     const body = assembleBody({ ...baseV2, suggestedActions: [] })
-    expect(body).toContain('> **Suggested actions**')
-    expect(body).toContain('/roadmap')
+    expect(body).not.toContain('> **Suggested actions**')
+    expect(body).not.toContain('/roadmap')
   })
 
   it('falls back to v1 rendering for v1 input', () => {

@@ -16,6 +16,9 @@ on:
   issue_comment:
     types: [created]
 
+env:
+  ACTION_REVIEW_DISABLED: ${{ vars.ACTION_REVIEW_DISABLED }}
+
 jobs:
   # S18 (audit I2): outcome capture on the accept path. Opening an accept/<date> PR with no
   # editorial feedback is the human's clean-accept action — stamp `outcome: accepted` on the
@@ -84,7 +87,7 @@ jobs:
             exit 1
           fi
           while IFS= read -r FILE; do
-            if [[ "$FILE" != "$ARTICLE_PATH" && "$FILE" != 'actions/registry.json' ]]; then
+            if [[ "$FILE" != "$ARTICLE_PATH" && "$FILE" != "actions/articles/$(basename "$ARTICLE_PATH" .md).json" ]]; then
               echo "::error::Editorial automation accepts only the dated article and canonical action data."
               exit 1
             fi
@@ -143,7 +146,7 @@ jobs:
         run: |
           git config user.name "ojfbot-blog[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$ARTICLE_PATH" actions/registry.json
+          git add "$ARTICLE_PATH" "actions/articles/$(basename "$ARTICLE_PATH" .md).json"
           if git diff --cached --quiet; then
             echo "⏭ No outcome change to commit"
           else
@@ -152,17 +155,30 @@ jobs:
             git push origin "HEAD:refs/heads/${HEAD_BRANCH}"
           fi
 
-      - name: Record verified registry output
-        uses: actions/github-script@v7
+      - name: Bind verified action output
+        id: action_proof
         env:
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
           INPUT_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          ACTION_REPO_ROOT: ${{ github.workspace }}
+        run: pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/scripts/write-action-output.ts"
+      - uses: actions/upload-artifact@v4
+        id: action_artifact
+        with:
+          name: ${{ steps.action_proof.outputs.artifact_name }}
+          path: .git/editorial-output.json
+          include-hidden-files: true
+          retention-days: 90
+          if-no-files-found: error
+      - name: Record verified registry output
+        uses: actions/github-script@v7
+        env:
+          ARTIFACT_ID: ${{ steps.action_artifact.outputs.artifact-id }}
         with:
           script: |
-            const { execFileSync } = await import('node:child_process');
-            const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
-            const receipt = { date: process.env.ARTICLE_PATH.match(/([0-9-]+)\.md$/)[1], runId: Number(process.env.GITHUB_RUN_ID), policySha: process.env.GITHUB_SHA, inputHead: process.env.INPUT_HEAD, outputCommit: git('rev-parse', 'HEAD'), outputRegistryBlob: git('rev-parse', 'HEAD:actions/registry.json') };
-            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body: `## Verified action registry\n${JSON.stringify(receipt)}` });
+            const receipt = JSON.parse(require('fs').readFileSync('.git/editorial-output.json', 'utf8'));
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body: `## Verified action registry\n${JSON.stringify({ ...receipt, artifactId: Number(process.env.ARTIFACT_ID) })}` });
 
 
   revise:
@@ -240,7 +256,7 @@ jobs:
             exit 1
           fi
           while IFS= read -r FILE; do
-            if [[ "$FILE" != "$ARTICLE_PATH" && "$FILE" != 'actions/registry.json' ]]; then
+            if [[ "$FILE" != "$ARTICLE_PATH" && "$FILE" != "actions/articles/$(basename "$ARTICLE_PATH" .md).json" ]]; then
               echo "::error::Editorial automation accepts only the dated article and canonical action data."
               exit 1
             fi
@@ -325,24 +341,38 @@ jobs:
         run: |
           git config user.name "ojfbot-blog[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "${{ steps.date.outputs.article_path }}" actions/registry.json
+          git add "${{ steps.date.outputs.article_path }}" "actions/articles/$(basename "${{ steps.date.outputs.article_path }}" .md).json"
           git commit -m "editorial: revise ${{ steps.date.outputs.date }} per feedback"
           gh auth setup-git
           git push origin "HEAD:refs/heads/${HEAD_BRANCH}"
 
+      - name: Bind verified action output
+        id: action_proof
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        env:
+          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
+          INPUT_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          ACTION_REPO_ROOT: ${{ github.workspace }}
+        run: pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/scripts/write-action-output.ts"
+      - uses: actions/upload-artifact@v4
+        id: action_artifact
+        if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
+        with:
+          name: ${{ steps.action_proof.outputs.artifact_name }}
+          path: .git/editorial-output.json
+          include-hidden-files: true
+          retention-days: 90
+          if-no-files-found: error
       - name: Record verified registry output
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
         uses: actions/github-script@v7
         env:
-          ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
-          INPUT_HEAD: ${{ github.event.pull_request.head.sha }}
+          ARTIFACT_ID: ${{ steps.action_artifact.outputs.artifact-id }}
         with:
           script: |
-            const { execFileSync } = await import('node:child_process');
-            const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
-            const receipt = { date: process.env.ARTICLE_PATH.match(/([0-9-]+)\.md$/)[1], runId: Number(process.env.GITHUB_RUN_ID), policySha: process.env.GITHUB_SHA, inputHead: process.env.INPUT_HEAD, outputCommit: git('rev-parse', 'HEAD'), outputRegistryBlob: git('rev-parse', 'HEAD:actions/registry.json') };
-            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body: `## Verified action registry\n${JSON.stringify(receipt)}` });
-
+            const receipt = JSON.parse(require('fs').readFileSync('.git/editorial-output.json', 'utf8'));
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body: `## Verified action registry\n${JSON.stringify({ ...receipt, artifactId: Number(process.env.ARTIFACT_ID) })}` });
       - name: Post revision summary on PR
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
         uses: actions/github-script@v7
@@ -483,3 +513,22 @@ jobs:
         run: |
           gh auth setup-git
           pnpm exec tsx .github/scripts/continue-editorial.ts push
+
+      - name: Bind continued action output
+        id: continued_proof
+        run: pnpm exec tsx scripts/write-action-output.ts continuation
+      - uses: actions/upload-artifact@v4
+        id: continued_artifact
+        if: steps.continued_proof.outputs.artifact_name != ''
+        with:
+          name: ${{ steps.continued_proof.outputs.artifact_name }}
+          path: .git/editorial-output.json
+          include-hidden-files: true
+          retention-days: 90
+          if-no-files-found: error
+      - name: Record artifact-bound continuation outcome
+        if: steps.continued_artifact.outputs.artifact-id != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EDITORIAL_ARTIFACT_ID: ${{ steps.continued_artifact.outputs.artifact-id }}
+        run: pnpm exec tsx .github/scripts/continue-editorial.ts finalize

@@ -109,8 +109,10 @@ export function createReviewSource(github: GitHub) {
       if (blob.sha !== data.sha) throw new ReviewError(409, 'File blob identity changed.')
       data = { ...data, ...blob }
     }
-    if (data.content.length > (path === 'actions/registry.json' ? 16000000 : 700000)) throw new ReviewError(503, 'Review record exceeds the bounded reader limit.')
-    return { blobSha: data.sha, text: Buffer.from(data.content, 'base64').toString('utf8') }
+    if (data.content.length > (path.startsWith('actions/articles/') ? 90000 : 700000)) throw new ReviewError(503, 'Review record exceeds the bounded reader limit.')
+    const bytes = Buffer.from(data.content, 'base64')
+    if (path.startsWith('actions/articles/') && bytes.length > 64 * 1024) throw new ReviewError(503, 'Article action file exceeds 64 KiB.')
+    return { blobSha: data.sha, text: bytes.toString('utf8') }
   }
   async function regularFile(path: string, ref: string) {
     let treeSha = z.object({ tree: z.object({ sha }) }).parse(await json(`/git/commits/${ref}`)).tree.sha

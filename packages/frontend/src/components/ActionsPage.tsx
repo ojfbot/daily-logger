@@ -95,7 +95,7 @@ function ReviewedActionRow({ action }: { action: ReviewedActionItem }) {
 }
 
 export function ActionsPage() {
-  const { actions, doneActions, proposedActions, loading, error } = useEntries()
+  const { actions, doneActions, proposedActions, loading, error, proposedError } = useEntries()
   const [filter, setFilter] = useState<string | null>(null)
   const [archiveOpen, setArchiveOpen] = useState(false)
   const [popover, setPopover] = useState<{ anchor: HTMLElement | null; item: ActionItem | null }>({ anchor: null, item: null })
@@ -200,6 +200,7 @@ export function ActionsPage() {
       )}
 
       {error && <p role="alert">{error}</p>}
+      {proposedError && <p role="alert">{proposedError}</p>}
       <div className="actions-columns">
         <div className="actions-column">
           <div className="actions-column-header">Proposed ({proposed.length})</div>

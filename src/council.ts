@@ -11,7 +11,7 @@
  * Architecture note: synthesis returns a StructuredArticle routed through
  * assembleBody() — same path as the initial draft. This guarantees every
  * council-reviewed article has the same structural guarantees (section headings,
- * > **Suggested actions** blockquotes) as the initial draft, regardless of what
+ * structured candidate data) as the initial draft, regardless of what
  * the synthesis Claude call decides to include or omit.
  */
 
@@ -231,7 +231,7 @@ Output each section as its body text only — no ## headings, those are injected
 //
 // IMPORTANT: synthesis returns a StructuredArticle routed through assembleBody().
 // Never assign the raw synthesis body directly — the deterministic assembly step
-// is what guarantees section headings and > **Suggested actions** blockquotes.
+// guarantees section headings; verified action reconciliation owns action blocks.
 
 export async function synthesizeWithCouncil(
   draft: GeneratedArticle,

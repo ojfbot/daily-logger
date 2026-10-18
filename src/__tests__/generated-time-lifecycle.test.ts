@@ -23,7 +23,7 @@ import { main } from '../index.js'
 import { reviseArticle } from '../revise-article.js'
 
 const sourceRoot = fileURLToPath(new URL('../../', import.meta.url))
-const date = '2026-10-18'
+const date = '2026-10-19'
 const source = 'PR [#359](https://github.com/ojfbot/daily-logger/pull/359)'
 const at = '2026-10-14T09:10:41.000Z'
 const context: BlogContext = { date, repos: ['daily-logger'], commits: [], mergedPRs: [{ number: 359, repo: 'daily-logger', title: 'Observed merge', url: 'https://github.com/ojfbot/daily-logger/pull/359', mergedAt: at, author: 'editor', additions: 1, deletions: 0 }], openPRs: [], recentPRs: [], closedIssues: [], openIssues: [], openActions: [], projectVision: '', previousArticles: [] }
@@ -33,7 +33,7 @@ function fixture(withHistory = false) {
   const root = mkdtempSync(join(tmpdir(), 'generated-time-lifecycle-'))
   if (withHistory) execFileSync('git', ['-c', 'core.hooksPath=/dev/null', 'clone', '--shared', '--quiet', sourceRoot, root])
   else mkdirSync(join(root, 'action-admissions'))
-  if (withHistory) cpSync(join(sourceRoot, 'actions'), join(root, 'actions'), { recursive: true })
+  if (withHistory) { cpSync(join(sourceRoot, 'actions'), join(root, 'actions'), { recursive: true }); cpSync(join(sourceRoot, '_articles'), join(root, '_articles'), { recursive: true }) }
   roots.push(root)
   return root
 }
@@ -86,11 +86,11 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     expect(cli).toContain('"changed":true')
     expect(readFileSync(persisted.articlePath, 'utf8')).toContain(`time_records_sha256: ${prepared.digest}`)
     expect(readFileSync(persisted.artifactPath).equals(originalArtifact)).toBe(true)
-    git(root, 'add', `_articles/${date}.md`, 'actions/registry.json')
+    git(root, 'add', `_articles/${date}.md`, `actions/articles/${date}.json`)
     git(root, 'commit', '-qm', 'Ordinary one-file editorial revision')
     const revision = git(root, 'rev-parse', 'HEAD')
     // These are the same changed-path and regular-file conditions enforced by both editorial workflow gates.
-    expect(git(root, 'diff', '--name-only', generation, revision)).toBe(`_articles/${date}.md\nactions/registry.json`)
+    expect(git(root, 'diff', '--name-only', generation, revision)).toBe(`_articles/${date}.md\nactions/articles/${date}.json`)
     expect(git(root, 'ls-tree', revision, '--', `_articles/${date}.md`)).toMatch(/^100644 blob /)
     buildApi(root)
     expect(articleJson.parse(JSON.parse(readFileSync(apiPath, 'utf8'))).timeReferences?.[0]).toMatchObject({ at, evidence: { repo: 'ojfbot/daily-logger', ref: '359', event: 'merged' } })
@@ -114,7 +114,7 @@ describe('generation, retained facts, ordinary revision and API publication', ()
 
   it('the actual dry-run orchestration writes no article, artifact, API or action files', async () => {
     vi.stubEnv('MOCK_LLM', 'true'); vi.stubEnv('DRY_RUN', 'true'); vi.stubEnv('SKIP_COUNCIL', 'true')
-    vi.stubEnv('DATE_OVERRIDE', '2026-10-19'); vi.stubEnv('ANTHROPIC_API_KEY', 'mock-only')
+    vi.stubEnv('DATE_OVERRIDE', '2026-10-20'); vi.stubEnv('ANTHROPIC_API_KEY', 'mock-only')
     vi.stubEnv('GITHUB_ACTIONS', 'false'); vi.stubEnv('BLOGENGINE_API_URL', '')
     const before = fingerprint(sourceRoot, ['_articles', 'api', 'action-admissions'])
     await main()

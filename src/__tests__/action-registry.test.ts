@@ -1,3 +1,4 @@
+import { writeActionStore } from './action-store-fixture.js'
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -7,7 +8,7 @@ import { ActionVerificationSchema, actionGithubReferences, applyVerifiedActionRe
 
 const articleDate = '2026-10-17'
 const articleStatuses = new Map([[articleDate, 'accepted']])
-const markdown = `---\ntitle: "Review"\ndate: ${articleDate}\nstatus: "accepted"\n---\n## What's next\n\n> **Suggested actions**\n> - \`/adr\` — Old generator output. (daily-logger)\n`
+const markdown = `---\ntitle: "Review"\ndate: ${articleDate}\nstatus: "accepted"\n---\n## What's next\n`
 const sources: ActionSource[] = [
   { id: 'goal', kind: 'goal', locator: 'ROADMAP.md', content: 'The operator goal is reliable editorial acceptance.' },
   { id: 'evidence', kind: 'github', locator: 'https://github.com/ojfbot/daily-logger/pull/373', content: 'The mandatory ADR prerequisite was explicitly superseded. The source confirms a queue and article mismatch.' },
@@ -122,6 +123,40 @@ describe('canonical action review and publication', () => {
     expect(renderArticleActions(markdown, completed, articleDate, articleStatuses)).toContain('/implement · Completed')
   })
 
+  it('suppresses unchanged rejected work across dates and permits fresh evidence to be reviewed', () => {
+    const rejectedVerdict = verify(); rejectedVerdict.suggestions[0].verdict = 'reject'
+    const first = apply(seed(), propose(), rejectedVerdict), nextDate = '2026-10-18'
+    const input = { registry: first, articleDate: nextDate, articleStatuses: new Map([[articleDate, 'accepted'], [nextDate, 'draft']]), markdown: markdown.replace(articleDate, nextDate).replace('"accepted"', '"draft"'), sources, roundId: 'e'.repeat(64), proposal: { changes: [], suggestions: [structuredClone(candidate)] }, verification: { changes: [], suggestions: verify().suggestions } }
+    const repeat = applyVerifiedActionReview(input)
+    expect(repeat.records.filter(record => record.origin === 'suggested')).toHaveLength(0)
+    expect(repeat.articles.find(article => article.date === nextDate)?.rejected[0].reason).toContain('unchanged source evidence')
+    const amended = sources.map(source => source.id === 'evidence' ? { ...source, content: `${source.content} A new owner checkpoint is now required.` } : source)
+    for (const unchangedCitations of [amended, [...sources, { id: 'unrelated', kind: 'goal' as const, locator: 'OTHER.md', content: 'An unrelated source changed.' }]]) {
+      const stillRejected = applyVerifiedActionReview({ ...input, sources: unchangedCitations })
+      expect(stillRejected.records.filter(record => record.origin === 'suggested')).toHaveLength(0)
+    }
+    const freshCandidate = { ...structuredClone(candidate), factCitations: [{ sourceId: 'evidence', quote: 'A new owner checkpoint is now required.' }] }
+    const fresh = applyVerifiedActionReview({ ...input, sources: amended, proposal: { changes: [], suggestions: [freshCandidate] } })
+    expect(fresh.records.filter(record => record.origin === 'suggested')).toHaveLength(1)
+  })
+
+  it('cannot admit the exact held historical suggestion even if both agents pass it', () => {
+    const registry = seed()
+    registry.baseline.heldSuggestions.push({ articlePath: '_articles/2026-10-01.md', sourceDate: '2026-10-01', line: 1, invocation: '/implement article actions', suggestionLineSha256: 'a'.repeat(64), suggestion: `> - \`/implement article actions\` — ${candidate.description} (${candidate.repo})` })
+    const result = apply(registry)
+    expect(result.records.filter(record => record.origin === 'suggested')).toHaveLength(0)
+    expect(result.articles[0].rejected[0].reason).toContain('historical suggestion remains held')
+  })
+
+  it('uses accepted corrected wording and gates for work from an earlier article', async () => {
+    const initial = propose(); initial.changes[0] = { ...initial.changes[0], state: 'open', description: 'Review with the documented owner and preview gates.' }; initial.suggestions = []
+    const registry = apply(seed(), initial, { changes: verify().changes, suggestions: [] }), date = '2026-10-18'
+    registry.records[0].gates = ['Owner decides readiness.']
+    const contexts: string[] = []
+    await reviewArticleActions({ registry, articleDate: date, articleStatuses: new Map([[articleDate, 'accepted'], [date, 'draft']]), markdown: markdown.replace(articleDate, date).replace('"accepted"', '"draft"'), feedback: '', sources, agents: { propose: async context => { contexts.push(context); return { changes: [], suggestions: [] } }, verify: async context => { contexts.push(context); return { changes: [], suggestions: [] } } } })
+    for (const context of contexts) { const action = JSON.parse(context.split('\n')[0]).actions[0]; expect(action.description).toBe('Review with the documented owner and preview gates.'); expect(action.gates).toEqual(['Owner decides readiness.']) }
+  })
+
   it('uses one result for retries without re-running agents or adding history', async () => {
     let proposals = 0, verifications = 0
     const agents = { propose: async () => { proposals++; return propose() }, verify: async () => { verifications++; return verify() } }
@@ -192,7 +227,7 @@ describe('canonical action review and publication', () => {
     const verification = verify(); verification.suggestions.push({ candidateIndex: 1, verdict: 'pass', reason: 'Unsubstantiated model assertion.', existingKey: null })
     const reviewed = apply(seed(), proposal, verification)
     expect(reviewed.records.map(record => record.original.description)).toEqual(['Old generator output.', 'Make article actions and queue state agree.'])
-    expect(reviewed.articles[0].rejected).toEqual([{ description: 'Invented architecture task.', reason: 'Missing exact primary factual evidence. Unsubstantiated model assertion.' }])
+    expect(reviewed.articles[0].rejected).toEqual([expect.objectContaining({ description: 'Invented architecture task.', reason: 'Missing exact primary factual evidence. Unsubstantiated model assertion.', workKey: 'daily-logger|unrelated|consistent article and queue', evidenceDigest: expect.stringMatching(/^[a-f0-9]{64}$/) })])
   })
 
   it('cannot recreate terminal work under a different date or description', () => {
@@ -215,7 +250,7 @@ describe('canonical action review and publication', () => {
 
   it('rejects stale ledger writes and preserves the newer operator choice', () => {
     const reviewed = apply(); const root = mkdtempSync(join(tmpdir(), 'action-ledger-')); roots.push(root); mkdirSync(join(root, 'actions'))
-    writeFileSync(join(root, 'actions/registry.json'), registryBytes(reviewed))
+    writeActionStore(root, reviewed)
     const next = setActionInclusion(reviewed, reviewed.records[1].key, false, 'editor', 'Do not add to the master index.', new Map([[articleDate, 'draft']]))
     writeActionRegistry(root, next, registryRevision(reviewed))
     expect(() => writeActionRegistry(root, reviewed, registryRevision(reviewed))).toThrow(/changed during review/)
@@ -244,7 +279,7 @@ describe('canonical action review and publication', () => {
 
   it('rolls back the article and retains the registry if publication fails inside its lock', () => {
     const registry = apply(), root = mkdtempSync(join(tmpdir(), 'action-publication-')); roots.push(root); mkdirSync(join(root, 'actions'))
-    const path = join(root, 'article.md'); writeFileSync(path, markdown); writeFileSync(join(root, 'actions/registry.json'), registryBytes(registry))
+    const path = join(root, `${articleDate}.md`); writeFileSync(path, markdown); writeActionStore(root, registry)
     const next = setActionInclusion(registry, registry.records[1].key, false, 'editor', 'Article only.', new Map())
     expect(() => writeActionRegistry(root, next, registryRevision(registry), { path, expected: markdown, next: 'new article', publish: () => { writeFileSync(path, 'new article'); throw new Error('Injected publication failure') } })).toThrow(/Injected/)
     expect(readFileSync(path, 'utf8')).toBe(markdown)
@@ -291,7 +326,7 @@ describe('canonical action review and publication', () => {
 
 function readActionRegistryFixture(registry: ActionRegistry): ActionRegistry {
   const root = mkdtempSync(join(tmpdir(), 'action-roundtrip-')); roots.push(root); mkdirSync(join(root, 'actions'))
-  writeFileSync(join(root, 'actions/registry.json'), registryBytes(registry))
+  writeActionStore(root, registry)
   // Fake projection edits cannot alter the canonical records.
   mkdirSync(join(root, 'api')); writeFileSync(join(root, 'api/actions.json'), '[{"description":"forged"}]')
   return readActionRegistry(root)

@@ -28,13 +28,13 @@ export function ArticleActions({ date, records, login, visibleBlobSha, draft, on
   return <section className="article-action-options" aria-label="Suggested action tracking">
     <h3>Action tracking</h3>
     {candidates.map(record => {
-      const current = saved?.registry.records.find(item => item.key === record.key) ?? record
+      const current = saved?.file.suggestions.find(item => item.key === record.key) ?? record
       return <div key={record.key} className="article-action-option">
         <p><code>{record.original.command}</code> {record.history.at(-1)?.description ?? record.original.description}</p>
         {record.introducedBy !== date ? <p>Existing suggestion from {record.introducedBy}. Its tracking choice is retained.</p> : draft && login ? <label><input type="checkbox" checked={pending?.key === record.key ? pending.include : current.includeInIndex} disabled={!saved || busy || !saved.draft} onChange={event => { void update(record.key, event.currentTarget.checked) }} /> Include in master actions index</label> : <p>{current.includeInIndex ? 'Included in master actions index' : 'Article only'}</p>}
       </div>
     })}
-    {draft && <p className="entry-stat" role="status">{busy ? 'Saving choice to the editorial branch…' : saved && !saved.draft ? 'Acceptance is staged. Tracking choices are read-only; editorial feedback can continue.' : saved ? 'Choices saved on the editorial branch. They take effect with article acceptance.' : 'Default on. Checked suggestions enter the index when accepted.'}</p>}
-    {error && <p role="alert">{error}</p>}
+    {draft && <p className="entry-stat" role="status">{busy ? 'Saving choice to the editorial branch…' : saved && !saved.draft ? 'Acceptance is staged. Tracking choices are read-only; editorial feedback can continue.' : saved ? 'Choices saved on the editorial branch. Suggestions remain provisional until the acceptance review passes.' : 'Default on. Checked suggestions enter the index when accepted.'}</p>}
+    {error && <><p role="alert">{error}</p><button type="button" disabled={busy} onClick={() => { if (!visibleBlobSha) return; setBusy(true); loadEditorialActions(date, visibleBlobSha).then(value => { setSaved(value); setError(null) }).catch(error => setError(String(error))).finally(() => setBusy(false)) }}>Reload action choices</button></>}
   </section>
 }

@@ -8,7 +8,7 @@ import { EXCLUDED_REPOS, KNOWN_REPOS, REPO_NOTES, classifyFleet } from './fleet.
 import {
   ActionRegistrySchema, CitationSchema, managedArticleDigest, normalizeWorkKey,
   renderArticleActions, sha256, stripManagedActions, actionStateDigest, acceptedActionState,
-  type ActionRegistry, type ActionSource,
+  normalizeLegacyActionProse, articleActionFileBytes, splitActionRegistry, type ActionRegistry, type ActionSource,
 } from './action-registry.js'
 
 const citations = z.array(CitationSchema).min(1)
@@ -217,7 +217,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   const next = structuredClone(input.registry)
   const previous = next.articles.find(article => article.date === input.articleDate)
   const keys = new Set(previous?.actionKeys ?? next.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key))
-  const rejected: Array<{ description: string; reason: string }> = [...(previous?.rejected ?? [])]
+  const rejected: Array<{ description: string; reason: string; workKey?: string; evidenceDigest?: string }> = [...(previous?.rejected ?? [])]
   const changeKeys = input.proposal.changes.map(change => change.actionKey)
   if (new Set(changeKeys).size !== changeKeys.length) throw new Error('Duplicate action disposition in one round')
   if (input.verification.changes.length !== input.proposal.changes.length || input.verification.suggestions.length !== input.proposal.suggestions.length) throw new Error('Independent verification is incomplete')
@@ -232,7 +232,10 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
       rejected.push({ description: change.description, reason: verdict.reason }); continue
     }
     const kinds: ActionSource['kind'][] = ['repository', 'github', ...(['open', 'deferred', 'dismissed'].includes(change.state) ? ['instruction' as const] : [])]
-    if (!checkedCitations(change.citations, input.sources, kinds, change.state === 'done' || change.state === 'superseded')) throw new Error(`Disposition ${change.actionKey} needs exact quotes from authoritative sources. Completion and supersession require repository, current API-state, or OWNER/MEMBER/COLLABORATOR evidence.`)
+    if (!checkedCitations(change.citations, input.sources, kinds, change.state === 'done' || change.state === 'superseded')) {
+      if (keys.has(change.actionKey)) throw new Error(`Disposition ${change.actionKey} needs exact quotes from authoritative sources. Completion and supersession require repository, current API-state, or OWNER/MEMBER/COLLABORATOR evidence.`)
+      rejected.push({ description: change.description, reason: 'Optional disposition lacks authoritative exact evidence' }); continue
+    }
     if (isReviewedAction(record.original) && change.state !== 'open') throw new Error('Reviewed action requires a separately accepted exact-ID settlement receipt')
     const acceptedState = acceptedActionState(record, input.articleStatuses, input.registry)
     if (['done', 'dismissed', 'superseded'].includes(acceptedState) && change.state !== acceptedState) throw new Error('Terminal actions cannot be reopened by an agent')
@@ -241,20 +244,29 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     record.history.push({ roundId: input.roundId, articleDate: input.articleDate, state: change.state, description: change.description, reason: change.reason, citations: change.citations, verifiedBy: input.identity?.verifier ?? 'injected-test-agent', verificationReason: verdict.reason })
   }
   for (const [candidateIndex, candidate] of input.proposal.suggestions.entries()) {
+    const workKey = normalizeWorkKey(candidate.repo, candidate.target, candidate.outcome)
+    const citedEvidence = [...new Map([...candidate.factCitations, ...candidate.goalCitations].map(citation => { const item = { sourceId: citation.sourceId.replace(/@[a-f0-9]{64}$/, ''), quote: citation.quote }; return [JSON.stringify(item), item] })).values()].sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+    const evidenceDigest = sha256(JSON.stringify(citedEvidence))
+    const rejectCandidate = (reason: string) => rejected.push({ description: candidate.description, reason, workKey, evidenceDigest })
     const verdict = input.verification.suggestions.find(verdict => verdict.candidateIndex === candidateIndex)
     if (!verdict) throw new Error('Candidate has no independent verdict')
-    if (verdict.verdict !== 'pass') { rejected.push({ description: candidate.description, reason: verdict.reason }); continue }
-    if (!checkedCitations(candidate.factCitations, input.sources, ['repository', 'github'])) { rejected.push({ description: candidate.description, reason: `Missing exact primary factual evidence. ${verdict.reason}` }); continue }
-    if (!checkedCitations([...candidate.factCitations, ...candidate.goalCitations], input.sources, ['repository', 'github'])) { rejected.push({ description: candidate.description, reason: 'A contextual citation is missing or does not match its exact source' }); continue }
-    const workKey = normalizeWorkKey(candidate.repo, candidate.target, candidate.outcome)
-    if (candidate.existingKey && !verdict.existingKey) { rejected.push({ description: candidate.description, reason: 'Proposer and verifier disagree about an existing identity; no new admission' }); continue }
+    if (verdict.verdict !== 'pass') { rejectCandidate(verdict.reason); continue }
+    if (!checkedCitations(candidate.factCitations, input.sources, ['repository', 'github'])) { rejectCandidate(`Missing exact primary factual evidence. ${verdict.reason}`); continue }
+    if (!checkedCitations([...candidate.factCitations, ...candidate.goalCitations], input.sources, ['repository', 'github'])) { rejectCandidate('A contextual citation is missing or does not match its exact source'); continue }
+    const priorRejection = input.registry.articles.flatMap(article => article.rejected).some(item => item.workKey === workKey && item.evidenceDigest === evidenceDigest)
+    const heldRepeat = input.registry.baseline.heldSuggestions.some(held => {
+      const match = /^>\s*-\s*`([^`]+)`\s*[—–-]\s*(.*?)\s*\(([^()]*)\)\s*$/.exec(held.suggestion)
+      return match && normalizeWorkKey(match[3], match[1].split(/\s+/)[0], match[2]) === normalizeWorkKey(candidate.repo, candidate.command, candidate.description)
+    })
+    if (priorRejection || heldRepeat) { rejectCandidate(heldRepeat ? 'Equivalent historical suggestion remains held; no automatic admission' : 'Previously rejected work has unchanged source evidence; no repeat admission'); continue }
+    if (candidate.existingKey && !verdict.existingKey) { rejectCandidate('Proposer and verifier disagree about an existing identity; no new admission'); continue }
     const existingKey = verdict.existingKey ?? next.records.find(record => record.workKey === workKey)?.key
     if (existingKey) {
       const existing = next.records.find(record => record.key === existingKey)
-      if (!existing || existing.original.repo !== candidate.repo) { rejected.push({ description: candidate.description, reason: 'Verifier linked to an unknown action or a different repository' }); continue }
+      if (!existing || existing.original.repo !== candidate.repo) { rejectCandidate('Verifier linked to an unknown action or a different repository'); continue }
       const equivalent = existing.workKey === workKey
-      if (!equivalent) { rejected.push({ description: candidate.description, reason: `Identity ${existingKey} lacks a matching target and outcome; retain existing work unchanged` }); continue }
-      if (isReviewedAction(existing.original)) { rejected.push({ description: candidate.description, reason: 'Restricted reviewed context is not dispatchable work' }); continue }
+      if (!equivalent) { rejectCandidate(`Identity ${existingKey} lacks a matching target and outcome; retain existing work unchanged`); continue }
+      if (isReviewedAction(existing.original)) { rejectCandidate('Restricted reviewed context is not dispatchable work'); continue }
       const state = acceptedActionState(existing, input.articleStatuses, input.registry)
       if (['open', 'proposed', 'deferred'].includes(state)) {
         keys.add(existingKey)
@@ -262,12 +274,12 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
         existing.state = state
         existing.history.push({ roundId: input.roundId, articleDate: input.articleDate, state, description: [candidate.description, ...candidate.gates].join(' '), reason: verdict.reason, citations: [...candidate.factCitations, ...candidate.goalCitations], verifiedBy: input.identity?.verifier ?? 'injected-test-agent', verificationReason: verdict.reason })
       }
-      else rejected.push({ description: candidate.description, reason: `Already resolved identity ${existingKey}: ${verdict.reason}` })
+      else rejectCandidate(`Already resolved identity ${existingKey}: ${verdict.reason}`)
       continue
     }
-    if (!checkedCitations(candidate.goalCitations, input.sources, ['goal', 'instruction', 'repository', 'github'])) { rejected.push({ description: candidate.description, reason: `Missing an authoritative goal for new work. ${verdict.reason}` }); continue }
+    if (!checkedCitations(candidate.goalCitations, input.sources, ['goal', 'instruction', 'repository', 'github'])) { rejectCandidate(`Missing an authoritative goal for new work. ${verdict.reason}`); continue }
     const existingAdmissions = next.records.filter(record => record.origin === 'suggested' && record.introducedBy === input.articleDate)
-    if (existingAdmissions.length >= 2) { rejected.push({ description: candidate.description, reason: 'Article admission limit reached; reuse existing work' }); continue }
+    if (existingAdmissions.length >= 2) { rejectCandidate('Article admission limit reached; reuse existing work'); continue }
     const key = `act-${input.articleDate}-${sha256(workKey).slice(0, 16)}`
     next.records.push({ key, original: { id: key, command: candidate.command, description: candidate.description, repo: candidate.repo, status: 'open', sourceDate: input.articleDate }, origin: 'suggested', workKey, state: 'proposed', introducedBy: input.articleDate, includeInIndex: true, inclusionOverride: null, goal: candidate.goal, doneWhen: candidate.doneWhen, gates: candidate.gates, history: [{ roundId: input.roundId, articleDate: input.articleDate, state: 'proposed', description: candidate.description, reason: verdict.reason, citations: [...candidate.factCitations, ...candidate.goalCitations], verifiedBy: input.identity?.verifier ?? 'injected-test-agent', verificationReason: verdict.reason }] })
     keys.add(key)
@@ -277,29 +289,47 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     const record = next.records.find(record => record.key === key)
     if (record && !covered.has(key)) throw new Error(`Existing suggestion omitted from independent review: ${key}`)
   }
+  // Git retains prior rounds; the dated working state retains only this round.
+  for (const record of next.records) record.history = record.history.filter(decision => decision.articleDate !== input.articleDate || decision.roundId === input.roundId)
   const usedSources = new Set(next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.map(citation => citation.sourceId))))
-  const retainedSources = [...new Map([...(previous?.sources ?? []), ...input.sources.filter(source => usedSources.has(source.id))].map(source => [source.id, source])).values()]
-  const snapshot = { date: input.articleDate, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], stateDigest: actionStateDigest(next, [...keys]), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: 'action-review-v3-strict-source-lines', proposalSha256: sha256(JSON.stringify(input.proposal)), verdicts: [...input.verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...input.verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason }))] }, sources: retainedSources, rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
+  const retainedSources = [...new Map([...(previous?.sources ?? []), ...input.sources.filter(source => usedSources.has(source.id))].map(source => [source.id, source])).values()].filter(source => usedSources.has(source.id)).map(source => {
+    const quotes = [...new Set(next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.filter(citation => citation.sourceId === source.id).map(citation => citation.quote))))]
+    return { id: source.id, kind: source.kind, locator: source.locator, content: quotes.join('\n\n'), fullContentSha256: source.fullContentSha256 ?? sha256(source.content) }
+  })
+  const snapshot = { date: input.articleDate, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], stateDigest: actionStateDigest(next, [...keys]), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: 'action-review-v4-bounded-rejection-memory', proposalSha256: sha256(JSON.stringify(input.proposal)), verdicts: [...input.verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...input.verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason }))] }, sources: retainedSources, rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
   next.articles = [...next.articles.filter(article => article.date !== input.articleDate), snapshot]
-  return ActionRegistrySchema.parse(next)
+  const result = ActionRegistrySchema.parse(next)
+  for (const file of splitActionRegistry(result).files) articleActionFileBytes(file)
+  return result
 }
 
 export async function reviewArticleActions(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string; sources: ActionSource[]; agents: ActionAgents; articleStatuses: ReadonlyMap<string, string> }): Promise<{ registry: ActionRegistry; markdown: string; cached: boolean }> {
   if (process.env.ACTION_REVIEW_DISABLED === 'true') throw new Error('Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked')
+  if (!input.registry.articles.some(article => article.date === input.articleDate) && Object.hasOwn(input.registry.baseline.articleActions, input.articleDate)) input = { ...input, markdown: normalizeLegacyActionProse(input.markdown) }
   input = { ...input, articleStatuses: new Map(input.articleStatuses).set(input.articleDate, input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft') }
   const previous = input.registry.articles.find(article => article.date === input.articleDate)
   input = { ...input, sources: [...new Map(input.sources.map(source => [source.id.replace(/@[a-f0-9]{64}$/, ''), source])).values()].sort((a, b) => a.id.localeCompare(b.id)) }
-  const inputHash = sha256(JSON.stringify({ version: 3, statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
+  const inputHash = sha256(JSON.stringify({ version: 4, statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
   if (previous?.roundId === inputHash && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys)) return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true }
+  const byteLength = (value: string) => Buffer.byteLength(value, 'utf8')
+  if (input.sources.some(source => byteLength(source.content) > 128 * 1024) || input.sources.reduce((total, source) => total + byteLength(source.content), 0) > 384 * 1024) throw new Error('Action evidence exceeds its source budget (128 KiB each / 384 KiB total); review pending')
   const sourceAliases = new Map(input.sources.map((source, index) => [`s${index + 1}`, source.id]))
   const modelSources = input.sources.map((source, index) => ({ ...source, id: `s${index + 1}` }))
-  const context = JSON.stringify({ articleDate: input.articleDate, articleStatuses: Object.fromEntries(input.articleStatuses), sources: modelSources.map(source => ({ ...source, content: source.content.split('\n').map((line, index) => `L${index + 1}: ${line}`).join('\n') })), citationPolicy: { factualEvidence: modelSources.filter(source => ['repository', 'github'].includes(source.kind)).map(source => source.id), goals: modelSources.filter(source => ['goal', 'instruction', 'repository', 'github'].includes(source.kind)).map(source => source.id), rule: 'Every quote must be exact. Each disposition requires at least one primary factual source; article-only citations never establish completion or supersession.' }, actions: input.registry.records, held: input.registry.baseline.heldSuggestions, previousRejections: input.registry.articles.flatMap(article => article.rejected), currentActionKeys: previous?.actionKeys ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key) })
+  const currentActionKeys = previous?.actionKeys ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
+  const context = JSON.stringify({ articleDate: input.articleDate, articleStatuses: Object.fromEntries(input.articleStatuses),
+    sources: modelSources.map(({ trustedContent, ...source }) => ({ ...source, authoritativeLines: trustedContent ? source.content.split('\n').flatMap((line, index) => line.trim() && trustedContent.some(text => text.includes(line)) ? [index + 1] : []) : 'repository source', content: source.content.split('\n').map((line, index) => `L${index + 1}: ${line}`).join('\n') })),
+    citationPolicy: { rule: 'Every quote must be exact. Completion and supersession require authoritative API/OWNER/MEMBER/COLLABORATOR lines, or repository evidence. Article-only claims and third-party comments never establish completion. Do not include source aliases or line labels in user-facing reasons.' },
+    actions: input.registry.records.map(record => ({ key: record.key, workKey: record.workKey, repo: record.original.repo, description: record.history.filter(decision => input.articleStatuses.get(decision.articleDate) === 'accepted' && input.registry.articles.some(article => article.date === decision.articleDate && article.status === 'accepted' && article.roundId === decision.roundId)).at(-1)?.description ?? record.original.description, doneWhen: record.doneWhen, gates: record.gates, state: acceptedActionState(record, input.articleStatuses, input.registry), ...(currentActionKeys.includes(record.key) ? { goal: record.goal, latestDecision: record.history.at(-1) } : {}) })),
+    held: input.registry.baseline.heldSuggestions.map(held => ({ date: held.sourceDate, fingerprint: held.suggestionLineSha256, suggestion: held.suggestion })),
+    previousRejections: previous?.rejected ?? [], rejectionMemory: [...new Map(input.registry.articles.flatMap(article => article.rejected).filter(item => item.workKey).map(item => [JSON.stringify([item.workKey, item.evidenceDigest]), { workKey: item.workKey, evidenceDigest: item.evidenceDigest }])).values()], currentActionKeys })
+  if (byteLength(context) > 640 * 1024) throw new Error('Action prompt exceeds 640 KiB; review pending')
+  const boundedPrompt = (prompt: string) => { if (byteLength(prompt) > 640 * 1024) throw new Error('Action prompt exceeds 640 KiB; review pending'); return prompt }
   let correction = ''
   // One repair of malformed output, never a recursive proposer/verifier negotiation.
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const proposal = ActionProposalSchema.parse(await input.agents.propose(`${context}\nReturn a change for every currentActionKey, including retained terminal dispositions. Every carried identity needs a verdict in this round. An independently verified existingKey link also counts as reviewing it.\n${correction}`, modelSources))
-      const verification = ActionVerificationSchema.parse(await input.agents.verify(`${context}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(proposal)}\n${correction}\nReturn ONLY the tool schema: changes and suggestions are arrays of verdict objects. Keep reasons concise.`, modelSources))
+      const proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every currentActionKey, including retained terminal dispositions. Every carried identity needs a verdict in this round. An independently verified existingKey link also counts as reviewing it.\n${correction}`), modelSources))
+      const verification = ActionVerificationSchema.parse(await input.agents.verify(boundedPrompt(`${context}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(proposal)}\n${correction}\nReturn ONLY the tool schema: changes and suggestions are arrays of verdict objects. Keep reasons concise.`), modelSources))
       const resolveCitation = (citation: z.infer<typeof CitationSchema>) => ({ ...citation, sourceId: sourceAliases.get(citation.sourceId) ?? citation.sourceId })
       for (const change of proposal.changes) change.citations = change.citations.map(resolveCitation)
       for (const candidate of proposal.suggestions) { candidate.goalCitations = candidate.goalCitations.map(resolveCitation); candidate.factCitations = candidate.factCitations.map(resolveCitation) }

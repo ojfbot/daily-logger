@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ActionRegistrySchema, type ActionRegistry } from '../../../../src/action-registry-schema.ts'
+import { ArticleActionFileSchema, actionArticlePath, articleActionFileBytes, type ArticleActionFile } from '../../../../src/action-registry-schema.ts'
 import { ghFetch } from './stampDraft.ts'
 
 const repo = 'repos/ojfbot/daily-logger'
@@ -18,8 +18,8 @@ async function readFile(path: string): Promise<z.infer<typeof fileSchema>> {
   if (blob.sha !== file.sha) throw new Error('Canonical editorial blob changed')
   return blob
 }
-const sameProse = (content: string) => content.replace(/^(?:status|outcome):.*\n?/gm, '')
-export interface EditorialActions { registry: ActionRegistry; sha: string; branchExists: boolean; draft: boolean }
+const sameProse = (content: string) => content.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, header => header.replace(/^(?:status|outcome):.*\n?/gm, ''))
+export interface EditorialActions { file: ArticleActionFile; sha: string; branchExists: boolean; draft: boolean }
 
 export async function loadEditorialActions(date: string, visibleBlobSha: string): Promise<EditorialActions> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Invalid article date')
@@ -32,8 +32,8 @@ export async function loadEditorialActions(date: string, visibleBlobSha: string)
     const main = await readFile(`${repo}/contents/_articles/${date}.md?ref=main`)
     if (main.sha !== visibleBlobSha || sameProse(decode(main.content)) !== sameProse(decode(article.content))) throw new Error('The editorial branch contains a different article version. Refresh its preview before changing actions.')
   }
-  const file = await readFile(`${repo}/contents/actions/registry.json?ref=${ref}`)
-  return { registry: ActionRegistrySchema.parse(JSON.parse(decode(file.content))), sha: file.sha, branchExists: branchResponse.ok, draft: /^status:\s*"?draft"?\s*$/m.test(decode(article.content)) }
+  const file = await readFile(`${repo}/contents/${actionArticlePath(date)}?ref=${ref}`)
+  return { file: ArticleActionFileSchema.parse(JSON.parse(decode(file.content))), sha: file.sha, branchExists: branchResponse.ok, draft: /^status:\s*"?draft"?\s*$/m.test(decode(article.content)) }
 }
 
 export async function saveActionInclusion(input: { date: string; visibleBlobSha: string; expectedSha: string; key: string; include: boolean; login: string }): Promise<EditorialActions> {
@@ -51,13 +51,13 @@ export async function saveActionInclusion(input: { date: string; visibleBlobSha:
     if (!current.draft) throw new Error('Article acceptance is already staged. Refresh before changing actions.')
     if (current.sha !== input.expectedSha) throw new Error('Action choices changed while creating the editorial branch. Refresh before saving.')
   }
-  const record = current.registry.records.find(record => record.key === input.key)
-  const snapshot = current.registry.articles.find(article => article.date === input.date)
+  const record = current.file.suggestions.find(record => record.key === input.key)
+  const snapshot = current.file.snapshot
   if (!record || record.origin !== 'suggested' || !snapshot?.actionKeys.includes(input.key) || record.introducedBy !== input.date) throw new Error('This is existing work; changing its admission checkbox cannot close it')
   record.includeInIndex = input.include
   record.inclusionOverride = { include: input.include, actor: input.login, instruction: 'Explicit editorial inclusion checkbox' }
-  const registry = ActionRegistrySchema.parse(current.registry)
-  const response = await ghFetch(`${repo}/contents/actions/registry.json`, { method: 'PUT', body: JSON.stringify({ branch, sha: current.sha, content: encode(JSON.stringify(registry, null, 2) + '\n'), message: `editorial: ${input.include ? 'include' : 'exclude'} action ${input.key}` }) })
+  const file = ArticleActionFileSchema.parse(current.file)
+  const response = await ghFetch(`${repo}/contents/${actionArticlePath(input.date)}`, { method: 'PUT', body: JSON.stringify({ branch, sha: current.sha, content: encode(articleActionFileBytes(file)), message: `editorial: ${input.include ? 'include' : 'exclude'} action ${input.key}` }) })
   if (!response.ok) throw new Error('Action choice was not confirmed. Reload before retrying.')
   return loadEditorialActions(input.date, input.visibleBlobSha)
 }

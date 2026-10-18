@@ -24,3 +24,6 @@ evals/results/raw.json
 
 # Python workflow-test artifacts
 __pycache__/
+
+# TypeScript incremental compiler cache
+*.tsbuildinfo

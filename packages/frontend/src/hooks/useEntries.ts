@@ -4,7 +4,7 @@ import { fetchEntries, fetchTags, fetchRepos, fetchActions, fetchDoneActions, fe
 
 export function useEntries() {
   const dispatch = useAppDispatch()
-  const { entries, tags, repos, actions, doneActions, proposedActions, loading, error } = useAppSelector((s) => s.articles)
+  const { entries, tags, repos, actions, doneActions, proposedActions, loading, error, proposedError } = useAppSelector((s) => s.articles)
 
   useEffect(() => {
     if (entries.length === 0 && !loading) {
@@ -17,5 +17,5 @@ export function useEntries() {
     }
   }, [dispatch, entries.length, loading])
 
-  return { entries, tags, repos, actions, doneActions, proposedActions, loading, error }
+  return { entries, tags, repos, actions, doneActions, proposedActions, loading, error, proposedError }
 }

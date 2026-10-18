@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "method": "Build the current proposer context using only the previously authorized receipt sources and an injected local capture. No remote calls or state writes.",
+  "baselineBytes": 556370,
+  "articleFileBytes": 31618,
+  "sourceBytes": 247734,
+  "proposerPromptBytes": 540404,
+  "limits": {
+    "source": 131072,
+    "totalSources": 393216,
+    "prompt": 655360,
+    "articleFile": 65536
+  }
+}

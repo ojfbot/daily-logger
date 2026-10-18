@@ -1,47 +1,50 @@
 # Action registry cutover verification
 
-Recorded October 17, 2026. This verifies the proposed cutover; it does not merge or deploy it.
+Recorded October 18, 2026, after Claude's independent review of PR #381 at `3bc6f2f`. This record covers local verification of the corrections. Hosted checks and Claude's follow-up review remain separate observations.
 
 ## Historical conservation
 
-`pnpm check:action-intake` passes against the pinned source commit `faac3c9bb310bc0fc1c1ec445433e310e0498558`:
+`pnpm check:action-intake` verifies 91 imported open and 125 imported completed objects against accepted main `d540e2c5d7aa21b3916c3db1527e993e66c705bd`. All 213 original objects from the earlier `faac3c9` migration survive unchanged, along with the three October 18 objects added on main while this PR was open. The 138 historical holds and three protected reviewed records retain their authority limits.
 
-- 88 original open and 125 original completed objects are preserved.
-- All 138 held source lines, hashes, and frozen article appearances match the migration pins.
-- Three protected reviewed records keep their authority restrictions.
-- Two consecutive API builds produce identical bytes.
+The frozen baseline contains 216 identities. October 17's three verified dispositions produce 88 open, 126 completed, zero proposed, and two dismissed records. No new identity was admitted by that reconciliation. Two consecutive API builds produce identical bytes.
 
-The initial migration registry had 213 records, no review receipts, and no history changes. Its SHA-256 revision is `30819f5cb3f65a2180f620fe6f4a0e46df8d6a62ddd4e207c1269c6fdc9f65b1`. The same PR then applies the independently verified October 17 receipt. Its three original rows remain immutable: the repeated unsupported ADR prerequisite and unsupported closure instruction are dismissed, and the #372 review is completed from its actual merge and delivery evidence. The open feed becomes 85, completed becomes 126, and two separate dispositions are recorded. No new identity is admitted.
+`actions/registry.json` is the immutable imported baseline. Each article owns `actions/articles/YYYY-MM-DD.json`. Every runtime writer, checkbox, workflow path restriction, and output receipt uses the exact dated file. The old Markdown admission parser remains only in the explicit importer and its tests. Reading the former mutable monolithic layout fails explicitly.
 
 ## Local checks
 
-- `pnpm test`: 737 tests pass across 53 files.
-- `pnpm exec playwright test`: 21 browser tests pass, including checked defaults, saved opt-out after reload, acceptance branch reuse, and conflict handling. GitHub writes are intercepted. Direct server-handler regressions separately prove editorial-branch `ref` forwarding, exact PR head/state filtering, and uncached readback. One scenario reads the actual reconciled October 17 API artifact and confirms all three cards, folded evidence, and the unchanged reporting-window commit count.
-- `VITE_BASE_PATH=/ pnpm --dir packages/frontend build` followed by `pnpm exec playwright test --config playwright.continuation.config.ts`: six additional production-bundle browser checks pass at desktop and narrow widths.
-- `pnpm type-check` and `pnpm --dir packages/frontend build`: pass.
-- `pnpm lint`: no errors; the existing `schema.test.ts:195` explicit-any warning remains.
-- Node feedback-extraction and revision-admission tests: nine pass.
-- Python editorial boundary tests: pass for article/registry changes and rejected code or symlink variants.
+- `pnpm test`: 765 tests pass across 57 files.
+- `pnpm type-check` and `pnpm --dir packages/frontend type-check`: pass.
+- Explicit TypeScript checking of the trusted editorial scripts, output-proof helper, and rebind CLI: passes.
+- `pnpm lint`: zero errors. The existing explicit-any warning at `src/__tests__/schema.test.ts:195` remains.
+- `pnpm exec playwright test`: 21 browser journeys pass, including the actual October 17 card artifact, checked defaults, saved opt-out after reload, acceptance branch reuse, and conflicting saves.
+- `VITE_BASE_PATH=/ pnpm --dir packages/frontend build` and the continuation Playwright configuration: production build and six browser journeys pass.
+- Nine Node feedback extraction and admission tests pass. The executable Python test passes both original workflow boundaries against real Git article, dated-state, code, and symlink changes.
 - `git diff --check`: passes.
 
-The combined base includes accepted PR #378. Native continuation tests pin both blobs, publish registry-only rounds, preserve at-most-once invocation claims, and reject missing/symlink/executable registries, cross-date choices, and forged follow-up snapshots. Real service-to-stamper tests reject hidden tree changes and ref races. Both original workflow modes use trusted-base code, exact output receipts, and the existing required PR check on every acceptance head. GitHub Contents encoding=none is read through the exact immutable Git blob.
+The native continuation tests create real Git worktrees, execute the actual revision CLI in mock mode, and push to a local bare remote. They cover registry-only rounds, trusted-main advancement, at-most-once claims, exact parent/blob checks, artifact-bound receipts, hidden changes, actor mismatches, and unsupported file modes. The native continuation and action-intake integration files have an explicit twenty-second timeout after a loaded full run exceeded Vitest's implicit five-second timeout. The frozen monthly Git replay has a sixty-second limit after it passed alone in about seventeen seconds but exceeded thirty seconds under full-suite filesystem load. Production request timeouts did not change.
 
-The registry tests exercise later-article disposition, draft isolation, correction before promotion, rerunning both agents at promotion, sticky exclusion, terminal exclusion from every master feed, a non-replenishing admission limit, exact identity matching, source-line resolution and invalid-range rejection, unsupported completion, stale writers, rollback after injected failure, real generated-card HTML, and authored/registry HTML injection attempts.
+New storage tests perform a real merge of acceptance on day D and generation on D+1, preserve the frozen baseline, round-trip the composed state, reject corrupt files, and inject failure during sidecar installation after article publication. Ordinary failures restore both files. Process termination between filesystem operations remains covered by stale-binding rejection and the documented recovery procedure.
 
-## Live quality check
+New evidence and lifecycle tests cover the XSS reproducer, normalized proxy paths, private-repository access, optional rejected changes, provider failure, pending draft publication, semantic holds without repair, current-source selection, source-author authority, source and prompt budgets, deterministic editorial rebind, and authored lines named `status`, `outcome`, or `provenance`. Rejection memory suppresses equivalent work across dates while its evidence is unchanged. Changed evidence requires another independent verdict. Exact held historical suggestions stay unadmitted even if both injected agents pass them.
 
-The operator explicitly authorized sending the October 17 article, action history, relevant goal/review documents, and linked GitHub discussions to Anthropic for a no-write test. Early attempts failed closed on malformed output, invalid quotes, and report-only evidence. A structurally successful attempt still retained a disproved claim in #372's active wording. This was treated as a failed quality check, not acceptance. Repeated quote-copying failures led to source-line selection: application code now resolves evidence text before verification.
+## Bounded size
 
-`scripts/check-action-review.ts` checks the final receipt for the exact three expected dispositions, preserved original objects, unchanged canonical state, a rendered history card, and fresh #372 merge evidence instead of historical draft handoffs. The live quality check passes; [its result](action-cutover-live-result.json) records the model identities, source digests, states, and unchanged canonical state during the dry run. The verified receipt was then applied separately to this feature branch.
+[The local size check](action-cutover-size-check.json) builds the current prompt with an injected capture using all current article statuses and the earlier authorized receipt sources. Run `pnpm check:action-size /path/to/authorized-receipt.json` to reproduce it. It calls no provider and writes no article or queue state.
 
-## Limits
+The frozen baseline is 556,370 bytes. The October 17 dated file is 31,618 bytes. The proposer prompt is 540,404 bytes for 247,734 bytes of source material. Enforced limits are 128 KiB per source, 384 KiB total sources, 640 KiB per complete proposer or verifier prompt, and 64 KiB per dated file. Earlier rounds remain in Git; dated state retains current decisions and cited excerpts rather than full discussions. Exceeding a limit preserves a pending daily draft with no new admissions.
 
-Independent model agreement cannot establish source truth or semantic novelty by itself. Literal source checks, strict identity links, preserved rejected/held history, bounded admissions, and human article acceptance remain separate controls. Missing evidence stops an existing-action review and excludes an unsupported candidate.
+## Live quality receipt
 
-Git is the publication boundary. An ordinary write exception restores prior article bytes; process termination between filesystem renames can leave local files and a stale lock requiring the recovery described in [Action intake](../docs/action-intake.md).
+The operator previously authorized an October 17 Anthropic dry run. Its proposer was Sonnet 4.6 and its independent verifier was Opus 4.6. The [original result](action-cutover-live-result.json) remains an immutable record of that test. This correction pass made no new live provider calls.
 
-The independent GPT reviewer found and helped resolve lifecycle, identity, and rendering gaps. The transcript-to-trail audit used this chat's recorded transcript. A review from another model family was not independently verified; no such claim is made here.
+`scripts/check-action-review.ts` verifies the preserved receipt against all current original objects and exact action histories. The storage conversion retains its model round and evidence hashes. An explicit editorial rebind records the reporting-window prose clarification without changing those decisions. October 17's three inherited GitHub time references were independently re-adjudicated against the current body; the [follow-up receipt](../docs/time-backfill/2026-10/oct17-action-cutover.json) records them. No stale-backfill warning remains for that article.
 
-Provider tool schemas use [strict tool decoding](https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use); application-side Zod validation still enforces every numeric, string, identity, and evidence constraint. The tool schema omits only provider-unsupported value constraints described in [the supported schema subset](https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations).
+## Authority and recovery limits
 
-Trusted main remains the human-reviewed authority for ordinary source/data PRs, including the one-time migration. Editorial output receipts constrain automated acceptance admission; they are not a cryptographic restriction on deliberate maintainer-approved policy or state changes. A receipt that was not appended or whose provenance cannot be read blocks continuation and acceptance checks without authorizing a provider replay.
+Fresh acceptance verification is intentional. A draft's model findings remain provisional until the final accepted round passes and the owner merges its visible output. No automatic PR readiness, merge, command execution, or protected-action settlement follows from an article disposition.
+
+Editorial receipts are bound by hash to immutable artifacts from the first attempt of the trusted workflow, with run event, branch, policy, request, output blob, and parent checks. Failed, stale, or uncertain bot comments cannot clear an outstanding request. The proof window is 90 days for an unmerged acceptance PR. Expiry fails closed and never authorizes automatic replay. Trusted main supplies durable authority after merge. Recovery and the atomic revert conditions are in [Action recovery](../docs/action-recovery.md).
+
+Separate unmerged branches cannot reserve identities globally. The composed registry rejects duplicate work keys before API publication; reconciliation is required when their states meet. Model agreement and exact matching cannot prove semantic novelty. Goal evidence, immutable identity history, independent verification, bounded admissions, and owner review remain separate controls.
+
+Claude's posted independent review found material gaps missed by the original GPT audit. A subsequent GPT audit identified the body-line hash exclusions, which are now fixed and tested. This record does not claim Claude approved the corrected head.

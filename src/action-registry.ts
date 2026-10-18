@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
-import { existsSync, readFileSync, writeFileSync, renameSync, openSync, closeSync, unlinkSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync, renameSync, openSync, closeSync, unlinkSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { readdirSync } from 'node:fs'
 import { detachArticleTime } from './article-time-frontmatter.js'
@@ -10,7 +10,7 @@ export const REGISTRY_PATH = 'actions/registry.json'
 export const ACTIONS_START = '<!-- ACTIONS_START -->'
 export const ACTIONS_END = '<!-- ACTIONS_END -->'
 export * from './action-registry-schema.js'
-import { ActionRegistrySchema, type ActionRegistry } from './action-registry-schema.js'
+import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hydrateActionRegistry, articleActionFileBytes, actionArticlePath, type ActionRegistry } from './action-registry-schema.js'
 
 export function sha256(value: string): string { return createHash('sha256').update(value).digest('hex') }
 export function registryBytes(registry: ActionRegistry): string { return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
@@ -22,29 +22,46 @@ export function normalizeWorkKey(repo: string, target: string, outcome: string):
 export function readActionRegistry(repoRoot: string): ActionRegistry {
   const path = join(repoRoot, REGISTRY_PATH)
   if (!existsSync(path)) throw new Error('Action registry is missing. Run the explicit migration; markdown is never an admission fallback.')
-  return ActionRegistrySchema.parse(JSON.parse(readFileSync(path, 'utf8')))
+  const directory = join(repoRoot, 'actions/articles')
+  const files = existsSync(directory) ? readdirSync(directory).filter(file => /^\d{4}-\d{2}-\d{2}\.json$/.test(file)).map(file => { const bytes = readFileSync(join(directory, file), 'utf8'); if (Buffer.byteLength(bytes) > 64 * 1024) throw new Error(`Oversized article action file: ${file}`); const parsed = ArticleActionFileSchema.parse(JSON.parse(bytes)); if (file !== `${parsed.date}.json`) throw new Error('Article action filename and date disagree'); return parsed }) : []
+  return hydrateActionRegistry(ActionRegistrySchema.parse(JSON.parse(readFileSync(path, 'utf8'))), files)
 }
 
 export function writeActionRegistry(repoRoot: string, registry: ActionRegistry, expectedRevision: string, article?: { path: string; expected: string | null; next: string; publish: () => void }): void {
   const path = join(repoRoot, REGISTRY_PATH)
   const lock = `${path}.lock`
   const descriptor = openSync(lock, 'wx')
-  const temporary = `${path}.${randomUUID()}.tmp`
+  const temporary: string[] = []
+  const oldFiles = new Map<string, string | null>()
   let published = false
   try {
-    if (registryRevision(readActionRegistry(repoRoot)) !== expectedRevision) throw new Error('Action registry changed during review; refresh before retrying')
+    writeFileSync(descriptor, JSON.stringify({ pid: process.pid, acquiredAt: new Date().toISOString() }) + '\n')
+    const before = readActionRegistry(repoRoot)
+    if (registryRevision(before) !== expectedRevision) throw new Error('Action registry changed during review; refresh before retrying')
     if (article && (existsSync(article.path) ? readFileSync(article.path, 'utf8') : null) !== article.expected) throw new Error('Article changed during action review; refresh before retrying')
-    writeFileSync(temporary, registryBytes(registry), { flag: 'wx' })
+    const split = splitActionRegistry(registry)
+    if (registryBytes(split.baseline) !== registryBytes(splitActionRegistry(before).baseline)) throw new Error('The imported action baseline cannot change during an article review')
+    if (before.articles.some(snapshot => !registry.articles.some(next => next.date === snapshot.date))) throw new Error('An article review cannot delete another article snapshot')
+    mkdirSync(join(repoRoot, 'actions/articles'), { recursive: true })
+    for (const file of split.files) {
+      const target = join(repoRoot, actionArticlePath(file.date)), bytes = articleActionFileBytes(file)
+      const old = existsSync(target) ? readFileSync(target, 'utf8') : null
+      if (old === bytes) continue
+      if (article && !article.path.endsWith(`/${file.date}.md`)) throw new Error('An article review cannot write another date')
+      const temp = `${target}.${randomUUID()}.tmp`
+      writeFileSync(temp, bytes, { flag: 'wx' }); temporary.push(temp); oldFiles.set(target, old)
+    }
     if (article) { published = true; article.publish(); if (readFileSync(article.path, 'utf8') !== article.next) throw new Error('Article publication did not match its verified content') }
-    renameSync(temporary, path)
+    for (const [index, target] of [...oldFiles.keys()].entries()) renameSync(temporary[index], target)
   } catch (error) {
+    for (const [target, old] of oldFiles) { if (old === null) { if (existsSync(target)) unlinkSync(target) } else writeFileSync(target, old) }
     if (article && published) {
       if (article.expected === null) { if (existsSync(article.path)) unlinkSync(article.path) }
       else writeFileSync(article.path, article.expected)
     }
     throw error
   } finally {
-    if (existsSync(temporary)) unlinkSync(temporary)
+    for (const temp of temporary) if (existsSync(temp)) unlinkSync(temp)
     closeSync(descriptor)
     unlinkSync(lock)
   }
@@ -66,7 +83,8 @@ export function stripManagedActions(markdown: string): string {
   return markdown.slice(0, start) + markdown.slice(end + ACTIONS_END.length)
 }
 export function articleActionDigest(markdown: string): string {
-  return sha256(detachArticleTime(stripManagedActions(markdown)).markdown.replace(/^(?:status|outcome|provenance):.*\n?/gm, '').trim())
+  const prose = detachArticleTime(stripManagedActions(markdown)).markdown
+  return sha256(prose.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, header => header.replace(/^(?:status|outcome|provenance):.*\n?/gm, '')).trim())
 }
 
 export function setActionInclusion(registry: ActionRegistry, key: string, include: boolean, actor: string, instruction: string, articleStatuses: ReadonlyMap<string, string>): ActionRegistry {
@@ -105,7 +123,9 @@ export function projectRegistry(registry: ActionRegistry, articleStatuses: Reado
     const status = articleStatuses.get(record.introducedBy)
     if (accepted && record.includeInIndex) open.push(active)
     else if (status === 'draft') {
-      if (record.state === 'open' || record.state === 'proposed') proposed.push({ id: record.key, command: original.command, description: original.description, repo: original.repo, sourceDate: original.sourceDate, status: 'proposed', includeInIndex: record.includeInIndex })
+      const own = registry.articles.find(article => article.date === record.introducedBy)
+      const ownState = record.history.filter(item => item.articleDate === own?.date && item.roundId === own.roundId).at(-1)?.state
+      if (ownState === 'open' || ownState === 'proposed') proposed.push({ id: record.key, command: original.command, description: original.description, repo: original.repo, sourceDate: original.sourceDate, status: 'proposed', includeInIndex: record.includeInIndex })
     }
   }
   return { open, done, proposed, dispositions }
@@ -144,7 +164,7 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
       const label = { done: 'Completed', dismissed: 'Dismissed', superseded: 'Superseded', deferred: 'Deferred', open: 'Open', proposed: 'Proposed' }[state]
       const evidence = decision?.citations.map(citation => registry.articles.flatMap(article => article.sources).find(source => source.id === citation.sourceId)).filter(source => source && source.kind !== 'report') ?? []
       const links = [...new Map(evidence.map(source => [source?.id, source])).values()].map(source => source ? `<li>${/^https:\/\//.test(source.locator) ? `<a href="${escaped(source.locator)}">${escaped(source.locator)}</a>` : escaped(source.locator)}</li>` : '').join('')
-      lines.push(`<article><strong>${escaped(record.original.command)} · ${label}</strong><p>${escaped(decision?.description ?? '')}</p><details><summary>Original suggestion and evidence</summary><p>${escaped(record.original.description)}</p><p>${escaped(decision?.reason ?? '')}</p><ul>${links}</ul></details></article>`)
+      lines.push(`<article><strong>${escaped(record.original.command)} · ${label}</strong><p>${escaped(decision?.description ?? '')}</p><details><summary>Original suggestion and evidence</summary><p>${escaped(record.original.description)}</p><p>${escaped((decision?.reason ?? '').replace(/\(s\d+(?:,\s*s\d+)*(?:\s+L\d+(?:-\d+)?)?\)/g, '').replace(/\bs\d+(?:\s+L\d+(?:-\d+)?)?/g, 'the cited source').replace(/ {2,}/g, ' ').trim())}</p><ul>${links}</ul></details></article>`)
     }
     lines.push('</section>')
   }
@@ -154,15 +174,29 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
   return footer === undefined ? `${prose}\n\n${lines.join('\n')}\n` : `${prose.slice(0, footer).trimEnd()}\n\n${lines.join('\n')}\n\n${prose.slice(footer).trimStart()}\n`
 }
 
-function unmanagedArticleProse(markdown: string): string {
+export function normalizeLegacyActionProse(markdown: string): string {
   return stripManagedActions(markdown)
     .replace(/^> \*\*Suggested actions\*\*[^\n]*\n(?:>[^\n]*(?:\n|$))*/gm, '')
     .replace(/^The following block retains the original generator suggestions verbatim[^\n]*(?:\n|$)/gm, '')
     .replace(/^\*\*Disposition of suggested actions:\*\*[^\n]*(?:\n|$)/gm, '')
     .replace(/\n{2,}---\n(?=\n?\*Generated by \[daily-logger\])/g, '\n\n---\n')
 }
+function unmanagedArticleProse(markdown: string): string { return stripManagedActions(markdown).replace(/\n{2,}---\n(?=\n?\*Generated by \[daily-logger\])/g, '\n\n---\n') }
 export function managedArticleDigest(markdown: string): string {
   return articleActionDigest(unmanagedArticleProse(markdown))
+}
+
+export function rebindArticleSnapshot(registry: ActionRegistry, input: { date: string; beforeMarkdown: string; afterMarkdown: string; expectedRoundId: string; actor: string; instruction: string }): ActionRegistry {
+  const next = structuredClone(registry), snapshot = next.articles.find(article => article.date === input.date)
+  if (!snapshot || snapshot.roundId !== input.expectedRoundId || snapshot.articleDigest !== managedArticleDigest(input.beforeMarkdown) || snapshot.review.state !== 'verified') throw new Error('The prior action review binding must be verified before an editorial rebind')
+  if (!input.actor.trim() || !input.instruction.trim()) throw new Error('An editorial rebind requires an explicit identified instruction')
+  if ((input.beforeMarkdown.match(/^status:.*$/m)?.[0]) !== input.afterMarkdown.match(/^status:.*$/m)?.[0]) throw new Error('An editorial rebind cannot change acceptance status')
+  const block = (value: string) => value.slice(value.indexOf(ACTIONS_START), value.indexOf(ACTIONS_END) + ACTIONS_END.length)
+  if (!input.beforeMarkdown.includes(ACTIONS_START) || !input.beforeMarkdown.includes(ACTIONS_END)) throw new Error('An editorial rebind requires the canonical managed block')
+  if (block(input.beforeMarkdown) !== block(input.afterMarkdown)) throw new Error('An editorial rebind cannot change managed action decisions')
+  snapshot.binding = { mode: 'editorial-rebind', fromDigest: snapshot.articleDigest, actor: input.actor, instructionSha256: sha256(input.instruction) }
+  snapshot.articleDigest = managedArticleDigest(input.afterMarkdown)
+  return ActionRegistrySchema.parse(next)
 }
 
 export function renderArticleActionHtml(markdown: string, registry: ActionRegistry, date: string, statuses: ReadonlyMap<string, string>): string {
