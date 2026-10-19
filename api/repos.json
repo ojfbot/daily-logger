@@ -1,17 +1,17 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 135,
-    "totalCommits": 1655,
+    "articleCount": 136,
+    "totalCommits": 1661,
     "relatedTags": [
       "daily-logger",
-      "core",
-      "editorial-pipeline",
-      "provenance",
-      "hardening",
       "ci-cd",
+      "editorial-pipeline",
+      "hardening",
+      "provenance",
       "model-behavior-as-design",
       "assistant-centric",
+      "core",
       "verification",
       "morning-cockpit",
       "graphql-federation",
