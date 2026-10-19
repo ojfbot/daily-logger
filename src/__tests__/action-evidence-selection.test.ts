@@ -6,7 +6,8 @@ const { github } = vi.hoisted(() => ({ github: vi.fn() }))
 vi.mock('node:child_process', () => ({ execFileSync: github }))
 import { ActionRegistrySchema, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionSource } from '../action-registry.js'
 import { writeActionStore } from './action-store-fixture.js'
-import { actionReviewIndex, COVERAGE_SOURCE, selectActionEvidence } from '../action-evidence-selection.js'
+import { actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from '../action-evidence-selection.js'
+import { revisionActionCycle } from '../action-review-cycle.js'
 import { collectActionSources, reviewArticleActions, reviewDraftActions } from '../review-actions.js'
 
 const date = '2030-01-01'
@@ -32,7 +33,7 @@ function fixture() {
   const sources = collectActionSources({ repoRoot: root, markdown, feedback: '' })
   return { root, sources, ownerGate }
 }
-function input(sources: ActionSource[]) { return { registry: empty(), articleDate: date, articleStatuses: new Map([[date, 'draft']]), markdown, feedback: '', sources } }
+function input(sources: ActionSource[]) { return { registry: empty(), articleDate: date, cycle: revisionActionCycle('offline-source-selection-control'), articleStatuses: new Map([[date, 'draft']]), markdown, feedback: '', sources } }
 
 it('runs full collector→selection→both prompt paths with twelve oversized discussions, preserving an older owner gate', async () => {
   const { root, sources, ownerGate } = fixture()
@@ -63,11 +64,37 @@ it('runs full collector→selection→both prompt paths with twelve oversized di
   expect(readActionRegistry(root).articles[0].sources.find(source => source.id === retained?.id)).toEqual(retained)
   expect(selection.receipt.sources.filter(source => source.kind === 'github' && !source.included)).toHaveLength(10)
   for (const item of selection.receipt.sources) expect(item.fullContentSha256).toBe(sha256(sources.find(source => source.id === item.id)?.content ?? ''))
-  const retry = await reviewArticleActions({ ...input([...sources].reverse()), registry: result.registry, markdown: result.markdown, agents: {
+  const retry = await reviewArticleActions({ ...input([...sources, sources[0]].reverse()), registry: result.registry, markdown: result.markdown, agents: {
     propose: async () => { throw new Error('Cached retry called proposer') }, verify: async () => { throw new Error('Cached retry called verifier') },
   } })
   expect(retry.cached).toBe(true)
   expect(retry.registry).toEqual(result.registry)
+})
+
+it('canonicalizes exact duplicates and property-order equivalents without losing citation IDs', () => {
+  const source: ActionSource = { id: 'github:core#1', kind: 'github', locator: 'https://github.com/ojfbot/core/issues/1', content: 'Current factual evidence.', trustedContent: ['Current factual evidence.'] }
+  const equivalent: ActionSource = { content: source.content, trustedContent: source.trustedContent, locator: source.locator, kind: source.kind, id: source.id }
+  expect(canonicalActionSources([source, equivalent, source])).toEqual([source])
+  expect(canonicalActionSources([equivalent, source])).toEqual([source])
+  expect(() => canonicalActionSources([source, { ...source, trustedContent: ['Different authority.'] }])).toThrow(/Conflicting action evidence identity/)
+  expect(() => canonicalActionSources([source, { ...source, id: `${source.id}@${'a'.repeat(64)}` }])).toThrow(/Conflicting action evidence identity/)
+})
+
+it('keeps semantic rejection and distinct cycle quota holds separate in global rejection memory', () => {
+  const registry = readActionRegistry(process.cwd())
+  const article = registry.articles[0]
+  if (!article) throw new Error('Missing registry fixture article')
+  const common = { description: 'Bounded work.', reason: 'Retained for independent review.', workKey: 'daily-logger|target|outcome', evidenceDigest: sha256('unchanged factual evidence') }
+  const hold = (id: string) => ({ ...common, quotaHold: { articleDate: article.date, cycle: revisionActionCycle(id) } })
+  article.rejected.push(common, hold('request-1'), hold('request-2'), hold('request-1'))
+  const index = actionReviewIndex({ registry, articleDate: date, articleStatuses: new Map(), expandedActionKeys: [] })
+  const matches = index.rejectionMemory.filter(item => item.workKey === common.workKey)
+  expect(matches).toHaveLength(3)
+  expect(matches).toEqual(expect.arrayContaining([
+    { workKey: common.workKey, evidenceDigest: common.evidenceDigest },
+    { workKey: common.workKey, evidenceDigest: common.evidenceDigest, quotaHold: hold('request-1').quotaHold },
+    { workKey: common.workKey, evidenceDigest: common.evidenceDigest, quotaHold: hold('request-2').quotaHold },
+  ]))
 })
 
 it.each(['missing', 'excerpt', 'oversized-unicode'])('keeps %s required evidence pending before either model call', async mode => {

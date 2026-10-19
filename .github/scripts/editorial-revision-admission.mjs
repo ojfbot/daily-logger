@@ -4,13 +4,16 @@ import { fileURLToPath } from 'node:url'
 import { extractEditorialFeedback } from './extract-editorial-feedback.mjs'
 
 export function skipBotRevision(author, event) {
-  if (!author.includes('[bot]')) return false
-  // Retain the bot guard. Only a changed feedback payload from a human can
-  // resume the supervised cycle after its previous bot revision.
-  if (event?.action !== 'edited' || event?.sender?.type !== 'User' || typeof event.sender.login !== 'string' || event.sender.login.endsWith('[bot]')) return true
-  const previousBody = event?.changes?.body?.from
+  if (event?.sender?.type !== 'User' || typeof event.sender.login !== 'string' || !event.sender.login.trim() || event.sender.login.endsWith('[bot]')) return true
   const currentBody = event?.pull_request?.body
-  if (typeof previousBody !== 'string' || typeof currentBody !== 'string') return true
+  if (typeof currentBody !== 'string') return true
+  if (event.action === 'opened') {
+    if (author.includes('[bot]')) return true
+    try { return !extractEditorialFeedback(currentBody).trim() } catch { return true }
+  }
+  if (event.action !== 'edited') return true
+  const previousBody = event?.changes?.body?.from
+  if (typeof previousBody !== 'string') return true
   try {
     const previous = extractEditorialFeedback(previousBody)
     const current = extractEditorialFeedback(currentBody)
