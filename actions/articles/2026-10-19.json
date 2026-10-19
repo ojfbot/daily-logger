@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-19",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-10-19",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action evidence exceeds its source budget (128 KiB each / 384 KiB total); review pending"
+    },
+    "articleDigest": "56cf9e0901986438f51ffb9f318b74b7e7e33f23907d3d0aeb3bbefddbe7b9db",
+    "roundId": "cb78737688abb9b6069223d49f8ac5895d7bd6e59a116721007a200e7d78b808",
+    "actionKeys": [],
+    "stateDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v1",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "rejected": []
+  }
+}
