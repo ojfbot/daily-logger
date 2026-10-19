@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261019-f7a5101c986d",
+  "article": {
+    "date": "2026-10-19",
+    "sourceCommitSha": "f7a5101c986da95943133dacd1509aadc43b20e7",
+    "blobSha": "14c8b2bfa7ba342ad89faae2faed48a5f0971a02"
+  },
+  "reviewer": {
+    "name": "Codex scheduled independent article review (recorded gpt-6.1-sol / high)",
+    "sessionId": "01a1540c-2395-7d20-8fee-3e4861586662"
+  },
+  "reviewedAt": "2026-10-19T12:10:00Z",
+  "scope": "Existing scheduled exact-visible-source review: eight confirmed errors and one unverified claim group, all open. Time is approximate as recorded. Original report preserved verbatim with separately attributed coordinator/source-validation appendix; C2 projection qualified to distinguish pre-call source rejection from later verifier-prompt rejection. Advisory only: article remains draft, no action settlement, independent provider attestation or human visual approval.",
+  "fullRecordBlobSha": "3d14420d7279d651a58e9736d54ef391b5d7356c",
+  "fullRecordPath": "reviews/articles/2026-10-19-f7a5101c986da95943133dacd1509aadc43b20e7.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The measurements are below their byte ceilings and do not establish a next-cycle deadline",
+      "location": "lines 11, 67, 79 and 91. Quotes: \"measurably over budget\", \"274 KiB proposer context\", and \"at current growth rate it is the next generation cycle's problem\".",
+      "explanation": "[#386](https://github.com/ojfbot/daily-logger/issues/386) reports 274,352 and 274,321 **bytes** against 327,680 bytes of fixed-context allowance, not 274 KiB exceeding a limit. The [retained October 17 size receipt](https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/reviews/action-cutover-size-check.json) reports 540,450 proposer bytes and 540,419 verifier bytes, each below 655,360. The [runtime bound](https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L333) applies to each complete prompt; 640 KiB is not a combined allowance for both agents. #386 requests tokenizer/provider counts precisely because bytes do not establish token-window fit. It supplies no measured growth series or next-run exhaustion forecast.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/386",
+        "https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/reviews/action-cutover-size-check.json",
+        "https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L333"
+      ],
+      "correction": "Retain the real prompt-size concern and the requested context-selection/token-budget work. State the units and separate fixed-context, complete-prompt and token-window budgets. Remove the claim that these measurements are already over their ceilings and the asserted next-cycle deadline. The separate observed source-budget rejection belongs in C2.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Today’s source-budget failure is visible and leaves action review pending",
+      "location": "lines 79 and 91, with the generic pending footer at lines 99–102. Quotes: \"failure mode ... is not stated explicitly in the issue\" and \"silent context truncation ... without necessarily surfacing an error\".",
+      "explanation": "the final paragraph of [#386](https://github.com/ojfbot/daily-logger/issues/386) explicitly says current runtime rejects oversized evidence or either complete prompt before calling a provider, preserves a pending draft without admissions, and blocks acceptance. [Source-budget validation](https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L323), [complete-prompt checks](https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L333), and [pending fallback](https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L354) implement that boundary. More consequentially, [this article's actual dated action record](https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/actions/articles/2026-10-19.json) is pending because \"Action evidence exceeds its source budget (128 KiB each / 384 KiB total); review pending\". Both agent identities are `not-verified`, with no suggestions or decisions. The reason does not distinguish the individual-source limit from the aggregate-source limit.\n\nCoordinator qualification after independent offline source validation: Independent coordinator validation against the actual runtime qualifies the original wording: source-budget rejection happens before either agent; each complete prompt is checked before its corresponding call. A verifier-prompt rejection can follow one successful proposer call. Four injected counter controls pass: today’s recorded source rejection does not establish that every budget failure precedes both calls. The observed October 19 record remains pending with both identities not-verified and no admissions.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/386",
+        "https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L323",
+        "https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L333",
+        "https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L354",
+        "https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/actions/articles/2026-10-19.json"
+      ],
+      "correction": "Explain the observed pending action review and its recorded source-budget rejection. Preserve the distinction between this known byte-budget fallback and the still-unqualified token-window fit. Do not claim a corrupt silent verification pass, identify a specific oversized source without evidence, or infer that a successful generation run verified actions.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Commit c88039f records #381 recovery, not the later workflow repair",
+      "location": "lines 41 and 73. Quotes: \"documenting how the workflow YAML repair was rebased\" and \"correction's YAML state\".",
+      "explanation": "[the entire c88039f diff](https://github.com/ojfbot/daily-logger/commit/c88039f1167a824be7ef27f65453ec3dd83f55f8) adds a #381 landing-history row and a deviation explaining that GitHub rejected the existing rebase history. It preserves a tested tree, saves a recovery ref and prepares linear history. Its parent is `410875824298c3b02d3e946da1baedf064d9d7c6`; it predates the article acceptance. The actual workflow repair is [db69911](https://github.com/ojfbot/daily-logger/commit/db69911bdbcba82f62bcc99cb594e6a357ce8f8c), parent `f94b11a2e81a2a5250fe6079332dfe2414875a81`. The [#388 landing receipt](https://github.com/ojfbot/daily-logger/pull/388#issuecomment-6255532274) documents that separate rebase. [#387's landed diff](https://github.com/ojfbot/daily-logger/commit/f94b11a2e81a2a5250fe6079332dfe2414875a81) changes six article/data files and no YAML.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/commit/c88039f1167a824be7ef27f65453ec3dd83f55f8",
+        "https://github.com/ojfbot/daily-logger/commit/db69911bdbcba82f62bcc99cb594e6a357ce8f8c",
+        "https://github.com/ojfbot/daily-logger/pull/388#issuecomment-6255532274",
+        "https://github.com/ojfbot/daily-logger/commit/f94b11a2e81a2a5250fe6079332dfe2414875a81"
+      ],
+      "correction": "Attribute c88039f to the action-registry landing recovery. Describe #388's separately verified two-line YAML change on the accepted base. Remove the invented article-correction YAML state and the universal assertion that opening a repair against an earlier base would silently undo it.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The documented reason for superseding #384 was the action-policy cutover",
+      "location": "line 61. Quote: \"amending #384 in place ... would have lost correspondence identity\".",
+      "explanation": "[#384's supersession receipt](https://github.com/ojfbot/daily-logger/pull/384#issuecomment-6255497896) explains that the later #381 cutover required a canonical October 18 action record absent from that branch's trusted ancestor. Approved corrected prose was ported through the ordinary human-reviewed source/data route. The [final #387 review](https://github.com/ojfbot/daily-logger/pull/387#pullrequestreview-5565101254) qualifies that bootstrap and preserves the earlier evidence. The [landed dated record](https://github.com/ojfbot/daily-logger/blob/f94b11a2e81a2a5250fe6079332dfe2414875a81/actions/articles/2026-10-18.json) records the actual reconciliation. Neither receipt establishes that updating the same PR necessarily destroys its identity or correspondence. The article elsewhere correctly reports that the branch and history were retained.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/384#issuecomment-6255497896",
+        "https://github.com/ojfbot/daily-logger/pull/387#pullrequestreview-5565101254",
+        "https://github.com/ojfbot/daily-logger/blob/f94b11a2e81a2a5250fe6079332dfe2414875a81/actions/articles/2026-10-18.json"
+      ],
+      "correction": "Explain the intervening policy/ancestor boundary and authorized bootstrap. Keep the real supersession and evidence preservation; remove the invented general rule against amending an existing PR.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Held suggestions are not verified admissions waiting for their next article cycle",
+      "location": "lines 29 and 67. Quotes: \"suggestions that passed identity checks but are pending a future article cycle\" and \"legitimate suggestions beyond the cap are held ... and carried into the next article cycle\".",
+      "explanation": "[the accepted intake contract](https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/docs/action-intake.md#L9) says exact held historical suggestions cannot be automatically admitted. Its [preserved historical contract](https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/docs/action-intake.md#L39) states that the 138 argument-bearing suggestions remain held and future admission needs an explicit policy decision; recognition alone is not eligibility. The [runtime](https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L265) rejects equivalent held historical suggestions. [Lifecycle-cap handling](https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L289) records rejection when two identities already exist. It does not create a future-cycle admission or a carry-forward execution queue.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/docs/action-intake.md#L9",
+        "https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/docs/action-intake.md#L39",
+        "https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L265",
+        "https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/src/review-actions.ts#L289"
+      ],
+      "correction": "Describe the 138 as preserved, unadmitted historical suggestions used for duplicate/rejection memory. Keep the two-identity lifecycle ceiling and independent evidence requirements. Remove the promised future-cycle admission and the claim that these held suggestions have already passed admission checks.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "#385 retains explicit human visual acceptance and merge gates",
+      "location": "lines 11, 81 and 93. Quotes: \"needs a single review pass ... then it can merge\" and \"This is a same-session close\".",
+      "explanation": "[PR #385](https://github.com/ojfbot/daily-logger/pull/385), inspected at head `cc3c99bc2f93afdcfa81c06b5ef813bb75934e81`, explicitly stays draft/unmerged **for human visual review**. Its independent hosted Spec addendum closes the bounded preview gap but says \"Human UX acceptance and merge approval remain unapproved.\" The description distinguishes automated/local/native checks, hosted browser evidence, physical devices and screen-reader limits. Source and preview verification are already reported; the retained gate is not merely another unspecified code review. The [dedicated source at that head](https://github.com/ojfbot/daily-logger/tree/cc3c99bc2f93afdcfa81c06b5ef813bb75934e81) remains separate from production.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/385",
+        "https://github.com/ojfbot/daily-logger/tree/cc3c99bc2f93afdcfa81c06b5ef813bb75934e81"
+      ],
+      "correction": "State that the reviewed preview is awaiting the human's visual acceptance and explicit merge decision. Retain the bounded single-article pilot and wider-follow-up limits. Remove the assured one-pass/same-session close estimate.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The LEGO drafts already document disposition paths, owners and concrete next work",
+      "location": "line 83. Quote: \"They have no disposition beyond 'analysis in progress.'\"",
+      "explanation": "[#44](https://github.com/ojfbot/lego-village-pipeline/pull/44) and [#46](https://github.com/ojfbot/lego-village-pipeline/pull/46) explicitly require close-or-supersede rather than merge, with operative import/reconstruction criteria. [#45](https://github.com/ojfbot/lego-village-pipeline/pull/45) preserves the distinct HOUSE-WORLD R0/HANDOFF-037 record, requires a second-steward check and retains James's merge control. The [source-pinned R6 pickup guide](https://github.com/ojfbot/lego-village-pipeline/blob/435f7efbabccb577a953fcd3cdb741400c632e0d/CLAUDE-DESIGN-PICKUP.md) identifies the current prototype and dedicated Grid/Subgrid, navigation/state and motion follow-ups. Non-operative status is correctly reported, but it does not erase those dispositions or establish an owner-agreed weekly checkpoint.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/46",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+        "https://github.com/ojfbot/lego-village-pipeline/blob/435f7efbabccb577a953fcd3cdb741400c632e0d/CLAUDE-DESIGN-PICKUP.md"
+      ],
+      "correction": "Preserve each record's distinct purpose, documented exit and owner gates. If summarizing next work, use the existing assignments. Label any proposed new weekly parking checkpoint as an editorial recommendation, subject to the existing owners, rather than an established obligation.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "Fleet-runner's decisions and frontier are documented in #307",
+      "location": "line 87. Quote: \"the specific decision blocking it is not documented in the issue at this time\".",
+      "explanation": "[#307](https://github.com/ojfbot/core/issues/307) lists nine inherited questions, types and dependency edges, explicitly names #315 census and #308 scheduled-agent research as the frontier, and retains authority, consumption, reach, recovery and S25 reconciliation decisions. The [canonical map at accepted core main](https://github.com/ojfbot/core/blob/a252d40c4c6e92b7244d30379704a2dc9893e1fd/decisions/wayfinder/control-plane-conductor.md#L398) contains the question inventory and [next work](https://github.com/ojfbot/core/blob/a252d40c4c6e92b7244d30379704a2dc9893e1fd/decisions/wayfinder/control-plane-conductor.md#L496). Runtime is correctly described as not cleared; that does not establish an undocumented single decision or a parked initiative.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/issues/307",
+        "https://github.com/ojfbot/core/blob/a252d40c4c6e92b7244d30379704a2dc9893e1fd/decisions/wayfinder/control-plane-conductor.md#L398",
+        "https://github.com/ojfbot/core/blob/a252d40c4c6e92b7244d30379704a2dc9893e1fd/decisions/wayfinder/control-plane-conductor.md#L496"
+      ],
+      "correction": "Name the documented research/census frontier and retained owner decisions. Keep the runtime implementation gate. Do not collapse the initiative into a missing decision or imply there is no preparatory work to perform.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The assertion that the lifecycle cap has never been hit lacks a historical receipt",
+      "location": "line 67. Quote: \"the cap has not yet been hit in practice\".",
+      "explanation": "the [retained verification report](https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/reviews/action-cutover-verification.md) and [October 18 acceptance review](https://github.com/ojfbot/daily-logger/pull/387#pullrequestreview-5565101254) establish bounded checked rounds and zero new identities for that acceptance. The current October 19 round is pending. Those facts do not establish an exhaustive history of every attempted reconciliation or cap rejection. This review did not reconstruct such a census. No contradictory cap-hit event is claimed.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/f7a5101c986da95943133dacd1509aadc43b20e7/reviews/action-cutover-verification.md",
+        "https://github.com/ojfbot/daily-logger/pull/387#pullrequestreview-5565101254"
+      ],
+      "correction": "Attribute the zero-admission result to the specific verified acceptance round, or omit the universal historical assertion until it has a bounded receipt and denominator.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
