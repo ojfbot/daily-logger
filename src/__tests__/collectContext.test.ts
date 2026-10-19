@@ -179,6 +179,30 @@ describe('collectContext — merged PR outcomes reach the drafter', () => {
     expect(ctx.recentPRs[0].body).toBe('x'.repeat(400))
   })
 
+  it('retains explicit merged false for a currently closed PR and leaves failed confirmation unknown', async () => {
+    const closed = {
+      ...metadataOnlyPRFixture[0],
+      number: 12,
+      state: 'closed',
+      closed_at: '2026-02-27T23:00:00Z',
+      merged_at: null,
+      updated_at: '2026-02-27T23:00:00Z',
+    }
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('ojfbot/shell/pulls?state=all')) return JSON.stringify([closed])
+      if (cmd.includes('ojfbot/shell/pulls/12')) return JSON.stringify({ merged: false })
+      return mockExecSync(cmd)
+    })
+    expect((await collectContext('2026-02-28')).recentPRs[0].merged).toBe(false)
+
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('ojfbot/shell/pulls?state=all')) return JSON.stringify([closed])
+      if (cmd.includes('ojfbot/shell/pulls/12')) throw new Error('provider unavailable')
+      return mockExecSync(cmd)
+    })
+    expect((await collectContext('2026-02-28')).recentPRs[0].merged).toBeUndefined()
+  })
+
   it.each(['maximum bodies', 'short and missing bodies'])('bounds disjoint 15-weekly/30-recent cohorts with %s in both prompts', async (cohort) => {
     const mixed = cohort === 'short and missing bodies'
     const weekly = Array.from({ length: 15 }, (_, index) => ({

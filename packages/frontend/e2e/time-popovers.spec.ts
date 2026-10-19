@@ -92,6 +92,79 @@ test.describe('browser timezone day/night popover', () => {
   })
 })
 
+test.describe('October 19 shipment completeness', () => {
+  test.use({ timezoneId: 'America/Chicago' })
+
+  test('renders controls in a second What shipped section after an empty first and refuses supplied outside sources', async ({ page }) => {
+    const article = {
+      date: '2026-10-20', title: 'Shipment state fixture', summary: 'Code-owned shipment states.', tags: [], reposActive: [], commitCount: 0,
+      activityType: 'development', schemaVersion: 2, status: 'accepted', codeReferences: [],
+      bodyHtml: '<h2>What shipped</h2><p>No linked pull request.</p>'
+        + '<h2>The decisions</h2><p><a href="https://github.com/ojfbot/daily-logger/pull/501">#501</a></p>'
+        + '<h2>What shipped</h2><p><a href="https://github.com/ojfbot/daily-logger/pull/500/files">#500 files</a> and <a href="https://github.com/ojfbot/daily-logger/pull/502">#502</a></p>'
+        + '<h2>What\'s next</h2><p><a href="https://github.com/ojfbot/daily-logger/pull/503">#503</a></p>',
+      shipmentTimes: [
+        { status: 'unavailable', reason: 'missing-merge-time', source: { repo: 'ojfbot/daily-logger', ref: '500', url: 'https://github.com/ojfbot/daily-logger/pull/500' } },
+        { status: 'available', at: '2026-10-19T12:00:00.000Z', source: { repo: 'ojfbot/daily-logger', ref: '501', url: 'https://github.com/ojfbot/daily-logger/pull/501' } },
+        { status: 'available', at: '2026-10-19T13:00:00.000Z', source: { repo: 'ojfbot/daily-logger', ref: '502', url: 'https://github.com/ojfbot/daily-logger/pull/502' } },
+        { status: 'available', at: '2026-10-19T14:00:00.000Z', source: { repo: 'ojfbot/daily-logger', ref: '503', url: 'https://github.com/ojfbot/daily-logger/pull/503' } },
+      ],
+    }
+    await page.route('**/api/*.json', route => route.fulfill({ json: [] }))
+    await page.route('**/api/entries.json', route => route.fulfill({ json: [article] }))
+    await page.route('**/api/articles/2026-10-20.json', route => route.fulfill({ json: article }))
+    await page.route('**/api/article-reviews**', route => route.fulfill({ status: 503, json: { error: 'No review fixture' } }))
+    await page.goto('/articles/2026-10-20')
+
+    await expect(page.locator('a[href$="/pull/500/files"] + .shipment-time-unavailable')).toContainText('timestamp unavailable')
+    await expect(page.locator('a[href$="/pull/502"] + .shipment-time-state time')).toHaveAttribute('datetime', '2026-10-19T13:00:00.000Z')
+    await expect(page.locator('a[href$="/pull/501"] + .shipment-time-state')).toHaveCount(0)
+    await expect(page.locator('a[href$="/pull/503"] + .shipment-time-state')).toHaveCount(0)
+  })
+
+  test('renders all five authoritative merge controls, rejects #384, and opens the existing single-event map popover', async ({ page }, testInfo) => {
+    const pageErrors: string[] = []
+    page.on('pageerror', (error) => pageErrors.push(error.message))
+    await page.goto('/articles/2026-10-19')
+    const api = await page.evaluate(async () => (await fetch('/api/articles/2026-10-19.json')).json() as Promise<{ shipmentTimes?: unknown[] }>)
+    expect(api.shipmentTimes).toHaveLength(5)
+    expect(pageErrors).toEqual([])
+    await expect(page.locator('article.article-content')).toHaveAttribute('data-shipment-time-count', '5')
+    await expect(page.locator('.shipment-time-ref')).toHaveCount(5)
+    await expect(page.locator('.shipment-time-unavailable')).toHaveCount(0)
+
+    const expected = new Map([
+      ['381', '2026-10-18T20:29:26.000Z'],
+      ['382', '2026-10-18T09:11:00.000Z'],
+      ['383', '2026-10-18T13:58:47.000Z'],
+      ['387', '2026-10-18T21:41:34.000Z'],
+      ['388', '2026-10-18T21:44:50.000Z'],
+    ])
+    for (const [ref, at] of expected) {
+      const link = page.locator(`a[href="https://github.com/ojfbot/daily-logger/pull/${ref}"]`).first()
+      await expect(link.locator('xpath=following-sibling::*[1]')).toHaveClass(/shipment-time-state/)
+      await expect(link.locator('xpath=following-sibling::*[1]').locator('time')).toHaveAttribute('datetime', at)
+    }
+    const closed = page.locator('a[href="https://github.com/ojfbot/daily-logger/pull/384"]').first()
+    await expect(closed.locator('xpath=following-sibling::*[1][contains(@class,"shipment-time-state")]')).toHaveCount(0)
+
+    const trigger = page.locator('a[href="https://github.com/ojfbot/daily-logger/pull/388"]').first().locator('xpath=following-sibling::*[1]').locator('.shipment-time-ref')
+    await trigger.click()
+    const popover = page.locator('.time-popover')
+    await expect(popover).toBeVisible()
+    await expect(popover.locator('.time-clock-utc')).toContainText('21:44')
+    await expect(popover.locator('.time-clock-viewer')).toContainText('16:44')
+    await expect(popover.locator('.time-clock-viewer')).toContainText('2026-10-18')
+    await expect(popover.locator('.time-world-map')).toBeVisible()
+    await expect(page.locator('.time-popover-heading')).toHaveCount(1)
+    await popover.locator('svg').hover()
+    await trigger.hover()
+    await page.waitForTimeout(50)
+    await expect(popover).toBeVisible()
+    await page.screenshot({ path: testInfo.outputPath('october-19-shipment-times.png'), fullPage: true })
+  })
+})
+
 test.describe('UTC mobile popover', () => {
   test.use({ timezoneId: 'UTC', viewport: { width: 320, height: 568 }, hasTouch: true })
 

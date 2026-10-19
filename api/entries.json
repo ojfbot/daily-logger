@@ -36,10 +36,11 @@
     "reposActive": [
       "daily-logger"
     ],
-    "commitCount": 6,
+    "commitCount": 9,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "edited",
     "decisions": [
       {
         "title": "Combining duplicate workflow `env` blocks rather than adding a third",
@@ -60,13 +61,69 @@
         "relatedTags": []
       },
       {
-        "title": "Rebase-onto-merged-article as the repair sequencing pattern",
+        "title": "Recording the action-registry landing recovery",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       }
     ],
-    "actions": [],
+    "actions": [
+      {
+        "command": "/pr-review",
+        "description": "Review daily-logger #381 (reconcile article suggestions through a verified action registry): check CI status first — this PR is already open, not to be created. Verify registry integrity checks pass, confirm suggestion-state transitions are covered by tests, and merge if green. This closes the correctness gap where a disproved suggestion can remain active in the published article and action queue simultaneously.",
+        "repo": "daily-logger",
+        "status": "open",
+        "sourceDate": "2026-10-18",
+        "id": "act-2026-10-18-pr-review-0de366"
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "388",
+          "url": "https://github.com/ojfbot/daily-logger/pull/388"
+        },
+        "at": "2026-10-18T21:44:50.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "387",
+          "url": "https://github.com/ojfbot/daily-logger/pull/387"
+        },
+        "at": "2026-10-18T21:41:34.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "381",
+          "url": "https://github.com/ojfbot/daily-logger/pull/381"
+        },
+        "at": "2026-10-18T20:29:26.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "383",
+          "url": "https://github.com/ojfbot/daily-logger/pull/383"
+        },
+        "at": "2026-10-18T13:58:47.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "382",
+          "url": "https://github.com/ojfbot/daily-logger/pull/382"
+        },
+        "at": "2026-10-18T09:11:00.000Z"
+      }
+    ],
     "provenance": {
       "schemaVersion": 1,
       "run": {
@@ -103,6 +160,18 @@
           "model": "claude-sonnet-4-6",
           "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
           "promptSha256": "1ac427b3ba4743c7a702f122ae59e8448295741a6356ec7d2f828c3b09e00542"
+        },
+        {
+          "role": "revision",
+          "model": "claude-opus-4-6",
+          "promptVersion": "editorial-revision-v2-recorded-time-protected",
+          "promptSha256": "80f899f65c1d10896fed758cbf353f83797d63cd1450c178419ec69c3654d9f5"
+        },
+        {
+          "role": "revision",
+          "model": "claude-opus-4-6",
+          "promptVersion": "editorial-revision-v2-recorded-time-protected",
+          "promptSha256": "80f899f65c1d10896fed758cbf353f83797d63cd1450c178419ec69c3654d9f5"
         }
       ],
       "runtime": {

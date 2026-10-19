@@ -18,6 +18,16 @@ Complete timestamps with an explicit UTC offset can identify themselves. Their p
 
 Drafting and council synthesis produce editorial content. They neither receive a separate timestamp catalog nor emit time metadata. Source collection retains author, committer, and PR event facts separately from model output. This adds no model calls.
 
+## Shipment completeness
+
+Every GitHub pull-request link between any rendered `## What shipped` heading and its next level-two heading is a shipment candidate, regardless of whether it appears in a subheading, paragraph, list item, multi-link sentence, or a repeated `What shipped` section. Links outside those sections are not candidates. The code resolves candidates from retained GitHub event records; it does not depend on a clock written by the drafting model.
+
+Each candidate must have exactly one accounted state before generation succeeds. A unique valid `merged_at` fact becomes a merge-time control. Missing, malformed, or conflicting source evidence becomes an explicit `timestamp unavailable` state. A pull request is excluded as closed-unmerged only when the captured provider response explicitly reports the current state as closed and `merged` as false; a historical `closed_at` event or an absent valid merge timestamp is not enough. The completeness assertion rejects missing, duplicate, unexpected, and unmerged controls.
+
+New immutable time-record artifacts use schema version 2 and retain complete evidence groups for shipment candidates in addition to records selected for visible prose clocks. Starting with the October 19, 2026 article, the static API build fails if a dated article has shipment candidates but valid v2 coverage is unavailable. It repeats the completeness assertion and projects shipment states separately from prose `timeReferences`. A dated checker compares the current article blob, immutable resolution, and built API projection so a stale API or wrong-source state fails.
+
+The frontend inserts each state immediately after the first matching in-section PR link. Available states reuse the existing single-event UTC/device-time/map popover; they do not create a grouped event panel. Section discussion context removes these code-owned decorations before quoting article prose.
+
 ## Generation, revision, and publication
 
 After final prose, verification notes, normalization and the provenance footer are assembled, generation selects the source identities mentioned next to supported event clocks. It retains each complete source group, including competing facts, in a canonical artifact at `api/time-records/<article-date>/<digest>.json`. Unrelated fleet activity is excluded. The article carries only `time_records_sha256`; derived references are not cached in new articles.

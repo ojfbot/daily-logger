@@ -3,6 +3,7 @@ import { closeSync, constants, existsSync, fstatSync, fsyncSync, linkSync, lstat
 import { dirname, join, resolve } from 'node:path'
 import { z } from 'zod'
 import { detachArticleTime } from './article-time-frontmatter.js'
+import { assertShipmentCoverage, resolveShipmentTimes, type ShipmentCoverage } from './shipment-times.js'
 import { TimeRecordSchema, TimeReferenceSchema, TimeReferenceSidecarSchema, articleBodySha256, canonicalInstant, resolveTimeReferences, selectTimeRecords, type TimeRecord, type TimeReference, type UnresolvedTime } from './time-references.js'
 
 const MAX_RECORDS = 256
@@ -17,17 +18,24 @@ const CaptureSchema = z.object({
   status: z.enum(['complete', 'exhausted']),
   diagnostics: z.array(z.enum(['record-limit', 'byte-limit'])).max(2),
 }).strict()
-const ArtifactSchema = z.object({
+const ArtifactV1Schema = z.object({
   schemaVersion: z.literal(1), date: z.string().refine(validDate), capture: CaptureSchema,
   records: z.array(TimeRecordSchema).max(MAX_RECORDS),
 }).strict().refine((value) => value.capture.status === 'exhausted' ? value.records.length === 0 && value.capture.diagnostics.length > 0 : value.capture.diagnostics.length === 0)
+const ArtifactV2Schema = z.object({
+  schemaVersion: z.literal(2), date: z.string().refine(validDate), capture: CaptureSchema,
+  records: z.array(TimeRecordSchema).max(MAX_RECORDS),
+}).strict().refine((value) => value.capture.status === 'exhausted' ? value.records.length === 0 && value.capture.diagnostics.length > 0 : value.capture.diagnostics.length === 0)
+const ArtifactSchema = z.union([ArtifactV1Schema, ArtifactV2Schema])
 type Artifact = z.infer<typeof ArtifactSchema>
 type Capture = Artifact['capture']
+export type ArticleShipmentCoverage = { status: 'disabled' } | ({ status: 'complete' } & ShipmentCoverage)
 export interface TimeCaptureInput { observedAt: string | null; window: { start: string; end: string } | null }
 export interface ArticleTimeResult {
   references: TimeReference[]
   warnings: string[]
   unresolved: UnresolvedTime[]
+  shipmentCoverage: ArticleShipmentCoverage
   capture?: Capture
 }
 export interface PreparedGeneratedTime {
@@ -71,7 +79,7 @@ export function articleTimeMetadata(input: {
   bindingContent?: string
   records?: TimeRecord[]
   sidecar?: { bodySha256: string; references: TimeReference[] }
-}): ArticleTimeResult {
+}): Omit<ArticleTimeResult, 'shipmentCoverage' | 'capture'> {
   const resolved = resolveTimeReferences(input.content, input.records ?? [])
   const warnings: string[] = []
   const admissible: TimeReference[] = resolved.references.filter((reference) => reference.evidence.kind === 'explicit-offset')
@@ -125,7 +133,7 @@ export function prepareGeneratedTime(input: { date: string; markdown: string; re
   const window = input.capture.window === null ? null : { start: canonicalInstant(input.capture.window.start), end: canonicalInstant(input.capture.window.end) }
   const capture = CaptureSchema.parse({ observedAt, window, status: 'complete', diagnostics: [] })
   const selected = selectTimeRecords(clean, input.records)
-  let artifact: Artifact = { schemaVersion: 1, date: input.date, capture, records: [] }
+  let artifact: Artifact = { schemaVersion: 2, date: input.date, capture, records: [] }
   if (selected.length > MAX_RECORDS) artifact.capture = { ...capture, status: 'exhausted', diagnostics: ['record-limit'] }
   else {
     const parsed = TimeRecordSchema.array().parse(selected)
@@ -136,6 +144,8 @@ export function prepareGeneratedTime(input: { date: string; markdown: string; re
   const digest = hash(bytes)
   const markdown = clean.replace(/^---\r?\n/, (opening) => `${opening}time_records_sha256: ${digest}\n`)
   const result = resolveTimeReferences(markdown, artifact.records)
+  const shipmentCoverage = resolveShipmentTimes(markdown, artifact.records, artifact.capture.status)
+  assertShipmentCoverage(markdown, shipmentCoverage)
   const warnings = artifact.capture.status === 'exhausted' ? ['Time-record capture exhausted; no Git source records retained'] : []
   const prepared = Object.freeze({ date: input.date, markdown, digest, warnings: Object.freeze(warnings), unresolved: Object.freeze(result.unresolved.map((item) => Object.freeze(item))) })
   preparedBytes.set(prepared, bytes)
@@ -214,7 +224,7 @@ export function persistGeneratedTime(input: { repoRoot: string; prepared: Prepar
 /** Admission uses the caller's root exclusively; neither cache candidates nor model fields supply source facts. */
 export function readArticleTime(input: { repoRoot: string; date: string; markdown: string; bindingMarkdown?: string }): ArticleTimeResult {
   const warnings: string[] = []
-  const empty = () => ({ ...resolveTimeReferences(input.markdown, []), warnings: boundedWarnings(warnings) })
+  const empty = (): ArticleTimeResult => ({ ...resolveTimeReferences(input.markdown, []), warnings: boundedWarnings(warnings), shipmentCoverage: { status: 'disabled' } })
   if (!validDate(input.date) || articleDate(input.markdown) !== input.date) { warnings.push('Invalid or mismatched article date; no Git time evidence admitted'); return empty() }
   let root: string
   try { root = safeRoot(input.repoRoot) } catch { warnings.push('Invalid repository root; no Git time evidence admitted'); return empty() }
@@ -229,7 +239,11 @@ export function readArticleTime(input: { repoRoot: string; date: string; markdow
       const artifact = ArtifactSchema.parse(raw)
       if (artifact.date !== input.date || canonicalBytes(artifact) !== bytes) throw new Error('Artifact date or canonical bytes mismatch')
       if (artifact.capture.status === 'exhausted') warnings.push('Time-record capture exhausted; no Git source records retained')
-      return { ...resolveTimeReferences(input.markdown, artifact.records), warnings, capture: artifact.capture }
+      const shipmentCoverage: ArticleShipmentCoverage = artifact.schemaVersion === 2
+        ? { status: 'complete', ...resolveShipmentTimes(input.markdown, artifact.records, artifact.capture.status) }
+        : { status: 'disabled' }
+      if (shipmentCoverage.status === 'complete') assertShipmentCoverage(input.markdown, shipmentCoverage)
+      return { ...resolveTimeReferences(input.markdown, artifact.records), warnings, shipmentCoverage, capture: artifact.capture }
     } catch { warnings.push('Missing or invalid immutable time-record artifact; no Git time evidence admitted'); return empty() }
   }
   let records: TimeRecord[] = []
@@ -247,5 +261,5 @@ export function readArticleTime(input: { repoRoot: string; date: string; markdow
     sidecar = parsed.data.articles[input.date]
   } catch { warnings.push('Historical time-reference backfill unavailable or invalid') }
   const result = articleTimeMetadata({ content: input.markdown, bindingContent: input.bindingMarkdown, records, sidecar })
-  return { ...result, warnings: boundedWarnings([...warnings, ...result.warnings]) }
+  return { ...result, warnings: boundedWarnings([...warnings, ...result.warnings]), shipmentCoverage: { status: 'disabled' } }
 }

@@ -27,7 +27,7 @@ interface VisibleProjection {
   text: string
   nodes: Array<{ text: string; index: number }>
   links: Array<{ url: string; index: number; end: number }>
-  headings: Array<{ text: string; index: number }>
+  headings: Array<{ text: string; index: number; level: number }>
 }
 
 /** Parse the same sanitized HTML served to readers; entity decoding and Markdown escapes follow the renderer. */
@@ -50,7 +50,7 @@ function visibleProjection(markdown: string): VisibleProjection {
       const href = attrs.find((attr) => attr.name === 'href')?.value
       if (href) projection.links.push({ url: href, index: start, end: projection.text.length })
     }
-    if (/^h[1-6]$/.test(tag)) projection.headings.push({ text: projection.text.slice(start), index: start })
+    if (/^h[1-6]$/.test(tag)) projection.headings.push({ text: projection.text.slice(start), index: start, level: Number(tag.slice(1)) })
     if (['p', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'tr'].includes(tag)) projection.text += '\n\n'
   }
   visit(root)
@@ -109,18 +109,51 @@ interface SourceMention {
   index: number
 }
 
+export interface ShipmentSource {
+  repo: string
+  ref: string
+  url: string
+}
+
+function linkedSource(url: string): SourceMention | undefined {
+  let parsed: URL
+  try { parsed = new URL(url) } catch { return undefined }
+  if (parsed.protocol !== 'https:' || parsed.hostname.toLowerCase() !== 'github.com' || parsed.port || parsed.username || parsed.password) return undefined
+  const [owner, name, sourceKind, rawRef] = parsed.pathname.split('/').filter(Boolean)
+  if (!owner || !name || !sourceKind || !rawRef || !/^[A-Za-z0-9_.-]+$/.test(owner) || !/^[A-Za-z0-9_.-]+$/.test(name)) return undefined
+  const repo = `${owner}/${name}`
+  const kind = sourceKind.toLowerCase()
+  if (kind !== 'pull' && kind !== 'commit' && kind !== 'issues') return undefined
+  const ref = rawRef.toLowerCase()
+  if (kind === 'commit' ? !/^[a-f0-9]{7,40}$/i.test(ref) : !/^[1-9]\d*$/.test(ref)) return undefined
+  return { kind, repo, ref: ref.toLowerCase(), index: 0 }
+}
+
+/** Every linked PR inside every rendered What shipped section, independent of model formatting or clocks. */
+export function shipmentSources(markdown: string): ShipmentSource[] {
+  const projection = visibleProjection(markdown)
+  const sections = projection.headings.filter((heading) => heading.level === 2 && heading.text.trim().toLowerCase() === 'what shipped')
+  const ranges = sections.map((section) => ({
+    start: section.index,
+    end: projection.headings.find((heading) => heading.level === 2 && heading.index > section.index)?.index ?? projection.text.length,
+  }))
+  const sources = projection.links
+    .filter((link) => ranges.some((range) => link.index > range.start && link.index < range.end))
+    .flatMap((link) => {
+      const source = linkedSource(link.url)
+      return source?.kind === 'pull' && source.repo ? [{ repo: source.repo, ref: source.ref, url: `https://github.com/${source.repo}/pull/${source.ref}` }] : []
+    })
+  return [...new Map(sources.map((source) => [`${source.repo.toLowerCase()}#${source.ref}`, source])).values()]
+}
+
 /** Discover subjects from prose before looking at the possibly incomplete evidence set. */
 function sourceMentions(text: string, links: VisibleProjection['links']): SourceMention[] {
   const mentions: SourceMention[] = []
   const linkedRanges: Array<{ index: number; end: number }> = []
   for (const link of links) {
-    const match = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\/(pull|commit|issues)\/([a-f0-9]+)(?:[?#].*)?$/i.exec(link.url)
-    if (!match) continue
-    const [, repo, sourceKind, ref] = match
-    const kind = sourceKind.toLowerCase()
-    if (kind !== 'pull' && kind !== 'commit' && kind !== 'issues') continue
-    if (kind === 'commit' ? !/^[a-f0-9]{7,40}$/i.test(ref) : !/^[1-9]\d*$/.test(ref)) continue
-    mentions.push({ kind, repo, ref: ref.toLowerCase(), index: link.index })
+    const source = linkedSource(link.url)
+    if (!source) continue
+    mentions.push({ ...source, index: link.index })
     linkedRanges.push(link)
   }
   for (const match of text.matchAll(/#[1-9]\d*\b|\b[a-f0-9]{7,40}\b/gi)) {
@@ -169,7 +202,14 @@ function sourceAtToken(projection: VisibleProjection, token: TimeToken) {
 export function selectTimeRecords(markdown: string, records: TimeRecord[]): TimeRecord[] {
   const projection = visibleProjection(markdown)
   const sources = scanProjection(projection).filter((token) => !canonicalInstant(token.text)).map((token) => sourceAtToken(projection, token))
-  const selected = records.filter((record) => record.evidence.kind !== 'explicit-offset' && sources.some(({ subject, heading }) => subject && record.evidence.kind !== 'explicit-offset' && sourceMatches(subject, record.evidence, heading)))
+  const shipments = shipmentSources(markdown)
+  const selected = records.filter((record) => {
+    if (record.evidence.kind === 'explicit-offset') return false
+    const evidence = record.evidence
+    if (sources.some(({ subject, heading }) => subject && sourceMatches(subject, evidence, heading))) return true
+    if (evidence.kind !== 'github-pull-request') return false
+    return shipments.some((source) => source.repo.toLowerCase() === evidence.repo.toLowerCase() && source.ref === evidence.ref)
+  })
   return [...new Map(selected.map((record) => [sourceKey(record), record])).values()].sort((a, b) => sourceKey(a).localeCompare(sourceKey(b)))
 }
 
@@ -227,6 +267,11 @@ export function recordsFromContext(ctx: BlogContext): TimeRecord[] {
     if ('mergedAt' in pr) add(pr.mergedAt, { ...source, event: 'merged' })
     if ('closedAt' in pr && typeof pr.closedAt === 'string') add(pr.closedAt, { ...source, event: 'closed' })
     if ('updatedAt' in pr && typeof pr.updatedAt === 'string') add(pr.updatedAt, { ...source, event: 'updated' })
+  }
+  for (const pr of ctx.recentPRs) {
+    const repo = repoFromUrl(pr.url)
+    if (!repo || pr.state !== 'closed' || pr.merged !== false || pr.mergedAt) continue
+    add(pr.updatedAt, { kind: 'github-pull-request', repo, ref: String(pr.number), event: 'closed-unmerged', url: `https://github.com/${repo}/pull/${pr.number}` })
   }
   return [...new Map(records.map((record) => [sourceKey(record), record])).values()].sort((a, b) => sourceKey(a).localeCompare(sourceKey(b)))
 }

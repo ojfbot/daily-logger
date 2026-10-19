@@ -179,6 +179,8 @@ Every tag MUST have a \`type\` field. The 7 tag types:
 ### Structured action items
 \`suggestedActions\` is an ARRAY of objects, each with: \`command\` (slash command like /adr, /test-expand, /validate, /doc-refactor, /techdebt, /hardening, /investigate, /sweep, /roadmap, /scaffold, /pr-review), \`description\` (what to do), \`repo\` (where), \`status\` (always "open"), \`sourceDate\` (today's date YYYY-MM-DD).
 
+\`whatsNext\` must leave the reader with useful continuation choices grounded in the supplied current evidence. Prefer the proper entry point into existing open work, an accepted prior review or owner gate, why the choice matters now, the roadmap gap or outcome it advances, and a concrete next checkpoint. Do not revive completed, dismissed, superseded, closed, or stale work. Do not invent filler merely to reach a count: the verified action pass may preserve an existing PR, issue, owner decision, or checkpoint as a closing option without admitting a new queue identity. If the evidence cannot support a continuation, state the decision or evidence needed explicitly.
+
 ### Activity type
 Classify the day as one of: \`build\` (normal development), \`rest\` (zero/very few commits), \`audit\` (review/audit focus), \`hardening\` (stability/security focus), \`cleanup\` (refactoring/debt), \`sprint\` (high-volume feature work).
 
@@ -882,8 +884,24 @@ export function buildUserPrompt(ctx: BlogContext): string {
 
   if (ctx.previousArticles.length > 0) {
     parts.push(`## Previous ${ctx.previousArticles.length} articles (continuity context)`)
+    const activeContinuityDate = ctx.previousArticles.find(article => article.closingContinuity?.status === 'available')?.date
     ctx.previousArticles.forEach((a) => {
       parts.push(`### ${a.date}\n${a.excerpt}\n`)
+      const continuity = a.closingContinuity ?? { status: 'unavailable' as const, version: 'accepted-closing-continuity-v1' as const, reason: 'missing-accepted-closing' as const, optionCount: 0, omittedOptionCount: 0 }
+      if (continuity.status === 'available') {
+        const active = a.date === activeContinuityDate
+        parts.push(active
+          ? '#### Accepted closing continuity — active bounded handoff; revalidate current state'
+          : '#### Accepted closing continuity — older historical context; not selected for current revalidation')
+        parts.push(active
+          ? '_This digest-bound prior decision is context, never present authority. Re-fetch every selected target and preserve current lifecycle, owner, and evidence gates._'
+          : '_This older digest-bound decision is background only. Its targets are not current evidence obligations and must not be renewed without an explicit new request._')
+        parts.push(JSON.stringify(continuity))
+      } else {
+        parts.push(`#### Accepted closing continuity unavailable: ${continuity.reason}`)
+        parts.push(`_The bounded projection omitted ${continuity.omittedOptionCount} of ${continuity.optionCount} whole options; do not infer their contents._`)
+      }
+      parts.push('')
     })
   }
 

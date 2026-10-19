@@ -9,10 +9,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import type { BlogContext } from '../types.js'
 import { TimeReferenceSchema, recordsFromContext } from '../time-references.js'
+import { ShipmentTimeSchema } from '../shipment-times.js'
 import { prepareGeneratedTime, persistGeneratedTime, readArticleTime } from '../article-time-metadata.js'
 import { detachArticleTime, preserveTimeDuringRevision } from '../article-time-frontmatter.js'
 import { stampOutcome } from '../stamp-outcome.js'
 import { buildApi } from '../build-api.js'
+import { checkShipmentTimeCoverage, requiresShipmentTimeCoverage } from '../shipment-time-coverage.js'
 import { readActionRegistry, registryRevision, writeActionRegistry } from '../action-registry.js'
 import { reviewArticleActions, mockActionAgents } from '../review-actions.js'
 
@@ -50,7 +52,7 @@ function fingerprint(root: string, directories: string[]) {
   for (const directory of directories) visit(join(root, directory))
   return hash.digest('hex')
 }
-const articleJson = z.object({ timeReferences: z.array(TimeReferenceSchema).optional() })
+const articleJson = z.object({ timeReferences: z.array(TimeReferenceSchema).optional(), shipmentTimes: z.array(ShipmentTimeSchema).optional() })
 beforeEach(() => {
   vi.stubEnv('MOCK_LLM', 'false')
   vi.spyOn(console, 'log').mockImplementation(() => {})
@@ -77,6 +79,7 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     buildApi(root)
     const apiPath = join(root, 'api/articles', `${date}.json`)
     expect(articleJson.parse(JSON.parse(readFileSync(apiPath, 'utf8'))).timeReferences?.[0]?.at).toBe(at)
+    expect(articleJson.parse(JSON.parse(readFileSync(apiPath, 'utf8'))).shipmentTimes?.[0]).toMatchObject({ status: 'available', at, source: { ref: '359' } })
     git(root, 'init', '-q')
     git(root, 'add', '.')
     git(root, 'commit', '-qm', 'Generated article and immutable source facts')
@@ -101,6 +104,7 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     expect(git(root, 'ls-tree', revision, '--', `_articles/${date}.md`)).toMatch(/^100644 blob /)
     buildApi(root)
     expect(articleJson.parse(JSON.parse(readFileSync(apiPath, 'utf8'))).timeReferences?.[0]).toMatchObject({ at, evidence: { repo: 'ojfbot/daily-logger', ref: '359', event: 'merged' } })
+    expect(articleJson.parse(JSON.parse(readFileSync(apiPath, 'utf8'))).shipmentTimes?.[0]).toMatchObject({ status: 'available', at, source: { ref: '359' } })
     const addedSource = readFileSync(persisted.articlePath, 'utf8') + '\nPR [#360](https://github.com/ojfbot/daily-logger/pull/360) merged at 09:10Z.\n'
     const current = readArticleTime({ repoRoot: root, date, markdown: addedSource })
     expect(current.references).toHaveLength(1)
@@ -109,6 +113,92 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     expect(readArticleTime({ repoRoot: otherRoot, date, markdown: prepared.markdown }).references).toEqual([])
     expect(createMessage).toHaveBeenCalledTimes(1)
     expect(fetch).not.toHaveBeenCalled()
+  }, 30_000)
+
+  it('delivers merge-time coverage when the model omits every clock and preserves it through revision', async () => {
+    const root = fixture(true)
+    const generated = await generateArticle(context)
+    generated.body = generated.body.replace('merged at 09:10Z', 'shipped without an authored clock')
+    const prepared = prepareGeneratedTime({ date, markdown: toMarkdown(generated), records: recordsFromContext(context), capture: { observedAt: '2026-10-18T09:01:00.000Z', window: null } })
+    const persisted = persistGeneratedTime({ repoRoot: root, prepared })
+    const registry = readActionRegistry(root)
+    const review = await reviewArticleActions({ cycle: generationActionCycle(), registry, articleStatuses: new Map(), articleDate: date, markdown: prepared.markdown, feedback: '', sources: [], agents: mockActionAgents })
+    writeActionRegistry(root, review.registry, registryRevision(registry))
+
+    expect(readArticleTime({ repoRoot: root, date, markdown: prepared.markdown }).shipmentCoverage).toMatchObject({ status: 'complete', times: [{ status: 'available', at, source: { ref: '359' } }] })
+    buildApi(root)
+    const apiPath = join(root, 'api/articles', `${date}.json`)
+    const generatedApi = articleJson.parse(JSON.parse(readFileSync(apiPath, 'utf8')))
+    expect(generatedApi.timeReferences).toBeUndefined()
+    expect(generatedApi.shipmentTimes).toEqual([{ status: 'available', at, source: { repo: 'ojfbot/daily-logger', ref: '359', url: 'https://github.com/ojfbot/daily-logger/pull/359' } }])
+    expect(checkShipmentTimeCoverage(root, date)).toMatchObject({ candidates: 1, available: 1, unavailable: 0, excluded: 0 })
+
+    writeFileSync(persisted.articlePath, `${prepared.markdown}\nUnbuilt source edit.\n`)
+    expect(() => checkShipmentTimeCoverage(root, date)).toThrow(/API article is stale/i)
+    writeFileSync(persisted.articlePath, prepared.markdown.replace(prepared.digest, 'f'.repeat(64)))
+    expect(() => checkShipmentTimeCoverage(root, date)).toThrow(/immutable shipment-time coverage is not enabled/i)
+    expect(() => buildApi(root)).toThrow(/required immutable shipment-time coverage is unavailable/i)
+    writeFileSync(persisted.articlePath, prepared.markdown.replace(`date: ${date}`, 'date: 2020-10-19'))
+    expect(() => buildApi(root)).toThrow(/required immutable shipment-time coverage is unavailable/i)
+    expect(requiresShipmentTimeCoverage(date, prepared.markdown.replace(`date: ${date}`, `date: "${date}"`))).toBe(true)
+    writeFileSync(persisted.articlePath, prepared.markdown)
+
+    const revised = await preserveTimeDuringRevision({ originalMarkdown: prepared.markdown, revise: async (modelMarkdown) => ({ revisedMarkdown: `${modelMarkdown}\nClock still intentionally omitted.\n`, changesSummary: ['Kept prose clock-free.'], changed: true }) })
+    writeFileSync(persisted.articlePath, revised.revisedMarkdown)
+    const revisedRegistry = readActionRegistry(root)
+    const revisedReview = await reviewArticleActions({ cycle: generationActionCycle(), registry: revisedRegistry, articleStatuses: new Map(), articleDate: date, markdown: revised.revisedMarkdown, feedback: '', sources: [], agents: mockActionAgents })
+    writeActionRegistry(root, revisedReview.registry, registryRevision(revisedRegistry))
+    buildApi(root)
+    expect(articleJson.parse(JSON.parse(readFileSync(apiPath, 'utf8'))).shipmentTimes).toEqual(generatedApi.shipmentTimes)
+  }, 30_000)
+
+  it('projects an explicit unavailable state through the immutable artifact and static API', async () => {
+    const root = fixture(true)
+    const generated = await generateArticle(context)
+    generated.body = generated.body.replace('merged at 09:10Z', 'shipped without an authored clock')
+    const prepared = prepareGeneratedTime({ date, markdown: toMarkdown(generated), records: [], capture: { observedAt: '2026-10-18T09:01:00.000Z', window: null } })
+    persistGeneratedTime({ repoRoot: root, prepared })
+    const registry = readActionRegistry(root)
+    const review = await reviewArticleActions({ cycle: generationActionCycle(), registry, articleStatuses: new Map(), articleDate: date, markdown: prepared.markdown, feedback: '', sources: [], agents: mockActionAgents })
+    writeActionRegistry(root, review.registry, registryRevision(registry))
+
+    buildApi(root)
+    const api = articleJson.parse(JSON.parse(readFileSync(join(root, 'api/articles', `${date}.json`), 'utf8')))
+    expect(api.timeReferences).toBeUndefined()
+    expect(api.shipmentTimes).toEqual([{ status: 'unavailable', reason: 'missing-merge-time', source: { repo: 'ojfbot/daily-logger', ref: '359', url: 'https://github.com/ojfbot/daily-logger/pull/359' } }])
+    expect(checkShipmentTimeCoverage(root, date)).toMatchObject({ candidates: 1, available: 0, unavailable: 1, excluded: 0 })
+  }, 30_000)
+
+  it('gates and projects shipments from every repeated What shipped section', async () => {
+    const root = fixture(true)
+    const generated = await generateArticle(context)
+    const secondSection = [
+      '## What shipped',
+      '',
+      'Second-section [merged PR](https://github.com/ojfbot/daily-logger/pull/360) and [unknown PR](https://github.com/ojfbot/daily-logger/pull/361).',
+      '',
+      '## The decisions',
+    ].join('\n')
+    const markdown = toMarkdown(generated).replace('## The decisions', secondSection)
+    const records = [
+      ...recordsFromContext(context),
+      { at: '2026-10-18T10:30:00.000Z', evidence: { kind: 'github-pull-request' as const, repo: 'ojfbot/daily-logger', ref: '360', event: 'merged' as const, url: 'https://github.com/ojfbot/daily-logger/pull/360' } },
+    ]
+    const prepared = prepareGeneratedTime({ date, markdown, records, capture: { observedAt: '2026-10-18T11:00:00.000Z', window: null } })
+    persistGeneratedTime({ repoRoot: root, prepared })
+    const registry = readActionRegistry(root)
+    const review = await reviewArticleActions({ cycle: generationActionCycle(), registry, articleStatuses: new Map(), articleDate: date, markdown: prepared.markdown, feedback: '', sources: [], agents: mockActionAgents })
+    writeActionRegistry(root, review.registry, registryRevision(registry))
+
+    expect(requiresShipmentTimeCoverage(date, prepared.markdown)).toBe(true)
+    buildApi(root)
+    const api = articleJson.parse(JSON.parse(readFileSync(join(root, 'api/articles', `${date}.json`), 'utf8')))
+    expect(api.shipmentTimes).toEqual([
+      { status: 'available', at, source: { repo: 'ojfbot/daily-logger', ref: '359', url: 'https://github.com/ojfbot/daily-logger/pull/359' } },
+      { status: 'available', at: '2026-10-18T10:30:00.000Z', source: { repo: 'ojfbot/daily-logger', ref: '360', url: 'https://github.com/ojfbot/daily-logger/pull/360' } },
+      { status: 'unavailable', reason: 'missing-merge-time', source: { repo: 'ojfbot/daily-logger', ref: '361', url: 'https://github.com/ojfbot/daily-logger/pull/361' } },
+    ])
+    expect(checkShipmentTimeCoverage(root, date)).toMatchObject({ candidates: 3, available: 2, unavailable: 1, excluded: 0 })
   }, 30_000)
 
   it('preserves unchanged metadata bytes and removes model attempts to add or replace time authority', async () => {

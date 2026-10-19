@@ -17,6 +17,7 @@ import { EditorialSidebar } from './EditorialSidebar.tsx'
 import { ArticleProvenanceDetails } from './ArticleProvenanceDetails.tsx'
 import { DiscussionDrafts, usePageDiscussionDrafts } from './DiscussionDrafts.tsx'
 import { ArticleActions } from './ArticleActions.tsx'
+import { decorateShipmentTimesHtml } from '../utils/shipmentTimes.ts'
 
 export function ArticlePage() {
   const { date } = useParams<{ date: string }>()
@@ -47,8 +48,11 @@ export function ArticlePage() {
   const codeReferences = useMemo(() => article?.codeReferences ?? entry?.codeReferences ?? [], [article?.codeReferences, entry?.codeReferences])
   const reposActive = useMemo(() => article?.reposActive ?? entry?.reposActive ?? [], [article?.reposActive, entry?.reposActive])
   const timeReferences = useMemo(() => article?.timeReferences ?? [], [article?.timeReferences])
+  const shipmentTimes = useMemo(() => article?.shipmentTimes ?? [], [article?.shipmentTimes])
+  const decoratedBodyHtml = useMemo(() => article?.bodyHtml ? decorateShipmentTimesHtml(article.bodyHtml, shipmentTimes) : '', [article?.bodyHtml, shipmentTimes])
+  const popoverContentRevision = `${article?.sourceBlobSha ?? decoratedBodyHtml}:${sectionHeadings.length}`
 
-  const popover = useArticlePopovers(contentRef, codeReferences, reposActive, timeReferences, article?.bodyHtml)
+  const popover = useArticlePopovers(contentRef, codeReferences, reposActive, timeReferences, popoverContentRevision, shipmentTimes)
   const { extractSection } = useSectionContent(contentRef)
 
   const displayEntry = article ?? entry
@@ -211,7 +215,8 @@ export function ArticlePage() {
             <article
               ref={contentRef}
               className="article-content"
-              dangerouslySetInnerHTML={{ __html: article.bodyHtml }}
+              data-shipment-time-count={shipmentTimes.length}
+              dangerouslySetInnerHTML={{ __html: decoratedBodyHtml }}
             />
           ) : (
             !articleLoading && <article className="article-content"><p>Article not found.</p></article>

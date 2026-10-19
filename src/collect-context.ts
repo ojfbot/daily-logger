@@ -1,19 +1,20 @@
+import { createHash } from 'node:crypto'
 import { execSync } from 'child_process'
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import type { ADRRegistryEntry, BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo, PRSkillUsage, RecentPRInfo } from './types.js'
+import type { AcceptedClosingContinuity, ADRRegistryEntry, BlogContext, CommitInfo, IssueInfo, OpenPRInfo, PRInfo, PRSkillUsage, PreviousArticleContext, RecentPRInfo } from './types.js'
 import { collectTelemetry } from './collect-telemetry.js'
 import { discoverRepos, reportSurfaceDrift } from './fleet.js'
 import { SYSTEM_PROMPT } from './generate-article.js'
 import { activityWindow } from './activity-window.js'
 import { boundedMergedPRBody, RECENT_PR_PREVIEW_CHARS } from './pr-body.js'
 import { type CanonicalAction } from './action-model.js'
-import { readRegistryProjection } from './action-registry.js'
+import { managedArticleDigest, readRegistryProjection } from './action-registry.js'
+import { ACTION_FILE_LIMIT, ArticleActionFileSchema, type ArticleActionSnapshot } from './action-registry-schema.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
-const ARTICLES_DIR = join(REPO_ROOT, '_articles')
 
 // The swept repo set is DERIVED at run time (src/fleet.ts discoverRepos) —
 // every non-archived, non-fork org repo minus EXCLUDED_REPOS. Hand-listing
@@ -277,6 +278,7 @@ function getOpenPRs(org: string, repo: string): OpenPRInfo[] {
 }
 
 function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo[] {
+  type GHPullState = { merged?: boolean }
   type GHCommit = {
     commit?: {
       author?: { date?: string } | null
@@ -310,6 +312,14 @@ function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo
         (pr.closed_at !== null && pr.closed_at >= since24h) ||
         (pr.merged_at !== null && pr.merged_at >= since24h)
       let headCommitAt: string | undefined
+      const currentState = pr.state === 'closed' && pr.merged_at === null
+        ? ghApi<GHPullState>(`repos/${org}/${repo}/pulls/${pr.number}`)?.merged
+        : undefined
+      const merged = pr.merged_at !== null
+        ? true
+        : pr.state === 'open'
+          ? false
+          : currentState === true || currentState === false ? currentState : undefined
 
       // GitHub advances updated_at for comments, labels, reviews, checks, and
       // pushes. The head commit date is an approximation of push time for an
@@ -333,6 +343,7 @@ function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo
         updatedAt: pr.updated_at,
         closedAt: pr.closed_at ?? undefined,
         mergedAt: pr.merged_at ?? undefined,
+        merged,
         headRef: pr.head.ref,
         headCommitAt,
         draft: pr.draft,
@@ -357,26 +368,84 @@ function getProjectVision(): string {
   return ''
 }
 
-function getPreviousArticles(): Array<{ date: string; excerpt: string }> {
-  if (!existsSync(ARTICLES_DIR)) return []
+const CLOSING_CONTINUITY_VERSION = 'accepted-closing-continuity-v1' as const
+export const CLOSING_CONTINUITY_MAX_BYTES = 8 * 1024
+
+function articleBlobSha(content: string): string {
+  return createHash('sha1').update(`blob ${Buffer.byteLength(content)}\0`).update(content).digest('hex')
+}
+
+export function acceptedClosingContinuity(input: { date: string; content: string; snapshot?: ArticleActionSnapshot | null }): AcceptedClosingContinuity {
+  const optionCount = input.snapshot?.closing?.kind === 'options' ? input.snapshot.closing.options.length : 0
+  const unavailable = (reason: Extract<AcceptedClosingContinuity, { status: 'unavailable' }>['reason']): AcceptedClosingContinuity => ({
+    status: 'unavailable', version: CLOSING_CONTINUITY_VERSION, reason, optionCount, omittedOptionCount: optionCount,
+  })
+  const articleStatus = input.content.match(/^status:\s*"?(\w+)/m)?.[1]
+  if (input.snapshot === null) return unavailable('invalid-snapshot')
+  const snapshot = input.snapshot
+  if (optionCount > 5) return unavailable('invalid-snapshot')
+  if (!snapshot || articleStatus !== 'accepted' || snapshot.status !== 'accepted' || snapshot.review.state !== 'verified' || snapshot.closing?.kind !== 'options') return unavailable('missing-accepted-closing')
+  if (snapshot.date !== input.date || snapshot.articleDigest !== managedArticleDigest(input.content)) return unavailable('binding-mismatch')
+  const options = snapshot.closing.options.map((option, index) => {
+    const review = snapshot.verification.verdicts.find(verdict => verdict.item === `closing:${index}`)
+    if (!review) return null
+    const evidencePointers = [...new Set([...option.factCitations, ...option.goalCitations].map(citation => citation.sourceId.replace(/@[a-f0-9]{64}$/, '')))].sort()
+    const fields = { title: option.title, entryPoint: option.entryPoint, context: option.context, whyNow: option.whyNow, outcome: option.outcome, nextCheck: option.nextCheck, evidencePointers,
+      review: { verdict: review.verdict, reason: review.reason } }
+    return option.kind === 'action' ? { kind: option.kind, actionKey: option.actionKey, ...fields } : { kind: option.kind, target: option.target, ...fields }
+  })
+  if (options.some(option => option === null)) return unavailable('invalid-snapshot')
+  const projection: AcceptedClosingContinuity = {
+    status: 'available',
+    version: CLOSING_CONTINUITY_VERSION,
+    source: { articleBlobSha: articleBlobSha(input.content), articleDigest: snapshot.articleDigest, roundId: snapshot.roundId, promptVersion: snapshot.verification.promptVersion },
+    optionCount,
+    omittedOptionCount: 0,
+    options: options.filter(option => option !== null),
+  }
+  return Buffer.byteLength(JSON.stringify(projection), 'utf8') <= CLOSING_CONTINUITY_MAX_BYTES ? projection : unavailable('oversize')
+}
+
+export function getPreviousArticles(repoRoot = REPO_ROOT): PreviousArticleContext[] {
+  const articlesDirectory = join(repoRoot, '_articles')
+  if (!existsSync(articlesDirectory)) return []
   try {
-    return readdirSync(ARTICLES_DIR)
+    return readdirSync(articlesDirectory)
       .filter((f) => f.endsWith('.md') && f !== '.gitkeep')
       .sort()
       .reverse()
       .slice(0, 5)
       .map((f) => {
-        const content = readFileSync(join(ARTICLES_DIR, f), 'utf-8')
+        const content = readFileSync(join(articlesDirectory, f), 'utf-8')
+        const articleDate = f.replace('.md', '')
         // Strip YAML frontmatter (--- ... ---) before slicing so the excerpt
         // contains actual article prose, not just title/date/tags metadata.
         // A raw slice(0, 500) on a typical article wastes ~150 chars on frontmatter.
         const fmEnd = content.indexOf('\n---\n', 3)
         const body = fmEnd > -1 ? content.slice(fmEnd + 5).trim() : content
-        return { date: f.replace('.md', ''), excerpt: body.slice(0, 600) }
+        const snapshotPath = join(repoRoot, 'actions/articles', `${articleDate}.json`)
+        let snapshot: ArticleActionSnapshot | null | undefined
+        if (existsSync(snapshotPath)) {
+          try {
+            const bytes = readFileSync(snapshotPath, 'utf8')
+            const parsed = Buffer.byteLength(bytes) <= ACTION_FILE_LIMIT ? ArticleActionFileSchema.safeParse(JSON.parse(bytes)) : null
+            snapshot = parsed?.success ? parsed.data.snapshot : null
+          } catch {
+            snapshot = null
+          }
+        }
+        return { date: articleDate, excerpt: body.slice(0, 600), closingContinuity: acceptedClosingContinuity({ date: articleDate, content, snapshot }) }
       })
   } catch {
     return []
   }
+}
+
+export function acceptedClosingContinuityTargets(previousArticles: readonly PreviousArticleContext[]): string[] {
+  const active = previousArticles.find(article => article.closingContinuity?.status === 'available')?.closingContinuity
+  return active?.status === 'available'
+    ? [...new Set(active.options.flatMap(option => option.kind === 'checkpoint' ? [option.target] : []))]
+    : []
 }
 
 // ─── Open actions from previous articles ─────────────────────────────────────

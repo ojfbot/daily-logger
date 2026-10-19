@@ -79,7 +79,15 @@ export function discoverTimeSources(articles: ArticleInput[]): TimeSourceRequest
 }
 
 const CommitResponseSchema = z.object({ sha: z.string().regex(/^[a-f0-9]{40}$/), commit: z.object({ author: z.object({ date: z.string() }), committer: z.object({ date: z.string() }) }) })
-const PullResponseSchema = z.object({ number: z.number().int().positive(), created_at: z.string(), merged_at: z.string().nullable(), closed_at: z.string().nullable(), updated_at: z.string() })
+const PullResponseSchema = z.object({
+  number: z.number().int().positive(),
+  state: z.enum(['open', 'closed']).optional(),
+  merged: z.boolean().optional(),
+  created_at: z.string(),
+  merged_at: z.string().nullable(),
+  closed_at: z.string().nullable(),
+  updated_at: z.string(),
+})
 
 export function recordsFromGitHubResponse(request: TimeSourceRequest, response: unknown): TimeRecord[] {
   if (!/^ojfbot\/[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(request.repo)) throw new Error('Only explicit ojfbot repository sources are supported')
@@ -96,9 +104,15 @@ export function recordsFromGitHubResponse(request: TimeSourceRequest, response: 
     if (!/^[1-9]\d*$/.test(request.ref)) throw new Error('Invalid pull request reference')
     const parsed = PullResponseSchema.parse(response)
     if (String(parsed.number) !== request.ref) throw new Error('Pull response identity mismatch')
-    for (const [event, value] of [['opened', parsed.created_at], ['merged', parsed.merged_at], ['closed', parsed.closed_at], ['updated', parsed.updated_at]] as const) {
+    for (const [event, value] of [['opened', parsed.created_at], ['closed', parsed.closed_at], ['updated', parsed.updated_at]] as const) {
       const at = value && canonicalInstant(value)
       if (at) records.push({ at, evidence: { kind: 'github-pull-request', repo: request.repo, ref: request.ref, event, url: `https://github.com/${request.repo}/pull/${request.ref}` } })
+    }
+    const mergedAt = parsed.merged_at && canonicalInstant(parsed.merged_at)
+    if (mergedAt && parsed.merged !== false) records.push({ at: mergedAt, evidence: { kind: 'github-pull-request', repo: request.repo, ref: request.ref, event: 'merged', url: `https://github.com/${request.repo}/pull/${request.ref}` } })
+    const observedAt = canonicalInstant(parsed.updated_at)
+    if (observedAt && parsed.state === 'closed' && parsed.merged === false && parsed.merged_at === null) {
+      records.push({ at: observedAt, evidence: { kind: 'github-pull-request', repo: request.repo, ref: request.ref, event: 'closed-unmerged', url: `https://github.com/${request.repo}/pull/${request.ref}` } })
     }
   }
   return records

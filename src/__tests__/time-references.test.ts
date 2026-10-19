@@ -1,8 +1,9 @@
 import { execFileSync } from 'node:child_process'
 import { describe, expect, it } from 'vitest'
-import { canonicalInstant, recordsFromContext, resolveTimeReferences, selectTimeRecords, scanTimeTokens, timeTokenMatchesInstant, TimeRecordSchema, TimeReferenceSchema, unsupportedTimeTokens, type TimeRecord } from '../time-references.js'
+import { canonicalInstant, recordsFromContext, resolveTimeReferences, selectTimeRecords, shipmentSources, scanTimeTokens, timeTokenMatchesInstant, TimeRecordSchema, TimeReferenceSchema, unsupportedTimeTokens, type TimeRecord } from '../time-references.js'
 import { buildTimeBackfill, discoverTimeSources, mergeTimeBackfills, parseBackfillOptions, recordsFromGitHubResponse } from '../backfill-times.js'
 import { buildUserPrompt, toMarkdown } from '../generate-article.js'
+import { resolveShipmentTimes } from '../shipment-times.js'
 import type { BlogContext } from '../types.js'
 
 const sha = 'ce04d6762fa5a8e5dff59388849e3ea164aff940'
@@ -124,6 +125,41 @@ describe('repeatable backfill and generation integration', () => {
     expect(() => parseBackfillOptions(['--snapshot', '/tmp/same.json', '--output', '/tmp/same.json'])).toThrow('distinct')
     expect(() => parseBackfillOptions(['--shard', '3/3', '--output', '/tmp/out'])).toThrow('zero-based')
   })
+  it('retains explicit current closed-unmerged state and does not infer it from a malformed merge timestamp', () => {
+    const request = { kind: 'pull' as const, repo: 'ojfbot/daily-logger', ref: '384' }
+    const malformedMerged = recordsFromGitHubResponse(request, {
+      number: 384,
+      state: 'closed',
+      merged: true,
+      created_at: '2026-10-18T14:00:02Z',
+      merged_at: 'not-a-time',
+      closed_at: '2026-10-18T21:42:16Z',
+      updated_at: '2026-10-18T21:42:16Z',
+    })
+    expect(malformedMerged.some((record) => record.evidence.kind === 'github-pull-request' && record.evidence.event === 'closed-unmerged')).toBe(false)
+    expect(resolveShipmentTimes(`## What shipped\n\n[#384](https://github.com/ojfbot/daily-logger/pull/384)`, malformedMerged, 'complete')).toMatchObject({
+      times: [{ status: 'unavailable', reason: 'missing-merge-time', source: { ref: '384' } }],
+      exclusions: [],
+    })
+
+    const closedUnmerged = recordsFromGitHubResponse(request, {
+      number: 384,
+      state: 'closed',
+      merged: false,
+      created_at: '2026-10-18T14:00:02Z',
+      merged_at: null,
+      closed_at: '2026-10-18T21:42:16Z',
+      updated_at: '2026-10-18T21:42:16Z',
+    })
+    expect(closedUnmerged).toContainEqual({
+      at: '2026-10-18T21:42:16.000Z',
+      evidence: { kind: 'github-pull-request', repo: 'ojfbot/daily-logger', ref: '384', event: 'closed-unmerged', url: 'https://github.com/ojfbot/daily-logger/pull/384' },
+    })
+    expect(resolveShipmentTimes(`## What shipped\n\n[#384](https://github.com/ojfbot/daily-logger/pull/384)`, closedUnmerged, 'complete')).toMatchObject({
+      times: [],
+      exclusions: [{ reason: 'closed-unmerged', source: { ref: '384' } }],
+    })
+  })
   it('discovers only validated GitHub source identifiers in time-bearing blocks', () => {
     const sources = discoverTimeSources([{ date: '2026-10-15', markdown: `${source} merged at 09:10Z.\n\n[Unrelated](https://github.com/ojfbot/core/pull/999).` }])
     expect(sources).toContainEqual({ kind: 'pull', repo: 'ojfbot/daily-logger', ref: '359' })
@@ -137,9 +173,80 @@ describe('repeatable backfill and generation integration', () => {
     expect(markdown).not.toContain('time_references:')
     expect(markdown).not.toContain('time_records_sha256:')
   })
+  it('records closed-unmerged only from an explicit current PR state observation', () => {
+    const ctx: BlogContext = {
+      ...context,
+      recentPRs: [{
+        number: 384,
+        title: 'Superseded draft',
+        repo: 'daily-logger',
+        url: 'https://github.com/ojfbot/daily-logger/pull/384',
+        state: 'closed',
+        merged: false,
+        createdAt: '2026-10-18T14:00:02Z',
+        updatedAt: '2026-10-18T21:42:16Z',
+        closedAt: '2026-10-18T21:42:16Z',
+        draft: true,
+      }],
+    }
+    expect(recordsFromContext(ctx)).toContainEqual({
+      at: '2026-10-18T21:42:16.000Z',
+      evidence: { kind: 'github-pull-request', repo: 'ojfbot/daily-logger', ref: '384', event: 'closed-unmerged', url: 'https://github.com/ojfbot/daily-logger/pull/384' },
+    })
+    expect(recordsFromContext({ ...ctx, recentPRs: ctx.recentPRs.map(({ merged: _merged, ...pr }) => pr) })).not.toContainEqual(expect.objectContaining({ evidence: expect.objectContaining({ event: 'closed-unmerged' }) }))
+    const malformedMerged = recordsFromContext({ ...ctx, recentPRs: ctx.recentPRs.map((pr) => ({ ...pr, merged: true, mergedAt: 'not-a-time' })) })
+    expect(resolveShipmentTimes(`## What shipped\n\n[#384](https://github.com/ojfbot/daily-logger/pull/384)`, malformedMerged, 'complete')).toMatchObject({
+      times: [{ status: 'unavailable', reason: 'missing-merge-time', source: { ref: '384' } }],
+      exclusions: [],
+    })
+  })
 })
 
 describe('bounded source capture selection', () => {
+  it('retains every PR source listed anywhere in What shipped when the model omits clocks', () => {
+    const shipped = [359, 360, 361, 362, 363].map((ref) => mergeRecord('daily-logger', String(ref)))
+    const closed: TimeRecord = {
+      at: '2026-10-14T10:00:00.000Z',
+      evidence: { kind: 'github-pull-request', repo: 'ojfbot/daily-logger', ref: '384', event: 'closed', url: 'https://github.com/ojfbot/daily-logger/pull/384' },
+    }
+    const outside = mergeRecord('daily-logger', '999')
+    const markdown = [
+      '## What shipped',
+      '',
+      '### daily-logger ([#359](https://github.com/ojfbot/daily-logger/pull/359))',
+      '',
+      'Paragraph shipment [#360](https://github.com/ojfbot/daily-logger/pull/360).',
+      '',
+      '- Bullet shipment [#361](https://github.com/ojfbot/daily-logger/pull/361)',
+      '',
+      '### Two sources ([#362](https://github.com/ojfbot/daily-logger/pull/362), [#363](https://github.com/ojfbot/daily-logger/pull/363))',
+      '',
+      'Closed without merge [#384](https://github.com/ojfbot/daily-logger/pull/384).',
+      '',
+      '## The decisions',
+      '',
+      'Outside the bounded section [#999](https://github.com/ojfbot/daily-logger/pull/999).',
+    ].join('\n')
+
+    expect(selectTimeRecords(markdown, [outside, closed, ...shipped]).map((record) => record.evidence.kind === 'github-pull-request' ? record.evidence.ref : '')).toEqual(['359', '360', '361', '362', '363', '384'])
+  })
+  it('canonicalizes equivalent GitHub PR links before selecting shipment evidence', () => {
+    const merged = mergeRecord('daily-logger', '359')
+    const markdown = [
+      '## What shipped',
+      '',
+      '[Files](https://github.com/ojfbot/daily-logger/pull/359/files) and [conversation](https://github.com/ojfbot/daily-logger/pull/359/).',
+      '',
+      '[Normalized target](https://github.com/ojfbot/daily-logger/pull/388/../999).',
+      '',
+      '## The decisions',
+    ].join('\n')
+    expect(shipmentSources(markdown)).toEqual([
+      { repo: 'ojfbot/daily-logger', ref: '359', url: 'https://github.com/ojfbot/daily-logger/pull/359' },
+      { repo: 'ojfbot/daily-logger', ref: '999', url: 'https://github.com/ojfbot/daily-logger/pull/999' },
+    ])
+    expect(selectTimeRecords(markdown, [merged])).toEqual([merged])
+  })
   it('does not invent a unique repository from compound prose when another source is missing', () => {
     const core = mergeRecord('core', '1')
     expect(resolveTimeReferences('### core and shell\n\nPR #1 merged at 09:10Z.', [core]).references).toEqual([])
