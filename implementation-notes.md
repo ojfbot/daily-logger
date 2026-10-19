@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-19 (receipt association): the admission reader assumed a workflow run's embedded PR head/base SHAs were frozen execution coordinates; live run 39292077417 instead reports the PR's updated output head after its own push. Use the immutable run/artifact input heads and exact same-repository PR association, retaining policy ancestry, output parent/blob and cycle checks. The unmodified guard failed on the captured valid receipt; no provider replay or receipt bypass repairs that mismatch.
+
 - 2026-10-19 (named-action dependencies): integrated Spec review named an older action by ID and showed its record expanded in the prompt while its already-collected primary discussion was omitted. Seed required dependencies from explicitly named action identities as well as the current article's carried identities, and pass the same registry into all three collectors so these direct references take priority within the existing twelve-source bound. Missing mandatory discussions still stop before provider calls. Related records remain context and do not trigger an unbounded transitive crawl.
 
 - 2026-10-19 (request sender): independent review reproduced a bot PR-description edit acquiring two new slots after a non-bot-authored commit because the inherited guard returned early on commit author. Require the non-bot account event and changed extracted feedback independently of HEAD authorship before provider steps; preserve deliberate new continuation requests as distinct revisions under the operator's per-revision policy.

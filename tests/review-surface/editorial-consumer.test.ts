@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { generationActionCycle, revisionActionCycle } from '../../src/action-review-cycle.js'
-import { editorialProofName } from '../../shared/editorial-action-proof.js'
+import { editorialProofName, editorialProofSchema } from '../../shared/editorial-action-proof.js'
 import { actionFile, emptyActionFile, writeActionStore } from '../../src/__tests__/action-store-fixture.js'
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, symlinkSync, chmodSync } from 'node:fs'
@@ -374,6 +374,13 @@ it.each([false, true])('both original workflow modes validate the actual Git reg
 })
 const initialFeedback = 'A bounded owner revision.'
 const initialFeedbackDigest = createHash('sha256').update(initialFeedback).digest('hex')
+function initialWorkflowRun(f: Awaited<ReturnType<typeof setup>>) {
+  return { id: 101, run_attempt: 1, event: 'pull_request_target', head_branch: `accept/${today}`, head_sha: f.head,
+    display_title: 'Editorial acceptance', path: '.github/workflows/editorial-revise.yml',
+    pull_requests: [{ number: 42, url: `https://api.github.com${repo}/pulls/42`,
+      base: { sha: f.execution.policySha, repo: { url: `https://api.github.com${repo}` } },
+      head: { sha: f.head, repo: { url: `https://api.github.com${repo}` } } }] }
+}
 async function initialActionOutput(f: Awaited<ReturnType<typeof setup>>, mode: 'clean-acceptance' | 'revision' = 'clean-acceptance') {
   execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(process.cwd(), mode === 'revision' ? 'src/revise-article.ts' : 'scripts/reconcile-actions.ts')], {
     cwd: process.cwd(), encoding: 'utf8', env: { ...process.env, MOCK_LLM: 'true', EDITORIAL_FEEDBACK: initialFeedback, ACTION_REVIEW_REQUEST: `pull-request:42:${mode}${mode === 'revision' ? `:${initialFeedbackDigest}` : ''}`, ACTION_REPO_ROOT: f.execution.workspace, ARTICLE_PATH: resolve(f.execution.workspace, f.path) },
@@ -386,9 +393,70 @@ async function initialActionOutput(f: Awaited<ReturnType<typeof setup>>, mode: '
   const comment = f.state.prComments.get(42)?.at(-1); if (!comment) throw new Error('Missing receipt')
   comment.body = `## Verified action registry\n${JSON.stringify({ ...JSON.parse(readFileSync(resolve(f.execution.workspace, '.git/editorial-output.json'), 'utf8')), artifactId: 101 })}`
   const github = f.execution.github
-  f.execution.github = (path, options) => path.endsWith('/actions/runs/101') ? Promise.resolve(Response.json({ id: 101, run_attempt: 1, event: 'pull_request_target', head_branch: `accept/${today}`, head_sha: f.head, display_title: 'Editorial acceptance', path: '.github/workflows/editorial-revise.yml', pull_requests: [{ number: 42, base: { sha: f.execution.policySha }, head: { sha: f.head } }] })) : github(path, options)
+  f.execution.github = (path, options) => path.endsWith('/actions/runs/101') ? Promise.resolve(Response.json(initialWorkflowRun(f))) : github(path, options)
   return git(f.execution.workspace, 'rev-parse', 'HEAD')
 }
+it.each(['clean-acceptance', 'revision'] as const)('immutable %s receipt survives the workflow push and later main metadata', async mode => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const outputCommit = await initialActionOutput(f, mode)
+  const laterMain = git(f.execution.workspace, 'commit-tree', `${f.execution.policySha}^{tree}`, '-p', f.execution.policySha, '-m', 'later main')
+  const run = initialWorkflowRun(f)
+  const associated = run.pull_requests[0]; if (!associated) throw new Error('Missing PR association')
+  associated.head.sha = outputCommit
+  associated.base.sha = laterMain
+  expect(run.head_sha).toBe(f.head)
+  expect(associated.head.sha).not.toBe(run.head_sha)
+  expect(associated.base.sha).not.toBe(f.execution.policySha)
+  const github: Execution['github'] = (path, options) => path.endsWith('/actions/runs/101') ? Promise.resolve(Response.json(run)) : f.execution.github(path, options)
+  await expect(admitActionRegistry({ workspace: f.execution.workspace, base: laterMain, head: outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github })).resolves.toBeUndefined()
+})
+it('immutable receipt admission still rejects unrelated PR, run, policy and artifact evidence', async () => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const outputCommit = await initialActionOutput(f, 'revision')
+  const run = initialWorkflowRun(f)
+  const associated = run.pull_requests[0]; if (!associated) throw new Error('Missing PR association')
+  associated.head.sha = outputCommit
+  type Run = ReturnType<typeof initialWorkflowRun>
+  const wrongRuns: Array<[string, Partial<Run>]> = [
+    ['PR number', { pull_requests: [{ ...associated, number: 43 }] }],
+    ['PR URL', { pull_requests: [{ ...associated, url: 'https://api.github.com/repos/other/daily-logger/pulls/42' }] }],
+    ['head repository', { pull_requests: [{ ...associated, head: { ...associated.head, repo: { url: 'https://api.github.com/repos/other/daily-logger' } } }] }],
+    ['base repository', { pull_requests: [{ ...associated, base: { ...associated.base, repo: { url: 'https://api.github.com/repos/other/daily-logger' } } }] }],
+    ['missing PR association', { pull_requests: [] }],
+    ['immutable input', { head_sha: outputCommit }],
+    ['run ID', { id: 102 }],
+    ['event', { event: 'workflow_dispatch' }],
+    ['branch', { head_branch: 'main' }],
+    ['workflow', { path: '.github/workflows/pr-check.yml' }],
+    ['attempt', { run_attempt: 2 }],
+  ]
+  const input = { workspace: f.execution.workspace, base: f.execution.policySha, head: outputCommit, date: today, actor: 'ojfbot', pullRequest: 42 }
+  for (const [label, change] of wrongRuns) {
+    const changed = { ...run, ...change }
+    const github: Execution['github'] = (path, options) => path.endsWith('/actions/runs/101') ? Promise.resolve(Response.json(changed)) : f.execution.github(path, options)
+    await expect(admitActionRegistry({ ...input, github }), label).rejects.toThrow()
+  }
+  const github: Execution['github'] = (path, options) => path.endsWith('/actions/runs/101') ? Promise.resolve(Response.json(run)) : f.execution.github(path, options)
+  const manifest = editorialProofSchema.parse(JSON.parse(readFileSync(resolve(f.execution.workspace, '.git/editorial-output.json'), 'utf8')))
+  const artifact = { id: 101, name: editorialProofName(manifest), expired: false, workflow_run: { id: 101, head_sha: f.head } }
+  for (const changed of [{ ...artifact, expired: true }, { ...artifact, name: 'unbound-output' },
+    { ...artifact, workflow_run: { id: 102, head_sha: f.head } }, { ...artifact, workflow_run: { id: 101, head_sha: outputCommit } }]) {
+    f.state.artifacts.set(101, changed)
+    await expect(admitActionRegistry({ ...input, github })).rejects.toThrow('trusted editorial output receipt')
+  }
+  f.state.artifacts.set(101, artifact)
+  const comment = f.state.prComments.get(42)?.at(-1); if (!comment) throw new Error('Missing receipt')
+  const originalBody = comment.body
+  comment.body = `## Verified action registry\n${JSON.stringify({ ...manifest, policySha: 'f'.repeat(40), artifactId: 101 })}`
+  await expect(admitActionRegistry({ ...input, github })).rejects.toThrow('trusted editorial output receipt')
+  const unrelatedPolicy = git(f.execution.workspace, 'commit-tree', `${f.execution.policySha}^{tree}`, '-m', 'unrelated policy')
+  const unrelated = { ...manifest, policySha: unrelatedPolicy }
+  comment.body = `## Verified action registry\n${JSON.stringify({ ...unrelated, artifactId: 101 })}`
+  f.state.artifacts.set(101, { ...artifact, name: editorialProofName(unrelated) })
+  await expect(admitActionRegistry({ ...input, github })).rejects.toThrow('trusted editorial output receipt')
+  comment.body = originalBody; f.state.artifacts.set(101, artifact)
+  await expect(admitActionRegistry({ ...input, github })).resolves.toBeUndefined()
+})
 it.each(['initial', 'continued'])('only an exact %s workflow receipt authorizes prior output; forged snapshots cannot bypass either agent', async kind => {
   const f = await setup(); f.state.login = 'github-actions[bot]'
   let outputCommit: string
