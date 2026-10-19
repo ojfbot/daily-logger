@@ -122,6 +122,12 @@ describe('trusted generation and revision action budgets', () => {
   it('keeps acceptance and prose revision requests distinct on the same PR', () => {
     expect(revisionActionCycle('pull-request:42:revision')).not.toEqual(acceptanceActionCycle('pull-request:42:clean-acceptance'))
   })
+  it('keeps identical PR feedback in one cycle and gives changed explicit feedback a distinct cycle', () => {
+    const request = (feedback: string) => revisionActionCycle(`pull-request:42:revision:${sha256(feedback)}`)
+    const first = apply(seed(), request('Owner request A'), [candidate(0), candidate(1)])
+    expect(apply(first, request('Owner request A'), [candidate(2)]).records).toHaveLength(2)
+    expect(apply(first, request('Owner request B'), [candidate(2), candidate(3)]).records).toHaveLength(4)
+  })
   it('does not refresh a consumed revision allowance when evidence is recollected', async () => {
     const cycle = revisionActionCycle('request-1')
     const firstProposal = { changes: [], suggestions: [candidate(0), candidate(1)] }

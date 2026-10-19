@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { generationActionCycle, revisionActionCycle } from '../../src/action-review-cycle.js'
 import { editorialProofName } from '../../shared/editorial-action-proof.js'
 import { actionFile, emptyActionFile, writeActionStore } from '../../src/__tests__/action-store-fixture.js'
@@ -91,7 +92,7 @@ async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executa
 async function publishProof(f: Awaited<ReturnType<typeof setup>>, initial = false) {
   const path = resolve(f.execution.workspace, '.git/editorial-output.json')
   const manifest = JSON.parse(readFileSync(path, 'utf8'))
-  if (initial) { delete manifest.requestDigest; delete manifest.requestCommentId; writeFileSync(path, JSON.stringify(manifest)) }
+  if (initial) { if (manifest.actionReviewMode !== 'revision') delete manifest.requestDigest; delete manifest.requestCommentId; writeFileSync(path, JSON.stringify(manifest)) }
   f.state.artifacts.set(101, { id: 101, name: editorialProofName(manifest), expired: false, workflow_run: { id: 101, head_sha: initial ? f.head : f.execution.policySha } })
   await finalizeEditorial(f.execution, 101)
 }
@@ -371,13 +372,15 @@ it.each([false, true])('both original workflow modes validate the actual Git reg
     else expect(run()).toBe('')
   }
 })
+const initialFeedback = 'A bounded owner revision.'
+const initialFeedbackDigest = createHash('sha256').update(initialFeedback).digest('hex')
 async function initialActionOutput(f: Awaited<ReturnType<typeof setup>>, mode: 'clean-acceptance' | 'revision' = 'clean-acceptance') {
   execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(process.cwd(), mode === 'revision' ? 'src/revise-article.ts' : 'scripts/reconcile-actions.ts')], {
-    cwd: process.cwd(), encoding: 'utf8', env: { ...process.env, MOCK_LLM: 'true', EDITORIAL_FEEDBACK: 'A bounded owner revision.', ACTION_REVIEW_REQUEST: `pull-request:42:${mode}`, ACTION_REPO_ROOT: f.execution.workspace, ARTICLE_PATH: resolve(f.execution.workspace, f.path) },
+    cwd: process.cwd(), encoding: 'utf8', env: { ...process.env, MOCK_LLM: 'true', EDITORIAL_FEEDBACK: initialFeedback, ACTION_REVIEW_REQUEST: `pull-request:42:${mode}${mode === 'revision' ? `:${initialFeedbackDigest}` : ''}`, ACTION_REPO_ROOT: f.execution.workspace, ARTICLE_PATH: resolve(f.execution.workspace, f.path) },
   })
   git(f.execution.workspace, 'add', '.'); git(f.execution.workspace, 'commit', '-qm', 'actual clean acceptance action review')
   execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(process.cwd(), 'scripts/write-action-output.ts'), mode], {
-    cwd: process.cwd(), encoding: 'utf8', env: { ...process.env, ACTION_REPO_ROOT: f.execution.workspace, ARTICLE_PATH: f.path, PR_NUMBER: '42', GITHUB_RUN_ID: '101', GITHUB_RUN_ATTEMPT: '1', GITHUB_SHA: f.execution.policySha, INPUT_HEAD: f.head },
+    cwd: process.cwd(), encoding: 'utf8', env: { ...process.env, ACTION_REPO_ROOT: f.execution.workspace, ARTICLE_PATH: f.path, REQUEST_DIGEST: initialFeedbackDigest, PR_NUMBER: '42', GITHUB_RUN_ID: '101', GITHUB_RUN_ATTEMPT: '1', GITHUB_SHA: f.execution.policySha, INPUT_HEAD: f.head },
   })
   await publishProof(f, true)
   const comment = f.state.prComments.get(42)?.at(-1); if (!comment) throw new Error('Missing receipt')
@@ -408,8 +411,19 @@ it.each(['clean-acceptance', 'revision'] as const)('trusted %s mode distinguishe
   const f = await setup(false, null, false, true); f.state.login = 'github-actions[bot]'
   const outputCommit = await initialActionOutput(f, mode)
   const file = ArticleActionFileSchema.parse(JSON.parse(readFileSync(resolve(f.execution.workspace, `actions/articles/${today}.json`), 'utf8')))
-  expect(file.snapshot.reviewCycle).toEqual(mode === 'clean-acceptance' ? generationActionCycle() : revisionActionCycle('pull-request:42:revision'))
+  expect(file.snapshot.reviewCycle).toEqual(mode === 'clean-acceptance' ? generationActionCycle() : revisionActionCycle(`pull-request:42:revision:${initialFeedbackDigest}`))
   await expect(admitActionRegistry({ workspace: f.execution.workspace, base: f.execution.policySha, head: outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github })).resolves.toBeUndefined()
+})
+it('a receipt cannot borrow a different feedback digest on the same PR', async () => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const outputCommit = await initialActionOutput(f, 'revision')
+  const path = resolve(f.execution.workspace, '.git/editorial-output.json')
+  const manifest = JSON.parse(readFileSync(path, 'utf8'))
+  manifest.requestDigest = createHash('sha256').update('Different human feedback.').digest('hex')
+  writeFileSync(path, JSON.stringify(manifest)); await publishProof(f, true)
+  const comment = f.state.prComments.get(42)?.at(-1); if (!comment) throw new Error('Missing receipt')
+  comment.body = `## Verified action registry\n${JSON.stringify({ ...manifest, artifactId: 101 })}`
+  await expect(admitActionRegistry({ workspace: f.execution.workspace, base: f.execution.policySha, head: outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github })).rejects.toThrow('trusted editorial output receipt')
 })
 it.each(['generation', 'wrong-request', 'v5'])('an artifact-bound output cannot borrow the wrong action cycle: %s', async kind => {
   const f = await setup(); f.state.login = 'github-actions[bot]'

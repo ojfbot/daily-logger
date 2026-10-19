@@ -279,6 +279,7 @@ jobs:
             const { extractEditorialFeedback } = await import(`${process.env.POLICY_DIRECTORY}/.github/scripts/extract-editorial-feedback.mjs`);
             const feedback = extractEditorialFeedback(context.payload.pull_request.body || '');
             core.setOutput('feedback', feedback);
+            core.setOutput('request_digest', require('node:crypto').createHash('sha256').update(feedback).digest('hex'));
             core.info(`Extracted ${feedback.length} chars of feedback`);
 
       - name: Guard — feedback non-empty
@@ -326,7 +327,7 @@ jobs:
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
         id: revise
         env:
-          ACTION_REVIEW_REQUEST: pull-request:${{ github.event.pull_request.number }}:revision
+          ACTION_REVIEW_REQUEST: pull-request:${{ github.event.pull_request.number }}:revision:${{ steps.feedback.outputs.request_digest }}
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
           EDITORIAL_FEEDBACK: ${{ steps.feedback.outputs.feedback }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -354,6 +355,7 @@ jobs:
         env:
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
           INPUT_HEAD: ${{ github.event.pull_request.head.sha }}
+          REQUEST_DIGEST: ${{ steps.feedback.outputs.request_digest }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           ACTION_REPO_ROOT: ${{ github.workspace }}
         run: pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/scripts/write-action-output.ts" revision
