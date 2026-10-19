@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-post-revision-20261019-48e7dfa49ac4",
+  "article": {
+    "date": "2026-10-19",
+    "sourceCommitSha": "48e7dfa49ac428ffc7dd303afea8a62469128c52",
+    "blobSha": "0dc881b250bb56afda7776da7d69b67d8cd7d39c"
+  },
+  "reviewer": {
+    "name": "Codex post-revision verification: October 19 accuracy and action usefulness",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-19T19:32:40.690Z",
+  "scope": "Verification of the accepted October19 article after the original eight confirmed findings and one unsupported claim, both actual editorial attempts and ordinary reviewed source/data acceptance. Separate native Codex Standards and Spec contexts approved candidate88 and its tree-identical accepted source48. No current material findings. Original human dispositions remain unchanged. Token-window qualification, oversized required-discussion handling, protected settlements and unattended-runner qualification remain separate. Exact reviewer model/session identities are not exposed.",
+  "fullRecordBlobSha": "37abddc8cdaf255484ac44d4aedb01b39de93ac6",
+  "fullRecordPath": "reviews/articles/2026-10-19-48e7dfa49ac428ffc7dd303afea8a62469128c52.md",
+  "result": "completed",
+  "findings": []
+}
