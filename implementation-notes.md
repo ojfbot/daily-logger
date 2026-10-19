@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-19 (timestamp lifecycle fixture): fresh hosted CI and an exact local replay showed the new-generation test copied the live October 19 action snapshot into its supposedly new date, requiring unrelated #381 evidence from its empty mock sources. Remove only that generated date's copied snapshot in the disposable fixture and assert its absence; retain all real article/action data and production evidence checks.
+
 - 2026-10-19 (supervised article acceptance): the normal continuation corrected the prose but redundantly reaffirmed an already-dismissed action with unrelated evidence; retry preflight then required the oversized historical #357 discussion and stopped before any model call. The operator authorized an ordinary reviewed source/data acceptance: omit only that new decision/card, retain its valid October 18 dismissal and actual machine-response history, and keep all receipt/evidence limits unchanged. PR #392 and its immutable outputs retain the rejected attempt.
 
 - 2026-10-19 (receipt association): the admission reader assumed a workflow run's embedded PR head/base SHAs were frozen execution coordinates; live run 39292077417 instead reports the PR's updated output head after its own push. Use the immutable run/artifact input heads and exact same-repository PR association, retaining policy ancestry, output parent/blob and cycle checks. The unmodified guard failed on the captured valid receipt; no provider replay or receipt bypass repairs that mismatch.

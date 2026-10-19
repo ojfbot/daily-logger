@@ -34,7 +34,12 @@ function fixture(withHistory = false) {
   const root = mkdtempSync(join(tmpdir(), 'generated-time-lifecycle-'))
   if (withHistory) execFileSync('git', ['-c', 'core.hooksPath=/dev/null', 'clone', '--shared', '--quiet', sourceRoot, root])
   else mkdirSync(join(root, 'action-admissions'))
-  if (withHistory) { cpSync(join(sourceRoot, 'actions'), join(root, 'actions'), { recursive: true }); cpSync(join(sourceRoot, '_articles'), join(root, '_articles'), { recursive: true }) }
+  if (withHistory) {
+    cpSync(join(sourceRoot, 'actions'), join(root, 'actions'), { recursive: true })
+    cpSync(join(sourceRoot, '_articles'), join(root, '_articles'), { recursive: true })
+    // This fixture generates a new dated record; live decisions for that date are unrelated inputs.
+    rmSync(join(root, 'actions/articles', `${date}.json`), { force: true })
+  }
   roots.push(root)
   return root
 }
@@ -66,6 +71,7 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     expect(prepared.markdown).toContain(`time_records_sha256: ${prepared.digest}`)
     expect(prepared.markdown).not.toContain('time_references:')
     const registry = readActionRegistry(root)
+    expect(registry.articles.some(article => article.date === date)).toBe(false)
     const review = await reviewArticleActions({ cycle: generationActionCycle(), registry, articleStatuses: new Map(), articleDate: date, markdown: prepared.markdown, feedback: '', sources: [], agents: mockActionAgents })
     writeActionRegistry(root, review.registry, registryRevision(registry))
     buildApi(root)
