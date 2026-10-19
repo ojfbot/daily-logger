@@ -20,7 +20,7 @@ export { scanVisibleTimeText } from './time-reference-text.js'
 
 export const TimeEvidenceSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('github-commit'), repo: repoSchema, ref: z.string().regex(/^[a-f0-9]{40}$/), event: z.enum(['authored', 'committed']), url: sourceUrlSchema }),
-  z.object({ kind: z.literal('github-pull-request'), repo: repoSchema, ref: z.string().regex(/^[1-9]\d*$/), event: z.enum(['opened', 'merged', 'closed', 'updated']), url: sourceUrlSchema }),
+  z.object({ kind: z.literal('github-pull-request'), repo: repoSchema, ref: z.string().regex(/^[1-9]\d*$/), event: z.enum(['opened', 'merged', 'closed', 'updated', 'closed-unmerged']), url: sourceUrlSchema }),
   z.object({ kind: z.literal('explicit-offset'), value: z.string().refine((value) => canonicalInstant(value) !== undefined) }),
 ]).refine((value) => value.kind === 'explicit-offset' || value.url === `https://github.com/${value.repo}/${value.kind === 'github-commit' ? 'commit' : 'pull'}/${value.ref}`)
 

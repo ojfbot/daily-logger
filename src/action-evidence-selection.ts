@@ -1,11 +1,42 @@
 import { acceptedActionState, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionSource } from './action-registry.js'
-import { KNOWN_REPOS } from './fleet.js'
+import { EXCLUDED_REPOS, KNOWN_REPOS } from './fleet.js'
 
 const SOURCE_LIMIT = 128 * 1024
 const TOTAL_LIMIT = 384 * 1024
 export const ACTION_EVIDENCE_SELECTION_VERSION = 'whole-action-sources-v2'
 export const COVERAGE_SOURCE = 'action-evidence-coverage'
+export const CONTINUITY_TARGETS_SOURCE = 'accepted-closing-continuity-targets'
 const sourceKey = (id: string) => id.replace(/@[a-f0-9]{64}$/, '')
+
+export type ContinuityGithubReference = { id: string; repo: string; kind: string; number: string }
+
+export function acceptedContinuityGithubReferences(targets: readonly string[]): ContinuityGithubReference[] {
+  const refs = new Map<string, ContinuityGithubReference>()
+  for (const target of targets) {
+    const match = /^https:\/\/github\.com\/ojfbot\/([\w-]+)\/(pull|issues)\/(\d+)$/.exec(target)
+    if (!match || EXCLUDED_REPOS.has(match[1])) continue
+    const id = `${match[1]}#${match[3]}`
+    refs.delete(id)
+    refs.set(id, { id, repo: match[1], kind: match[2], number: match[3] })
+  }
+  return [...refs.values()]
+}
+
+function continuityRequiredReferences(sources: readonly ActionSource[]): string[] {
+  const source = sources.find(candidate => sourceKey(candidate.id) === CONTINUITY_TARGETS_SOURCE)
+  if (!source) return []
+  try {
+    const parsed: unknown = JSON.parse(source.content)
+    if (!parsed || typeof parsed !== 'object' || !('version' in parsed) || parsed.version !== 'accepted-closing-continuity-targets-v1'
+      || !('references' in parsed) || !Array.isArray(parsed.references)
+      || parsed.references.some(reference => typeof reference !== 'string' || !/^[\w-]+#\d+$/.test(reference))) {
+      throw new Error('invalid accepted closing continuity target source')
+    }
+    return [...new Set(parsed.references)]
+  } catch (error) {
+    throw new Error(`Accepted closing continuity target source is invalid; review pending: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
 
 /** Canonical input for both cache fingerprints and selection; never pick a conflicting version. */
 export function canonicalActionSources(sources: readonly ActionSource[]): ActionSource[] {
@@ -30,10 +61,12 @@ function references(text: string): Set<string> {
 }
 
 export function actionEvidenceScope(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string }) {
-  const current = input.registry.articles.find(article => article.date === input.articleDate)?.actionKeys
+  const snapshot = input.registry.articles.find(article => article.date === input.articleDate)
+  const current = snapshot?.actionKeys
     ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
   const nextSection = stripManagedActions(input.markdown).match(/^## (?:What['’]s next|Next actions|Suggested actions)\s*\n([\s\S]*?)(?=^## |$(?![\s\S]))/mi)?.[1] ?? ''
-  const requested = [input.feedback, nextSection].join('\n')
+  const closing = snapshot?.closing?.kind === 'options' ? JSON.stringify(snapshot.closing.options) : ''
+  const requested = [input.feedback, nextSection, closing].join('\n')
   const carried = input.registry.records.filter(record => current.includes(record.key) || requested.includes(record.key))
   const text = [requested, ...carried.map(record => JSON.stringify({ key: record.key, workKey: record.workKey,
     originalDescription: record.original.description, description: record.history.at(-1)?.description ?? record.original.description, goal: record.goal, doneWhen: record.doneWhen, gates: record.gates }))].join('\n')
@@ -53,16 +86,17 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
 export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string; sources: readonly ActionSource[] }) {
   const scope = actionEvidenceScope(input)
   const sources = canonicalActionSources(input.sources)
+  const requiredRefs = new Set([...scope.refs, ...continuityRequiredReferences(sources)])
   const available = new Set(sources.map(source => sourceKey(source.id)))
   const required = (source: ActionSource) => ['article', 'operator'].includes(sourceKey(source.id))
     || source.kind === 'repository'
     || source.kind === 'github' && !/^github:[\w-]+#\d+$/.test(sourceKey(source.id))
-    || scope.refs.has(sourceKey(source.id).replace(/^github:/, ''))
+    || requiredRefs.has(sourceKey(source.id).replace(/^github:/, ''))
   const coverage = sources.map(source => ({ id: source.id, kind: source.kind, locator: source.locator,
     fullContentSha256: source.fullContentSha256 ?? sha256(source.content), collectedContentSha256: sha256(source.content),
     bytes: Buffer.byteLength(source.content), lines: source.content.split('\n').length,
     required: required(source), included: false, reason: 'outside current action/feedback scope' }))
-  const missing = [...scope.refs].filter(ref => !available.has(`github:${ref}`)).sort()
+  const missing = [...requiredRefs].filter(ref => !available.has(`github:${ref}`)).sort()
   const selected: ActionSource[] = []
   let bytes = 0
   const dependencies = [scope.text, ...sources.filter(source => source.kind === 'github' && required(source)).map(source => source.content)].join('\n')
@@ -91,7 +125,7 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     collection: 'Bounded collector output, not an exhaustive repository/discussion census. Missing or omitted content is unknown, never evidence of absence or approval.',
     selection: 'Whole sources only; no chronological comment window or excerpt. Only current carried actions, explicit feedback and the next-actions section require GitHub discussions. Shipment prose does not.',
     authority: 'This coverage index is context only. Hashes, identities, omission reasons and missing evidence cannot justify completion, supersession, dismissal or human approval.',
-    requiredReferences: [...scope.refs].sort(), expandedActionKeys: scope.expanded.sort(), sources: coverage }
+    requiredReferences: [...requiredRefs].sort(), expandedActionKeys: scope.expanded.sort(), sources: coverage }
   const content = JSON.stringify(receipt)
   if (Buffer.byteLength(content) > SOURCE_LIMIT || bytes + Buffer.byteLength(content) > TOTAL_LIMIT) throw new Error('Action evidence coverage exceeds its source budget; review pending')
   const report: ActionSource = { id: `${COVERAGE_SOURCE}@${sha256(content)}`, kind: 'report', locator: ACTION_EVIDENCE_SELECTION_VERSION, content }

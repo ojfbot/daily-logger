@@ -17,6 +17,8 @@ import { fileURLToPath } from 'url'
 import { ARTICLE_OUTCOMES, type CodeReference } from './schema.js'
 import { parseArticleProvenance, type ArticleProvenance } from './run-provenance.js'
 import { readArticleTime } from './article-time-metadata.js'
+import { assertShipmentCoverage, type ShipmentTime } from './shipment-times.js'
+import { requiresShipmentTimeCoverage } from './shipment-time-coverage.js'
 import type { TimeReference } from './time-references.js'
 import { type CanonicalAction } from './action-model.js'
 import { verifyRecordedAdmissions } from './action-intake.js'
@@ -51,6 +53,7 @@ interface EntryData {
   actions?: CanonicalAction[]
   codeReferences?: CodeReference[]
   timeReferences?: TimeReference[]
+  shipmentTimes?: ShipmentTime[]
   provenance?: ArticleProvenance
 }
 
@@ -254,7 +257,10 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
     const body = narrative.replace(/^---[\s\S]*?---\n/, '')
     const date = (fm.date as string) ?? file.replace('.md', '')
 
-    const timeMetadata = readArticleTime({ repoRoot, date: file.replace(/\.md$/, ''), markdown: narrative, bindingMarkdown: content })
+    const datedFilename = file.replace(/\.md$/, '')
+    const timeMetadata = readArticleTime({ repoRoot, date: datedFilename, markdown: narrative, bindingMarkdown: content })
+    if (requiresShipmentTimeCoverage(datedFilename, narrative) && timeMetadata.shipmentCoverage.status !== 'complete') throw new Error(`${datedFilename}: required immutable shipment-time coverage is unavailable`)
+    if (timeMetadata.shipmentCoverage.status === 'complete') assertShipmentCoverage(narrative, timeMetadata.shipmentCoverage)
     for (const warning of timeMetadata.warnings) console.warn(`::warning::${date}: ${warning}`)
     for (const missing of timeMetadata.unresolved) console.warn(`::warning::${date}: time ${missing.text} occurrence ${missing.occurrence}: ${missing.reason}`)
 
@@ -310,6 +316,7 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
       actions,
       codeReferences: codeRefsByDate[date],
       ...(timeMetadata.references.length > 0 ? { timeReferences: timeMetadata.references } : {}),
+      ...(timeMetadata.shipmentCoverage.status === 'complete' && timeMetadata.shipmentCoverage.times.length > 0 ? { shipmentTimes: timeMetadata.shipmentCoverage.times } : {}),
       provenance: fm.provenance as ArticleProvenance | undefined,
     }
     entries.push(entry)

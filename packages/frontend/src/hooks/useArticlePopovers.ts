@@ -1,21 +1,25 @@
 import { useEffect, useId, useRef, useState, useCallback } from 'react'
 import type { TimeReference } from '../../../../src/time-reference-schema.ts'
+import type { ShipmentTime } from '../../../../src/shipment-times.ts'
 import type { CodeReference } from '../store/types.ts'
 import { findCodeElements, resolveRef, PR_LINK_RE } from '../utils/codeRefUtils.ts'
 import { useGithubCache } from './useGithubCache.ts'
 import type { PopoverState } from '../components/Popover.tsx'
 import { attachTimeReferences } from '../utils/timeReferences.ts'
+import { attachShipmentTimes, shipmentTimeReference } from '../utils/shipmentTimes.ts'
 import { viewerClock } from '../utils/timeDisplay.ts'
 import { scanVisibleTimeText } from '../../../../src/time-reference-text.ts'
 
 const SHOW_DELAY = 200
+const EMPTY_SHIPMENT_TIMES: ShipmentTime[] = []
 
 export function useArticlePopovers(
   contentRef: React.RefObject<HTMLDivElement | null>,
   codeReferences: CodeReference[],
   reposActive: string[],
   timeReferences: TimeReference[],
-  bodyHtml?: string,
+  contentRevision?: string,
+  shipmentTimes: ShipmentTime[] = EMPTY_SHIPMENT_TIMES,
 ) {
   const [popover, setPopover] = useState<PopoverState>({ visible: false, anchor: null, variant: { kind: 'ref', type: 'config', label: '', detail: '', url: null } })
   const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -187,14 +191,14 @@ export function useArticlePopovers(
     }
 
     return () => cleanups.forEach(fn => fn())
-  }, [contentRef, codeReferences, reposActive, getCommit, getPR, hidePopover, bodyHtml])
+  }, [contentRef, codeReferences, reposActive, getCommit, getPR, hidePopover, contentRevision])
 
   useEffect(() => {
     const root = contentRef.current
     if (!root) return
-    const { attached, restore } = attachTimeReferences(root, timeReferences)
-    const cleanups = attached.map(({ element, reference }) => {
-      const show = () => {
+    const proseTimes = attachTimeReferences(root, timeReferences)
+    const shipmentStates = attachShipmentTimes(root, shipmentTimes)
+    const show = (element: HTMLButtonElement, reference: TimeReference) => {
         if (!element.isConnected || !root.contains(element)) return
         hidePopover()
         activeAnchor.current = element
@@ -203,21 +207,22 @@ export function useArticlePopovers(
         setPopover({ visible: true, anchor: element, variant: {
           kind: 'time', reference, tooltipId, viewer: viewerClock(new Date(reference.at), reference.precision),
         } })
-      }
+    }
+    const cleanups = proseTimes.attached.map(({ element, reference }) => {
       const enter = () => {
         keepOpen()
         if (activeAnchor.current === element) return
         hidePopover()
         activeAnchor.current = element
         showTimer.current = setTimeout(() => {
-          if (activeAnchor.current === element) show()
+          if (activeAnchor.current === element) show(element, reference)
         }, SHOW_DELAY)
       }
       const leave = () => {
         if (showTimer.current) { hidePopover(); return }
         scheduleHide()
       }
-      const focus = () => { if (element.matches(':focus-visible')) show() }
+      const focus = () => { if (element.matches(':focus-visible')) show(element, reference) }
       const blur = (event: FocusEvent) => {
         const next = event.relatedTarget
         const popover = document.getElementById(tooltipId)
@@ -227,7 +232,7 @@ export function useArticlePopovers(
       }
       const click = () => {
         if (pinnedAnchor.current === element) { hidePopover(); return }
-        show()
+        show(element, reference)
         pinnedAnchor.current = element
       }
       element.addEventListener('mouseenter', enter)
@@ -243,8 +248,67 @@ export function useArticlePopovers(
         element.removeEventListener('click', click)
       }
     })
-    return () => { cleanups.forEach(cleanup => cleanup()); hidePopover(); restore() }
-  }, [contentRef, timeReferences, bodyHtml, hidePopover, keepOpen, scheduleHide, tooltipId])
+    const shipmentByUrl = new Map(shipmentTimes.flatMap((shipment) => shipment.status === 'available' ? [[shipment.source.url, shipment] as const] : []))
+    const shipmentTarget = (event: Event) => {
+      if (!(event.target instanceof Element)) return undefined
+      const element = event.target.closest<HTMLButtonElement>('.shipment-time-ref')
+      const state = element?.closest<HTMLElement>('.shipment-time-state')
+      const shipment = state?.dataset.shipmentUrl ? shipmentByUrl.get(state.dataset.shipmentUrl) : undefined
+      return element && shipment && root.contains(element) ? { element, reference: shipmentTimeReference(shipment) } : undefined
+    }
+    const onShipmentOver = (event: MouseEvent) => {
+      const target = shipmentTarget(event)
+      if (!target || (event.relatedTarget instanceof Node && target.element.contains(event.relatedTarget))) return
+      keepOpen()
+      if (activeAnchor.current === target.element) return
+      hidePopover()
+      activeAnchor.current = target.element
+      showTimer.current = setTimeout(() => {
+        if (activeAnchor.current === target.element) show(target.element, target.reference)
+      }, SHOW_DELAY)
+    }
+    const onShipmentOut = (event: MouseEvent) => {
+      const target = shipmentTarget(event)
+      if (!target || (event.relatedTarget instanceof Node && target.element.contains(event.relatedTarget))) return
+      if (showTimer.current) { hidePopover(); return }
+      scheduleHide()
+    }
+    const onShipmentFocus = (event: FocusEvent) => {
+      const target = shipmentTarget(event)
+      if (target) show(target.element, target.reference)
+    }
+    const onShipmentBlur = (event: FocusEvent) => {
+      const target = shipmentTarget(event)
+      if (!target) return
+      const next = event.relatedTarget
+      const popover = document.getElementById(tooltipId)
+      if (pinnedAnchor.current === target.element && (next === null || (next instanceof Node && popover?.contains(next)))) return
+      hidePopover()
+    }
+    const onShipmentClick = (event: MouseEvent) => {
+      const target = shipmentTarget(event)
+      if (!target) return
+      if (pinnedAnchor.current === target.element) { hidePopover(); return }
+      show(target.element, target.reference)
+      pinnedAnchor.current = target.element
+    }
+    root.addEventListener('mouseover', onShipmentOver)
+    root.addEventListener('mouseout', onShipmentOut)
+    root.addEventListener('focusin', onShipmentFocus)
+    root.addEventListener('focusout', onShipmentBlur)
+    root.addEventListener('click', onShipmentClick)
+    return () => {
+      root.removeEventListener('mouseover', onShipmentOver)
+      root.removeEventListener('mouseout', onShipmentOut)
+      root.removeEventListener('focusin', onShipmentFocus)
+      root.removeEventListener('focusout', onShipmentBlur)
+      root.removeEventListener('click', onShipmentClick)
+      cleanups.forEach(cleanup => cleanup())
+      hidePopover()
+      shipmentStates.restore()
+      proseTimes.restore()
+    }
+  }, [contentRef, timeReferences, shipmentTimes, contentRevision, hidePopover, keepOpen, scheduleHide, tooltipId])
 
   return { state: popover, keepOpen, scheduleHide }
 }

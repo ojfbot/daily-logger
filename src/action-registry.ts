@@ -10,12 +10,15 @@ export const REGISTRY_PATH = 'actions/registry.json'
 export const ACTIONS_START = '<!-- ACTIONS_START -->'
 export const ACTIONS_END = '<!-- ACTIONS_END -->'
 export * from './action-registry-schema.js'
-import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hydrateActionRegistry, articleActionFileBytes, actionArticlePath, type ActionRegistry } from './action-registry-schema.js'
+import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hydrateActionRegistry, articleActionFileBytes, actionArticlePath, type ActionRegistry, type ClosingPrompt } from './action-registry-schema.js'
 
 export function sha256(value: string): string { return createHash('sha256').update(value).digest('hex') }
 export function registryBytes(registry: ActionRegistry): string { return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
 export function registryRevision(registry: ActionRegistry): string { return sha256(registryBytes(registry)) }
-export function actionStateDigest(registry: ActionRegistry, keys: readonly string[]): string { return sha256(JSON.stringify(registry.records.filter(record => keys.includes(record.key)).map(record => ({ key: record.key, state: record.state, history: record.history, admission: record.admission })))) }
+export function actionStateDigest(registry: ActionRegistry, keys: readonly string[], closing?: ClosingPrompt): string {
+  const records = registry.records.filter(record => keys.includes(record.key)).map(record => ({ key: record.key, state: record.state, history: record.history, admission: record.admission }))
+  return sha256(JSON.stringify(closing === undefined ? records : { records, closing }))
+}
 export function actionKey(action: CanonicalAction): string { return action.id ?? `legacy-${sha256(legacyActionKey(action))}` }
 export function normalizeWorkKey(repo: string, target: string, outcome: string): string { return [repo, target, outcome].map(value => value.toLowerCase().replace(/\s+/g, ' ').trim()).join('|') }
 
@@ -158,13 +161,15 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
     if (snapshot.status !== 'draft') throw new Error(`Action review is pending for ${articleDate}; acceptance is blocked`)
     return `${unmanagedArticleProse(markdown).trimEnd()}\n\n${ACTIONS_START}\n> **Suggested actions**\n> Action review pending. No new action or disposition has been admitted. Reconcile before accepting this article.\n${ACTIONS_END}\n`
   }
+  if (articleDate >= '2026-10-19' && !snapshot.closing) {
+    throw new Error(`Verified action review is missing its required closing for ${articleDate}; reconcile before publishing`)
+  }
   const visible = articleActionRecords(registry, articleDate, statuses).map(record => ({ record, decision: record.history.at(-1), state: record.state }))
   const active = visible.filter(item => item.state === 'open' || item.state === 'proposed')
   const resolved = visible.filter(item => item.state !== 'open' && item.state !== 'proposed')
-  const lines = [ACTIONS_START, '> **Suggested actions**', ...active.flatMap(({ record, decision }) => [`> - \`${oneLine(record.original.command)}\` — ${oneLine(decision?.description ?? record.original.description)} (${oneLine(record.original.repo)})${record.includeInIndex ? '' : ' · Article only'}`, ...(record.doneWhen ? [`>   Done when: ${oneLine(record.doneWhen)}`] : []), ...(record.gates.length ? [`>   Conditions: ${record.gates.map(oneLine).join(' ')}`] : [])])]
-  if (active.length === 0) lines.push('> No new verified suggestion. Existing work retains its documented next checkpoints.')
+  const lines = [ACTIONS_START, '> **Suggested actions**']
   if (resolved.length) {
-    lines.push('', '<section class="action-history-card" aria-label="Resolved suggestions">', '<h3>Resolved suggestions</h3>')
+    lines.push('<section class="action-history-card" aria-label="Resolved suggestions">', '<h3>Resolved suggestions</h3>')
     for (const { record, decision, state } of resolved) {
       const label = { done: 'Completed', dismissed: 'Dismissed', superseded: 'Superseded', deferred: 'Deferred', open: 'Open', proposed: 'Proposed' }[state]
       const evidence = decision?.citations.map(citation => registry.articles.flatMap(article => article.sources).find(source => source.id === citation.sourceId)).filter(source => source && source.kind !== 'report') ?? []
@@ -172,6 +177,39 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
       lines.push(`<article><strong>${escaped(record.original.command)} · ${label}</strong><p>${escaped(decision?.description ?? '')}</p><details><summary>Original suggestion and evidence</summary><p>${escaped(record.original.description)}</p><p>${escaped((decision?.reason ?? '').replace(/\(s\d+(?:,\s*s\d+)*(?:\s+L\d+(?:-\d+)?)?\)/g, '').replace(/\bs\d+(?:\s+L\d+(?:-\d+)?)?/g, 'the cited source').replace(/ {2,}/g, ' ').trim())}</p><ul>${links}</ul></details></article>`)
     }
     lines.push('</section>')
+  }
+  if (snapshot.closing?.kind === 'options') {
+    const currentOptions = snapshot.closing.options.filter(option => option.kind === 'checkpoint' || visible.some(item => item.record.key === option.actionKey && ['open', 'proposed', 'deferred'].includes(item.state)))
+    if (currentOptions.length) lines.push('', '> **Choose a supported next step**', '> These choices continue verified work or checkpoints; they do not create additional queue identities.')
+    for (const option of currentOptions) {
+      if (option.kind === 'checkpoint') {
+        lines.push(`> - **${oneLine(option.title)}** — ${oneLine(option.context)}`,
+          `>   Entry point: <${escaped(option.target)}> — ${oneLine(option.entryPoint)}`,
+          `>   Why now: ${oneLine(option.whyNow)}`,
+          `>   Advances: ${oneLine(option.outcome)}`,
+          `>   Next checkpoint: ${oneLine(option.nextCheck)}`)
+        continue
+      }
+      const item = visible.find(({ record }) => record.key === option.actionKey)
+      if (!item) throw new Error(`Missing closing action: ${option.actionKey}`)
+      lines.push(`> - **${oneLine(option.title)}** — ${oneLine(option.context)}`,
+        `>   Entry point: ${oneLine(option.entryPoint)}`,
+        `>   Why now: ${oneLine(option.whyNow)}`,
+        `>   Advances: ${oneLine(option.outcome)}`,
+        `>   Next checkpoint: ${oneLine(option.nextCheck)}`,
+        `>   Action: \`${oneLine(item.record.original.command)}\` (${oneLine(item.record.original.repo)})${item.record.includeInIndex ? '' : ' · Article only'}`,
+        ...(item.record.doneWhen ? [`>   Done when: ${oneLine(item.record.doneWhen)}`] : []),
+        ...(item.record.gates.length ? [`>   Conditions: ${item.record.gates.map(oneLine).join(' ')}`] : []))
+    }
+    if (!currentOptions.length) lines.push('', '> **Decision needed before the next action**', '> Which supported continuation should the next session take?', '> Missing evidence: Every previously verified option is now resolved or no longer current.', '> Next check: Reconcile current primary evidence before presenting or admitting more work.')
+  } else if (snapshot.closing?.kind === 'needs-evidence') {
+    lines.push('', '> **Decision needed before the next action**',
+      `> ${oneLine(snapshot.closing.question)}`,
+      `> Missing evidence: ${oneLine(snapshot.closing.missingEvidence)}`,
+      `> Next check: ${oneLine(snapshot.closing.nextCheck)}`)
+  } else {
+    lines.push(...active.flatMap(({ record, decision }) => [`> - \`${oneLine(record.original.command)}\` — ${oneLine(decision?.description ?? record.original.description)} (${oneLine(record.original.repo)})${record.includeInIndex ? '' : ' · Article only'}`, ...(record.doneWhen ? [`>   Done when: ${oneLine(record.doneWhen)}`] : []), ...(record.gates.length ? [`>   Conditions: ${record.gates.map(oneLine).join(' ')}`] : [])]))
+    if (active.length === 0) lines.push('> No new verified suggestion. Existing work retains its documented next checkpoints.')
   }
   lines.push(ACTIONS_END)
   const prose = unmanagedArticleProse(markdown).trimEnd()
@@ -213,7 +251,9 @@ export function renderArticleActionHtml(markdown: string, registry: ActionRegist
   const end = rendered.indexOf(ACTIONS_END, blockStart)
   const start = rendered.lastIndexOf('\n<section class="action-history-card"', end)
   if (blockStart === -1 || end === -1 || start <= blockStart || start >= end) return renderArticle(rendered)
-  return renderArticle(rendered.slice(0, start)) + rendered.slice(start, end) + renderArticle(rendered.slice(end + ACTIONS_END.length))
+  const cardEnd = rendered.indexOf('</section>', start) + '</section>'.length
+  if (cardEnd < start + '</section>'.length || cardEnd > end) throw new Error('Invalid generated action-history card')
+  return renderArticle(rendered.slice(0, start)) + rendered.slice(start, cardEnd) + renderArticle(rendered.slice(cardEnd, end)) + renderArticle(rendered.slice(end + ACTIONS_END.length))
 }
 
 export function readRegistryProjection(repoRoot: string) {

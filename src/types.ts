@@ -79,6 +79,8 @@ export interface RecentPRInfo {
   updatedAt: string
   closedAt?: string
   mergedAt?: string
+  /** Explicit current provider state; undefined when a closed PR could not be confirmed. */
+  merged?: boolean
   /** Source branch, used to recognize the logger's article and cleaner PRs. */
   headRef?: string
   /** Latest commit on the PR branch. Metadata-only PR updates leave this outside the window. */
@@ -102,6 +104,44 @@ export interface ADRRegistryEntry {
   status?: string
 }
 
+export type ClosingContinuityUnavailableReason =
+  | 'missing-accepted-closing'
+  | 'binding-mismatch'
+  | 'invalid-snapshot'
+  | 'oversize'
+
+export type ClosingContinuityOption = {
+  title: string
+  entryPoint: string
+  context: string
+  whyNow: string
+  outcome: string
+  nextCheck: string
+  evidencePointers: string[]
+  review: { verdict: 'pass' | 'reject' | 'hold'; reason: string }
+} & ({ kind: 'action'; actionKey: string } | { kind: 'checkpoint'; target: string })
+
+export type AcceptedClosingContinuity = {
+  status: 'available'
+  version: 'accepted-closing-continuity-v1'
+  source: { articleBlobSha: string; articleDigest: string; roundId: string; promptVersion: string }
+  optionCount: number
+  omittedOptionCount: 0
+  options: ClosingContinuityOption[]
+} | {
+  status: 'unavailable'
+  version: 'accepted-closing-continuity-v1'
+  reason: ClosingContinuityUnavailableReason
+  optionCount: number
+  omittedOptionCount: number
+}
+
+export interface PreviousArticleContext {
+  date: string
+  excerpt: string
+  closingContinuity?: AcceptedClosingContinuity
+}
+
 export interface BlogContext {
   date: string
   repos: string[]
@@ -115,7 +155,7 @@ export interface BlogContext {
   /** Open actions from previous articles, filtered against done-actions.json */
   openActions: CanonicalAction[]
   projectVision: string
-  previousArticles: Array<{ date: string; excerpt: string }>
+  previousArticles: PreviousArticleContext[]
   /** Claude Code tool/skill telemetry for the 24h window. Null if unavailable. */
   telemetry?: TelemetrySummary | null
   /**

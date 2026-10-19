@@ -1138,7 +1138,7 @@
     "status": "done",
     "sourceDate": "2026-10-18",
     "id": "act-2026-10-18-pr-review-0de366",
-    "closedDate": "2026-10-18",
-    "resolution": "The current API reports #381 merged. The owner receipt records landing c88039f1167a824be7ef27f65453ec3dd83f55f8, passing checks on the exact landing candidate and post-merge tree equality. This completes the original review/merge request; live authenticated article-cycle verification remains separate and is not claimed complete."
+    "closedDate": "2026-10-19",
+    "resolution": "PR #381 is confirmed merged per the current API state (state=merged; merged_at=2026-10-18T20:29:26Z). The owner-authored landing receipt records merge commit c88039f1167a824be7ef27f65453ec3dd83f55f8, all applicable hosted checks passing on the exact candidate bcc0bf627a6e7a4bafc910d118a76cd421feb17b, and post-merge tree equality verification. This terminal disposition carries forward from the prior cycle with full authoritative evidence; no new evidence reverses it."
   }
 ]

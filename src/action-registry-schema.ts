@@ -16,6 +16,39 @@ export const ActionSourceSchema = z.object({
 }).strict()
 export type ActionSource = z.infer<typeof ActionSourceSchema>
 export const ActionStateSchema = z.enum(['proposed', 'open', 'done', 'dismissed', 'superseded', 'deferred'])
+const ClosingHandoffFields = {
+  title: z.string().min(1),
+  entryPoint: z.string().min(1),
+  context: z.string().min(1),
+  whyNow: z.string().min(1),
+  outcome: z.string().min(1),
+  nextCheck: z.string().min(1),
+  factCitations: z.array(CitationSchema).min(1),
+  goalCitations: z.array(CitationSchema).min(1),
+}
+export const ClosingActionSchema = z.object({
+  kind: z.literal('action'),
+  actionKey: z.string().min(1),
+  ...ClosingHandoffFields,
+}).strict()
+export const ClosingCheckpointSchema = z.object({
+  kind: z.literal('checkpoint'),
+  target: z.string().url(),
+  ...ClosingHandoffFields,
+}).strict()
+export const ClosingOptionSchema = z.discriminatedUnion('kind', [ClosingActionSchema, ClosingCheckpointSchema])
+export const ClosingPromptSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('options'), options: z.array(ClosingOptionSchema).min(1).max(5) }).strict(),
+  z.object({
+    kind: z.literal('needs-evidence'),
+    question: z.string().min(1),
+    missingEvidence: z.string().min(1),
+    nextCheck: z.string().min(1),
+  }).strict(),
+])
+export type ClosingCheckpoint = z.infer<typeof ClosingCheckpointSchema>
+export type ClosingOption = z.infer<typeof ClosingOptionSchema>
+export type ClosingPrompt = z.infer<typeof ClosingPromptSchema>
 export const ActionDecisionSchema = z.object({
   roundId: digest,
   articleDate: date,
@@ -50,6 +83,7 @@ export const ArticleActionSchema = z.object({
   roundId: digest,
   reviewCycle: ActionReviewCycleSchema.optional(),
   actionKeys: z.array(z.string()),
+  closing: ClosingPromptSchema.optional(),
   stateDigest: digest,
   verification: z.object({ proposer: z.string(), verifier: z.string(), promptVersion: z.string(), proposalSha256: digest, verdicts: z.array(z.object({ item: z.string(), verdict: z.enum(['pass', 'reject', 'hold']), reason: z.string() }).strict()) }).strict(),
   sources: z.array(ActionSourceSchema),
@@ -57,6 +91,7 @@ export const ArticleActionSchema = z.object({
   binding: z.object({ mode: z.literal('editorial-rebind'), fromDigest: digest, actor: z.string().min(1), instructionSha256: digest }).strict().optional(),
 }).strict().superRefine((article, context) => {
   if ([ACTION_REVIEW_PROMPT_VERSION, 'action-review-pending-v2-cycle'].includes(article.verification.promptVersion) && !article.reviewCycle) context.addIssue({ code: 'custom', message: `Action review cycle is missing: ${article.date}` })
+  if (article.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && article.review.state === 'verified' && !article.closing) context.addIssue({ code: 'custom', message: `Closing prompt is missing: ${article.date}` })
 })
 export const ActionRegistrySchema = z.object({
   schemaVersion: z.literal(1),
@@ -71,6 +106,17 @@ export const ActionRegistrySchema = z.object({
   for (const article of registry.articles) {
     if (article.review.state === 'pending' && article.status !== 'draft') context.addIssue({ code: 'custom', message: `Pending action review cannot publish: ${article.date}` })
     if (new Set(article.actionKeys).size !== article.actionKeys.length || article.actionKeys.some(key => !keys.includes(key))) context.addIssue({ code: 'custom', message: `Invalid action references for ${article.date}` })
+    if (article.closing?.kind === 'options') {
+      const optionKeys = article.closing.options.flatMap(option => option.kind === 'action' ? [option.actionKey] : [])
+      if (new Set(optionKeys).size !== optionKeys.length || optionKeys.some(key => !article.actionKeys.includes(key))) context.addIssue({ code: 'custom', message: `Invalid closing action references for ${article.date}` })
+      for (const key of optionKeys) {
+        const record = registry.records.find(item => item.key === key)
+        const state = record?.history.find(decision => decision.articleDate === article.date && decision.roundId === article.roundId)?.state
+        if (!state || !['open', 'proposed', 'deferred'].includes(state)) context.addIssue({ code: 'custom', message: `Resolved action cannot be a closing option: ${key}` })
+      }
+      const targets = article.closing.options.flatMap(option => option.kind === 'checkpoint' ? [option.target] : [])
+      if (new Set(targets).size !== targets.length) context.addIssue({ code: 'custom', message: `Duplicate closing checkpoint for ${article.date}` })
+    }
   }
   for (const record of registry.records) {
     if (record.origin === 'imported' && record.admission) context.addIssue({ code: 'custom', message: `Imported action cannot acquire an admission cycle: ${record.key}` })

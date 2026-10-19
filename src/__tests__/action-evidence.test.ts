@@ -6,6 +6,10 @@ const { github } = vi.hoisted(() => ({ github: vi.fn() }))
 vi.mock('node:child_process', () => ({ execFileSync: github }))
 import { collectActionSources } from '../review-actions.js'
 import { ActionRegistrySchema } from '../action-registry.js'
+import { buildUserPrompt } from '../generate-article.js'
+import { acceptedClosingContinuityTargets } from '../collect-context.js'
+import { selectActionEvidence } from '../action-evidence-selection.js'
+import type { BlogContext } from '../types.js'
 
 const registry = ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
 
@@ -39,6 +43,53 @@ it('keeps public repository discovery and explicitly opted-in private repository
   const sources = collectActionSources({ registry, repoRoot: root, markdown: 'Inspect https://github.com/ojfbot/new-public/issues/1 and https://github.com/ojfbot/core/issues/1.', feedback: '' })
   expect(sources.filter(source => source.kind === 'github')).toHaveLength(2)
   expect(github.mock.calls.some(([, args]) => args.at(-1) === 'repos/ojfbot/core')).toBe(false)
+})
+
+it('collects accepted continuity targets before a saturated current-action reference set', () => {
+  const root = mkdtempSync(join(tmpdir(), 'action-continuity-priority-')); roots.push(root)
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
+  github.mockImplementation((_command, args: string[]) => {
+    const endpoint = args.at(-1)
+    if (endpoint?.includes('/comments')) return JSON.stringify([[]])
+    if (endpoint?.includes('/issues/')) return JSON.stringify([{ state: 'open' }])
+    return '[]'
+  })
+  const previousArticles: BlogContext['previousArticles'] = [{
+    date: '2026-10-19', excerpt: 'Prior article.', closingContinuity: {
+      status: 'available', version: 'accepted-closing-continuity-v1',
+      source: { articleBlobSha: 'a'.repeat(40), articleDigest: 'b'.repeat(64), roundId: 'c'.repeat(64), promptVersion: 'action-review-v10-protected-scope-closing-options' },
+      optionCount: 2, omittedOptionCount: 0,
+      options: ['386', '385'].map(number => ({
+        kind: 'checkpoint' as const, target: `https://github.com/ojfbot/daily-logger/issues/${number}`,
+        title: `Revalidate #${number}`, entryPoint: 'Open current primary evidence.', context: 'Historical context.',
+        whyNow: 'A fresh check is required.', outcome: 'Determine current state.', nextCheck: 'Retain the hold unless current evidence supports renewal.',
+        evidencePointers: [`github:daily-logger#${number}`], review: { verdict: 'pass' as const, reason: 'Historically verified.' },
+      })),
+    },
+  }]
+  const context = buildUserPrompt({ date: '2026-10-20', repos: [], commits: [], mergedPRs: [], openPRs: [], recentPRs: [], closedIssues: [], openIssues: [], openActions: [], projectVision: '', previousArticles })
+  const markdown = `---\ndate: 2026-10-20\nstatus: draft\n---\n\n## What's next\n\n${Array.from({ length: 13 }, (_, index) => `https://github.com/ojfbot/daily-logger/issues/${700 + index}`).join('\n')}`
+  const sources = collectActionSources({ registry, repoRoot: root, markdown, feedback: '', context, continuityTargets: acceptedClosingContinuityTargets(previousArticles) })
+  const collected = sources.filter(source => source.kind === 'github').map(source => source.id.replace(/@[a-f0-9]{64}$/, ''))
+
+  expect(collected).toHaveLength(12)
+  expect(collected.slice(0, 2)).toEqual(['github:daily-logger#386', 'github:daily-logger#385'])
+  expect(collected).not.toContain('github:daily-logger#710')
+  expect(() => selectActionEvidence({ registry, articleDate: '2026-10-20', markdown, feedback: '', sources })).toThrow(/Required action evidence unavailable.*daily-logger#710/)
+})
+
+it('fails closed with explicit accounting when accepted continuity alone exceeds the fetch cap', () => {
+  const root = mkdtempSync(join(tmpdir(), 'action-continuity-omission-')); roots.push(root)
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
+  github.mockImplementation((_command, args: string[]) => args.at(-1)?.includes('/comments')
+    ? JSON.stringify([[]])
+    : args.at(-1)?.includes('/issues/') ? JSON.stringify([{ state: 'open' }]) : '[]')
+  const markdown = '---\ndate: 2026-10-20\nstatus: draft\n---\n\n## What\'s next\n\nNo current target.'
+  const sources = collectActionSources({ registry, repoRoot: root, markdown, feedback: '', context: '',
+    continuityTargets: Array.from({ length: 13 }, (_, index) => `https://github.com/ojfbot/daily-logger/issues/${600 + index}`) })
+
+  expect(sources.find(source => source.id.startsWith('continuity-evidence-budget@'))?.content).toContain('daily-logger#612')
+  expect(() => selectActionEvidence({ registry, articleDate: '2026-10-20', markdown, feedback: '', sources })).toThrow(/Required action evidence unavailable.*daily-logger#612/)
 })
 
 it('marks only current API facts and member-authored body/diff text as terminal evidence (F12r)', () => {

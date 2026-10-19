@@ -6,7 +6,7 @@ const { github } = vi.hoisted(() => ({ github: vi.fn() }))
 vi.mock('node:child_process', () => ({ execFileSync: github }))
 import { ActionRegistrySchema, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
 import { writeActionStore } from './action-store-fixture.js'
-import { ACTION_EVIDENCE_SELECTION_VERSION, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from '../action-evidence-selection.js'
+import { ACTION_EVIDENCE_SELECTION_VERSION, actionEvidenceScope, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from '../action-evidence-selection.js'
 import { revisionActionCycle } from '../action-review-cycle.js'
 import { collectActionSources, reviewArticleActions, reviewDraftActions } from '../review-actions.js'
 
@@ -36,6 +36,18 @@ function fixture(options: { markdown?: string; feedback?: string; acceptedPrevie
   return { root, sources, ownerGate, completion }
 }
 function input(sources: ActionSource[]) { return { registry: empty(), articleDate: date, cycle: revisionActionCycle('offline-source-selection-control'), articleStatuses: new Map([[date, 'draft']]), markdown, feedback: '', sources } }
+
+it('revalidates a carried closing checkpoint even after authored next-step prose changes', () => {
+  const registry = empty()
+  registry.articles.push({
+    date, status: 'draft', review: { state: 'verified' }, articleDigest: 'd'.repeat(64), roundId: 'e'.repeat(64), actionKeys: [],
+    closing: { kind: 'options', options: [{ kind: 'checkpoint', title: 'Review the current pilot', target: 'https://github.com/ojfbot/daily-logger/pull/385', entryPoint: 'Open the current PR.', context: 'The prior review retained a human gate.', whyNow: 'The gate is unresolved.', outcome: 'Close the pilot evidence gap.', nextCheck: 'Record the visual verdict.', factCitations: [{ sourceId: 'github:daily-logger#385@' + 'a'.repeat(64), quote: 'CURRENT API STATE daily-logger#385: state=open.' }], goalCitations: [{ sourceId: 'github:daily-logger#385@' + 'a'.repeat(64), quote: 'Human visual acceptance remains required.' }] }] },
+    stateDigest: sha256('empty'), verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'legacy-closing-fixture', proposalSha256: 'f'.repeat(64), verdicts: [] }, sources: [], rejected: [],
+  })
+  const revised = `---\ndate: ${date}\nstatus: draft\n---\n## What's next\nThe authored prose no longer repeats a PR number.\n`
+
+  expect(actionEvidenceScope({ registry, articleDate: date, markdown: revised, feedback: '' }).refs).toEqual(new Set(['daily-logger#385']))
+})
 
 it.each(['feedback', 'next-actions'])('follows an older action explicitly named in %s through collector, whole-source selection and both closure prompts', async location => {
   const key = 'old-owned-action'

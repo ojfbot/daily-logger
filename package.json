@@ -27,7 +27,8 @@
     "eval": "tsx evals/run.ts",
     "eval:test": "vitest run --config evals/vitest.config.ts",
     "actions:rebind": "tsx scripts/rebind-actions.ts",
-    "check:action-size": "tsx scripts/check-action-size.ts"
+    "check:action-size": "tsx scripts/check-action-size.ts",
+    "check:shipment-times": "tsx scripts/check-shipment-time-coverage.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
