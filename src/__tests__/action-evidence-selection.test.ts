@@ -1,0 +1,136 @@
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, expect, it, vi } from 'vitest'
+const { github } = vi.hoisted(() => ({ github: vi.fn() }))
+vi.mock('node:child_process', () => ({ execFileSync: github }))
+import { ActionRegistrySchema, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionSource } from '../action-registry.js'
+import { writeActionStore } from './action-store-fixture.js'
+import { actionReviewIndex, COVERAGE_SOURCE, selectActionEvidence } from '../action-evidence-selection.js'
+import { collectActionSources, reviewArticleActions, reviewDraftActions } from '../review-actions.js'
+
+const date = '2030-01-01'
+const empty = () => ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
+const markdown = `---\ndate: ${date}\nstatus: draft\n---\n## What shipped\n${Array.from({ length: 10 }, (_, i) => `https://github.com/ojfbot/daily-logger/pull/${i + 1}`).join('\n')}\n## What's next\nReview daily-logger #385 and daily-logger #386.\n`
+const roots: string[] = []
+afterEach(() => { roots.splice(0).forEach(root => rmSync(root, { recursive: true, force: true })); vi.restoreAllMocks(); github.mockReset() })
+
+function fixture() {
+  const root = mkdtempSync(join(tmpdir(), 'action-selection-')); roots.push(root)
+  const ownerGate = 'OWNER GATE: human visual acceptance is required before merge.'
+  const middle = Array.from({ length: 201 }, (_, i) => ({ author_association: i === 100 ? 'OWNER' : 'NONE', body: i === 100 ? ownerGate : `Comment ${i}: ${'背景🙂 '.repeat(15)}` }))
+  github.mockImplementation((_command, args: string[], options: { timeout: number }) => {
+    expect(args.slice(0, 3)).toEqual(['api', '--paginate', '--slurp'])
+    expect(options.timeout).toBeGreaterThan(0); expect(options.timeout).toBeLessThanOrEqual(10000)
+    const endpoint = args.at(-1) ?? ''
+    if (endpoint.includes('/contents/')) return JSON.stringify([{ type: 'file', sha: 'a'.repeat(40), encoding: 'base64', content: Buffer.from('Goal: reliable evidence-backed queue and article decisions.').toString('base64') }])
+    if (/\/issues\/\d+$/.test(endpoint)) return JSON.stringify([{ state: 'open', author_association: 'OWNER', body: 'The exact obligation remains open.' }])
+    if (endpoint.includes('/comments')) return JSON.stringify([middle])
+    throw new Error(`Unexpected fake GitHub endpoint: ${endpoint}`)
+  })
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
+  const sources = collectActionSources({ repoRoot: root, markdown, feedback: '' })
+  return { root, sources, ownerGate }
+}
+function input(sources: ActionSource[]) { return { registry: empty(), articleDate: date, articleStatuses: new Map([[date, 'draft']]), markdown, feedback: '', sources } }
+
+it('runs full collector→selection→both prompt paths with twelve oversized discussions, preserving an older owner gate', async () => {
+  const { root, sources, ownerGate } = fixture()
+  expect(sources.reduce((total, source) => total + Buffer.byteLength(source.content), 0)).toBeGreaterThan(384 * 1024)
+  const prompts: string[] = []
+  const result = await reviewArticleActions({ ...input(sources), agents: {
+    propose: async (prompt, selected) => {
+      prompts.push(prompt)
+      expect(selected.filter(source => source.kind === 'github')).toHaveLength(2)
+      for (const source of selected.filter(source => source.kind === 'github')) {
+        expect(source.content).toContain(ownerGate)
+        expect(source.trustedContent).toContain(ownerGate)
+        expect(source.content).toContain('Comment 0:'); expect(source.content).toContain('Comment 200:')
+      }
+      return { changes: [], suggestions: [] }
+    }, verify: async prompt => { prompts.push(prompt); return { changes: [], suggestions: [] } },
+  } })
+  expect(prompts).toHaveLength(2)
+  expect(prompts.every(prompt => Buffer.byteLength(prompt) < 640 * 1024)).toBe(true)
+  const retained = result.registry.articles[0].sources.find(source => source.id.startsWith(COVERAGE_SOURCE))
+  expect(retained).toBeDefined()
+  const selection = selectActionEvidence(input(sources))
+  expect(retained?.content).toBe(JSON.stringify(selection.receipt))
+  writeActionStore(root, empty())
+  writeActionRegistry(root, result.registry, registryRevision(empty()))
+  const datedBytes = readFileSync(join(root, `actions/articles/${date}.json`), 'utf8')
+  expect(Buffer.byteLength(datedBytes)).toBeLessThanOrEqual(64 * 1024)
+  expect(readActionRegistry(root).articles[0].sources.find(source => source.id === retained?.id)).toEqual(retained)
+  expect(selection.receipt.sources.filter(source => source.kind === 'github' && !source.included)).toHaveLength(10)
+  for (const item of selection.receipt.sources) expect(item.fullContentSha256).toBe(sha256(sources.find(source => source.id === item.id)?.content ?? ''))
+  const retry = await reviewArticleActions({ ...input([...sources].reverse()), registry: result.registry, markdown: result.markdown, agents: {
+    propose: async () => { throw new Error('Cached retry called proposer') }, verify: async () => { throw new Error('Cached retry called verifier') },
+  } })
+  expect(retry.cached).toBe(true)
+  expect(retry.registry).toEqual(result.registry)
+})
+
+it.each(['missing', 'excerpt', 'oversized-unicode'])('keeps %s required evidence pending before either model call', async mode => {
+  const { sources } = fixture()
+  const required = sources.find(source => source.id.startsWith('github:daily-logger#385@'))
+  if (!required) throw new Error('Missing fixture source')
+  const changed = sources.filter(source => source !== required)
+  if (mode !== 'missing') {
+    const content = mode === 'excerpt' ? 'An incomplete excerpt.' : '🙂'.repeat(33 * 1024)
+    changed.push({ ...required, id: mode === 'excerpt' ? required.id : `github:daily-logger#385@${sha256(content)}`, content,
+      fullContentSha256: mode === 'excerpt' ? sha256(required.content) : sha256(content) })
+  }
+  const calls = vi.fn()
+  const result = await reviewDraftActions({ ...input(changed), agents: { propose: async () => { calls(); return {} }, verify: async () => { calls(); return {} } } })
+  expect(calls).not.toHaveBeenCalled()
+  expect(result.registry.records).toEqual([])
+  expect(result.registry.articles[0].review.state).toBe('pending')
+  expect(result.markdown).toContain('Action review pending')
+})
+
+it('omits an oversized irrelevant source without silently truncating or treating it as negative evidence', () => {
+  const { sources } = fixture()
+  const source: ActionSource = { id: 'github:core#999', kind: 'github', locator: 'https://github.com/ojfbot/core/issues/999', content: '🙂'.repeat(80 * 1024) }
+  const selected = selectActionEvidence(input([...sources, source]))
+  expect(selected.sources.some(item => item.id === source.id)).toBe(false)
+  expect(selected.receipt.sources.find(item => item.id === source.id)).toMatchObject({ included: false, fullContentSha256: sha256(source.content), reason: 'outside current action/feedback scope' })
+  expect(selected.receipt.authority).toContain('cannot justify completion')
+})
+
+it('rejects conflicting full source identities at the review boundary rather than selecting a version by input order', async () => {
+  const { sources } = fixture()
+  const conflicting = [...sources, { ...sources[0], content: 'Contradictory collection.' }]
+  expect(() => selectActionEvidence(input(conflicting))).toThrow(/Conflicting action evidence identity/)
+  const calls = vi.fn()
+  await expect(reviewArticleActions({ ...input(conflicting), agents: { propose: async () => { calls(); return {} }, verify: async () => { calls(); return {} } } })).rejects.toThrow(/Conflicting action evidence identity/)
+  expect(calls).not.toHaveBeenCalled()
+})
+
+it('keeps all 216 identities, 138 held records and protected/inclusion gates in compact global context', () => {
+  const registry = readActionRegistry(process.cwd())
+  const index = actionReviewIndex({ registry, articleDate: date, articleStatuses: new Map(), expandedActionKeys: [] })
+  expect(index.actions).toHaveLength(216); expect(index.held).toHaveLength(138)
+  expect(index.actions.map(record => record.workKey)).toEqual(registry.records.map(record => record.workKey))
+  expect(index.actions.filter(record => record.protected)).toHaveLength(3)
+  for (const record of registry.records) {
+    const item = index.actions.find(item => item.key === record.key)
+    expect(item?.includeInIndex).toBe(record.includeInIndex)
+    expect(item?.inclusionOverride).toEqual(record.inclusionOverride)
+    if (record.gates.length) expect(item).toHaveProperty('gates', record.gates)
+  }
+})
+
+it('refuses a terminal disposition supported only by the coverage index, even if both agents pass it', async () => {
+  const { sources } = fixture()
+  const registry = empty()
+  registry.records.push({ key: 'carried', original: { id: 'carried', command: '/review', description: 'Inspect daily-logger #385.', repo: 'daily-logger', status: 'open', sourceDate: date }, origin: 'imported', workKey: 'existing', state: 'open', introducedBy: date, includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: 'Owner accepts the preview.', gates: ['Human acceptance required.'], history: [] })
+  const result = await reviewDraftActions({ ...input(sources), registry, agents: {
+    propose: async (_prompt, selected) => {
+      const coverage = selected.find(source => source.locator === 'whole-action-sources-v1')
+      if (!coverage) throw new Error('Missing coverage')
+      return { changes: [{ actionKey: 'carried', state: 'done', description: 'Completed.', reason: 'The index exists.', citations: [{ sourceId: coverage.id, quote: 'Missing or omitted content is unknown' }] }], suggestions: [] }
+    }, verify: async () => ({ changes: [{ actionKey: 'carried', verdict: 'pass', reason: 'Index says unknown.' }], suggestions: [] }),
+  } })
+  expect(result.registry.articles[0].review.state).toBe('pending')
+  expect(result.registry.records[0]).toEqual(registry.records[0])
+})

@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { isReviewedAction } from './action-model.js'
 import { ACTION_REVIEW_PROMPT_VERSION, ActionReviewCycleSchema, actionAdmissionLimit, countCycleAdmissions, type ActionReviewCycle } from './action-review-cycle.js'
+import { ACTION_EVIDENCE_SELECTION_VERSION, actionReviewIndex, COVERAGE_SOURCE, selectActionEvidence } from './action-evidence-selection.js'
 import { EXCLUDED_REPOS, KNOWN_REPOS, REPO_NOTES, classifyFleet } from './fleet.js'
 import {
   ActionRegistrySchema, CitationSchema, managedArticleDigest, normalizeWorkKey,
@@ -83,12 +84,15 @@ export function createActionAgents(): ActionAgents {
     const unsupported = new Set(['$schema', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'minLength', 'maxLength', 'maxItems'])
     const wireSchema = z.record(z.string(), z.unknown()).parse(JSON.parse(JSON.stringify(z.toJSONSchema(schema), (key, value) => unsupported.has(key) ? undefined : value)))
     const tool = { name: 'review_actions', description: 'Return the structured action review.', strict: true, input_schema: { ...wireSchema, type: 'object' as const } }
-    const response = await client.messages.create({
+    const request = {
       model: role === 'proposer' ? 'claude-sonnet-4-6' : 'claude-opus-4-6', max_tokens: 12000,
       system: `${RULES}\nYou are the independent action ${role}. ${role === 'verifier' ? 'Check every proposed disposition and candidate against the actual sources. The proposer rationale is not evidence. Reject unsupported conclusions, duplicate work, mandatory architecture work presented without authority, omitted owner gates, and inappropriate commands. Return a verdict for every item. Do not invent replacements.' : 'Return structured dispositions and candidates with exact source quotes. Existing work can remain open without a change record.'}`,
       tools: [tool],
-      tool_choice: { type: 'tool', name: 'review_actions' }, messages: [{ role: 'user', content: prompt }],
-    })
+      tool_choice: { type: 'tool' as const, name: 'review_actions' }, messages: [{ role: 'user' as const, content: prompt }],
+    }
+    const requestBytes = Buffer.byteLength(JSON.stringify(request), 'utf8')
+    if (requestBytes > 640 * 1024) throw new Error(`Complete action provider request exceeds 640 KiB (${requestBytes} bytes); review pending`)
+    const response = await client.messages.create(request)
     console.warn(`Action ${role}: stop=${response.stop_reason}; output_tokens=${response.usage?.output_tokens ?? 'unavailable'}`)
     if (response.stop_reason !== 'tool_use') throw new Error(`Action ${role} did not finish its structured review (${response.stop_reason})`)
     const result = response.content.find(block => block.type === 'tool_use')
@@ -301,10 +305,10 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   }
   // Git retains prior rounds; the dated working state retains only this round.
   for (const record of next.records) record.history = record.history.filter(decision => decision.articleDate !== input.articleDate || decision.roundId === input.roundId)
-  const usedSources = new Set(next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.map(citation => citation.sourceId))))
+  const usedSources = new Set([...next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.map(citation => citation.sourceId))), ...input.sources.filter(source => source.id.startsWith(`${COVERAGE_SOURCE}@`)).map(source => source.id)])
   const retainedSources = [...new Map([...(previous?.sources ?? []), ...input.sources.filter(source => usedSources.has(source.id))].map(source => [source.id, source])).values()].filter(source => usedSources.has(source.id)).map(source => {
     const quotes = [...new Set(next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.filter(citation => citation.sourceId === source.id).map(citation => citation.quote))))]
-    return { id: source.id, kind: source.kind, locator: source.locator, content: quotes.join('\n\n'), fullContentSha256: source.fullContentSha256 ?? sha256(source.content) }
+    return { id: source.id, kind: source.kind, locator: source.locator, content: source.id.startsWith(`${COVERAGE_SOURCE}@`) ? source.content : quotes.join('\n\n'), fullContentSha256: source.fullContentSha256 ?? sha256(source.content) }
   })
   const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], stateDigest: actionStateDigest(next, [...keys]), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256: sha256(JSON.stringify(input.proposal)), verdicts: [...input.verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...input.verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason }))] }, sources: retainedSources, rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
   next.articles = [...next.articles.filter(article => article.date !== input.articleDate), snapshot]
@@ -320,8 +324,11 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   input = { ...input, articleStatuses: new Map(input.articleStatuses).set(input.articleDate, input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft') }
   const previous = input.registry.articles.find(article => article.date === input.articleDate)
   input = { ...input, sources: [...new Map(input.sources.map(source => [source.id.replace(/@[a-f0-9]{64}$/, ''), source])).values()].sort((a, b) => a.id.localeCompare(b.id)) }
-  const inputHash = sha256(JSON.stringify({ version: ACTION_REVIEW_PROMPT_VERSION, cycle: input.cycle, statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
+  const inputHash = sha256(JSON.stringify({ version: ACTION_REVIEW_PROMPT_VERSION, evidenceSelectionVersion: ACTION_EVIDENCE_SELECTION_VERSION, cycle: input.cycle, statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
+
   if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === inputHash && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys)) return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true }
+  const selection = selectActionEvidence(input)
+  input = { ...input, sources: selection.sources }
   const byteLength = (value: string) => Buffer.byteLength(value, 'utf8')
   if (input.sources.some(source => byteLength(source.content) > 128 * 1024) || input.sources.reduce((total, source) => total + byteLength(source.content), 0) > 384 * 1024) throw new Error('Action evidence exceeds its source budget (128 KiB each / 384 KiB total); review pending')
   const sourceAliases = new Map(input.sources.map((source, index) => [`s${index + 1}`, source.id]))
@@ -330,9 +337,8 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   const context = JSON.stringify({ articleDate: input.articleDate, reviewCycle: input.cycle, newIdentityLimit: actionAdmissionLimit(input.cycle), remainingNewIdentitySlots: Math.max(0, actionAdmissionLimit(input.cycle) - countCycleAdmissions(input.registry.records.filter(record => record.origin === 'suggested' && record.introducedBy === input.articleDate), input.cycle)), articleStatuses: Object.fromEntries(input.articleStatuses),
     sources: modelSources.map(({ trustedContent, ...source }) => ({ ...source, authoritativeLines: source.kind === 'github' ? source.content.split('\n').flatMap((line, index) => line.trim() && trustedContent?.some(text => text.includes(line)) ? [index + 1] : []) : source.kind === 'repository' ? 'repository source' : source.kind === 'instruction' ? 'operator instruction' : 'context only', content: source.content.split('\n').map((line, index) => `L${index + 1}: ${line}`).join('\n') })),
     citationPolicy: { rule: 'Every quote must be exact. Completion, dismissal and supersession require every citation to be authoritative API/OWNER/MEMBER/COLLABORATOR text or repository evidence. Dismissal also permits explicit operator feedback. Article-only claims, metadata and third-party comments never establish terminal dispositions. Do not include source aliases or line labels in user-facing reasons.' },
-    actions: input.registry.records.map(record => ({ key: record.key, workKey: record.workKey, repo: record.original.repo, description: record.history.filter(decision => input.articleStatuses.get(decision.articleDate) === 'accepted' && input.registry.articles.some(article => article.date === decision.articleDate && article.status === 'accepted' && article.roundId === decision.roundId)).at(-1)?.description ?? record.original.description, doneWhen: record.doneWhen, gates: record.gates, state: acceptedActionState(record, input.articleStatuses, input.registry), ...(currentActionKeys.includes(record.key) ? { goal: record.goal, latestDecision: record.history.at(-1) } : {}) })),
-    held: input.registry.baseline.heldSuggestions.map(held => ({ date: held.sourceDate, fingerprint: held.suggestionLineSha256, suggestion: held.suggestion })),
-    previousRejections: previous?.rejected ?? [], rejectionMemory: [...new Map(input.registry.articles.flatMap(article => article.rejected).filter(item => item.workKey).map(item => [JSON.stringify([item.workKey, item.evidenceDigest, item.quotaHold]), { workKey: item.workKey, evidenceDigest: item.evidenceDigest, ...(item.quotaHold ? { quotaHold: item.quotaHold } : {}) }])).values()], currentActionKeys })
+    ...actionReviewIndex({ ...input, expandedActionKeys: selection.expandedActionKeys }),
+    previousRejections: previous?.rejected ?? [], currentActionKeys })
   if (byteLength(context) > 640 * 1024) throw new Error('Action prompt exceeds 640 KiB; review pending')
   const boundedPrompt = (prompt: string) => { if (byteLength(prompt) > 640 * 1024) throw new Error('Action prompt exceeds 640 KiB; review pending'); return prompt }
   let correction = ''
