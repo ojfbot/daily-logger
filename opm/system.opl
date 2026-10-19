@@ -190,3 +190,12 @@ Editorial Output Binding yields Editorial Output Artifact. [src: scripts/write-a
 Explicit Revision Admitting requires Editorial Output Artifact. [src: .github/scripts/editorial-action-registry.ts]
 Editorial Rebinding requires Article. [src: src/action-registry.ts]
 Editorial Rebinding affects Article Action Files. [src: src/action-registry.ts]
+
+Action Reconciling invokes Source Evidence Selecting. [src: src/review-actions.ts]
+Source Evidence Selecting requires Article. [src: src/action-evidence-selection.ts]
+Source Evidence Selecting requires Action Registry. [src: src/action-evidence-selection.ts]
+Source Evidence Selecting requires Source Evidence. [src: src/action-evidence-selection.ts]
+Source Evidence Selecting yields Selected Source Evidence. [src: src/action-evidence-selection.ts]
+Source Evidence Selecting yields Evidence Coverage. [src: src/action-evidence-selection.ts]
+Suggestion Proposing requires Selected Source Evidence. [src: src/review-actions.ts]
+Suggestion Verifying requires Selected Source Evidence. [src: src/review-actions.ts]

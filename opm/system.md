@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `49e25580c7e9c5a201842cbb516d70b307c8be6c5354dcb27e93c1893ca1c6a3`.
+> Source SHA-256: `bc7103a23864fe231a02d110ada01888d89ff88eb8988706c5f22dcdf846e6e8`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -57,7 +57,7 @@ flowchart TD
   n83["Article Action Files — states: pending, verified"]
   n31("Inclusion Choosing")
   n32["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
-  n88["Canonical Actions"]
+  n91["Canonical Actions"]
   n33["JSON API"]
   n34("Frontend Rendering")
   n35["Rendered Site"]
@@ -68,8 +68,8 @@ flowchart TD
   n40["Revision Request"]
   n41("Conversation Saving")
   n42["Saved Message"]
-  n89["Review Records"]
-  n90["Correspondence"]
+  n92["Review Records"]
+  n93["Correspondence"]
   n43["Time Record Pointer"]
   n44("Time Recording")
   n45["Commit Context"]
@@ -134,7 +134,7 @@ flowchart TD
   n4 -->|"requires (instrument)"| n31
   n31 <-->|"affects"| n22
   n18 -->|"handles (human)"| n31
-  n88 -->|"part of"| n13
+  n91 -->|"part of"| n13
   n32 -->|"part of"| n13
   n20 -->|"invokes"| n21
   n13 -->|"requires (instrument)"| n20
@@ -156,8 +156,8 @@ flowchart TD
   n38 -->|"requires (instrument)"| n41
   n41 -->|"yields"| n42
   n41 <-->|"affects"| n4
-  n89 -->|"part of"| n38
-  n90 -->|"part of"| n38
+  n92 -->|"part of"| n38
+  n93 -->|"part of"| n38
   n0 -->|"exhibits"| n43
   n0 -->|"requires (instrument)"| n44
   n45 -->|"requires (instrument)"| n44
@@ -462,6 +462,12 @@ flowchart TD
   n85("Editorial Output Binding")
   n86["Editorial Output Artifact"]
   n87("Editorial Rebinding")
+  n88("Source Evidence Selecting")
+  n25["Source Evidence"]
+  n89["Selected Source Evidence"]
+  n90["Evidence Coverage"]
+  n26("Suggestion Proposing")
+  n27("Suggestion Verifying")
   n4 -->|"requires (instrument)"| n71
   n36 -->|"requires (instrument)"| n71
   n71 -->|"yields"| n72
@@ -488,6 +494,14 @@ flowchart TD
   n86 -->|"requires (instrument)"| n76
   n0 -->|"requires (instrument)"| n87
   n87 <-->|"affects"| n83
+  n23 -->|"invokes"| n88
+  n0 -->|"requires (instrument)"| n88
+  n22 -->|"requires (instrument)"| n88
+  n25 -->|"requires (instrument)"| n88
+  n88 -->|"yields"| n89
+  n88 -->|"yields"| n90
+  n89 -->|"requires (instrument)"| n26
+  n89 -->|"requires (instrument)"| n27
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -520,4 +534,12 @@ Editorial Output Binding yields Editorial Output Artifact. [src: scripts/write-a
 Explicit Revision Admitting requires Editorial Output Artifact. [src: .github/scripts/editorial-action-registry.ts]
 Editorial Rebinding requires Article. [src: src/action-registry.ts]
 Editorial Rebinding affects Article Action Files. [src: src/action-registry.ts]
+Action Reconciling invokes Source Evidence Selecting. [src: src/review-actions.ts]
+Source Evidence Selecting requires Article. [src: src/action-evidence-selection.ts]
+Source Evidence Selecting requires Action Registry. [src: src/action-evidence-selection.ts]
+Source Evidence Selecting requires Source Evidence. [src: src/action-evidence-selection.ts]
+Source Evidence Selecting yields Selected Source Evidence. [src: src/action-evidence-selection.ts]
+Source Evidence Selecting yields Evidence Coverage. [src: src/action-evidence-selection.ts]
+Suggestion Proposing requires Selected Source Evidence. [src: src/review-actions.ts]
+Suggestion Verifying requires Selected Source Evidence. [src: src/review-actions.ts]
 ```

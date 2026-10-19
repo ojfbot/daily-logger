@@ -2,22 +2,26 @@ import { revisionActionCycle } from '../src/action-review-cycle.js'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { readActionRegistry, readArticleStatuses, ActionRegistrySchema, type ActionSource } from '../src/action-registry.js'
 import { reviewArticleActions } from '../src/review-actions.js'
+import { actionEvidenceScope } from '../src/action-evidence-selection.js'
 
 const FIXED_CONTEXT_LIMIT = 320 * 1024
 const date = '2026-10-17'
 
 void (async () => {
   const root = process.cwd(), receiptPath = process.argv[2]
+  const registry = readActionRegistry(root), markdown = readFileSync(`_articles/${date}.md`, 'utf8')
+  const feedback = 'Local context-size measurement only'
   const sources: ActionSource[] = receiptPath
     ? ActionRegistrySchema.parse(JSON.parse(readFileSync(receiptPath, 'utf8')).registry).articles[0].sources
-    : [{ id: 'budget-fixture', kind: 'repository', locator: 'check-action-size fixture', content: 'Receipt-free fixed-context budget probe.' }]
+    : [{ id: 'budget-fixture', kind: 'repository', locator: 'check-action-size fixture', content: 'Receipt-free fixed-context budget probe.' },
+      ...[...actionEvidenceScope({ registry, articleDate: date, markdown, feedback }).refs].map(ref => ({ id: `github:${ref}`, kind: 'github' as const,
+        locator: 'offline check-action-size fixture; not fetched GitHub evidence', content: 'Offline placeholder only. Both agents are injected measurements; no disposition is evaluated or applied.' }))]
   const prompts: number[] = []
   const measured = new Error('Both prompts captured; no provider called')
   try {
     await reviewArticleActions({ cycle: revisionActionCycle('budget-probe'),
-      registry: readActionRegistry(root), articleDate: date,
-      markdown: readFileSync(`_articles/${date}.md`, 'utf8'),
-      feedback: 'Local context-size measurement only', sources, articleStatuses: readArticleStatuses(root),
+      registry, articleDate: date, markdown,
+      feedback, sources, articleStatuses: readArticleStatuses(root),
       agents: {
         propose: async prompt => { prompts.push(Buffer.byteLength(prompt)); return { changes: [], suggestions: [] } },
         verify: async prompt => { prompts.push(Buffer.byteLength(prompt)); throw measured },

@@ -22,7 +22,8 @@ it('runs the receipt-free CI probe and fails when fixed action context grows bey
     expect(result.verifierPromptBytes).toBeLessThan(result.limits.fixedContext)
     expect(readFileSync(join(directory, 'actions/registry.json'), 'utf8')).toBe(before)
     const inflated = ActionRegistrySchema.parse(JSON.parse(before))
-    inflated.records[0].doneWhen += 'x'.repeat(100 * 1024)
+    // All identities remain global; irrelevant full-record fields now expand on demand.
+    inflated.records[0].workKey += 'x'.repeat(320 * 1024)
     writeFileSync(join(directory, 'actions/registry.json'), JSON.stringify(inflated))
     expect(run).toThrow(/Fixed action context exceeds 320 KiB/)
   } finally { rmSync(directory, { recursive: true, force: true }) }
