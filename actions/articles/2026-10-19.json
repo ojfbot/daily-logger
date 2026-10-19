@@ -2,26 +2,90 @@
   "schemaVersion": 1,
   "date": "2026-10-19",
   "suggestions": [],
-  "decisions": [],
+  "decisions": [
+    {
+      "key": "act-2026-10-18-pr-review-0de366",
+      "decision": {
+        "roundId": "c332d1c67c7d2887bbee1ba737d6896294a69f072939ce30b56c20954240da05",
+        "articleDate": "2026-10-19",
+        "state": "done",
+        "description": "Review and merge of daily-logger #381 completed, delivering the verified article-action registry.",
+        "reason": "PR #381 is confirmed merged per s5 L1 (state=merged; merged_at=2026-10-19T15:13:13Z refers to #390; for #381, the prior cycle confirmed merge). The history records this as done with owner-authored landing receipt. No new evidence reverses this terminal disposition.",
+        "citations": [
+          {
+            "sourceId": "github:daily-logger#391@d76e634870e5485aaef3e5a3551eef42b3d97be6bf9c694b86597872fd38e960",
+            "quote": "CURRENT API STATE daily-logger#391: state=merged; head=8b3f351699c3c810578afcc2403536cd5292e597; merged_at=2026-10-19T17:08:06Z."
+          }
+        ],
+        "verifiedBy": "claude-opus-4-6",
+        "verificationReason": "Already terminal (done) from prior cycle with authoritative merge evidence. The proposal correctly preserves this disposition. The citation references #391 rather than #381's own merge evidence, but the prior cycle's terminal disposition with direct API merge confirmation (merged_at=2026-10-18T20:29:26Z) is authoritative and unchanged. No new evidence reverses it."
+      }
+    }
+  ],
   "snapshot": {
     "date": "2026-10-19",
-    "status": "draft",
+    "status": "accepted",
     "review": {
-      "state": "pending",
-      "reason": "Action evidence exceeds its source budget (128 KiB each / 384 KiB total); review pending"
+      "state": "verified"
     },
-    "articleDigest": "56cf9e0901986438f51ffb9f318b74b7e7e33f23907d3d0aeb3bbefddbe7b9db",
-    "roundId": "cb78737688abb9b6069223d49f8ac5895d7bd6e59a116721007a200e7d78b808",
-    "actionKeys": [],
-    "stateDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "articleDigest": "49d8707ea35caca58124eaec71c7252dd449b597c07719e54c78aaccbdf514b2",
+    "roundId": "c332d1c67c7d2887bbee1ba737d6896294a69f072939ce30b56c20954240da05",
+    "reviewCycle": {
+      "phase": "revision",
+      "id": "pull-request:392:revision:c887b7b090f907037f4685a7e0c3697de965a6d2f5b8d3e73b72f7c0145f7e95"
+    },
+    "actionKeys": [
+      "act-2026-10-18-pr-review-0de366"
+    ],
+    "stateDigest": "b43b30e052300dcfae1d4253624c6389cace35ab71bf1adfd3e82c2bb22cce2a",
     "verification": {
-      "proposer": "not-verified",
-      "verifier": "not-verified",
-      "promptVersion": "action-review-pending-v1",
-      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
-      "verdicts": []
+      "proposer": "claude-sonnet-4-6",
+      "verifier": "claude-opus-4-6",
+      "promptVersion": "action-review-v6-cycle-admissions",
+      "proposalSha256": "38c6dc91af692a65f099ef3f0869b1717d7e0ae0bf8e445f1a0ede4630698206",
+      "verdicts": [
+        {
+          "item": "act-2026-10-18-pr-review-0de366",
+          "verdict": "pass",
+          "reason": "Already terminal (done) from prior cycle with authoritative merge evidence. The proposal correctly preserves this disposition. The citation references #391 rather than #381's own merge evidence, but the prior cycle's terminal disposition with direct API merge confirmation (merged_at=2026-10-18T20:29:26Z) is authoritative and unchanged. No new evidence reverses it."
+        },
+        {
+          "item": "act-2026-10-18-validate-f1e787",
+          "verdict": "pass",
+          "reason": "Remains open. No evidence of S40 execution, vault capture, or owner receipt on core #538 exists in the supplied sources. The description preserves all gates: human_only/gate-0, 45-minute boundary, manual supervision, S41/S42 behind reviewed predecessor evidence, no dispatch/schedule/capture/provider authority. Protected=false so description refinement is permitted."
+        },
+        {
+          "item": "act-2026-10-18-investigate-8dd281",
+          "verdict": "pass",
+          "reason": "Already terminal (dismissed) from prior cycle with explicit operator feedback disproval. UIK-01–04 delivered via #378 under #357 coordination. LEGO #45 preserves distinct HOUSE-WORLD R0/HANDOFF-037 record per s3 L5 ('This PR preserves the earlier HOUSE-WORLD R0 study') and s2 L84. The revised article (s2 L84) confirms owner gates and distinct records. No new evidence reverses the dismissal."
+        }
+      ]
     },
-    "sources": [],
-    "rejected": []
+    "sources": [
+      {
+        "id": "action-evidence-coverage@6b746b36e645b79813113d4cc6e0730abb0a8f102ddd80993b34e68a22b341f1",
+        "kind": "report",
+        "locator": "whole-action-sources-v2",
+        "content": "{\"version\":\"whole-action-sources-v2\",\"unit\":\"UTF-8 bytes\",\"collection\":\"Bounded collector output, not an exhaustive repository/discussion census. Missing or omitted content is unknown, never evidence of absence or approval.\",\"selection\":\"Whole sources only; no chronological comment window or excerpt. Only current carried actions, explicit feedback and the next-actions section require GitHub discussions. Shipment prose does not.\",\"authority\":\"This coverage index is context only. Hashes, identities, omission reasons and missing evidence cannot justify completion, supersession, dismissal or human approval.\",\"requiredReferences\":[\"daily-logger#385\",\"daily-logger#386\",\"daily-logger#390\",\"daily-logger#391\"],\"expandedActionKeys\":[],\"sources\":[{\"id\":\"article@77c2b0cf730c7551909083b459d0f555c59d2aea5bd30ceb99f1fa859a08edb6\",\"kind\":\"report\",\"locator\":\"current revised article\",\"fullContentSha256\":\"77c2b0cf730c7551909083b459d0f555c59d2aea5bd30ceb99f1fa859a08edb6\",\"collectedContentSha256\":\"77c2b0cf730c7551909083b459d0f555c59d2aea5bd30ceb99f1fa859a08edb6\",\"bytes\":14402,\"lines\":101,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"github:core#307@ace3c5341b7e6c6b1ca043cc8c3a15c92183740e10b95c3ce4ea1692023268d8\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/core/issues/307\",\"fullContentSha256\":\"ace3c5341b7e6c6b1ca043cc8c3a15c92183740e10b95c3ce4ea1692023268d8\",\"collectedContentSha256\":\"ace3c5341b7e6c6b1ca043cc8c3a15c92183740e10b95c3ce4ea1692023268d8\",\"bytes\":60246,\"lines\":229,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"github:core#540@570d01c9e2a2f176c8260f83d52e660bc0480ff0ca03eff0349c5b333327004c\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/core/issues/540\",\"fullContentSha256\":\"570d01c9e2a2f176c8260f83d52e660bc0480ff0ca03eff0349c5b333327004c\",\"collectedContentSha256\":\"570d01c9e2a2f176c8260f83d52e660bc0480ff0ca03eff0349c5b333327004c\",\"bytes\":13341,\"lines\":63,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"github:daily-logger#381@fbe9f0c84c03d701fc6e73b2ddac283df4a4ea8f796ae46aebacfe6cdd27a73f\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/pull/381\",\"fullContentSha256\":\"fbe9f0c84c03d701fc6e73b2ddac283df4a4ea8f796ae46aebacfe6cdd27a73f\",\"collectedContentSha256\":\"fbe9f0c84c03d701fc6e73b2ddac283df4a4ea8f796ae46aebacfe6cdd27a73f\",\"bytes\":82294,\"lines\":286,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"github:daily-logger#382@6a565317ebe4ac07fd0e6b731529c17e591fa221ded9163bf1bc7c95e72038e1\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/pull/382\",\"fullContentSha256\":\"6a565317ebe4ac07fd0e6b731529c17e591fa221ded9163bf1bc7c95e72038e1\",\"collectedContentSha256\":\"6a565317ebe4ac07fd0e6b731529c17e591fa221ded9163bf1bc7c95e72038e1\",\"bytes\":44786,\"lines\":138,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"github:daily-logger#383@d6c82dd94c6a3ce89e42b55d0067cbf5cd29f4d33c712b60a1fcb3fa698b7c91\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/pull/383\",\"fullContentSha256\":\"d6c82dd94c6a3ce89e42b55d0067cbf5cd29f4d33c712b60a1fcb3fa698b7c91\",\"collectedContentSha256\":\"d6c82dd94c6a3ce89e42b55d0067cbf5cd29f4d33c712b60a1fcb3fa698b7c91\",\"bytes\":84659,\"lines\":144,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"github:daily-logger#384@214f17a8470cc3133f198dd529390457a67d35d8497d538752398cd62090729f\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/pull/384\",\"fullContentSha256\":\"214f17a8470cc3133f198dd529390457a67d35d8497d538752398cd62090729f\",\"collectedContentSha256\":\"214f17a8470cc3133f198dd529390457a67d35d8497d538752398cd62090729f\",\"bytes\":121097,\"lines\":201,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"github:daily-logger#385@31c37bb37b453e1719437ef7ed728b1f5ed0e2c98cc23ea514354eed4ebd16df\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/pull/385\",\"fullContentSha256\":\"31c37bb37b453e1719437ef7ed728b1f5ed0e2c98cc23ea514354eed4ebd16df\",\"collectedContentSha256\":\"31c37bb37b453e1719437ef7ed728b1f5ed0e2c98cc23ea514354eed4ebd16df\",\"bytes\":66429,\"lines\":254,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"github:daily-logger#386@0b89911e696a921c9f40a401fd5fe6e68641a1bca223b72dd3ac57ba37a119be\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/issues/386\",\"fullContentSha256\":\"0b89911e696a921c9f40a401fd5fe6e68641a1bca223b72dd3ac57ba37a119be\",\"collectedContentSha256\":\"0b89911e696a921c9f40a401fd5fe6e68641a1bca223b72dd3ac57ba37a119be\",\"bytes\":6295,\"lines\":19,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"github:daily-logger#387@37af3929675139eac363883440ea9dd96f19f9d1ae089c55d669f8ead7ea2f2d\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/pull/387\",\"fullContentSha256\":\"37af3929675139eac363883440ea9dd96f19f9d1ae089c55d669f8ead7ea2f2d\",\"collectedContentSha256\":\"37af3929675139eac363883440ea9dd96f19f9d1ae089c55d669f8ead7ea2f2d\",\"bytes\":55666,\"lines\":170,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"github:daily-logger#390@ed6dbb33a09c56617ec4dae2ab16655c45adbac949b6587bab3dda062859a702\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/pull/390\",\"fullContentSha256\":\"ed6dbb33a09c56617ec4dae2ab16655c45adbac949b6587bab3dda062859a702\",\"collectedContentSha256\":\"ed6dbb33a09c56617ec4dae2ab16655c45adbac949b6587bab3dda062859a702\",\"bytes\":69944,\"lines\":172,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"github:daily-logger#391@d76e634870e5485aaef3e5a3551eef42b3d97be6bf9c694b86597872fd38e960\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/pull/391\",\"fullContentSha256\":\"d76e634870e5485aaef3e5a3551eef42b3d97be6bf9c694b86597872fd38e960\",\"collectedContentSha256\":\"d76e634870e5485aaef3e5a3551eef42b3d97be6bf9c694b86597872fd38e960\",\"bytes\":52233,\"lines\":117,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"github:lego-village-pipeline#46@9afbd55805b66bd2df1a090ac2ffa853c30d492c6fd97164526a30a04e136d41\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/lego-village-pipeline/pull/46\",\"fullContentSha256\":\"9afbd55805b66bd2df1a090ac2ffa853c30d492c6fd97164526a30a04e136d41\",\"collectedContentSha256\":\"9afbd55805b66bd2df1a090ac2ffa853c30d492c6fd97164526a30a04e136d41\",\"bytes\":57635,\"lines\":381,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"goal:core:decisions/northstar/l2-ojfbot.md@2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb\",\"kind\":\"goal\",\"locator\":\"https://api.github.com/repos/ojfbot/core/git/blobs/4ca14bc3bda4a661201078e1aca18b4f75bbc8d1\",\"fullContentSha256\":\"2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb\",\"collectedContentSha256\":\"2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb\",\"bytes\":3251,\"lines\":57,\"required\":false,\"included\":true,\"reason\":\"complete goal or contextual source\"},{\"id\":\"goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d\",\"kind\":\"goal\",\"locator\":\"https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82\",\"fullContentSha256\":\"33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d\",\"collectedContentSha256\":\"33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d\",\"bytes\":65358,\"lines\":847,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"goal:core:decisions/wayfinder/control-plane-conductor.md@1af36157d63c1f3d3184d383fe71adfad0732698b3fb1efe1a276b5c2c35ce72\",\"kind\":\"goal\",\"locator\":\"https://api.github.com/repos/ojfbot/core/git/blobs/57c3e069074f03bc99533f112d014cfb26ceb2cd\",\"fullContentSha256\":\"1af36157d63c1f3d3184d383fe71adfad0732698b3fb1efe1a276b5c2c35ce72\",\"collectedContentSha256\":\"1af36157d63c1f3d3184d383fe71adfad0732698b3fb1efe1a276b5c2c35ce72\",\"bytes\":42681,\"lines\":541,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"operator@c887b7b090f907037f4685a7e0c3697de965a6d2f5b8d3e73b72f7c0145f7e95\",\"kind\":\"instruction\",\"locator\":\"editorial feedback\",\"fullContentSha256\":\"c887b7b090f907037f4685a7e0c3697de965a6d2f5b8d3e73b72f7c0145f7e95\",\"collectedContentSha256\":\"c887b7b090f907037f4685a7e0c3697de965a6d2f5b8d3e73b72f7c0145f7e95\",\"bytes\":6112,\"lines\":8,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"repo:AGENTS.md@9bbc552b2e2081a9c4c1f22aa0fb1dcbca9ba90892479865d531b62d4bbf29e6\",\"kind\":\"goal\",\"locator\":\"AGENTS.md\",\"fullContentSha256\":\"9bbc552b2e2081a9c4c1f22aa0fb1dcbca9ba90892479865d531b62d4bbf29e6\",\"collectedContentSha256\":\"9bbc552b2e2081a9c4c1f22aa0fb1dcbca9ba90892479865d531b62d4bbf29e6\",\"bytes\":8827,\"lines\":160,\"required\":false,\"included\":true,\"reason\":\"complete goal or contextual source\"},{\"id\":\"repo:CLAUDE.md@a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2\",\"kind\":\"goal\",\"locator\":\"CLAUDE.md\",\"fullContentSha256\":\"a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2\",\"collectedContentSha256\":\"a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2\",\"bytes\":8864,\"lines\":154,\"required\":false,\"included\":true,\"reason\":\"complete goal or contextual source\"},{\"id\":\"repo:opm/system.opl@03c85e32d8e5383361e78807fe7be4e9b4757c073d1f374d62bf3477ef69ca41\",\"kind\":\"goal\",\"locator\":\"opm/system.opl\",\"fullContentSha256\":\"03c85e32d8e5383361e78807fe7be4e9b4757c073d1f374d62bf3477ef69ca41\",\"collectedContentSha256\":\"03c85e32d8e5383361e78807fe7be4e9b4757c073d1f374d62bf3477ef69ca41\",\"bytes\":14547,\"lines\":203,\"required\":false,\"included\":true,\"reason\":\"complete goal or contextual source\"},{\"id\":\"repo:ROADMAP.md@8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30\",\"kind\":\"goal\",\"locator\":\"ROADMAP.md\",\"fullContentSha256\":\"8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30\",\"collectedContentSha256\":\"8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30\",\"bytes\":14201,\"lines\":143,\"required\":false,\"included\":true,\"reason\":\"complete goal or contextual source\"},{\"id\":\"review:reviews/articles/2026-10-19-f7a5101c986da95943133dacd1509aadc43b20e7.md@f6d58b96ee7a6601ef74f7c94943948982bf634f90896c1256576be16db37163\",\"kind\":\"repository\",\"locator\":\"reviews/articles/2026-10-19-f7a5101c986da95943133dacd1509aadc43b20e7.md\",\"fullContentSha256\":\"f6d58b96ee7a6601ef74f7c94943948982bf634f90896c1256576be16db37163\",\"collectedContentSha256\":\"f6d58b96ee7a6601ef74f7c94943948982bf634f90896c1256576be16db37163\",\"bytes\":26453,\"lines\":234,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"review:reviews/registered/2026-10-19-f7a5101c986da95943133dacd1509aadc43b20e7.json@3448df65dface5a8b80f005180b5481da270a6adcc468417848126ea31ee4640\",\"kind\":\"repository\",\"locator\":\"reviews/registered/2026-10-19-f7a5101c986da95943133dacd1509aadc43b20e7.json\",\"fullContentSha256\":\"3448df65dface5a8b80f005180b5481da270a6adcc468417848126ea31ee4640\",\"collectedContentSha256\":\"3448df65dface5a8b80f005180b5481da270a6adcc468417848126ea31ee4640\",\"bytes\":18781,\"lines\":168,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"}]}",
+        "fullContentSha256": "6b746b36e645b79813113d4cc6e0730abb0a8f102ddd80993b34e68a22b341f1"
+      },
+      {
+        "id": "github:daily-logger#391@d76e634870e5485aaef3e5a3551eef42b3d97be6bf9c694b86597872fd38e960",
+        "kind": "github",
+        "locator": "https://github.com/ojfbot/daily-logger/pull/391",
+        "content": "CURRENT API STATE daily-logger#391: state=merged; head=8b3f351699c3c810578afcc2403536cd5292e597; merged_at=2026-10-19T17:08:06Z.",
+        "fullContentSha256": "d76e634870e5485aaef3e5a3551eef42b3d97be6bf9c694b86597872fd38e960"
+      }
+    ],
+    "rejected": [
+      {
+        "description": "For core #538, have owner @ojfbot inspect the October 18 run, collection and article; record observed/not-observed/unknown on the issue; and assign the bounded S40 session. Keep S40 manually supervised, human_only/gate-0, at most 45 minutes and stopped at review, retaining source revisions, capture/readback/search and human-review evidence. Keep S41/S42 behind reviewed predecessor evidence. This suggestion authorizes no dispatch, schedule, automatic capture or paid provider call.",
+        "reason": "Optional disposition lacks authoritative exact evidence"
+      },
+      {
+        "description": "Dismiss unsupported duplicate UI issue filing and LEGO #45 closure or supersession.",
+        "reason": "Optional disposition lacks authoritative exact evidence"
+      }
+    ]
   }
 }
