@@ -44,11 +44,11 @@ export async function admitActionRegistry(input: { workspace: string; base: stri
       : run.head_branch !== 'main' || run.head_sha !== receipt.policySha || run.display_title !== `Editorial continuation comment ${receipt.requestCommentId}`) continue
     try {
       if (proposed.snapshot.reviewCycle || proposed.suggestions.some(record => record.admission)) {
-        if (!receipt.inputHead || !receipt.actionReviewMode || continuation && (!receipt.requestCommentId || !receipt.requestDigest || receipt.actionReviewMode !== 'revision')) continue
+        if (!receipt.inputHead || !receipt.actionReviewMode || receipt.actionReviewMode === 'revision' && !receipt.requestDigest || continuation && (!receipt.requestCommentId || !receipt.requestDigest || receipt.actionReviewMode !== 'revision')) continue
         const before = registryAt(receipt.inputHead), output = registryAt(receipt.outputCommit)
         const expectedCycle = initial && receipt.actionReviewMode === 'clean-acceptance'
           ? acceptanceActionCycle(`pull-request:${input.pullRequest}:clean-acceptance`, before.snapshot)
-          : revisionActionCycle(initial ? `pull-request:${input.pullRequest}:revision` : `comment:${receipt.requestCommentId}:${receipt.requestDigest}`)
+          : revisionActionCycle(initial ? `pull-request:${input.pullRequest}:revision:${receipt.requestDigest}` : `comment:${receipt.requestCommentId}:${receipt.requestDigest}`)
         if (output.snapshot.verification.promptVersion !== ACTION_REVIEW_PROMPT_VERSION || JSON.stringify(output.snapshot.reviewCycle) !== JSON.stringify(expectedCycle)) continue
         // The immutable artifact binds this entire dated file. Phase and births
         // must also match the trusted callsite's logical request, never v5 output.

@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-19 (changed PR feedback): PR-plus-intent alone conflated the existing human-edited PR-body revision path with its previous request. Bind the trusted extractor’s exact feedback digest into the revision cycle and immutable output artifact; changed human feedback gets a distinct cycle, while identical feedback/source refresh/retries do not. Explicit continuation comments retain their separate comment-ID/digest identity.
+
 - 2026-10-19 (quota-only rejection memory): the inherited global rejection fingerprint treated capacity exclusions as permanent semantic rejection. The human’s per-revision clarification explicitly permits fresh consideration in a later distinct trusted cycle. Record a typed scope only at the new deterministic capacity guard, preserve it across same-cycle retries, and require a fresh proposer/verifier pass later; do not infer old reason text or alter semantic rejections or the 138 legacy holds.
 
 - 2026-10-19 (local action-policy checks): the isolated checkout lacked the frontend dependency links and the existing budget test used the tsx CLI’s prohibited IPC listener. Linked the matching frozen dependency tree read-only and used the already-supported `pnpm exec node --import tsx` path in that fixture; this changes no budget guard or source selection.
