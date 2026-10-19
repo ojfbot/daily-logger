@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-delivery-20261019-7fb95077e56a",
+  "article": {
+    "date": "2026-10-19",
+    "sourceCommitSha": "7fb95077e56abd92c45a5025169d6d2acb8c0c5f",
+    "blobSha": "9fb6e14b5198273e9c55cf214c52d2fe1c955acf"
+  },
+  "reviewer": {
+    "name": "Codex post-delivery verification: October 19 shipment times and closing choices",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-19T22:26:24.627Z",
+  "scope": "Bounded verification of five source-backed merged-shipment controls, the existing local/UTC/map popover, verified closing choices and newest-accepted-closing continuity at the exact accepted delivery source. No current material finding in this scope. Earlier factual reviews remain historical and original human dispositions are untouched. Local progressive retrieval remains unadopted, hosted retention is human-blocked and live-provider/token and unattended-runner qualification remain unproven.",
+  "fullRecordBlobSha": "2d947ce8b35e57f15b4bf42c2298d570171fdc4f",
+  "fullRecordPath": "reviews/articles/2026-10-19-7fb95077e56abd92c45a5025169d6d2acb8c0c5f.md",
+  "result": "completed",
+  "findings": []
+}
