@@ -5,6 +5,7 @@ import { createReviewSource, ReviewError, type GitHub } from '../../api/_lib/art
 import { decodeEditorial } from '../../api/_lib/editorial-continuation.js'
 import { verifyEditorialProof } from '../../shared/editorial-action-proof.js'
 import { sha } from '../../shared/article-review.js'
+import { ACTION_REVIEW_PROMPT_VERSION, acceptanceActionCycle, revisionActionCycle } from '../../src/action-review-cycle.js'
 
 export async function admitActionRegistry(input: { workspace: string; base: string; head: string; date: string; actor: string; pullRequest: number; github: GitHub }) {
   const git = (...args: string[]) => execFileSync('git', args, { cwd: input.workspace, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
@@ -25,7 +26,7 @@ export async function admitActionRegistry(input: { workspace: string; base: stri
     if (comment.user.login !== 'github-actions[bot]' || comment.created_at !== comment.updated_at) continue
     const initial = comment.body.startsWith('## Verified action registry\n'), continuation = comment.body.startsWith('## Editorial execution receipt\n')
     if (!initial && !continuation) continue
-    const value = z.object({ runId: z.number().int().positive(), policySha: sha, outputCommit: sha, outputRegistryBlob: sha, inputHead: sha.optional(), date: z.string().optional(), requestCommentId: z.number().optional(), outcome: z.string().optional() }).passthrough().safeParse(JSON.parse(comment.body.slice(comment.body.indexOf('\n') + 1)))
+    const value = z.object({ runId: z.number().int().positive(), policySha: sha, outputCommit: sha, outputRegistryBlob: sha, inputHead: sha.optional(), date: z.string().optional(), requestCommentId: z.number().optional(), requestDigest: z.string().regex(/^[a-f0-9]{64}$/).optional(), actionReviewMode: z.enum(['clean-acceptance', 'revision']).optional(), outcome: z.string().optional() }).passthrough().safeParse(JSON.parse(comment.body.slice(comment.body.indexOf('\n') + 1)))
     if (!value.success) continue
     const receipt = value.data
     if (!await verifyEditorialProof(input.github, receipt) || receipt.pullRequest !== input.pullRequest || receipt.date !== input.date) continue
@@ -42,6 +43,18 @@ export async function admitActionRegistry(input: { workspace: string; base: stri
     if (initial ? run.head_branch !== `accept/${input.date}` || run.head_sha !== receipt.inputHead || !run.pull_requests.some(pr => pr.number === input.pullRequest && pr.base.sha === receipt.policySha && pr.head.sha === receipt.inputHead)
       : run.head_branch !== 'main' || run.head_sha !== receipt.policySha || run.display_title !== `Editorial continuation comment ${receipt.requestCommentId}`) continue
     try {
+      if (proposed.snapshot.reviewCycle || proposed.suggestions.some(record => record.admission)) {
+        if (!receipt.inputHead || !receipt.actionReviewMode || continuation && (!receipt.requestCommentId || !receipt.requestDigest || receipt.actionReviewMode !== 'revision')) continue
+        const before = registryAt(receipt.inputHead), output = registryAt(receipt.outputCommit)
+        const expectedCycle = initial && receipt.actionReviewMode === 'clean-acceptance'
+          ? acceptanceActionCycle(`pull-request:${input.pullRequest}:clean-acceptance`, before.snapshot)
+          : revisionActionCycle(initial ? `pull-request:${input.pullRequest}:revision` : `comment:${receipt.requestCommentId}:${receipt.requestDigest}`)
+        if (output.snapshot.verification.promptVersion !== ACTION_REVIEW_PROMPT_VERSION || JSON.stringify(output.snapshot.reviewCycle) !== JSON.stringify(expectedCycle)) continue
+        // The immutable artifact binds this entire dated file. Phase and births
+        // must also match the trusted callsite's logical request, never v5 output.
+        if (before.suggestions.some(prior => !output.suggestions.some(record => record.key === prior.key && JSON.stringify(record.original) === JSON.stringify(prior.original) && record.workKey === prior.workKey && JSON.stringify(record.admission) === JSON.stringify(prior.admission)))) continue
+        if (output.suggestions.some(record => !before.suggestions.some(prior => prior.key === record.key) && JSON.stringify(record.admission) !== JSON.stringify(expectedCycle))) continue
+      }
       if (receipt.inputHead && (receipt.outcome === 'no_change' ? receipt.outputCommit !== receipt.inputHead : git('rev-parse', `${receipt.outputCommit}^`) !== receipt.inputHead)) continue
       git('merge-base', '--is-ancestor', receipt.policySha, input.base)
       git('merge-base', '--is-ancestor', receipt.outputCommit, input.head)

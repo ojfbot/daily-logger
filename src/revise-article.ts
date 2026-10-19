@@ -1,3 +1,4 @@
+import { revisionActionCycle } from './action-review-cycle.js'
 /**
  * Editorial revision script — applies human feedback to a generated article.
  *
@@ -175,6 +176,10 @@ async function main() {
     process.exit(1)
   }
 
+  const requestIdentity = process.env.ACTION_REVIEW_REQUEST?.trim()
+  if (!requestIdentity) throw new Error('ACTION_REVIEW_REQUEST must identify this logical editorial request; retries retain it')
+  const cycle = revisionActionCycle(requestIdentity)
+
   const articleContent = readFileSync(articlePath, 'utf-8')
 
   console.error(`📝 Revising ${articlePath}`)
@@ -190,7 +195,7 @@ async function main() {
     const registry = readActionRegistry(repoRoot)
     const articleDate = result.revisedMarkdown.match(/^date:\s*"?(\d{4}-\d{2}-\d{2})/m)?.[1]
     if (!articleDate) throw new Error('Article date is missing')
-    const actions = await reviewArticleActions({ registry, articleStatuses: readArticleStatuses(repoRoot), articleDate, markdown: result.revisedMarkdown, feedback, sources: isMock ? [] : collectActionSources({ repoRoot, markdown: result.revisedMarkdown, feedback }), agents: isMock ? mockActionAgents : createActionAgents() })
+    const actions = await reviewArticleActions({ cycle, registry, articleStatuses: readArticleStatuses(repoRoot), articleDate, markdown: result.revisedMarkdown, feedback, sources: isMock ? [] : collectActionSources({ repoRoot, markdown: result.revisedMarkdown, feedback }), agents: isMock ? mockActionAgents : createActionAgents() })
     result.revisedMarkdown = actions.markdown
     result.changed = result.revisedMarkdown.trim() !== articleContent.trim()
     registryChanged = registryRevision(actions.registry) !== registryRevision(registry)

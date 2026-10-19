@@ -1,3 +1,4 @@
+import { generationActionCycle, revisionActionCycle } from '../../src/action-review-cycle.js'
 import { editorialProofName } from '../../shared/editorial-action-proof.js'
 import { actionFile, emptyActionFile, writeActionStore } from '../../src/__tests__/action-store-fixture.js'
 import { execFileSync } from 'node:child_process'
@@ -16,7 +17,7 @@ vi.setConfig({ testTimeout: 20_000 })
 const cleanups: string[] = []
 afterEach(() => { vi.unstubAllEnvs(); for (const path of cleanups.splice(0)) rmSync(path, { recursive: true, force: true }) })
 function git(cwd: string, ...args: string[]) { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim() }
-async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | 'missing-registry' | 'registry-symlink' | 'registry-executable' | 'cross-date-choice' | null = null, ambiguousAncestry = false) {
+async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | 'missing-registry' | 'registry-symlink' | 'registry-executable' | 'cross-date-choice' | null = null, ambiguousAncestry = false, pendingInitial = false) {
   vi.stubEnv('MOCK_LLM', 'true')
   vi.stubEnv('DRY_RUN', 'false')
   const root = mkdtempSync(resolve(tmpdir(), 'uik01-consumer-')); cleanups.push(root)
@@ -26,7 +27,9 @@ async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executa
   mkdirSync(resolve(workspace, 'actions/articles'), { recursive: true })
   let registry = JSON.stringify({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [{ key: 'old', original: { id: 'old', command: '/pr-review', description: 'Prior tracked work', repo: 'daily-logger', sourceDate: '2026-10-01', status: 'open' }, origin: 'imported', workKey: 'daily-logger|old|review', state: 'open', introducedBy: '2026-10-01', includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: '', gates: [], history: [] }], articles: [] })
   writeFileSync(resolve(workspace, 'actions/registry.json'), registry)
-  writeFileSync(resolve(workspace, `actions/articles/${today}.json`), JSON.stringify(emptyActionFile(today)))
+  const initialFile = emptyActionFile(today)
+  if (pendingInitial) { initialFile.snapshot.status = 'draft'; initialFile.snapshot.review = { state: 'pending', reason: 'Initial action evidence unavailable' }; initialFile.snapshot.reviewCycle = generationActionCycle() }
+  writeFileSync(resolve(workspace, `actions/articles/${today}.json`), JSON.stringify(initialFile))
   const article = `---\ntitle: Fixture\ndate: ${today}\nstatus: accepted\ntags: []\nsummary: ${noChange ? 'unchanged' : '"Original"'}\n---\nLiteral body 雪\n`
   const path = `_articles/${today}.md`
   writeFileSync(resolve(workspace, 'package.json'), '{}')
@@ -34,7 +37,7 @@ async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executa
   let policySha = git(workspace, 'rev-parse', 'HEAD')
   writeFileSync(resolve(workspace, path), `${article}\nAccepted branch text\n`)
   if (noChange) {
-    const reviewed = await reviewArticleActions({ registry: ActionRegistrySchema.parse(JSON.parse(registry)), articleDate: today, articleStatuses: new Map([[today, 'accepted']]), markdown: readFileSync(resolve(workspace, path), 'utf8'), feedback: 'Earlier feedback', sources: [], agents: mockActionAgents })
+    const reviewed = await reviewArticleActions({ cycle: revisionActionCycle('fixture'), registry: ActionRegistrySchema.parse(JSON.parse(registry)), articleDate: today, articleStatuses: new Map([[today, 'accepted']]), markdown: readFileSync(resolve(workspace, path), 'utf8'), feedback: 'Earlier feedback', sources: [], agents: mockActionAgents })
     registry = JSON.stringify(reviewed.registry)
     writeFileSync(resolve(workspace, path), reviewed.markdown)
     writeActionStore(workspace, reviewed.registry)
@@ -368,27 +371,63 @@ it.each([false, true])('both original workflow modes validate the actual Git reg
     else expect(run()).toBe('')
   }
 })
+async function initialActionOutput(f: Awaited<ReturnType<typeof setup>>, mode: 'clean-acceptance' | 'revision' = 'clean-acceptance') {
+  execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(process.cwd(), mode === 'revision' ? 'src/revise-article.ts' : 'scripts/reconcile-actions.ts')], {
+    cwd: process.cwd(), encoding: 'utf8', env: { ...process.env, MOCK_LLM: 'true', EDITORIAL_FEEDBACK: 'A bounded owner revision.', ACTION_REVIEW_REQUEST: `pull-request:42:${mode}`, ACTION_REPO_ROOT: f.execution.workspace, ARTICLE_PATH: resolve(f.execution.workspace, f.path) },
+  })
+  git(f.execution.workspace, 'add', '.'); git(f.execution.workspace, 'commit', '-qm', 'actual clean acceptance action review')
+  execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(process.cwd(), 'scripts/write-action-output.ts'), mode], {
+    cwd: process.cwd(), encoding: 'utf8', env: { ...process.env, ACTION_REPO_ROOT: f.execution.workspace, ARTICLE_PATH: f.path, PR_NUMBER: '42', GITHUB_RUN_ID: '101', GITHUB_RUN_ATTEMPT: '1', GITHUB_SHA: f.execution.policySha, INPUT_HEAD: f.head },
+  })
+  await publishProof(f, true)
+  const comment = f.state.prComments.get(42)?.at(-1); if (!comment) throw new Error('Missing receipt')
+  comment.body = `## Verified action registry\n${JSON.stringify({ ...JSON.parse(readFileSync(resolve(f.execution.workspace, '.git/editorial-output.json'), 'utf8')), artifactId: 101 })}`
+  const github = f.execution.github
+  f.execution.github = (path, options) => path.endsWith('/actions/runs/101') ? Promise.resolve(Response.json({ id: 101, run_attempt: 1, event: 'pull_request_target', head_branch: `accept/${today}`, head_sha: f.head, display_title: 'Editorial acceptance', path: '.github/workflows/editorial-revise.yml', pull_requests: [{ number: 42, base: { sha: f.execution.policySha }, head: { sha: f.head } }] })) : github(path, options)
+  return git(f.execution.workspace, 'rev-parse', 'HEAD')
+}
 it.each(['initial', 'continued'])('only an exact %s workflow receipt authorizes prior output; forged snapshots cannot bypass either agent', async kind => {
   const f = await setup(); f.state.login = 'github-actions[bot]'
-  const prepared = await prepareEditorial(f.execution); if (!prepared) throw new Error('Missing verified output')
-  await pushEditorial(f.execution, prepared)
-  await publishProof(f)
-  if (kind === 'initial') {
-    await publishProof(f, true)
-    const comment = f.state.prComments.get(42)?.at(-1); if (!comment) throw new Error('Missing receipt')
-    comment.body = `## Verified action registry\n${JSON.stringify({ ...JSON.parse(readFileSync(resolve(f.execution.workspace, '.git/editorial-output.json'), 'utf8')), artifactId: 101 })}`
-    const github = f.execution.github
-    f.execution.github = (path, options) => path.endsWith('/actions/runs/101') ? Promise.resolve(Response.json({ id: 101, run_attempt: 1, event: 'pull_request_target', head_branch: `accept/${today}`, head_sha: f.head, display_title: 'Editorial continuation comment automatic', path: '.github/workflows/editorial-revise.yml', pull_requests: [{ number: 42, base: { sha: f.execution.policySha }, head: { sha: f.head } }] })) : github(path, options)
+  let outputCommit: string
+  if (kind === 'initial') outputCommit = await initialActionOutput(f)
+  else {
+    const prepared = await prepareEditorial(f.execution); if (!prepared) throw new Error('Missing verified output')
+    await pushEditorial(f.execution, prepared); await publishProof(f)
+    outputCommit = prepared.outputCommit
   }
-  const input = { workspace: f.execution.workspace, base: f.execution.policySha, head: prepared.outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github }
+  const input = { workspace: f.execution.workspace, base: f.execution.policySha, head: outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github }
   await expect(admitActionRegistry(input)).resolves.toBeUndefined()
-  git(f.execution.workspace, 'checkout', '--detach', prepared.outputCommit)
+  git(f.execution.workspace, 'checkout', '--detach', outputCommit)
   const registryPath = resolve(f.execution.workspace, `actions/articles/${today}.json`)
   const forged = ArticleActionFileSchema.parse(JSON.parse(readFileSync(registryPath, 'utf8')))
   forged.snapshot.verification.proposer = 'manual'
   writeFileSync(registryPath, JSON.stringify(forged)); git(f.execution.workspace, 'add', '.'); git(f.execution.workspace, 'commit', '-qm', 'hand-authored snapshot')
   await expect(admitActionRegistry({ ...input, head: git(f.execution.workspace, 'rev-parse', 'HEAD') })).rejects.toThrow('trusted editorial output receipt')
 }, 20_000)
+it.each(['clean-acceptance', 'revision'] as const)('trusted %s mode distinguishes pending-generation retry from an actual revision', async mode => {
+  const f = await setup(false, null, false, true); f.state.login = 'github-actions[bot]'
+  const outputCommit = await initialActionOutput(f, mode)
+  const file = ArticleActionFileSchema.parse(JSON.parse(readFileSync(resolve(f.execution.workspace, `actions/articles/${today}.json`), 'utf8')))
+  expect(file.snapshot.reviewCycle).toEqual(mode === 'clean-acceptance' ? generationActionCycle() : revisionActionCycle('pull-request:42:revision'))
+  await expect(admitActionRegistry({ workspace: f.execution.workspace, base: f.execution.policySha, head: outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github })).resolves.toBeUndefined()
+})
+it.each(['generation', 'wrong-request', 'v5'])('an artifact-bound output cannot borrow the wrong action cycle: %s', async kind => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  await initialActionOutput(f)
+  const path = resolve(f.execution.workspace, `actions/articles/${today}.json`)
+  const file = ArticleActionFileSchema.parse(JSON.parse(readFileSync(path, 'utf8')))
+  file.snapshot.reviewCycle = kind === 'generation' ? { phase: 'generation' } : revisionActionCycle(kind === 'v5' ? 'pull-request:42:clean-acceptance' : 'another-request')
+  if (kind === 'v5') file.snapshot.verification.promptVersion = 'action-review-v5-terminal-citations'
+  writeFileSync(path, JSON.stringify(file)); git(f.execution.workspace, 'add', '.'); git(f.execution.workspace, 'commit', '--amend', '-qm', 'wrong phase output')
+  const outputCommit = git(f.execution.workspace, 'rev-parse', 'HEAD')
+  const manifestPath = resolve(f.execution.workspace, '.git/editorial-output.json')
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+  manifest.outputCommit = outputCommit; manifest.outputRegistryBlob = git(f.execution.workspace, 'rev-parse', `HEAD:actions/articles/${today}.json`)
+  writeFileSync(manifestPath, JSON.stringify(manifest)); await publishProof(f, true)
+  const comment = f.state.prComments.get(42)?.at(-1); if (!comment) throw new Error('Missing receipt')
+  comment.body = `## Verified action registry\n${JSON.stringify({ ...manifest, artifactId: 101 })}`
+  await expect(admitActionRegistry({ workspace: f.execution.workspace, base: f.execution.policySha, head: outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github })).rejects.toThrow('trusted editorial output receipt')
+})
 
 it.each(['failed', 'stale', 'uncertain'])('an unbound %s bot comment cannot clear the outstanding request (F13)', async outcome => {
   const f = await setup()

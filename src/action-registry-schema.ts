@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { CanonicalActionSchema, isReviewedAction } from './action-model.js'
+import { ActionReviewCycleSchema, ACTION_REVIEW_PROMPT_VERSION, actionAdmissionErrors } from './action-review-cycle.js'
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 const digest = z.string().regex(/^[a-f0-9]{64}$/)
@@ -32,6 +33,7 @@ export const ActionRecordSchema = z.object({
   workKey: z.string().min(1),
   state: ActionStateSchema,
   introducedBy: date,
+  admission: ActionReviewCycleSchema.optional(),
   includeInIndex: z.boolean(),
   inclusionOverride: z.object({ include: z.boolean(), actor: z.string().min(1), instruction: z.string().min(1) }).strict().nullable(),
   goal: z.string(),
@@ -46,13 +48,16 @@ export const ArticleActionSchema = z.object({
   review: z.discriminatedUnion('state', [z.object({ state: z.literal('verified') }).strict(), z.object({ state: z.literal('pending'), reason: z.string().min(1) }).strict()]).default({ state: 'verified' }),
   articleDigest: digest,
   roundId: digest,
+  reviewCycle: ActionReviewCycleSchema.optional(),
   actionKeys: z.array(z.string()),
   stateDigest: digest,
   verification: z.object({ proposer: z.string(), verifier: z.string(), promptVersion: z.string(), proposalSha256: digest, verdicts: z.array(z.object({ item: z.string(), verdict: z.enum(['pass', 'reject', 'hold']), reason: z.string() }).strict()) }).strict(),
   sources: z.array(ActionSourceSchema),
-  rejected: z.array(z.object({ description: z.string(), reason: z.string(), workKey: z.string().optional(), evidenceDigest: digest.optional() }).strict()),
+  rejected: z.array(z.object({ description: z.string(), reason: z.string(), workKey: z.string().optional(), evidenceDigest: digest.optional(), quotaHold: z.object({ articleDate: date, cycle: ActionReviewCycleSchema }).strict().optional() }).strict()),
   binding: z.object({ mode: z.literal('editorial-rebind'), fromDigest: digest, actor: z.string().min(1), instructionSha256: digest }).strict().optional(),
-}).strict()
+}).strict().superRefine((article, context) => {
+  if ([ACTION_REVIEW_PROMPT_VERSION, 'action-review-pending-v2-cycle'].includes(article.verification.promptVersion) && !article.reviewCycle) context.addIssue({ code: 'custom', message: `Action review cycle is missing: ${article.date}` })
+})
 export const ActionRegistrySchema = z.object({
   schemaVersion: z.literal(1),
   baseline: z.object({ commit: z.string().regex(/^[a-f0-9]{40}$/), openSha256: digest, doneSha256: digest, articleActions: z.record(z.string(), z.array(CanonicalActionSchema)), heldSuggestions: z.array(z.object({ articlePath: z.string(), sourceDate: date, line: z.number(), invocation: z.string(), suggestionLineSha256: digest, suggestion: z.string().min(1) }).strict()) }).strict(),
@@ -68,6 +73,7 @@ export const ActionRegistrySchema = z.object({
     if (new Set(article.actionKeys).size !== article.actionKeys.length || article.actionKeys.some(key => !keys.includes(key))) context.addIssue({ code: 'custom', message: `Invalid action references for ${article.date}` })
   }
   for (const record of registry.records) {
+    if (record.origin === 'imported' && record.admission) context.addIssue({ code: 'custom', message: `Imported action cannot acquire an admission cycle: ${record.key}` })
     if (record.original.status === 'done' && record.state !== 'done') context.addIssue({ code: 'custom', message: `Completed history cannot reopen: ${record.key}` })
     if (isReviewedAction(record.original) && record.state !== 'open') context.addIssue({ code: 'custom', message: `Reviewed action requires a separately accepted exact-ID settlement receipt: ${record.key}` })
     if (record.inclusionOverride && record.includeInIndex !== record.inclusionOverride.include) context.addIssue({ code: 'custom', message: `Inclusion override changed: ${record.key}` })
@@ -75,9 +81,7 @@ export const ActionRegistrySchema = z.object({
     if (record.origin === 'imported' && !record.history.length && record.state !== record.original.status) context.addIssue({ code: 'custom', message: `Imported state changed without evidence: ${record.key}` })
     if (record.origin === 'suggested' && (!record.original.id || record.original.id !== record.key || !record.goal || !record.doneWhen || !record.history.length || !registry.articles.some(article => article.date === record.introducedBy && article.actionKeys.includes(record.key)))) context.addIssue({ code: 'custom', message: `Suggested action lacks an article review: ${record.key}` })
   }
-  for (const day of new Set(registry.records.filter(record => record.origin === 'suggested').map(record => record.introducedBy))) {
-    if (registry.records.filter(record => record.origin === 'suggested' && record.introducedBy === day).length > 2) context.addIssue({ code: 'custom', message: `More than two new suggestion identities for ${day}` })
-  }
+  for (const message of actionAdmissionErrors(registry.records.filter(record => record.origin === 'suggested'))) context.addIssue({ code: 'custom', message })
 })
 export type ActionRegistry = z.infer<typeof ActionRegistrySchema>
 function explicitInclusionInstruction(instruction: string) { return instruction === 'Explicit editorial inclusion checkbox' || /^Explicit editorial inclusion instruction: \S[\s\S]*$/.test(instruction) }
@@ -95,7 +99,8 @@ export const ArticleActionFileSchema = z.object({
   snapshot: ArticleActionSchema,
 }).strict().superRefine((file, context) => {
   if (new TextEncoder().encode(JSON.stringify(file)).length > ACTION_FILE_LIMIT) context.addIssue({ code: 'custom', message: 'Article action state exceeds 64 KiB' })
-  if (file.snapshot.date !== file.date || file.decisions.some(item => item.decision.articleDate !== file.date) || file.suggestions.some(item => item.origin !== 'suggested' || item.introducedBy !== file.date) || file.suggestions.length > 2) context.addIssue({ code: 'custom', message: 'Article action file crosses its date boundary' })
+  if (file.snapshot.date !== file.date || file.decisions.some(item => item.decision.articleDate !== file.date) || file.suggestions.some(item => item.origin !== 'suggested' || item.introducedBy !== file.date)) context.addIssue({ code: 'custom', message: 'Article action file crosses its date boundary' })
+  for (const message of actionAdmissionErrors(file.suggestions)) context.addIssue({ code: 'custom', message })
 })
 export type ArticleActionFile = z.infer<typeof ArticleActionFileSchema>
 export const actionArticlePath = (date: string) => `actions/articles/${date}.json`

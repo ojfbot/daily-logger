@@ -15,7 +15,7 @@ import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hyd
 export function sha256(value: string): string { return createHash('sha256').update(value).digest('hex') }
 export function registryBytes(registry: ActionRegistry): string { return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
 export function registryRevision(registry: ActionRegistry): string { return sha256(registryBytes(registry)) }
-export function actionStateDigest(registry: ActionRegistry, keys: readonly string[]): string { return sha256(JSON.stringify(registry.records.filter(record => keys.includes(record.key)).map(record => ({ key: record.key, state: record.state, history: record.history })))) }
+export function actionStateDigest(registry: ActionRegistry, keys: readonly string[]): string { return sha256(JSON.stringify(registry.records.filter(record => keys.includes(record.key)).map(record => ({ key: record.key, state: record.state, history: record.history, admission: record.admission })))) }
 export function actionKey(action: CanonicalAction): string { return action.id ?? `legacy-${sha256(legacyActionKey(action))}` }
 export function normalizeWorkKey(repo: string, target: string, outcome: string): string { return [repo, target, outcome].map(value => value.toLowerCase().replace(/\s+/g, ' ').trim()).join('|') }
 
@@ -38,6 +38,10 @@ export function writeActionRegistry(repoRoot: string, registry: ActionRegistry, 
     writeFileSync(descriptor, JSON.stringify({ pid: process.pid, acquiredAt: new Date().toISOString() }) + '\n')
     const before = readActionRegistry(repoRoot)
     if (registryRevision(before) !== expectedRevision) throw new Error('Action registry changed during review; refresh before retrying')
+    for (const prior of before.records.filter(record => record.origin === 'suggested')) {
+      const next = registry.records.find(record => record.key === prior.key)
+      if (!next || JSON.stringify(next.original) !== JSON.stringify(prior.original) || next.workKey !== prior.workKey || next.introducedBy !== prior.introducedBy || JSON.stringify(next.admission) !== JSON.stringify(prior.admission)) throw new Error('Existing suggested identity, original payload and birth cycle cannot change during review')
+    }
     if (article && (existsSync(article.path) ? readFileSync(article.path, 'utf8') : null) !== article.expected) throw new Error('Article changed during action review; refresh before retrying')
     const split = splitActionRegistry(registry)
     if (registryBytes(split.baseline) !== registryBytes(splitActionRegistry(before).baseline)) throw new Error('The imported action baseline cannot change during an article review')

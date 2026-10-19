@@ -1,3 +1,4 @@
+import { generationActionCycle } from './action-review-cycle.js'
 /**
  * ojfbot daily-logger
  *
@@ -254,7 +255,7 @@ export async function main() {
   const originalMarkdown = toMarkdown(article)
   const articlePath = join(REPO_ROOT, '_articles', `${date}.md`)
   const previousArticle = existsSync(articlePath) ? readFileSync(articlePath, 'utf8') : null
-  const actionReview = await reviewDraftActions({ registry, articleStatuses: readArticleStatuses(REPO_ROOT), articleDate: date, markdown: originalMarkdown, feedback: '', sources: process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ repoRoot: REPO_ROOT, markdown: originalMarkdown, feedback: '', context: `${buildUserPrompt(ctx)}\nStructured draft candidates: ${JSON.stringify(article.suggestedActions ?? [])}` }), agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
+  const actionReview = await reviewDraftActions({ cycle: generationActionCycle(), registry, articleStatuses: readArticleStatuses(REPO_ROOT), articleDate: date, markdown: originalMarkdown, feedback: '', sources: process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ repoRoot: REPO_ROOT, markdown: originalMarkdown, feedback: '', context: `${buildUserPrompt(ctx)}\nStructured draft candidates: ${JSON.stringify(article.suggestedActions ?? [])}` }), agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
   const prepared = prepareGeneratedTime({ date, markdown: actionReview.markdown, records: recordsFromContext(ctx), capture: timeCapture })
   const markdown = prepared.markdown
   for (const warning of prepared.warnings) console.warn(`::warning::${date}: ${warning}`)

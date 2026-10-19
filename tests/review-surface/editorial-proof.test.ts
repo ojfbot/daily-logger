@@ -4,7 +4,7 @@ const receipt = { repository: 'ojfbot/daily-logger', date: '2026-10-17', pullReq
 const artifact = { id: 99, name: editorialProofName(receipt), expired: false, workflow_run: { id: 101, head_sha: receipt.inputHead } }
 it('requires an immutable artifact with the exact receipt hash and run identity (F13)', async () => {
   expect(await verifyEditorialProof(async () => Response.json(artifact), receipt)).toBe(true)
-  for (const change of [{ outputCommit: 'e'.repeat(40) }, { outputRegistryBlob: 'e'.repeat(40) }, { date: '2026-10-18' }, { pullRequest: 43 }, { runAttempt: 2 }, { requestDigest: 'f'.repeat(64) }]) expect(await verifyEditorialProof(async () => Response.json(artifact), { ...receipt, ...change })).toBe(false)
+  for (const change of [{ outputCommit: 'e'.repeat(40) }, { outputRegistryBlob: 'e'.repeat(40) }, { date: '2026-10-18' }, { pullRequest: 43 }, { runAttempt: 2 }, { requestDigest: 'f'.repeat(64) }, { actionReviewMode: 'revision' }]) expect(await verifyEditorialProof(async () => Response.json(artifact), { ...receipt, ...change })).toBe(false)
   for (const change of [{ expired: true }, { workflow_run: { id: 102, head_sha: receipt.inputHead } }, { workflow_run: { id: 101, head_sha: receipt.policySha } }]) expect(await verifyEditorialProof(async () => Response.json({ ...artifact, ...change }), receipt)).toBe(false)
   await expect(verifyEditorialProof(async () => Response.json({}, { status: 503 }), receipt)).rejects.toThrow('unavailable')
 })
