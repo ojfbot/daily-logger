@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { z } from 'zod'
 import { ArticleActionFileSchema, isArticleFileInclusionChange, actionArticlePath } from '../../src/action-registry-schema.js'
 import { createReviewSource, ReviewError, type GitHub } from '../../api/_lib/article-review-sources.js'
-import { decodeEditorial } from '../../api/_lib/editorial-continuation.js'
+import { decodeEditorial, repo } from '../../api/_lib/editorial-continuation.js'
 import { verifyEditorialProof } from '../../shared/editorial-action-proof.js'
 import { sha } from '../../shared/article-review.js'
 import { ACTION_REVIEW_PROMPT_VERSION, acceptanceActionCycle, revisionActionCycle } from '../../src/action-review-cycle.js'
@@ -38,10 +38,17 @@ export async function admitActionRegistry(input: { workspace: string; base: stri
     const response = await input.github(`/repos/ojfbot/daily-logger/actions/runs/${receipt.runId}`)
     if (!response.ok) throw new ReviewError(503, 'Action registry receipt provenance unavailable.')
     const run = z.object({ id: z.number(), run_attempt: z.literal(1), event: z.string(), head_branch: z.string(), head_sha: sha, display_title: z.string(), path: z.string().regex(/^\.github\/workflows\/editorial-revise\.yml(?:@(?:main|refs\/heads\/main))?$/),
-      pull_requests: z.array(z.object({ number: z.number(), base: z.object({ sha }), head: z.object({ sha }) })).default([]) }).parse(await response.json())
+      pull_requests: z.array(z.object({ number: z.number().int().positive(), url: z.string().url(),
+        base: z.object({ repo: z.object({ url: z.string().url() }) }),
+        head: z.object({ repo: z.object({ url: z.string().url() }) }) })).default([]) }).parse(await response.json())
     if (run.id !== receipt.runId || run.event !== (initial ? 'pull_request_target' : 'issue_comment')) continue
-    if (initial ? run.head_branch !== `accept/${input.date}` || run.head_sha !== receipt.inputHead || !run.pull_requests.some(pr => pr.number === input.pullRequest && pr.base.sha === receipt.policySha && pr.head.sha === receipt.inputHead)
-      : run.head_branch !== 'main' || run.head_sha !== receipt.policySha || run.display_title !== `Editorial continuation comment ${receipt.requestCommentId}`) continue
+    if (initial) {
+      // Embedded PR head/base SHAs follow the current PR. Run and artifact heads pin the input.
+      const repositoryUrl = `https://api.github.com${repo}`
+      if (run.head_branch !== `accept/${input.date}` || run.head_sha !== receipt.inputHead
+        || !run.pull_requests.some(pr => pr.number === input.pullRequest && pr.url === `${repositoryUrl}/pulls/${input.pullRequest}`
+          && pr.base.repo.url === repositoryUrl && pr.head.repo.url === repositoryUrl)) continue
+    } else if (run.head_branch !== 'main' || run.head_sha !== receipt.policySha || run.display_title !== `Editorial continuation comment ${receipt.requestCommentId}`) continue
     try {
       if (proposed.snapshot.reviewCycle || proposed.suggestions.some(record => record.admission)) {
         if (!receipt.inputHead || !receipt.actionReviewMode || receipt.actionReviewMode === 'revision' && !receipt.requestDigest || continuation && (!receipt.requestCommentId || !receipt.requestDigest || receipt.actionReviewMode !== 'revision')) continue
