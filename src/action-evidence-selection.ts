@@ -7,6 +7,21 @@ export const ACTION_EVIDENCE_SELECTION_VERSION = 'whole-action-sources-v1'
 export const COVERAGE_SOURCE = 'action-evidence-coverage'
 const sourceKey = (id: string) => id.replace(/@[a-f0-9]{64}$/, '')
 
+/** Canonical input for both cache fingerprints and selection; never pick a conflicting version. */
+export function canonicalActionSources(sources: readonly ActionSource[]): ActionSource[] {
+  const unique = new Map<string, ActionSource>()
+  const identity = (source: ActionSource) => JSON.stringify({ id: source.id, kind: source.kind, locator: source.locator,
+    content: source.content, trustedContent: source.trustedContent, fullContentSha256: source.fullContentSha256 })
+  for (const source of [...sources].sort((a, b) => a.id.localeCompare(b.id))) {
+    const key = sourceKey(source.id)
+    if (key === COVERAGE_SOURCE) continue
+    const previous = unique.get(key)
+    if (previous && identity(previous) !== identity(source)) throw new Error(`Conflicting action evidence identity: ${key}; review pending`)
+    if (!previous) unique.set(key, source)
+  }
+  return [...unique.values()]
+}
+
 function references(text: string): Set<string> {
   return new Set([
     ...[...text.matchAll(/https:\/\/github\.com\/ojfbot\/([\w-]+)\/(?:pull|issues)\/(\d+)/g)].map(match => `${match[1]}#${match[2]}`),
@@ -36,15 +51,8 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
 /** Select complete sources, never first/last-N comments or inferred summaries. */
 export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string; sources: readonly ActionSource[] }) {
   const scope = actionEvidenceScope(input)
-  const unique = new Map<string, ActionSource>()
-  for (const source of input.sources) {
-    const key = sourceKey(source.id)
-    if (key === COVERAGE_SOURCE) continue
-    const previous = unique.get(key)
-    if (previous && JSON.stringify(previous) !== JSON.stringify(source)) throw new Error(`Conflicting action evidence identity: ${key}; review pending`)
-    unique.set(key, source)
-  }
-  const sources = [...unique.values()].sort((a, b) => sourceKey(a.id).localeCompare(sourceKey(b.id)))
+  const sources = canonicalActionSources(input.sources)
+  const available = new Set(sources.map(source => sourceKey(source.id)))
   const required = (source: ActionSource) => ['article', 'operator'].includes(sourceKey(source.id))
     || source.kind === 'repository'
     || source.kind === 'github' && !/^github:[\w-]+#\d+$/.test(sourceKey(source.id))
@@ -53,7 +61,7 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     fullContentSha256: source.fullContentSha256 ?? sha256(source.content), collectedContentSha256: sha256(source.content),
     bytes: Buffer.byteLength(source.content), lines: source.content.split('\n').length,
     required: required(source), included: false, reason: 'outside current action/feedback scope' }))
-  const missing = [...scope.refs].filter(ref => !unique.has(`github:${ref}`)).sort()
+  const missing = [...scope.refs].filter(ref => !available.has(`github:${ref}`)).sort()
   const selected: ActionSource[] = []
   let bytes = 0
   const dependencies = [scope.text, ...sources.filter(source => source.kind === 'github' && required(source)).map(source => source.content)].join('\n')

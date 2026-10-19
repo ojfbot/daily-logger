@@ -2,6 +2,10 @@
 
 ## Deviations
 
+- 2026-10-19 (request sender): independent review reproduced a bot PR-description edit acquiring two new slots after a non-bot-authored commit because the inherited guard returned early on commit author. Require the non-bot account event and changed extracted feedback independently of HEAD authorship before provider steps; preserve deliberate new continuation requests as distinct revisions under the operator's per-revision policy.
+
+- 2026-10-19 (review scope): a reviewer initially treated unchanged notes on a deliberately requested new continuation as a quota bypass. The actual API required a new explicit owner request after a terminal predecessor; kept the operator's per-revision allowance and rejected the inferred per-text lifetime cap. Retries and duplicate delivery remain distinct from a new request.
+
 - 2026-10-19 (changed PR feedback): PR-plus-intent alone conflated the existing human-edited PR-body revision path with its previous request. Bind the trusted extractor’s exact feedback digest into the revision cycle and immutable output artifact; changed human feedback gets a distinct cycle, while identical feedback/source refresh/retries do not. Explicit continuation comments retain their separate comment-ID/digest identity.
 
 - 2026-10-19 (quota-only rejection memory): the inherited global rejection fingerprint treated capacity exclusions as permanent semantic rejection. The human’s per-revision clarification explicitly permits fresh consideration in a later distinct trusted cycle. Record a typed scope only at the new deterministic capacity guard, preserve it across same-cycle retries, and require a fresh proposer/verifier pass later; do not infer old reason text or alter semantic rejections or the 138 legacy holds.

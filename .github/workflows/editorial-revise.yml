@@ -210,7 +210,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: false
 
-      - name: Guard — skip if last commit was by bot
+      - name: Guard — require an explicit editorial request
         id: guard
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -220,7 +220,7 @@ jobs:
           SKIP=$(node .github/scripts/editorial-revision-admission.mjs "$AUTHOR")
           echo "skip=$SKIP" >> "$GITHUB_OUTPUT"
           if [[ "$SKIP" == 'true' ]]; then
-            echo "⏭ Bot revision remains blocked without changed human feedback"
+            echo "⏭ Revision requires a non-bot account request with valid new feedback"
           fi
 
       - name: Extract article date from branch name

@@ -19,6 +19,8 @@ ARTICLE_PATH=_articles/2026-10-17.md ACTION_REVIEW_REQUEST=manual:review-2026-10
 
 Reuse the same `ACTION_REVIEW_REQUEST` for retries of that request; a new identity is reserved for a genuinely new human action-review request. The workflow sets it from its trusted PR/comment metadata, never model output. The revision CLI also requires it.
 
+PR-body revision requests require a non-bot GitHub account event even when the current commit has a non-bot author. An edited event must change the extracted feedback; changing unrelated PR prose cannot invoke another revision or create another allowance. A continuation explicitly requested after its predecessor finishes is a new revision, even when the saved notes are unchanged. Duplicate delivery of that same request retains its identity and is not automatically replayed. Account type establishes this request boundary, not independent human authorship or distinct model provenance.
+
 An instructed agent can change an unaccepted suggestion's inclusion:
 
 ```bash

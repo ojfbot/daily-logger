@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { isReviewedAction } from './action-model.js'
 import { ACTION_REVIEW_PROMPT_VERSION, ActionReviewCycleSchema, actionAdmissionLimit, countCycleAdmissions, type ActionReviewCycle } from './action-review-cycle.js'
-import { ACTION_EVIDENCE_SELECTION_VERSION, actionReviewIndex, COVERAGE_SOURCE, selectActionEvidence } from './action-evidence-selection.js'
+import { ACTION_EVIDENCE_SELECTION_VERSION, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from './action-evidence-selection.js'
 import { EXCLUDED_REPOS, KNOWN_REPOS, REPO_NOTES, classifyFleet } from './fleet.js'
 import {
   ActionRegistrySchema, CitationSchema, managedArticleDigest, normalizeWorkKey,
@@ -323,7 +323,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   if (!input.registry.articles.some(article => article.date === input.articleDate) && Object.hasOwn(input.registry.baseline.articleActions, input.articleDate)) input = { ...input, markdown: normalizeLegacyActionProse(input.markdown) }
   input = { ...input, articleStatuses: new Map(input.articleStatuses).set(input.articleDate, input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft') }
   const previous = input.registry.articles.find(article => article.date === input.articleDate)
-  input = { ...input, sources: [...new Map(input.sources.map(source => [source.id.replace(/@[a-f0-9]{64}$/, ''), source])).values()].sort((a, b) => a.id.localeCompare(b.id)) }
+  input = { ...input, sources: canonicalActionSources(input.sources) }
   const inputHash = sha256(JSON.stringify({ version: ACTION_REVIEW_PROMPT_VERSION, evidenceSelectionVersion: ACTION_EVIDENCE_SELECTION_VERSION, cycle: input.cycle, statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
 
   if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === inputHash && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys)) return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true }
