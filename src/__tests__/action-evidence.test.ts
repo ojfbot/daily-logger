@@ -5,6 +5,9 @@ import { afterEach, expect, it, vi } from 'vitest'
 const { github } = vi.hoisted(() => ({ github: vi.fn() }))
 vi.mock('node:child_process', () => ({ execFileSync: github }))
 import { collectActionSources } from '../review-actions.js'
+import { ActionRegistrySchema } from '../action-registry.js'
+
+const registry = ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
 
 const roots: string[] = []
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); vi.restoreAllMocks(); github.mockReset() })
@@ -18,7 +21,7 @@ it.each(['private', 'internal', undefined])('does not fetch unnoted %s repositor
     if (endpoint?.includes('unnoted-secret/')) throw new Error('Private source content was fetched')
     return '[]'
   })
-  const sources = collectActionSources({ repoRoot: root, markdown: 'Inspect https://github.com/ojfbot/unnoted-secret/issues/1.', feedback: '' })
+  const sources = collectActionSources({ registry, repoRoot: root, markdown: 'Inspect https://github.com/ojfbot/unnoted-secret/issues/1.', feedback: '' })
   expect(sources.some(source => source.id.startsWith('github:unnoted-secret') || source.id.startsWith('goal:unnoted-secret'))).toBe(false)
   expect(github.mock.calls.filter(([, args]) => args.at(-1) === 'repos/ojfbot/unnoted-secret')).toHaveLength(1)
   expect(github.mock.calls.some(([, args]) => args.at(-1)?.includes('unnoted-secret/'))).toBe(false)
@@ -33,7 +36,7 @@ it('keeps public repository discovery and explicitly opted-in private repository
     if (endpoint?.endsWith('/issues/1')) return JSON.stringify([{ state: 'open', body: 'The current public issue remains open.' }])
     return '[]'
   })
-  const sources = collectActionSources({ repoRoot: root, markdown: 'Inspect https://github.com/ojfbot/new-public/issues/1 and https://github.com/ojfbot/core/issues/1.', feedback: '' })
+  const sources = collectActionSources({ registry, repoRoot: root, markdown: 'Inspect https://github.com/ojfbot/new-public/issues/1 and https://github.com/ojfbot/core/issues/1.', feedback: '' })
   expect(sources.filter(source => source.kind === 'github')).toHaveLength(2)
   expect(github.mock.calls.some(([, args]) => args.at(-1) === 'repos/ojfbot/core')).toBe(false)
 })
@@ -47,7 +50,7 @@ it('marks only current API facts and member-authored body/diff text as terminal 
     if (endpoint?.includes('/comments')) return JSON.stringify([[{ author_association: 'NONE', body: 'Third party claims completion.' }, { author_association: 'MEMBER', body: 'Member confirmed the condition.', diff_hunk: 'A member-authored review excerpt.', html_url: 'metadata URL' }]])
     return '[]'
   })
-  const source = collectActionSources({ repoRoot: root, markdown: 'Inspect https://github.com/ojfbot/core/issues/1.', feedback: '' }).find(source => source.kind === 'github')
+  const source = collectActionSources({ registry, repoRoot: root, markdown: 'Inspect https://github.com/ojfbot/core/issues/1.', feedback: '' }).find(source => source.kind === 'github')
   expect(source?.trustedContent).toEqual([
     'CURRENT API STATE core#1: state=open; head=not-a-PR; merged_at=none.',
     'The owner retained the obligation.',

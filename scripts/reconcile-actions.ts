@@ -25,7 +25,7 @@ const requestIdentity = process.env.ACTION_REVIEW_REQUEST?.trim()
 if (!process.env.ACTION_KEY && !requestIdentity) throw new Error('ACTION_REVIEW_REQUEST must identify this logical action-review request; retries retain it')
 const reviewed = process.env.ACTION_KEY
   ? { registry: setActionInclusion(registry, process.env.ACTION_KEY, process.env.INCLUDE_IN_INDEX !== 'false', process.env.ACTION_ACTOR ?? '', `Explicit editorial inclusion instruction: ${feedback.trim()}`, statuses), markdown }
-  : await reviewArticleActions({ cycle: acceptanceActionCycle(requestIdentity ?? '', registry.articles.find(article => article.date === articleDate)), registry, articleStatuses: statuses, articleDate, markdown, feedback, sources: process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ repoRoot, markdown, feedback }), agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
+  : await reviewArticleActions({ cycle: acceptanceActionCycle(requestIdentity ?? '', registry.articles.find(article => article.date === articleDate)), registry, articleStatuses: statuses, articleDate, markdown, feedback, sources: process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ registry, repoRoot, markdown, feedback }), agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
 reviewed.markdown = renderArticleActions(reviewed.markdown, reviewed.registry, articleDate, statuses)
 if (process.env.DRY_RUN !== 'true') {
   if (readFileSync(resolve(repoRoot, articlePath), 'utf8') !== markdown) throw new Error('Article changed during action review')
