@@ -133,6 +133,7 @@ jobs:
 
       - name: Reconcile actions before clean acceptance
         env:
+          ACTION_REVIEW_REQUEST: pull-request:${{ github.event.pull_request.number }}:clean-acceptance
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -162,7 +163,7 @@ jobs:
           INPUT_HEAD: ${{ github.event.pull_request.head.sha }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           ACTION_REPO_ROOT: ${{ github.workspace }}
-        run: pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/scripts/write-action-output.ts"
+        run: pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/scripts/write-action-output.ts" clean-acceptance
       - uses: actions/upload-artifact@v4
         id: action_artifact
         with:
@@ -325,6 +326,7 @@ jobs:
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''
         id: revise
         env:
+          ACTION_REVIEW_REQUEST: pull-request:${{ github.event.pull_request.number }}:revision
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
           EDITORIAL_FEEDBACK: ${{ steps.feedback.outputs.feedback }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -354,7 +356,7 @@ jobs:
           INPUT_HEAD: ${{ github.event.pull_request.head.sha }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           ACTION_REPO_ROOT: ${{ github.workspace }}
-        run: pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/scripts/write-action-output.ts"
+        run: pnpm --dir "$POLICY_DIRECTORY" exec tsx "$POLICY_DIRECTORY/scripts/write-action-output.ts" revision
       - uses: actions/upload-artifact@v4
         id: action_artifact
         if: steps.guard.outputs.skip != 'true' && steps.feedback.outputs.feedback != ''

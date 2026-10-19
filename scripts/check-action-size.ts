@@ -1,3 +1,4 @@
+import { revisionActionCycle } from '../src/action-review-cycle.js'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { readActionRegistry, readArticleStatuses, ActionRegistrySchema, type ActionSource } from '../src/action-registry.js'
 import { reviewArticleActions } from '../src/review-actions.js'
@@ -13,7 +14,7 @@ void (async () => {
   const prompts: number[] = []
   const measured = new Error('Both prompts captured; no provider called')
   try {
-    await reviewArticleActions({
+    await reviewArticleActions({ cycle: revisionActionCycle('budget-probe'),
       registry: readActionRegistry(root), articleDate: date,
       markdown: readFileSync(`_articles/${date}.md`, 'utf8'),
       feedback: 'Local context-size measurement only', sources, articleStatuses: readArticleStatuses(root),

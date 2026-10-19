@@ -1,3 +1,4 @@
+import { revisionActionCycle } from '../action-review-cycle.js'
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, writeFileSync, renameSync, existsSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -15,7 +16,7 @@ const source = { id: 'proof', kind: 'repository' as const, locator: 'ROADMAP.md'
 const prose = (date: string, status = 'draft') => `---\ndate: ${date}\nstatus: ${status}\n---\nA reviewed article.\n`
 function propose(date: string, registry = empty(), accepted = false): ActionRegistry {
   const previous = registry.articles.find(article => article.date === date)
-  return applyVerifiedActionReview({ registry, articleDate: date, markdown: prose(date, accepted ? 'accepted' : 'draft'), articleStatuses: new Map([[date, accepted ? 'accepted' : 'draft']]), sources: [source], roundId: (accepted ? 'e' : 'd').repeat(64),
+  return applyVerifiedActionReview({ cycle: revisionActionCycle('fixture'), registry, articleDate: date, markdown: prose(date, accepted ? 'accepted' : 'draft'), articleStatuses: new Map([[date, accepted ? 'accepted' : 'draft']]), sources: [source], roundId: (accepted ? 'e' : 'd').repeat(64),
     proposal: { changes: (previous?.actionKeys ?? []).map(actionKey => ({ actionKey, state: 'open', description: 'Review this checkpoint.', reason: 'The checkpoint remains necessary.', citations: [{ sourceId: 'proof', quote: 'acceptance requires a verified checkpoint' }] })), suggestions: previous ? [] : [{ command: '/validate', description: `Review ${date}.`, repo: 'daily-logger', target: date, outcome: 'verified acceptance', goal: 'Reliable acceptance', factCitations: [{ sourceId: 'proof', quote: 'acceptance requires a verified checkpoint' }], goalCitations: [{ sourceId: 'proof', quote: 'Reliable acceptance' }], doneWhen: 'The checkpoint is verified.', gates: [], existingKey: null }] },
     verification: { changes: (previous?.actionKeys ?? []).map(actionKey => ({ actionKey, verdict: 'pass', reason: 'Source checked.' })), suggestions: previous ? [] : [{ candidateIndex: 0, verdict: 'pass', reason: 'Source checked.', existingKey: null }] } })
 }
@@ -38,7 +39,7 @@ it('merges acceptance on D with generation on D+1 without changing the imported 
 })
 it('rejects oversized evidence before either provider call, retains the draft and admits nothing (F3/F4)', async () => {
   let calls = 0
-  const result = await reviewDraftActions({ registry: empty(), articleDate: '2030-01-01', markdown: prose('2030-01-01'), feedback: '', articleStatuses: new Map(), sources: [{ ...source, content: 'x'.repeat(129 * 1024) }], agents: { propose: async () => { calls++; throw new Error('must not call') }, verify: async () => { calls++; throw new Error('must not call') } } })
+  const result = await reviewDraftActions({ cycle: revisionActionCycle('fixture'), registry: empty(), articleDate: '2030-01-01', markdown: prose('2030-01-01'), feedback: '', articleStatuses: new Map(), sources: [{ ...source, content: 'x'.repeat(129 * 1024) }], agents: { propose: async () => { calls++; throw new Error('must not call') }, verify: async () => { calls++; throw new Error('must not call') } } })
   expect(calls).toBe(0); expect(result.registry.records).toEqual([])
   expect(result.markdown).toContain('Action review pending')
   const file = splitActionRegistry(result.registry).files[0]!
@@ -98,7 +99,7 @@ it('restores both the published article and dated state if sidecar installation 
 it('bounds the verifier prompt including the proposed output before calling the verifier (F3)', async () => {
   let proposals = 0, verifications = 0
   const registry = propose('2030-01-01'), record = registry.records[0]!
-  const result = await reviewDraftActions({ registry, articleDate: '2030-01-01', markdown: prose('2030-01-01'), feedback: 'new review', sources: [source], articleStatuses: new Map(), agents: {
+  const result = await reviewDraftActions({ cycle: revisionActionCycle('fixture'), registry, articleDate: '2030-01-01', markdown: prose('2030-01-01'), feedback: 'new review', sources: [source], articleStatuses: new Map(), agents: {
     propose: async () => { proposals++; return { changes: [{ actionKey: record.key, state: 'open', description: 'x'.repeat(640 * 1024), reason: 'Grounded.', citations: [{ sourceId: 's1', quote: 'Reliable acceptance' }] }], suggestions: [] } },
     verify: async () => { verifications++; throw new Error('must not call') },
   } })

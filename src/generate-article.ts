@@ -8,7 +8,7 @@ import { formatArticleFooter } from './run-provenance.js'
 import { isReviewedAction } from './action-model.js'
 
 export const ARTICLE_MODEL = 'claude-sonnet-4-6'
-export const ARTICLE_PROMPT_VERSION = 'article-v2-2026-10-16-no-model-time-metadata'
+export const ARTICLE_PROMPT_VERSION = 'article-v3-2026-10-19-initial-action-target'
 // 8 k output budget — enough headroom on high-activity days (64+ commits) to
 // avoid mid-response cutoff.
 const MAX_TOKENS = 8192
@@ -118,6 +118,8 @@ All three TypeScript apps share an identical extracted shell:
 - Aware that this blog is itself a demonstration of AI-native development
 
 ## Action item standards
+
+Initial generation targets 3–5 useful, source-supported follow-ups, with at most five candidate ideas. Never fill a quota: fewer or zero is valid when evidence or existing work does not justify more. Admission still requires the separate independent action review.
 
 Candidates in the \`suggestedActions\` field must be:
 - **Specific**: tied to today's actual shipped work, not generic
@@ -382,7 +384,8 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
       },
       suggestedActions: {
         type: 'array',
-        description: 'Structured action items with slash command prefixes.',
+        description: 'Target 3–5 useful source-supported candidate ideas; fewer or zero is valid without justified novel work. Independent verification owns admission.',
+        maxItems: 5,
         items: {
           type: 'object',
           properties: {

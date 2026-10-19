@@ -15,7 +15,7 @@ it('runs the receipt-free CI probe and fails when fixed action context grows bey
     mkdirSync(join(directory, '_articles'))
     cpSync(join(root, '_articles/2026-10-17.md'), join(directory, '_articles/2026-10-17.md'))
     symlinkSync(join(root, 'node_modules'), join(directory, 'node_modules'), 'dir')
-    const run = () => execFileSync('pnpm', ['exec', 'tsx', join(root, 'scripts/check-action-size.ts')], { cwd: directory, encoding: 'utf8', stdio: 'pipe' })
+    const run = () => execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', join(root, 'scripts/check-action-size.ts')], { cwd: directory, encoding: 'utf8', stdio: 'pipe' })
     const before = readFileSync(join(directory, 'actions/registry.json'), 'utf8')
     const result = JSON.parse(run())
     expect(result.proposerPromptBytes).toBeLessThan(result.limits.fixedContext)

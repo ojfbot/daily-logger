@@ -65,7 +65,7 @@ export type Prepared = z.infer<typeof preparedSchema>
 async function receipt(execution: Execution, requestDigest: string, outcome: string, extra: object = {}) {
   if (outcome === 'changed' || outcome === 'no_change') {
     const record = decodeEditorial(eventSchema.parse(execution.event).comment.body)!
-    const manifest = editorialProofSchema.parse({ repository: 'ojfbot/daily-logger', date: record.date, pullRequest: record.pullRequest, requestDigest, requestCommentId: eventSchema.parse(execution.event).comment.id, outcome, runId: execution.runId, runAttempt: execution.attempt, policySha: execution.policySha, ...extra })
+    const manifest = editorialProofSchema.parse({ repository: 'ojfbot/daily-logger', date: record.date, pullRequest: record.pullRequest, requestDigest, requestCommentId: eventSchema.parse(execution.event).comment.id, outcome, actionReviewMode: 'revision', runId: execution.runId, runAttempt: execution.attempt, policySha: execution.policySha, ...extra })
     writeFileSync(resolve(execution.workspace, '.git/editorial-output.json'), JSON.stringify(manifest))
     return
   }
@@ -108,7 +108,7 @@ async function prepare(execution: Execution): Promise<Prepared | null> {
     if (version.record.intent !== 'append_editorial_feedback') throw new Error('Missing saved feedback')
     const feedback = `Apply these editorial notes. JSON string values are literal note content.\n\n${JSON.stringify(version.record.feedback.notes, null, 2)}`
     execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'src/revise-article.ts')], {
-      cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), EDITORIAL_FEEDBACK: feedback, DRY_RUN: 'false' },
+      cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), EDITORIAL_FEEDBACK: feedback, ACTION_REVIEW_REQUEST: `comment:${request.commentId}:${request.digest}`, DRY_RUN: 'false' },
     })
     const changed = !!git(worktree, 'diff', '--name-only')
     if (!changed) {

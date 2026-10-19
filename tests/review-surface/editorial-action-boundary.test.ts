@@ -1,3 +1,4 @@
+import { revisionActionCycle } from '../../src/action-review-cycle.js'
 import { actionFile } from '../../src/__tests__/action-store-fixture.js'
 import { afterEach, expect, it, vi } from 'vitest'
 import { createFixture, today } from './fixture.js'
@@ -12,7 +13,7 @@ function setup() {
   const { state, github } = createFixture()
   const head = 'd'.repeat(40), articlePath = `_articles/${today}.md`
   const article = `---\ndate: ${today}\nstatus: draft\n---\nA reviewed draft.\n`
-  const before = applyVerifiedActionReview({ registry: ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] }),
+  const before = applyVerifiedActionReview({ cycle: revisionActionCycle('fixture'), registry: ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] }),
     articleDate: today, articleStatuses: new Map([[today, 'draft']]), markdown: article, roundId: 'd'.repeat(64),
     sources: [{ id: 'proof', kind: 'github', locator: 'fixture', content: 'The exact checkpoint requires review before the owner decides readiness.' }],
     proposal: { changes: [], suggestions: [{ command: '/pr-review', description: 'Review the exact checkpoint.', repo: 'daily-logger', target: '#42', outcome: 'Owner receives evidence', goal: 'Verified acceptance', goalCitations: [{ sourceId: 'proof', quote: 'requires review before the owner' }], factCitations: [{ sourceId: 'proof', quote: 'The exact checkpoint requires review' }], doneWhen: 'Review evidence is delivered.', gates: ['Owner decides readiness.'], existingKey: null }] },

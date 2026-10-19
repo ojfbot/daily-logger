@@ -1,3 +1,4 @@
+import { generationActionCycle } from '../action-review-cycle.js'
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { cpSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
@@ -65,7 +66,7 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     expect(prepared.markdown).toContain(`time_records_sha256: ${prepared.digest}`)
     expect(prepared.markdown).not.toContain('time_references:')
     const registry = readActionRegistry(root)
-    const review = await reviewArticleActions({ registry, articleStatuses: new Map(), articleDate: date, markdown: prepared.markdown, feedback: '', sources: [], agents: mockActionAgents })
+    const review = await reviewArticleActions({ cycle: generationActionCycle(), registry, articleStatuses: new Map(), articleDate: date, markdown: prepared.markdown, feedback: '', sources: [], agents: mockActionAgents })
     writeActionRegistry(root, review.registry, registryRevision(registry))
     buildApi(root)
     const apiPath = join(root, 'api/articles', `${date}.json`)
@@ -82,7 +83,7 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     expect(revised.revisedMarkdown).toContain(`time_records_sha256: ${prepared.digest}`)
     expect(revised.revisedMarkdown).not.toContain('time_references:')
     writeFileSync(persisted.articlePath, revised.revisedMarkdown)
-    const cli = execFileSync(process.execPath, ['--import', 'tsx', fileURLToPath(new URL('../revise-article.ts', import.meta.url))], { cwd: sourceRoot, env: { ...process.env, ARTICLE_PATH: persisted.articlePath, EDITORIAL_FEEDBACK: 'Apply the offline fixture summary change.', MOCK_LLM: 'true', DRY_RUN: 'false' }, encoding: 'utf8' })
+    const cli = execFileSync(process.execPath, ['--import', 'tsx', fileURLToPath(new URL('../revise-article.ts', import.meta.url))], { cwd: sourceRoot, env: { ...process.env, ARTICLE_PATH: persisted.articlePath, EDITORIAL_FEEDBACK: 'Apply the offline fixture summary change.', ACTION_REVIEW_REQUEST: 'fixture:time-preservation', MOCK_LLM: 'true', DRY_RUN: 'false' }, encoding: 'utf8' })
     expect(cli).toContain('"changed":true')
     expect(readFileSync(persisted.articlePath, 'utf8')).toContain(`time_records_sha256: ${prepared.digest}`)
     expect(readFileSync(persisted.artifactPath).equals(originalArtifact)).toBe(true)
