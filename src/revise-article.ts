@@ -195,7 +195,7 @@ async function main() {
     const registry = readActionRegistry(repoRoot)
     const articleDate = result.revisedMarkdown.match(/^date:\s*"?(\d{4}-\d{2}-\d{2})/m)?.[1]
     if (!articleDate) throw new Error('Article date is missing')
-    const actions = await reviewArticleActions({ cycle, registry, articleStatuses: readArticleStatuses(repoRoot), articleDate, markdown: result.revisedMarkdown, feedback, sources: isMock ? [] : collectActionSources({ repoRoot, markdown: result.revisedMarkdown, feedback }), agents: isMock ? mockActionAgents : createActionAgents() })
+    const actions = await reviewArticleActions({ cycle, registry, articleStatuses: readArticleStatuses(repoRoot), articleDate, markdown: result.revisedMarkdown, feedback, sources: isMock ? [] : collectActionSources({ registry, repoRoot, markdown: result.revisedMarkdown, feedback }), agents: isMock ? mockActionAgents : createActionAgents() })
     result.revisedMarkdown = actions.markdown
     result.changed = result.revisedMarkdown.trim() !== articleContent.trim()
     registryChanged = registryRevision(actions.registry) !== registryRevision(registry)

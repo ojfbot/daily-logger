@@ -4,9 +4,9 @@ import { join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 const { github } = vi.hoisted(() => ({ github: vi.fn() }))
 vi.mock('node:child_process', () => ({ execFileSync: github }))
-import { ActionRegistrySchema, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionSource } from '../action-registry.js'
+import { ActionRegistrySchema, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
 import { writeActionStore } from './action-store-fixture.js'
-import { actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from '../action-evidence-selection.js'
+import { ACTION_EVIDENCE_SELECTION_VERSION, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from '../action-evidence-selection.js'
 import { revisionActionCycle } from '../action-review-cycle.js'
 import { collectActionSources, reviewArticleActions, reviewDraftActions } from '../review-actions.js'
 
@@ -16,10 +16,12 @@ const markdown = `---\ndate: ${date}\nstatus: draft\n---\n## What shipped\n${Arr
 const roots: string[] = []
 afterEach(() => { roots.splice(0).forEach(root => rmSync(root, { recursive: true, force: true })); vi.restoreAllMocks(); github.mockReset() })
 
-function fixture() {
+function fixture(options: { markdown?: string; feedback?: string; acceptedPreview?: boolean; registry?: ActionRegistry; compact?: boolean } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'action-selection-')); roots.push(root)
   const ownerGate = 'OWNER GATE: human visual acceptance is required before merge.'
-  const middle = Array.from({ length: 201 }, (_, i) => ({ author_association: i === 100 ? 'OWNER' : 'NONE', body: i === 100 ? ownerGate : `Comment ${i}: ${'背景🙂 '.repeat(15)}` }))
+  const completion = 'OWNER DELIVERY: the human accepted the visual preview and verified every preview acceptance check.'
+  const middle = Array.from({ length: options.compact ? 0 : 201 }, (_, i) => ({ author_association: i === 100 || i === 200 && options.acceptedPreview ? 'OWNER' : 'NONE',
+    body: i === 100 ? ownerGate : i === 200 && options.acceptedPreview ? completion : `Comment ${i}: ${'背景🙂 '.repeat(15)}` }))
   github.mockImplementation((_command, args: string[], options: { timeout: number }) => {
     expect(args.slice(0, 3)).toEqual(['api', '--paginate', '--slurp'])
     expect(options.timeout).toBeGreaterThan(0); expect(options.timeout).toBeLessThanOrEqual(10000)
@@ -30,10 +32,69 @@ function fixture() {
     throw new Error(`Unexpected fake GitHub endpoint: ${endpoint}`)
   })
   vi.spyOn(console, 'warn').mockImplementation(() => {})
-  const sources = collectActionSources({ repoRoot: root, markdown, feedback: '' })
-  return { root, sources, ownerGate }
+  const sources = collectActionSources({ repoRoot: root, registry: options.registry ?? empty(), markdown: options.markdown ?? markdown, feedback: options.feedback ?? '' })
+  return { root, sources, ownerGate, completion }
 }
 function input(sources: ActionSource[]) { return { registry: empty(), articleDate: date, cycle: revisionActionCycle('offline-source-selection-control'), articleStatuses: new Map([[date, 'draft']]), markdown, feedback: '', sources } }
+
+it.each(['feedback', 'next-actions'])('follows an older action explicitly named in %s through collector, whole-source selection and both closure prompts', async location => {
+  const key = 'old-owned-action'
+  const feedback = location === 'feedback' ? `Reconcile ${key} against its recorded completion condition; retain every owner gate.` : ''
+  const shipments = Array.from({ length: 20 }, (_, i) => `https://github.com/ojfbot/daily-logger/pull/${i + 1}`).join('\n')
+  const article = `---\ndate: ${date}\nstatus: draft\n---\n## What shipped\n${shipments}\n## What's next\n${location === 'next-actions' ? `Reconcile ${key}.` : ''}\n`
+  const registry = empty()
+  const original = { id: key, command: '/review', description: 'Review the visual preview for daily-logger #385.', repo: 'daily-logger', status: 'open' as const, sourceDate: '2029-12-31' }
+  registry.records.push({ key, original, origin: 'imported', workKey: 'preview-obligation', state: 'open', introducedBy: original.sourceDate,
+    includeInIndex: true, inclusionOverride: null, goal: 'A human accepts the preview.', doneWhen: 'The human accepted the visual preview and verified every preview acceptance check.', gates: ['Human visual acceptance is required.'], history: [] })
+  registry.records.push({ ...structuredClone(registry.records[0]), key: 'context-neighbor', original: { ...original, id: 'context-neighbor' },
+    workKey: 'other-obligation', goal: 'Separate contextual work.', gates: ['Also inspect daily-logger #999.'] })
+  const { sources, ownerGate, completion } = fixture({ registry, markdown: article, feedback, acceptedPreview: true })
+  expect(github.mock.calls.some(([, args]) => args.at(-1)?.includes('/issues/385'))).toBe(true)
+  expect(github.mock.calls.some(([, args]) => args.at(-1)?.includes('/issues/999'))).toBe(false)
+  expect(sources.filter(source => source.kind === 'github')).toHaveLength(12)
+  const reviewInput = { ...input(sources), registry, markdown: article, feedback }
+  const selected = selectActionEvidence(reviewInput)
+  expect(selected.receipt.requiredReferences).toEqual(['daily-logger#385'])
+  expect(selected.expandedActionKeys).toContain('context-neighbor')
+  const prompts: string[] = []
+  const result = await reviewArticleActions({ ...reviewInput, agents: {
+    propose: async (prompt, modelSources) => {
+      prompts.push(prompt)
+      const source = modelSources.find(source => source.locator === 'https://github.com/ojfbot/daily-logger/issues/385')
+      if (!source) throw new Error('Named older action lost its collected dependency')
+      expect(source.content).toContain(ownerGate)
+      expect(source.content).toContain(completion)
+      expect(source.trustedContent).toContain(completion)
+      return { changes: [{ actionKey: key, state: 'done', description: 'The human accepted the visual preview.', reason: 'The owner confirmed the exact preview completion condition.', citations: [{ sourceId: source.id, quote: completion }] }], suggestions: [] }
+    }, verify: async prompt => { prompts.push(prompt); return { changes: [{ actionKey: key, verdict: 'pass', reason: 'The complete owner discussion retains its gate and later exact delivery confirmation.' }], suggestions: [] } },
+  } })
+  expect(prompts).toHaveLength(2)
+  expect(prompts.every(prompt => prompt.includes(ownerGate) && prompt.includes(completion))).toBe(true)
+  expect(result.registry.records.find(record => record.key === key)?.state).toBe('done')
+  expect(result.registry.records.find(record => record.key === 'context-neighbor')).toEqual(registry.records[1])
+  expect(result.registry.articles[0].rejected).toEqual([])
+  const calls = vi.fn()
+  const missing = await reviewDraftActions({ ...reviewInput, sources: sources.filter(source => source.kind !== 'github'), agents: {
+    propose: async () => { calls(); return {} }, verify: async () => { calls(); return {} },
+  } })
+  expect(calls).not.toHaveBeenCalled()
+  expect(missing.registry.articles[0].review.state).toBe('pending')
+  expect(missing.registry.records).toEqual(registry.records)
+})
+
+it('keeps thirteen mandatory references pending under the unchanged twelve-discussion collector limit', async () => {
+  const article = `---\ndate: ${date}\nstatus: draft\n---\n## What's next\nInspect the explicitly named evidence.\n`
+  const feedback = Array.from({ length: 13 }, (_, index) => `Inspect daily-logger #${100 + index}.`).join('\n')
+  const { sources } = fixture({ markdown: article, feedback, compact: true })
+  expect(sources.filter(source => source.kind === 'github')).toHaveLength(12)
+  const calls = vi.fn()
+  const result = await reviewDraftActions({ ...input(sources), markdown: article, feedback, agents: {
+    propose: async () => { calls(); return {} }, verify: async () => { calls(); return {} },
+  } })
+  expect(calls).not.toHaveBeenCalled()
+  expect(result.registry.records).toEqual([])
+  expect(result.registry.articles[0].review).toMatchObject({ state: 'pending', reason: expect.stringContaining('Required action evidence unavailable') })
+})
 
 it('runs full collector→selection→both prompt paths with twelve oversized discussions, preserving an older owner gate', async () => {
   const { root, sources, ownerGate } = fixture()
@@ -153,7 +214,7 @@ it('refuses a terminal disposition supported only by the coverage index, even if
   registry.records.push({ key: 'carried', original: { id: 'carried', command: '/review', description: 'Inspect daily-logger #385.', repo: 'daily-logger', status: 'open', sourceDate: date }, origin: 'imported', workKey: 'existing', state: 'open', introducedBy: date, includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: 'Owner accepts the preview.', gates: ['Human acceptance required.'], history: [] })
   const result = await reviewDraftActions({ ...input(sources), registry, agents: {
     propose: async (_prompt, selected) => {
-      const coverage = selected.find(source => source.locator === 'whole-action-sources-v1')
+      const coverage = selected.find(source => source.locator === ACTION_EVIDENCE_SELECTION_VERSION)
       if (!coverage) throw new Error('Missing coverage')
       return { changes: [{ actionKey: 'carried', state: 'done', description: 'Completed.', reason: 'The index exists.', citations: [{ sourceId: coverage.id, quote: 'Missing or omitted content is unknown' }] }], suggestions: [] }
     }, verify: async () => ({ changes: [{ actionKey: 'carried', verdict: 'pass', reason: 'Index says unknown.' }], suggestions: [] }),

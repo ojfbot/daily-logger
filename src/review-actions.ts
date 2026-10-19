@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { isReviewedAction } from './action-model.js'
 import { ACTION_REVIEW_PROMPT_VERSION, ActionReviewCycleSchema, actionAdmissionLimit, countCycleAdmissions, type ActionReviewCycle } from './action-review-cycle.js'
-import { ACTION_EVIDENCE_SELECTION_VERSION, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from './action-evidence-selection.js'
+import { ACTION_EVIDENCE_SELECTION_VERSION, actionEvidenceScope, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from './action-evidence-selection.js'
 import { EXCLUDED_REPOS, KNOWN_REPOS, REPO_NOTES, classifyFleet } from './fleet.js'
 import {
   ActionRegistrySchema, CitationSchema, managedArticleDigest, normalizeWorkKey,
@@ -113,7 +113,7 @@ export function actionGithubReferences(input: { markdown: string; feedback: stri
   return [...refs].reverse().slice(0, 12)
 }
 
-export function collectActionSources(input: { repoRoot: string; markdown: string; feedback: string; context?: string }): ActionSource[] {
+export function collectActionSources(input: { registry: ActionRegistry; repoRoot: string; markdown: string; feedback: string; context?: string }): ActionSource[] {
   const sources: ActionSource[] = [
     { id: 'article', kind: 'report', locator: 'current revised article', content: stripManagedActions(input.markdown) },
     { id: 'operator', kind: 'instruction', locator: 'editorial feedback', content: input.feedback },
@@ -162,7 +162,13 @@ export function collectActionSources(input: { repoRoot: string; markdown: string
     ['fleet-goal', { repo: 'core', path: 'decisions/northstar/l2-ojfbot.md', ref: 'main' }],
     ['fleet-roadmap', { repo: 'core', path: 'decisions/northstar/roadmap-l2-ojfbot.md', ref: 'main' }],
   ])
-  for (const [id, ref] of actionGithubReferences(input)) {
+  const references = new Map<string, { repo: string; kind: string; number: string }>()
+  for (const id of [...actionEvidenceScope({ ...input, articleDate: articleDate ?? '' }).refs].sort()) {
+    const match = /^([\w-]+)#(\d+)$/.exec(id)
+    if (match) references.set(id, { repo: match[1], kind: 'pull', number: match[2] })
+  }
+  for (const [id, ref] of actionGithubReferences(input)) if (!references.has(id)) references.set(id, ref)
+  for (const [id, ref] of [...references].slice(0, 12)) {
     if (!canReadRepository(ref.repo)) continue
     try {
       const base = `repos/ojfbot/${ref.repo}`

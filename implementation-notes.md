@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-19 (named-action dependencies): integrated Spec review named an older action by ID and showed its record expanded in the prompt while its already-collected primary discussion was omitted. Seed required dependencies from explicitly named action identities as well as the current article's carried identities, and pass the same registry into all three collectors so these direct references take priority within the existing twelve-source bound. Missing mandatory discussions still stop before provider calls. Related records remain context and do not trigger an unbounded transitive crawl.
+
 - 2026-10-19 (request sender): independent review reproduced a bot PR-description edit acquiring two new slots after a non-bot-authored commit because the inherited guard returned early on commit author. Require the non-bot account event and changed extracted feedback independently of HEAD authorship before provider steps; preserve deliberate new continuation requests as distinct revisions under the operator's per-revision policy.
 
 - 2026-10-19 (review scope): a reviewer initially treated unchanged notes on a deliberately requested new continuation as a quota bypass. The actual API required a new explicit owner request after a terminal predecessor; kept the operator's per-revision allowance and rejected the inferred per-text lifetime cap. Retries and duplicate delivery remain distinct from a new request.

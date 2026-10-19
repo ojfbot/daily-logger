@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { applyVerifiedActionReview } from '../../../src/review-actions.js'
+import { revisionActionCycle } from '../../../src/action-review-cycle.js'
 import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry } from '../../../src/action-registry-schema.js'
 import { readFileSync } from 'node:fs'
 
@@ -20,6 +21,7 @@ test('the reconciled October 17 article renders completed and dismissed cards wi
 const source = `---\ntitle: "Action review"\ndate: ${date}\nstatus: "draft"\n---\n## What's next\nReview the next checkpoint.\n`
 function fixture() {
   return applyVerifiedActionReview({
+    cycle: revisionActionCycle('browser-inclusion-fixture'),
     registry: ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] }),
     articleDate: date, articleStatuses: new Map([[date, 'draft']]), markdown: source, roundId: 'd'.repeat(64),
     sources: [{ id: 'proof', kind: 'github', locator: 'test proof', content: 'The next checkpoint requires the exact review.' }],

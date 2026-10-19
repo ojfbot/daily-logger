@@ -3,7 +3,7 @@ import { KNOWN_REPOS } from './fleet.js'
 
 const SOURCE_LIMIT = 128 * 1024
 const TOTAL_LIMIT = 384 * 1024
-export const ACTION_EVIDENCE_SELECTION_VERSION = 'whole-action-sources-v1'
+export const ACTION_EVIDENCE_SELECTION_VERSION = 'whole-action-sources-v2'
 export const COVERAGE_SOURCE = 'action-evidence-coverage'
 const sourceKey = (id: string) => id.replace(/@[a-f0-9]{64}$/, '')
 
@@ -33,9 +33,10 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
   const current = input.registry.articles.find(article => article.date === input.articleDate)?.actionKeys
     ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
   const nextSection = stripManagedActions(input.markdown).match(/^## (?:What['’]s next|Next actions|Suggested actions)\s*\n([\s\S]*?)(?=^## |$(?![\s\S]))/mi)?.[1] ?? ''
-  const carried = input.registry.records.filter(record => current.includes(record.key))
-  const text = [input.feedback, nextSection, ...carried.map(record => JSON.stringify({ key: record.key, workKey: record.workKey,
-    description: record.history.at(-1)?.description ?? record.original.description, goal: record.goal, doneWhen: record.doneWhen, gates: record.gates }))].join('\n')
+  const requested = [input.feedback, nextSection].join('\n')
+  const carried = input.registry.records.filter(record => current.includes(record.key) || requested.includes(record.key))
+  const text = [requested, ...carried.map(record => JSON.stringify({ key: record.key, workKey: record.workKey,
+    originalDescription: record.original.description, description: record.history.at(-1)?.description ?? record.original.description, goal: record.goal, doneWhen: record.doneWhen, gates: record.gates }))].join('\n')
   const refs = references(text)
   // Citation identities are also dependencies when the prose uses a short #N.
   for (const record of carried) for (const decision of record.history) for (const citation of decision.citations) {
