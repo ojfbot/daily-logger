@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-shortlist-20261019-2505c10a5f02",
+  "article": {
+    "date": "2026-10-19",
+    "sourceCommitSha": "2505c10a5f02a276c2880358dac2a3ea93e0bbb7",
+    "blobSha": "bdc5969ce732e57a96fa2056732625e75372c046"
+  },
+  "reviewer": {
+    "name": "Codex — Suggested actions delivery review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-20T04:09:24.530Z",
+  "scope": "Three source-reviewed checkpoints preserve article history, action identities and owner gates. A/B reviewed article and action data; A authored the test repair and B independently reviewed it. Root observed production accessibility interactions; visual proof is unavailable. Schedule, unattended, retention and PR385 approval gates remain held.",
+  "fullRecordBlobSha": "2901e552bb806fd72f64bfa4b5e4234a48316e13",
+  "fullRecordPath": "reviews/articles/2026-10-19-2505c10a5f02a276c2880358dac2a3ea93e0bbb7.md",
+  "result": "completed",
+  "findings": []
+}
