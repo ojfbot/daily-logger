@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CanonicalActionSchema, isReviewedAction } from './action-model.js'
-import { ActionReviewCycleSchema, ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, actionAdmissionErrors } from './action-review-cycle.js'
+import { ActionReviewCycleSchema, CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS, RANKED_ACTION_REVIEW_PROMPT_VERSIONS, actionAdmissionErrors } from './action-review-cycle.js'
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 const digest = z.string().regex(/^[a-f0-9]{64}$/)
@@ -49,6 +49,11 @@ const RankedRecommendationFields = {
 export const RankedClosingActionSchema = ClosingActionSchema.extend(RankedRecommendationFields).strict()
 export const RankedClosingCheckpointSchema = ClosingCheckpointSchema.extend(RankedRecommendationFields).strict()
 export const RankedClosingOptionSchema = z.discriminatedUnion('kind', [RankedClosingActionSchema, RankedClosingCheckpointSchema])
+export const RecommendationMaintenanceDescriptorSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('action'), identity: z.string().min(1), actionKey: z.string().min(1), title: z.string().min(1), outcome: z.string().min(1) }).strict(),
+  z.object({ kind: z.literal('checkpoint'), identity: z.string().min(1), target: z.string().url(), title: z.string().min(1), outcome: z.string().min(1) }).strict(),
+])
+export type RecommendationMaintenanceDescriptor = z.infer<typeof RecommendationMaintenanceDescriptorSchema>
 export const RankedShortlistSchema = z.object({
   kind: z.literal('shortlist'),
   options: z.tuple([RankedClosingOptionSchema, RankedClosingOptionSchema, RankedClosingOptionSchema]),
@@ -69,9 +74,12 @@ const NeedsEvidenceClosingSchema = z.object({
   nextCheck: z.string().min(1),
   recommendations: PartialShortlistSchema.default([]),
   unresolvedIdentities: z.array(z.string().min(1)).optional(),
+  unresolvedRecommendations: z.array(RecommendationMaintenanceDescriptorSchema).optional(),
 }).strict().superRefine((closing, context) => {
   const unresolved = closing.unresolvedIdentities ?? []
+  const descriptors = closing.unresolvedRecommendations ?? []
   if (new Set(unresolved).size !== unresolved.length || unresolved.some(identity => closing.recommendations.some(option => option.identity === identity))) context.addIssue({ code: 'custom', message: 'Unresolved recommendation identities must be distinct from the visible partial shortlist' })
+  if (new Set(descriptors.map(descriptor => descriptor.identity)).size !== descriptors.length || descriptors.some(descriptor => !unresolved.includes(descriptor.identity))) context.addIssue({ code: 'custom', message: 'Unresolved recommendation descriptors must identify unresolved shortlist obligations' })
 })
 export const ClosingPromptSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('options'), options: z.array(ClosingOptionSchema).min(1).max(5) }).strict(),
@@ -129,10 +137,12 @@ export const ArticleActionSchema = z.object({
   rejected: z.array(z.object({ description: z.string(), reason: z.string(), workKey: z.string().optional(), evidenceDigest: digest.optional(), quotaHold: z.object({ articleDate: date, cycle: ActionReviewCycleSchema }).strict().optional() }).strict()),
   binding: z.object({ mode: z.literal('editorial-rebind'), fromDigest: digest, actor: z.string().min(1), instructionSha256: digest }).strict().optional(),
 }).strict().superRefine((article, context) => {
-  if ([ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, 'action-review-pending-v2-cycle'].includes(article.verification.promptVersion) && !article.reviewCycle) context.addIssue({ code: 'custom', message: `Action review cycle is missing: ${article.date}` })
-  if ([ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION].includes(article.verification.promptVersion) && !article.draftContext) context.addIssue({ code: 'custom', message: `Draft continuation context state is missing: ${article.date}` })
-  if (article.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && article.review.state === 'verified' && !article.closing) context.addIssue({ code: 'custom', message: `Closing prompt is missing: ${article.date}` })
-  if (article.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && article.review.state === 'verified' && article.closing?.kind === 'options') context.addIssue({ code: 'custom', message: `Legacy closing options cannot qualify a ranked shortlist: ${article.date}` })
+  const contextBoundVersions = new Set<string>(CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS)
+  const rankedVersions = new Set<string>(RANKED_ACTION_REVIEW_PROMPT_VERSIONS)
+  if ((contextBoundVersions.has(article.verification.promptVersion) || article.verification.promptVersion === 'action-review-pending-v2-cycle') && !article.reviewCycle) context.addIssue({ code: 'custom', message: `Action review cycle is missing: ${article.date}` })
+  if (contextBoundVersions.has(article.verification.promptVersion) && !article.draftContext) context.addIssue({ code: 'custom', message: `Draft continuation context state is missing: ${article.date}` })
+  if (rankedVersions.has(article.verification.promptVersion) && article.review.state === 'verified' && !article.closing) context.addIssue({ code: 'custom', message: `Closing prompt is missing: ${article.date}` })
+  if (rankedVersions.has(article.verification.promptVersion) && article.review.state === 'verified' && article.closing?.kind === 'options') context.addIssue({ code: 'custom', message: `Legacy closing options cannot qualify a ranked shortlist: ${article.date}` })
 })
 export const ActionRegistrySchema = z.object({
   schemaVersion: z.literal(1),
@@ -153,7 +163,9 @@ export const ActionRegistrySchema = z.object({
       if (new Set(optionKeys).size !== optionKeys.length || optionKeys.some(key => !article.actionKeys.includes(key))) context.addIssue({ code: 'custom', message: `Invalid closing action references for ${article.date}` })
       for (const key of optionKeys) {
         const record = registry.records.find(item => item.key === key)
-        const state = record?.history.find(decision => decision.articleDate === article.date && decision.roundId === article.roundId)?.state
+        const state = article.review.state === 'pending'
+          ? record?.history.filter(decision => decision.articleDate === article.date).at(-1)?.state
+          : record?.history.find(decision => decision.articleDate === article.date && decision.roundId === article.roundId)?.state
         if (!state || !['open', 'proposed', 'deferred'].includes(state)) context.addIssue({ code: 'custom', message: `Resolved action cannot be a closing option: ${key}` })
       }
       if (article.closing.kind === 'options') {

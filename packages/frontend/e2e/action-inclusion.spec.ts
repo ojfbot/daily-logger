@@ -5,17 +5,23 @@ import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry } fr
 import { readFileSync } from 'node:fs'
 
 const date = '2026-10-18'
-test('the reconciled October 17 article renders completed and dismissed cards without raw API metadata', async ({ page }) => {
+test('the reconciled October 17 article keeps completed and dismissed history collapsed without raw API metadata', async ({ page }) => {
   const reviewed = JSON.parse(readFileSync(new URL('../../../api/articles/2026-10-17.json', import.meta.url), 'utf8'))
   await page.route('**/api/entries.json', route => route.fulfill({ json: [reviewed] }))
   await page.route('**/api/articles/2026-10-17.json', route => route.fulfill({ json: reviewed }))
   await page.route('**/api/article-reviews**', route => route.fulfill({ status: 503, json: {} }))
   await page.goto('/articles/2026-10-17')
-  const card = page.getByRole('region', { name: 'Resolved suggestions' })
-  await expect(card).toBeVisible()
-  await expect(card.locator('article > strong')).toHaveText(['/adr · Dismissed', '/pr-review · Completed', '/close-pr · Dismissed'])
-  await expect(card.locator('details[open]')).toHaveCount(0)
-  await expect(card).not.toContainText('repository_url')
+  const history = page.locator('details.suggestions-handled')
+  const historySummary = history.locator(':scope > summary')
+  await expect(history).toBeVisible()
+  await expect(history).not.toHaveAttribute('open')
+  await expect(historySummary).toContainText('Suggestions handled at draft')
+  await historySummary.click()
+  await expect(history).toHaveAttribute('open', '')
+  await expect(history.locator('article')).toHaveCount(3)
+  await expect(history.locator('article > strong')).toHaveText(['/adr · Dismissed', '/pr-review · Completed', '/close-pr · Dismissed'])
+  await expect(history.locator('details[open]')).toHaveCount(0)
+  await expect(history).not.toContainText('repository_url')
   expect(reviewed.commitCount).toBe(26)
 })
 const source = `---\ntitle: "Action review"\ndate: ${date}\nstatus: "draft"\n---\n## What's next\nReview the next checkpoint.\n`
@@ -34,7 +40,7 @@ for (const conflict of [false, true]) {
   test(conflict ? 'rejects a conflicting checkbox save and keeps the server choice' : 'retains opt-out through reload and acceptance on the same editorial branch', async ({ page }, testInfo) => {
     let registry = fixture(), file = splitActionRegistry(registry).files[0], sha = 'registry-1', branch = false, articleSource = source
     let branchCreations = 0, writes = 0, opened = false
-    const article = { date, title: 'Action review', summary: 'Verified suggestions.', tags: [], reposActive: [], commitCount: 0, activityType: 'build', schemaVersion: 2, status: 'draft', sourceBlobSha: 'article-1', actionSuggestions: registry.records, bodyHtml: '<h2>What shipped</h2><p>Reviewed work.</p><h2>What’s next</h2><blockquote><strong>Suggested actions</strong><p>Review the exact acceptance checkpoint.</p></blockquote><section class="action-history-card" aria-label="Resolved suggestions"><h3>Resolved suggestions</h3><article>Earlier suggestion · completed</article></section>' }
+    const article = { date, title: 'Action review', summary: 'Verified suggestions.', tags: [], reposActive: [], commitCount: 0, activityType: 'build', schemaVersion: 2, status: 'draft', sourceBlobSha: 'article-1', actionSuggestions: registry.records, bodyHtml: '<h2>What shipped</h2><p>Reviewed work.</p><section class="suggested-actions-card" aria-labelledby="suggested-actions-fixture"><h3 id="suggested-actions-fixture">Suggested actions</h3><details class="suggestions-handled"><summary>Suggestions handled at draft <span>1</span></summary><article>Earlier suggestion · completed</article></details></section>' }
     await page.route('**/api/entries.json', route => route.fulfill({ json: [article] }))
     await page.route(`**/api/articles/${date}.json`, route => route.fulfill({ json: article }))
     await page.route('**/api/article-reviews**', route => new URL(route.request().url()).searchParams.get('view') === 'editorial' ? route.fulfill({ json: { status: 'none', ...(branch ? { stagedHeadSha: 'a'.repeat(40) } : {}) } }) : route.fulfill({ json: { schemaVersion: 1, date, observedAt: '2026-10-18T12:00:00Z', sourceCommitSha: 'b'.repeat(40), currentBlobSha: article.sourceBlobSha, visibleBlobSha: article.sourceBlobSha, discovery: 'registered_and_eligible_pull_requests', requestTarget: null, entries: [], unavailable: [], requests: [], pullRequests: [], correspondence: [] } }))

@@ -22,6 +22,7 @@ import {
 import {
   applyVerifiedActionReview,
   reviewArticleActions,
+  reviewDraftActions,
   type ActionProposal,
   type ActionVerification,
 } from '../review-actions.js'
@@ -71,6 +72,14 @@ function completeShortlist(first: ClosingProposal = closingOption()): ClosingPro
     first,
     { ...closingOption(), title: 'Check the owner handoff', outcome: 'Confirm the owner handoff remains usable for the next session.', nextCheck: 'Return the owner handoff result for review.' },
     { ...closingOption(), title: 'Check the roadmap handoff', outcome: 'Confirm the roadmap handoff still advances the recorded goal.', nextCheck: 'Return the roadmap handoff result for review.' },
+  ]
+}
+
+function sourceBoundShortlist(first: ClosingProposal): ClosingProposal[] {
+  return [
+    first,
+    { ...first, title: 'Check the owner handoff', outcome: 'Confirm the owner handoff remains usable for the next session.', nextCheck: 'Return the owner handoff result for review.' },
+    { ...first, title: 'Check the roadmap handoff', outcome: 'Confirm the roadmap handoff still advances the recorded goal.', nextCheck: 'Return the roadmap handoff result for review.' },
   ]
 }
 
@@ -621,6 +630,160 @@ describe('verified article closing options', () => {
     const explained = [readyOptions[0], readyOptions[1], { ...replacement, replaces: [readyClosing.options[2].identity] }]
     const repaired = review(retry, { changes: [], suggestions: [], closingOptions: explained }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
     expect(repaired.articles[0].closing).toMatchObject({ kind: 'shortlist', options: [{ rank: 1 }, { rank: 2 }, { rank: 3, replaces: [readyClosing.options[2].identity] }] })
+  })
+
+  it('provides prior recommendation identities and outcomes to both review agents', async () => {
+    const { source, option } = pendingDecisionFixture()
+    const evidence = [source, sources[1]]
+    const firstOptions = sourceBoundShortlist(option)
+    const first = await reviewArticleActions({
+      registry: empty(), cycle: revisionActionCycle('prompt-continuity'), articleDate, articleStatuses: statuses,
+      markdown, feedback: option.target, sources: evidence,
+      agents: { propose: async () => ({ changes: [], suggestions: [], closingOptions: firstOptions }), verify: async () => ({ changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) }) },
+    })
+    const firstClosing = first.registry.articles[0].closing
+    if (firstClosing?.kind !== 'shortlist') throw new Error('Missing ready shortlist')
+    const prompts: string[] = []
+
+    await reviewArticleActions({
+      registry: first.registry, cycle: revisionActionCycle('prompt-continuity'), articleDate, articleStatuses: statuses,
+      markdown: first.markdown, feedback: 'Recheck the maintained shortlist.', sources: evidence,
+      agents: {
+        propose: async prompt => { prompts.push(prompt); return { changes: [], suggestions: [], closingOptions: firstOptions } },
+        verify: async prompt => { prompts.push(prompt); return { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) } },
+      },
+    })
+
+    expect(prompts).toHaveLength(2)
+    for (const prompt of prompts) for (const recommendation of firstClosing.options) {
+      expect(prompt).toContain(recommendation.identity)
+      expect(prompt).toContain(recommendation.outcome)
+    }
+  })
+
+  it('rejects an oversized maintenance projection without dropping prior identities', async () => {
+    const { source, option } = pendingDecisionFixture()
+    const evidence = [source, sources[1]]
+    const firstOptions = sourceBoundShortlist(option)
+    const first = await reviewArticleActions({
+      registry: empty(), cycle: revisionActionCycle('oversized-prompt-continuity'), articleDate, articleStatuses: statuses,
+      markdown, feedback: option.target, sources: evidence,
+      agents: { propose: async () => ({ changes: [], suggestions: [], closingOptions: firstOptions }), verify: async () => ({ changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) }) },
+    })
+    const oversized = structuredClone(first.registry)
+    const snapshot = oversized.articles[0]
+    snapshot.closing = {
+      kind: 'needs-evidence',
+      question: 'Which supported continuation should complete this shortlist?',
+      missingEvidence: 'The prior maintenance set exceeds the provider boundary.',
+      nextCheck: 'Reduce upstream state only through an explicit persisted-state migration.',
+      recommendations: [],
+      unresolvedIdentities: Array.from({ length: 10_000 }, (_, index) => `checkpoint:${index.toString().padStart(5, '0')}:${'x'.repeat(48)}`),
+    }
+    snapshot.stateDigest = actionStateDigest(oversized, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId })
+    let calls = 0
+
+    await expect(reviewArticleActions({
+      registry: oversized, cycle: revisionActionCycle('oversized-prompt-continuity'), articleDate, articleStatuses: statuses,
+      markdown: first.markdown, feedback: 'Recheck the oversized maintenance set.', sources: evidence,
+      agents: { propose: async () => { calls++; return {} }, verify: async () => { calls++; return {} } },
+    })).rejects.toThrow(/prompt exceeds 640 KiB/i)
+    expect(calls).toBe(0)
+  })
+
+  it('preserves ready-shortlist replacement obligations through provider failure and retry', async () => {
+    const { source, option } = pendingDecisionFixture()
+    const evidence = [source, sources[1]]
+    const firstOptions = sourceBoundShortlist(option)
+    const base = { cycle: revisionActionCycle('provider-failure-continuity'), articleDate, articleStatuses: statuses, markdown, sources: evidence }
+    const first = await reviewArticleActions({
+      ...base, registry: empty(), feedback: option.target,
+      agents: { propose: async () => ({ changes: [], suggestions: [], closingOptions: firstOptions }), verify: async () => ({ changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) }) },
+    })
+    const firstClosing = first.registry.articles[0].closing
+    if (firstClosing?.kind !== 'shortlist') throw new Error('Missing ready shortlist')
+
+    const pending = await reviewDraftActions({
+      ...base, registry: first.registry, markdown: first.markdown, feedback: 'Retry after an injected provider failure.',
+      agents: { propose: async () => { throw new Error('injected provider timeout') }, verify: async () => ({}) },
+    })
+    expect(pending.registry.articles[0]).toMatchObject({ review: { state: 'pending' }, closing: firstClosing })
+
+    const unrelated = firstOptions.map((candidate, index) => ({
+      ...candidate,
+      title: `Unrelated retry ${index + 1}`,
+      outcome: `Advance unrelated retry outcome ${index + 1}.`,
+      replaces: [],
+    }))
+    const retry = await reviewArticleActions({
+      ...base, registry: pending.registry, markdown: pending.markdown, feedback: 'Retry with unrelated recommendations.',
+      agents: { propose: async () => ({ changes: [], suggestions: [], closingOptions: unrelated }), verify: async () => ({ changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) }) },
+    })
+
+    expect(retry.registry.articles[0].closing).toMatchObject({
+      kind: 'needs-evidence',
+      missingEvidence: 'A prior displayed recommendation was omitted without an evidence-backed rank change.',
+      unresolvedIdentities: firstClosing.options.map(recommendation => recommendation.identity),
+    })
+  })
+
+  it('preserves partial recommendations and unresolved identities through provider failure', async () => {
+    const { source, option } = pendingDecisionFixture()
+    const evidence = [source, sources[1]]
+    const readyOptions = sourceBoundShortlist(option)
+    const base = { cycle: revisionActionCycle('partial-provider-failure'), articleDate, articleStatuses: statuses, markdown, sources: evidence }
+    const ready = await reviewArticleActions({
+      ...base, registry: empty(), feedback: option.target,
+      agents: { propose: async () => ({ changes: [], suggestions: [], closingOptions: readyOptions }), verify: async () => ({ changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) }) },
+    })
+    const readyClosing = ready.registry.articles[0].closing
+    if (readyClosing?.kind !== 'shortlist') throw new Error('Missing ready shortlist')
+    const unresolvedRecommendation = readyClosing.options[2]
+    if (unresolvedRecommendation.kind !== 'checkpoint') throw new Error('Missing checkpoint maintenance fixture')
+    const unexplained = [readyOptions[0], readyOptions[1], { ...readyOptions[2], title: 'Unexplained replacement', outcome: 'Advance an unexplained replacement.', replaces: [] }]
+    const partial = await reviewArticleActions({
+      ...base, registry: ready.registry, markdown: ready.markdown, feedback: 'Re-rank the third recommendation.',
+      agents: { propose: async () => ({ changes: [], suggestions: [], closingOptions: unexplained }), verify: async () => ({ changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) }) },
+    })
+    const partialClosing = partial.registry.articles[0].closing
+    if (partialClosing?.kind !== 'needs-evidence') throw new Error('Missing partial shortlist')
+
+    const pending = await reviewDraftActions({
+      ...base, registry: partial.registry, markdown: partial.markdown, feedback: 'Retry partial review.',
+      agents: { propose: async () => { throw new Error('injected provider timeout') }, verify: async () => ({}) },
+    })
+
+    expect(partialClosing.unresolvedIdentities).toEqual([unresolvedRecommendation.identity])
+    expect(partialClosing.unresolvedRecommendations).toEqual([{
+      kind: 'checkpoint',
+      identity: unresolvedRecommendation.identity,
+      target: unresolvedRecommendation.target,
+      title: unresolvedRecommendation.title,
+      outcome: unresolvedRecommendation.outcome,
+    }])
+    expect(pending.registry.articles[0]).toMatchObject({ review: { state: 'pending' }, closing: partialClosing })
+
+    const prompts: string[] = []
+    const unrelated = readyOptions.map((candidate, index) => ({
+      ...candidate,
+      title: `Unrelated partial retry ${index + 1}`,
+      outcome: `Advance unrelated partial retry outcome ${index + 1}.`,
+      replaces: [],
+    }))
+    const retry = await reviewArticleActions({
+      ...base, registry: pending.registry, markdown: pending.markdown, feedback: 'Retry with unrelated recommendations.',
+      agents: {
+        propose: async prompt => { prompts.push(prompt); return { changes: [], suggestions: [], closingOptions: unrelated } },
+        verify: async prompt => { prompts.push(prompt); return { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) } },
+      },
+    })
+    for (const prompt of prompts) {
+      expect(prompt).toContain(unresolvedRecommendation.identity)
+      expect(prompt).toContain(unresolvedRecommendation.target)
+      expect(prompt).toContain(unresolvedRecommendation.title)
+      expect(prompt).toContain(unresolvedRecommendation.outcome)
+    }
+    expect(retry.registry.articles[0].closing).toMatchObject({ kind: 'needs-evidence', unresolvedIdentities: readyClosing.options.map(option => option.identity) })
   })
 
   it('does not consume a prior obligation through a mixed valid and invalid replacement declaration', () => {
