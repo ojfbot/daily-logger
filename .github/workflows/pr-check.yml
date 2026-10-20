@@ -176,14 +176,28 @@ jobs:
             exit 1
           fi
           echo "✓ Article file exists"
-          # Verify required sections are present
-          for section in "## What shipped" "## The decisions" "## Roadmap pulse" "## What's next" "Suggested actions"; do
+          # Verify the three authored prose sections are present.
+          for section in "## What shipped" "## The decisions" "## Roadmap pulse"; do
             if ! grep -q "${section}" _articles/2026-01-01.md; then
               echo "❌ Missing section: ${section}"
               exit 1
             fi
           done
-          echo "✓ All required sections and blockquotes present"
+          # The maintained card is the only current recommendation surface.
+          if [ "$(grep -c '>Suggested actions</h3>' _articles/2026-01-01.md)" -ne 1 ]; then
+            echo "❌ Expected exactly one maintained Suggested actions card"
+            exit 1
+          fi
+          if grep -Eq "^## (What['’]s next|Next actions|Suggested actions)[[:space:]]*$|Choose a supported next step" _articles/2026-01-01.md; then
+            echo "❌ Found a competing legacy recommendation surface"
+            exit 1
+          fi
+          if ! grep -q '<summary>Earlier draft notes</summary>' _articles/2026-01-01.md; then
+            echo "❌ Preserved draft context is missing from its closed history disclosure"
+            exit 1
+          fi
+          node -e "const fs=require('fs'); const file=JSON.parse(fs.readFileSync('actions/articles/2026-01-01.json','utf8')); const snapshot=file.snapshot; if(snapshot.draftContext?.kind!=='retained'||!snapshot.draftContext.markdown.includes('Merge the PR if the smoke test passes.')||!/^[a-f0-9]{64}$/.test(snapshot.stateDigest)) throw new Error('Draft context is not preserved and bound into action-review state');"
+          echo "✓ Authored sections, single maintained card, and bound draft context present"
 
       - name: Build and verify static JSON API
         run: |

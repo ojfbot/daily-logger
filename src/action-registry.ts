@@ -5,7 +5,7 @@ import { readdirSync } from 'node:fs'
 import { detachArticleTime } from './article-time-frontmatter.js'
 import { isReviewedAction, legacyActionKey, type CanonicalAction } from './action-model.js'
 import { renderArticle } from './render-article.js'
-import { ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION } from './action-review-cycle.js'
+import { CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS, RANKED_ACTION_REVIEW_PROMPT_VERSIONS } from './action-review-cycle.js'
 import { extractDraftRecommendationContext } from './recommendation-prose.js'
 
 export const REGISTRY_PATH = 'actions/registry.json'
@@ -17,10 +17,11 @@ import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hyd
 export function sha256(value: string): string { return createHash('sha256').update(value).digest('hex') }
 export function registryBytes(registry: ActionRegistry): string { return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
 export function registryRevision(registry: ActionRegistry): string { return sha256(registryBytes(registry)) }
-export function actionStateDigest(registry: ActionRegistry, keys: readonly string[], closing?: ClosingPrompt, draftContext?: ActionRegistry['articles'][number]['draftContext'], boundary?: { articleDate: string; roundId: string }): string {
+export function actionStateDigest(registry: ActionRegistry, keys: readonly string[], closing?: ClosingPrompt, draftContext?: ActionRegistry['articles'][number]['draftContext'], boundary?: { articleDate: string; roundId: string; includePriorArticleRounds?: boolean }): string {
   const records = registry.records.filter(record => keys.includes(record.key)).map(record => {
     if (!boundary) return { key: record.key, state: record.state, history: record.history, admission: record.admission }
-    const history = record.history.filter(decision => decision.articleDate < boundary.articleDate || (decision.articleDate === boundary.articleDate && decision.roundId === boundary.roundId))
+    const history = record.history.filter(decision => decision.articleDate < boundary.articleDate
+      || (decision.articleDate === boundary.articleDate && (boundary.includePriorArticleRounds || decision.roundId === boundary.roundId)))
     const state = history.at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed')
     return { key: record.key, state, history, admission: record.admission }
   })
@@ -193,12 +194,16 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
     if (!Object.hasOwn(registry.baseline.articleActions, articleDate)) throw new Error(`Action review is missing for ${articleDate}; reconcile before publishing`)
     return markdown
   }
-  const sourceBoundContext = [ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION].includes(snapshot.verification.promptVersion)
+  const sourceBoundContext = new Set<string>(CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS).has(snapshot.verification.promptVersion)
   if (sourceBoundContext) {
     const prepared = extractDraftRecommendationContext(stripManagedActions(markdown), snapshot.draftContext)
     if (JSON.stringify(prepared.context) !== JSON.stringify(snapshot.draftContext)) throw new Error(`Action review draft context is stale for ${articleDate}; reconcile before publishing`)
     markdown = prepared.markdown
-    if (snapshot.stateDigest !== actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId })) throw new Error(`Action review state is stale for ${articleDate}; reconcile before publishing`)
+    const currentStateDigest = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId, includePriorArticleRounds: snapshot.review.state === 'pending' })
+    const legacyPendingStateDigest = snapshot.review.state === 'pending' && snapshot.closing === undefined
+      ? actionStateDigest(registry, snapshot.actionKeys, undefined, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId })
+      : undefined
+    if (snapshot.stateDigest !== currentStateDigest && snapshot.stateDigest !== legacyPendingStateDigest) throw new Error(`Action review state is stale for ${articleDate}; reconcile before publishing`)
   }
   if (managedArticleDigest(markdown) !== snapshot.articleDigest) throw new Error(`Action review is stale for ${articleDate}; reconcile before publishing`)
   if (snapshot.status !== statuses.get(articleDate)) throw new Error(`Action review status is stale for ${articleDate}; reconcile before publishing`)
@@ -210,7 +215,7 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
   if (articleDate >= '2026-10-19' && !snapshot.closing) {
     throw new Error(`Verified action review is missing its required closing for ${articleDate}; reconcile before publishing`)
   }
-  if (articleDate >= '2026-10-19' && snapshot.status === 'accepted' && snapshot.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && snapshot.closing?.kind !== 'shortlist') {
+  if (articleDate >= '2026-10-19' && snapshot.status === 'accepted' && new Set<string>(RANKED_ACTION_REVIEW_PROMPT_VERSIONS).has(snapshot.verification.promptVersion) && snapshot.closing?.kind !== 'shortlist') {
     throw new Error(`Accepted article requires exactly three ranked suggestions for ${articleDate}; reconcile before publishing`)
   }
   const visible = articleActionRecords(registry, articleDate, statuses).map(record => ({ record, decision: record.history.at(-1), state: record.state }))
