@@ -521,15 +521,18 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   const previousRecommendations = displayedPreviousRecommendations.filter(option => option.kind !== 'action' || ['open', 'proposed', 'deferred'].includes(next.records.find(record => record.key === option.actionKey)?.state ?? ''))
   const previousUnresolvedIdentities = previous?.closing?.kind === 'needs-evidence' ? previous.closing.unresolvedIdentities ?? [] : []
   const currentIdentities = new Set(ranked.map(option => option.identity))
-  const replacedIdentities = ranked.flatMap(option => option.replaces)
   const previousIdentities = new Set([...previousRecommendations.map(option => option.identity), ...previousUnresolvedIdentities])
-  const invalidReplacement = replacedIdentities.some(identity => !previousIdentities.has(identity) || currentIdentities.has(identity))
-  const omittedWithoutReason = [...previousIdentities].some(identity => !currentIdentities.has(identity) && !replacedIdentities.includes(identity))
+  const replacementCounts = new Map<string, number>()
+  for (const identity of ranked.flatMap(option => option.replaces)) replacementCounts.set(identity, (replacementCounts.get(identity) ?? 0) + 1)
+  const replacementIsValid = (identities: string[]) => new Set(identities).size === identities.length && identities.every(identity => previousIdentities.has(identity) && !currentIdentities.has(identity) && replacementCounts.get(identity) === 1)
+  const invalidReplacement = ranked.some(option => !replacementIsValid(option.replaces))
+  const acknowledgedReplacementIdentities = ranked.flatMap(option => replacementIsValid(option.replaces) ? option.replaces : [])
+  const omittedWithoutReason = [...previousIdentities].some(identity => !currentIdentities.has(identity) && !acknowledgedReplacementIdentities.includes(identity))
   // Maintenance history and current display have different trust boundaries. Keep
   // omitted prior identities below, but never resurrect an old recommendation
   // object after this round's source or verifier checks rejected it.
   const partialRecommendations = ranked.slice(0, 2)
-  const unresolvedIdentities = [...previousIdentities].filter(identity => !currentIdentities.has(identity) && !replacedIdentities.includes(identity) && !partialRecommendations.some(option => option.identity === identity))
+  const unresolvedIdentities = [...previousIdentities].filter(identity => !currentIdentities.has(identity) && !acknowledgedReplacementIdentities.includes(identity) && !partialRecommendations.some(option => option.identity === identity))
   const closing = ranked.length === 3 && !invalidReplacement && !omittedWithoutReason
     ? RankedShortlistSchema.parse({ kind: 'shortlist', options: ranked })
     : { kind: 'needs-evidence' as const, question: 'Which supported continuation should complete this shortlist?', missingEvidence: invalidReplacement
