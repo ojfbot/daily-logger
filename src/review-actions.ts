@@ -525,9 +525,10 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   const previousIdentities = new Set([...previousRecommendations.map(option => option.identity), ...previousUnresolvedIdentities])
   const invalidReplacement = replacedIdentities.some(identity => !previousIdentities.has(identity) || currentIdentities.has(identity))
   const omittedWithoutReason = [...previousIdentities].some(identity => !currentIdentities.has(identity) && !replacedIdentities.includes(identity))
-  const partialRecommendations = invalidReplacement || omittedWithoutReason
-    ? previousRecommendations.slice(0, 2)
-    : ranked.slice(0, 2)
+  // Maintenance history and current display have different trust boundaries. Keep
+  // omitted prior identities below, but never resurrect an old recommendation
+  // object after this round's source or verifier checks rejected it.
+  const partialRecommendations = ranked.slice(0, 2)
   const unresolvedIdentities = [...previousIdentities].filter(identity => !currentIdentities.has(identity) && !replacedIdentities.includes(identity) && !partialRecommendations.some(option => option.identity === identity))
   const closing = ranked.length === 3 && !invalidReplacement && !omittedWithoutReason
     ? RankedShortlistSchema.parse({ kind: 'shortlist', options: ranked })

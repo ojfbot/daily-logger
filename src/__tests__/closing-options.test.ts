@@ -405,7 +405,49 @@ describe('verified article closing options', () => {
     expect([...actionEvidenceScope({ registry: result, articleDate, markdown, feedback: '' }).refs]).toContain('daily-logger#900')
   })
 
-  it('does not let a retry replace a partial shortlist without explicit replacement evidence', () => {
+  it('shows only current-round survivors while retaining a rejected prior identity', () => {
+    const options = completeShortlist()
+    const first = review(empty(), { changes: [], suggestions: [], closingOptions: options }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    const firstClosing = first.articles[0].closing
+    if (firstClosing?.kind !== 'shortlist') throw new Error('Missing ready shortlist')
+    const verification = passingClosingVerdicts(3)
+    verification[0] = { optionIndex: 0, verdict: 'hold', reason: 'The first recommendation needs fresh independent evidence.' }
+
+    const retry = review(first, { changes: [], suggestions: [], closingOptions: options }, { changes: [], suggestions: [], closingOptions: verification })
+
+    expect(retry.articles[0].closing).toMatchObject({
+      kind: 'needs-evidence',
+      recommendations: [
+        { title: options[1].title, rank: 1, identity: firstClosing.options[1].identity },
+        { title: options[2].title, rank: 2, identity: firstClosing.options[2].identity },
+      ],
+      unresolvedIdentities: [firstClosing.options[0].identity],
+    })
+  })
+
+  it('does not display prior checkpoints after fresh primary evidence closes them', () => {
+    const options = completeShortlist()
+    const first = review(empty(), { changes: [], suggestions: [], closingOptions: options }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    const firstClosing = first.articles[0].closing
+    if (firstClosing?.kind !== 'shortlist') throw new Error('Missing ready shortlist')
+    const closed = 'CURRENT API STATE daily-logger#900: state=closed; head=not-a-PR; merged_at=none.'
+    const closedSource: ActionSource = { id: 'issue-closed', kind: 'github', locator: target, content: closed, trustedContent: [closed] }
+    const staleOptions = options.map(option => ({ ...option, factCitations: [{ sourceId: closedSource.id, quote: closed }] }))
+
+    const retry = review(first, { changes: [], suggestions: [], closingOptions: staleOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) }, [closedSource, sources[1]])
+
+    expect(retry.articles[0].closing).toMatchObject({
+      kind: 'needs-evidence',
+      recommendations: [],
+      unresolvedIdentities: firstClosing.options.map(option => option.identity),
+    })
+    expect(renderArticleActions(markdown, retry, articleDate, statuses)).not.toContain('<h4>Qualify the evidence reader</h4>')
+    const card = articleActionCard(retry, articleDate, statuses)
+    expect(card).toBeDefined()
+    expect(card?.closing).toMatchObject({ kind: 'needs-evidence', recommendations: [] })
+  })
+
+  it('keeps omitted partial identities unresolved while showing only current qualified survivors', () => {
     const firstOptions = completeShortlist()
     const firstVerdicts = passingClosingVerdicts(3)
     firstVerdicts[2] = { optionIndex: 2, verdict: 'reject', reason: 'The third choice is not supported.' }
@@ -424,7 +466,8 @@ describe('verified article closing options', () => {
     expect(retry.articles[0].closing).toMatchObject({
       kind: 'needs-evidence',
       missingEvidence: 'A prior displayed recommendation was omitted without an evidence-backed rank change.',
-      recommendations: firstClosing.recommendations.map(option => ({ identity: option.identity, title: option.title })),
+      recommendations: replacementOptions.slice(0, 2).map((option, index) => ({ rank: index + 1, title: option.title })),
+      unresolvedIdentities: firstClosing.recommendations.map(option => option.identity),
     })
   })
 
