@@ -1,5 +1,6 @@
-import { acceptedActionState, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionSource } from './action-registry.js'
+import { acceptedActionState, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionSource, type DraftRecommendationContext } from './action-registry.js'
 import { EXCLUDED_REPOS, KNOWN_REPOS } from './fleet.js'
+import { extractDraftRecommendationContext } from './recommendation-prose.js'
 
 const SOURCE_LIMIT = 128 * 1024
 const TOTAL_LIMIT = 384 * 1024
@@ -60,11 +61,12 @@ function references(text: string): Set<string> {
   ])
 }
 
-export function actionEvidenceScope(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string }) {
+export function actionEvidenceScope(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string; draftContext?: DraftRecommendationContext }) {
   const snapshot = input.registry.articles.find(article => article.date === input.articleDate)
   const current = snapshot?.actionKeys
     ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
-  const nextSection = stripManagedActions(input.markdown).match(/^## (?:What['’]s next|Next actions|Suggested actions)\s*\n([\s\S]*?)(?=^## |$(?![\s\S]))/mi)?.[1] ?? ''
+  const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? snapshot?.draftContext)
+  const nextSection = prepared.context.kind === 'retained' ? prepared.context.markdown : ''
   const closing = snapshot?.closing
     ? JSON.stringify(snapshot.closing.kind === 'needs-evidence' ? snapshot.closing.recommendations : snapshot.closing.options)
     : ''
@@ -85,7 +87,7 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
 }
 
 /** Select complete sources, never first/last-N comments or inferred summaries. */
-export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string; sources: readonly ActionSource[] }) {
+export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string; sources: readonly ActionSource[]; draftContext?: DraftRecommendationContext }) {
   const scope = actionEvidenceScope(input)
   const sources = canonicalActionSources(input.sources)
   const requiredRefs = new Set([...scope.refs, ...continuityRequiredReferences(sources)])
@@ -125,7 +127,7 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
   if (missing.length) throw new Error(`Required action evidence unavailable (collection limit, privacy policy or fetch failure): ${missing.join(', ')}; review pending`)
   const receipt = { version: ACTION_EVIDENCE_SELECTION_VERSION, unit: 'UTF-8 bytes',
     collection: 'Bounded collector output, not an exhaustive repository/discussion census. Missing or omitted content is unknown, never evidence of absence or approval.',
-    selection: 'Whole sources only; no chronological comment window or excerpt. Only current carried actions, explicit feedback and the next-actions section require GitHub discussions. Shipment prose does not.',
+    selection: 'Whole sources only; no chronological comment window or excerpt. Only current carried actions, explicit feedback and retained draft continuation context require GitHub discussions. Shipment prose does not.',
     authority: 'This coverage index is context only. Hashes, identities, omission reasons and missing evidence cannot justify completion, supersession, dismissal or human approval.',
     requiredReferences: [...requiredRefs].sort(), expandedActionKeys: scope.expanded.sort(), sources: coverage }
   const content = JSON.stringify(receipt)

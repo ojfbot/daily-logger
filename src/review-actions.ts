@@ -4,14 +4,15 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { isReviewedAction } from './action-model.js'
-import { ACTION_REVIEW_PROMPT_VERSION, ActionReviewCycleSchema, actionAdmissionLimit, countCycleAdmissions, type ActionReviewCycle } from './action-review-cycle.js'
+import { ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, ActionReviewCycleSchema, actionAdmissionLimit, countCycleAdmissions, type ActionReviewCycle } from './action-review-cycle.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, CONTINUITY_TARGETS_SOURCE, acceptedContinuityGithubReferences, actionEvidenceScope, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from './action-evidence-selection.js'
 import { EXCLUDED_REPOS, KNOWN_REPOS, REPO_NOTES, classifyFleet } from './fleet.js'
 import {
   ActionRegistrySchema, CitationSchema, ClosingActionSchema, ClosingCheckpointSchema, RankedClosingActionSchema, RankedClosingCheckpointSchema, RankedShortlistSchema, managedArticleDigest, normalizeWorkKey,
   renderArticleActions, sha256, stripManagedActions, actionStateDigest, acceptedActionState,
-  normalizeLegacyActionProse, articleActionFileBytes, splitActionRegistry, type ActionRegistry, type ActionSource, type ClosingCheckpoint, type ClosingOption,
+  normalizeLegacyActionProse, articleActionFileBytes, splitActionRegistry, type ActionRegistry, type ActionSource, type ClosingCheckpoint, type ClosingOption, type DraftRecommendationContext,
 } from './action-registry.js'
+import { extractDraftRecommendationContext } from './recommendation-prose.js'
 
 const citations = z.array(CitationSchema).min(1)
 const RecommendationProposalFields = {
@@ -125,15 +126,17 @@ export function createActionAgents(): ActionAgents {
 type GithubReference = { repo: string; kind: string; number: string }
 type GithubReferenceEntry = [string, GithubReference]
 
-export function actionGithubReferenceSelection(input: { markdown: string; feedback: string; context?: string; continuityTargets?: readonly string[] }) {
+export function actionGithubReferenceSelection(input: { markdown: string; feedback: string; context?: string; continuityTargets?: readonly string[]; draftContext?: DraftRecommendationContext }) {
+  const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext)
+  const draftContext = prepared.context.kind === 'retained' ? prepared.context.markdown : ''
   const priorityRefs = new Map(acceptedContinuityGithubReferences(input.continuityTargets ?? [])
     .map(reference => [reference.id, { repo: reference.repo, kind: reference.kind, number: reference.number }]))
   const refs = new Map<string, GithubReference>()
   const ordinaryContext = (input.context ?? '').split('\n')
     .filter(line => !line.startsWith('{"status":"available","version":"accepted-closing-continuity-v1"'))
     .join('\n')
-  for (const match of `${ordinaryContext}\n${input.markdown}\n${input.feedback}`.matchAll(/https:\/\/github\.com\/ojfbot\/([\w-]+)\/(pull|issues)\/(\d+)/g)) { if (EXCLUDED_REPOS.has(match[1])) continue; const id = `${match[1]}#${match[3]}`; refs.delete(id); refs.set(id, { repo: match[1], kind: match[2], number: match[3] }) }
-  for (const match of `${input.markdown}\n${input.feedback}`.matchAll(/\b([\w-]+)\s+#(\d+)/g)) {
+  for (const match of `${ordinaryContext}\n${prepared.markdown}\n${draftContext}\n${input.feedback}`.matchAll(/https:\/\/github\.com\/ojfbot\/([\w-]+)\/(pull|issues)\/(\d+)/g)) { if (EXCLUDED_REPOS.has(match[1])) continue; const id = `${match[1]}#${match[3]}`; refs.delete(id); refs.set(id, { repo: match[1], kind: match[2], number: match[3] }) }
+  for (const match of `${prepared.markdown}\n${draftContext}\n${input.feedback}`.matchAll(/\b([\w-]+)\s+#(\d+)/g)) {
     if (!KNOWN_REPOS.has(match[1]) || EXCLUDED_REPOS.has(match[1])) continue
     const id = `${match[1]}#${match[2]}`, ref = refs.get(id) ?? { repo: match[1], kind: 'pull', number: match[2] }
     refs.delete(id); refs.set(id, ref)
@@ -148,13 +151,17 @@ export function actionGithubReferenceSelection(input: { markdown: string; feedba
   return { references, continuityReferences, remainingReferences, omittedContinuityReferences, omissionNotice }
 }
 
-export function actionGithubReferences(input: { markdown: string; feedback: string; context?: string; continuityTargets?: readonly string[] }) {
+export function actionGithubReferences(input: { markdown: string; feedback: string; context?: string; continuityTargets?: readonly string[]; draftContext?: DraftRecommendationContext }) {
   return actionGithubReferenceSelection(input).references
 }
 
 export function collectActionSources(input: { registry: ActionRegistry; repoRoot: string; markdown: string; feedback: string; context?: string; continuityTargets?: readonly string[] }): ActionSource[] {
+  const articleDate = input.markdown.match(/^date:\s*["']?(\d{4}-\d{2}-\d{2})/m)?.[1]
+  const priorContext = input.registry.articles.find(article => article.date === articleDate)?.draftContext
+  const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), priorContext)
+  const draftContext = prepared.context.kind === 'retained' ? `\n\nDRAFT CONTINUATION CONTEXT (not a current recommendation list):\n${prepared.context.markdown}` : ''
   const sources: ActionSource[] = [
-    { id: 'article', kind: 'report', locator: 'current revised article', content: stripManagedActions(input.markdown) },
+    { id: 'article', kind: 'report', locator: 'current revised article', content: `${stripManagedActions(prepared.markdown)}${draftContext}` },
     { id: 'operator', kind: 'instruction', locator: 'editorial feedback', content: input.feedback },
   ]
   if (input.context) sources.push({ id: 'collection', kind: 'report', locator: 'bounded activity collection; not a substitute for full issue and PR evidence', content: input.context })
@@ -162,7 +169,6 @@ export function collectActionSources(input: { registry: ActionRegistry; repoRoot
     if (existsSync(join(input.repoRoot, path))) sources.push({ id: `repo:${path}`, kind: 'goal', locator: path, content: readFileSync(join(input.repoRoot, path), 'utf8') })
   }
   const reviewDir = join(input.repoRoot, 'reviews')
-  const articleDate = input.markdown.match(/^date:\s*"?(\d{4}-\d{2}-\d{2})/m)?.[1]
   const visit = (directory: string, depth: number) => {
     if (depth > 3 || sources.length > 32) return
     for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -202,7 +208,7 @@ export function collectActionSources(input: { registry: ActionRegistry; repoRoot
     ['fleet-roadmap', { repo: 'core', path: 'decisions/northstar/roadmap-l2-ojfbot.md', ref: 'main' }],
   ])
   const references = new Map<string, GithubReference>()
-  const githubSelection = actionGithubReferenceSelection(input)
+  const githubSelection = actionGithubReferenceSelection({ ...input, draftContext: prepared.context })
   if (githubSelection.continuityReferences.length) {
     const content = JSON.stringify({ version: 'accepted-closing-continuity-targets-v1', references: githubSelection.continuityReferences.map(([id]) => id) })
     sources.push({ id: CONTINUITY_TARGETS_SOURCE, kind: 'report', locator: 'accepted closing continuity targets; current evidence required', content })
@@ -375,12 +381,14 @@ function recommendationIdentity(option: ProposedClosingOption, candidateActionKe
   return `checkpoint:${sha256(workKey).slice(0, 20)}`
 }
 
-export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; sources: ActionSource[]; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string } }): ActionRegistry {
+export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; sources: ActionSource[]; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string }; draftContext?: DraftRecommendationContext }): ActionRegistry {
   const cycle = ActionReviewCycleSchema.parse(input.cycle)
   const proposal = ActionProposalSchema.parse(input.proposal)
   const verification = ActionVerificationSchema.parse(input.verification)
   const next = structuredClone(input.registry)
   const previous = next.articles.find(article => article.date === input.articleDate)
+  const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? previous?.draftContext)
+  input = { ...input, markdown: prepared.markdown, draftContext: prepared.context }
   const keys = new Set(previous?.actionKeys ?? next.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key))
   const rejected: ActionRegistry['articles'][number]['rejected'] = [...(previous?.rejected ?? [])]
   const changeKeys = proposal.changes.map(change => change.actionKey)
@@ -549,7 +557,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     const trustedContent = source.kind === 'github' ? quotes.filter(quote => source.trustedContent?.some(text => text.includes(quote))) : undefined
     return { id: source.id, kind: source.kind, locator: source.locator, content: source.id.startsWith(`${COVERAGE_SOURCE}@`) ? source.content : quotes.join('\n\n'), ...(trustedContent?.length ? { trustedContent } : {}), fullContentSha256: source.fullContentSha256 ?? sha256(source.content) }
   })
-  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], closing, stateDigest: actionStateDigest(next, [...keys], closing), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256: sha256(JSON.stringify(proposal)), verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
+  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], draftContext: prepared.context, closing, stateDigest: actionStateDigest(next, [...keys], closing, prepared.context, { articleDate: input.articleDate, roundId: input.roundId }), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256: sha256(JSON.stringify(proposal)), verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
   next.articles = [...next.articles.filter(article => article.date !== input.articleDate), snapshot]
   const result = ActionRegistrySchema.parse(next)
   for (const file of splitActionRegistry(result).files) articleActionFileBytes(file)
@@ -560,13 +568,15 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   input = { ...input, cycle: ActionReviewCycleSchema.parse(input.cycle) }
   if (process.env.ACTION_REVIEW_DISABLED === 'true') throw new Error('Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked')
   if (!input.registry.articles.some(article => article.date === input.articleDate) && Object.hasOwn(input.registry.baseline.articleActions, input.articleDate)) input = { ...input, markdown: normalizeLegacyActionProse(input.markdown) }
-  input = { ...input, articleStatuses: new Map(input.articleStatuses).set(input.articleDate, input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft') }
   const previous = input.registry.articles.find(article => article.date === input.articleDate)
+  const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), previous?.draftContext)
+  input = { ...input, markdown: prepared.markdown }
+  input = { ...input, articleStatuses: new Map(input.articleStatuses).set(input.articleDate, input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft') }
   input = { ...input, sources: canonicalActionSources(input.sources) }
-  const inputHash = sha256(JSON.stringify({ version: ACTION_REVIEW_PROMPT_VERSION, evidenceSelectionVersion: ACTION_EVIDENCE_SELECTION_VERSION, cycle: input.cycle, statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
+  const inputHash = sha256(JSON.stringify({ version: ACTION_REVIEW_PROMPT_VERSION, evidenceSelectionVersion: ACTION_EVIDENCE_SELECTION_VERSION, cycle: input.cycle, statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), draftContext: prepared.context, feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
 
-  if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === inputHash && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys, previous.closing)) return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true }
-  const selection = selectActionEvidence(input)
+  if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === inputHash && JSON.stringify(previous.draftContext) === JSON.stringify(prepared.context) && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys, previous.closing, previous.draftContext, { articleDate: previous.date, roundId: previous.roundId })) return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true }
+  const selection = selectActionEvidence({ ...input, draftContext: prepared.context })
   input = { ...input, sources: selection.sources }
   const byteLength = (value: string) => Buffer.byteLength(value, 'utf8')
   if (input.sources.some(source => byteLength(source.content) > 128 * 1024) || input.sources.reduce((total, source) => total + byteLength(source.content), 0) > 384 * 1024) throw new Error('Action evidence exceeds its source budget (128 KiB each / 384 KiB total); review pending')
@@ -592,7 +602,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
       for (const candidate of proposal.suggestions) { candidate.goalCitations = candidate.goalCitations.map(resolveCitation); candidate.factCitations = candidate.factCitations.map(resolveCitation) }
       for (const option of proposal.closingOptions) { option.goalCitations = option.goalCitations.map(resolveCitation); option.factCitations = option.factCitations.map(resolveCitation) }
     } catch (error) { if (attempt === 1 || !(error instanceof z.ZodError || error instanceof ActionOutputError)) throw error; correction = `Previous structured output was invalid: ${error.message}. Return the required schema.`; console.warn(`Action review needs its one repair: ${correction}`); continue }
-    const registry = applyVerifiedActionReview({ ...input, roundId: inputHash, proposal, verification, identity: input.agents.identity })
+    const registry = applyVerifiedActionReview({ ...input, roundId: inputHash, proposal, verification, identity: input.agents.identity, draftContext: prepared.context })
     return { registry, markdown: renderArticleActions(input.markdown, registry, input.articleDate, input.articleStatuses), cached: false }
   }
   throw new Error('Action review returned no result')
@@ -600,11 +610,14 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
 
 export const mockActionAgents: ActionAgents = { identity: { proposer: 'mock-llm', verifier: 'mock-llm' }, propose: async () => ({ changes: [], suggestions: [], closingOptions: [] }), verify: async () => ({ changes: [], suggestions: [], closingOptions: [] }) }
 
-export function pendingActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; reason: string; articleStatuses: ReadonlyMap<string, string> }) {
+export function pendingActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; reason: string; articleStatuses: ReadonlyMap<string, string>; draftContext?: DraftRecommendationContext }) {
   if (/^status:\s*"?accepted/m.test(input.markdown) || input.registry.articles.some(article => article.date === input.articleDate && article.status === 'accepted')) throw new Error('A pending action review cannot replace an accepted article')
   const registry = structuredClone(input.registry), previous = registry.articles.find(article => article.date === input.articleDate)
+  const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? previous?.draftContext)
+  input = { ...input, markdown: prepared.markdown, draftContext: prepared.context }
   const keys = previous?.actionKeys ?? []
-  const snapshot = { date: input.articleDate, reviewCycle: ActionReviewCycleSchema.parse(input.cycle), status: 'draft' as const, review: { state: 'pending' as const, reason: input.reason.slice(0, 1000) }, articleDigest: managedArticleDigest(input.markdown), roundId: sha256(JSON.stringify({ pending: managedArticleDigest(input.markdown), cycle: input.cycle })), actionKeys: keys, stateDigest: actionStateDigest(registry, keys), verification: { proposer: 'not-verified', verifier: 'not-verified', promptVersion: 'action-review-pending-v2-cycle', proposalSha256: sha256('pending'), verdicts: [] }, sources: previous?.sources ?? [], rejected: previous?.rejected ?? [] }
+  const roundId = sha256(JSON.stringify({ pending: managedArticleDigest(input.markdown), draftContext: prepared.context, cycle: input.cycle }))
+  const snapshot = { date: input.articleDate, reviewCycle: ActionReviewCycleSchema.parse(input.cycle), status: 'draft' as const, review: { state: 'pending' as const, reason: input.reason.slice(0, 1000) }, articleDigest: managedArticleDigest(input.markdown), roundId, actionKeys: keys, draftContext: prepared.context, stateDigest: actionStateDigest(registry, keys, undefined, prepared.context, { articleDate: input.articleDate, roundId }), verification: { proposer: 'not-verified', verifier: 'not-verified', promptVersion: PENDING_ACTION_REVIEW_PROMPT_VERSION, proposalSha256: sha256('pending'), verdicts: [] }, sources: previous?.sources ?? [], rejected: previous?.rejected ?? [] }
   registry.articles = [...registry.articles.filter(article => article.date !== input.articleDate), snapshot]
   return { registry: ActionRegistrySchema.parse(registry), markdown: renderArticleActions(input.markdown, registry, input.articleDate, new Map(input.articleStatuses).set(input.articleDate, 'draft')), cached: false }
 }

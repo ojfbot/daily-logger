@@ -49,6 +49,21 @@ it('revalidates a carried closing checkpoint even after authored next-step prose
   expect(actionEvidenceScope({ registry, articleDate: date, markdown: revised, feedback: '' }).refs).toEqual(new Set(['daily-logger#385']))
 })
 
+it('recollects references from retained draft context after visible prose is normalized', () => {
+  const registry = empty()
+  registry.articles.push({
+    date, status: 'draft', review: { state: 'verified' }, articleDigest: 'd'.repeat(64), roundId: 'e'.repeat(64), actionKeys: [],
+    draftContext: { kind: 'retained', markdown: 'Review daily-logger #385 before changing the owner gate.' },
+    closing: { kind: 'needs-evidence', question: 'Which option is supported?', missingEvidence: 'No option passed.', nextCheck: 'Recheck primary evidence.', recommendations: [] },
+    stateDigest: sha256('empty'), verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'legacy-closing-fixture', proposalSha256: 'f'.repeat(64), verdicts: [] }, sources: [], rejected: [],
+  })
+  const normalized = `---\ndate: ${date}\nstatus: draft\n---\n## What shipped\nNo reader-facing action list.\n`
+
+  fixture({ registry, markdown: normalized, compact: true })
+
+  expect(github.mock.calls.some(([, args]) => args.at(-1)?.includes('/issues/385'))).toBe(true)
+})
+
 it.each(['feedback', 'next-actions'])('follows an older action explicitly named in %s through collector, whole-source selection and both closure prompts', async location => {
   const key = 'old-owned-action'
   const feedback = location === 'feedback' ? `Reconcile ${key} against its recorded completion condition; retain every owner gate.` : ''

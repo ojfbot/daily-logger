@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { assembleBody } from '../generate-article.js'
 import type { ArticleDataV2 } from '../schema.js'
+import { extractDraftRecommendationContext } from '../recommendation-prose.js'
 
 const base = {
   title: 'Test',
@@ -20,12 +21,12 @@ const base = {
 }
 
 describe('assembleBody — section headings', () => {
-  it('always emits all four ## headings', () => {
+  it('emits the three reader-facing prose headings and no competing recommendation section', () => {
     const body = assembleBody(base)
     expect(body).toContain('## What shipped')
     expect(body).toContain('## The decisions')
     expect(body).toContain('## Roadmap pulse')
-    expect(body).toContain("## What's next")
+    expect(body).not.toContain("## What's next")
   })
 
   it('section headings appear in the correct order', () => {
@@ -33,10 +34,8 @@ describe('assembleBody — section headings', () => {
     const shipped = body.indexOf('## What shipped')
     const decisions = body.indexOf('## The decisions')
     const pulse = body.indexOf('## Roadmap pulse')
-    const next = body.indexOf("## What's next")
     expect(shipped).toBeLessThan(decisions)
     expect(decisions).toBeLessThan(pulse)
-    expect(pulse).toBeLessThan(next)
   })
 })
 
@@ -77,7 +76,8 @@ describe('assembleBody — section content', () => {
     expect(body).toContain('Something shipped.')
     expect(body).toContain('A decision was made.')
     expect(body).toContain('Phase 1 is progressing.')
-    expect(body).toContain('Do the next thing.')
+    expect(body).not.toContain('Do the next thing.')
+    expect(extractDraftRecommendationContext(body).context).toEqual({ kind: 'retained', markdown: 'Do the next thing.' })
   })
 
   it('trims leading/trailing whitespace from section content', () => {
@@ -142,12 +142,12 @@ const baseV2: ArticleDataV2 = {
 }
 
 describe('assembleBody — v2 schema', () => {
-  it('emits all four ## headings for v2 input', () => {
+  it('emits the three reader-facing prose headings for v2 input', () => {
     const body = assembleBody(baseV2)
     expect(body).toContain('## What shipped')
     expect(body).toContain('## The decisions')
     expect(body).toContain('## Roadmap pulse')
-    expect(body).toContain("## What's next")
+    expect(body).not.toContain("## What's next")
   })
 
   it('renders shipment entries grouped by repo with linked PRs', () => {
@@ -226,7 +226,7 @@ describe('assembleBody — PR linkification', () => {
       ...baseV2,
       whatsNext: 'Merge [shell] #5 and follow up.',
     })
-    expect(body).toContain('[shell] [#5](https://github.com/ojfbot/shell/pull/5)')
+    expect(extractDraftRecommendationContext(body).context).toEqual({ kind: 'retained', markdown: 'Merge [shell] [#5](https://github.com/ojfbot/shell/pull/5) and follow up.' })
   })
 
   it('leaves unknown repos in [repo] #N unlinked', () => {

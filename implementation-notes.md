@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-19 (single recommendation surface): the card plan assumed adding a verified shortlist displaced authored recommendations, but the normal producer still emitted an unmanaged `What's next` priority list and the rehearsal had manually removed it. Keep producer continuation facts as source-bound draft context, strip legacy next-action prose at the ordinary review boundary, and expose it only in a closed card disclosure; bind the retained value into the dated state digest so file-only changes fail publication.
+
 - The plan assumed the curated October 19 shortlist could be staged by downgrading the accepted article and teaching production to render a special unverified preparation state; source review showed that would bypass the ordinary review receipt and rewrite accepted history. Kept the accepted article/data unchanged, removed the preparation exception, and retained the curation only in the handoff capsule for a later supervised adoption cycle.
 
 - 2026-10-19 (closing density enforcement): the five-option design was enforced on new model output but not on persisted closing snapshots, so a malformed or legacy snapshot could project more than five targets. Apply the same maximum at the registry schema and continuity boundary; reject the whole over-cap closing instead of silently truncating it.

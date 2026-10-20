@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { ACTION_REVIEW_PROMPT_VERSION, revisionActionCycle } from '../action-review-cycle.js'
 import {
   ActionRegistrySchema,
@@ -8,9 +11,11 @@ import {
   articleActionCard,
   normalizeWorkKey,
   readActionRegistry,
+  registryRevision,
   registryBytes,
   renderArticleActions,
   sha256,
+  writeActionRegistry,
   type ActionRegistry,
   type ActionSource,
 } from '../action-registry.js'
@@ -21,6 +26,8 @@ import {
   type ActionVerification,
 } from '../review-actions.js'
 import { actionEvidenceScope } from '../action-evidence-selection.js'
+import { assembleBody } from '../generate-article.js'
+import { buildApi } from '../build-api.js'
 
 const articleDate = '2030-01-01'
 const markdown = `---\ndate: ${articleDate}\nstatus: draft\n---\n## What's next\n\nContinue the verified checkpoint.\n`
@@ -97,6 +104,94 @@ function protectedDecisionFixture() {
 }
 
 describe('verified article closing options', () => {
+  it('publishes one current recommendation surface while retaining structured draft context', async () => {
+    const generatedBody = assembleBody({
+      schemaVersion: 2,
+      date: articleDate,
+      title: 'Single recommendation surface',
+      summary: 'The verified shortlist owns the current handoff.',
+      tags: [{ name: 'daily-logger', type: 'repo' }],
+      whatShipped: [],
+      decisions: [],
+      roadmapPulse: `Issue ${target} remains open and needs an owner decision.`,
+      whatsNext: 'Priority 1: ship the stale draft choice. Priority 2: reopen the superseded choice.',
+      suggestedActions: [],
+      commitCount: 0,
+      reposActive: ['daily-logger'],
+      activityType: 'audit',
+    })
+    const article = `---\ntitle: "Single recommendation surface"\ndate: ${articleDate}\nstatus: draft\n---\n\n${generatedBody}\n\n<!-- ACTIONS_START -->\n<section class="suggested-actions-card"><h3>Suggested actions</h3><p>Old managed priority must be replaced.</p></section>\n<!-- ACTIONS_END -->\n`
+    const proposal: ActionProposal = { changes: [], suggestions: [], closingOptions: completeShortlist() }
+    const verification: ActionVerification = { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) }
+    const reviewed = await reviewArticleActions({
+      registry: empty(),
+      cycle: revisionActionCycle('single-recommendation-surface'),
+      articleDate,
+      articleStatuses: statuses,
+      markdown: article,
+      feedback: '',
+      sources,
+      agents: { propose: async () => proposal, verify: async () => verification },
+    })
+    const rendered = renderArticleActions(reviewed.markdown, reviewed.registry, articleDate, statuses)
+
+    expect(rendered).not.toContain("## What's next")
+    expect(rendered).toContain('Issue https://github.com/ojfbot/daily-logger/issues/900 remains open and needs an owner decision.')
+    expect(rendered).toContain('Priority 1: ship the stale draft choice. Priority 2: reopen the superseded choice.')
+    expect(rendered).not.toContain('Old managed priority must be replaced.')
+    expect(rendered.match(/<section class="suggested-actions-card/g)).toHaveLength(1)
+    expect(rendered.match(/data-recommendation-id=/g)).toHaveLength(3)
+    expect(reviewed.registry.articles[0].draftContext).toEqual({ kind: 'retained', markdown: 'Priority 1: ship the stale draft choice. Priority 2: reopen the superseded choice.' })
+    expect(rendered).toMatch(/<details class="suggested-actions-draft-context"><summary>Draft context considered during review<\/summary><div>[\s\S]*Priority 1: ship the stale draft choice[\s\S]*<\/div><\/details>/)
+    expect(rendered.slice(0, rendered.indexOf('<details class="suggested-actions-draft-context">'))).not.toContain('Priority 1:')
+
+    const tampered = structuredClone(reviewed.registry)
+    const tamperedSnapshot = tampered.articles[0]
+    if (tamperedSnapshot.draftContext?.kind !== 'retained') throw new Error('Missing retained draft context fixture')
+    tamperedSnapshot.draftContext.markdown = 'Priority 1: publish a registry-only replacement.'
+    expect(() => renderArticleActions(reviewed.markdown, tampered, articleDate, statuses)).toThrow(/action review state is stale/i)
+
+    const parent = mkdtempSync(join(tmpdir(), 'single-recommendation-surface-'))
+    const root = join(parent, 'repo')
+    try {
+      execFileSync('git', ['clone', '--shared', '--quiet', process.cwd(), root])
+      const persisted = readActionRegistry(root)
+      const builtReview = await reviewArticleActions({
+        registry: persisted,
+        cycle: revisionActionCycle('single-recommendation-surface-build'),
+        articleDate,
+        articleStatuses: statuses,
+        markdown: article,
+        feedback: '',
+        sources,
+        agents: { propose: async () => proposal, verify: async () => verification },
+      })
+      const articlePath = join(root, '_articles', `${articleDate}.md`)
+      writeActionRegistry(root, builtReview.registry, registryRevision(persisted), {
+        path: articlePath,
+        expected: null,
+        next: builtReview.markdown,
+        publish: () => writeFileSync(articlePath, builtReview.markdown),
+      })
+      buildApi(root)
+      const api = JSON.parse(readFileSync(join(root, 'api', 'articles', `${articleDate}.json`), 'utf8')) as { bodyHtml: string; suggestedActionsCard: { closing: { kind: string } } }
+      expect(api.suggestedActionsCard.closing.kind).toBe('shortlist')
+      expect(api.bodyHtml).not.toContain("What's next")
+      expect(api.bodyHtml.match(/<section class="suggested-actions-card/g)).toHaveLength(1)
+      expect(api.bodyHtml.match(/data-recommendation-id=/g)).toHaveLength(3)
+      expect(api.bodyHtml).toContain('<details class="suggested-actions-draft-context">')
+      expect(api.bodyHtml).not.toContain('<details class="suggested-actions-draft-context" open>')
+
+      const actionPath = join(root, 'actions', 'articles', `${articleDate}.json`)
+      const actionFile = JSON.parse(readFileSync(actionPath, 'utf8')) as { snapshot: { draftContext?: { kind: string; markdown?: string } } }
+      actionFile.snapshot.draftContext = { kind: 'retained', markdown: 'Priority 1: publish a file-only replacement.' }
+      writeFileSync(actionPath, JSON.stringify(actionFile, null, 2) + '\n')
+      expect(() => buildApi(root)).toThrow(/action review state is stale/i)
+    } finally {
+      rmSync(parent, { recursive: true, force: true })
+    }
+  })
+
   it('rejects more than five closing options at the persisted-state boundary', () => {
     const options = Array.from({ length: 6 }, (_, index) => ({
       ...closingOption(),
@@ -127,6 +222,26 @@ describe('verified article closing options', () => {
     snapshot.verification.promptVersion = ACTION_REVIEW_PROMPT_VERSION
 
     expect(ActionRegistrySchema.safeParse(legacy).success).toBe(false)
+  })
+
+  it('keeps historical pending-v2 snapshots valid without the new draft-context field', () => {
+    const historical = empty()
+    historical.articles.push({
+      date: articleDate,
+      status: 'draft',
+      review: { state: 'pending', reason: 'Historical provider failure.' },
+      articleDigest: sha256('historical article'),
+      roundId: sha256('historical pending round'),
+      reviewCycle: revisionActionCycle('historical-pending-v2'),
+      actionKeys: [],
+      stateDigest: sha256('historical state'),
+      verification: { proposer: 'not-verified', verifier: 'not-verified', promptVersion: 'action-review-pending-v2-cycle', proposalSha256: sha256('pending'), verdicts: [] },
+      sources: [],
+      rejected: [],
+    })
+
+    expect(ActionRegistrySchema.safeParse(historical).success).toBe(true)
+    expect(historical.articles[0]).not.toHaveProperty('draftContext')
   })
 
   it('does not let a partial verified shortlist claim accepted status', () => {
@@ -267,7 +382,7 @@ describe('verified article closing options', () => {
     expect(refreshed.cached).toBe(false)
     expect(calls).toBe(2)
     expect(refreshed.registry.articles[0].closing?.kind).toBe('needs-evidence')
-    expect(refreshed.registry.articles[0].verification.promptVersion).toBe('action-review-v11-ranked-suggested-actions')
+    expect(refreshed.registry.articles[0].verification.promptVersion).toBe(ACTION_REVIEW_PROMPT_VERSION)
   })
 
   it('does not reuse a digest-valid v9 cache that exposed protected scope without its internal key', async () => {
@@ -292,7 +407,7 @@ describe('verified article closing options', () => {
     expect(refreshed.cached).toBe(false)
     expect(calls).toBe(2)
     expect(refreshed.registry.articles[0].closing?.kind).toBe('needs-evidence')
-    expect(refreshed.registry.articles[0].verification.promptVersion).toBe('action-review-v11-ranked-suggested-actions')
+    expect(refreshed.registry.articles[0].verification.promptVersion).toBe(ACTION_REVIEW_PROMPT_VERSION)
   })
 
   it('rejects an untrusted GitHub authority claim before it can be rendered or cached', async () => {
