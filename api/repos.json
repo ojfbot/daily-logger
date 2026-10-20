@@ -1,16 +1,16 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 136,
-    "totalCommits": 1664,
+    "articleCount": 137,
+    "totalCommits": 1695,
     "relatedTags": [
       "daily-logger",
       "ci-cd",
-      "editorial-pipeline",
       "hardening",
-      "provenance",
       "model-behavior-as-design",
       "assistant-centric",
+      "editorial-pipeline",
+      "provenance",
       "core",
       "verification",
       "morning-cockpit",

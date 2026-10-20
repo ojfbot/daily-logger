@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-20",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-10-20",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; review pending"
+    },
+    "articleDigest": "b30123e0d736ac78c26af9acd8872719eae23b9b21620fb3078ef732a909b553",
+    "roundId": "7b2e4b5458116cd2650dae220976138dbd1ff9bea85b1ddfa008351c85dc47ac",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Three active checkpoints carry forward from the accepted October 19 closing continuity, in priority order:\n\n1. Disposition of the progressive-retrieval trial for #386: candidate `907e490`, recorded base `1667af9`. This is the structurally significant open item — the token-aware admission budget is not yet implemented, and the failure mode when the 640 KiB ceiling is hit in production (silent drop, crash, or stale article ship) is not documented in available project context and should be confirmed.\n\n2. Rebase of #385 against current accepted main (`c79c895`) before requesting human visual verdict: prepared candidate `5v897125`, recorded base `730fb9f`. The rebase is a pipeline-owner action; the verdict gate is a human visual inspection requiring no further code change after rebind.\n\n3. Receipt settlement for three reviewed canonical actions (`act-2026-10-15-investigate-66e04675dca0`, `act-2026-10-15-validate-bf0fbc1d6c71`, `act-2026-10-15-orient-a778b3b2c5af`) — pending receipt from owning actor; no settlement authority present in this cycle.\n\nEvidence gap: the failure mode when the 640 KiB ceiling is hit (silent drop, crash, or stale ship) is not confirmed in available project context. This should be documented before the next ceiling event.\n\nEvidence gap: the rationale for the 393,216-byte source limit is not documented. Whether it is a principled design ceiling or an implementation constant is unknown.\n\nEvidence gap: cost per article cycle (token spend, retry cost on evidence overflow) is not tracked or reported in available project context.\n\nEvidence gap: pipeline green/clean run status as of October 20 is not confirmed. Monday established structural preconditions but no observed clean end-to-end run is recorded.\n\nHistorical receipts generated before #393 merged carry a weaker provenance guarantee — their envelope SHAs reference mutable PR head/base objects that GitHub may have since updated. Downstream verifiers should be aware that pre-#393 receipts are best-effort, not guaranteed-intact.\n\nThe `bf67063` legacy-heading normalization was applied retroactively to in-flight history. Downstream test authors should verify their fixtures use current heading formats before the next test run.\n\nThe lego-village-pipeline PRs (#44, #45, #46) are parked as design-phase artifacts until the HOUSE-WORLD phase gate closes. No owner action is required in the current cycle."
+    },
+    "stateDigest": "e420d05b87072300877c768d1b1fc36125903957f2c69a69928126027d376d44",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v4-maintained-recommendation-continuity",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "rejected": []
+  }
+}
