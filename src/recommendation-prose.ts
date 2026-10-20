@@ -34,7 +34,7 @@ function withoutRange(markdown: string, start: number, end: number): string {
 export function extractDraftRecommendationContext(markdown: string, prior?: DraftRecommendationContext): { markdown: string; context: DraftRecommendationContext } {
   const markerPattern = new RegExp(`^<!-- ${CONTEXT_MARKER}:([A-Za-z0-9_-]+) -->\\s*$`, 'gm')
   const markers = [...markdown.matchAll(markerPattern)]
-  const headings = [...markdown.matchAll(/^## (?:What['’]s next|Next actions)\s*$/gm)]
+  const headings = [...markdown.matchAll(/^## (?:What['’]s next|Next actions|Suggested actions)\s*$/gmi)]
   if (markers.length > 1 || headings.length > 1 || (markers.length && headings.length)) throw new Error('Article contains multiple draft continuation contexts')
 
   if (markers[0]?.index !== undefined) {
