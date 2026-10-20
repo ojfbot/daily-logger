@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-final-20261020-b609203983af",
+  "article": {
+    "date": "2026-10-20",
+    "sourceCommitSha": "b609203983af3d03ee2b3a88ade1ad08b1882247",
+    "blobSha": "656bd193ea43c3bedefc30d2f571f03754169211"
+  },
+  "reviewer": {
+    "name": "Codex — final accuracy and delivery review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-20T22:02:45Z",
+  "scope": "Accepted October 20 source: resolution of C1–C10, useful three-checkpoint shortlist, source/data acceptance and live-delivery binding. Separate Codex editorial/data reviews; publisher-attributed browser observations. No queue settlement, scheduling adoption or identity attestation.",
+  "fullRecordBlobSha": "473584d02fa1387cfe895da9f195525518803274",
+  "fullRecordPath": "reviews/articles/2026-10-20-b609203983af3d03ee2b3a88ade1ad08b1882247.md",
+  "result": "completed",
+  "findings": []
+}
