@@ -285,26 +285,15 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     expect(detachArticleTime(bare).restore(bare.replace('date:', 'time_records_sha256: fake\ndate:'))).toBe(bare)
   })
 
-  it('the actual dry-run orchestration writes no article, artifact, API or action files', async () => {
-    vi.stubEnv('MOCK_LLM', 'true'); vi.stubEnv('DRY_RUN', 'true'); vi.stubEnv('SKIP_COUNCIL', 'true')
-    vi.stubEnv('DATE_OVERRIDE', '2026-10-20'); vi.stubEnv('ANTHROPIC_API_KEY', 'mock-only')
-    vi.stubEnv('GITHUB_ACTIONS', 'false'); vi.stubEnv('BLOGENGINE_API_URL', '')
-    const before = fingerprint(sourceRoot, ['_articles', 'api', 'action-admissions'])
-    await main()
-    expect(fingerprint(sourceRoot, ['_articles', 'api', 'action-admissions'])).toBe(before)
-    expect(createMessage).not.toHaveBeenCalled()
-    expect(fetch).not.toHaveBeenCalled()
-  })
-
-  it('renders a fresh draft date through the native dry-run caller without a saved article status', async () => {
+  it('the actual dry-run orchestration on a fresh date writes no article, artifact, API or action files', async () => {
     const freshDate = '2099-01-01'
     expect(readArticleStatuses(sourceRoot).has(freshDate)).toBe(false)
     vi.stubEnv('MOCK_LLM', 'true'); vi.stubEnv('DRY_RUN', 'true'); vi.stubEnv('SKIP_COUNCIL', 'true')
     vi.stubEnv('DATE_OVERRIDE', freshDate); vi.stubEnv('ANTHROPIC_API_KEY', 'mock-only')
     vi.stubEnv('GITHUB_ACTIONS', 'false'); vi.stubEnv('BLOGENGINE_API_URL', '')
-    const before = fingerprint(sourceRoot, ['_articles', 'api', 'action-admissions'])
+    const before = fingerprint(sourceRoot, ['_articles', 'api', 'actions', 'action-admissions'])
     await expect(main()).resolves.toBeUndefined()
-    expect(fingerprint(sourceRoot, ['_articles', 'api', 'action-admissions'])).toBe(before)
+    expect(fingerprint(sourceRoot, ['_articles', 'api', 'actions', 'action-admissions'])).toBe(before)
     expect(createMessage).not.toHaveBeenCalled()
     expect(fetch).not.toHaveBeenCalled()
   })
