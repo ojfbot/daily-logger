@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const ACTION_REVIEW_PROMPT_VERSION = 'action-review-v10-protected-scope-closing-options'
+export const ACTION_REVIEW_PROMPT_VERSION = 'action-review-v11-ranked-suggested-actions'
 export const ActionReviewCycleSchema = z.discriminatedUnion('phase', [
   z.object({ phase: z.literal('generation') }).strict(),
   z.object({ phase: z.literal('revision'), id: z.string().min(1).max(256) }).strict(),

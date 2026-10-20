@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `276e774bb4e29f0e1e5efc892182cbc712d94eb78a46afc71d3a7b974ecfecbc`.
+> Source SHA-256: `d3cb438394911ba3a679bf27997b9b26c3eaa8009cbfbffb6b1f962f8b04835e`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -23,8 +23,8 @@ flowchart TD
   n18["Jim"]
   n4["GitHub"]
   style n4 stroke-dasharray: 5 5
-  n28["Claude API"]
-  style n28 stroke-dasharray: 5 5
+  n31["Claude API"]
+  style n31 stroke-dasharray: 5 5
   n0["Article — states: draft, accepted, rejected"]
   n1["Run Admission — states: generate, recover, complete"]
   n2["Cron Firing"]
@@ -46,50 +46,54 @@ flowchart TD
   n20("API Building")
   n21("Action Projecting")
   n22["Action Registry"]
-  n23("Action Reconciling")
-  n24["Action Review Cycle — states: generation, revision"]
-  n25["Source Evidence"]
-  n26("Suggestion Proposing")
-  n27("Suggestion Verifying")
-  n29["Closing Prompt — states: options, needs-evidence"]
-  n30("Editorial Revising")
-  n31["Editorial Revision Request"]
-  n32["Draft Suggestion — states: proposed, open, done, dismissed, superseded, deferred"]
-  n93["Imported Action Baseline"]
-  n76["Article Action Files — states: pending, verified"]
-  n33("Inclusion Choosing")
-  n34["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
-  n100["Canonical Actions"]
-  n35["JSON API"]
-  n36("Frontend Rendering")
-  n37["Rendered Site"]
-  n38["Article Fingerprint"]
-  n39("Independent Review Projecting")
-  n40["Review Projection"]
-  n41("Revision Requesting")
-  n42["Revision Request"]
-  n43("Conversation Saving")
-  n44["Saved Message"]
-  n101["Review Records"]
-  n102["Correspondence"]
-  n45["Time Record Pointer"]
-  n46("Time Recording")
-  n47["Commit Context"]
-  n48["Time Evidence"]
-  n49("Time Backfilling")
-  n50("Time Resolving")
-  n51["Time References"]
-  n52["Shipment Timestamp — states: available, unavailable"]
-  n53["Shipment Coverage — states: complete, unavailable"]
-  n54("Shipment Time Resolving")
-  n55("Time Projecting")
-  n56("Shipment Coverage Checking")
-  n57["Projected Time References"]
-  n58["Projected Shipment Timestamps"]
-  n59("Time Visualizing")
-  n60["Device Timezone"]
-  n61["Time Popover"]
-  n62("Time Metadata Preserving")
+  n23["Closing Prompt — states: legacy-options, ranked-shortlist, needs-evidence"]
+  n24("Suggested Action Card Rendering")
+  n25["Suggested Actions Card"]
+  n26("Action Reconciling")
+  n27["Action Review Cycle — states: generation, revision"]
+  n28["Source Evidence"]
+  n29("Suggestion Proposing")
+  n30("Suggestion Verifying")
+  n102["Ranked Recommendations"]
+  n103["Handled Suggestions"]
+  n32("Editorial Revising")
+  n33["Editorial Revision Request"]
+  n34["Draft Suggestion — states: proposed, open, done, dismissed, superseded, deferred"]
+  n95["Imported Action Baseline"]
+  n78["Article Action Files — states: pending, verified"]
+  n35("Inclusion Choosing")
+  n36["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
+  n104["Canonical Actions"]
+  n37["JSON API"]
+  n38("Frontend Rendering")
+  n39["Rendered Site"]
+  n40["Article Fingerprint"]
+  n41("Independent Review Projecting")
+  n42["Review Projection"]
+  n43("Revision Requesting")
+  n44["Revision Request"]
+  n45("Conversation Saving")
+  n46["Saved Message"]
+  n105["Review Records"]
+  n106["Correspondence"]
+  n47["Time Record Pointer"]
+  n48("Time Recording")
+  n49["Commit Context"]
+  n50["Time Evidence"]
+  n51("Time Backfilling")
+  n52("Time Resolving")
+  n53["Time References"]
+  n54["Shipment Timestamp — states: available, unavailable"]
+  n55["Shipment Coverage — states: complete, unavailable"]
+  n56("Shipment Time Resolving")
+  n57("Time Projecting")
+  n58("Shipment Coverage Checking")
+  n59["Projected Time References"]
+  n60["Projected Shipment Timestamps"]
+  n61("Time Visualizing")
+  n62["Device Timezone"]
+  n63["Time Popover"]
+  n64("Time Metadata Preserving")
   n2 -->|"object event"| n3
   n4 -->|"requires (instrument)"| n3
   n3 -->|"yields"| n1
@@ -119,92 +123,97 @@ flowchart TD
   n0 -->|"requires (instrument)"| n21
   n22 -->|"requires (instrument)"| n21
   n21 -->|"yields"| n13
-  n0 -->|"requires (instrument)"| n23
-  n22 -->|"requires (instrument)"| n23
-  n24 -->|"requires (instrument)"| n23
-  n25 -->|"requires (instrument)"| n23
-  n23 -->|"invokes"| n26
-  n23 -->|"invokes"| n27
+  n23 -->|"requires (instrument)"| n24
+  n22 -->|"requires (instrument)"| n24
+  n24 -->|"yields"| n25
+  n0 -->|"requires (instrument)"| n26
+  n22 -->|"requires (instrument)"| n26
+  n27 -->|"requires (instrument)"| n26
   n28 -->|"requires (instrument)"| n26
-  n28 -->|"requires (instrument)"| n27
-  n23 <-->|"affects"| n22
-  n23 <-->|"affects"| n0
-  n23 -->|"yields"| n29
-  n7 -->|"yields"| n24
-  n7 -->|"invokes"| n23
-  n30 -->|"yields"| n24
-  n30 -->|"invokes"| n23
+  n26 -->|"invokes"| n29
+  n26 -->|"invokes"| n30
+  n31 -->|"requires (instrument)"| n29
   n31 -->|"requires (instrument)"| n30
-  n19 -->|"yields"| n24
-  n19 -->|"invokes"| n23
-  n93 -->|"part of"| n22
-  n76 -->|"part of"| n22
-  n22 -->|"requires (instrument)"| n33
-  n4 -->|"requires (instrument)"| n33
-  n33 <-->|"affects"| n22
-  n18 -->|"handles (human)"| n33
-  n100 -->|"part of"| n13
-  n34 -->|"part of"| n13
+  n26 <-->|"affects"| n22
+  n26 <-->|"affects"| n0
+  n26 -->|"yields"| n23
+  n102 -->|"part of"| n25
+  n103 -->|"part of"| n25
+  n7 -->|"yields"| n27
+  n7 -->|"invokes"| n26
+  n32 -->|"yields"| n27
+  n32 -->|"invokes"| n26
+  n33 -->|"requires (instrument)"| n32
+  n19 -->|"yields"| n27
+  n19 -->|"invokes"| n26
+  n95 -->|"part of"| n22
+  n78 -->|"part of"| n22
+  n22 -->|"requires (instrument)"| n35
+  n4 -->|"requires (instrument)"| n35
+  n35 <-->|"affects"| n22
+  n18 -->|"handles (human)"| n35
+  n104 -->|"part of"| n13
+  n36 -->|"part of"| n13
   n20 -->|"invokes"| n21
   n13 -->|"requires (instrument)"| n20
-  n20 -->|"yields"| n35
-  n35 -->|"requires (instrument)"| n36
-  n13 -->|"requires (instrument)"| n36
-  n36 -->|"yields"| n37
-  n20 -->|"yields"| n38
-  n36 -->|"invokes"| n39
-  n4 -->|"requires (instrument)"| n39
-  n38 -->|"requires (instrument)"| n39
-  n39 -->|"yields"| n40
-  n18 -->|"handles (human)"| n41
+  n20 -->|"yields"| n37
+  n37 -->|"requires (instrument)"| n38
+  n13 -->|"requires (instrument)"| n38
+  n38 -->|"yields"| n39
+  n20 -->|"yields"| n40
+  n38 -->|"invokes"| n41
+  n4 -->|"requires (instrument)"| n41
   n40 -->|"requires (instrument)"| n41
   n41 -->|"yields"| n42
-  n41 <-->|"affects"| n4
-  n4 -->|"requires (instrument)"| n43
-  n38 -->|"requires (instrument)"| n43
-  n40 -->|"requires (instrument)"| n43
+  n18 -->|"handles (human)"| n43
+  n42 -->|"requires (instrument)"| n43
   n43 -->|"yields"| n44
   n43 <-->|"affects"| n4
-  n101 -->|"part of"| n40
-  n102 -->|"part of"| n40
-  n0 -->|"exhibits"| n45
-  n0 -->|"requires (instrument)"| n46
-  n47 -->|"requires (instrument)"| n46
-  n46 -->|"yields"| n48
-  n46 <-->|"affects"| n0
-  n0 -->|"requires (instrument)"| n49
-  n4 -->|"requires (instrument)"| n49
-  n49 -->|"yields"| n48
-  n49 -->|"invokes"| n50
-  n48 -->|"requires (instrument)"| n50
-  n0 -->|"requires (instrument)"| n50
-  n50 -->|"yields"| n51
-  n0 -->|"requires (instrument)"| n54
-  n48 -->|"requires (instrument)"| n54
-  n54 -->|"yields"| n52
-  n46 -->|"invokes"| n54
-  n20 -->|"invokes"| n55
-  n20 -->|"invokes"| n56
+  n4 -->|"requires (instrument)"| n45
+  n40 -->|"requires (instrument)"| n45
+  n42 -->|"requires (instrument)"| n45
+  n45 -->|"yields"| n46
+  n45 <-->|"affects"| n4
+  n105 -->|"part of"| n42
+  n106 -->|"part of"| n42
+  n0 -->|"exhibits"| n47
+  n0 -->|"requires (instrument)"| n48
+  n49 -->|"requires (instrument)"| n48
+  n48 -->|"yields"| n50
+  n48 <-->|"affects"| n0
+  n0 -->|"requires (instrument)"| n51
+  n4 -->|"requires (instrument)"| n51
+  n51 -->|"yields"| n50
+  n51 -->|"invokes"| n52
+  n50 -->|"requires (instrument)"| n52
+  n0 -->|"requires (instrument)"| n52
+  n52 -->|"yields"| n53
   n0 -->|"requires (instrument)"| n56
-  n48 -->|"requires (instrument)"| n56
-  n56 -->|"yields"| n53
-  n0 -->|"requires (instrument)"| n55
-  n48 -->|"requires (instrument)"| n55
-  n55 -->|"invokes"| n50
-  n55 -->|"invokes"| n54
-  n55 -->|"yields"| n57
-  n55 -->|"yields"| n58
-  n57 -->|"part of"| n35
-  n58 -->|"part of"| n35
-  n36 -->|"invokes"| n59
-  n57 -->|"requires (instrument)"| n59
-  n58 -->|"requires (instrument)"| n59
-  n60 -->|"requires (instrument)"| n59
-  n59 -->|"yields"| n61
-  n18 -->|"handles (human)"| n30
-  n30 -->|"invokes"| n62
-  n0 -->|"requires (instrument)"| n62
-  n62 <-->|"affects"| n0
+  n50 -->|"requires (instrument)"| n56
+  n56 -->|"yields"| n54
+  n48 -->|"invokes"| n56
+  n20 -->|"invokes"| n57
+  n20 -->|"invokes"| n58
+  n0 -->|"requires (instrument)"| n58
+  n50 -->|"requires (instrument)"| n58
+  n58 -->|"yields"| n55
+  n0 -->|"requires (instrument)"| n57
+  n50 -->|"requires (instrument)"| n57
+  n57 -->|"invokes"| n52
+  n57 -->|"invokes"| n56
+  n57 -->|"yields"| n59
+  n57 -->|"yields"| n60
+  n59 -->|"part of"| n37
+  n60 -->|"part of"| n37
+  n38 -->|"invokes"| n61
+  n59 -->|"requires (instrument)"| n61
+  n60 -->|"requires (instrument)"| n61
+  n62 -->|"requires (instrument)"| n61
+  n61 -->|"yields"| n63
+  n18 -->|"handles (human)"| n32
+  n32 -->|"invokes"| n64
+  n0 -->|"requires (instrument)"| n64
+  n64 <-->|"affects"| n0
 ```
 
 Initial-state shorthand: Draft. Object scope must be checked in the source model.
@@ -249,6 +258,9 @@ API Building requires Article. [src: src/build-api.ts]
 Action Projecting requires Article. [src: src/action-registry.ts]
 Action Projecting requires Action Registry. [src: src/action-registry.ts]
 Action Projecting yields Canonical Action Projection. [src: src/action-registry.ts]
+Suggested Action Card Rendering requires Closing Prompt. [src: src/action-registry.ts]
+Suggested Action Card Rendering requires Action Registry. [src: src/action-registry.ts]
+Suggested Action Card Rendering yields Suggested Actions Card. [src: src/action-registry.ts]
 Action Reconciling requires Article. [src: src/review-actions.ts]
 Action Reconciling requires Action Registry. [src: src/review-actions.ts]
 Action Review Cycle can be generation or revision. [src: src/action-review-cycle.ts]
@@ -261,7 +273,8 @@ Suggestion Verifying requires Claude API. [src: src/review-actions.ts]
 Action Reconciling affects Action Registry. [src: src/review-actions.ts]
 Action Reconciling affects Article. [src: src/action-registry.ts]
 Action Reconciling yields Closing Prompt. [src: src/review-actions.ts]
-Closing Prompt can be options or needs-evidence. [src: src/action-registry-schema.ts]
+Closing Prompt can be legacy-options, ranked-shortlist, or needs-evidence. [src: src/action-registry-schema.ts]
+Suggested Actions Card consists of Ranked Recommendations and Handled Suggestions. [src: src/action-registry.ts]
 Article Generating yields Action Review Cycle. [src: src/index.ts]
 Article Generating invokes Action Reconciling. [src: src/index.ts]
 Editorial Revising yields Action Review Cycle. [src: src/revise-article.ts]
@@ -353,74 +366,74 @@ title: "SD1.1 — Article Generating in-zoom"
 flowchart TD
   accTitle: SD1.1 — Article Generating in-zoom
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n63["Activity Decision — states: skip, run"]
-  n64["Run Timing — states: available, unavailable"]
+  n65["Activity Decision — states: skip, run"]
+  n66["Run Timing — states: available, unavailable"]
   n6["Run Evidence"]
   n7("Article Generating")
-  n65("Context Collecting")
-  n66("Activity Assessing")
-  n67("Credit Checking")
-  n68("Drafting")
-  n69("Council Reviewing")
-  n70("Synthesizing")
-  n71("Claim Verifying")
-  n72("Provenance Attaching")
-  n46("Time Recording")
+  n67("Context Collecting")
+  n68("Activity Assessing")
+  n69("Credit Checking")
+  n70("Drafting")
+  n71("Council Reviewing")
+  n72("Synthesizing")
+  n73("Claim Verifying")
+  n74("Provenance Attaching")
+  n48("Time Recording")
   n4["GitHub"]
   style n4 stroke-dasharray: 5 5
   n13["Canonical Action Projection"]
-  n73("Closing Continuity Projecting")
-  n74("Telemetry Collecting")
-  n47["Commit Context"]
-  n75["Closing Continuity Projection — states: available, unavailable"]
+  n75("Closing Continuity Projecting")
+  n76("Telemetry Collecting")
+  n49["Commit Context"]
+  n77["Closing Continuity Projection — states: available, unavailable"]
   n0["Article — states: draft, accepted, rejected"]
-  n76["Article Action Files — states: pending, verified"]
-  n77["Telemetry Digest"]
-  n28["Claude API"]
-  style n28 stroke-dasharray: 5 5
-  n78["Credit Status"]
-  n79["Council Critiques"]
-  n80["Claim Report"]
-  n48["Time Evidence"]
-  n64 -->|"part of"| n6
-  n4 -->|"requires (instrument)"| n65
-  n13 -->|"requires (instrument)"| n65
-  n65 -->|"invokes"| n73
-  n65 -->|"invokes"| n74
-  n65 -->|"yields"| n47
-  n0 -->|"requires (instrument)"| n73
-  n76 -->|"requires (instrument)"| n73
-  n73 -->|"yields"| n75
-  n74 -->|"yields"| n77
-  n47 -->|"requires (instrument)"| n66
-  n66 -->|"yields"| n63
-  n63 -->|"condition: run"| n67
-  n28 -->|"requires (instrument)"| n67
-  n67 -->|"yields"| n78
-  n28 -->|"requires (instrument)"| n68
-  n47 -->|"requires (instrument)"| n68
-  n77 -->|"requires (instrument)"| n68
-  n78 -->|"requires (instrument)"| n68
-  n75 -->|"requires (instrument)"| n68
-  n63 -->|"condition: run"| n68
-  n68 -->|"yields"| n0
-  n28 -->|"requires (instrument)"| n69
-  n0 -->|"requires (instrument)"| n69
-  n69 -->|"yields"| n79
-  n28 -->|"requires (instrument)"| n70
-  n79 -->|"consumes"| n70
-  n70 <-->|"affects"| n0
+  n78["Article Action Files — states: pending, verified"]
+  n79["Telemetry Digest"]
+  n31["Claude API"]
+  style n31 stroke-dasharray: 5 5
+  n80["Credit Status"]
+  n81["Council Critiques"]
+  n82["Claim Report"]
+  n50["Time Evidence"]
+  n66 -->|"part of"| n6
+  n4 -->|"requires (instrument)"| n67
+  n13 -->|"requires (instrument)"| n67
+  n67 -->|"invokes"| n75
+  n67 -->|"invokes"| n76
+  n67 -->|"yields"| n49
+  n0 -->|"requires (instrument)"| n75
+  n78 -->|"requires (instrument)"| n75
+  n75 -->|"yields"| n77
+  n76 -->|"yields"| n79
+  n49 -->|"requires (instrument)"| n68
+  n68 -->|"yields"| n65
+  n65 -->|"condition: run"| n69
+  n31 -->|"requires (instrument)"| n69
+  n69 -->|"yields"| n80
+  n31 -->|"requires (instrument)"| n70
+  n49 -->|"requires (instrument)"| n70
+  n79 -->|"requires (instrument)"| n70
+  n80 -->|"requires (instrument)"| n70
+  n77 -->|"requires (instrument)"| n70
+  n65 -->|"condition: run"| n70
+  n70 -->|"yields"| n0
+  n31 -->|"requires (instrument)"| n71
   n0 -->|"requires (instrument)"| n71
-  n47 -->|"requires (instrument)"| n71
-  n71 -->|"yields"| n80
-  n71 <-->|"affects"| n0
-  n0 -->|"requires (instrument)"| n72
-  n6 -->|"requires (instrument)"| n72
+  n71 -->|"yields"| n81
+  n31 -->|"requires (instrument)"| n72
+  n81 -->|"consumes"| n72
   n72 <-->|"affects"| n0
-  n47 -->|"requires (instrument)"| n46
-  n0 -->|"requires (instrument)"| n46
-  n46 -->|"yields"| n48
-  n46 <-->|"affects"| n0
+  n0 -->|"requires (instrument)"| n73
+  n49 -->|"requires (instrument)"| n73
+  n73 -->|"yields"| n82
+  n73 <-->|"affects"| n0
+  n0 -->|"requires (instrument)"| n74
+  n6 -->|"requires (instrument)"| n74
+  n74 <-->|"affects"| n0
+  n49 -->|"requires (instrument)"| n48
+  n0 -->|"requires (instrument)"| n48
+  n48 -->|"yields"| n50
+  n48 <-->|"affects"| n0
 ```
 
 In-zoom membership: Article Generating contains Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, Provenance Attaching, and Time Recording. No execution order is inferred.
@@ -489,70 +502,70 @@ flowchart TD
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
   n4["GitHub"]
   style n4 stroke-dasharray: 5 5
-  n81("Feedback Version Saving")
-  n38["Article Fingerprint"]
-  n82["Feedback Version"]
-  n83("Explicit Revision Requesting")
-  n84["PR Article Fingerprint"]
-  n85["Explicit Revision Request"]
-  n86("Explicit Revision Admitting")
-  n87["Owner Account"]
-  n88["Admitted Revision"]
-  n89("Invocation Claiming")
-  n90["Invocation Claim"]
-  n91("Continued Article Revising")
-  n28["Claude API"]
-  style n28 stroke-dasharray: 5 5
+  n83("Feedback Version Saving")
+  n40["Article Fingerprint"]
+  n84["Feedback Version"]
+  n85("Explicit Revision Requesting")
+  n86["PR Article Fingerprint"]
+  n87["Explicit Revision Request"]
+  n88("Explicit Revision Admitting")
+  n89["Owner Account"]
+  n90["Admitted Revision"]
+  n91("Invocation Claiming")
+  n92["Invocation Claim"]
+  n93("Continued Article Revising")
+  n31["Claude API"]
+  style n31 stroke-dasharray: 5 5
   n22["Action Registry"]
   n0["Article — states: draft, accepted, rejected"]
-  n92["Revision Outcome"]
-  n76["Article Action Files — states: pending, verified"]
-  n23("Action Reconciling")
-  n93["Imported Action Baseline"]
+  n94["Revision Outcome"]
+  n78["Article Action Files — states: pending, verified"]
+  n26("Action Reconciling")
+  n95["Imported Action Baseline"]
   n21("Action Projecting")
-  n94("Editorial Output Binding")
-  n95["Editorial Output Artifact"]
-  n96("Editorial Rebinding")
-  n97("Source Evidence Selecting")
-  n25["Source Evidence"]
-  n98["Selected Source Evidence"]
-  n99["Evidence Coverage"]
-  n26("Suggestion Proposing")
-  n27("Suggestion Verifying")
-  n4 -->|"requires (instrument)"| n81
-  n38 -->|"requires (instrument)"| n81
-  n81 -->|"yields"| n82
-  n82 -->|"requires (instrument)"| n83
-  n84 -->|"requires (instrument)"| n83
-  n83 -->|"yields"| n85
-  n85 -->|"object event"| n86
-  n87 -->|"requires (instrument)"| n86
-  n4 -->|"requires (instrument)"| n86
-  n86 -->|"yields"| n88
-  n88 -->|"object event"| n89
-  n4 -->|"requires (instrument)"| n89
-  n89 -->|"yields"| n90
+  n96("Editorial Output Binding")
+  n97["Editorial Output Artifact"]
+  n98("Editorial Rebinding")
+  n99("Source Evidence Selecting")
+  n28["Source Evidence"]
+  n100["Selected Source Evidence"]
+  n101["Evidence Coverage"]
+  n29("Suggestion Proposing")
+  n30("Suggestion Verifying")
+  n4 -->|"requires (instrument)"| n83
+  n40 -->|"requires (instrument)"| n83
+  n83 -->|"yields"| n84
+  n84 -->|"requires (instrument)"| n85
+  n86 -->|"requires (instrument)"| n85
+  n85 -->|"yields"| n87
+  n87 -->|"object event"| n88
+  n89 -->|"requires (instrument)"| n88
+  n4 -->|"requires (instrument)"| n88
+  n88 -->|"yields"| n90
   n90 -->|"object event"| n91
-  n28 -->|"requires (instrument)"| n91
-  n22 -->|"requires (instrument)"| n91
-  n91 <-->|"affects"| n0
-  n91 <-->|"affects"| n22
+  n4 -->|"requires (instrument)"| n91
   n91 -->|"yields"| n92
-  n23 -->|"yields"| n76
-  n93 -->|"requires (instrument)"| n21
-  n4 -->|"requires (instrument)"| n94
-  n94 -->|"yields"| n95
-  n95 -->|"requires (instrument)"| n86
-  n0 -->|"requires (instrument)"| n96
-  n96 <-->|"affects"| n76
-  n23 -->|"invokes"| n97
-  n0 -->|"requires (instrument)"| n97
-  n22 -->|"requires (instrument)"| n97
-  n25 -->|"requires (instrument)"| n97
-  n97 -->|"yields"| n98
-  n97 -->|"yields"| n99
-  n98 -->|"requires (instrument)"| n26
-  n98 -->|"requires (instrument)"| n27
+  n92 -->|"object event"| n93
+  n31 -->|"requires (instrument)"| n93
+  n22 -->|"requires (instrument)"| n93
+  n93 <-->|"affects"| n0
+  n93 <-->|"affects"| n22
+  n93 -->|"yields"| n94
+  n26 -->|"yields"| n78
+  n95 -->|"requires (instrument)"| n21
+  n4 -->|"requires (instrument)"| n96
+  n96 -->|"yields"| n97
+  n97 -->|"requires (instrument)"| n88
+  n0 -->|"requires (instrument)"| n98
+  n98 <-->|"affects"| n78
+  n26 -->|"invokes"| n99
+  n0 -->|"requires (instrument)"| n99
+  n22 -->|"requires (instrument)"| n99
+  n28 -->|"requires (instrument)"| n99
+  n99 -->|"yields"| n100
+  n99 -->|"yields"| n101
+  n100 -->|"requires (instrument)"| n29
+  n100 -->|"requires (instrument)"| n30
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**

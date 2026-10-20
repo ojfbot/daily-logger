@@ -65,7 +65,9 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
   const current = snapshot?.actionKeys
     ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
   const nextSection = stripManagedActions(input.markdown).match(/^## (?:What['’]s next|Next actions|Suggested actions)\s*\n([\s\S]*?)(?=^## |$(?![\s\S]))/mi)?.[1] ?? ''
-  const closing = snapshot?.closing?.kind === 'options' ? JSON.stringify(snapshot.closing.options) : ''
+  const closing = snapshot?.closing
+    ? JSON.stringify(snapshot.closing.kind === 'needs-evidence' ? snapshot.closing.recommendations : snapshot.closing.options)
+    : ''
   const requested = [input.feedback, nextSection, closing].join('\n')
   const carried = input.registry.records.filter(record => current.includes(record.key) || requested.includes(record.key))
   const text = [requested, ...carried.map(record => JSON.stringify({ key: record.key, workKey: record.workKey,
