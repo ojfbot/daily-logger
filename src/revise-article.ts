@@ -29,7 +29,7 @@ import {
 } from './run-provenance.js'
 
 export const REVISION_MODEL = 'claude-opus-4-6'
-export const REVISION_PROMPT_VERSION = 'editorial-revision-v2-recorded-time-protected'
+export const REVISION_PROMPT_VERSION = 'editorial-revision-v3-single-recommendation-surface'
 const MAX_TOKENS = 8192
 
 export const REVISION_SYSTEM_PROMPT = `You are a careful editor revising a daily development blog article for the ojfbot project.
@@ -40,7 +40,7 @@ Rules:
 1. Apply ONLY the changes described in the editorial feedback. Do not rewrite sections that are not mentioned in the feedback.
 2. Preserve the article's voice — first-person plural ("we"), direct, technical, didactic.
 3. Keep ALL YAML frontmatter fields intact (including title, date, tags, summary, status, and provenance). Do not modify the status or provenance fields.
-4. Preserve section structure: ## What shipped, ## The decisions, ## Roadmap pulse, ## What's next. Suggested actions are managed separately after prose revision. Do not invent or preserve obsolete action instructions in prose.
+4. Preserve the reader-facing prose sections: ## What shipped, ## The decisions, ## Roadmap pulse. Do not create or preserve a ## What's next section or any parallel priority/action list. Preserve relevant facts, evidence gaps and owner gates in Roadmap pulse; the separately managed Suggested actions card is the sole current recommendation surface.
 5. Preserve all markdown formatting: GFM links, backtick code references, blockquotes, headings, lists.
 6. Return the FULL revised article (not a diff), including the YAML frontmatter delimiters (---).
 7. In changesSummary, list each discrete change you made as a short sentence. If a feedback item required no change (e.g., the article already says what was requested), note "No change needed: ..." and explain why.

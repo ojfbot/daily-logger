@@ -55,8 +55,10 @@
 .suggested-action-start { margin: 0; color: var(--text-secondary); font-size: .88rem; }
 .suggested-action-copy > details { margin-top: .75rem; border-top: 1px dotted var(--border); padding-top: .65rem; }
 .suggested-action-copy > details summary,
+.suggested-actions-draft-context > summary,
 .suggestions-handled > summary { cursor: pointer; font-weight: 700; }
 .suggested-action-copy > details summary:focus-visible,
+.suggested-actions-draft-context > summary:focus-visible,
 .suggestions-handled > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .suggested-action-copy dl { margin: .8rem 0; display: grid; grid-template-columns: minmax(8rem, .32fr) minmax(0, 1fr); gap: .45rem 1rem; }
 .suggested-action-copy dt { color: var(--text-secondary); font-weight: 700; }
@@ -73,6 +75,14 @@
 
 .suggested-actions-review-note p { margin: .25rem 0 0; color: var(--text-secondary); }
 
+.suggested-actions-draft-context {
+  border-top: 1px solid var(--border);
+  padding: .9rem 1.25rem 1rem;
+  color: var(--text-secondary);
+}
+
+.suggested-actions-draft-context > div { margin-top: .8rem; }
+
 .suggestions-handled {
   border-top: 1px solid var(--border);
   padding: .9rem 1.25rem 1rem;
@@ -87,6 +97,7 @@
 @media (max-width: 600px) {
   .suggested-actions-header,
   .suggested-action,
+  .suggested-actions-draft-context,
   .suggestions-handled { padding-left: .9rem; padding-right: .9rem; }
   .suggested-actions-review-note { margin-left: .9rem; margin-right: .9rem; }
   .suggested-action { grid-template-columns: 1.8rem minmax(0, 1fr); gap: .65rem; }

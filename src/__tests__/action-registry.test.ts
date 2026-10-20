@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ActionRegistrySchema, articleActionRecords, projectRegistry, readActionRegistry, registryBytes, registryRevision, renderArticleActions, renderArticleActionHtml, setActionInclusion, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
+import { ActionRegistrySchema, actionStateDigest, articleActionRecords, projectRegistry, readActionRegistry, registryBytes, registryRevision, renderArticleActions, renderArticleActionHtml, setActionInclusion, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
 import { ActionVerificationSchema, actionGithubReferences, applyVerifiedActionReview, reviewArticleActions, reviewDraftActions, renderGithubEvidence, resolveActionSourceLines, type ActionProposal, type ActionVerification } from '../review-actions.js'
 
 const articleDate = '2026-10-17'
@@ -111,6 +111,7 @@ describe('canonical action review and publication', () => {
       }
       const handoff = (record: typeof existing) => ({ kind: 'action' as const, actionKey: record.key, title: 'Continue the reviewed action', benefit: 'Move the reviewed obligation to its next decision.', start: 'Resume the existing handoff.', entryPoint: `Run ${record.original.command} in ${record.original.repo}.`, context: record.history[0].description, whyNow: 'The verified action remains current.', outcome: 'Advance the existing reviewed obligation.', nextCheck: 'Record its next verified checkpoint.', factCitations: [{ sourceId: 'evidence', quote: 'a queue and article mismatch' }], goalCitations: [{ sourceId: 'goal', quote: 'reliable editorial acceptance' }] })
       reviewed.articles[0].closing = { kind: 'options', options: [existing, suggested].filter(record => ['open', 'proposed', 'deferred'].includes(record.state)).map(handoff) }
+      reviewed.articles[0].stateDigest = actionStateDigest(reviewed, reviewed.articles[0].actionKeys, reviewed.articles[0].closing, reviewed.articles[0].draftContext, { articleDate, roundId: reviewed.articles[0].roundId })
       const html = renderArticleActionHtml(markdown, reviewed, articleDate, articleStatuses)
       expect(html).not.toContain('<img')
       expect(html).toContain('&lt;img')
@@ -123,6 +124,7 @@ describe('canonical action review and publication', () => {
     record.original.command = payload; record.original.repo = payload; record.original.description = payload
     record.history[0].description = payload; record.doneWhen = payload; record.gates = [payload]
     reviewed.articles[0].closing = { kind: 'options', options: [actionHandoff(record.key, payload)] }
+    reviewed.articles[0].stateDigest = actionStateDigest(reviewed, reviewed.articles[0].actionKeys, reviewed.articles[0].closing, reviewed.articles[0].draftContext, { articleDate, roundId: reviewed.articles[0].roundId })
     const first = renderArticleActions(markdown, reviewed, articleDate, articleStatuses)
     expect(first.match(/<!-- ACTIONS_START -->/g)).toHaveLength(1)
     expect(first.match(/<!-- ACTIONS_END -->/g)).toHaveLength(1)

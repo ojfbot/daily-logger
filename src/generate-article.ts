@@ -6,9 +6,10 @@ import { validateArticleOutput, getValidationErrors, actionId } from './schema.j
 import { allocateMergedPREvidence, mergedEvidenceKey, PROMPT_PR_PREVIEW_CHARS } from './pr-body.js'
 import { formatArticleFooter } from './run-provenance.js'
 import { isReviewedAction } from './action-model.js'
+import { draftRecommendationContextMarker } from './recommendation-prose.js'
 
 export const ARTICLE_MODEL = 'claude-sonnet-4-6'
-export const ARTICLE_PROMPT_VERSION = 'article-v3-2026-10-19-initial-action-target'
+export const ARTICLE_PROMPT_VERSION = 'article-v4-2026-10-19-single-recommendation-surface'
 // 8 k output budget — enough headroom on high-activity days (64+ commits) to
 // avoid mid-response cutoff.
 const MAX_TOKENS = 8192
@@ -139,8 +140,8 @@ Field rules:
 - \`whatShipped\`: GFM markdown. Name specific PRs (#number), commits (7-char hash), files. ONLY reference merged/committed work here — open/in-flight PRs must go in roadmapPulse.
 - \`theDecisions\`: The most important section. Explain WHY each architectural choice was made, what alternatives were considered, and what would break if the decision were different. If applicable, tag the engineering concern area.
 - \`roadmapPulse\`: MUST explicitly reference every open PR from the Open PRs context by [repo] #number as in-flight work — do not omit any. When capture-agent (formerly gcgcca) activity is present, validate progress against its milestones in ROADMAP.md and note which architectural requirements (type bridge, Frame OS integration, API contracts, test coverage) are advancing or stalled.
-- \`whatsNext\`: 1-2 items. Immediately actionable. The reader should be able to start in the next 30 minutes.
-- Total word count across lede + four sections: 800–1200 words.
+- \`whatsNext\`: factual continuation context for the independent action review. Preserve useful current-state facts, owner gates and unresolved evidence, but do not rank work, give a parallel action list or tell the reader what to do next. The verified Suggested actions card is the sole recommendation surface.
+- Total word count across lede + the three reader-facing prose sections: 800–1200 words.
 - Zero-commit days: \`whatShipped\` becomes "What we explored" — architecture deep-dive or tradeoff analysis. Never write filler.
 
 ## Day naming
@@ -154,7 +155,7 @@ Zero-commit days (weekends, holidays, deliberate rest) are expected and must be 
 - Use the window as a focused audit: review open PRs, surface the critical-path blocker, document a deferred tradeoff
 - \`lede\`: set the reading/audit frame directly — e.g. "No commits Saturday. That's not a gap — it's a reading day."
 - \`whatShipped\`: open with "No code committed [day]. What follows is…" then an architectural deep-dive or open PR audit. Never write filler.
-- \`theDecisions\`, \`roadmapPulse\`, \`whatsNext\`: same standards as any active development day
+- \`theDecisions\` and \`roadmapPulse\`: same standards as any active development day. \`whatsNext\` remains factual review context, never a parallel recommendation list.
 
 ## Structured output schema (v2)
 
@@ -179,7 +180,7 @@ Every tag MUST have a \`type\` field. The 7 tag types:
 ### Structured action items
 \`suggestedActions\` is an ARRAY of objects, each with: \`command\` (slash command like /adr, /test-expand, /validate, /doc-refactor, /techdebt, /hardening, /investigate, /sweep, /roadmap, /scaffold, /pr-review), \`description\` (what to do), \`repo\` (where), \`status\` (always "open"), \`sourceDate\` (today's date YYYY-MM-DD).
 
-\`whatsNext\` must leave the reader with useful continuation choices grounded in the supplied current evidence. Prefer the proper entry point into existing open work, an accepted prior review or owner gate, why the choice matters now, the roadmap gap or outcome it advances, and a concrete next checkpoint. Do not revive completed, dismissed, superseded, closed, or stale work. Do not invent filler merely to reach a count: the verified action pass may preserve an existing PR, issue, owner decision, or checkpoint as a closing option without admitting a new queue identity. If the evidence cannot support a continuation, state the decision or evidence needed explicitly.
+\`whatsNext\` is retained as draft context for independent action review, not rendered as a reader-facing section. Record only useful facts the reviewer may need: current state, accepted prior review, owner gates, unresolved evidence and explicit boundaries. Do not rank work, issue commands, create a 1-2 item menu or duplicate \`suggestedActions\`. The verified action pass alone chooses and maintains the reader-facing top three.
 
 ### Activity type
 Classify the day as one of: \`build\` (normal development), \`rest\` (zero/very few commits), \`audit\` (review/audit focus), \`hardening\` (stability/security focus), \`cleanup\` (refactoring/debt), \`sprint\` (high-volume feature work).
@@ -382,7 +383,7 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
       },
       whatsNext: {
         type: 'string',
-        description: 'GFM markdown for What\'s next — 1-2 most immediately actionable items.',
+        description: 'Factual continuation context for independent action review. Preserve current state, evidence gaps and owner gates; do not rank work or emit a parallel action list.',
       },
       suggestedActions: {
         type: 'array',
@@ -481,7 +482,7 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
  * Assembles the article body from structured Claude output.
  * Section headings and suggested-actions blockquotes are injected by code —
  * Claude only supplies the prose content and action items.
- * This guarantees every article has the required four sections and blockquotes,
+ * This guarantees every article has the required three prose sections and blockquotes,
  * regardless of what Claude decided to include or omit.
  *
  * Handles both v1 (StructuredArticle) and v2 (ArticleDataV2) inputs.
@@ -498,7 +499,6 @@ function assembleBodyV1(s: StructuredArticle): string {
     ['What shipped', s.whatShipped, s.actions?.whatShipped],
     ['The decisions', s.theDecisions, s.actions?.theDecisions],
     ['Roadmap pulse', s.roadmapPulse, s.actions?.roadmapPulse],
-    ["What's next", s.whatsNext, s.actions?.whatsNext],
   ]
 
   const parts: string[] = []
@@ -510,6 +510,9 @@ function assembleBodyV1(s: StructuredArticle): string {
   for (const [heading, content] of sections) {
     parts.push(`## ${heading}`, '', content.trim(), '')
   }
+
+  const context = draftRecommendationContextMarker(s.whatsNext)
+  if (context) parts.push(context)
 
   return parts.join('\n').trimEnd()
 }
@@ -614,9 +617,8 @@ function assembleBodyV2(s: ArticleDataV2): string {
     parts.push(st.narrative.trim(), '')
   }
 
-  // ── What's next ──
-  parts.push("## What's next", '')
-  parts.push(linkifyPRRefs((s.whatsNext ?? 'Review the roadmap and queue the next action.').trim(), knownRepos), '')
+  const context = draftRecommendationContextMarker(linkifyPRRefs((s.whatsNext ?? '').trim(), knownRepos))
+  if (context) parts.push(context)
 
   return parts.join('\n').trimEnd()
 }

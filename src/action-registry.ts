@@ -5,7 +5,8 @@ import { readdirSync } from 'node:fs'
 import { detachArticleTime } from './article-time-frontmatter.js'
 import { isReviewedAction, legacyActionKey, type CanonicalAction } from './action-model.js'
 import { renderArticle } from './render-article.js'
-import { ACTION_REVIEW_PROMPT_VERSION } from './action-review-cycle.js'
+import { ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION } from './action-review-cycle.js'
+import { extractDraftRecommendationContext } from './recommendation-prose.js'
 
 export const REGISTRY_PATH = 'actions/registry.json'
 export const ACTIONS_START = '<!-- ACTIONS_START -->'
@@ -16,8 +17,14 @@ import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hyd
 export function sha256(value: string): string { return createHash('sha256').update(value).digest('hex') }
 export function registryBytes(registry: ActionRegistry): string { return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
 export function registryRevision(registry: ActionRegistry): string { return sha256(registryBytes(registry)) }
-export function actionStateDigest(registry: ActionRegistry, keys: readonly string[], closing?: ClosingPrompt): string {
-  const records = registry.records.filter(record => keys.includes(record.key)).map(record => ({ key: record.key, state: record.state, history: record.history, admission: record.admission }))
+export function actionStateDigest(registry: ActionRegistry, keys: readonly string[], closing?: ClosingPrompt, draftContext?: ActionRegistry['articles'][number]['draftContext'], boundary?: { articleDate: string; roundId: string }): string {
+  const records = registry.records.filter(record => keys.includes(record.key)).map(record => {
+    if (!boundary) return { key: record.key, state: record.state, history: record.history, admission: record.admission }
+    const history = record.history.filter(decision => decision.articleDate < boundary.articleDate || (decision.articleDate === boundary.articleDate && decision.roundId === boundary.roundId))
+    const state = history.at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed')
+    return { key: record.key, state, history, admission: record.admission }
+  })
+  if (draftContext !== undefined) return sha256(JSON.stringify({ records, closing: closing ?? null, draftContext }))
   return sha256(JSON.stringify(closing === undefined ? records : { records, closing }))
 }
 export function actionKey(action: CanonicalAction): string { return action.id ?? `legacy-${sha256(legacyActionKey(action))}` }
@@ -147,6 +154,10 @@ function sourceLabel(locator: string): string {
   const file = locator.split('/').filter(Boolean).at(-1)
   return file ?? locator
 }
+function draftContextHtml(context: ActionRegistry['articles'][number]['draftContext']): string[] {
+  if (context?.kind !== 'retained') return []
+  return [`<details class="suggested-actions-draft-context"><summary>Draft context considered during review</summary><div>${renderArticle(context.markdown)}</div></details>`]
+}
 export function articleActionRecords(registry: ActionRegistry, articleDate: string, statuses: ReadonlyMap<string, string>) {
   const snapshot = registry.articles.find(article => article.date === articleDate)
   return (snapshot?.actionKeys ?? []).map(key => {
@@ -174,7 +185,7 @@ export function articleActionCard(registry: ActionRegistry, articleDate: string,
   const sources = snapshot.sources
     .filter(source => citedSourceIds.has(source.id) && source.kind !== 'report')
     .map(({ id, kind, locator }) => ({ id, kind, locator }))
-  return { review: snapshot.review, closing: snapshot.closing ?? null, handled, sources }
+  return { review: snapshot.review, closing: snapshot.closing ?? null, draftContext: snapshot.draftContext ?? null, handled, sources }
 }
 export function renderArticleActions(markdown: string, registry: ActionRegistry, articleDate: string, statuses: ReadonlyMap<string, string>): string {
   const snapshot = registry.articles.find(article => article.date === articleDate)
@@ -182,11 +193,19 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
     if (!Object.hasOwn(registry.baseline.articleActions, articleDate)) throw new Error(`Action review is missing for ${articleDate}; reconcile before publishing`)
     return markdown
   }
+  const sourceBoundContext = [ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION].includes(snapshot.verification.promptVersion)
+  if (sourceBoundContext) {
+    const prepared = extractDraftRecommendationContext(stripManagedActions(markdown), snapshot.draftContext)
+    if (JSON.stringify(prepared.context) !== JSON.stringify(snapshot.draftContext)) throw new Error(`Action review draft context is stale for ${articleDate}; reconcile before publishing`)
+    markdown = prepared.markdown
+    if (snapshot.stateDigest !== actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId })) throw new Error(`Action review state is stale for ${articleDate}; reconcile before publishing`)
+  }
   if (managedArticleDigest(markdown) !== snapshot.articleDigest) throw new Error(`Action review is stale for ${articleDate}; reconcile before publishing`)
   if (snapshot.status !== statuses.get(articleDate)) throw new Error(`Action review status is stale for ${articleDate}; reconcile before publishing`)
   if (snapshot.review.state === 'pending') {
     if (snapshot.status !== 'draft') throw new Error(`Action review is pending for ${articleDate}; acceptance is blocked`)
-    return `${unmanagedArticleProse(markdown).trimEnd()}\n\n${ACTIONS_START}\n> **Suggested actions**\n> Action review pending. No new action or disposition has been admitted. Reconcile before accepting this article.\n${ACTIONS_END}\n`
+    const context = draftContextHtml(snapshot.draftContext)
+    return `${unmanagedArticleProse(markdown).trimEnd()}\n\n${ACTIONS_START}\n<section class="suggested-actions-card suggested-actions-card-needs-review" aria-labelledby="suggested-actions-${escaped(articleDate)}">\n<header class="suggested-actions-header"><h3 id="suggested-actions-${escaped(articleDate)}">Suggested actions</h3><p>Action review pending. No new action or disposition has been admitted. Reconcile before accepting this article.</p></header>\n${context.join('\n')}\n</section>\n${ACTIONS_END}\n`
   }
   if (articleDate >= '2026-10-19' && !snapshot.closing) {
     throw new Error(`Verified action review is missing its required closing for ${articleDate}; reconcile before publishing`)
@@ -228,7 +247,7 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
     }
     lines.push('</ol>')
     if (reviewNeeded) lines.push(`<aside class="suggested-actions-review-note" aria-label="Shortlist review needed"><strong>${oneLine(reviewNeeded.question)}</strong><p>${oneLine(reviewNeeded.missingEvidence)} ${oneLine(reviewNeeded.nextCheck)}</p></aside>`)
-    lines.push(...handledLines(), '</section>')
+    lines.push(...draftContextHtml(snapshot.draftContext), ...handledLines(), '</section>')
   }
   if (snapshot.closing?.kind === 'shortlist') {
     pushCard(snapshot.closing.options)

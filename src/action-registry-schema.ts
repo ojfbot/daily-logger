@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { CanonicalActionSchema, isReviewedAction } from './action-model.js'
-import { ActionReviewCycleSchema, ACTION_REVIEW_PROMPT_VERSION, actionAdmissionErrors } from './action-review-cycle.js'
+import { ActionReviewCycleSchema, ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, actionAdmissionErrors } from './action-review-cycle.js'
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 const digest = z.string().regex(/^[a-f0-9]{64}$/)
@@ -108,6 +108,11 @@ export const ActionRecordSchema = z.object({
   history: z.array(ActionDecisionSchema),
 }).strict()
 export type ActionRecord = z.infer<typeof ActionRecordSchema>
+export const DraftRecommendationContextSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('none') }).strict(),
+  z.object({ kind: z.literal('retained'), markdown: z.string().min(1).max(16_000) }).strict(),
+])
+export type DraftRecommendationContext = z.infer<typeof DraftRecommendationContextSchema>
 export const ArticleActionSchema = z.object({
   date,
   status: z.enum(['draft', 'accepted', 'rejected']),
@@ -116,6 +121,7 @@ export const ArticleActionSchema = z.object({
   roundId: digest,
   reviewCycle: ActionReviewCycleSchema.optional(),
   actionKeys: z.array(z.string()),
+  draftContext: DraftRecommendationContextSchema.optional(),
   closing: ClosingPromptSchema.optional(),
   stateDigest: digest,
   verification: z.object({ proposer: z.string(), verifier: z.string(), promptVersion: z.string(), proposalSha256: digest, verdicts: z.array(z.object({ item: z.string(), verdict: z.enum(['pass', 'reject', 'hold']), reason: z.string() }).strict()) }).strict(),
@@ -123,7 +129,8 @@ export const ArticleActionSchema = z.object({
   rejected: z.array(z.object({ description: z.string(), reason: z.string(), workKey: z.string().optional(), evidenceDigest: digest.optional(), quotaHold: z.object({ articleDate: date, cycle: ActionReviewCycleSchema }).strict().optional() }).strict()),
   binding: z.object({ mode: z.literal('editorial-rebind'), fromDigest: digest, actor: z.string().min(1), instructionSha256: digest }).strict().optional(),
 }).strict().superRefine((article, context) => {
-  if ([ACTION_REVIEW_PROMPT_VERSION, 'action-review-pending-v2-cycle'].includes(article.verification.promptVersion) && !article.reviewCycle) context.addIssue({ code: 'custom', message: `Action review cycle is missing: ${article.date}` })
+  if ([ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, 'action-review-pending-v2-cycle'].includes(article.verification.promptVersion) && !article.reviewCycle) context.addIssue({ code: 'custom', message: `Action review cycle is missing: ${article.date}` })
+  if ([ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION].includes(article.verification.promptVersion) && !article.draftContext) context.addIssue({ code: 'custom', message: `Draft continuation context state is missing: ${article.date}` })
   if (article.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && article.review.state === 'verified' && !article.closing) context.addIssue({ code: 'custom', message: `Closing prompt is missing: ${article.date}` })
   if (article.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && article.review.state === 'verified' && article.closing?.kind === 'options') context.addIssue({ code: 'custom', message: `Legacy closing options cannot qualify a ranked shortlist: ${article.date}` })
 })
