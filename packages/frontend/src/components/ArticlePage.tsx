@@ -18,6 +18,7 @@ import { ArticleProvenanceDetails } from './ArticleProvenanceDetails.tsx'
 import { DiscussionDrafts, usePageDiscussionDrafts } from './DiscussionDrafts.tsx'
 import { ArticleActions } from './ArticleActions.tsx'
 import { decorateShipmentTimesHtml } from '../utils/shipmentTimes.ts'
+import { decorateIssueTimesHtml } from '../utils/issueTimes.ts'
 
 export function ArticlePage() {
   const { date } = useParams<{ date: string }>()
@@ -49,10 +50,11 @@ export function ArticlePage() {
   const reposActive = useMemo(() => article?.reposActive ?? entry?.reposActive ?? [], [article?.reposActive, entry?.reposActive])
   const timeReferences = useMemo(() => article?.timeReferences ?? [], [article?.timeReferences])
   const shipmentTimes = useMemo(() => article?.shipmentTimes ?? [], [article?.shipmentTimes])
-  const decoratedBodyHtml = useMemo(() => article?.bodyHtml ? decorateShipmentTimesHtml(article.bodyHtml, shipmentTimes) : '', [article?.bodyHtml, shipmentTimes])
+  const issueTimes = useMemo(() => article?.issueTimes ?? [], [article?.issueTimes])
+  const decoratedBodyHtml = useMemo(() => article?.bodyHtml ? decorateIssueTimesHtml(decorateShipmentTimesHtml(article.bodyHtml, shipmentTimes), issueTimes) : '', [article?.bodyHtml, shipmentTimes, issueTimes])
   const popoverContentRevision = `${article?.sourceBlobSha ?? decoratedBodyHtml}:${sectionHeadings.length}`
 
-  const popover = useArticlePopovers(contentRef, codeReferences, reposActive, timeReferences, popoverContentRevision, shipmentTimes)
+  const popover = useArticlePopovers(contentRef, codeReferences, reposActive, timeReferences, popoverContentRevision, shipmentTimes, issueTimes)
   const { extractSection } = useSectionContent(contentRef)
 
   const displayEntry = article ?? entry

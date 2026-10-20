@@ -354,6 +354,21 @@ describe('collectContext — open issue createdAt mapping', () => {
     expect(issue?.createdAt).toBe('2026-02-20T00:00:00Z')
   })
 
+  it('marks newly created closed issues using the activity window, while retaining older closures', async () => {
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('gh repo list')) return JSON.stringify(repoListFixture)
+      if (cmd.includes('ojfbot/shell/issues?state=closed')) return JSON.stringify([
+        { number: 999, title: 'New and closed', labels: [], html_url: 'https://github.com/ojfbot/shell/issues/999', body: null, created_at: '2026-02-27T10:00:00Z', updated_at: '2026-02-27T10:05:00Z', closed_at: '2026-02-27T10:05:00Z' },
+        { number: 998, title: 'Old and closed', labels: [], html_url: 'https://github.com/ojfbot/shell/issues/998', body: null, created_at: '2026-02-20T10:00:00Z', updated_at: '2026-02-27T10:05:00Z', closed_at: '2026-02-27T10:05:00Z' },
+      ])
+      return mockExecSync(cmd)
+    })
+    const ctx = await collectContext('2026-02-28')
+    expect(ctx.closedIssues.find((issue) => issue.number === 999)?.createdInWindow).toBe(true)
+    expect(ctx.closedIssues.find((issue) => issue.number === 998)?.createdInWindow).toBe(false)
+    expect(ctx.closedIssues).toHaveLength(2)
+  })
+
   it('filters out pull_request entries from issues endpoint', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
       if (cmd.includes('gh repo list')) return JSON.stringify(repoListFixture)
@@ -373,12 +388,16 @@ describe('collectContext — open issue createdAt mapping', () => {
     const ctx = await collectContext('2026-02-28')
     const issue = ctx.openIssues.find((i) => i.number === 6)
     expect(issue?.isNew).toBe(true)
+    expect(issue?.createdInWindow).toBe(true)
+    expect(issue?.updatedAt).toBe('2026-02-27T23:00:00Z')
   })
 
   it('marks issue as isNew when updated_at is within 24h even if created_at is old', async () => {
     const ctx = await collectContext('2026-02-28')
     const issue = ctx.openIssues.find((i) => i.number === 7)
     expect(issue?.isNew).toBe(true)
+    expect(issue?.createdInWindow).toBe(false)
+    expect(issue?.updatedAt).toBe('2026-02-27T22:00:00Z')
   })
 
   it('does not mark issue as isNew when both created_at and updated_at are outside 24h', async () => {

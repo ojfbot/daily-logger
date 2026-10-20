@@ -10,6 +10,10 @@
 
 import { createHash } from 'crypto'
 import { z } from 'zod'
+import { shipmentPrNumber } from './article-references.js'
+import { ActionItemSchema } from './action-item-schema.js'
+
+export { ACTION_STATUSES, ActionItemSchema, type ActionItem } from './action-item-schema.js'
 
 // ─── Tag types ───────────────────────────────────────────────────────────────
 
@@ -27,6 +31,10 @@ export const ShipmentEntrySchema = z.object({
   description: z.string(),
   commits: z.array(z.string()),
   prs: z.array(z.string()).optional(),
+}).superRefine((entry, context) => {
+  for (const [index, value] of (entry.prs ?? []).entries()) {
+    if (!shipmentPrNumber(value, entry.repo)) context.addIssue({ code: 'custom', path: ['prs', index], message: 'Use #N, N, or a canonical same-repo GitHub PR URL' })
+  }
 })
 
 export const PILLAR_VALUES = [
@@ -42,19 +50,6 @@ export const DecisionEntrySchema = z.object({
   repo: z.string(),
   pillar: z.enum(PILLAR_VALUES).optional(),
   relatedTags: z.array(z.string()),
-})
-
-export const ACTION_STATUSES = ['open', 'done'] as const
-
-export const ActionItemSchema = z.object({
-  id: z.string().optional(),
-  command: z.string(),
-  description: z.string(),
-  repo: z.string(),
-  status: z.enum(ACTION_STATUSES),
-  sourceDate: z.string(),
-  closedDate: z.string().optional(),
-  resolution: z.string().optional(),
 })
 
 /**
@@ -173,7 +168,6 @@ export const StructuredArticleSchema = z.object({
 export type TypedTag = z.infer<typeof TypedTagSchema>
 export type ShipmentEntry = z.infer<typeof ShipmentEntrySchema>
 export type DecisionEntry = z.infer<typeof DecisionEntrySchema>
-export type ActionItem = z.infer<typeof ActionItemSchema>
 export type ClosedAction = z.infer<typeof ClosedActionSchema>
 export type CodeReference = z.infer<typeof CodeReferenceSchema>
 export type CodeReferenceType = z.infer<typeof CodeReferenceSchema>['type']

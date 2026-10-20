@@ -95,6 +95,42 @@ test.describe('browser timezone day/night popover', () => {
 test.describe('October 19 shipment completeness', () => {
   test.use({ timezoneId: 'America/Chicago' })
 
+  test('keeps issue and open PR links free of merge warnings and previews the issue as an issue', async ({ page }) => {
+    const article = {
+      date: '2026-10-20', title: 'Reference fixture', summary: 'Typed links and merge state.', tags: [], reposActive: [], commitCount: 0,
+      activityType: 'development', schemaVersion: 2, status: 'accepted', codeReferences: [],
+      bodyHtml: '<h2>What shipped</h2><p><a href="https://github.com/ojfbot/daily-logger/pull/389">#389</a>, <a href="https://github.com/ojfbot/daily-logger/pull/385">#385</a>, new issue <a href="https://github.com/ojfbot/daily-logger/issues/386">#386</a>, and ongoing issue <a href="https://github.com/ojfbot/daily-logger/issues/357">#357</a>.</p>',
+      shipmentTimes: [{ status: 'available', at: '2026-10-19T09:06:00.000Z', source: { repo: 'ojfbot/daily-logger', ref: '389', url: 'https://github.com/ojfbot/daily-logger/pull/389' } }],
+      issueTimes: [
+        { event: 'created', at: '2026-10-18T15:57:36.000Z', source: { repo: 'ojfbot/daily-logger', ref: '386', url: 'https://github.com/ojfbot/daily-logger/issues/386' } },
+        { event: 'updated', at: '2026-10-19T15:35:18.000Z', source: { repo: 'ojfbot/daily-logger', ref: '357', url: 'https://github.com/ojfbot/daily-logger/issues/357' } },
+      ],
+    }
+    const requests: string[] = []
+    page.on('request', request => requests.push(request.url()))
+    await page.route('**/api/*.json', route => route.fulfill({ json: [] }))
+    await page.route('**/api/entries.json', route => route.fulfill({ json: [article] }))
+    await page.route('**/api/articles/2026-10-20.json', route => route.fulfill({ json: article }))
+    await page.route('**/api/article-reviews**', route => route.fulfill({ status: 503, json: { error: 'No review fixture' } }))
+    await page.route('https://api.github.com/repos/ojfbot/daily-logger/issues/386', route => route.fulfill({ json: { number: 386, title: 'Admission budget', state: 'open', html_url: 'https://github.com/ojfbot/daily-logger/issues/386', labels: [] } }))
+    await page.goto('/articles/2026-10-20')
+    await expect(page.locator('.shipment-time-state')).toHaveCount(1)
+    await expect(page.locator('a[href$="/pull/385"] + .shipment-time-state')).toHaveCount(0)
+    await expect(page.locator('a[href$="/issues/386"] + .shipment-time-state')).toHaveCount(0)
+    await expect(page.locator('a[href$="/issues/386"] + .issue-time-state')).toContainText('Created 15:57Z')
+    await expect(page.locator('a[href$="/issues/357"] + .issue-time-state')).toContainText('Updated 15:35Z')
+    await page.locator('a[href$="/issues/357"] + .issue-time-state button').click()
+    await expect(page.locator('.time-popover .time-clock-utc')).toContainText('15:35')
+    await expect(page.locator('.time-popover .time-clock-viewer')).toContainText('10:35')
+    await expect(page.locator('.time-popover .time-world-map')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await page.locator('a[href$="/issues/386"]').hover()
+    await expect(page.locator('.commit-popover')).toContainText('ISSUE')
+    await expect(page.locator('.commit-popover')).toContainText('Admission budget')
+    expect(requests).toContain('https://api.github.com/repos/ojfbot/daily-logger/issues/386')
+    expect(requests).not.toContain('https://api.github.com/repos/ojfbot/daily-logger/pulls/386')
+  })
+
   test('renders controls in a second What shipped section after an empty first and refuses supplied outside sources', async ({ page }) => {
     const article = {
       date: '2026-10-20', title: 'Shipment state fixture', summary: 'Code-owned shipment states.', tags: [], reposActive: [], commitCount: 0,

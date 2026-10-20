@@ -116,6 +116,12 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      - name: Validate changed article references
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: pnpm exec tsx scripts/check-article-references.ts
+
       # Golden eval suite (audit S19 / I4). ADVISORY ONLY — continue-on-error
       # guarantees it never blocks a PR; it posts the pass/fail diff vs the
       # committed snapshot (evals/results/latest.json) to the job summary.
@@ -192,8 +198,12 @@ jobs:
             echo "❌ Found a competing legacy recommendation surface"
             exit 1
           fi
-          if ! grep -q '<summary>Earlier draft notes</summary>' _articles/2026-01-01.md; then
-            echo "❌ Preserved draft context is missing from its closed history disclosure"
+          if ! grep -q '<summary>Article draft context</summary>' _articles/2026-01-01.md; then
+            echo "❌ Preserved draft context is missing from its native disclosure"
+            exit 1
+          fi
+          if grep -q '<summary>Earlier draft notes</summary>' _articles/2026-01-01.md; then
+            echo "❌ Found the retired draft-context disclosure label"
             exit 1
           fi
           node -e "const fs=require('fs'); const file=JSON.parse(fs.readFileSync('actions/articles/2026-01-01.json','utf8')); const snapshot=file.snapshot; if(snapshot.draftContext?.kind!=='retained'||!snapshot.draftContext.markdown.includes('Merge the PR if the smoke test passes.')||!/^[a-f0-9]{64}$/.test(snapshot.stateDigest)) throw new Error('Draft context is not preserved and bound into action-review state');"

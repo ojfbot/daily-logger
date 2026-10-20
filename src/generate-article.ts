@@ -7,6 +7,7 @@ import { allocateMergedPREvidence, mergedEvidenceKey, PROMPT_PR_PREVIEW_CHARS } 
 import { formatArticleFooter } from './run-provenance.js'
 import { isReviewedAction } from './action-model.js'
 import { draftRecommendationContextMarker } from './recommendation-prose.js'
+import { assertArticleReferenceContract, githubReferenceKey, githubReferenceKinds, normalizeArticleResourceLinks, shipmentPrNumber, type GithubReferenceKinds } from './article-references.js'
 
 export const ARTICLE_MODEL = 'claude-sonnet-4-6'
 export const ARTICLE_PROMPT_VERSION = 'article-v4-2026-10-19-single-recommendation-surface'
@@ -487,11 +488,15 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
  *
  * Handles both v1 (StructuredArticle) and v2 (ArticleDataV2) inputs.
  */
-export function assembleBody(s: StructuredArticle | ArticleDataV2): string {
+export function assembleBody(s: StructuredArticle | ArticleDataV2, kinds: GithubReferenceKinds = new Map()): string {
   if ('schemaVersion' in s && s.schemaVersion === 2) {
-    return normalizeArticleMarkdown(assembleBodyV2(s as ArticleDataV2))
+    const body = normalizeArticleResourceLinks(normalizeArticleMarkdown(assembleBodyV2(s as ArticleDataV2, kinds)), kinds)
+    assertArticleReferenceContract(body, kinds)
+    return body
   }
-  return normalizeArticleMarkdown(assembleBodyV1(s as StructuredArticle))
+  const body = normalizeArticleResourceLinks(normalizeArticleMarkdown(assembleBodyV1(s as StructuredArticle)), kinds)
+  assertArticleReferenceContract(body, kinds)
+  return body
 }
 
 function assembleBodyV1(s: StructuredArticle): string {
@@ -523,32 +528,36 @@ const GITHUB_ORG = 'ojfbot'
 
 /** Convert "#42" (or "42") to markdown link `[#42](https://github.com/ojfbot/{repo}/pull/42)` */
 function linkifyPR(ref: string, repo: string): string {
-  const num = ref.replace(/^#/, '')
-  const display = ref.startsWith('#') ? ref : `#${ref}`
-  return `[${display}](https://github.com/${GITHUB_ORG}/${repo}/pull/${num})`
+  const num = shipmentPrNumber(ref, repo)
+  if (!num) throw new Error(`Invalid shipment PR reference for ${repo}: ${ref}`)
+  return `[#${num}](https://github.com/${GITHUB_ORG}/${repo}/pull/${num})`
 }
 
 /** Convert `[repo] #N` patterns in free-text GFM to markdown links. */
-function linkifyPRRefs(text: string, knownRepos: string[]): string {
+function linkifyPRRefs(text: string, knownRepos: string[], kinds: GithubReferenceKinds): string {
   const repoSet = new Set(knownRepos)
   return text.replace(
     /\[(\w[\w-]*)\]\s*#(\d+)/g,
     (match, repo: string, num: string) => {
       if (!repoSet.has(repo)) return match
-      return `[${repo}] [#${num}](https://github.com/${GITHUB_ORG}/${repo}/pull/${num})`
+      const kind = kinds.get(githubReferenceKey(repo, num)) ?? 'pull'
+      return `[${repo}] [#${num}](https://github.com/${GITHUB_ORG}/${repo}/${kind}/${num})`
     },
   )
 }
 
 /** Convert bare `#N` in text to a markdown link using a known repo. */
-function linkifyBarePRs(text: string, repo: string): string {
+function linkifyBarePRs(text: string, repo: string, kinds: GithubReferenceKinds): string {
   return text.replace(
     /(?<!\[)#(\d+)(?!\])/g,
-    (_m, num: string) => `[#${num}](https://github.com/${GITHUB_ORG}/${repo}/pull/${num})`,
+    (_m, num: string) => {
+      const kind = kinds.get(githubReferenceKey(repo, num)) ?? 'pull'
+      return `[#${num}](https://github.com/${GITHUB_ORG}/${repo}/${kind}/${num})`
+    },
   )
 }
 
-function assembleBodyV2(s: ArticleDataV2): string {
+function assembleBodyV2(s: ArticleDataV2, kinds: GithubReferenceKinds): string {
   const parts: string[] = []
 
   const knownRepos = [...new Set([
@@ -570,7 +579,7 @@ function assembleBodyV2(s: ArticleDataV2): string {
         ? ` (${ship.prs.map((pr) => linkifyPR(pr, ship.repo)).join(', ')})`
         : ''
       parts.push(`### ${ship.repo}${prRefs}`, '')
-      parts.push(linkifyBarePRs(ship.description.trim(), ship.repo), '')
+      parts.push(linkifyBarePRs(ship.description.trim(), ship.repo, kinds), '')
       if (ship.commits.length > 0) {
         parts.push(ship.commits.map((c) => `- \`${c}\``).join('\n'), '')
       }
@@ -585,7 +594,7 @@ function assembleBodyV2(s: ArticleDataV2): string {
     for (const dec of s.decisions) {
       const pillarBadge = dec.pillar ? ` — *${dec.pillar}*` : ''
       parts.push(`### ${dec.title}${pillarBadge}`, '')
-      parts.push(linkifyPRRefs(dec.summary.trim(), knownRepos), '')
+      parts.push(linkifyPRRefs(dec.summary.trim(), knownRepos, kinds), '')
       if (dec.relatedTags.length > 0) {
         parts.push(`Tags: ${dec.relatedTags.map((t) => `\`${t}\``).join(', ')}`, '')
       }
@@ -594,7 +603,7 @@ function assembleBodyV2(s: ArticleDataV2): string {
 
   // ── Roadmap pulse ──
   parts.push('## Roadmap pulse', '')
-  parts.push(linkifyPRRefs((s.roadmapPulse ?? 'No roadmap update today.').trim(), knownRepos), '')
+  parts.push(linkifyPRRefs((s.roadmapPulse ?? 'No roadmap update today.').trim(), knownRepos, kinds), '')
 
   // ── Skill Telemetry ──
   if (s.skillTelemetry) {
@@ -617,7 +626,7 @@ function assembleBodyV2(s: ArticleDataV2): string {
     parts.push(st.narrative.trim(), '')
   }
 
-  const context = draftRecommendationContextMarker(linkifyPRRefs((s.whatsNext ?? '').trim(), knownRepos))
+  const context = draftRecommendationContextMarker(linkifyPRRefs((s.whatsNext ?? '').trim(), knownRepos, kinds))
   if (context) parts.push(context)
 
   return parts.join('\n').trimEnd()
@@ -1033,7 +1042,7 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
       date: ctx.date,
       tags: fixture.tags.map((t) => t.name),
       summary: fixture.summary,
-      body: assembleBody(fixture),
+      body: assembleBody(fixture, githubReferenceKinds(ctx)),
       suggestedActions: fixture.suggestedActions,
       generationMode: 'mock',
     }
@@ -1078,7 +1087,7 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
       date: ctx.date,
       tags: result.data.tags.map((t) => t.name),
       summary: result.data.summary,
-      body: assembleBody(result.data),
+      body: assembleBody(result.data, githubReferenceKinds(ctx)),
       suggestedActions: result.data.suggestedActions,
       commitCount: result.data.commitCount,
       reposActive: result.data.reposActive,
@@ -1093,7 +1102,7 @@ export async function generateArticle(ctx: BlogContext): Promise<GeneratedArticl
       date: ctx.date,
       tags: result.data.tags ?? ['dev-log'],
       summary: result.data.summary ?? '',
-      body: assembleBody(result.data),
+      body: assembleBody(result.data, githubReferenceKinds(ctx)),
       generationMode: 'model',
     }
   }

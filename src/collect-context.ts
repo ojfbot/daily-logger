@@ -185,11 +185,13 @@ function getMergedPRs(org: string, repo: string, since: string): PRInfo[] {
     }))
 }
 
-function getClosedIssues(org: string, repo: string, since: string): IssueInfo[] {
+function getClosedIssues(org: string, repo: string, since: string, since24h: string): IssueInfo[] {
   type GHIssue = {
     number: number
     title: string
     labels: Array<{ name: string }>
+    created_at: string
+    updated_at: string
     closed_at: string | null
     html_url: string
     pull_request?: unknown
@@ -206,6 +208,9 @@ function getClosedIssues(org: string, repo: string, since: string): IssueInfo[] 
       title: i.title,
       state: 'closed' as const,
       labels: i.labels.map((l) => l.name),
+      createdAt: i.created_at,
+      createdInWindow: i.created_at >= since24h,
+      updatedAt: i.updated_at,
       closedAt: i.closed_at!,
       url: i.html_url,
       repo,
@@ -242,11 +247,13 @@ function getOpenIssues(org: string, repo: string, since24h: string): IssueInfo[]
         state: 'open' as const,
         labels: i.labels.map((l) => l.name),
         createdAt: i.created_at,
+        updatedAt: i.updated_at,
         url: i.html_url,
         repo,
         // Active issues get full body up to 800 chars — stale ones stay at 200.
         body: i.body ? i.body.slice(0, isNew ? 800 : 200) : undefined,
         isNew,
+        createdInWindow: i.created_at >= since24h,
       }
     })
     // Active issues first so they're never bumped off by the global cap
@@ -572,7 +579,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
       pr.skillUsage = getSkillUsageFromPRComments(org, repo, pr.number)
     }
     allRecentPRs.push(...recentPRs)
-    allClosed.push(...getClosedIssues(org, repo, since7d))
+    allClosed.push(...getClosedIssues(org, repo, since7d, since24h))
     allOpen.push(...getOpenIssues(org, repo, since24h))
     allADRs.push(...getADRRegistry(org, repo))
   }

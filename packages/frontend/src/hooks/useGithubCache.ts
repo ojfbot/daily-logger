@@ -1,7 +1,18 @@
 import { useCallback, useRef, useState } from 'react'
+import { z } from 'zod'
 
 const ORG = 'ojfbot'
 const COMMIT_CACHE_KEY = 'dl-commit-cache'
+const issueResponseSchema = z.object({
+  number: z.int().positive(),
+  html_url: z.string(),
+  pull_request: z.never().optional(),
+  title: z.string().nullish(),
+  state: z.string().nullish(),
+  user: z.object({ login: z.string() }).nullish(),
+  created_at: z.string().nullish(),
+  labels: z.array(z.object({ name: z.string() })).nullish(),
+})
 
 export interface CommitData {
   sha: string
@@ -14,6 +25,7 @@ export interface CommitData {
 }
 
 export interface PRData {
+  kind: 'pull' | 'issues'
   number: number
   title: string
   state: string
@@ -54,27 +66,37 @@ async function fetchCommitData(repo: string, hash: string): Promise<CommitData> 
   }
 }
 
-async function fetchPRData(repo: string, number: number): Promise<PRData> {
+async function fetchIssueData(repo: string, number: number): Promise<PRData> {
+  const res = await fetch(`https://api.github.com/repos/${ORG}/${repo}/issues/${number}`)
+  if (res.status === 403) throw new Error('Rate limited — try again later')
+  if (!res.ok) throw new Error('Private repo — preview unavailable')
+  const parsed = issueResponseSchema.safeParse(await res.json())
+  const canonicalUrl = `https://github.com/${ORG}/${repo}/issues/${number}`
+  if (!parsed.success || parsed.data.number !== number || parsed.data.html_url !== canonicalUrl) {
+    throw new Error('GitHub issue preview unavailable')
+  }
+  const issue = parsed.data
+  return {
+    kind: 'issues', number, title: issue.title ?? '', state: issue.state ?? 'unknown',
+    merged: false, author: issue.user?.login ?? '', date: issue.created_at ?? '',
+    url: issue.html_url,
+    repo, additions: 0, deletions: 0,
+    labels: (issue.labels ?? []).map(label => label.name),
+  }
+}
+
+async function fetchPRData(repo: string, number: number, sourceKind: 'pull' | 'issues'): Promise<PRData> {
+  if (sourceKind === 'issues') return fetchIssueData(repo, number)
   const res = await fetch(`https://api.github.com/repos/${ORG}/${repo}/pulls/${number}`)
 
-  if (res.status === 404) {
-    const issueRes = await fetch(`https://api.github.com/repos/${ORG}/${repo}/issues/${number}`)
-    if (!issueRes.ok) throw new Error('Private repo — preview unavailable')
-    const issue = await issueRes.json()
-    return {
-      number, title: issue.title ?? '', state: issue.state ?? 'unknown',
-      merged: false, author: issue.user?.login ?? '', date: issue.created_at ?? '',
-      url: issue.html_url ?? `https://github.com/${ORG}/${repo}/issues/${number}`,
-      repo, additions: 0, deletions: 0,
-      labels: (issue.labels ?? []).map((l: { name: string }) => l.name),
-    }
-  }
+  if (res.status === 404) return fetchIssueData(repo, number)
 
   if (res.status === 403) throw new Error('Rate limited — try again later')
   if (!res.ok) throw new Error('Private repo — preview unavailable')
 
   const json = await res.json()
   return {
+    kind: 'pull',
     number, title: json.title ?? '',
     state: json.merged ? 'merged' : json.state ?? 'unknown',
     merged: json.merged ?? false, author: json.user?.login ?? '',
@@ -135,13 +157,13 @@ export function useGithubCache() {
     return { status: 'loading' }
   }, [saveCommitCache])
 
-  const getPR = useCallback((repo: string, number: number): CacheEntry<PRData> => {
-    const key = `pr:${repo}/${number}`
+  const getPR = useCallback((repo: string, number: number, sourceKind: 'pull' | 'issues' = 'pull'): CacheEntry<PRData> => {
+    const key = `${sourceKind}:${repo}/${number}`
     const cached = prCacheRef.current.get(key)
     if (cached) return cached
 
     prCacheRef.current.set(key, { status: 'loading' })
-    fetchPRData(repo, number)
+    fetchPRData(repo, number, sourceKind)
       .then(data => {
         prCacheRef.current.set(key, { status: 'ok', data })
         setCacheRevision(n => n + 1)

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { ActionRecord } from '../../../../src/action-registry-schema.ts'
+import type { ActionRecord } from '../../../../src/action-registry-contract.ts'
 import { loadEditorialActions, saveActionInclusion, type EditorialActions } from '../utils/actionInclusion.ts'
 
 export function ArticleActions({ date, records, login, visibleBlobSha, draft, onReadyChange }: { date: string; records: ActionRecord[]; login?: string; visibleBlobSha?: string; draft: boolean; onReadyChange?: (ready: boolean) => void }) {

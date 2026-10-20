@@ -14,7 +14,7 @@ const EvidenceSnapshotSchema = z.object({
 })
 export type EvidenceSnapshot = z.infer<typeof EvidenceSnapshotSchema>
 export interface ArticleInput { date: string; markdown: string }
-export interface TimeSourceRequest { kind: 'commit' | 'pull'; repo: string; ref: string }
+export interface TimeSourceRequest { kind: 'commit' | 'pull' | 'issue'; repo: string; ref: string }
 
 export function parseBackfillOptions(args: string[]): { harvest: boolean; write: boolean; snapshot: string; output: string; report: string; shard?: { index: number; count: number }; merge: string[] } {
   let harvest = false, write = false, snapshot = join(ROOT, 'api/time-evidence.json'), output = join(ROOT, 'api/time-refs.json'), report = join(ROOT, 'api/time-refs-report.json')
@@ -62,9 +62,10 @@ export function discoverTimeSources(articles: ArticleInput[]): TimeSourceRequest
       if (!scanTimeTokens(paragraph).length && !unsupportedTimeTokens(paragraph).length) continue
       const heading = [...body.slice(0, start).matchAll(/^#{1,6} (.+)$/gm)].at(-1)?.[1] ?? ''
       const block = `${heading}\n${paragraph}`
-      for (const match of block.matchAll(/https:\/\/github\.com\/(ojfbot\/[A-Za-z0-9][A-Za-z0-9_.-]*)\/(pull|commit)\/([a-f0-9]+)\b/g)) {
+      for (const match of block.matchAll(/https:\/\/github\.com\/(ojfbot\/[A-Za-z0-9][A-Za-z0-9_.-]*)\/(pull|commit|issues)\/([a-f0-9]+)\b/g)) {
         if (match[2] === 'pull' && /^[1-9]\d*$/.test(match[3])) add({ kind: 'pull', repo: match[1], ref: match[3] })
         if (match[2] === 'commit' && /^[a-f0-9]{7,40}$/.test(match[3])) add({ kind: 'commit', repo: match[1], ref: match[3] })
+        if (match[2] === 'issues' && /^[1-9]\d*$/.test(match[3])) add({ kind: 'issue', repo: match[1], ref: match[3] })
       }
       for (const repo of repos) {
         const escaped = repo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -88,6 +89,13 @@ const PullResponseSchema = z.object({
   closed_at: z.string().nullable(),
   updated_at: z.string(),
 })
+const IssueResponseSchema = z.object({
+  number: z.number().int().positive(),
+  html_url: z.string().url(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  pull_request: z.unknown().optional(),
+})
 
 export function recordsFromGitHubResponse(request: TimeSourceRequest, response: unknown): TimeRecord[] {
   if (!/^ojfbot\/[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(request.repo)) throw new Error('Only explicit ojfbot repository sources are supported')
@@ -99,6 +107,14 @@ export function recordsFromGitHubResponse(request: TimeSourceRequest, response: 
     for (const [event, value] of [['authored', parsed.commit.author.date], ['committed', parsed.commit.committer.date]] as const) {
       const at = canonicalInstant(value)
       if (at) records.push({ at, evidence: { kind: 'github-commit', repo: request.repo, ref: parsed.sha, event, url: `https://github.com/${request.repo}/commit/${parsed.sha}` } })
+    }
+  } else if (request.kind === 'issue') {
+    if (!/^[1-9]\d*$/.test(request.ref)) throw new Error('Invalid issue reference')
+    const parsed = IssueResponseSchema.parse(response)
+    if (String(parsed.number) !== request.ref || parsed.html_url !== `https://github.com/${request.repo}/issues/${request.ref}` || parsed.pull_request) throw new Error('Issue response identity mismatch')
+    for (const [event, value] of [['created', parsed.created_at], ['updated', parsed.updated_at]] as const) {
+      const at = canonicalInstant(value)
+      if (at) records.push({ at, evidence: { kind: 'github-issue', repo: request.repo, ref: request.ref, event, url: parsed.html_url } })
     }
   } else {
     if (!/^[1-9]\d*$/.test(request.ref)) throw new Error('Invalid pull request reference')
@@ -124,7 +140,7 @@ function harvestEvidence(requests: TimeSourceRequest[]): EvidenceSnapshot {
     const key = `${request.kind}:${request.repo}:${request.ref}`
     process.stderr.write(`\rHarvesting ${index + 1}/${requests.length} ${key.padEnd(85)}`)
     try {
-      const raw = execFileSync('gh', ['api', `repos/${request.repo}/${request.kind === 'pull' ? 'pulls' : 'commits'}/${request.ref}`], { encoding: 'utf-8', timeout: 30_000, maxBuffer: 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] })
+      const raw = execFileSync('gh', ['api', `repos/${request.repo}/${request.kind === 'pull' ? 'pulls' : request.kind === 'issue' ? 'issues' : 'commits'}/${request.ref}`], { encoding: 'utf-8', timeout: 30_000, maxBuffer: 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] })
       const response: unknown = JSON.parse(raw)
       records.push(...recordsFromGitHubResponse(request, response))
     } catch {
@@ -185,7 +201,7 @@ export function main(args = process.argv.slice(2)): void {
     for (const record of previous.records) {
       const evidence = record.evidence
       if (evidence.kind === 'explicit-offset') continue
-      const prefix = `${evidence.kind === 'github-commit' ? 'commit' : 'pull'}:${evidence.repo}:`
+      const prefix = `${evidence.kind === 'github-commit' ? 'commit' : evidence.kind === 'github-issue' ? 'issue' : 'pull'}:${evidence.repo}:`
       if (snapshot.failures.some((failure) => failure.request.startsWith(prefix) && evidence.ref.startsWith(failure.request.slice(prefix.length)))) snapshot.records.push(record)
     }
     snapshot.records = [...new Map(snapshot.records.map((record) => [JSON.stringify(record), record])).values()].sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))

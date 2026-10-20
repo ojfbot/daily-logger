@@ -78,6 +78,14 @@ describe('ArticleDataSchema (v2)', () => {
     expect(result.success).toBe(true)
   })
 
+  it('accepts canonical same-repo PR URLs and rejects malformed or cross-repo shipment refs', () => {
+    const entry = VALID_V2.whatShipped[0]
+    const withRefs = (prs: string[]) => ({ ...VALID_V2, whatShipped: [{ ...entry, prs }] })
+    expect(ArticleDataSchema.safeParse(withRefs(['https://github.com/ojfbot/daily-logger/pull/42'])).success).toBe(true)
+    expect(ArticleDataSchema.safeParse(withRefs(['https://github.com/ojfbot/shell/pull/42'])).success).toBe(false)
+    expect(ArticleDataSchema.safeParse(withRefs(['https://github.com/ojfbot/daily-logger/issues/42'])).success).toBe(false)
+  })
+
   it('accepts v2 with optional fields omitted', () => {
     const { lede: _lede, roadmapPulse: _rp, whatsNext: _wn, ...required } = VALID_V2
     // Also strip optional pillar from decisions and prs from shipments

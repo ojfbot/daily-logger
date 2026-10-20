@@ -12,7 +12,7 @@ export interface PopoverState {
   variant:
     | { kind: 'ref'; type: CodeReferenceType; label: string; detail: string; url: string | null }
     | { kind: 'commit'; entry: CacheEntry<CommitData>; text: string; repo: string }
-    | { kind: 'pr'; entry: CacheEntry<PRData>; repo: string; number: number }
+    | { kind: 'pr'; entry: CacheEntry<PRData>; repo: string; number: number; sourceKind: 'pull' | 'issues'; targetUrl: string }
     | { kind: 'time'; reference: TimeReference; viewer: ClockDisplay; tooltipId: string }
 }
 
@@ -75,8 +75,9 @@ export function Popover({ state, onMouseEnter, onMouseLeave }: { state: PopoverS
       url = d.url
     }
   } else {
-    typeBadge = 'PULL REQUEST'
-    typeClass = 'ref-type-pr'
+    url = variant.targetUrl
+    typeBadge = variant.sourceKind === 'issues' ? 'ISSUE' : 'PULL REQUEST'
+    typeClass = variant.sourceKind === 'issues' ? 'ref-type-issue' : 'ref-type-pr'
     const { entry } = variant
     if (entry.status === 'loading') {
       sha = `#${variant.number}`; message = 'Loading...'; messageClass += ' commit-popover-loading'; meta = `ojfbot/${variant.repo}`
@@ -84,13 +85,14 @@ export function Popover({ state, onMouseEnter, onMouseLeave }: { state: PopoverS
       sha = `#${variant.number}`; message = entry.message; messageClass += ' commit-popover-error'; meta = `ojfbot/${variant.repo}`
     } else {
       const d = entry.data
+      typeBadge = d.kind === 'issues' ? 'ISSUE' : 'PULL REQUEST'
+      typeClass = d.kind === 'issues' ? 'ref-type-issue' : 'ref-type-pr'
       sha = `#${d.number}`; message = d.title
-      const stateBadge = d.merged ? 'merged' : d.state
-      const diffStr = (d.additions || d.deletions) ? ` · +${d.additions} −${d.deletions}` : ''
+      const stateBadge = d.kind === 'pull' && d.merged ? 'merged' : d.state
+      const diffStr = d.kind === 'pull' && (d.additions || d.deletions) ? ` · +${d.additions} −${d.deletions}` : ''
       prLine = `${stateBadge}${diffStr}`
       const dateStr = d.date ? new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''
       meta = `ojfbot/${d.repo}${dateStr ? ` · ${dateStr}` : ''}${d.author ? ` · ${d.author}` : ''}`
-      url = d.url
     }
   }
 

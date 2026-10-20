@@ -1,17 +1,20 @@
 import { useEffect, useId, useRef, useState, useCallback } from 'react'
 import type { TimeReference } from '../../../../src/time-reference-schema.ts'
 import type { ShipmentTime } from '../../../../src/shipment-times.ts'
+import type { IssueTime } from '../../../../src/issue-times.ts'
 import type { CodeReference } from '../store/types.ts'
 import { findCodeElements, resolveRef, PR_LINK_RE } from '../utils/codeRefUtils.ts'
 import { useGithubCache } from './useGithubCache.ts'
 import type { PopoverState } from '../components/Popover.tsx'
 import { attachTimeReferences } from '../utils/timeReferences.ts'
 import { attachShipmentTimes, shipmentTimeReference } from '../utils/shipmentTimes.ts'
+import { attachIssueTimes, issueTimeReference } from '../utils/issueTimes.ts'
 import { viewerClock } from '../utils/timeDisplay.ts'
 import { scanVisibleTimeText } from '../../../../src/time-reference-text.ts'
 
 const SHOW_DELAY = 200
 const EMPTY_SHIPMENT_TIMES: ShipmentTime[] = []
+const EMPTY_ISSUE_TIMES: IssueTime[] = []
 
 export function useArticlePopovers(
   contentRef: React.RefObject<HTMLDivElement | null>,
@@ -20,6 +23,7 @@ export function useArticlePopovers(
   timeReferences: TimeReference[],
   contentRevision?: string,
   shipmentTimes: ShipmentTime[] = EMPTY_SHIPMENT_TIMES,
+  issueTimes: IssueTime[] = EMPTY_ISSUE_TIMES,
 ) {
   const [popover, setPopover] = useState<PopoverState>({ visible: false, anchor: null, variant: { kind: 'ref', type: 'config', label: '', detail: '', url: null } })
   const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -86,7 +90,7 @@ export function useArticlePopovers(
           : { ...current, variant: { ...current.variant, entry: latest } }
       }
       if (current.variant.kind === 'pr') {
-        const latest = getPR(current.variant.repo, current.variant.number)
+        const latest = getPR(current.variant.repo, current.variant.number, current.variant.sourceKind)
         return latest === current.variant.entry
           ? current
           : { ...current, variant: { ...current.variant, entry: latest } }
@@ -161,22 +165,24 @@ export function useArticlePopovers(
       if (!match) continue
 
       const repo = match[1]
+      const sourceKind = match[2] === 'issues' ? 'issues' : 'pull'
+      if (sourceKind === 'issues' && match[4] && !match[4].startsWith('issuecomment-')) continue
       const prNumber = parseInt(match[3], 10)
       const prEl = link as HTMLElement
-      prEl.classList.add('code-ref', 'ref-type-pr')
+      prEl.classList.add('code-ref', sourceKind === 'issues' ? 'ref-type-issue' : 'ref-type-pr')
 
       const onEnter = () => {
         hidePopover()
         activeAnchor.current = prEl
-        const entry = getPR(repo, prNumber)
+        const entry = getPR(repo, prNumber, sourceKind)
         if (entry.status === 'ok') {
-          setPopover({ visible: true, anchor: prEl, variant: { kind: 'pr', entry, repo, number: prNumber } })
+          setPopover({ visible: true, anchor: prEl, variant: { kind: 'pr', entry, repo, number: prNumber, sourceKind, targetUrl: href } })
           return
         }
         showTimer.current = setTimeout(() => {
           if (activeAnchor.current !== prEl || !prEl.isConnected || !el.contains(prEl)) return
-          const latest = getPR(repo, prNumber)
-          setPopover({ visible: true, anchor: prEl, variant: { kind: 'pr', entry: latest, repo, number: prNumber } })
+          const latest = getPR(repo, prNumber, sourceKind)
+          setPopover({ visible: true, anchor: prEl, variant: { kind: 'pr', entry: latest, repo, number: prNumber, sourceKind, targetUrl: href } })
         }, SHOW_DELAY)
       }
 
@@ -198,6 +204,7 @@ export function useArticlePopovers(
     if (!root) return
     const proseTimes = attachTimeReferences(root, timeReferences)
     const shipmentStates = attachShipmentTimes(root, shipmentTimes)
+    const issueStates = attachIssueTimes(root, issueTimes)
     const show = (element: HTMLButtonElement, reference: TimeReference) => {
         if (!element.isConnected || !root.contains(element)) return
         hidePopover()
@@ -249,12 +256,17 @@ export function useArticlePopovers(
       }
     })
     const shipmentByUrl = new Map(shipmentTimes.flatMap((shipment) => shipment.status === 'available' ? [[shipment.source.url, shipment] as const] : []))
+    const issueByUrl = new Map(issueTimes.map((issue) => [issue.source.url, issue]))
     const shipmentTarget = (event: Event) => {
       if (!(event.target instanceof Element)) return undefined
-      const element = event.target.closest<HTMLButtonElement>('.shipment-time-ref')
-      const state = element?.closest<HTMLElement>('.shipment-time-state')
-      const shipment = state?.dataset.shipmentUrl ? shipmentByUrl.get(state.dataset.shipmentUrl) : undefined
-      return element && shipment && root.contains(element) ? { element, reference: shipmentTimeReference(shipment) } : undefined
+      const element = event.target.closest<HTMLButtonElement>('.shipment-time-ref, .issue-time-ref')
+      if (!element || !root.contains(element)) return undefined
+      const shipmentUrl = element.closest<HTMLElement>('.shipment-time-state')?.dataset.shipmentUrl
+      const shipment = shipmentUrl ? shipmentByUrl.get(shipmentUrl) : undefined
+      if (shipment) return { element, reference: shipmentTimeReference(shipment) }
+      const issueUrl = element.closest<HTMLElement>('.issue-time-state')?.dataset.issueUrl
+      const issue = issueUrl ? issueByUrl.get(issueUrl) : undefined
+      return issue ? { element, reference: issueTimeReference(issue) } : undefined
     }
     const onShipmentOver = (event: MouseEvent) => {
       const target = shipmentTarget(event)
@@ -306,9 +318,10 @@ export function useArticlePopovers(
       cleanups.forEach(cleanup => cleanup())
       hidePopover()
       shipmentStates.restore()
+      issueStates.restore()
       proseTimes.restore()
     }
-  }, [contentRef, timeReferences, shipmentTimes, contentRevision, hidePopover, keepOpen, scheduleHide, tooltipId])
+  }, [contentRef, timeReferences, shipmentTimes, issueTimes, contentRevision, hidePopover, keepOpen, scheduleHide, tooltipId])
 
   return { state: popover, keepOpen, scheduleHide }
 }
