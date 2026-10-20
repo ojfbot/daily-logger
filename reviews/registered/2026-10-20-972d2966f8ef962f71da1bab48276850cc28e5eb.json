@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-accuracy-20261020-972d2966f8ef",
+  "article": {
+    "date": "2026-10-20",
+    "sourceCommitSha": "972d2966f8ef962f71da1bab48276850cc28e5eb",
+    "blobSha": "6d7260164454ecd34764a203ad77b8e2ac881dd3"
+  },
+  "reviewer": {
+    "name": "Codex — independent October 20 factual review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-20T15:42:09Z",
+  "scope": "Live draft, accepted source/action state, PR389-400, issue386/357, existing checkpoint and LVP owner gates. Read-only; no acceptance authority.",
+  "fullRecordBlobSha": "87153ddda64e0b21bf587739779ad509643dfeea",
+  "fullRecordPath": "reviews/articles/2026-10-20-972d2966f8ef962f71da1bab48276850cc28e5eb.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Current action review is pending on oversized #357 evidence",
+      "location": "L21: “the evidence-selection overflow is resolved for the current cycle”; L139: “Action review pending. No new action or disposition has been admitted.”",
+      "explanation": "The October 20 action snapshot records a 128 KiB per-source rejection for required #357 evidence, with pending review and no admitted action or decision. #391 fixed an earlier bounded local replay, not all future mandatory discussions.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L11-L23",
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/actions/articles/2026-10-20.json",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6275464471"
+      ],
+      "correction": "State the observed October 20 pending result, preserve zero admissions, and separate known byte-guard behavior from unqualified token-window fit.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Accepted October 19 closing and October 15 dispositions are misrepresented",
+      "location": "L101: “Three open items carry forward with explicit priority ordering from the accepted October 19 closing continuity.”; L107: “three reviewed canonical actions pending receipt.”",
+      "explanation": "The accepted closing contains three existing checkpoint identities for timing, recovery, and popover review. The three October 15 action IDs have deferred, completed-existing-evidence, and pending-receipt dispositions respectively; they were not the closing's ranked three and are not all pending receipt.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L99-L107",
+        "https://github.com/ojfbot/daily-logger/blob/19fa512ce908ee14e6ec55765863101b6301c631/_articles/2026-10-19.md#L90-L102",
+        "https://github.com/ojfbot/daily-logger/blob/19fa512ce908ee14e6ec55765863101b6301c631/actions/registry.json"
+      ],
+      "correction": "Restore checkpoint:d8e801b487140ebe8fd3, checkpoint:a2c05cce92f08451469c, and checkpoint:edd972afb47f74ef416a with their gates; if discussing October 15 records, retain each original ID and distinct disposition.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "#385 popover pilot is conflated with the scheduling candidate",
+      "location": "L105: “A current-base candidate exists (`5v897125`, recorded base `730fb9f`)”; L111: “Blocked on rebase before visual verdict.”",
+      "explanation": "5v897125 is invalid and the valid 5f897125 is the separate Chicago scheduling candidate based on 730fb9f. #385 is the popover PR at cc3c99bc; its exact-head preview is checked and awaiting human visual review. A rebase is not established as the prerequisite for asking for that verdict.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L105-L111",
+        "https://github.com/ojfbot/daily-logger/pull/385",
+        "https://github.com/ojfbot/daily-logger/blob/19fa512ce908ee14e6ec55765863101b6301c631/_articles/2026-10-19.md#L95-L98"
+      ],
+      "correction": "Separate the 5f897125 scheduling checkpoint from #385; request a source-bound human preview verdict, then handle current-base integration and merge as separate gates.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "PR work is assigned to invented ordered pipeline stages",
+      "location": "L17: “action-evidence selection fixes (#390, #391)”; L19: “#393 fixed stage three (editorial receipt binding).”",
+      "explanation": "PR #390 registers an independent article review, #393 repairs an editorial receipt reader, and #395/#397/#400 register distinct source-current reviews. These are separate editorial, action, presentation, and delivery operations rather than sequential stages of one generation pipeline.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L11-L23",
+        "https://github.com/ojfbot/daily-logger/pull/390",
+        "https://github.com/ojfbot/daily-logger/pull/393",
+        "https://github.com/ojfbot/daily-logger/pull/400"
+      ],
+      "correction": "Replace the five-stage chronology with a factual account of each PR's purpose and its place in the October 19 article follow-through.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "#391 mechanism and cap rationale are invented",
+      "location": "L55: “scores candidate records by direct dependency ... then by recency”; “identity caps ... are empirically derived from the 640 KiB total ceiling.”",
+      "explanation": "Accepted source selects whole mandatory dependencies before optional sources with stable ID ordering, not dependency-recency scores. The 3-5 initial target and at-most-two new later identities came from operator policy clarification, not an empirical derivation from the 640 KiB byte ceiling.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L51-L59",
+        "https://github.com/ojfbot/daily-logger/blob/19fa512ce908ee14e6ec55765863101b6301c631/src/action-evidence-selection.ts#L108-L153",
+        "https://github.com/ojfbot/daily-logger/pull/391",
+        "https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6271042441"
+      ],
+      "correction": "Describe required-source classification, whole-source inclusion and recorded omissions; attribute identity bounds to policy and distinguish them from byte guards.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "#393 historical provenance claim exceeds observed repair",
+      "location": "L69: “The chain for earlier receipts is best-effort.”; L67: “check whether the PR head SHA in the receipt matches the current PR head SHA”.",
+      "explanation": "The exact #392 captured receipt kept immutable input and artifact heads while an embedded PR object advanced after the push. The repaired reader accepted that unedited old receipt with immutable checks intact. A current PR-head mismatch alone does not make all pre-#393 receipts best-effort.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L63-L71",
+        "https://github.com/ojfbot/daily-logger/pull/393",
+        "https://github.com/ojfbot/daily-logger/pull/393#pullrequestreview-5576310896"
+      ],
+      "correction": "Limit the diagnosis to the mutable embedded PR object and actual #392 replay; remove the blanket historical-receipt downgrade.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Legacy heading and fixture changes are misstated",
+      "location": "L95: “Without fixture isolation, tests ... would suppress failures in the new three-option path”; “normalization was applied retroactively to in-flight history.”",
+      "explanation": "bf67063 changed heading extraction and tests without rewriting historical article data. fe84ab6 froze authentic old two-option data for historical tests and added current three-item assertions after six tests failed against mutable current data; there is no evidence that old fixtures had masked present regressions.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L91-L95",
+        "https://github.com/ojfbot/daily-logger/commit/bf6706373f39a5d426d39a1f246094f14cdbe237",
+        "https://github.com/ojfbot/daily-logger/commit/fe84ab685d098451431f8d700e034e8e0b887d06",
+        "https://github.com/ojfbot/daily-logger/pull/399"
+      ],
+      "correction": "Describe the parser coverage and static historical fixture repair accurately; remove retroactive-history and predicted adjacent-suite claims.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "LEGO design PR exits and owners are collapsed",
+      "location": "L113: “No active development work is gated on them”; L155: “No owner action is required in the current cycle.”",
+      "explanation": "LVP #44 and #46 are non-operative overlays with close-or-supersede/import conditions, while #45 has a separate HOUSE-WORLD record, second-steward check, and James's merge control. #46 also assigns future Grid/Subgrid, navigation, and motion work. Blanket no-owner-action language is false.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L113-L117",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/46"
+      ],
+      "correction": "Preserve the three records' distinct exits and owner gates; mark any parking review as an editorial proposal subject to those owners.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C9",
+      "classification": "confirmed_error",
+      "title": "Shipment and issue links are malformed",
+      "location": "L15: `#https://github.com/ojfbot/daily-logger/pull/389` links to `/pull/https://.../389`; L21/L121/L123 route issues #386/#357 to `/pull/`.",
+      "explanation": "All 11 heading links contain duplicated GitHub URL segments. #386 and #357 are issue records but link to pull-request paths. The live dated API has all 11 correct mergerows and one phantom unavailable pull/386 row; this is a reference-classification defect, not absent merge-time coverage.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L15",
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L21",
+        "https://log.jim.software/api/articles/2026-10-20.json",
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L119-L123",
+        "https://github.com/ojfbot/daily-logger/issues/386",
+        "https://github.com/ojfbot/daily-logger/issues/357"
+      ],
+      "correction": "Render short #389-#400 PR labels with direct /pull/N links; route #386 and #357 to /issues/N and remove the phantom unavailable pull/386 shipment-time reference while retaining all 11 real merge controls.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C10",
+      "classification": "confirmed_error",
+      "title": "Live API's 32 commit references are not the 25 distinct shipments",
+      "location": "L3 title: “25 commits”; L23–47 list 25 SHA entries; live API field `commitCount: 32`.",
+      "explanation": "The article lists 25 distinct commits before PR #401, and 11 PRs merged during the Chicago reporting day. The live dated API reports commitCount 32 because build-api counts every backticked seven-character SHA occurrence when frontmatter lacks commitCount; repeated/candidate references inflate this derived field.",
+      "evidenceUrls": [
+        "https://log.jim.software/api/articles/2026-10-20.json",
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/_articles/2026-10-20.md#L23-L47",
+        "https://github.com/ojfbot/daily-logger/blob/972d2966f8ef962f71da1bab48276850cc28e5eb/src/build-api.ts#L143-L147"
+      ],
+      "correction": "Preserve 25 as the sourced activity count; set an explicit count for the projection or otherwise prevent the heuristic 32 from being presented as distinct commits.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
