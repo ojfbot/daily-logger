@@ -82,6 +82,7 @@
 }
 
 .suggested-actions-draft-context > div { margin-top: .8rem; }
+.suggested-actions-draft-context-note { margin: 0 0 .7rem; font-size: .88rem; }
 
 .suggestions-handled {
   border-top: 1px solid var(--border);

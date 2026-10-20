@@ -156,7 +156,7 @@ function sourceLabel(locator: string): string {
 }
 function draftContextHtml(context: ActionRegistry['articles'][number]['draftContext']): string[] {
   if (context?.kind !== 'retained') return []
-  return [`<details class="suggested-actions-draft-context"><summary>Draft context considered during review</summary><div>${renderArticle(context.markdown)}</div></details>`]
+  return [`<details class="suggested-actions-draft-context"><summary>Earlier draft notes</summary><div><p class="suggested-actions-draft-context-note">These draft notes are preserved as review history. Current follow-ups are ranked above.</p>${renderArticle(context.markdown)}</div></details>`]
 }
 export function articleActionRecords(registry: ActionRegistry, articleDate: string, statuses: ReadonlyMap<string, string>) {
   const snapshot = registry.articles.find(article => article.date === articleDate)
