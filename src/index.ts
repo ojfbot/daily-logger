@@ -25,7 +25,7 @@ import { readFileSync, existsSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { acceptedClosingContinuityTargets, collectContext } from './collect-context.js'
-import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses } from './action-registry.js'
+import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses, renderArticleActionHtml } from './action-registry.js'
 import { collectActionSources, createActionAgents, mockActionAgents, reviewDraftActions } from './review-actions.js'
 import {
   ARTICLE_MODEL,
@@ -48,6 +48,9 @@ import { verifyFileExistenceClaims } from './verify-claims.js'
 import { checkAnthropicCredits } from './check-anthropic-credits.js'
 import { recordsFromContext } from './time-references.js'
 import { prepareGeneratedTime, persistGeneratedTime } from './article-time-metadata.js'
+import { githubReferenceKinds } from './article-references.js'
+import { shipmentStatesFromContext } from './shipment-times.js'
+import { issueEventsFromContext } from './issue-times.js'
 import {
   buildArticleProvenance,
   captureRunEvidence,
@@ -255,8 +258,19 @@ export async function main() {
   const originalMarkdown = toMarkdown(article)
   const articlePath = join(REPO_ROOT, '_articles', `${date}.md`)
   const previousArticle = existsSync(articlePath) ? readFileSync(articlePath, 'utf8') : null
-  const actionReview = await reviewDraftActions({ cycle: generationActionCycle(), registry, articleStatuses: readArticleStatuses(REPO_ROOT), articleDate: date, markdown: originalMarkdown, feedback: '', sources: process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ registry, repoRoot: REPO_ROOT, markdown: originalMarkdown, feedback: '', context: `${buildUserPrompt(ctx)}\nStructured draft candidates: ${JSON.stringify(article.suggestedActions ?? [])}`, continuityTargets: acceptedClosingContinuityTargets(ctx.previousArticles) }), agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
-  const prepared = prepareGeneratedTime({ date, markdown: actionReview.markdown, records: recordsFromContext(ctx), capture: timeCapture })
+  const articleStatuses = readArticleStatuses(REPO_ROOT)
+  const draftCandidates = article.suggestedActions ?? []
+  const actionSources = process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ registry, repoRoot: REPO_ROOT, markdown: originalMarkdown, feedback: '', context: `${buildUserPrompt(ctx)}\nStructured draft candidate evidence hints: ${JSON.stringify(draftCandidates)}`, continuityTargets: acceptedClosingContinuityTargets(ctx.previousArticles) })
+  const actionReview = await reviewDraftActions({ cycle: generationActionCycle(), registry, articleStatuses, articleDate: date, markdown: originalMarkdown, feedback: '', draftCandidates, sources: actionSources, agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
+  const renderingStatuses = new Map(articleStatuses)
+  if (!renderingStatuses.has(date)) renderingStatuses.set(date, 'draft')
+  const renderedHtml = renderArticleActionHtml(actionReview.markdown, actionReview.registry, date, renderingStatuses)
+  const prepared = prepareGeneratedTime({
+    date, markdown: actionReview.markdown, records: recordsFromContext(ctx), capture: timeCapture, renderedHtml,
+    referenceKinds: githubReferenceKinds(ctx),
+    shipmentStates: shipmentStatesFromContext(ctx, actionReview.markdown),
+    issueEvents: issueEventsFromContext(ctx, actionReview.markdown, renderedHtml),
+  })
   const markdown = prepared.markdown
   for (const warning of prepared.warnings) console.warn(`::warning::${date}: ${warning}`)
   if (prepared.unresolved.length) console.warn(`     ⚠ ${prepared.unresolved.length} time reference(s) unresolved; left as plain text`)

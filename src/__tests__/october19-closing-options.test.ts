@@ -35,7 +35,7 @@ describe('accepted October 19 closing options', () => {
     expect(closing.match(/<section class="suggested-actions-card"/g)).toHaveLength(1)
     expect(closing.match(/data-recommendation-id=/g)).toHaveLength(3)
     for (const option of snapshot.closing.options) expect(closing).toContain(`data-recommendation-id="${option.identity}"`)
-    expect(closing).toContain('<summary>Earlier draft notes</summary>')
+    expect(closing).toContain('<summary>Article draft context</summary>')
     expect(closing).toContain('<summary>Suggestions handled at draft')
     expect(closing).not.toMatch(/<details\b[^>]*\bopen(?:\s|>|=)/)
     expect(closing).not.toContain('Choose a supported next step')

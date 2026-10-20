@@ -18,7 +18,16 @@ export const TimeReferenceSidecarSchema = z.object({
 export type TimeReferenceSidecar = z.infer<typeof TimeReferenceSidecarSchema>
 export function articleBody(markdown: string): string { return markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '') }
 export function articleBodySha256(markdown: string): string { return createHash('sha256').update(articleBody(markdown)).digest('hex') }
-export const TimeRecordSchema = z.object({ at: z.string().refine((value) => canonicalInstant(value) === value), evidence: TimeEvidenceSchema })
+export const TimeRecordSchema = z.object({
+  at: z.string().refine((value) => canonicalInstant(value) === value),
+  evidence: TimeEvidenceSchema,
+  /** A later source read can coexist with an older artifact capture without rewriting its provenance. */
+  acquisition: z.object({
+    observedAt: z.string().refine((value) => canonicalInstant(value) === value),
+    requestUrl: z.string().url(),
+    responseSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  }).strict().optional(),
+}).refine((record) => !record.acquisition || (record.evidence.kind === 'github-issue' && record.acquisition.requestUrl === `https://api.github.com/repos/${record.evidence.repo}/issues/${record.evidence.ref}`))
 export type TimeRecord = z.infer<typeof TimeRecordSchema>
 export interface TimeToken { text: string; occurrence: number; index: number; precision: 'minute' | 'second' }
 export interface UnresolvedTime { text: string; occurrence: number; reason: 'missing-evidence' | 'clock-mismatch' | 'ambiguous' | 'mutable-event' }
@@ -31,8 +40,8 @@ interface VisibleProjection {
 }
 
 /** Parse the same sanitized HTML served to readers; entity decoding and Markdown escapes follow the renderer. */
-function visibleProjection(markdown: string): VisibleProjection {
-  const root = parseFragment(renderArticle(articleBody(markdown)))
+function visibleProjection(markdown: string, renderedHtml?: string): VisibleProjection {
+  const root = parseFragment(renderedHtml ?? renderArticle(articleBody(markdown)))
   const projection: VisibleProjection = { text: '', nodes: [], links: [], headings: [] }
   function visit(node: DefaultTreeAdapterMap['node']): void {
     if (node.nodeName === '#text' && 'value' in node) {
@@ -115,6 +124,8 @@ export interface ShipmentSource {
   url: string
 }
 
+export type IssueSource = ShipmentSource
+
 function linkedSource(url: string): SourceMention | undefined {
   let parsed: URL
   try { parsed = new URL(url) } catch { return undefined }
@@ -146,6 +157,17 @@ export function shipmentSources(markdown: string): ShipmentSource[] {
   return [...new Map(sources.map((source) => [`${source.repo.toLowerCase()}#${source.ref}`, source])).values()]
 }
 
+/** Linked issue identities in rendered article prose, independent of authored clocks. */
+export function issueSources(markdown: string, renderedHtml?: string): IssueSource[] {
+  const sources = visibleProjection(markdown, renderedHtml).links.flatMap((link) => {
+    const mention = linkedSource(link.url)
+    return mention?.kind === 'issues' && mention.repo
+      ? [{ repo: mention.repo, ref: mention.ref, url: `https://github.com/${mention.repo}/issues/${mention.ref}` }]
+      : []
+  })
+  return [...new Map(sources.map((source) => [`${source.repo.toLowerCase()}#${source.ref}`, source])).values()]
+}
+
 /** Discover subjects from prose before looking at the possibly incomplete evidence set. */
 function sourceMentions(text: string, links: VisibleProjection['links']): SourceMention[] {
   const mentions: SourceMention[] = []
@@ -167,7 +189,7 @@ function sourceMentions(text: string, links: VisibleProjection['links']): Source
 }
 
 function sourceMatches(mention: SourceMention, evidence: GitTimeEvidence, heading: string): boolean {
-  const kind = evidence.kind === 'github-commit' ? 'commit' : 'pull'
+  const kind = evidence.kind === 'github-commit' ? 'commit' : evidence.kind === 'github-issue' ? 'issues' : 'pull'
   if (mention.kind !== kind) return false
   if (kind === 'commit' ? !evidence.ref.startsWith(mention.ref) : evidence.ref !== mention.ref) return false
   const declared = mention.repo ?? /^([A-Za-z0-9][A-Za-z0-9_.-]*(?:\/[A-Za-z0-9][A-Za-z0-9_.-]*)?)(?:\s+\((?:PR\s+)?#[1-9]\d*\))?$/i.exec(heading.trim())?.[1]
@@ -177,9 +199,9 @@ function sourceMatches(mention: SourceMention, evidence: GitTimeEvidence, headin
 }
 
 function eventBefore(text: string): GitEvent | undefined {
-  const events = [...text.matchAll(/\b(merged|authored|committed|opened|closed|updated)\b/gi)]
+  const events = [...text.matchAll(/\b(merged|authored|committed|opened|created|closed|updated)\b/gi)]
   const event = events.at(-1)?.[1].toLowerCase()
-  return event === 'merged' || event === 'authored' || event === 'committed' || event === 'opened' || event === 'closed' || event === 'updated' ? event : undefined
+  return event === 'merged' || event === 'authored' || event === 'committed' || event === 'opened' || event === 'created' || event === 'closed' || event === 'updated' ? event : undefined
 }
 
 function sourceKey(record: TimeRecord): string { return JSON.stringify(record) }
@@ -199,14 +221,16 @@ function sourceAtToken(projection: VisibleProjection, token: TimeToken) {
 }
 
 /** Capture entire mentioned source groups, including conflicting events/instants; never choose facts by clock. */
-export function selectTimeRecords(markdown: string, records: TimeRecord[]): TimeRecord[] {
+export function selectTimeRecords(markdown: string, records: TimeRecord[], renderedHtml?: string): TimeRecord[] {
   const projection = visibleProjection(markdown)
   const sources = scanProjection(projection).filter((token) => !canonicalInstant(token.text)).map((token) => sourceAtToken(projection, token))
   const shipments = shipmentSources(markdown)
+  const issues = issueSources(markdown, renderedHtml)
   const selected = records.filter((record) => {
     if (record.evidence.kind === 'explicit-offset') return false
     const evidence = record.evidence
     if (sources.some(({ subject, heading }) => subject && sourceMatches(subject, evidence, heading))) return true
+    if (evidence.kind === 'github-issue') return issues.some((source) => source.repo.toLowerCase() === evidence.repo.toLowerCase() && source.ref === evidence.ref)
     if (evidence.kind !== 'github-pull-request') return false
     return shipments.some((source) => source.repo.toLowerCase() === evidence.repo.toLowerCase() && source.ref === evidence.ref)
   })
@@ -272,6 +296,13 @@ export function recordsFromContext(ctx: BlogContext): TimeRecord[] {
     const repo = repoFromUrl(pr.url)
     if (!repo || pr.state !== 'closed' || pr.merged !== false || pr.mergedAt) continue
     add(pr.updatedAt, { kind: 'github-pull-request', repo, ref: String(pr.number), event: 'closed-unmerged', url: `https://github.com/${repo}/pull/${pr.number}` })
+  }
+  for (const issue of [...ctx.openIssues, ...ctx.closedIssues]) {
+    const repo = repoFromUrl(issue.url)
+    if (!repo) continue
+    const source = { kind: 'github-issue' as const, repo, ref: String(issue.number), url: `https://github.com/${repo}/issues/${issue.number}` }
+    add(issue.createdAt, { ...source, event: 'created' })
+    add(issue.updatedAt, { ...source, event: 'updated' })
   }
   return [...new Map(records.map((record) => [sourceKey(record), record])).values()].sort((a, b) => sourceKey(a).localeCompare(sourceKey(b)))
 }

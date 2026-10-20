@@ -36,6 +36,54 @@ function enterCommit(hash: string) { document.querySelector(`#commit-${hash}`)?.
 function leaveCommit(hash: string) { document.querySelector(`#commit-${hash}`)?.dispatchEvent(new MouseEvent('mouseleave')) }
 
 describe('combined article popover lifecycle', () => {
+  it('previews an issue as an issue through its canonical link', async () => {
+    const issueUrl = 'https://api.github.com/repos/ojfbot/daily-logger/issues/386'
+    await act(async () => root.render(<Harness html='<a id="issue-386" href="https://github.com/ojfbot/daily-logger/issues/386">issue #386</a>' />))
+    await act(async () => { document.querySelector('#issue-386')?.dispatchEvent(new MouseEvent('mouseenter')); vi.advanceTimersByTime(210) })
+    expect(responses.has(issueUrl)).toBe(true)
+    await act(async () => responses.get(issueUrl)?.(Response.json({ number: 386, title: 'Token-aware admission budget', state: 'open', html_url: 'https://github.com/ojfbot/daily-logger/issues/386', labels: [] })))
+    expect(tooltip()).toContain('ISSUE')
+    expect(tooltip()).toContain('Token-aware admission budget')
+    expect(tooltip()).not.toContain('PULL REQUEST')
+  })
+  it.each([
+    ['pull', 402, '#issuecomment-6295372166'],
+    ['pull', 402, '#pullrequestreview-123456'],
+    ['pull', 402, '#discussion_r987654'],
+    ['issues', 357, '#issuecomment-6271042441'],
+  ] as const)('previews a %s comment permalink and retains its navigation target', async (kind, number, fragment) => {
+    const pageUrl = `https://github.com/ojfbot/daily-logger/${kind}/${number}${fragment}`
+    const apiUrl = `https://api.github.com/repos/ojfbot/daily-logger/${kind === 'pull' ? 'pulls' : 'issues'}/${number}`
+    const open = vi.fn()
+    vi.stubGlobal('open', open)
+    await act(async () => root.render(<Harness html={`<a id="permalink" href="${pageUrl}">source</a>`} />))
+    await act(async () => { document.querySelector('#permalink')?.dispatchEvent(new MouseEvent('mouseenter')); vi.advanceTimersByTime(210) })
+    expect(responses.has(apiUrl)).toBe(true)
+    const response = kind === 'pull' ? pr(number) : { number, title: 'Issue discussion', state: 'open', html_url: `https://github.com/ojfbot/daily-logger/issues/${number}`, labels: [] }
+    await act(async () => responses.get(apiUrl)?.(Response.json(response)))
+    expect(tooltip()).toContain(kind === 'pull' ? 'Resolved target' : 'Issue discussion')
+    expect(document.querySelector('#permalink')?.getAttribute('href')).toBe(pageUrl)
+    const popover = document.querySelector<HTMLElement>('[role=tooltip]')
+    expect(popover?.dataset.url).toBe(pageUrl)
+    await act(async () => popover?.click())
+    expect(open).toHaveBeenCalledWith(pageUrl, '_blank', 'noopener')
+  })
+  it.each([
+    ['PR returned through the issues endpoint', { number: 401, title: 'PR-shaped response', state: 'closed', html_url: 'https://github.com/ojfbot/daily-logger/pull/401', pull_request: { url: 'https://api.github.com/repos/ojfbot/daily-logger/pulls/401' } }],
+    ['PR marker with an issue-shaped URL', { number: 401, title: 'Marked PR', state: 'closed', html_url: 'https://github.com/ojfbot/daily-logger/issues/401', pull_request: { url: 'https://api.github.com/repos/ojfbot/daily-logger/pulls/401' } }],
+    ['wrong issue number', { number: 402, title: 'Wrong number', state: 'open', html_url: 'https://github.com/ojfbot/daily-logger/issues/401' }],
+    ['different repository', { number: 401, title: 'Wrong repository', state: 'open', html_url: 'https://github.com/ojfbot/core/issues/401' }],
+    ['noncanonical issue URL', { number: 401, title: 'Redirected issue', state: 'open', html_url: 'https://github.com/ojfbot/daily-logger/issues/401?redirect=1' }],
+  ])('refuses %s instead of caching a successful issue preview', async (_case, payload) => {
+    const issueUrl = 'https://api.github.com/repos/ojfbot/daily-logger/issues/401'
+    await act(async () => root.render(<Harness html='<a id="issue-401" href="https://github.com/ojfbot/daily-logger/issues/401">issue #401</a>' />))
+    await act(async () => { document.querySelector('#issue-401')?.dispatchEvent(new MouseEvent('mouseenter')); vi.advanceTimersByTime(210) })
+    expect(responses.has(issueUrl)).toBe(true)
+    await act(async () => responses.get(issueUrl)?.(Response.json(payload)))
+    expect(tooltip()).toContain('GitHub issue preview unavailable')
+    expect(tooltip()).not.toContain(payload.title)
+    expect(tooltip()).not.toContain('closed')
+  })
   it('must render stationary-pointer PR success after the cache completes', async () => {
     await act(async () => root.render(<Harness html={html(1)} />))
     await act(async () => { enter(1); vi.advanceTimersByTime(210) })

@@ -30,12 +30,15 @@ export interface IssueInfo {
   state: 'open' | 'closed'
   labels: string[]
   createdAt?: string
+  updatedAt?: string
   closedAt?: string
   url: string
   repo: string
   body?: string
   /** True when the issue was created in the last 24h (first time the sweep sees it). */
   isNew?: boolean
+  /** Created in the collection window; distinct from recently updated activity. */
+  createdInWindow?: boolean
 }
 
 export interface PRInfo {

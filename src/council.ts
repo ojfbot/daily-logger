@@ -22,6 +22,7 @@ import { fileURLToPath } from 'url'
 import type { BlogContext, GeneratedArticle, Persona, CouncilNote } from './types.js'
 import { assembleBody } from './generate-article.js'
 import { validateArticleOutput } from './schema.js'
+import { githubReferenceKinds } from './article-references.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
@@ -314,7 +315,7 @@ export async function synthesizeWithCouncil(
       date: ctx.date,
       tags: result.data.tags.map((t) => t.name),
       summary: result.data.summary,
-      body: assembleBody(result.data),
+      body: assembleBody(result.data, githubReferenceKinds(ctx)),
       suggestedActions: result.data.suggestedActions,
     }
   }
@@ -326,7 +327,7 @@ export async function synthesizeWithCouncil(
       date: ctx.date,
       tags: result.data.tags ?? draft.tags,
       summary: result.data.summary ?? draft.summary,
-      body: assembleBody(result.data),
+      body: assembleBody(result.data, githubReferenceKinds(ctx)),
     }
   }
 

@@ -18,7 +18,9 @@ import { ARTICLE_OUTCOMES, type CodeReference } from './schema.js'
 import { parseArticleProvenance, type ArticleProvenance } from './run-provenance.js'
 import { readArticleTime } from './article-time-metadata.js'
 import { assertShipmentCoverage, type ShipmentTime } from './shipment-times.js'
+import type { IssueTime } from './issue-times.js'
 import { requiresShipmentTimeCoverage } from './shipment-time-coverage.js'
+import { assertArticleReferenceContract } from './article-references.js'
 import type { TimeReference } from './time-references.js'
 import { type CanonicalAction } from './action-model.js'
 import { verifyRecordedAdmissions } from './action-intake.js'
@@ -54,6 +56,7 @@ interface EntryData {
   codeReferences?: CodeReference[]
   timeReferences?: TimeReference[]
   shipmentTimes?: ShipmentTime[]
+  issueTimes?: IssueTime[]
   provenance?: ArticleProvenance
 }
 
@@ -247,6 +250,7 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
   const intake = { reviewedActions: registry.records.filter(record => 'review' in record.original && record.original.review).map(record => record.original), historicalHeldCount: registry.baseline.heldSuggestions.length }
   const tagCounts = new Map<string, { type: string; count: number }>()
   const repoStats = new Map<string, { articleCount: number; totalCommits: number; tags: Set<string> }>()
+  const renderedBodies = new Map<string, string>()
 
   for (const file of files) {
     const source = articleSources.find((article) => article.path === `_articles/${file}`)
@@ -258,7 +262,13 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
     const date = (fm.date as string) ?? file.replace('.md', '')
 
     const datedFilename = file.replace(/\.md$/, '')
-    const timeMetadata = readArticleTime({ repoRoot, date: datedFilename, markdown: narrative, bindingMarkdown: content })
+    const renderedHtml = renderArticleActionHtml(content, registry, datedFilename, statuses)
+    renderedBodies.set(datedFilename, renderedHtml)
+    const timeMetadata = readArticleTime({ repoRoot, date: datedFilename, markdown: narrative, bindingMarkdown: content, renderedHtml })
+    if (datedFilename >= '2026-10-20') {
+      const audit = assertArticleReferenceContract(content, timeMetadata.referenceKinds, renderedHtml)
+      console.log(`::notice::${date}: GitHub references: ${audit.verified} source-verified, ${audit.unknown} identity-unknown`)
+    }
     if (requiresShipmentTimeCoverage(datedFilename, narrative) && timeMetadata.shipmentCoverage.status !== 'complete') throw new Error(`${datedFilename}: required immutable shipment-time coverage is unavailable`)
     if (timeMetadata.shipmentCoverage.status === 'complete') assertShipmentCoverage(narrative, timeMetadata.shipmentCoverage)
     for (const warning of timeMetadata.warnings) console.warn(`::warning::${date}: ${warning}`)
@@ -317,6 +327,7 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
       codeReferences: codeRefsByDate[date],
       ...(timeMetadata.references.length > 0 ? { timeReferences: timeMetadata.references } : {}),
       ...(timeMetadata.shipmentCoverage.status === 'complete' && timeMetadata.shipmentCoverage.times.length > 0 ? { shipmentTimes: timeMetadata.shipmentCoverage.times } : {}),
+      ...(timeMetadata.issueTimes.length > 0 ? { issueTimes: timeMetadata.issueTimes } : {}),
       provenance: fm.provenance as ArticleProvenance | undefined,
     }
     entries.push(entry)
@@ -365,7 +376,8 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
     const entry = entries.find((e) => e.date === date)
     if (!entry) continue
 
-    const bodyHtml = renderArticleActionHtml(content, registry, date, statuses)
+    const bodyHtml = renderedBodies.get(date)
+    if (!bodyHtml) throw new Error(`Rendered article disappeared during API build: ${date}`)
     writeFileSync(
       join(articlesApiDir, `${date}.json`),
       JSON.stringify({ ...entry, actionSuggestions: articleActionRecords(registry, date, statuses), suggestedActionsCard: articleActionCard(registry, date, statuses), sourceBlobSha: createHash('sha1').update(`blob ${Buffer.byteLength(content)}\0`).update(content).digest('hex'), bodyHtml }, null, 2),

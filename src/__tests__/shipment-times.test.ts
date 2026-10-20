@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { assertShipmentCoverage, resolveShipmentTimes, ShipmentTimeSchema } from '../shipment-times.js'
+import { assertShipmentCoverage, resolveShipmentTimes, shipmentStatesFromContext, ShipmentTimeSchema } from '../shipment-times.js'
+import type { BlogContext } from '../types.js'
 import { requiresShipmentTimeCoverage } from '../shipment-time-coverage.js'
 import { shipmentSources, type TimeRecord } from '../time-references.js'
 
@@ -25,6 +26,36 @@ function record(ref: string, event: 'merged' | 'closed' | 'opened' | 'closed-unm
 }
 
 describe('shipment merge-time coverage', () => {
+  it('keeps open PRs, closed-unmerged PRs, and issues free of merge placeholders', () => {
+    const mixed = [
+      '## What shipped',
+      '',
+      'Merged [#389](https://github.com/ojfbot/daily-logger/pull/389).',
+      'Open [#385](https://github.com/ojfbot/daily-logger/pull/385) remains in flight.',
+      'Issue [#386](https://github.com/ojfbot/daily-logger/issues/386) tracks the budget.',
+      'Closed without merge [#392](https://github.com/ojfbot/daily-logger/pull/392).',
+    ].join('\n')
+    const sources = shipmentSources(mixed)
+    const states = [
+      { source: sources.find(source => source.ref === '385')!, state: 'open' as const },
+      { source: sources.find(source => source.ref === '392')!, state: 'closed-unmerged' as const },
+    ]
+    const coverage = resolveShipmentTimes(mixed, [record('389', 'merged'), record('385', 'opened'), record('392', 'closed-unmerged')], 'complete', states)
+    expect(coverage.times.map(time => time.source.ref)).toEqual(['389'])
+    expect(coverage.exclusions.map(exclusion => [exclusion.source.ref, exclusion.reason])).toEqual([['385', 'open'], ['392', 'closed-unmerged']])
+    expect(() => assertShipmentCoverage(mixed, coverage)).not.toThrow()
+    expect(() => resolveShipmentTimes(mixed, [record('385', 'merged')], 'complete', states)).toThrow(/conflicting merge and current PR state/i)
+    expect(() => resolveShipmentTimes(mixed, [], 'complete', [{ source: { repo: 'ojfbot/daily-logger', ref: '999', url: 'https://github.com/ojfbot/daily-logger/pull/999' }, state: 'open' }])).toThrow(/no shipment link/i)
+    const ctx: BlogContext = {
+      date: '2026-10-20', repos: ['daily-logger'], commits: [],
+      mergedPRs: [{ number: 389, repo: 'daily-logger', title: 'Merged', mergedAt: record('389', 'merged').at, additions: 1, deletions: 0, url: 'https://github.com/ojfbot/daily-logger/pull/389' }],
+      openPRs: [{ number: 385, repo: 'daily-logger', title: 'Open', url: 'https://github.com/ojfbot/daily-logger/pull/385', createdAt: record('385', 'opened').at, draft: false }],
+      recentPRs: [{ number: 392, repo: 'daily-logger', title: 'Closed', url: 'https://github.com/ojfbot/daily-logger/pull/392', state: 'closed', merged: false, draft: false, createdAt: record('392', 'opened').at, updatedAt: record('392', 'closed-unmerged').at }],
+      openIssues: [{ number: 386, repo: 'daily-logger', title: 'Issue', state: 'open', labels: [], url: 'https://github.com/ojfbot/daily-logger/issues/386' }],
+      closedIssues: [], openActions: [], projectVision: '', previousArticles: [],
+    }
+    expect(shipmentStatesFromContext(ctx, mixed)).toEqual(states)
+  })
   it('covers every linked PR formatting variant inside What shipped and rejects closed-unmerged or outside links', () => {
     const records = ['381', '382', '383', '387', '388'].map((ref) => record(ref, 'merged'))
     records.push(record('384', 'closed-unmerged'))

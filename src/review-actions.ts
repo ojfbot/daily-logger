@@ -10,7 +10,7 @@ import { EXCLUDED_REPOS, KNOWN_REPOS, REPO_NOTES, classifyFleet } from './fleet.
 import {
   ActionRegistrySchema, CitationSchema, ClosingActionSchema, ClosingCheckpointSchema, RankedClosingActionSchema, RankedClosingCheckpointSchema, RankedShortlistSchema, managedArticleDigest, normalizeWorkKey,
   renderArticleActions, sha256, stripManagedActions, actionStateDigest, acceptedActionState,
-  normalizeLegacyActionProse, articleActionFileBytes, splitActionRegistry, type ActionRegistry, type ActionSource, type ClosingCheckpoint, type ClosingOption, type DraftRecommendationContext,
+  normalizeLegacyActionProse, articleActionFileBytes, splitActionRegistry, captureDraftActionCandidates, type ActionRegistry, type ActionSource, type ClosingCheckpoint, type ClosingOption, type DraftActionCandidate, type DraftRecommendationContext,
   type RecommendationMaintenanceDescriptor,
 } from './action-registry.js'
 import { extractDraftRecommendationContext } from './recommendation-prose.js'
@@ -25,6 +25,12 @@ const ClosingActionProposalSchema = ClosingActionSchema.extend(RecommendationPro
 const ClosingCheckpointProposalSchema = ClosingCheckpointSchema.extend(RecommendationProposalFields).strict()
 const ClosingCandidateSchema = ClosingActionSchema.omit({ actionKey: true }).extend({ kind: z.literal('candidate'), candidateIndex: z.number().int().nonnegative(), ...RecommendationProposalFields }).strict()
 const ClosingOptionProposalSchema = z.discriminatedUnion('kind', [ClosingActionProposalSchema, ClosingCandidateSchema, ClosingCheckpointProposalSchema])
+const DraftCandidateDispositionProposalSchema = z.discriminatedUnion('kind', [
+  z.object({ candidateId: z.string().regex(/^[a-f0-9]{64}$/), kind: z.literal('promote'), suggestionIndex: z.number().int().nonnegative(), reason: z.string().min(1) }).strict(),
+  z.object({ candidateId: z.string().regex(/^[a-f0-9]{64}$/), kind: z.literal('map-existing'), suggestionIndex: z.number().int().nonnegative(), actionKey: z.string().min(1), reason: z.string().min(1) }).strict(),
+  z.object({ candidateId: z.string().regex(/^[a-f0-9]{64}$/), kind: z.literal('reject'), reason: z.string().min(1), citations }).strict(),
+  z.object({ candidateId: z.string().regex(/^[a-f0-9]{64}$/), kind: z.literal('verified-closure'), actionKey: z.string().min(1).nullable(), reason: z.string().min(1), citations }).strict(),
+])
 export const ActionProposalSchema = z.object({
   changes: z.array(z.object({
     actionKey: z.string(), state: z.enum(['open', 'done', 'dismissed', 'superseded', 'deferred']),
@@ -35,23 +41,34 @@ export const ActionProposalSchema = z.object({
     target: z.string().min(1), outcome: z.string().min(1), goal: z.string().min(1),
     goalCitations: citations, factCitations: citations, doneWhen: z.string().min(1), gates: z.array(z.string()), existingKey: z.string().nullable(),
   }).strict()).max(5),
+  candidateDispositions: z.array(DraftCandidateDispositionProposalSchema).max(5).default([]),
   closingOptions: z.array(ClosingOptionProposalSchema).max(5).default([]),
 }).strict()
 export const ActionVerificationSchema = z.object({
   changes: z.array(z.object({ actionKey: z.string(), verdict: z.enum(['pass', 'reject', 'hold']), reason: z.string().min(1) }).strict()).default([]),
   suggestions: z.array(z.object({ candidateIndex: z.number().int().nonnegative(), verdict: z.enum(['pass', 'reject', 'hold']), reason: z.string().min(1), existingKey: z.string().nullable() }).strict()).default([]),
+  candidateDispositions: z.array(z.object({ candidateId: z.string().regex(/^[a-f0-9]{64}$/), verdict: z.enum(['pass', 'reject', 'hold']), reason: z.string().min(1) }).strict()).max(5).default([]),
   closingOptions: z.array(z.object({ optionIndex: z.number().int().nonnegative(), verdict: z.enum(['pass', 'reject', 'hold']), reason: z.string().min(1) }).strict()).default([]),
 }).strict()
 type ParsedActionProposal = z.infer<typeof ActionProposalSchema>
 type ParsedActionVerification = z.infer<typeof ActionVerificationSchema>
 type InputActionProposal = z.input<typeof ActionProposalSchema>
 export type ActionProposal = Omit<InputActionProposal, 'closingOptions'> & { closingOptions?: InputActionProposal['closingOptions'] }
-export type ActionVerification = Omit<ParsedActionVerification, 'closingOptions'> & { closingOptions?: ParsedActionVerification['closingOptions'] }
+export type ActionVerification = Omit<ParsedActionVerification, 'candidateDispositions' | 'closingOptions'> & {
+  candidateDispositions?: ParsedActionVerification['candidateDispositions']
+  closingOptions?: ParsedActionVerification['closingOptions']
+}
 class ActionOutputError extends Error {}
 const lineCitations = z.array(z.object({ sourceId: z.string(), startLine: z.number().int().positive(), endLine: z.number().int().positive() }).strict()).min(1)
 const LineProposalSchema = ActionProposalSchema.extend({
   changes: z.array(ActionProposalSchema.shape.changes.element.extend({ citations: lineCitations })),
   suggestions: z.array(ActionProposalSchema.shape.suggestions.element.extend({ factCitations: lineCitations, goalCitations: lineCitations })).max(5),
+  candidateDispositions: z.array(z.discriminatedUnion('kind', [
+    DraftCandidateDispositionProposalSchema.options[0],
+    DraftCandidateDispositionProposalSchema.options[1],
+    DraftCandidateDispositionProposalSchema.options[2].omit({ citations: true }).extend({ citations: lineCitations }).strict(),
+    DraftCandidateDispositionProposalSchema.options[3].omit({ citations: true }).extend({ citations: lineCitations }).strict(),
+  ])).max(5).default([]),
   closingOptions: z.array(z.discriminatedUnion('kind', [
     ClosingActionProposalSchema.extend({ factCitations: lineCitations, goalCitations: lineCitations }),
     ClosingCandidateSchema.extend({ factCitations: lineCitations, goalCitations: lineCitations }),
@@ -69,7 +86,7 @@ export function resolveActionSourceLines(value: unknown, sources: readonly Actio
     if (quote.length > 16000) throw new ActionOutputError(`Evidence selection for ${citation.sourceId} is too broad; select at most 16000 characters of relevant source lines`)
     return { sourceId: source.id, quote }
   }
-  return ActionProposalSchema.parse({ ...proposal, changes: proposal.changes.map(change => ({ ...change, citations: change.citations.map(resolve) })), suggestions: proposal.suggestions.map(candidate => ({ ...candidate, factCitations: candidate.factCitations.map(resolve), goalCitations: candidate.goalCitations.map(resolve) })), closingOptions: proposal.closingOptions.map(option => ({ ...option, factCitations: option.factCitations.map(resolve), goalCitations: option.goalCitations.map(resolve) })) })
+  return ActionProposalSchema.parse({ ...proposal, changes: proposal.changes.map(change => ({ ...change, citations: change.citations.map(resolve) })), suggestions: proposal.suggestions.map(candidate => ({ ...candidate, factCitations: candidate.factCitations.map(resolve), goalCitations: candidate.goalCitations.map(resolve) })), candidateDispositions: proposal.candidateDispositions.map(disposition => disposition.kind === 'reject' || disposition.kind === 'verified-closure' ? { ...disposition, citations: disposition.citations.map(resolve) } : disposition), closingOptions: proposal.closingOptions.map(option => ({ ...option, factCitations: option.factCitations.map(resolve), goalCitations: option.goalCitations.map(resolve) })) })
 }
 export interface ActionAgents {
   identity?: { proposer: string; verifier: string }
@@ -367,6 +384,12 @@ function checkpointRestrictionReason(option: ClosingCheckpoint, registry: Action
 
 type ProposedClosingOption = z.infer<typeof ClosingOptionProposalSchema>
 
+function matchesCapturedDraftCandidate(candidate: DraftActionCandidate, suggestion: ParsedActionProposal['suggestions'][number]): boolean {
+  return candidate.payload.command === suggestion.command
+    && candidate.payload.repo === suggestion.repo
+    && candidate.payload.description === suggestion.description
+}
+
 function canonicalCheckpointTarget(value: string): string {
   const target = new URL(value)
   target.hash = ''
@@ -382,20 +405,25 @@ function recommendationIdentity(option: ProposedClosingOption, candidateActionKe
   return `checkpoint:${sha256(workKey).slice(0, 20)}`
 }
 
-export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; sources: ActionSource[]; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string }; draftContext?: DraftRecommendationContext }): ActionRegistry {
+export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; sources: ActionSource[]; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string }; draftCandidates?: readonly DraftActionCandidate[]; draftContext?: DraftRecommendationContext }): ActionRegistry {
   const cycle = ActionReviewCycleSchema.parse(input.cycle)
   const proposal = ActionProposalSchema.parse(input.proposal)
   const verification = ActionVerificationSchema.parse(input.verification)
   const next = structuredClone(input.registry)
   const previous = next.articles.find(article => article.date === input.articleDate)
+  const draftCandidates = structuredClone(input.draftCandidates ?? previous?.draftCandidates)
+  const awaitingDraftCandidates = draftCandidates?.filter(candidate => candidate.review.state === 'awaiting-review') ?? []
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? previous?.draftContext)
   input = { ...input, markdown: prepared.markdown, draftContext: prepared.context }
   const keys = new Set(previous?.actionKeys ?? next.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key))
   const rejected: ActionRegistry['articles'][number]['rejected'] = [...(previous?.rejected ?? [])]
   const changeKeys = proposal.changes.map(change => change.actionKey)
   if (new Set(changeKeys).size !== changeKeys.length) throw new Error('Duplicate action disposition in one round')
-  if (verification.changes.length !== proposal.changes.length || verification.suggestions.length !== proposal.suggestions.length || verification.closingOptions.length !== proposal.closingOptions.length) throw new Error('Independent verification is incomplete')
-  if (new Set(verification.changes.map(verdict => verdict.actionKey)).size !== verification.changes.length || new Set(verification.suggestions.map(verdict => verdict.candidateIndex)).size !== verification.suggestions.length || new Set(verification.closingOptions.map(verdict => verdict.optionIndex)).size !== verification.closingOptions.length) throw new Error('Duplicate independent verdict')
+  if (verification.changes.length !== proposal.changes.length || verification.suggestions.length !== proposal.suggestions.length || verification.candidateDispositions.length !== proposal.candidateDispositions.length || verification.closingOptions.length !== proposal.closingOptions.length) throw new Error('Independent verification is incomplete')
+  if (new Set(verification.changes.map(verdict => verdict.actionKey)).size !== verification.changes.length || new Set(verification.suggestions.map(verdict => verdict.candidateIndex)).size !== verification.suggestions.length || new Set(verification.candidateDispositions.map(verdict => verdict.candidateId)).size !== verification.candidateDispositions.length || new Set(verification.closingOptions.map(verdict => verdict.optionIndex)).size !== verification.closingOptions.length) throw new Error('Duplicate independent verdict')
+  const dispositionIds = proposal.candidateDispositions.map(disposition => disposition.candidateId)
+  const awaitingIds = awaitingDraftCandidates.map(candidate => candidate.candidateId)
+  if (new Set(dispositionIds).size !== dispositionIds.length || dispositionIds.length !== awaitingIds.length || dispositionIds.some(candidateId => !awaitingIds.includes(candidateId))) throw new Error('Every awaiting initial draft candidate requires exactly one disposition')
   const covered = new Set(changeKeys)
   for (const change of proposal.changes) {
     const record = next.records.find(record => record.key === change.actionKey)
@@ -418,6 +446,8 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     record.history.push({ roundId: input.roundId, articleDate: input.articleDate, state: change.state, description: change.description, reason: change.reason, citations: change.citations, verifiedBy: input.identity?.verifier ?? 'injected-test-agent', verificationReason: verdict.reason })
   }
   const candidateActionKeys = new Map<number, string>()
+  const newCandidateActionKeys = new Map<number, string>()
+  const mappedCandidateActionKeys = new Map<number, string>()
   for (const [candidateIndex, candidate] of proposal.suggestions.entries()) {
     const workKey = normalizeWorkKey(candidate.repo, candidate.target, candidate.outcome)
     const evidenceDigest = citationEvidenceDigest([...candidate.factCitations, ...candidate.goalCitations])
@@ -447,6 +477,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
         keys.add(existingKey)
         covered.add(existingKey)
         candidateActionKeys.set(candidateIndex, existingKey)
+        mappedCandidateActionKeys.set(candidateIndex, existingKey)
         existing.state = state
         existing.history.push({ roundId: input.roundId, articleDate: input.articleDate, state, description: [candidate.description, ...candidate.gates].join(' '), reason: verdict.reason, citations: [...candidate.factCitations, ...candidate.goalCitations], verifiedBy: input.identity?.verifier ?? 'injected-test-agent', verificationReason: verdict.reason })
       }
@@ -461,11 +492,43 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     keys.add(key)
     covered.add(key)
     candidateActionKeys.set(candidateIndex, key)
+    newCandidateActionKeys.set(candidateIndex, key)
   }
   for (const key of keys) {
     const record = next.records.find(record => record.key === key)
     if (record && !covered.has(key)) throw new Error(`Existing suggestion omitted from independent review: ${key}`)
   }
+  const reviewedDraftCandidates = draftCandidates?.map(candidate => {
+    if (candidate.review.state !== 'awaiting-review') return candidate
+    const disposition = proposal.candidateDispositions.find(item => item.candidateId === candidate.candidateId)
+    const verdict = verification.candidateDispositions.find(item => item.candidateId === candidate.candidateId)
+    if (!disposition || !verdict || verdict.verdict !== 'pass') throw new Error(`Initial draft candidate requires further review: ${candidate.candidateId}: ${verdict?.reason ?? 'missing disposition'}`)
+    if (disposition.kind === 'promote') {
+      const actionKey = newCandidateActionKeys.get(disposition.suggestionIndex)
+      const suggestion = proposal.suggestions[disposition.suggestionIndex]
+      if (!actionKey || !suggestion) throw new Error(`Initial draft candidate promotion was not admitted: ${candidate.candidateId}`)
+      if (!matchesCapturedDraftCandidate(candidate, suggestion)) throw new Error(`Promoted suggestion does not match the captured candidate's exact command, repository and description: ${candidate.candidateId}`)
+      return { ...candidate, review: { state: 'promoted' as const, actionKey, reason: disposition.reason, citations: [...suggestion.factCitations, ...suggestion.goalCitations] } }
+    }
+    if (disposition.kind === 'map-existing') {
+      const actionKey = mappedCandidateActionKeys.get(disposition.suggestionIndex)
+      const suggestion = proposal.suggestions[disposition.suggestionIndex]
+      if (!actionKey || actionKey !== disposition.actionKey || !suggestion) throw new Error(`Initial draft candidate existing-identity map was not verified: ${candidate.candidateId}`)
+      if (!matchesCapturedDraftCandidate(candidate, suggestion)) throw new Error(`Mapped suggestion does not match the captured candidate's exact command, repository and description: ${candidate.candidateId}`)
+      return { ...candidate, review: { state: 'mapped-existing' as const, actionKey, reason: disposition.reason, citations: [...suggestion.factCitations, ...suggestion.goalCitations] } }
+    }
+    if (disposition.kind === 'reject') {
+      if (!checkedCitations(disposition.citations, input.sources, ['repository', 'github', 'goal', 'instruction'])) throw new Error(`Initial draft candidate rejection lacks exact evidence: ${candidate.candidateId}`)
+      return { ...candidate, review: { state: 'rejected' as const, reason: disposition.reason, citations: disposition.citations } }
+    }
+    if (!checkedCitations(disposition.citations, input.sources, ['repository', 'github'], true)) throw new Error(`Initial draft candidate closure lacks authoritative exact evidence: ${candidate.candidateId}`)
+    if (disposition.actionKey) {
+      const record = next.records.find(item => item.key === disposition.actionKey)
+      const state = record ? acceptedActionState(record, input.articleStatuses, next) : undefined
+      if (!state || !['done', 'dismissed', 'superseded'].includes(state)) throw new Error(`Initial draft candidate closure does not identify verified terminal work: ${candidate.candidateId}`)
+    }
+    return { ...candidate, review: { state: 'verified-closure' as const, actionKey: disposition.actionKey, reason: disposition.reason, citations: disposition.citations } }
+  })
   const closingIdentities = proposal.closingOptions.map(option => recommendationIdentity(option))
   if (new Set(closingIdentities).size !== closingIdentities.length) throw new Error('Duplicate closing option in one round')
   const qualifiedRecommendations: Array<{ option: ClosingOption; benefit: string; start: string; replaces: string[] }> = []
@@ -567,31 +630,35 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   // Git retains prior rounds; the dated working state retains only this round.
   for (const record of next.records) record.history = record.history.filter(decision => decision.articleDate !== input.articleDate || decision.roundId === input.roundId)
   const closingOptions = closing.kind === 'shortlist' ? closing.options : closing.recommendations
-  const usedSources = new Set([...next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.map(citation => citation.sourceId))), ...closingOptions.flatMap(option => [...option.factCitations, ...option.goalCitations].map(citation => citation.sourceId)), ...input.sources.filter(source => source.id.startsWith(`${COVERAGE_SOURCE}@`)).map(source => source.id)])
+  const draftCandidateCitations = reviewedDraftCandidates?.flatMap(candidate => candidate.review.state === 'awaiting-review' ? [] : candidate.review.citations) ?? []
+  const usedSources = new Set([...next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.map(citation => citation.sourceId))), ...draftCandidateCitations.map(citation => citation.sourceId), ...closingOptions.flatMap(option => [...option.factCitations, ...option.goalCitations].map(citation => citation.sourceId)), ...input.sources.filter(source => source.id.startsWith(`${COVERAGE_SOURCE}@`)).map(source => source.id)])
   const retainedSources = [...new Map([...(previous?.sources ?? []), ...input.sources.filter(source => usedSources.has(source.id))].map(source => [source.id, source])).values()].filter(source => usedSources.has(source.id)).map(source => {
-    const quotes = [...new Set([...next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.filter(citation => citation.sourceId === source.id).map(citation => citation.quote))), ...closingOptions.flatMap(option => [...option.factCitations, ...option.goalCitations].filter(citation => citation.sourceId === source.id).map(citation => citation.quote))])]
+    const quotes = [...new Set([...next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.filter(citation => citation.sourceId === source.id).map(citation => citation.quote))), ...draftCandidateCitations.filter(citation => citation.sourceId === source.id).map(citation => citation.quote), ...closingOptions.flatMap(option => [...option.factCitations, ...option.goalCitations].filter(citation => citation.sourceId === source.id).map(citation => citation.quote))])]
     const trustedContent = source.kind === 'github' ? quotes.filter(quote => source.trustedContent?.some(text => text.includes(quote))) : undefined
     return { id: source.id, kind: source.kind, locator: source.locator, content: source.id.startsWith(`${COVERAGE_SOURCE}@`) ? source.content : quotes.join('\n\n'), ...(trustedContent?.length ? { trustedContent } : {}), fullContentSha256: source.fullContentSha256 ?? sha256(source.content) }
   })
-  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], draftContext: prepared.context, closing, stateDigest: actionStateDigest(next, [...keys], closing, prepared.context, { articleDate: input.articleDate, roundId: input.roundId }), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256: sha256(JSON.stringify(proposal)), verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
+  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], ...(reviewedDraftCandidates === undefined ? {} : { draftCandidates: reviewedDraftCandidates }), draftContext: prepared.context, closing, stateDigest: actionStateDigest(next, [...keys], closing, prepared.context, { articleDate: input.articleDate, roundId: input.roundId, draftCandidates: reviewedDraftCandidates }), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256: sha256(JSON.stringify(proposal)), verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...verification.candidateDispositions.map(verdict => ({ item: `draft-candidate:${verdict.candidateId}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
   next.articles = [...next.articles.filter(article => article.date !== input.articleDate), snapshot]
   const result = ActionRegistrySchema.parse(next)
   for (const file of splitActionRegistry(result).files) articleActionFileBytes(file)
   return result
 }
 
-export async function reviewArticleActions(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; feedback: string; sources: ActionSource[]; agents: ActionAgents; articleStatuses: ReadonlyMap<string, string> }): Promise<{ registry: ActionRegistry; markdown: string; cached: boolean }> {
+export async function reviewArticleActions(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; feedback: string; sources: ActionSource[]; agents: ActionAgents; articleStatuses: ReadonlyMap<string, string>; draftCandidates?: readonly unknown[] }): Promise<{ registry: ActionRegistry; markdown: string; cached: boolean }> {
   input = { ...input, cycle: ActionReviewCycleSchema.parse(input.cycle) }
   if (process.env.ACTION_REVIEW_DISABLED === 'true') throw new Error('Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked')
   if (!input.registry.articles.some(article => article.date === input.articleDate) && Object.hasOwn(input.registry.baseline.articleActions, input.articleDate)) input = { ...input, markdown: normalizeLegacyActionProse(input.markdown) }
   const previous = input.registry.articles.find(article => article.date === input.articleDate)
+  const capturedDraftCandidates = input.draftCandidates === undefined ? undefined : captureDraftActionCandidates(input.draftCandidates)
+  if (previous?.draftCandidates && capturedDraftCandidates && JSON.stringify(previous.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload }))) !== JSON.stringify(capturedDraftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))) throw new Error('Initial draft candidates changed after capture')
+  const draftCandidates = previous?.draftCandidates ?? capturedDraftCandidates
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), previous?.draftContext)
   input = { ...input, markdown: prepared.markdown }
   input = { ...input, articleStatuses: new Map(input.articleStatuses).set(input.articleDate, input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft') }
   input = { ...input, sources: canonicalActionSources(input.sources) }
-  const inputHash = sha256(JSON.stringify({ version: ACTION_REVIEW_PROMPT_VERSION, evidenceSelectionVersion: ACTION_EVIDENCE_SELECTION_VERSION, cycle: input.cycle, statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), draftContext: prepared.context, feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
+  const inputHash = sha256(JSON.stringify({ version: ACTION_REVIEW_PROMPT_VERSION, evidenceSelectionVersion: ACTION_EVIDENCE_SELECTION_VERSION, cycle: input.cycle, statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), draftContext: prepared.context, draftCandidates, feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
 
-  if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === inputHash && JSON.stringify(previous.draftContext) === JSON.stringify(prepared.context) && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys, previous.closing, previous.draftContext, { articleDate: previous.date, roundId: previous.roundId })) return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true }
+  if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === inputHash && JSON.stringify(previous.draftContext) === JSON.stringify(prepared.context) && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys, previous.closing, previous.draftContext, { articleDate: previous.date, roundId: previous.roundId, draftCandidates: previous.draftCandidates })) return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true }
   const selection = selectActionEvidence({ ...input, draftContext: prepared.context })
   input = { ...input, sources: selection.sources }
   const byteLength = (value: string) => Buffer.byteLength(value, 'utf8')
@@ -600,6 +667,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   const modelSources = input.sources.map((source, index) => ({ ...source, id: `s${index + 1}` }))
   const currentActionKeys = previous?.actionKeys ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
   const context = JSON.stringify({ articleDate: input.articleDate, reviewCycle: input.cycle, newIdentityLimit: actionAdmissionLimit(input.cycle), remainingNewIdentitySlots: Math.max(0, actionAdmissionLimit(input.cycle) - countCycleAdmissions(input.registry.records.filter(record => record.origin === 'suggested' && record.introducedBy === input.articleDate), input.cycle)), articleStatuses: Object.fromEntries(input.articleStatuses),
+    initialDraftCandidates: draftCandidates ?? [], initialDraftCandidatePolicy: 'Exact same-article producer candidates. Awaiting candidates are unverified and not admitted, ranked, executable, or settled. Account for each awaiting candidate exactly once as promote, reject, map-existing, or verified-closure. Promote and map-existing require the selected suggestion to preserve the captured command, repository and description exactly; this is an identity guard, not proof of semantic equivalence. Put amended or unrelated work in a separate suggestion and reject or otherwise account for the original candidate. Prior-day recommendation maintenance is separate context.',
     sources: modelSources.map(({ trustedContent, ...source }) => ({ ...source, authoritativeLines: source.kind === 'github' ? source.content.split('\n').flatMap((line, index) => line.trim() && trustedContent?.some(text => text.includes(line)) ? [index + 1] : []) : source.kind === 'repository' ? 'repository source' : source.kind === 'instruction' ? 'operator instruction' : 'context only', content: source.content.split('\n').map((line, index) => `L${index + 1}: ${line}`).join('\n') })),
     citationPolicy: { rule: 'Every quote must be exact. Completion, dismissal and supersession require every citation to be authoritative API/OWNER/MEMBER/COLLABORATOR text or repository evidence. Dismissal also permits explicit operator feedback. Article-only claims, metadata and third-party comments never establish terminal dispositions. Do not include source aliases or line labels in user-facing reasons.' },
     ...actionReviewIndex({ ...input, expandedActionKeys: selection.expandedActionKeys }),
@@ -612,14 +680,15 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   for (let attempt = 0; attempt < 2; attempt++) {
     let proposal: ParsedActionProposal, verification: ParsedActionVerification
     try {
-      proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every currentActionKey, including retained terminal dispositions. Every carried identity needs a verdict in this round. An independently verified existingKey link also counts as reviewing it.\n${correction}`), modelSources))
-      verification = ActionVerificationSchema.parse(await input.agents.verify(boundedPrompt(`${context}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(proposal)}\n${correction}\nReturn ONLY the tool schema: changes, suggestions and closingOptions are arrays of verdict objects. Check each closing option for current disposition, usefulness, prior-context relevance, goal connection, entry point and next checkpoint. Keep reasons concise.`), modelSources))
+      proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every currentActionKey, including retained terminal dispositions. Every carried identity needs a verdict in this round. An independently verified existingKey link also counts as reviewing it. Return one candidateDisposition for every awaiting initialDraftCandidate; never reconstruct a missing candidate from draft context or prior-day maintenance. A promotion or existing-identity map must select a suggestion with the exact captured command, repository and description. If work is amended or unrelated, propose it separately and account for the original candidate with another supported disposition.\n${correction}`), modelSources))
+      verification = ActionVerificationSchema.parse(await input.agents.verify(boundedPrompt(`${context}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(proposal)}\n${correction}\nReturn ONLY the tool schema: changes, suggestions, candidateDispositions and closingOptions are arrays of verdict objects. Verify every initial candidate disposition independently. Check each closing option for current disposition, usefulness, prior-context relevance, goal connection, entry point and next checkpoint. Keep reasons concise.`), modelSources))
       const resolveCitation = (citation: z.infer<typeof CitationSchema>) => ({ ...citation, sourceId: sourceAliases.get(citation.sourceId) ?? citation.sourceId })
       for (const change of proposal.changes) change.citations = change.citations.map(resolveCitation)
       for (const candidate of proposal.suggestions) { candidate.goalCitations = candidate.goalCitations.map(resolveCitation); candidate.factCitations = candidate.factCitations.map(resolveCitation) }
+      for (const disposition of proposal.candidateDispositions) if (disposition.kind === 'reject' || disposition.kind === 'verified-closure') disposition.citations = disposition.citations.map(resolveCitation)
       for (const option of proposal.closingOptions) { option.goalCitations = option.goalCitations.map(resolveCitation); option.factCitations = option.factCitations.map(resolveCitation) }
     } catch (error) { if (attempt === 1 || !(error instanceof z.ZodError || error instanceof ActionOutputError)) throw error; correction = `Previous structured output was invalid: ${error.message}. Return the required schema.`; console.warn(`Action review needs its one repair: ${correction}`); continue }
-    const registry = applyVerifiedActionReview({ ...input, roundId: inputHash, proposal, verification, identity: input.agents.identity, draftContext: prepared.context })
+    const registry = applyVerifiedActionReview({ ...input, roundId: inputHash, proposal, verification, identity: input.agents.identity, draftCandidates, draftContext: prepared.context })
     return { registry, markdown: renderArticleActions(input.markdown, registry, input.articleDate, input.articleStatuses), cached: false }
   }
   throw new Error('Action review returned no result')
@@ -627,15 +696,18 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
 
 export const mockActionAgents: ActionAgents = { identity: { proposer: 'mock-llm', verifier: 'mock-llm' }, propose: async () => ({ changes: [], suggestions: [], closingOptions: [] }), verify: async () => ({ changes: [], suggestions: [], closingOptions: [] }) }
 
-export function pendingActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; reason: string; articleStatuses: ReadonlyMap<string, string>; draftContext?: DraftRecommendationContext }) {
+export function pendingActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; reason: string; articleStatuses: ReadonlyMap<string, string>; draftCandidates?: readonly unknown[]; draftContext?: DraftRecommendationContext }) {
   if (/^status:\s*"?accepted/m.test(input.markdown) || input.registry.articles.some(article => article.date === input.articleDate && article.status === 'accepted')) throw new Error('A pending action review cannot replace an accepted article')
   const registry = structuredClone(input.registry), previous = registry.articles.find(article => article.date === input.articleDate)
+  const capturedDraftCandidates = input.draftCandidates === undefined ? undefined : captureDraftActionCandidates(input.draftCandidates)
+  if (previous?.draftCandidates && capturedDraftCandidates && JSON.stringify(previous.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload }))) !== JSON.stringify(capturedDraftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))) throw new Error('Initial draft candidates changed after capture')
+  const draftCandidates = previous?.draftCandidates ?? capturedDraftCandidates
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? previous?.draftContext)
   input = { ...input, markdown: prepared.markdown, draftContext: prepared.context }
   const keys = previous?.actionKeys ?? []
   const closing = previous?.closing
-  const roundId = sha256(JSON.stringify({ pending: managedArticleDigest(input.markdown), draftContext: prepared.context, cycle: input.cycle }))
-  const snapshot = { date: input.articleDate, reviewCycle: ActionReviewCycleSchema.parse(input.cycle), status: 'draft' as const, review: { state: 'pending' as const, reason: input.reason.slice(0, 1000) }, articleDigest: managedArticleDigest(input.markdown), roundId, actionKeys: keys, draftContext: prepared.context, closing, stateDigest: actionStateDigest(registry, keys, closing, prepared.context, { articleDate: input.articleDate, roundId, includePriorArticleRounds: true }), verification: { proposer: 'not-verified', verifier: 'not-verified', promptVersion: PENDING_ACTION_REVIEW_PROMPT_VERSION, proposalSha256: sha256('pending'), verdicts: [] }, sources: previous?.sources ?? [], rejected: previous?.rejected ?? [] }
+  const roundId = sha256(JSON.stringify({ pending: managedArticleDigest(input.markdown), draftContext: prepared.context, draftCandidates, cycle: input.cycle }))
+  const snapshot = { date: input.articleDate, reviewCycle: ActionReviewCycleSchema.parse(input.cycle), status: 'draft' as const, review: { state: 'pending' as const, reason: input.reason.slice(0, 1000) }, articleDigest: managedArticleDigest(input.markdown), roundId, actionKeys: keys, ...(draftCandidates === undefined ? {} : { draftCandidates }), draftContext: prepared.context, closing, stateDigest: actionStateDigest(registry, keys, closing, prepared.context, { articleDate: input.articleDate, roundId, includePriorArticleRounds: true, draftCandidates }), verification: { proposer: 'not-verified', verifier: 'not-verified', promptVersion: PENDING_ACTION_REVIEW_PROMPT_VERSION, proposalSha256: sha256('pending'), verdicts: [] }, sources: previous?.sources ?? [], rejected: previous?.rejected ?? [] }
   registry.articles = [...registry.articles.filter(article => article.date !== input.articleDate), snapshot]
   return { registry: ActionRegistrySchema.parse(registry), markdown: renderArticleActions(input.markdown, registry, input.articleDate, new Map(input.articleStatuses).set(input.articleDate, 'draft')), cached: false }
 }

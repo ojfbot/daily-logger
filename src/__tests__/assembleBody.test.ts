@@ -158,6 +158,24 @@ describe('assembleBody — v2 schema', () => {
     expect(body).toContain('`abc1234`')
   })
 
+  it('renders a same-repo PR URL from structured output exactly once', () => {
+    const body = assembleBody({ ...baseV2, whatShipped: [{ ...baseV2.whatShipped[0], prs: ['https://github.com/ojfbot/daily-logger/pull/42'] }] })
+    expect(body).toContain('### daily-logger ([#42](https://github.com/ojfbot/daily-logger/pull/42))')
+    expect(body).not.toContain('#https://')
+    expect(body).not.toContain('/pull/https://')
+  })
+
+  it('uses a source-known issue kind in shipment prose and the roadmap', () => {
+    const body = assembleBody({
+      ...baseV2,
+      whatShipped: [{ ...baseV2.whatShipped[0], description: 'Issue #386 remains open.' }],
+      roadmapPulse: 'Open issue [daily-logger] #386.',
+    }, new Map([['daily-logger#386', 'issues']]))
+    expect(body).toContain('Issue [#386](https://github.com/ojfbot/daily-logger/issues/386) remains open.')
+    expect(body).toContain('Open issue [daily-logger] [#386](https://github.com/ojfbot/daily-logger/issues/386).')
+    expect(body).not.toContain('/pull/386')
+  })
+
   it('renders decision entries with pillar badges', () => {
     const body = assembleBody(baseV2)
     expect(body).toContain('### Zod over manual validation')

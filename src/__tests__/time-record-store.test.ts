@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { persistGeneratedTime, prepareGeneratedTime, readArticleTime } from '../article-time-metadata.js'
 import { type TimeRecord } from '../time-references.js'
+import { shipmentSources } from '../time-references.js'
 
 const roots: string[] = []
 function root() { const path = mkdtempSync(join(tmpdir(), 'time-store-')); roots.push(path); return path }
@@ -37,6 +38,10 @@ describe('immutable article time-record persistence', () => {
     expect(prepared.markdown).not.toContain('time_references_body_sha256:')
     expect(() => prepareGeneratedTime({ date: '../outside', markdown, records: [record], capture })).toThrow('date')
     expect(() => prepareGeneratedTime({ date, markdown, records: [record], capture: { observedAt: 'not-time', window: null } })).toThrow('observedAt')
+    expect(() => prepareGeneratedTime({ date, markdown: markdown.replace('[#359](https://github.com/ojfbot/daily-logger/pull/359)', '[#https://github.com/ojfbot/daily-logger/pull/359](https://github.com/ojfbot/daily-logger/pull/https://github.com/ojfbot/daily-logger/pull/359)'), records: [record], capture })).toThrow(/nested GitHub reference label/i)
+    expect(() => prepareGeneratedTime({ date, markdown, renderedHtml: '<a href="https://github.com/ojfbot/daily-logger/pull/https://github.com/ojfbot/daily-logger/pull/401">#401</a>', records: [record], capture })).toThrow(/non-canonical GitHub resource URL/i)
+    expect(() => prepareGeneratedTime({ date, markdown: `${markdown}\n[supervised correction request](https://github.com/ojfbot/daily-logger/pull/402#issuecomment-6295372166)\n`, records: [record], capture })).not.toThrow()
+    expect(() => prepareGeneratedTime({ date, markdown: `${markdown}\n[#386](https://github.com/ojfbot/daily-logger/pull/386)\n`, records: [record], capture, referenceKinds: new Map([['daily-logger#386', 'issues']]) })).toThrow(/wrong GitHub resource kind/i)
   })
   it('installs exact immutable canonical bytes before article replacement and safely retries identical preparation', () => {
     const repoRoot = root(), prepared = prepare()
@@ -47,10 +52,44 @@ describe('immutable article time-record persistence', () => {
     expect(persistGeneratedTime({ repoRoot, prepared })).toEqual(written)
     expect(readdirSync(dirname(written.artifactPath))).toEqual([`${prepared.digest}.json`])
     const result = readArticleTime({ repoRoot, date, markdown: prepared.markdown })
+    expect(result.referenceKinds.get('daily-logger#359')).toBe('pull')
     expect(result.references).toHaveLength(1)
     expect(result.references[0]?.at).toBe(record.at)
     expect(result.capture).toMatchObject({ observedAt: capture.observedAt, window: null, status: 'complete' })
     expect(() => persistGeneratedTime({ repoRoot, prepared: { ...prepared } })).toThrow('prepareGeneratedTime')
+  })
+  it('preserves current open and closed-unmerged states without adding merge placeholders', () => {
+    const mixed = markdown.replace('\nPR [#359]', '\n## What shipped\nMerged PR [#359]') + '\nOpen [#385](https://github.com/ojfbot/daily-logger/pull/385) and closed [#392](https://github.com/ojfbot/daily-logger/pull/392).\n'
+    const sources = shipmentSources(mixed)
+    const states = [
+      { source: sources.find((source) => source.ref === '385')!, state: 'open' as const },
+      { source: sources.find((source) => source.ref === '392')!, state: 'closed-unmerged' as const },
+    ]
+    const repoRoot = root()
+    const prepared = prepareGeneratedTime({ date, markdown: mixed, records: [record], capture, shipmentStates: states })
+    const saved = persistGeneratedTime({ repoRoot, prepared })
+    expect(JSON.parse(readFileSync(saved.artifactPath, 'utf-8')).shipmentStates).toEqual(states)
+    const read = readArticleTime({ repoRoot, date, markdown: prepared.markdown })
+    expect(read.referenceKinds.get('daily-logger#385')).toBe('pull')
+    expect(read.referenceKinds.get('daily-logger#392')).toBe('pull')
+    expect(read.shipmentCoverage).toMatchObject({
+      status: 'complete', times: [{ status: 'available', source: { ref: '359' } }],
+      exclusions: [{ source: { ref: '385' }, reason: 'open' }, { source: { ref: '392' }, reason: 'closed-unmerged' }],
+    })
+  })
+  it('retains card-only issue evidence while leaving card clock text out of authored time references', () => {
+    const repoRoot = root()
+    const text = `---\ntitle: Time\ndate: ${date}\n---\n\nNo authored issue link or clock.\n`
+    const renderedHtml = '<p>No authored issue link or clock.</p><section class="suggested-actions-card"><a href="https://github.com/ojfbot/daily-logger/issues/357">issue #357</a> 09:10Z</section>'
+    const issueRecord: TimeRecord = { at: '2026-10-14T09:10:41.000Z', evidence: { kind: 'github-issue', repo: 'ojfbot/daily-logger', ref: '357', event: 'created', url: 'https://github.com/ojfbot/daily-logger/issues/357' } }
+    const source = { repo: 'ojfbot/daily-logger', ref: '357', url: 'https://github.com/ojfbot/daily-logger/issues/357' }
+    const prepared = prepareGeneratedTime({ date, markdown: text, renderedHtml, records: [issueRecord], issueEvents: [{ source, event: 'created' }], capture })
+    const saved = persistGeneratedTime({ repoRoot, prepared })
+    expect(JSON.parse(readFileSync(saved.artifactPath, 'utf8')).records).toEqual([issueRecord])
+    const result = readArticleTime({ repoRoot, date, markdown: prepared.markdown, renderedHtml })
+    expect(result.issueTimes).toMatchObject([{ source: { ref: '357' }, event: 'created', at: issueRecord.at }])
+    expect(result.referenceKinds.get('daily-logger#357')).toBe('issues')
+    expect(result.references).toEqual([])
   })
   it('retains competing complete source facts and does not manufacture uniqueness by filtering displayed clocks', () => {
     const repoRoot = root()
@@ -85,6 +124,7 @@ describe('immutable article time-record persistence', () => {
     writeFileSync(saved.artifactPath, '{}\n')
     const invalid = readArticleTime({ repoRoot, date, markdown: prepared.markdown })
     expect(invalid.references).toEqual([])
+    expect(invalid.referenceKinds.size).toBe(0)
     expect(invalid.warnings.join(' ')).toContain('invalid')
     expect(() => persistGeneratedTime({ repoRoot, prepared })).toThrow('conflicts')
     expect(readFileSync(saved.articlePath, 'utf-8')).toBe(prepared.markdown)

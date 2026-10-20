@@ -1,6 +1,7 @@
 // Shared types for the React frontend — mirrors the static JSON API shape
 import type { TimeReference } from '../../../../src/time-reference-schema.ts'
 import type { ShipmentTime } from '../../../../src/shipment-times.ts'
+import type { IssueTime } from '../../../../src/issue-times.ts'
 import type { CanonicalAction, ReviewedCanonicalAction } from '../../../../src/action-model.ts'
 
 export interface TypedTag {
@@ -86,6 +87,7 @@ export interface EntryData {
   codeReferences?: CodeReference[]
   timeReferences?: TimeReference[]
   shipmentTimes?: ShipmentTime[]
+  issueTimes?: IssueTime[]
   provenance?: ArticleProvenance
 }
 

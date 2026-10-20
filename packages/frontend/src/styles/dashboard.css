@@ -1765,8 +1765,8 @@ a:hover { border-bottom-color: var(--text); }
 .code-ref.ref-type-env:hover { border-color: #c69026; }
 .code-ref.ref-type-endpoint:hover { border-color: #539bf5; }
 .code-ref.ref-type-directory:hover { border-color: #57ab5a; }
-.code-ref.ref-type-pr { cursor: pointer; transition: border-color 0.1s; }
-.code-ref.ref-type-pr:hover { border-color: #a371f7; }
+.code-ref.ref-type-pr, .code-ref.ref-type-issue { cursor: pointer; transition: border-color 0.1s; }
+.code-ref.ref-type-pr:hover, .code-ref.ref-type-issue:hover { border-color: #a371f7; }
 
 .commit-popover {
   position: fixed;
@@ -1804,8 +1804,8 @@ a:hover { border-bottom-color: var(--text); }
 }
 .time-ref:hover { color: var(--blue); border-bottom-style: solid; }
 .time-ref:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
-.shipment-time-state { white-space: nowrap; font-family: var(--font-mono); font-size: 0.78em; color: var(--text-secondary); }
-.shipment-time-ref { color: var(--text-secondary); }
+.shipment-time-state, .issue-time-state { white-space: nowrap; font-family: var(--font-mono); font-size: 0.78em; color: var(--text-secondary); }
+.shipment-time-ref, .issue-time-ref { color: var(--text-secondary); }
 .shipment-time-unavailable { font-style: italic; }
 .time-popover {
   width: 374px;
@@ -1901,8 +1901,10 @@ a:hover { border-bottom-color: var(--text); }
 .ref-type-directory.commit-popover-type { color: #57ab5a; }
 
 .ref-type-pr.commit-popover-type,
+.ref-type-issue.commit-popover-type,
 .commit-popover:has(.ref-type-pr) { border-left-color: #a371f7; }
-.ref-type-pr.commit-popover-type { color: #a371f7; }
+.commit-popover:has(.ref-type-issue) { border-left-color: #a371f7; }
+.ref-type-pr.commit-popover-type, .ref-type-issue.commit-popover-type { color: #a371f7; }
 
 .commit-popover-sha {
   font-size: 0.7rem;

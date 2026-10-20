@@ -157,4 +157,4 @@ export function findCodeElements(
   return results
 }
 
-export const PR_LINK_RE = /^https:\/\/github\.com\/ojfbot\/([^/]+)\/(pull|issues)\/(\d+)\/?$/
+export const PR_LINK_RE = /^https:\/\/github\.com\/ojfbot\/([^/]+)\/(pull|issues)\/([1-9]\d*)\/?(?:#(issuecomment-[1-9]\d*|pullrequestreview-[1-9]\d*|discussion_r[1-9]\d*))?$/

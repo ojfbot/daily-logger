@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ArticleActionFileSchema, actionArticlePath, articleActionFileBytes, type ArticleActionFile } from '../../../../src/action-registry-schema.ts'
+import { ArticleActionFileContractSchema, actionArticlePath, articleActionFileContractBytes, type ArticleActionFile } from '../../../../src/action-registry-contract.ts'
 import { ghFetch } from './stampDraft.ts'
 
 const repo = 'repos/ojfbot/daily-logger'
@@ -33,7 +33,7 @@ export async function loadEditorialActions(date: string, visibleBlobSha: string)
     if (main.sha !== visibleBlobSha || sameProse(decode(main.content)) !== sameProse(decode(article.content))) throw new Error('The editorial branch contains a different article version. Refresh its preview before changing actions.')
   }
   const file = await readFile(`${repo}/contents/${actionArticlePath(date)}?ref=${ref}`)
-  return { file: ArticleActionFileSchema.parse(JSON.parse(decode(file.content))), sha: file.sha, branchExists: branchResponse.ok, draft: /^status:\s*"?draft"?\s*$/m.test(decode(article.content)) }
+  return { file: ArticleActionFileContractSchema.parse(JSON.parse(decode(file.content))), sha: file.sha, branchExists: branchResponse.ok, draft: /^status:\s*"?draft"?\s*$/m.test(decode(article.content)) }
 }
 
 export async function saveActionInclusion(input: { date: string; visibleBlobSha: string; expectedSha: string; key: string; include: boolean; login: string }): Promise<EditorialActions> {
@@ -56,8 +56,8 @@ export async function saveActionInclusion(input: { date: string; visibleBlobSha:
   if (!record || record.origin !== 'suggested' || !snapshot?.actionKeys.includes(input.key) || record.introducedBy !== input.date) throw new Error('This is existing work; changing its admission checkbox cannot close it')
   record.includeInIndex = input.include
   record.inclusionOverride = { include: input.include, actor: input.login, instruction: 'Explicit editorial inclusion checkbox' }
-  const file = ArticleActionFileSchema.parse(current.file)
-  const response = await ghFetch(`${repo}/contents/${actionArticlePath(input.date)}`, { method: 'PUT', body: JSON.stringify({ branch, sha: current.sha, content: encode(articleActionFileBytes(file)), message: `editorial: ${input.include ? 'include' : 'exclude'} action ${input.key}` }) })
+  const file = ArticleActionFileContractSchema.parse(current.file)
+  const response = await ghFetch(`${repo}/contents/${actionArticlePath(input.date)}`, { method: 'PUT', body: JSON.stringify({ branch, sha: current.sha, content: encode(articleActionFileContractBytes(file)), message: `editorial: ${input.include ? 'include' : 'exclude'} action ${input.key}` }) })
   if (!response.ok) throw new Error('Action choice was not confirmed. Reload before retrying.')
   return loadEditorialActions(input.date, input.visibleBlobSha)
 }

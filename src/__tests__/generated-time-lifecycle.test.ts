@@ -8,14 +8,16 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import type { BlogContext } from '../types.js'
-import { TimeReferenceSchema, recordsFromContext } from '../time-references.js'
+import { TimeReferenceSchema, issueSources, recordsFromContext, type TimeRecord } from '../time-references.js'
 import { ShipmentTimeSchema } from '../shipment-times.js'
+import { IssueTimeSchema } from '../issue-times.js'
+import { issueEventsFromContext } from '../issue-times.js'
 import { prepareGeneratedTime, persistGeneratedTime, readArticleTime } from '../article-time-metadata.js'
 import { detachArticleTime, preserveTimeDuringRevision } from '../article-time-frontmatter.js'
 import { stampOutcome } from '../stamp-outcome.js'
 import { buildApi } from '../build-api.js'
 import { checkShipmentTimeCoverage, requiresShipmentTimeCoverage } from '../shipment-time-coverage.js'
-import { readActionRegistry, registryRevision, writeActionRegistry } from '../action-registry.js'
+import { readActionRegistry, readArticleStatuses, registryRevision, rebindArticleSnapshot, renderArticleActionHtml, stripManagedActions, writeActionRegistry } from '../action-registry.js'
 import { reviewArticleActions, mockActionAgents } from '../review-actions.js'
 
 const { createMessage } = vi.hoisted(() => ({ createMessage: vi.fn() }))
@@ -52,7 +54,7 @@ function fingerprint(root: string, directories: string[]) {
   for (const directory of directories) visit(join(root, directory))
   return hash.digest('hex')
 }
-const articleJson = z.object({ timeReferences: z.array(TimeReferenceSchema).optional(), shipmentTimes: z.array(ShipmentTimeSchema).optional() })
+const articleJson = z.object({ timeReferences: z.array(TimeReferenceSchema).optional(), shipmentTimes: z.array(ShipmentTimeSchema).optional(), issueTimes: z.array(IssueTimeSchema).optional() })
 beforeEach(() => {
   vi.stubEnv('MOCK_LLM', 'false')
   vi.spyOn(console, 'log').mockImplementation(() => {})
@@ -139,7 +141,7 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     expect(() => checkShipmentTimeCoverage(root, date)).toThrow(/immutable shipment-time coverage is not enabled/i)
     expect(() => buildApi(root)).toThrow(/required immutable shipment-time coverage is unavailable/i)
     writeFileSync(persisted.articlePath, prepared.markdown.replace(`date: ${date}`, 'date: 2020-10-19'))
-    expect(() => buildApi(root)).toThrow(/required immutable shipment-time coverage is unavailable/i)
+    expect(() => buildApi(root)).toThrow(/action review is stale/i)
     expect(requiresShipmentTimeCoverage(date, prepared.markdown.replace(`date: ${date}`, `date: "${date}"`))).toBe(true)
     writeFileSync(persisted.articlePath, prepared.markdown)
 
@@ -167,6 +169,80 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     expect(api.timeReferences).toBeUndefined()
     expect(api.shipmentTimes).toEqual([{ status: 'unavailable', reason: 'missing-merge-time', source: { repo: 'ojfbot/daily-logger', ref: '359', url: 'https://github.com/ojfbot/daily-logger/pull/359' } }])
     expect(checkShipmentTimeCoverage(root, date)).toMatchObject({ candidates: 1, available: 0, unavailable: 1, excluded: 0 })
+  }, 30_000)
+
+  it('projects immutable issue Created and Updated clocks through the static API without model clocks', async () => {
+    const root = fixture(true)
+    const ctx: BlogContext = { ...context, openIssues: [
+      { repo: 'daily-logger', number: 386, title: 'New', state: 'open', labels: [], url: 'https://github.com/ojfbot/daily-logger/issues/386', createdAt: '2026-10-18T15:57:36Z', updatedAt: '2026-10-18T15:57:36Z', createdInWindow: true },
+      { repo: 'daily-logger', number: 357, title: 'Ongoing', state: 'open', labels: [], url: 'https://github.com/ojfbot/daily-logger/issues/357', createdAt: '2026-10-13T15:53:55Z', updatedAt: '2026-10-18T15:35:18Z' },
+    ] }
+    const generated = await generateArticle(ctx)
+    generated.body += '\nNew [#386](https://github.com/ojfbot/daily-logger/issues/386) and ongoing [#357](https://github.com/ojfbot/daily-logger/issues/357).\n'
+    const draftMarkdown = toMarkdown(generated)
+    const prepared = prepareGeneratedTime({ date, markdown: draftMarkdown, records: recordsFromContext(ctx), issueEvents: issueEventsFromContext(ctx, draftMarkdown), capture: { observedAt: '2026-10-19T09:01:00.000Z', window: null } })
+    const persisted = persistGeneratedTime({ repoRoot: root, prepared })
+    expect(JSON.parse(readFileSync(persisted.artifactPath, 'utf8')).records.filter((record: TimeRecord) => record.evidence.kind === 'github-issue')).toHaveLength(4)
+    const registry = readActionRegistry(root)
+    const review = await reviewArticleActions({ cycle: generationActionCycle(), registry, articleStatuses: new Map(), articleDate: date, markdown: prepared.markdown, feedback: '', sources: [], agents: mockActionAgents })
+    writeActionRegistry(root, review.registry, registryRevision(registry))
+    buildApi(root)
+    const api = articleJson.parse(JSON.parse(readFileSync(join(root, 'api/articles', `${date}.json`), 'utf8')))
+    expect(api.issueTimes).toMatchObject([
+      { source: { ref: '386' }, event: 'created', at: '2026-10-18T15:57:36.000Z' },
+      { source: { ref: '357' }, event: 'updated', at: '2026-10-18T15:35:18.000Z' },
+    ])
+    expect(api.shipmentTimes?.[0]).toMatchObject({ source: { ref: '359' }, status: 'available' })
+  }, 30_000)
+
+  it('projects an issue linked only in a native action card without admitting card clock text', () => {
+    const root = fixture(true)
+    rmSync(join(root, '_articles', `${date}.md`), { force: true })
+    const articleDate = '2026-10-20'
+    const path = join(root, '_articles', `${articleDate}.md`)
+    const original = readFileSync(path, 'utf8')
+    const proseOnly = original.replace(/\[([^\]]+)\]\(https:\/\/github\.com\/ojfbot\/daily-logger\/issues\/(?:357|386)(?:#issuecomment-\d+)?\)/g, '$1')
+    expect(issueSources(stripManagedActions(proseOnly))).toEqual([])
+    const before = readActionRegistry(root)
+    const snapshot = before.articles.find((article) => article.date === articleDate)!
+    const rebound = rebindArticleSnapshot(before, { date: articleDate, beforeMarkdown: original, afterMarkdown: proseOnly, expectedRoundId: snapshot.roundId, actor: 'offline-test', instruction: 'Keep issue links only in the verified action card.' })
+    writeActionRegistry(root, rebound, registryRevision(before))
+    const statuses = readArticleStatuses(root)
+    const renderedHtml = renderArticleActionHtml(proseOnly, rebound, articleDate, statuses)
+    expect(issueSources(proseOnly, renderedHtml).map((source) => source.ref)).toContain('386')
+    const originalDigest = /^time_records_sha256: ([a-f0-9]{64})$/m.exec(original)![1]
+    const originalRecords: TimeRecord[] = JSON.parse(readFileSync(join(root, 'api/time-records', articleDate, `${originalDigest}.json`), 'utf8')).records
+    const prAndCommitRecords = originalRecords.filter((record) => record.evidence.kind !== 'github-issue')
+    expect(prAndCommitRecords).toHaveLength(44)
+    const issue: TimeRecord = { at: '2026-10-18T15:57:36.000Z', evidence: { kind: 'github-issue', repo: 'ojfbot/daily-logger', ref: '386', event: 'created', url: 'https://github.com/ojfbot/daily-logger/issues/386' } }
+    const prepared = prepareGeneratedTime({ date: articleDate, markdown: proseOnly, renderedHtml, records: [...prAndCommitRecords, issue], issueEvents: [{ source: { repo: 'ojfbot/daily-logger', ref: '386', url: 'https://github.com/ojfbot/daily-logger/issues/386' }, event: 'created' }], capture: { observedAt: '2026-10-20T12:00:00.000Z', window: null } })
+    persistGeneratedTime({ repoRoot: root, prepared })
+    buildApi(root)
+    const api = JSON.parse(readFileSync(join(root, 'api/articles', `${articleDate}.json`), 'utf8'))
+    expect(api.issueTimes).toEqual([{ source: { repo: 'ojfbot/daily-logger', ref: '386', url: 'https://github.com/ojfbot/daily-logger/issues/386' }, event: 'created', at: issue.at }])
+    expect(api.timeReferences?.some((reference: { text: string }) => reference.text === '09:10Z')).not.toBe(true)
+  }, 30_000)
+
+  it('checks a changed article against retained PR identity in both API and CI paths', () => {
+    const root = fixture(true)
+    const articleDate = '2026-10-20'
+    const path = join(root, '_articles', `${articleDate}.md`)
+    const original = readFileSync(path, 'utf8')
+    const revised = original.replace('[#389](https://github.com/ojfbot/daily-logger/pull/389)', '[#389](https://github.com/ojfbot/daily-logger/issues/389)')
+    expect(revised).not.toBe(original)
+    const base = git(root, 'rev-parse', 'HEAD')
+    const before = readActionRegistry(root)
+    const snapshot = before.articles.find((article) => article.date === articleDate)!
+    const rebound = rebindArticleSnapshot(before, { date: articleDate, beforeMarkdown: original, afterMarkdown: revised, expectedRoundId: snapshot.roundId, actor: 'offline-test', instruction: 'Test retained resource identity.' })
+    writeActionRegistry(root, rebound, registryRevision(before))
+    writeFileSync(path, revised)
+    expect(() => buildApi(root)).toThrow(/wrong GitHub resource kind for daily-logger#389/i)
+    git(root, 'add', path, join(root, 'actions/articles', `${articleDate}.json`))
+    git(root, 'commit', '-qm', 'Offline wrong-kind article fixture')
+    const head = git(root, 'rev-parse', 'HEAD')
+    const script = fileURLToPath(new URL('../../scripts/check-article-references.ts', import.meta.url))
+    const loader = fileURLToPath(new URL('../../node_modules/tsx/dist/loader.mjs', import.meta.url))
+    expect(() => execFileSync(process.execPath, ['--import', loader, script], { cwd: root, env: { ...process.env, BASE_SHA: base, HEAD_SHA: head }, encoding: 'utf8', stdio: 'pipe' })).toThrow(/wrong GitHub resource kind for daily-logger#389/i)
   }, 30_000)
 
   it('gates and projects shipments from every repeated What shipped section', async () => {
@@ -215,6 +291,19 @@ describe('generation, retained facts, ordinary revision and API publication', ()
     vi.stubEnv('GITHUB_ACTIONS', 'false'); vi.stubEnv('BLOGENGINE_API_URL', '')
     const before = fingerprint(sourceRoot, ['_articles', 'api', 'action-admissions'])
     await main()
+    expect(fingerprint(sourceRoot, ['_articles', 'api', 'action-admissions'])).toBe(before)
+    expect(createMessage).not.toHaveBeenCalled()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('renders a fresh draft date through the native dry-run caller without a saved article status', async () => {
+    const freshDate = '2099-01-01'
+    expect(readArticleStatuses(sourceRoot).has(freshDate)).toBe(false)
+    vi.stubEnv('MOCK_LLM', 'true'); vi.stubEnv('DRY_RUN', 'true'); vi.stubEnv('SKIP_COUNCIL', 'true')
+    vi.stubEnv('DATE_OVERRIDE', freshDate); vi.stubEnv('ANTHROPIC_API_KEY', 'mock-only')
+    vi.stubEnv('GITHUB_ACTIONS', 'false'); vi.stubEnv('BLOGENGINE_API_URL', '')
+    const before = fingerprint(sourceRoot, ['_articles', 'api', 'action-admissions'])
+    await expect(main()).resolves.toBeUndefined()
     expect(fingerprint(sourceRoot, ['_articles', 'api', 'action-admissions'])).toBe(before)
     expect(createMessage).not.toHaveBeenCalled()
     expect(fetch).not.toHaveBeenCalled()

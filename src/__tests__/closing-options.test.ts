@@ -161,7 +161,7 @@ describe('verified article closing options', () => {
     expect(rendered.match(/<section class="suggested-actions-card/g)).toHaveLength(1)
     expect(rendered.match(/data-recommendation-id=/g)).toHaveLength(3)
     expect(reviewed.registry.articles[0].draftContext).toEqual({ kind: 'retained', markdown: 'Priority 1: ship the stale draft choice. Priority 2: reopen the superseded choice.' })
-    expect(rendered).toMatch(/<details class="suggested-actions-draft-context"><summary>Earlier draft notes<\/summary><div><p class="suggested-actions-draft-context-note">These draft notes are preserved as review history\. Current follow-ups are ranked above\.<\/p>[\s\S]*Priority 1: ship the stale draft choice[\s\S]*<\/div><\/details>/)
+    expect(rendered).toMatch(/<details class="suggested-actions-draft-context"><summary>Article draft context<\/summary><div><p class="suggested-actions-draft-context-note">These notes are retained from this article’s draft and review\. They are separate from prior-day maintenance context\. Current follow-ups are ranked above\.<\/p>[\s\S]*Priority 1: ship the stale draft choice[\s\S]*<\/div><\/details>/)
     expect(rendered.slice(0, rendered.indexOf('<details class="suggested-actions-draft-context">'))).not.toContain('Priority 1:')
 
     const tampered = structuredClone(reviewed.registry)
@@ -200,7 +200,7 @@ describe('verified article closing options', () => {
       expect(api.bodyHtml.match(/data-recommendation-id=/g)).toHaveLength(3)
       expect(api.bodyHtml).toContain('<details class="suggested-actions-draft-context">')
       expect(api.bodyHtml).not.toContain('<details class="suggested-actions-draft-context" open>')
-      expect(api.bodyHtml).toContain('<summary>Earlier draft notes</summary>')
+      expect(api.bodyHtml).toContain('<summary>Article draft context</summary>')
 
       const actionPath = join(root, 'actions', 'articles', `${articleDate}.json`)
       const actionFile = JSON.parse(readFileSync(actionPath, 'utf8')) as { snapshot: { draftContext?: { kind: string; markdown?: string } } }

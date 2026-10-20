@@ -318,7 +318,7 @@ describe('canonical action review and publication', () => {
     expect(() => apply(seed(), propose(), verification)).toThrow(/requires further review/)
     const valid = apply()
     expect(projectRegistry(valid, new Map([[articleDate, 'accepted']])).open[0].command).toBe('/implement')
-    expect(ActionVerificationSchema.parse({ changes: [] })).toEqual({ changes: [], suggestions: [], closingOptions: [] })
+    expect(ActionVerificationSchema.parse({ changes: [] })).toEqual({ changes: [], suggestions: [], candidateDispositions: [], closingOptions: [] })
     expect(() => apply(seed(), propose(), ActionVerificationSchema.parse({ changes: verify().changes }))).toThrow(/verification is incomplete/)
   })
 

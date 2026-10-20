@@ -18,7 +18,9 @@ import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
-import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses } from './action-registry.js'
+import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses, renderArticleActionHtml, stripManagedActions } from './action-registry.js'
+import { assertArticleReferenceContract } from './article-references.js'
+import { readArticleTime } from './article-time-metadata.js'
 import { collectActionSources, createActionAgents, mockActionAgents, reviewArticleActions } from './review-actions.js'
 import { stampOutcome } from './stamp-outcome.js'
 import { detachArticleTime, preserveTimeDuringRevision, type RevisionResult } from './article-time-frontmatter.js'
@@ -195,7 +197,12 @@ async function main() {
     const registry = readActionRegistry(repoRoot)
     const articleDate = result.revisedMarkdown.match(/^date:\s*"?(\d{4}-\d{2}-\d{2})/m)?.[1]
     if (!articleDate) throw new Error('Article date is missing')
-    const actions = await reviewArticleActions({ cycle, registry, articleStatuses: readArticleStatuses(repoRoot), articleDate, markdown: result.revisedMarkdown, feedback, sources: isMock ? [] : collectActionSources({ registry, repoRoot, markdown: result.revisedMarkdown, feedback }), agents: isMock ? mockActionAgents : createActionAgents() })
+    const statuses = readArticleStatuses(repoRoot)
+    const actions = await reviewArticleActions({ cycle, registry, articleStatuses: statuses, articleDate, markdown: result.revisedMarkdown, feedback, sources: isMock ? [] : collectActionSources({ registry, repoRoot, markdown: result.revisedMarkdown, feedback }), agents: isMock ? mockActionAgents : createActionAgents() })
+    const renderedHtml = renderArticleActionHtml(actions.markdown, actions.registry, articleDate, statuses)
+    const evidence = readArticleTime({ repoRoot, date: articleDate, markdown: stripManagedActions(actions.markdown), bindingMarkdown: actions.markdown, renderedHtml })
+    const referenceAudit = assertArticleReferenceContract(actions.markdown, evidence.referenceKinds, renderedHtml)
+    console.error(`   References: ${referenceAudit.verified} source-verified, ${referenceAudit.unknown} identity-unknown`)
     result.revisedMarkdown = actions.markdown
     result.changed = result.revisedMarkdown.trim() !== articleContent.trim()
     registryChanged = registryRevision(actions.registry) !== registryRevision(registry)
