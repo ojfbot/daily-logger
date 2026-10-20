@@ -129,4 +129,35 @@ describe('emitted GitHub references', () => {
     expect(() => normalizeArticleResourceLinks(localClaim, known)).toThrow(/collected source says PR/i)
     expect(() => assertArticleReferenceContract(localClaim, known)).toThrow(/issue.*links to a pull request/i)
   })
+
+  it('normalizes every visible nested inline link while preserving literal examples', () => {
+    const wrong = '[issue #386](https://github.com/ojfbot/daily-logger/pull/386)'
+    const example = '[issue #391](https://github.com/ojfbot/daily-logger/pull/391)'
+    const kinds = new Map([['daily-logger#386', 'issues' as const], ['daily-logger#391', 'pull' as const]])
+    const active = [
+      wrong,
+      `**${wrong}**`,
+      `*${wrong}*`,
+      `~~${wrong}~~`,
+      `***${wrong}***`,
+      `- **${wrong}**`,
+      `| Work |\n| --- |\n| **${wrong}** |`,
+    ]
+    for (const markdown of active) {
+      const normalized = normalizeArticleResourceLinks(markdown, kinds)
+      expect(normalized).toContain('/issues/386')
+      expect(assertArticleReferenceContract(normalized, kinds)).toEqual({ verified: 1, unknown: 0 })
+    }
+    const literal = [
+      `\`${example}\``,
+      `**\`${example}\`**`,
+      `~~~md\n${example}\n~~~`,
+      `\`\`\`md\n${example}\n\`\`\``,
+      'This remains an issue\n\n[PR #391](https://github.com/ojfbot/daily-logger/pull/391) describes the implementation.',
+    ]
+    for (const markdown of literal) {
+      expect(normalizeArticleResourceLinks(markdown, kinds)).toBe(markdown)
+      expect(() => assertArticleReferenceContract(markdown, kinds)).not.toThrow()
+    }
+  })
 })

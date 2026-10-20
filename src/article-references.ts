@@ -1,6 +1,6 @@
 import type { BlogContext } from './types.js'
 import { parseFragment, type DefaultTreeAdapterMap } from 'parse5'
-import { Lexer } from 'marked'
+import { Lexer, type Token } from 'marked'
 import { renderArticle } from './render-article.js'
 
 export type GithubResourceKind = 'pull' | 'issues'
@@ -104,29 +104,35 @@ function renderedAnchorLinks(html: string): { label: string; url: string; preced
 /** Correct only source-known links and links explicitly labeled as issues in generated prose. */
 export function normalizeArticleResourceLinks(markdown: string, kinds: GithubReferenceKinds): string {
   const normalizeSegment = (segment: string): string => {
-    let cursor = 0
-    let result = ''
-    for (const token of Lexer.lexInline(segment)) {
-      const start = segment.indexOf(token.raw, cursor)
-      if (start === -1) return segment
-      result += segment.slice(cursor, start)
-      let replacement = token.raw
-      const link = token.type === 'link' ? LINK.exec(token.raw) : null
-      if (link) {
-        const [, label, url] = link
-        const resource = canonicalResource(url)
-        if (resource) {
-          const fromSource = kinds.get(githubReferenceKey(resource.repo, resource.number))
-          const namedIssue = explicitlyNamesIssue(label, segment.slice(segment.lastIndexOf('\n', start - 1) + 1, start))
-          if (fromSource === 'pull' && namedIssue) throw new Error(`Article calls ${resource.repo}#${resource.number} an issue, but collected source says PR`)
-          const kind = fromSource ?? (namedIssue ? 'issues' : resource.kind)
-          replacement = `[${label}](https://github.com/ojfbot/${resource.repo}/${kind}/${resource.number}${resource.fragment})`
+    const normalizeTokens = (source: string, tokens: Token[], sourceOffset: number): string => {
+      let cursor = 0
+      let result = ''
+      for (const token of tokens) {
+        const start = source.indexOf(token.raw, cursor)
+        if (start === -1) return source
+        result += source.slice(cursor, start)
+        const absoluteStart = sourceOffset + start
+        let replacement = token.raw
+        const link = token.type === 'link' ? LINK.exec(token.raw) : null
+        if (link) {
+          const [, label, url] = link
+          const resource = canonicalResource(url)
+          if (resource) {
+            const fromSource = kinds.get(githubReferenceKey(resource.repo, resource.number))
+            const namedIssue = explicitlyNamesIssue(label, segment.slice(segment.lastIndexOf('\n', absoluteStart - 1) + 1, absoluteStart))
+            if (fromSource === 'pull' && namedIssue) throw new Error(`Article calls ${resource.repo}#${resource.number} an issue, but collected source says PR`)
+            const kind = fromSource ?? (namedIssue ? 'issues' : resource.kind)
+            replacement = `[${label}](https://github.com/ojfbot/${resource.repo}/${kind}/${resource.number}${resource.fragment})`
+          }
+        } else if (token.type !== 'image' && 'tokens' in token && Array.isArray(token.tokens)) {
+          replacement = normalizeTokens(token.raw, token.tokens, absoluteStart)
         }
+        result += replacement
+        cursor = start + token.raw.length
       }
-      result += replacement
-      cursor = start + token.raw.length
+      return result + source.slice(cursor)
     }
-    return result + segment.slice(cursor)
+    return normalizeTokens(segment, Lexer.lexInline(segment), 0)
   }
   return Lexer.lex(markdown).map((block) =>
     block.type === 'code' || block.type === 'html' ? block.raw : mapUnfencedMarkdown(block.raw, normalizeSegment)
