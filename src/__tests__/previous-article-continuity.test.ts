@@ -6,6 +6,7 @@ import { buildUserPrompt } from '../generate-article.js'
 import { readActionRegistry } from '../action-registry.js'
 import { actionGithubReferenceSelection, actionGithubReferences } from '../review-actions.js'
 import type { BlogContext } from '../types.js'
+import { legacyAcceptedClosingFixture } from './action-store-fixture.js'
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url))
 
@@ -26,35 +27,54 @@ const context = (previousArticles: BlogContext['previousArticles']): BlogContext
 describe('accepted prior closing continuity', () => {
   it('projects the actual accepted October 19 closing into a synthetic October 20 prompt', () => {
     const previous = getPreviousArticles(repoRoot).find(article => article.date === '2026-10-19')
-    expect(previous?.closingContinuity).toMatchObject({ status: 'available', optionCount: 2, omittedOptionCount: 0 })
+    const snapshot = readActionRegistry(repoRoot).articles.find(article => article.date === '2026-10-19')
+    if (snapshot?.closing?.kind !== 'shortlist') throw new Error('Missing current October 19 shortlist')
+    expect(previous?.closingContinuity).toMatchObject({ status: 'available', optionCount: 3, omittedOptionCount: 0 })
     if (!previous || previous.closingContinuity?.status !== 'available') throw new Error('October 19 continuity was not available')
-    expect(previous.closingContinuity.options.map(option => option.kind === 'checkpoint' ? option.target : option.actionKey)).toEqual([
+    expect(previous.closingContinuity.options.map(option => option.kind === 'checkpoint' ? option.target : option.actionKey)).toEqual(snapshot.closing.options.map(option => option.kind === 'checkpoint' ? option.target : option.actionKey))
+    expect(previous.closingContinuity.options.every(option => option.review.verdict === 'pass')).toBe(true)
+    const prompt = buildUserPrompt(context([previous]))
+    for (const option of snapshot.closing.options) expect(prompt).toContain(option.title)
+    expect(prompt).toContain('revalidate current state')
+  })
+
+  it('preserves the frozen v7 two-option accepted closing as legacy continuity', () => {
+    const { content, registry } = legacyAcceptedClosingFixture()
+    const snapshot = registry.articles[0]
+    if (snapshot.closing?.kind !== 'options') throw new Error('Missing frozen legacy closing')
+    expect(snapshot.verification.promptVersion).toBe('action-review-v7-closing-options')
+    const continuity = acceptedClosingContinuity({ date: snapshot.date, content, snapshot })
+
+    expect(continuity).toMatchObject({ status: 'available', optionCount: 2, omittedOptionCount: 0 })
+    if (continuity.status !== 'available') throw new Error('Legacy continuity was unavailable')
+    expect(continuity.options.map(option => option.kind === 'checkpoint' ? option.target : option.actionKey)).toEqual([
       'https://github.com/ojfbot/daily-logger/issues/386',
       'https://github.com/ojfbot/daily-logger/pull/385',
     ])
-    expect(previous.closingContinuity.options.every(option => option.review.verdict === 'pass')).toBe(true)
-    const prompt = buildUserPrompt(context([previous]))
+    expect(continuity.options.every(option => option.review.verdict === 'pass')).toBe(true)
+    const prompt = buildUserPrompt(context([{ date: snapshot.date, excerpt: '', closingContinuity: continuity }]))
     expect(prompt).toContain('Qualify evidence relevance under issue #386')
     expect(prompt).toContain('Review the existing timestamp-popover pilot')
-    expect(prompt).toContain('revalidate current state')
   })
 
   it('projects ranked shortlist fields and canonicalizes fragment targets for the next evidence cycle', () => {
     const content = readFileSync(`${repoRoot}/_articles/2026-10-19.md`, 'utf8')
     const snapshot = structuredClone(readActionRegistry(repoRoot).articles.find(article => article.date === '2026-10-19'))
-    if (!snapshot || snapshot.closing?.kind !== 'options') throw new Error('Missing October 19 legacy closing fixture')
-    const [first, second] = snapshot.closing.options
-    const third = { ...first, kind: 'checkpoint' as const, target: 'https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6271042441', title: 'Review the prepared timing repair', outcome: 'Return a bounded timing-repair adoption decision.' }
-    snapshot.closing = { kind: 'shortlist', options: [
-      { ...first, rank: 1, identity: 'checkpoint:first', benefit: 'Check the first retained decision.', start: 'Review the first current source.', rationale: first.whyNow, replaces: [] },
-      { ...second, rank: 2, identity: 'checkpoint:second', benefit: 'Check the second retained decision.', start: 'Review the second current source.', rationale: second.whyNow, replaces: [] },
-      { ...third, rank: 3, identity: 'checkpoint:third', benefit: 'Check the prepared timing decision.', start: 'Review the timing source.', rationale: third.whyNow, replaces: [] },
-    ] }
-    snapshot.verification.verdicts.push({ item: 'closing:2', verdict: 'pass', reason: 'The timing checkpoint was independently checked.' })
-
+    if (!snapshot || snapshot.closing?.kind !== 'shortlist') throw new Error('Missing current October 19 shortlist')
     const continuity = acceptedClosingContinuity({ date: '2026-10-19', content, snapshot })
-    expect(continuity).toMatchObject({ status: 'available', optionCount: 3, options: [{ whyNow: first.whyNow }, { whyNow: second.whyNow }, { whyNow: third.whyNow }] })
-    expect(acceptedClosingContinuityTargets([{ date: '2026-10-19', excerpt: '', closingContinuity: continuity }])).toContain('https://github.com/ojfbot/daily-logger/issues/357')
+    expect(continuity).toMatchObject({ status: 'available', optionCount: 3, source: { articleDigest: snapshot.articleDigest, roundId: snapshot.roundId, promptVersion: snapshot.verification.promptVersion }, options: snapshot.closing.options.map((option, index) => {
+      const verdict = snapshot.verification.verdicts.find(verdict => verdict.item === `closing:${index}`)
+      if (!verdict) throw new Error('Missing current independent closing verdict')
+      return { title: option.title, benefit: option.benefit, start: option.start, entryPoint: option.entryPoint, context: option.context, whyNow: option.rationale, outcome: option.outcome, nextCheck: option.nextCheck, review: { verdict: verdict.verdict, reason: verdict.reason } }
+    }) })
+
+    const legacy = legacyAcceptedClosingFixture()
+    const legacySnapshot = legacy.registry.articles[0]
+    if (legacySnapshot.closing?.kind !== 'options' || legacySnapshot.closing.options[0].kind !== 'checkpoint') throw new Error('Missing frozen checkpoint')
+    const canonicalTarget = legacySnapshot.closing.options[0].target
+    legacySnapshot.closing.options[0].target = `${canonicalTarget}#continuity-fixture`
+    const fragmentContinuity = acceptedClosingContinuity({ date: legacySnapshot.date, content: legacy.content, snapshot: legacySnapshot })
+    expect(acceptedClosingContinuityTargets([{ date: legacySnapshot.date, excerpt: '', closingContinuity: fragmentContinuity }])).toContain(canonicalTarget)
   })
 
   it('reaches both next-day request consumers with binding and review context', () => {
@@ -103,7 +123,11 @@ describe('accepted prior closing continuity', () => {
     const refs = actionGithubReferences({ markdown: crowdedMarkdown, feedback: '', context: prompt, continuityTargets: acceptedClosingContinuityTargets([previous]) })
 
     expect(refs).toHaveLength(12)
-    expect(refs.map(([id]) => id)).toEqual(expect.arrayContaining(['daily-logger#386', 'daily-logger#385']))
+    const targets = acceptedClosingContinuityTargets([previous])
+    expect(refs.map(([id]) => id)).toEqual(expect.arrayContaining(targets.map(target => {
+      const url = new URL(target)
+      return `${url.pathname.split('/')[2]}#${url.pathname.split('/').at(-1)}`
+    })))
   })
 
   it('selects only the newest accepted closing as the bounded active handoff', () => {
@@ -159,12 +183,12 @@ describe('accepted prior closing continuity', () => {
   it('fails closed for changed article bytes and oversized whole-option projections', () => {
     const content = readFileSync(`${repoRoot}/_articles/2026-10-19.md`, 'utf8')
     const snapshot = readActionRegistry(repoRoot).articles.find(article => article.date === '2026-10-19')
-    if (!snapshot || snapshot.closing?.kind !== 'options') throw new Error('Missing October 19 closing fixture')
+    if (!snapshot || snapshot.closing?.kind !== 'shortlist') throw new Error('Missing current October 19 shortlist')
     expect(acceptedClosingContinuity({ date: '2026-10-19', content, snapshot: null })).toMatchObject({ status: 'unavailable', reason: 'invalid-snapshot', optionCount: 0 })
-    expect(acceptedClosingContinuity({ date: '2026-10-19', content: `${content}\nchanged`, snapshot })).toMatchObject({ status: 'unavailable', reason: 'binding-mismatch', omittedOptionCount: 2 })
+    expect(acceptedClosingContinuity({ date: '2026-10-19', content: `${content}\nchanged`, snapshot })).toMatchObject({ status: 'unavailable', reason: 'binding-mismatch', omittedOptionCount: 3 })
     const oversized = structuredClone(snapshot)
-    if (oversized.closing?.kind !== 'options') throw new Error('Missing cloned closing fixture')
+    if (oversized.closing?.kind !== 'shortlist') throw new Error('Missing cloned shortlist')
     oversized.closing.options[0].context = 'x'.repeat(9_000)
-    expect(acceptedClosingContinuity({ date: '2026-10-19', content, snapshot: oversized })).toMatchObject({ status: 'unavailable', reason: 'oversize', optionCount: 2, omittedOptionCount: 2 })
+    expect(acceptedClosingContinuity({ date: '2026-10-19', content, snapshot: oversized })).toMatchObject({ status: 'unavailable', reason: 'oversize', optionCount: 3, omittedOptionCount: 3 })
   })
 })

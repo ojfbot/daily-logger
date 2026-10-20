@@ -1,6 +1,10 @@
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { splitActionRegistry, articleActionFileBytes, registryBytes, managedArticleDigest, sha256, type ActionRegistry, type ArticleActionFile } from '../action-registry.js'
+import { z } from 'zod'
+import { ActionRegistrySchema, splitActionRegistry, articleActionFileBytes, registryBytes, managedArticleDigest, sha256, type ActionRegistry, type ArticleActionFile } from '../action-registry.js'
+export function legacyAcceptedClosingFixture() {
+  return z.object({ content: z.string(), registry: ActionRegistrySchema }).parse(JSON.parse(readFileSync(new URL('./fixtures/accepted-closing-v7-c79c895.json', import.meta.url), 'utf8')))
+}
 export function emptyActionFile(date: string, markdown = ''): ArticleActionFile {
   return { schemaVersion: 1, date, suggestions: [], decisions: [], snapshot: { date, status: 'accepted', review: { state: 'verified' }, articleDigest: managedArticleDigest(markdown), roundId: sha256('fixture'), stateDigest: sha256('[]'), actionKeys: [], verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'fixture', proposalSha256: sha256('fixture'), verdicts: [] }, sources: [], rejected: [] } }
 }

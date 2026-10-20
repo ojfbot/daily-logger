@@ -30,6 +30,7 @@ import { actionEvidenceScope } from '../action-evidence-selection.js'
 import { assembleBody } from '../generate-article.js'
 import { buildApi } from '../build-api.js'
 import { extractDraftRecommendationContext } from '../recommendation-prose.js'
+import { legacyAcceptedClosingFixture } from './action-store-fixture.js'
 
 const articleDate = '2030-01-01'
 const markdown = `---\ndate: ${articleDate}\nstatus: draft\n---\n## What's next\n\nContinue the verified checkpoint.\n`
@@ -220,27 +221,41 @@ describe('verified article closing options', () => {
     expect(ClosingPromptSchema.safeParse({ kind: 'options', options }).success).toBe(false)
   })
 
-  it('rejects the accepted rollout article when its verified closing is removed', () => {
+  it('rejects the legacy accepted rollout article when its verified closing is removed', () => {
     const actualDate = '2026-10-19'
-    const actual = readActionRegistry(process.cwd())
+    const { content: article, registry: actual } = legacyAcceptedClosingFixture()
     const missing = structuredClone(actual)
     const snapshot = missing.articles.find(article => article.date === actualDate)
     if (!snapshot) throw new Error('Missing October 19 action snapshot fixture')
     delete snapshot.closing
-    const article = readFileSync(`_articles/${actualDate}.md`, 'utf8')
 
     expect(ActionRegistrySchema.safeParse(missing).success).toBe(true)
     expect(() => renderArticleActions(article, missing, actualDate, new Map([[actualDate, 'accepted']]))).toThrow(/missing its required closing/)
     expect(renderArticleActions(article, actual, actualDate, new Map([[actualDate, 'accepted']]))).toContain('Choose a supported next step')
   })
 
+  it('rejects removal of the current verified shortlist at its schema and render boundaries', () => {
+    const actualDate = '2026-10-19'
+    const actual = readActionRegistry(process.cwd())
+    const snapshot = actual.articles.find(article => article.date === actualDate)
+    if (snapshot?.closing?.kind !== 'shortlist') throw new Error('Missing current verified shortlist')
+    delete snapshot.closing
+    const article = readFileSync(`_articles/${actualDate}.md`, 'utf8')
+
+    expect(ActionRegistrySchema.safeParse(actual).success).toBe(false)
+    expect(() => renderArticleActions(article, actual, actualDate, new Map([[actualDate, 'accepted']]))).toThrow(/state is stale/)
+  })
+
   it('does not let a new review cycle regain ready status with legacy closing options', () => {
-    const legacy = readActionRegistry(process.cwd())
+    const { registry: legacy } = legacyAcceptedClosingFixture()
     const snapshot = legacy.articles.find(article => article.date === '2026-10-19')
     if (!snapshot || snapshot.closing?.kind !== 'options') throw new Error('Missing historical legacy closing fixture')
     snapshot.verification.promptVersion = ACTION_REVIEW_PROMPT_VERSION
+    snapshot.draftContext = { kind: 'none' }
 
-    expect(ActionRegistrySchema.safeParse(legacy).success).toBe(false)
+    const parsed = ActionRegistrySchema.safeParse(legacy)
+    expect(parsed.success).toBe(false)
+    if (!parsed.success) expect(parsed.error.issues).toEqual(expect.arrayContaining([expect.objectContaining({ message: `Legacy closing options cannot qualify a ranked shortlist: ${snapshot.date}` })]))
   })
 
   it('keeps historical pending-v2 snapshots valid without the new draft-context field', () => {
