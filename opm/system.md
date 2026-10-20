@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `49a7607cb5aa457e127e72f375c22aee5a8db636183c93a9619cbce99cc710df`.
+> Source SHA-256: `a7df947eab1936b4824eb8cb16da9726a14202f6412e3d421184ac2b5080ae6c`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -546,6 +546,7 @@ flowchart TD
   n101("Editorial Rebinding")
   n102("Source Evidence Selecting")
   n29["Source Evidence"]
+  n30["Recommendation Maintenance Memory"]
   n103["Selected Source Evidence"]
   n104["Evidence Coverage"]
   n31("Suggestion Proposing")
@@ -584,6 +585,7 @@ flowchart TD
   n0 -->|"requires (instrument)"| n102
   n22 -->|"requires (instrument)"| n102
   n29 -->|"requires (instrument)"| n102
+  n30 -->|"requires (instrument)"| n102
   n102 -->|"yields"| n103
   n102 -->|"yields"| n104
   n103 -->|"requires (instrument)"| n31
@@ -628,6 +630,7 @@ Action Reconciling invokes Source Evidence Selecting. [src: src/review-actions.t
 Source Evidence Selecting requires Article. [src: src/action-evidence-selection.ts]
 Source Evidence Selecting requires Action Registry. [src: src/action-evidence-selection.ts]
 Source Evidence Selecting requires Source Evidence. [src: src/action-evidence-selection.ts]
+Source Evidence Selecting requires Recommendation Maintenance Memory. [src: src/action-evidence-selection.ts]
 Source Evidence Selecting yields Selected Source Evidence. [src: src/action-evidence-selection.ts]
 Source Evidence Selecting yields Evidence Coverage. [src: src/action-evidence-selection.ts]
 Suggestion Proposing requires Selected Source Evidence. [src: src/review-actions.ts]

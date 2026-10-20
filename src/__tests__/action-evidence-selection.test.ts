@@ -8,7 +8,7 @@ import { ActionRegistrySchema, readActionRegistry, registryRevision, sha256, wri
 import { writeActionStore } from './action-store-fixture.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, actionEvidenceScope, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from '../action-evidence-selection.js'
 import { revisionActionCycle } from '../action-review-cycle.js'
-import { collectActionSources, reviewArticleActions, reviewDraftActions } from '../review-actions.js'
+import { collectActionSources, reviewArticleActions, reviewDraftActions, type ActionVerification } from '../review-actions.js'
 
 const date = '2030-01-01'
 const empty = () => ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
@@ -47,6 +47,72 @@ it('revalidates a carried closing checkpoint even after authored next-step prose
   const revised = `---\ndate: ${date}\nstatus: draft\n---\n## What's next\nThe authored prose no longer repeats a PR number.\n`
 
   expect(actionEvidenceScope({ registry, articleDate: date, markdown: revised, feedback: '' }).refs).toEqual(new Set(['daily-logger#385']))
+})
+
+it('recollects and selects all three maintained targets after one becomes unresolved and review goes pending', async () => {
+  const targets = [900, 901, 902].map(number => `https://github.com/ojfbot/daily-logger/issues/${number}`)
+  const goal = 'Maintain the source-supported existing checkpoint shortlist.'
+  const evidence: ActionSource[] = [
+    ...targets.map((target, index) => {
+      const number = 900 + index
+      const content = `CURRENT API STATE daily-logger#${number}: state=open; head=not-a-PR; merged_at=none.`
+      return { id: `github:daily-logger#${number}`, kind: 'github' as const, locator: target, content, trustedContent: [content] }
+    }),
+    { id: 'goal', kind: 'goal', locator: 'ROADMAP.md', content: goal },
+  ]
+  const article = `---\ndate: ${date}\nstatus: draft\n---\n## Roadmap pulse\nThree existing obligations need current review.\n`
+  const statuses = new Map([[date, 'draft']])
+  const cycle = revisionActionCycle('three-maintained-targets')
+  const options = targets.map((target, index) => ({
+    kind: 'checkpoint' as const,
+    target,
+    title: `Review existing checkpoint ${900 + index}`,
+    benefit: 'Keep an existing obligation grounded in current evidence.',
+    start: 'Review the current issue.',
+    entryPoint: `Begin at checkpoint ${900 + index}.`,
+    context: 'This is an existing open checkpoint.',
+    whyNow: 'Current owner evidence retains the checkpoint.',
+    outcome: `Return the supported disposition for checkpoint ${900 + index}.`,
+    nextCheck: 'Return the current owner decision.',
+    factCitations: [{ sourceId: `github:daily-logger#${900 + index}`, quote: `CURRENT API STATE daily-logger#${900 + index}: state=open; head=not-a-PR; merged_at=none.` }],
+    goalCitations: [{ sourceId: 'goal', quote: goal }],
+  }))
+  const pass = [0, 1, 2].map(optionIndex => ({ optionIndex, verdict: 'pass' as const, reason: 'Current exact facts and goal support this checkpoint.' }))
+  const base = { cycle, articleDate: date, articleStatuses: statuses, markdown: article, sources: evidence }
+  const ready = await reviewArticleActions({
+    ...base,
+    registry: empty(),
+    feedback: targets.join('\n'),
+    agents: { propose: async () => ({ changes: [], suggestions: [], closingOptions: options }), verify: async () => ({ changes: [], suggestions: [], closingOptions: pass }) },
+  })
+  const partialVerdicts: NonNullable<ActionVerification['closingOptions']> = [...pass]
+  partialVerdicts[0] = { optionIndex: 0, verdict: 'hold', reason: 'This checkpoint needs another independent review.' }
+  const partial = await reviewArticleActions({
+    ...base,
+    registry: ready.registry,
+    markdown: ready.markdown,
+    feedback: 'Recheck the maintained shortlist.',
+    agents: { propose: async () => ({ changes: [], suggestions: [], closingOptions: options }), verify: async () => ({ changes: [], suggestions: [], closingOptions: partialVerdicts }) },
+  })
+  const partialClosing = partial.registry.articles[0].closing
+  if (partialClosing?.kind !== 'needs-evidence') throw new Error('Missing partial maintained shortlist fixture')
+  expect(partialClosing.unresolvedRecommendations).toMatchObject([{ target: targets[0] }])
+  const pending = await reviewDraftActions({
+    ...base,
+    registry: partial.registry,
+    markdown: partial.markdown,
+    feedback: 'Retry after an injected provider failure.',
+    agents: { propose: async () => { throw new Error('injected provider timeout') }, verify: async () => ({}) },
+  })
+
+  const scoped = actionEvidenceScope({ registry: pending.registry, articleDate: date, markdown: pending.markdown, feedback: '' })
+  expect([...scoped.refs].sort()).toEqual(['daily-logger#900', 'daily-logger#901', 'daily-logger#902'])
+  const selected = selectActionEvidence({ registry: pending.registry, articleDate: date, markdown: pending.markdown, feedback: '', sources: evidence })
+  expect(selected.receipt.requiredReferences).toEqual(['daily-logger#900', 'daily-logger#901', 'daily-logger#902'])
+  expect(selected.sources.filter(source => source.kind === 'github').map(source => source.locator).sort()).toEqual([...targets].sort())
+
+  const { sources: recollected } = fixture({ registry: pending.registry, markdown: pending.markdown, compact: true })
+  expect(targets.every(target => recollected.some(source => source.locator === target))).toBe(true)
 })
 
 it('recollects references from retained draft context after visible prose is normalized', () => {

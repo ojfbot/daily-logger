@@ -786,6 +786,37 @@ describe('verified article closing options', () => {
     expect(retry.registry.articles[0].closing).toMatchObject({ kind: 'needs-evidence', unresolvedIdentities: readyClosing.options.map(option => option.identity) })
   })
 
+  it('does not consume a descriptorless historical identity as a replacement', () => {
+    const readyOptions = completeShortlist()
+    const ready = review(empty(), { changes: [], suggestions: [], closingOptions: readyOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    const readyClosing = ready.articles[0].closing
+    if (readyClosing?.kind !== 'shortlist') throw new Error('Missing ready shortlist')
+    const unknownIdentity = readyClosing.options[2].identity
+    ready.articles[0].closing = {
+      kind: 'needs-evidence',
+      question: 'Which supported continuation should complete this shortlist?',
+      missingEvidence: 'Historical identity lacks a compact descriptor.',
+      nextCheck: 'Recover source-bound meaning before replacement.',
+      recommendations: [],
+      unresolvedIdentities: [unknownIdentity],
+    }
+    ready.articles[0].stateDigest = actionStateDigest(ready, ready.articles[0].actionKeys, ready.articles[0].closing, ready.articles[0].draftContext, { articleDate, roundId: ready.articles[0].roundId })
+    const replacements = completeShortlist().map((option, index) => ({
+      ...option,
+      title: `Fresh replacement option ${index + 1}`,
+      outcome: `Advance a fresh replacement outcome ${index + 1}.`,
+      replaces: index === 0 ? [unknownIdentity] : [],
+    }))
+
+    const result = review(ready, { changes: [], suggestions: [], closingOptions: replacements }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+
+    expect(result.articles[0].closing).toMatchObject({
+      kind: 'needs-evidence',
+      missingEvidence: 'A prior unresolved recommendation lacks preserved meaning; recover source-bound context before replacing it.',
+      unresolvedIdentities: [unknownIdentity],
+    })
+  })
+
   it('does not consume a prior obligation through a mixed valid and invalid replacement declaration', () => {
     const readyOptions = completeShortlist()
     const ready = review(empty(), { changes: [], suggestions: [], closingOptions: readyOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
