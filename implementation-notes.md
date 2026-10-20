@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- The plan assumed the curated October 19 shortlist could be staged by downgrading the accepted article and teaching production to render a special unverified preparation state; source review showed that would bypass the ordinary review receipt and rewrite accepted history. Kept the accepted article/data unchanged, removed the preparation exception, and retained the curation only in the handoff capsule for a later supervised adoption cycle.
+
 - 2026-10-19 (closing density enforcement): the five-option design was enforced on new model output but not on persisted closing snapshots, so a malformed or legacy snapshot could project more than five targets. Apply the same maximum at the registry schema and continuity boundary; reject the whole over-cap closing instead of silently truncating it.
 
 - 2026-10-19 (accepted closing presence): the closing-options plan assumed every verified rollout snapshot would retain its closing, but the schema allowed deletion and the renderer fell back to the legacy empty suggestion sentence. Gate verified 2026-10-19-and-later rendering on an options or needs-evidence closing while retaining the pre-rollout and pending-draft paths.

@@ -5,12 +5,13 @@ import { readdirSync } from 'node:fs'
 import { detachArticleTime } from './article-time-frontmatter.js'
 import { isReviewedAction, legacyActionKey, type CanonicalAction } from './action-model.js'
 import { renderArticle } from './render-article.js'
+import { ACTION_REVIEW_PROMPT_VERSION } from './action-review-cycle.js'
 
 export const REGISTRY_PATH = 'actions/registry.json'
 export const ACTIONS_START = '<!-- ACTIONS_START -->'
 export const ACTIONS_END = '<!-- ACTIONS_END -->'
 export * from './action-registry-schema.js'
-import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hydrateActionRegistry, articleActionFileBytes, actionArticlePath, type ActionRegistry, type ClosingPrompt } from './action-registry-schema.js'
+import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hydrateActionRegistry, articleActionFileBytes, actionArticlePath, type ActionRegistry, type ClosingPrompt, type RankedClosingOption } from './action-registry-schema.js'
 
 export function sha256(value: string): string { return createHash('sha256').update(value).digest('hex') }
 export function registryBytes(registry: ActionRegistry): string { return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
@@ -140,6 +141,12 @@ export function projectRegistry(registry: ActionRegistry, articleStatuses: Reado
 
 function escaped(value: string): string { return value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char] ?? char)) }
 function oneLine(value: string): string { return escaped(value.replace(/\s*[\r\n]+\s*/g, ' ')) }
+function sourceLabel(locator: string): string {
+  const github = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/(issues|pull)\/(\d+)/.exec(locator)
+  if (github) return `${github[2]} #${github[4]}`
+  const file = locator.split('/').filter(Boolean).at(-1)
+  return file ?? locator
+}
 export function articleActionRecords(registry: ActionRegistry, articleDate: string, statuses: ReadonlyMap<string, string>) {
   const snapshot = registry.articles.find(article => article.date === articleDate)
   return (snapshot?.actionKeys ?? []).map(key => {
@@ -148,6 +155,26 @@ export function articleActionRecords(registry: ActionRegistry, articleDate: stri
     const history = record.history.filter(item => (item.articleDate === articleDate && item.roundId === snapshot.roundId) || (statuses.get(item.articleDate) === 'accepted' && registry.articles.some(article => article.date === item.articleDate && article.status === 'accepted' && article.roundId === item.roundId)))
     return { ...record, history, state: history.at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed' as const) }
   })
+}
+export function articleActionCard(registry: ActionRegistry, articleDate: string, statuses: ReadonlyMap<string, string>) {
+  const snapshot = registry.articles.find(article => article.date === articleDate)
+  if (!snapshot) return undefined
+  const handled = articleActionRecords(registry, articleDate, statuses).flatMap(record => {
+    if (!['done', 'dismissed', 'superseded'].includes(record.state)) return []
+    const decision = record.history.at(-1)
+    return [{ key: record.key, state: record.state, command: record.original.command, originalDescription: record.original.description, description: decision?.description ?? '', reason: decision?.reason ?? '', citations: decision?.citations ?? [] }]
+  })
+  const recommendations = snapshot.closing?.kind === 'needs-evidence'
+    ? snapshot.closing.recommendations
+    : snapshot.closing?.options ?? []
+  const citedSourceIds = new Set([
+    ...handled.flatMap(item => item.citations.map(citation => citation.sourceId)),
+    ...recommendations.flatMap(option => [...option.factCitations, ...option.goalCitations].map(citation => citation.sourceId)),
+  ])
+  const sources = snapshot.sources
+    .filter(source => citedSourceIds.has(source.id) && source.kind !== 'report')
+    .map(({ id, kind, locator }) => ({ id, kind, locator }))
+  return { review: snapshot.review, closing: snapshot.closing ?? null, handled, sources }
 }
 export function renderArticleActions(markdown: string, registry: ActionRegistry, articleDate: string, statuses: ReadonlyMap<string, string>): string {
   const snapshot = registry.articles.find(article => article.date === articleDate)
@@ -164,21 +191,48 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
   if (articleDate >= '2026-10-19' && !snapshot.closing) {
     throw new Error(`Verified action review is missing its required closing for ${articleDate}; reconcile before publishing`)
   }
-  const visible = articleActionRecords(registry, articleDate, statuses).map(record => ({ record, decision: record.history.at(-1), state: record.state }))
-  const active = visible.filter(item => item.state === 'open' || item.state === 'proposed')
-  const resolved = visible.filter(item => item.state !== 'open' && item.state !== 'proposed')
-  const lines = [ACTIONS_START, '> **Suggested actions**']
-  if (resolved.length) {
-    lines.push('<section class="action-history-card" aria-label="Resolved suggestions">', '<h3>Resolved suggestions</h3>')
-    for (const { record, decision, state } of resolved) {
-      const label = { done: 'Completed', dismissed: 'Dismissed', superseded: 'Superseded', deferred: 'Deferred', open: 'Open', proposed: 'Proposed' }[state]
-      const evidence = decision?.citations.map(citation => registry.articles.flatMap(article => article.sources).find(source => source.id === citation.sourceId)).filter(source => source && source.kind !== 'report') ?? []
-      const links = [...new Map(evidence.map(source => [source?.id, source])).values()].map(source => source ? `<li>${/^https:\/\//.test(source.locator) ? `<a href="${escaped(source.locator)}">${escaped(source.locator)}</a>` : escaped(source.locator)}</li>` : '').join('')
-      lines.push(`<article><strong>${escaped(record.original.command)} · ${label}</strong><p>${escaped(decision?.description ?? '')}</p><details><summary>Original suggestion and evidence</summary><p>${escaped(record.original.description)}</p><p>${escaped((decision?.reason ?? '').replace(/\(s\d+(?:,\s*s\d+)*(?:\s+L\d+(?:-\d+)?)?\)/g, '').replace(/\bs\d+(?:\s+L\d+(?:-\d+)?)?/g, 'the cited source').replace(/ {2,}/g, ' ').trim())}</p><ul>${links}</ul></details></article>`)
-    }
-    lines.push('</section>')
+  if (articleDate >= '2026-10-19' && snapshot.status === 'accepted' && snapshot.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && snapshot.closing?.kind !== 'shortlist') {
+    throw new Error(`Accepted article requires exactly three ranked suggestions for ${articleDate}; reconcile before publishing`)
   }
-  if (snapshot.closing?.kind === 'options') {
+  const visible = articleActionRecords(registry, articleDate, statuses).map(record => ({ record, decision: record.history.at(-1), state: record.state }))
+  const active = visible.filter(item => item.state === 'open' || item.state === 'proposed' || item.state === 'deferred')
+  const handled = visible.filter(item => item.state === 'done' || item.state === 'dismissed' || item.state === 'superseded')
+  const allSources = registry.articles.flatMap(article => article.sources)
+  const evidenceList = (citations: readonly { sourceId: string }[]) => {
+    const evidence = citations.map(citation => allSources.find(source => source.id === citation.sourceId)).filter(source => source && source.kind !== 'report')
+    return [...new Map(evidence.map(source => [source?.id, source])).values()].map(source => source ? `<li>${/^https:\/\//.test(source.locator) ? `<a href="${escaped(source.locator)}">${escaped(sourceLabel(source.locator))}</a>` : escaped(source.locator)}</li>` : '').join('')
+  }
+  const handledLines = () => {
+    if (!handled.length) return []
+    const result = [`<details class="suggestions-handled"><summary>Suggestions handled at draft <span>${handled.length}</span></summary><div class="suggestions-handled-list">`]
+    for (const { record, decision, state } of handled) {
+      const label = { done: 'Completed', dismissed: 'Dismissed', superseded: 'Superseded', deferred: 'Deferred', open: 'Open', proposed: 'Proposed' }[state]
+      const links = evidenceList(decision?.citations ?? [])
+      result.push(`<article><strong>${escaped(record.original.command)} · ${label}</strong><p>${escaped(decision?.description ?? '')}</p><details><summary>Original suggestion and evidence</summary><p>${escaped(record.original.description)}</p><p>${escaped((decision?.reason ?? '').replace(/\(s\d+(?:,\s*s\d+)*(?:\s+L\d+(?:-\d+)?)?\)/g, '').replace(/\bs\d+(?:\s+L\d+(?:-\d+)?)?/g, 'the cited source').replace(/ {2,}/g, ' ').trim())}</p><ul>${links}</ul></details></article>`)
+    }
+    result.push('</div></details>')
+    return result
+  }
+  const lines = [ACTIONS_START]
+  const pushCard = (options: readonly RankedClosingOption[], reviewNeeded?: { question: string; missingEvidence: string; nextCheck: string }) => {
+    lines.push(`<section class="suggested-actions-card${reviewNeeded ? ' suggested-actions-card-needs-review' : ''}" aria-labelledby="suggested-actions-${escaped(articleDate)}">`, '<header class="suggested-actions-header">', `<h3 id="suggested-actions-${escaped(articleDate)}">Suggested actions</h3>`, ...(reviewNeeded ? ['<p>Supported follow-ups remain visible while the shortlist needs one more review.</p>'] : []), '</header>', '<ol class="suggested-actions-list">')
+    for (const option of options) {
+      const item = option.kind === 'action' ? visible.find(({ record }) => record.key === option.actionKey) : undefined
+      if (option.kind === 'action' && !item) throw new Error(`Missing suggested action: ${option.actionKey}`)
+      const conditions = item?.record.gates ?? []
+      const sources = evidenceList([...option.factCitations, ...option.goalCitations])
+      const start = option.kind === 'checkpoint'
+        ? `<a href="${escaped(option.target)}">${escaped(sourceLabel(option.target))}</a> · ${oneLine(option.start)}`
+        : oneLine(option.start)
+      lines.push(`<li data-recommendation-id="${escaped(option.identity)}"><article class="suggested-action"><span class="suggested-action-rank" aria-label="Rank ${option.rank}">${option.rank}</span><div class="suggested-action-copy"><h4>${oneLine(option.title)}</h4><p class="suggested-action-benefit">${oneLine(option.benefit)}</p><p class="suggested-action-start"><strong>Start:</strong> ${start}</p><details><summary>Agent brief and evidence</summary><dl><dt>Current state and prior work</dt><dd>${oneLine(option.context)}</dd><dt>Agent entry point</dt><dd>${oneLine(option.entryPoint)}</dd><dt>Why this ranks here</dt><dd>${oneLine(option.rationale)}</dd><dt>Intended outcome</dt><dd>${oneLine(option.outcome)}</dd><dt>First checkpoint</dt><dd>${oneLine(option.nextCheck)}</dd>${item && !item.record.includeInIndex ? '<dt>Scope</dt><dd>Article only</dd>' : ''}${conditions.length ? `<dt>Conditions</dt><dd>${conditions.map(oneLine).join(' ')}</dd>` : ''}</dl><h5>Sources</h5><ul>${sources}</ul></details></div></article></li>`)
+    }
+    lines.push('</ol>')
+    if (reviewNeeded) lines.push(`<aside class="suggested-actions-review-note" aria-label="Shortlist review needed"><strong>${oneLine(reviewNeeded.question)}</strong><p>${oneLine(reviewNeeded.missingEvidence)} ${oneLine(reviewNeeded.nextCheck)}</p></aside>`)
+    lines.push(...handledLines(), '</section>')
+  }
+  if (snapshot.closing?.kind === 'shortlist') {
+    pushCard(snapshot.closing.options)
+  } else if (snapshot.closing?.kind === 'options') {
     const currentOptions = snapshot.closing.options.filter(option => option.kind === 'checkpoint' || visible.some(item => item.record.key === option.actionKey && ['open', 'proposed', 'deferred'].includes(item.state)))
     if (currentOptions.length) lines.push('', '> **Choose a supported next step**', '> These choices continue verified work or checkpoints; they do not create additional queue identities.')
     for (const option of currentOptions) {
@@ -202,14 +256,14 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
         ...(item.record.gates.length ? [`>   Conditions: ${item.record.gates.map(oneLine).join(' ')}`] : []))
     }
     if (!currentOptions.length) lines.push('', '> **Decision needed before the next action**', '> Which supported continuation should the next session take?', '> Missing evidence: Every previously verified option is now resolved or no longer current.', '> Next check: Reconcile current primary evidence before presenting or admitting more work.')
+    lines.push(...handledLines())
   } else if (snapshot.closing?.kind === 'needs-evidence') {
-    lines.push('', '> **Decision needed before the next action**',
-      `> ${oneLine(snapshot.closing.question)}`,
-      `> Missing evidence: ${oneLine(snapshot.closing.missingEvidence)}`,
-      `> Next check: ${oneLine(snapshot.closing.nextCheck)}`)
+    pushCard(snapshot.closing.recommendations, snapshot.closing)
   } else {
+    lines.push('> **Suggested actions**')
     lines.push(...active.flatMap(({ record, decision }) => [`> - \`${oneLine(record.original.command)}\` — ${oneLine(decision?.description ?? record.original.description)} (${oneLine(record.original.repo)})${record.includeInIndex ? '' : ' · Article only'}`, ...(record.doneWhen ? [`>   Done when: ${oneLine(record.doneWhen)}`] : []), ...(record.gates.length ? [`>   Conditions: ${record.gates.map(oneLine).join(' ')}`] : [])]))
     if (active.length === 0) lines.push('> No new verified suggestion. Existing work retains its documented next checkpoints.')
+    lines.push(...handledLines())
   }
   lines.push(ACTIONS_END)
   const prose = unmanagedArticleProse(markdown).trimEnd()
@@ -245,14 +299,19 @@ export function rebindArticleSnapshot(registry: ActionRegistry, input: { date: s
 export function renderArticleActionHtml(markdown: string, registry: ActionRegistry, date: string, statuses: ReadonlyMap<string, string>): string {
   const rendered = renderArticleActions(markdown, registry, date, statuses).replace(/^---[\s\S]*?---\n/, '')
   if (!registry.articles.some(article => article.date === date)) return renderArticle(rendered)
-  // Only the escaped card freshly constructed from registry records bypasses
+  // Only escaped cards freshly constructed from registry records bypass
   // Markdown's raw-HTML escaping. Authored HTML still goes through renderArticle.
   const blockStart = rendered.indexOf(ACTIONS_START)
   const end = rendered.indexOf(ACTIONS_END, blockStart)
-  const start = rendered.lastIndexOf('\n<section class="action-history-card"', end)
+  const starts = ['\n<section class="suggested-actions-card', '\n<details class="suggestions-handled"']
+    .map(marker => rendered.indexOf(marker, blockStart))
+    .filter(index => index !== -1 && index < end)
+  const start = starts.length ? Math.min(...starts) : -1
   if (blockStart === -1 || end === -1 || start <= blockStart || start >= end) return renderArticle(rendered)
-  const cardEnd = rendered.indexOf('</section>', start) + '</section>'.length
-  if (cardEnd < start + '</section>'.length || cardEnd > end) throw new Error('Invalid generated action-history card')
+  const section = rendered.startsWith('\n<section', start)
+  const closingTag = section ? '</section>' : '</details>'
+  const cardEnd = rendered.lastIndexOf(closingTag, end) + closingTag.length
+  if (cardEnd < start + closingTag.length || cardEnd > end) throw new Error('Invalid generated suggested-actions card')
   return renderArticle(rendered.slice(0, start)) + rendered.slice(start, cardEnd) + renderArticle(rendered.slice(cardEnd, end)) + renderArticle(rendered.slice(end + ACTIONS_END.length))
 }
 

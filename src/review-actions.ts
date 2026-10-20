@@ -8,14 +8,21 @@ import { ACTION_REVIEW_PROMPT_VERSION, ActionReviewCycleSchema, actionAdmissionL
 import { ACTION_EVIDENCE_SELECTION_VERSION, CONTINUITY_TARGETS_SOURCE, acceptedContinuityGithubReferences, actionEvidenceScope, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from './action-evidence-selection.js'
 import { EXCLUDED_REPOS, KNOWN_REPOS, REPO_NOTES, classifyFleet } from './fleet.js'
 import {
-  ActionRegistrySchema, CitationSchema, ClosingActionSchema, ClosingCheckpointSchema, managedArticleDigest, normalizeWorkKey,
+  ActionRegistrySchema, CitationSchema, ClosingActionSchema, ClosingCheckpointSchema, RankedClosingActionSchema, RankedClosingCheckpointSchema, RankedShortlistSchema, managedArticleDigest, normalizeWorkKey,
   renderArticleActions, sha256, stripManagedActions, actionStateDigest, acceptedActionState,
   normalizeLegacyActionProse, articleActionFileBytes, splitActionRegistry, type ActionRegistry, type ActionSource, type ClosingCheckpoint, type ClosingOption,
 } from './action-registry.js'
 
 const citations = z.array(CitationSchema).min(1)
-const ClosingCandidateSchema = ClosingActionSchema.omit({ actionKey: true }).extend({ kind: z.literal('candidate'), candidateIndex: z.number().int().nonnegative() })
-const ClosingOptionProposalSchema = z.discriminatedUnion('kind', [ClosingActionSchema, ClosingCandidateSchema, ClosingCheckpointSchema])
+const RecommendationProposalFields = {
+  benefit: z.string().min(1).max(180),
+  start: z.string().min(1).max(180),
+  replaces: z.array(z.string().min(1)).default([]),
+}
+const ClosingActionProposalSchema = ClosingActionSchema.extend(RecommendationProposalFields).strict()
+const ClosingCheckpointProposalSchema = ClosingCheckpointSchema.extend(RecommendationProposalFields).strict()
+const ClosingCandidateSchema = ClosingActionSchema.omit({ actionKey: true }).extend({ kind: z.literal('candidate'), candidateIndex: z.number().int().nonnegative(), ...RecommendationProposalFields }).strict()
+const ClosingOptionProposalSchema = z.discriminatedUnion('kind', [ClosingActionProposalSchema, ClosingCandidateSchema, ClosingCheckpointProposalSchema])
 export const ActionProposalSchema = z.object({
   changes: z.array(z.object({
     actionKey: z.string(), state: z.enum(['open', 'done', 'dismissed', 'superseded', 'deferred']),
@@ -35,7 +42,8 @@ export const ActionVerificationSchema = z.object({
 }).strict()
 type ParsedActionProposal = z.infer<typeof ActionProposalSchema>
 type ParsedActionVerification = z.infer<typeof ActionVerificationSchema>
-export type ActionProposal = Omit<ParsedActionProposal, 'closingOptions'> & { closingOptions?: ParsedActionProposal['closingOptions'] }
+type InputActionProposal = z.input<typeof ActionProposalSchema>
+export type ActionProposal = Omit<InputActionProposal, 'closingOptions'> & { closingOptions?: InputActionProposal['closingOptions'] }
 export type ActionVerification = Omit<ParsedActionVerification, 'closingOptions'> & { closingOptions?: ParsedActionVerification['closingOptions'] }
 class ActionOutputError extends Error {}
 const lineCitations = z.array(z.object({ sourceId: z.string(), startLine: z.number().int().positive(), endLine: z.number().int().positive() }).strict()).min(1)
@@ -43,9 +51,9 @@ const LineProposalSchema = ActionProposalSchema.extend({
   changes: z.array(ActionProposalSchema.shape.changes.element.extend({ citations: lineCitations })),
   suggestions: z.array(ActionProposalSchema.shape.suggestions.element.extend({ factCitations: lineCitations, goalCitations: lineCitations })).max(5),
   closingOptions: z.array(z.discriminatedUnion('kind', [
-    ClosingActionSchema.extend({ factCitations: lineCitations, goalCitations: lineCitations }),
+    ClosingActionProposalSchema.extend({ factCitations: lineCitations, goalCitations: lineCitations }),
     ClosingCandidateSchema.extend({ factCitations: lineCitations, goalCitations: lineCitations }),
-    ClosingCheckpointSchema.extend({ factCitations: lineCitations, goalCitations: lineCitations }),
+    ClosingCheckpointProposalSchema.extend({ factCitations: lineCitations, goalCitations: lineCitations }),
   ])).max(5).default([]),
 })
 export function resolveActionSourceLines(value: unknown, sources: readonly ActionSource[]): ActionProposal {
@@ -79,7 +87,7 @@ Completed means its exact completion condition has delivery evidence. Dismissed 
 Superseded requires a demonstrated replacement of this obligation, not replacement of an interface source.
 Open work retains owner decisions, evidence conditions, blockers and dependency ordering. Article acceptance grants no execution, settlement, PR readiness or merge authority.
 The trusted reviewCycle owns the admission limit. Initial generation targets 3–5 useful source-supported actions, at most five new identities. Every additional revision or clean-acceptance action-review cycle may add at most two new identities, regardless of existing active work. First reconcile every carried identity: delivered work is done, disproved premises dismissed, genuinely replaced obligations superseded, and waiting work deferred or open with its gates. Resolved work leaves the active block but retains its identity and history. Never invent unsupported filler; zero or fewer actions is valid. Existing links, rewording, disposal and retries do not replenish a cycle's new-identity allowance.
-The article must end with useful next-step choices, but presentation choices and queue admissions are distinct. Use closingOptions for relevant existing actions, newly proposed candidates, issues, PRs, owner decisions or verified checkpoints. Reference a carried identity with kind=action and actionKey. Reference a suggestion from this proposal with kind=candidate and candidateIndex; application code resolves its admitted identity, so never invent its future action key. A checkpoint cannot bypass a canonical identity, historical hold, unchanged rejection, protected authority or owner gate merely because it allocates no queue record. A closing option must name the appropriate entry point, the relevant prior accepted-work/review context, why it matters now, the roadmap gap or outcome it advances, and a concrete next checkpoint. Cite exact current primary evidence for the disposition and exact goal evidence for the continuation. Generated article prose, third-party GitHub claims and the coverage report are context, never authority. Do not reissue a merged, closed, completed, dismissed or superseded checkpoint. Omit an unsupported option; application code will surface a supervised needs-evidence state rather than fabricate work.
+The article must end with exactly three ranked, distinct, source-supported recommendations, but display rank and queue admission are separate. Order closingOptions by article-specific importance; the application persists the first three that pass. Use them for relevant existing actions, newly proposed candidates, issues, PRs, owner decisions or verified checkpoints. Reference a carried identity with kind=action and actionKey. Reference a suggestion from this proposal with kind=candidate and candidateIndex; application code resolves its admitted identity, so never invent its future action key. Checkpoint identity is derived from the canonical target plus distinct outcome, never a URL fragment. A checkpoint cannot bypass a canonical identity, historical hold, unchanged rejection, protected authority or owner gate merely because it allocates no queue record. Each recommendation must provide benefit and start as short, familiar-language card copy; keep hashes, protocol terms and long safety clauses in entryPoint/context/gates for the disclosed agent brief. It must also name prior accepted-work/review context, why it ranks now, the roadmap gap or canonical outcome it advances, and a first checkpoint. Cite exact current primary evidence for the disposition and exact goal evidence for the continuation. Generated article prose, third-party GitHub claims and the coverage report are context, never authority. Do not reissue merged, closed, completed, dismissed or superseded work. When a prior displayed recommendation remains, propose it again with fresh evidence. A still-open recommendation may be displaced by more relevant article work without settling its underlying identity: list its prior recommendation identity in replaces and use whyNow to explain the evidence-backed rank change. Omit unsupported filler; fewer than three passing recommendations produces a supervised needs-evidence state rather than a fake ready shortlist.
 Each proposal needs a current observed gap, a cited operator or roadmap goal, why now, a verifiable completion condition, and all known gates.
 Match the target AND intended outcome against ALL existing, completed, excluded and previously rejected suggestions, including held history. Rewording, a new date, or age is not novelty. Return an existingKey for equivalent work. A recorded quotaHold applies only to its trusted article/cycle: a later distinct cycle may reconsider it with a fresh proposer and verifier. It is never automatically admitted. Semantic rejections and unclassified legacy holds remain unchanged.
 For an existing identity, copy its stored workKey target and outcome exactly into the candidate target/outcome fields. Imported legacy keys use the original command as target and original description as outcome. If equivalence is uncertain, hold it rather than admitting a new identity.
@@ -282,8 +290,11 @@ function citationEvidenceDigest(citations: readonly z.infer<typeof CitationSchem
 type GithubCheckpointTarget = { repo: string; number: string; url: string }
 
 function githubCheckpointTarget(target: string): GithubCheckpointTarget | null {
-  const match = /^https:\/\/github\.com\/ojfbot\/([^/]+)\/(?:issues|pull)\/(\d+)\/?$/.exec(target)
-  return match ? { repo: match[1].toLowerCase(), number: match[2], url: target.toLowerCase().replace(/\/$/, '') } : null
+  let canonical: string
+  try { canonical = canonicalCheckpointTarget(target) }
+  catch { return null }
+  const match = /^https:\/\/github\.com\/ojfbot\/([^/]+)\/(?:issues|pull)\/(\d+)\/?$/.exec(canonical)
+  return match ? { repo: match[1].toLowerCase(), number: match[2], url: canonical.toLowerCase().replace(/\/$/, '') } : null
 }
 
 function mentionsGithubCheckpoint(value: string, target: GithubCheckpointTarget): boolean {
@@ -345,6 +356,23 @@ function checkpointRestrictionReason(option: ClosingCheckpoint, registry: Action
   const rejected = registry.articles.flatMap(article => article.rejected).find(candidate => candidate.evidenceDigest === evidenceDigest && checkpointWorkKeyMatches(candidate.workKey, target, option.outcome))
   if (rejected) return `Application reconciled checkpoint ${option.target} to unchanged rejected work; it was not reissued.`
   return null
+}
+
+type ProposedClosingOption = z.infer<typeof ClosingOptionProposalSchema>
+
+function canonicalCheckpointTarget(value: string): string {
+  const target = new URL(value)
+  target.hash = ''
+  target.search = ''
+  target.pathname = target.pathname.replace(/\/$/, '')
+  return target.toString()
+}
+
+function recommendationIdentity(option: ProposedClosingOption, candidateActionKeys?: ReadonlyMap<number, string>): string {
+  if (option.kind === 'action') return `action:${option.actionKey}`
+  if (option.kind === 'candidate') return `action:${candidateActionKeys?.get(option.candidateIndex) ?? `candidate:${option.candidateIndex}`}`
+  const workKey = normalizeWorkKey('checkpoint', canonicalCheckpointTarget(option.target), option.outcome)
+  return `checkpoint:${sha256(workKey).slice(0, 20)}`
 }
 
 export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; sources: ActionSource[]; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string } }): ActionRegistry {
@@ -429,9 +457,9 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     const record = next.records.find(record => record.key === key)
     if (record && !covered.has(key)) throw new Error(`Existing suggestion omitted from independent review: ${key}`)
   }
-  const closingIdentities = proposal.closingOptions.map(option => option.kind === 'action' ? `action:${option.actionKey}` : option.kind === 'candidate' ? `candidate:${option.candidateIndex}` : `checkpoint:${option.target}`)
+  const closingIdentities = proposal.closingOptions.map(option => recommendationIdentity(option))
   if (new Set(closingIdentities).size !== closingIdentities.length) throw new Error('Duplicate closing option in one round')
-  const closingOptions: ClosingOption[] = []
+  const qualifiedRecommendations: Array<{ option: ClosingOption; benefit: string; start: string; replaces: string[] }> = []
   const closingVerdicts: Array<{ item: string; verdict: 'pass' | 'reject' | 'hold'; reason: string }> = []
   for (const [optionIndex, option] of proposal.closingOptions.entries()) {
     const verdict = verification.closingOptions.find(item => item.optionIndex === optionIndex)
@@ -449,15 +477,18 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
         const identity = option.kind === 'action' ? option.actionKey : `candidate:${option.candidateIndex}`
         closingVerdicts.push({ item, verdict: 'reject', reason: `Application reconciled ${identity} as missing, unadmitted or resolved; it cannot be reissued as a closing choice.` }); continue
       }
-      if (option.kind === 'action') closingOptions.push(ClosingActionSchema.parse(option))
+      if (option.kind === 'action') {
+        const { replaces, benefit, start, ...handoff } = option
+        qualifiedRecommendations.push({ option: ClosingActionSchema.parse(handoff), benefit, start, replaces })
+      }
       else {
-        const { candidateIndex: _candidateIndex, ...handoff } = option
-        closingOptions.push(ClosingActionSchema.parse({ ...handoff, kind: 'action', actionKey }))
+        const { candidateIndex: _candidateIndex, replaces, benefit, start, ...handoff } = option
+        qualifiedRecommendations.push({ option: ClosingActionSchema.parse({ ...handoff, kind: 'action', actionKey }), benefit, start, replaces })
       }
       closingVerdicts.push({ item, verdict: 'pass', reason: verdict.reason })
       continue
     }
-    const targetSource = option.factCitations.map(citation => input.sources.find(source => source.id === citation.sourceId)).find(source => source?.locator === option.target)
+    const targetSource = option.factCitations.map(citation => input.sources.find(source => source.id === citation.sourceId)).find(source => source && /^https:\/\//.test(source.locator) && canonicalCheckpointTarget(source.locator) === canonicalCheckpointTarget(option.target))
     if (!targetSource) {
       closingVerdicts.push({ item, verdict: 'reject', reason: 'Application rejected the checkpoint because no cited primary source matched its entry-point target.' }); continue
     }
@@ -471,14 +502,43 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     if (restriction) {
       closingVerdicts.push({ item, verdict: 'reject', reason: restriction }); continue
     }
-    closingOptions.push(ClosingCheckpointSchema.parse(option))
+    const { replaces, benefit, start, ...handoff } = option
+    qualifiedRecommendations.push({ option: ClosingCheckpointSchema.parse(handoff), benefit, start, replaces })
     closingVerdicts.push({ item, verdict: 'pass', reason: verdict.reason })
   }
-  const closing = closingOptions.length
-    ? { kind: 'options' as const, options: closingOptions }
-    : { kind: 'needs-evidence' as const, question: 'Which supported continuation should the next session take?', missingEvidence: 'No current source-backed action or checkpoint passed independent review.', nextCheck: 'Collect current primary evidence or request the owner decision before admitting or presenting more work.' }
+  const selected = qualifiedRecommendations.slice(0, 3)
+  const ranked = selected.map(({ option, benefit, start, replaces }, index) => {
+    const rank = z.union([z.literal(1), z.literal(2), z.literal(3)]).parse(index + 1)
+    const identity = recommendationIdentity({ ...option, benefit, start, replaces }, candidateActionKeys)
+    const value = { ...option, rank, identity, benefit, start, rationale: option.whyNow, replaces }
+    return option.kind === 'action' ? RankedClosingActionSchema.parse(value) : RankedClosingCheckpointSchema.parse(value)
+  })
+  const displayedPreviousRecommendations = previous?.closing?.kind === 'shortlist'
+    ? previous.closing.options
+    : previous?.closing?.kind === 'needs-evidence'
+      ? previous.closing.recommendations
+      : []
+  const previousRecommendations = displayedPreviousRecommendations.filter(option => option.kind !== 'action' || ['open', 'proposed', 'deferred'].includes(next.records.find(record => record.key === option.actionKey)?.state ?? ''))
+  const previousUnresolvedIdentities = previous?.closing?.kind === 'needs-evidence' ? previous.closing.unresolvedIdentities ?? [] : []
+  const currentIdentities = new Set(ranked.map(option => option.identity))
+  const replacedIdentities = ranked.flatMap(option => option.replaces)
+  const previousIdentities = new Set([...previousRecommendations.map(option => option.identity), ...previousUnresolvedIdentities])
+  const invalidReplacement = replacedIdentities.some(identity => !previousIdentities.has(identity) || currentIdentities.has(identity))
+  const omittedWithoutReason = [...previousIdentities].some(identity => !currentIdentities.has(identity) && !replacedIdentities.includes(identity))
+  const partialRecommendations = invalidReplacement || omittedWithoutReason
+    ? previousRecommendations.slice(0, 2)
+    : ranked.slice(0, 2)
+  const unresolvedIdentities = [...previousIdentities].filter(identity => !currentIdentities.has(identity) && !replacedIdentities.includes(identity) && !partialRecommendations.some(option => option.identity === identity))
+  const closing = ranked.length === 3 && !invalidReplacement && !omittedWithoutReason
+    ? RankedShortlistSchema.parse({ kind: 'shortlist', options: ranked })
+    : { kind: 'needs-evidence' as const, question: 'Which supported continuation should complete this shortlist?', missingEvidence: invalidReplacement
+      ? 'A proposed replacement does not identify a prior displayed recommendation.'
+      : omittedWithoutReason
+        ? 'A prior displayed recommendation was omitted without an evidence-backed rank change.'
+        : `Only ${ranked.length} distinct recommendation${ranked.length === 1 ? '' : 's'} passed source and authority checks.`, nextCheck: 'Reconcile current primary evidence and rank rationale before presenting a ready shortlist.', recommendations: partialRecommendations, unresolvedIdentities }
   // Git retains prior rounds; the dated working state retains only this round.
   for (const record of next.records) record.history = record.history.filter(decision => decision.articleDate !== input.articleDate || decision.roundId === input.roundId)
+  const closingOptions = closing.kind === 'shortlist' ? closing.options : closing.recommendations
   const usedSources = new Set([...next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.map(citation => citation.sourceId))), ...closingOptions.flatMap(option => [...option.factCitations, ...option.goalCitations].map(citation => citation.sourceId)), ...input.sources.filter(source => source.id.startsWith(`${COVERAGE_SOURCE}@`)).map(source => source.id)])
   const retainedSources = [...new Map([...(previous?.sources ?? []), ...input.sources.filter(source => usedSources.has(source.id))].map(source => [source.id, source])).values()].filter(source => usedSources.has(source.id)).map(source => {
     const quotes = [...new Set([...next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.filter(citation => citation.sourceId === source.id).map(citation => citation.quote))), ...closingOptions.flatMap(option => [...option.factCitations, ...option.goalCitations].filter(citation => citation.sourceId === source.id).map(citation => citation.quote))])]

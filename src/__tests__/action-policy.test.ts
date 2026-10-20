@@ -62,7 +62,7 @@ describe('trusted generation and revision action budgets', () => {
     const same = apply(first, cycle, [candidate(2)], changes)
     expect(same.records).toHaveLength(2)
     const body = renderArticleActions(markdown, same, date, statuses)
-    const active = body.split('<section class="action-history-card"')[0]
+    const active = body.split('<details class="suggestions-handled"')[0]
     expect(active).not.toContain('Investigate bounded gap')
     expect(body).toContain('Completed'); expect(body).toContain('Dismissed')
     expect(same.records.map(record => record.original)).toEqual(first.records.map(record => record.original))

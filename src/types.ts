@@ -112,6 +112,8 @@ export type ClosingContinuityUnavailableReason =
 
 export type ClosingContinuityOption = {
   title: string
+  benefit?: string
+  start?: string
   entryPoint: string
   context: string
   whyNow: string

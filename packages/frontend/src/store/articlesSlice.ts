@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import type { EntryData, TagCount, RepoStats, ActionItem } from './types.ts'
 import type { ActionRecord, ProposedAction } from '../../../../src/action-registry-schema.ts'
+import type { articleActionCard } from '../../../../src/action-registry.ts'
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
 
@@ -14,6 +15,7 @@ export interface ArticleDetail extends EntryData {
   bodyHtml: string
   sourceBlobSha?: string
   actionSuggestions?: ActionRecord[]
+  suggestedActionsCard?: ReturnType<typeof articleActionCard>
 }
 
 export const fetchEntries = createAsyncThunk('articles/fetchEntries', () =>

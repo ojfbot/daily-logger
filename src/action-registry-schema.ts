@@ -37,17 +37,50 @@ export const ClosingCheckpointSchema = z.object({
   ...ClosingHandoffFields,
 }).strict()
 export const ClosingOptionSchema = z.discriminatedUnion('kind', [ClosingActionSchema, ClosingCheckpointSchema])
+const RecommendationRankSchema = z.union([z.literal(1), z.literal(2), z.literal(3)])
+const RankedRecommendationFields = {
+  rank: RecommendationRankSchema,
+  identity: z.string().min(1),
+  benefit: z.string().min(1).max(180),
+  start: z.string().min(1).max(180),
+  rationale: z.string().min(1),
+  replaces: z.array(z.string().min(1)),
+}
+export const RankedClosingActionSchema = ClosingActionSchema.extend(RankedRecommendationFields).strict()
+export const RankedClosingCheckpointSchema = ClosingCheckpointSchema.extend(RankedRecommendationFields).strict()
+export const RankedClosingOptionSchema = z.discriminatedUnion('kind', [RankedClosingActionSchema, RankedClosingCheckpointSchema])
+export const RankedShortlistSchema = z.object({
+  kind: z.literal('shortlist'),
+  options: z.tuple([RankedClosingOptionSchema, RankedClosingOptionSchema, RankedClosingOptionSchema]),
+}).strict().superRefine((shortlist, context) => {
+  if (shortlist.options.some((option, index) => option.rank !== index + 1)) context.addIssue({ code: 'custom', message: 'Suggested action ranks must be exactly 1, 2, 3 in display order' })
+  if (new Set(shortlist.options.map(option => option.identity)).size !== shortlist.options.length) context.addIssue({ code: 'custom', message: 'Suggested action identities must be distinct' })
+  const replaced = shortlist.options.flatMap(option => option.replaces)
+  if (new Set(replaced).size !== replaced.length || replaced.some(identity => shortlist.options.some(option => option.identity === identity))) context.addIssue({ code: 'custom', message: 'A prior suggested action may be replaced once and cannot remain current' })
+})
+const PartialShortlistSchema = z.array(RankedClosingOptionSchema).max(2).superRefine((options, context) => {
+  if (options.some((option, index) => option.rank !== index + 1)) context.addIssue({ code: 'custom', message: 'Partial suggested action ranks must be contiguous from 1' })
+  if (new Set(options.map(option => option.identity)).size !== options.length) context.addIssue({ code: 'custom', message: 'Partial suggested action identities must be distinct' })
+})
+const NeedsEvidenceClosingSchema = z.object({
+  kind: z.literal('needs-evidence'),
+  question: z.string().min(1),
+  missingEvidence: z.string().min(1),
+  nextCheck: z.string().min(1),
+  recommendations: PartialShortlistSchema.default([]),
+  unresolvedIdentities: z.array(z.string().min(1)).optional(),
+}).strict().superRefine((closing, context) => {
+  const unresolved = closing.unresolvedIdentities ?? []
+  if (new Set(unresolved).size !== unresolved.length || unresolved.some(identity => closing.recommendations.some(option => option.identity === identity))) context.addIssue({ code: 'custom', message: 'Unresolved recommendation identities must be distinct from the visible partial shortlist' })
+})
 export const ClosingPromptSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('options'), options: z.array(ClosingOptionSchema).min(1).max(5) }).strict(),
-  z.object({
-    kind: z.literal('needs-evidence'),
-    question: z.string().min(1),
-    missingEvidence: z.string().min(1),
-    nextCheck: z.string().min(1),
-  }).strict(),
+  RankedShortlistSchema,
+  NeedsEvidenceClosingSchema,
 ])
 export type ClosingCheckpoint = z.infer<typeof ClosingCheckpointSchema>
 export type ClosingOption = z.infer<typeof ClosingOptionSchema>
+export type RankedClosingOption = z.infer<typeof RankedClosingOptionSchema>
 export type ClosingPrompt = z.infer<typeof ClosingPromptSchema>
 export const ActionDecisionSchema = z.object({
   roundId: digest,
@@ -92,6 +125,7 @@ export const ArticleActionSchema = z.object({
 }).strict().superRefine((article, context) => {
   if ([ACTION_REVIEW_PROMPT_VERSION, 'action-review-pending-v2-cycle'].includes(article.verification.promptVersion) && !article.reviewCycle) context.addIssue({ code: 'custom', message: `Action review cycle is missing: ${article.date}` })
   if (article.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && article.review.state === 'verified' && !article.closing) context.addIssue({ code: 'custom', message: `Closing prompt is missing: ${article.date}` })
+  if (article.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && article.review.state === 'verified' && article.closing?.kind === 'options') context.addIssue({ code: 'custom', message: `Legacy closing options cannot qualify a ranked shortlist: ${article.date}` })
 })
 export const ActionRegistrySchema = z.object({
   schemaVersion: z.literal(1),
@@ -106,16 +140,19 @@ export const ActionRegistrySchema = z.object({
   for (const article of registry.articles) {
     if (article.review.state === 'pending' && article.status !== 'draft') context.addIssue({ code: 'custom', message: `Pending action review cannot publish: ${article.date}` })
     if (new Set(article.actionKeys).size !== article.actionKeys.length || article.actionKeys.some(key => !keys.includes(key))) context.addIssue({ code: 'custom', message: `Invalid action references for ${article.date}` })
-    if (article.closing?.kind === 'options') {
-      const optionKeys = article.closing.options.flatMap(option => option.kind === 'action' ? [option.actionKey] : [])
+    if (article.closing) {
+      const options = article.closing.kind === 'needs-evidence' ? article.closing.recommendations : article.closing.options
+      const optionKeys = options.flatMap(option => option.kind === 'action' ? [option.actionKey] : [])
       if (new Set(optionKeys).size !== optionKeys.length || optionKeys.some(key => !article.actionKeys.includes(key))) context.addIssue({ code: 'custom', message: `Invalid closing action references for ${article.date}` })
       for (const key of optionKeys) {
         const record = registry.records.find(item => item.key === key)
         const state = record?.history.find(decision => decision.articleDate === article.date && decision.roundId === article.roundId)?.state
         if (!state || !['open', 'proposed', 'deferred'].includes(state)) context.addIssue({ code: 'custom', message: `Resolved action cannot be a closing option: ${key}` })
       }
-      const targets = article.closing.options.flatMap(option => option.kind === 'checkpoint' ? [option.target] : [])
-      if (new Set(targets).size !== targets.length) context.addIssue({ code: 'custom', message: `Duplicate closing checkpoint for ${article.date}` })
+      if (article.closing.kind === 'options') {
+        const targets = article.closing.options.flatMap(option => option.kind === 'checkpoint' ? [option.target] : [])
+        if (new Set(targets).size !== targets.length) context.addIssue({ code: 'custom', message: `Duplicate closing checkpoint for ${article.date}` })
+      }
     }
   }
   for (const record of registry.records) {

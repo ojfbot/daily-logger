@@ -376,7 +376,8 @@ function articleBlobSha(content: string): string {
 }
 
 export function acceptedClosingContinuity(input: { date: string; content: string; snapshot?: ArticleActionSnapshot | null }): AcceptedClosingContinuity {
-  const optionCount = input.snapshot?.closing?.kind === 'options' ? input.snapshot.closing.options.length : 0
+  const closing = input.snapshot?.closing
+  const optionCount = closing?.kind === 'options' || closing?.kind === 'shortlist' ? closing.options.length : 0
   const unavailable = (reason: Extract<AcceptedClosingContinuity, { status: 'unavailable' }>['reason']): AcceptedClosingContinuity => ({
     status: 'unavailable', version: CLOSING_CONTINUITY_VERSION, reason, optionCount, omittedOptionCount: optionCount,
   })
@@ -384,13 +385,13 @@ export function acceptedClosingContinuity(input: { date: string; content: string
   if (input.snapshot === null) return unavailable('invalid-snapshot')
   const snapshot = input.snapshot
   if (optionCount > 5) return unavailable('invalid-snapshot')
-  if (!snapshot || articleStatus !== 'accepted' || snapshot.status !== 'accepted' || snapshot.review.state !== 'verified' || snapshot.closing?.kind !== 'options') return unavailable('missing-accepted-closing')
+  if (!snapshot || articleStatus !== 'accepted' || snapshot.status !== 'accepted' || snapshot.review.state !== 'verified' || (snapshot.closing?.kind !== 'options' && snapshot.closing?.kind !== 'shortlist')) return unavailable('missing-accepted-closing')
   if (snapshot.date !== input.date || snapshot.articleDigest !== managedArticleDigest(input.content)) return unavailable('binding-mismatch')
   const options = snapshot.closing.options.map((option, index) => {
     const review = snapshot.verification.verdicts.find(verdict => verdict.item === `closing:${index}`)
     if (!review) return null
     const evidencePointers = [...new Set([...option.factCitations, ...option.goalCitations].map(citation => citation.sourceId.replace(/@[a-f0-9]{64}$/, '')))].sort()
-    const fields = { title: option.title, entryPoint: option.entryPoint, context: option.context, whyNow: option.whyNow, outcome: option.outcome, nextCheck: option.nextCheck, evidencePointers,
+    const fields = { title: option.title, ...('benefit' in option ? { benefit: option.benefit, start: option.start } : {}), entryPoint: option.entryPoint, context: option.context, whyNow: 'rationale' in option ? option.rationale : option.whyNow, outcome: option.outcome, nextCheck: option.nextCheck, evidencePointers,
       review: { verdict: review.verdict, reason: review.reason } }
     return option.kind === 'action' ? { kind: option.kind, actionKey: option.actionKey, ...fields } : { kind: option.kind, target: option.target, ...fields }
   })
@@ -444,7 +445,14 @@ export function getPreviousArticles(repoRoot = REPO_ROOT): PreviousArticleContex
 export function acceptedClosingContinuityTargets(previousArticles: readonly PreviousArticleContext[]): string[] {
   const active = previousArticles.find(article => article.closingContinuity?.status === 'available')?.closingContinuity
   return active?.status === 'available'
-    ? [...new Set(active.options.flatMap(option => option.kind === 'checkpoint' ? [option.target] : []))]
+    ? [...new Set(active.options.flatMap(option => {
+      if (option.kind !== 'checkpoint') return []
+      const target = new URL(option.target)
+      target.hash = ''
+      target.search = ''
+      target.pathname = target.pathname.replace(/\/$/, '')
+      return [target.toString()]
+    }))]
     : []
 }
 

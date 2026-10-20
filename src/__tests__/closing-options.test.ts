@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { revisionActionCycle } from '../action-review-cycle.js'
+import { ACTION_REVIEW_PROMPT_VERSION, revisionActionCycle } from '../action-review-cycle.js'
 import {
   ActionRegistrySchema,
   ClosingPromptSchema,
   actionStateDigest,
+  articleActionCard,
   normalizeWorkKey,
   readActionRegistry,
   registryBytes,
@@ -19,6 +20,7 @@ import {
   type ActionProposal,
   type ActionVerification,
 } from '../review-actions.js'
+import { actionEvidenceScope } from '../action-evidence-selection.js'
 
 const articleDate = '2030-01-01'
 const markdown = `---\ndate: ${articleDate}\nstatus: draft\n---\n## What's next\n\nContinue the verified checkpoint.\n`
@@ -40,6 +42,8 @@ function closingOption() {
   return {
     kind: 'checkpoint' as const,
     title: 'Qualify the evidence reader',
+    benefit: 'Check whether the evidence reader finds useful support without swallowing irrelevant text.',
+    start: 'Review the bounded evidence cases.',
     target,
     entryPoint: 'Start in issue #900 at the bounded source-reader acceptance cases.',
     context: 'The prior accepted review retained the gap after the byte-budget repair.',
@@ -49,6 +53,21 @@ function closingOption() {
     factCitations: [{ sourceId: 'issue', quote: checkpoint }],
     goalCitations: [{ sourceId: 'goal', quote: roadmap }],
   }
+}
+
+type ClosingProposal = NonNullable<ActionProposal['closingOptions']>[number]
+type ClosingVerdict = NonNullable<ActionVerification['closingOptions']>[number]
+
+function completeShortlist(first: ClosingProposal = closingOption()): ClosingProposal[] {
+  return [
+    first,
+    { ...closingOption(), title: 'Check the owner handoff', outcome: 'Confirm the owner handoff remains usable for the next session.', nextCheck: 'Return the owner handoff result for review.' },
+    { ...closingOption(), title: 'Check the roadmap handoff', outcome: 'Confirm the roadmap handoff still advances the recorded goal.', nextCheck: 'Return the roadmap handoff result for review.' },
+  ]
+}
+
+function passingClosingVerdicts(count: number): ClosingVerdict[] {
+  return Array.from({ length: count }, (_, optionIndex) => ({ optionIndex, verdict: 'pass' as const, reason: 'Current disposition, roadmap relevance, entry point and next checkpoint match primary evidence.' }))
 }
 
 function review(registry: ActionRegistry, proposal: ActionProposal, verification: ActionVerification, evidence = sources) {
@@ -101,21 +120,53 @@ describe('verified article closing options', () => {
     expect(renderArticleActions(article, actual, actualDate, new Map([[actualDate, 'accepted']]))).toContain('Choose a supported next step')
   })
 
+  it('does not let a new review cycle regain ready status with legacy closing options', () => {
+    const legacy = readActionRegistry(process.cwd())
+    const snapshot = legacy.articles.find(article => article.date === '2026-10-19')
+    if (!snapshot || snapshot.closing?.kind !== 'options') throw new Error('Missing historical legacy closing fixture')
+    snapshot.verification.promptVersion = ACTION_REVIEW_PROMPT_VERSION
+
+    expect(ActionRegistrySchema.safeParse(legacy).success).toBe(false)
+  })
+
+  it('does not let a partial verified shortlist claim accepted status', () => {
+    const options = completeShortlist()
+    const verification = passingClosingVerdicts(options.length)
+    verification[2] = { optionIndex: 2, verdict: 'reject', reason: 'The third choice lacks current evidence.' }
+    const partial = review(empty(), { changes: [], suggestions: [], closingOptions: options }, { changes: [], suggestions: [], closingOptions: verification })
+    partial.articles[0].status = 'accepted'
+
+    expect(partial.articles[0].closing?.kind).toBe('needs-evidence')
+    expect(ActionRegistrySchema.safeParse(partial).success).toBe(true)
+    expect(() => renderArticleActions(markdown.replace('"draft"', '"accepted"'), partial, articleDate, new Map([[articleDate, 'accepted']]))).toThrow(/requires exactly three ranked suggestions/)
+  })
+
   it('carries actionable prior-review context without creating a queue identity and is byte-idempotent', () => {
-    const proposal = { changes: [], suggestions: [], closingOptions: [closingOption()] }
-    const verification = { changes: [], suggestions: [], closingOptions: [{ optionIndex: 0, verdict: 'pass' as const, reason: 'Current disposition, roadmap relevance, entry point and next checkpoint match primary evidence.' }] }
+    const options = completeShortlist()
+    const proposal = { changes: [], suggestions: [], closingOptions: options }
+    const verification = { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(options.length) }
 
     const first = review(empty(), proposal, verification)
     const second = review(first, proposal, verification)
     const rendered = renderArticleActions(markdown, first, articleDate, statuses)
 
     expect(first.records).toEqual([])
-    expect(first.articles[0].closing).toMatchObject({ kind: 'options', options: [{ kind: 'checkpoint', target }] })
-    expect(rendered).toContain('Choose a supported next step')
+    expect(first.articles[0].closing).toMatchObject({ kind: 'shortlist' })
+    expect(first.articles[0].closing?.kind === 'shortlist' && first.articles[0].closing.options[0]).toMatchObject({ kind: 'checkpoint', target, rank: 1 })
+    expect(rendered).toContain('Suggested actions</h3>')
     expect(rendered).toContain('The prior accepted review retained the gap')
     expect(rendered).toContain('Advance the roadmap from bounded selection')
     expect(rendered).toContain('Demonstrate one relevant answer')
+    const firstDefaultView = rendered.match(/<li data-recommendation-id=[\s\S]*?<details>/)?.[0] ?? ''
+    expect(firstDefaultView).toContain('Check whether the evidence reader finds useful support')
+    expect(firstDefaultView).toContain('Review the bounded evidence cases')
+    expect(firstDefaultView).not.toContain('Advance the roadmap from bounded selection')
+    expect(firstDefaultView).not.toContain('issue #900 at the bounded source-reader acceptance cases')
     expect(first.articles[0].sources.find(source => source.id === 'issue')?.trustedContent).toEqual([checkpoint])
+    expect(articleActionCard(first, articleDate, statuses)?.sources).toEqual([
+      { id: 'issue', kind: 'github', locator: target },
+      { id: 'goal', kind: 'goal', locator: 'ROADMAP.md' },
+    ])
     expect(registryBytes(second)).toBe(registryBytes(first))
   })
 
@@ -131,35 +182,40 @@ describe('verified article closing options', () => {
     expect(result.articles[0].closing?.kind).toBe('needs-evidence')
     expect(result.articles[0].verification.verdicts).toContainEqual({ item: 'closing:0', verdict: 'reject', reason: 'Application reconciled the checkpoint as merged rather than open; it was not reissued.' })
     expect(rendered).not.toContain(target)
-    expect(rendered).toContain('Decision needed before the next action')
+    expect(rendered).toContain('Suggested actions')
   })
 
   it('uses an existing deferred identity as a closing choice without another admission', () => {
     const registry = empty()
     registry.records.push({ key: 'act-existing', original: { id: 'act-existing', command: '/validate', description: 'Validate the retained owner checkpoint.', repo: 'daily-logger', status: 'open', sourceDate: articleDate }, origin: 'imported', workKey: 'existing', state: 'open', introducedBy: articleDate, includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: 'The owner records a disposition.', gates: ['Owner decides whether to proceed.'], history: [] })
-    const proposal = { changes: [{ actionKey: 'act-existing', state: 'deferred' as const, description: 'Return to the existing checkpoint when the owner is available.', reason: 'The owner gate remains current.', citations: [{ sourceId: 'issue', quote: checkpoint }] }], suggestions: [], closingOptions: [{ kind: 'action' as const, actionKey: 'act-existing', title: 'Return to the retained owner checkpoint', entryPoint: 'Resume the existing /validate action from its owner gate.', context: 'The prior review retained this identity and its owner decision.', whyNow: 'The action remains deferred, not resolved.', outcome: 'Advance the existing evidence decision without duplicating queue work.', nextCheck: 'Record the owner disposition against the existing identity.', factCitations: [{ sourceId: 'issue', quote: checkpoint }], goalCitations: [{ sourceId: 'goal', quote: roadmap }] }] }
-    const verification = { changes: [{ actionKey: 'act-existing', verdict: 'pass' as const, reason: 'The owner gate and deferred state are supported.' }], suggestions: [], closingOptions: [{ optionIndex: 0, verdict: 'pass' as const, reason: 'The retained identity is a relevant, useful handoff with a concrete owner checkpoint.' }] }
+    const handoff = { kind: 'action' as const, actionKey: 'act-existing', title: 'Return to the retained owner checkpoint', benefit: 'Resolve the waiting owner decision without creating duplicate work.', start: 'Resume the existing validation handoff.', entryPoint: 'Resume the existing /validate action from its owner gate.', context: 'The prior review retained this identity and its owner decision.', whyNow: 'The action remains deferred, not resolved.', outcome: 'Advance the existing evidence decision without duplicating queue work.', nextCheck: 'Record the owner disposition against the existing identity.', factCitations: [{ sourceId: 'issue', quote: checkpoint }], goalCitations: [{ sourceId: 'goal', quote: roadmap }] }
+    const options = completeShortlist(handoff)
+    const proposal = { changes: [{ actionKey: 'act-existing', state: 'deferred' as const, description: 'Return to the existing checkpoint when the owner is available.', reason: 'The owner gate remains current.', citations: [{ sourceId: 'issue', quote: checkpoint }] }], suggestions: [], closingOptions: options }
+    const verification = { changes: [{ actionKey: 'act-existing', verdict: 'pass' as const, reason: 'The owner gate and deferred state are supported.' }], suggestions: [], closingOptions: passingClosingVerdicts(options.length) }
 
     const result = review(registry, proposal, verification)
 
     expect(result.records).toHaveLength(1)
     expect(result.records[0].state).toBe('deferred')
-    expect(result.articles[0].closing).toMatchObject({ kind: 'options', options: [{ kind: 'action', actionKey: 'act-existing', title: 'Return to the retained owner checkpoint', whyNow: 'The action remains deferred, not resolved.', nextCheck: 'Record the owner disposition against the existing identity.' }] })
+    expect(result.articles[0].closing).toMatchObject({ kind: 'shortlist' })
+    expect(result.articles[0].closing?.kind === 'shortlist' && result.articles[0].closing.options[0]).toMatchObject({ kind: 'action', actionKey: 'act-existing', title: 'Return to the retained owner checkpoint', whyNow: 'The action remains deferred, not resolved.', nextCheck: 'Record the owner disposition against the existing identity.' })
     expect(renderArticleActions(markdown, result, articleDate, statuses)).toContain('Owner decides whether to proceed')
   })
 
   it('resolves a newly admitted candidate into one rich closing action identity', () => {
     const suggestion = { command: '/validate', description: 'Validate the evidence reader against the retained controls.', repo: 'daily-logger', target: 'issue #900 evidence qualification', outcome: 'qualified evidence relevance behavior', goal: 'Source-backed continuation options', goalCitations: [{ sourceId: 'goal', quote: roadmap }], factCitations: [{ sourceId: 'issue', quote: checkpoint }], doneWhen: 'The relevant and irrelevant controls both have reviewed outcomes.', gates: ['Owner reviews the evidence report.'], existingKey: null }
-    const handoff = { kind: 'candidate' as const, candidateIndex: 0, title: 'Validate the newly admitted evidence action', entryPoint: 'Begin with the retained issue #900 controls.', context: 'The same review admitted this bounded action from current evidence.', whyNow: 'The evidence reader still lacks a relevance qualification.', outcome: 'Qualify evidence relevance without a duplicate identity.', nextCheck: 'Return both control outcomes for owner review.', factCitations: suggestion.factCitations, goalCitations: suggestion.goalCitations }
-    const proposal: ActionProposal = { changes: [], suggestions: [suggestion], closingOptions: [handoff] }
-    const verification: ActionVerification = { changes: [], suggestions: [{ candidateIndex: 0, verdict: 'pass', reason: 'This is novel bounded work tied to the current evidence.', existingKey: null }], closingOptions: [{ optionIndex: 0, verdict: 'pass', reason: 'The admitted candidate is a useful handoff with a concrete next check.' }] }
+    const handoff = { kind: 'candidate' as const, candidateIndex: 0, title: 'Validate the newly admitted evidence action', benefit: 'Check the evidence reader before broader use.', start: 'Run the retained issue controls.', entryPoint: 'Begin with the retained issue #900 controls.', context: 'The same review admitted this bounded action from current evidence.', whyNow: 'The evidence reader still lacks a relevance qualification.', outcome: 'Qualify evidence relevance without a duplicate identity.', nextCheck: 'Return both control outcomes for owner review.', factCitations: suggestion.factCitations, goalCitations: suggestion.goalCitations }
+    const options = completeShortlist(handoff)
+    const proposal: ActionProposal = { changes: [], suggestions: [suggestion], closingOptions: options }
+    const verification: ActionVerification = { changes: [], suggestions: [{ candidateIndex: 0, verdict: 'pass', reason: 'This is novel bounded work tied to the current evidence.', existingKey: null }], closingOptions: passingClosingVerdicts(options.length) }
 
     const result = review(empty(), proposal, verification)
     const key = result.records[0]?.key
 
     expect(result.records).toHaveLength(1)
     expect(result.articles[0].actionKeys).toEqual([key])
-    expect(result.articles[0].closing).toMatchObject({ kind: 'options', options: [{ kind: 'action', actionKey: key, title: handoff.title, entryPoint: handoff.entryPoint, context: handoff.context, whyNow: handoff.whyNow, outcome: handoff.outcome, nextCheck: handoff.nextCheck }] })
+    expect(result.articles[0].closing).toMatchObject({ kind: 'shortlist' })
+    expect(result.articles[0].closing?.kind === 'shortlist' && result.articles[0].closing.options[0]).toMatchObject({ kind: 'action', actionKey: key, title: handoff.title, entryPoint: handoff.entryPoint, context: handoff.context, whyNow: handoff.whyNow, outcome: handoff.outcome, nextCheck: handoff.nextCheck })
     expect(renderArticleActions(markdown, result, articleDate, statuses)).toContain('Validate the newly admitted evidence action')
   })
 
@@ -174,15 +230,15 @@ describe('verified article closing options', () => {
     const first = await reviewArticleActions({ registry: empty(), cycle: revisionActionCycle('cache-tamper-fixture'), articleDate, articleStatuses: statuses, markdown, feedback: target, sources: cacheSources, agents })
     const tampered = structuredClone(first.registry)
     const stored = tampered.articles[0].closing
-    if (stored?.kind !== 'options' || stored.options[0]?.kind !== 'checkpoint') throw new Error('Missing closing checkpoint fixture')
-    stored.options[0].context = 'Unreviewed replacement context.'
+    if (stored?.kind !== 'needs-evidence' || stored.recommendations[0]?.kind !== 'checkpoint') throw new Error('Missing closing checkpoint fixture')
+    stored.recommendations[0].context = 'Unreviewed replacement context.'
     calls = 0
 
     const repaired = await reviewArticleActions({ registry: tampered, cycle: revisionActionCycle('cache-tamper-fixture'), articleDate, articleStatuses: statuses, markdown: first.markdown, feedback: target, sources: cacheSources, agents })
 
     expect(repaired.cached).toBe(false)
     expect(calls).toBe(2)
-    expect(repaired.registry.articles[0].closing).toMatchObject({ kind: 'options', options: [{ context: closingOption().context }] })
+    expect(repaired.registry.articles[0].closing).toMatchObject({ kind: 'needs-evidence', recommendations: [{ context: closingOption().context }] })
   })
 
   it('does not reuse a digest-valid v8 cache that stored a raw checkpoint beside its same-round identity', async () => {
@@ -211,7 +267,7 @@ describe('verified article closing options', () => {
     expect(refreshed.cached).toBe(false)
     expect(calls).toBe(2)
     expect(refreshed.registry.articles[0].closing?.kind).toBe('needs-evidence')
-    expect(refreshed.registry.articles[0].verification.promptVersion).toBe('action-review-v10-protected-scope-closing-options')
+    expect(refreshed.registry.articles[0].verification.promptVersion).toBe('action-review-v11-ranked-suggested-actions')
   })
 
   it('does not reuse a digest-valid v9 cache that exposed protected scope without its internal key', async () => {
@@ -236,7 +292,7 @@ describe('verified article closing options', () => {
     expect(refreshed.cached).toBe(false)
     expect(calls).toBe(2)
     expect(refreshed.registry.articles[0].closing?.kind).toBe('needs-evidence')
-    expect(refreshed.registry.articles[0].verification.promptVersion).toBe('action-review-v10-protected-scope-closing-options')
+    expect(refreshed.registry.articles[0].verification.promptVersion).toBe('action-review-v11-ranked-suggested-actions')
   })
 
   it('rejects an untrusted GitHub authority claim before it can be rendered or cached', async () => {
@@ -291,13 +347,15 @@ describe('verified article closing options', () => {
   it('rejects checkpoint execution wording for the actual protected no-authority identity', () => {
     const { protectedRecord, source, option } = protectedDecisionFixture()
     const registry = empty(); registry.records.push(structuredClone(protectedRecord))
-    const proposal: ActionProposal = { changes: [], suggestions: [], closingOptions: [option] }
     const verification: ActionVerification = { changes: [], suggestions: [], closingOptions: [{ optionIndex: 0, verdict: 'pass', reason: 'Injected agreement is not execution authority.' }] }
 
-    const result = review(registry, proposal, verification, [source, sources[1]])
-    expect(result.records[0]).toEqual(protectedRecord)
-    expect(result.articles[0].closing?.kind).toBe('needs-evidence')
-    expect(renderArticleActions(markdown, result, articleDate, statuses)).not.toContain('Provision accounts and credentials immediately')
+    for (const suffix of ['', '#discussion', '?view=latest']) {
+      const proposal: ActionProposal = { changes: [], suggestions: [], closingOptions: [{ ...option, target: `${option.target}${suffix}` }] }
+      const result = review(registry, proposal, verification, [source, sources[1]])
+      expect(result.records[0]).toEqual(protectedRecord)
+      expect(result.articles[0].closing?.kind).toBe('needs-evidence')
+      expect(renderArticleActions(markdown, result, articleDate, statuses)).not.toContain('Provision accounts and credentials immediately')
+    }
   })
 
   it('retains an external pending human decision when trusted evidence preserves its gate', () => {
@@ -306,7 +364,7 @@ describe('verified article closing options', () => {
     const verification: ActionVerification = { changes: [], suggestions: [], closingOptions: [{ optionIndex: 0, verdict: 'pass', reason: 'The option preserves the owner gate and asks for a decision, not execution.' }] }
 
     const result = review(empty(), proposal, verification, [source, sources[1]])
-    expect(result.articles[0].closing).toMatchObject({ kind: 'options', options: [{ kind: 'checkpoint', target: decisionTarget, nextCheck: option.nextCheck }] })
+    expect(result.articles[0].closing).toMatchObject({ kind: 'needs-evidence', recommendations: [{ kind: 'checkpoint', target: decisionTarget, nextCheck: option.nextCheck }] })
     expect(renderArticleActions(markdown, result, articleDate, statuses)).toContain('Record the pending visual decision')
   })
 
@@ -326,7 +384,103 @@ describe('verified article closing options', () => {
     const verification: ActionVerification = { changes: [], suggestions: [], closingOptions: [{ optionIndex: 0, verdict: 'pass', reason: 'The trusted pending decision remains useful and distinct from renderer work.' }] }
 
     const result = review(registry, proposal, verification, [source, sources[1]])
-    expect(result.articles[0].closing).toMatchObject({ kind: 'options', options: [{ kind: 'checkpoint', target: decisionTarget }] })
+    expect(result.articles[0].closing).toMatchObject({ kind: 'needs-evidence', recommendations: [{ kind: 'checkpoint', target: decisionTarget }] })
+  })
+
+  it('keeps two verified recommendations visible when the third is unsupported', () => {
+    const options = completeShortlist()
+    const verification = passingClosingVerdicts(options.length)
+    verification[2] = { optionIndex: 2, verdict: 'reject', reason: 'The third choice lacks current evidence.' }
+
+    const result = review(empty(), { changes: [], suggestions: [], closingOptions: options }, { changes: [], suggestions: [], closingOptions: verification })
+    const rendered = renderArticleActions(markdown, result, articleDate, statuses)
+
+    expect(result.records).toEqual([])
+    expect(result.articles[0].closing).toMatchObject({ kind: 'needs-evidence', recommendations: [{ title: options[0].title }, { title: options[1].title }] })
+    expect(rendered).toContain(options[0].title)
+    expect(rendered).toContain(options[1].title)
+    expect(rendered).not.toContain(options[2].title)
+    expect(rendered).not.toContain('The third choice lacks current evidence.')
+    expect(rendered).toContain('Only 2 distinct recommendations passed source and authority checks.')
+    expect([...actionEvidenceScope({ registry: result, articleDate, markdown, feedback: '' }).refs]).toContain('daily-logger#900')
+  })
+
+  it('does not let a retry replace a partial shortlist without explicit replacement evidence', () => {
+    const firstOptions = completeShortlist()
+    const firstVerdicts = passingClosingVerdicts(3)
+    firstVerdicts[2] = { optionIndex: 2, verdict: 'reject', reason: 'The third choice is not supported.' }
+    const first = review(empty(), { changes: [], suggestions: [], closingOptions: firstOptions }, { changes: [], suggestions: [], closingOptions: firstVerdicts })
+    const firstClosing = first.articles[0].closing
+    if (firstClosing?.kind !== 'needs-evidence') throw new Error('Missing partial shortlist')
+
+    const replacementOptions = completeShortlist().map((option, index) => ({
+      ...option,
+      title: `Unexplained replacement ${index + 1}`,
+      outcome: `A different unrecorded outcome ${index + 1}.`,
+      replaces: [],
+    }))
+    const retry = review(first, { changes: [], suggestions: [], closingOptions: replacementOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+
+    expect(retry.articles[0].closing).toMatchObject({
+      kind: 'needs-evidence',
+      missingEvidence: 'A prior displayed recommendation was omitted without an evidence-backed rank change.',
+      recommendations: firstClosing.recommendations.map(option => ({ identity: option.identity, title: option.title })),
+    })
+  })
+
+  it('retains a ready-shortlist replacement obligation across repeated partial retries', () => {
+    const readyOptions = completeShortlist()
+    const ready = review(empty(), { changes: [], suggestions: [], closingOptions: readyOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    const readyClosing = ready.articles[0].closing
+    if (readyClosing?.kind !== 'shortlist') throw new Error('Missing ready shortlist')
+    const replacement = { ...readyOptions[2], title: 'A different third recommendation', outcome: 'Advance a different third outcome.', replaces: [] }
+    const unexplained = [readyOptions[0], readyOptions[1], replacement]
+
+    const partial = review(ready, { changes: [], suggestions: [], closingOptions: unexplained }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    expect(partial.articles[0].closing).toMatchObject({
+      kind: 'needs-evidence',
+      recommendations: readyClosing.options.slice(0, 2).map(option => ({ identity: option.identity })),
+      unresolvedIdentities: [readyClosing.options[2].identity],
+    })
+
+    const retry = review(partial, { changes: [], suggestions: [], closingOptions: unexplained }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    expect(retry.articles[0].closing).toMatchObject({
+      kind: 'needs-evidence',
+      recommendations: readyClosing.options.slice(0, 2).map(option => ({ identity: option.identity })),
+      unresolvedIdentities: [readyClosing.options[2].identity],
+    })
+
+    const explained = [readyOptions[0], readyOptions[1], { ...replacement, replaces: [readyClosing.options[2].identity] }]
+    const repaired = review(retry, { changes: [], suggestions: [], closingOptions: explained }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    expect(repaired.articles[0].closing).toMatchObject({ kind: 'shortlist', options: [{ rank: 1 }, { rank: 2 }, { rank: 3, replaces: [readyClosing.options[2].identity] }] })
+  })
+
+  it('does not manufacture distinct work from URL fragments', () => {
+    const first = closingOption()
+    const second = { ...closingOption(), target: `${target}#discussion` }
+    const proposal = { changes: [], suggestions: [], closingOptions: [first, second] }
+    const verification = { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(2) }
+
+    expect(() => review(empty(), proposal, verification)).toThrow(/Duplicate closing option/)
+  })
+
+  it('records an evidence-backed display replacement without settling the underlying work', () => {
+    const firstOptions = completeShortlist()
+    const first = review(empty(), { changes: [], suggestions: [], closingOptions: firstOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    const firstClosing = first.articles[0].closing
+    if (firstClosing?.kind !== 'shortlist') throw new Error('Missing first shortlist')
+    const replacement = { ...closingOption(), title: 'Review a more relevant article follow-up', outcome: 'Advance the newly supported article-specific outcome.', whyNow: 'Fresh evidence ranks this above the prior display choice.', replaces: [firstClosing.options[0].identity] }
+    const nextOptions = [replacement, firstOptions[1], firstOptions[2]]
+
+    const next = review(first, { changes: [], suggestions: [], closingOptions: nextOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    const nextClosing = next.articles[0].closing
+
+    expect(next.records).toEqual([])
+    expect(nextClosing).toMatchObject({ kind: 'shortlist', options: [
+      { title: replacement.title, rank: 1, replaces: [firstClosing.options[0].identity] },
+      { identity: firstClosing.options[1].identity, rank: 2 },
+      { identity: firstClosing.options[2].identity, rank: 3 },
+    ] })
   })
 
   it('reconciles a same-round matching suggestion instead of emitting a raw checkpoint', () => {

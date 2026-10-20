@@ -20,7 +20,7 @@ function seed(): ActionRegistry {
 const candidate = { command: '/implement', description: 'Make article actions and queue state agree.', repo: 'daily-logger', target: 'editorial action reconciliation', outcome: 'consistent article and queue', goal: 'Reliable editorial acceptance', goalCitations: [{ sourceId: 'goal', quote: 'reliable editorial acceptance' }], factCitations: [{ sourceId: 'evidence', quote: 'a queue and article mismatch' }], doneWhen: 'A repeat build preserves the same action identities.', gates: ['Human merges the editorial PR.'], existingKey: null }
 function propose(): ActionProposal { return { changes: [{ actionKey: 'act-existing', state: 'superseded', description: 'The ADR prerequisite is superseded.', reason: 'The prerequisite was explicitly superseded.', citations: [{ sourceId: 'evidence', quote: 'mandatory ADR prerequisite was explicitly superseded' }] }], suggestions: [structuredClone(candidate)] } }
 function verify(): ActionVerification { return { changes: [{ actionKey: 'act-existing', verdict: 'pass', reason: 'The exact prerequisite is superseded.' }], suggestions: [{ candidateIndex: 0, verdict: 'pass', reason: 'A bounded step toward the operator goal.', existingKey: null }] } }
-function actionHandoff(actionKey: string, context = 'The prior review retained this current action.') { return { kind: 'action' as const, actionKey, title: 'Continue the reviewed action', entryPoint: 'Resume the existing action from its recorded gates.', context, whyNow: 'The verified obligation remains current.', outcome: 'Advance the existing obligation without creating another identity.', nextCheck: 'Record the next verified checkpoint on the existing action.', factCitations: [{ sourceId: 'evidence', quote: 'a queue and article mismatch' }], goalCitations: [{ sourceId: 'goal', quote: 'reliable editorial acceptance' }] } }
+function actionHandoff(actionKey: string, context = 'The prior review retained this current action.') { return { kind: 'action' as const, actionKey, title: 'Continue the reviewed action', benefit: 'Move the reviewed obligation to its next decision.', start: 'Resume the existing handoff.', entryPoint: 'Resume the existing action from its recorded gates.', context, whyNow: 'The verified obligation remains current.', outcome: 'Advance the existing obligation without creating another identity.', nextCheck: 'Record the next verified checkpoint on the existing action.', factCitations: [{ sourceId: 'evidence', quote: 'a queue and article mismatch' }], goalCitations: [{ sourceId: 'goal', quote: 'reliable editorial acceptance' }] } }
 function closingVerdict() { return { optionIndex: 0, verdict: 'pass' as const, reason: 'The current action is a useful handoff with a concrete checkpoint.' } }
 function apply(registry = seed(), proposal = propose(), verification = verify()) { return applyVerifiedActionReview({ cycle: revisionActionCycle('fixture'), registry, articleStatuses, articleDate, markdown, sources, roundId: 'd'.repeat(64), proposal, verification }) }
 const roots: string[] = []
@@ -109,12 +109,12 @@ describe('canonical action review and publication', () => {
       if (realCard && field === 'open-description') {
         suggested.state = 'done'; suggested.history[0].state = 'done'
       }
-      const handoff = (record: typeof existing) => ({ kind: 'action' as const, actionKey: record.key, title: 'Continue the reviewed action', entryPoint: `Run ${record.original.command} in ${record.original.repo}.`, context: record.history[0].description, whyNow: 'The verified action remains current.', outcome: 'Advance the existing reviewed obligation.', nextCheck: 'Record its next verified checkpoint.', factCitations: [{ sourceId: 'evidence', quote: 'a queue and article mismatch' }], goalCitations: [{ sourceId: 'goal', quote: 'reliable editorial acceptance' }] })
+      const handoff = (record: typeof existing) => ({ kind: 'action' as const, actionKey: record.key, title: 'Continue the reviewed action', benefit: 'Move the reviewed obligation to its next decision.', start: 'Resume the existing handoff.', entryPoint: `Run ${record.original.command} in ${record.original.repo}.`, context: record.history[0].description, whyNow: 'The verified action remains current.', outcome: 'Advance the existing reviewed obligation.', nextCheck: 'Record its next verified checkpoint.', factCitations: [{ sourceId: 'evidence', quote: 'a queue and article mismatch' }], goalCitations: [{ sourceId: 'goal', quote: 'reliable editorial acceptance' }] })
       reviewed.articles[0].closing = { kind: 'options', options: [existing, suggested].filter(record => ['open', 'proposed', 'deferred'].includes(record.state)).map(handoff) }
       const html = renderArticleActionHtml(markdown, reviewed, articleDate, articleStatuses)
       expect(html).not.toContain('<img')
       expect(html).toContain('&lt;img')
-      expect(html.includes('<section class="action-history-card"')).toBe(realCard)
+      expect(html.includes('<details class="suggestions-handled"')).toBe(realCard)
     })
   }
   it('keeps marker-shaped active fields inside a single rerenderable managed block (F1r audit)', () => {
@@ -254,13 +254,13 @@ describe('canonical action review and publication', () => {
   it('moves original wording into history and never infers membership from quoted commands', () => {
     const reviewed = apply()
     const body = renderArticleActions(markdown, reviewed, articleDate, articleStatuses)
-    expect(body.match(/> \*\*Suggested actions\*\*/g)).toHaveLength(1)
-    expect(body.split('Resolved suggestions')[0]).not.toContain('Old generator output.')
+    expect(body.match(/>Suggested actions<\/h3>/g)).toHaveLength(1)
+    expect(body.indexOf('Continue the reviewed action')).toBeLessThan(body.indexOf('Suggestions handled at draft'))
     expect(body).toContain('<p>Old generator output.</p>')
     expect(body).toContain('superseded')
     expect(projectRegistry(readActionRegistryFixture(reviewed), new Map([[articleDate, 'accepted']])).open.map(action => action.description)).toEqual(['Make article actions and queue state agree.'])
     const html = renderArticleActionHtml(markdown, reviewed, articleDate, articleStatuses)
-    expect(html).toContain('<section class="action-history-card"')
+    expect(html).toContain('<section class="suggested-actions-card')
     expect(html).not.toContain('&lt;section')
   })
 
@@ -278,7 +278,7 @@ describe('canonical action review and publication', () => {
     proposal.changes[0].citations.push({ sourceId: hostileSource.id, quote: hostileSource.content })
     const reviewed = applyVerifiedActionReview({ cycle: revisionActionCycle('fixture'), registry, articleStatuses, articleDate, markdown: prose, sources: [...sources, hostileSource], roundId: 'd'.repeat(64), proposal, verification: verify() })
     const html = renderArticleActionHtml(prose, reviewed, articleDate, articleStatuses)
-    expect(html).toContain('<section class="action-history-card"')
+    expect(html).toContain('<section class="suggested-actions-card')
     expect(html).not.toContain('<script>')
     expect(html).not.toContain('<img')
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
@@ -337,7 +337,7 @@ describe('canonical action review and publication', () => {
     const verification: ActionVerification = { changes: [{ actionKey: key, verdict: 'pass', reason: 'Exact delivery evidence checked.' }], suggestions: [] }
     const draft = applyVerifiedActionReview({ cycle: revisionActionCycle('fixture'), registry: first, articleStatuses: statuses, articleDate: laterDate, markdown: laterMarkdown, sources, roundId: 'e'.repeat(64), proposal, verification })
     expect(projectRegistry(draft, statuses).open.map(action => action.id)).toContain(key)
-    expect(renderArticleActions(markdown, draft, articleDate, statuses)).toContain('Decision needed before the next action')
+    expect(renderArticleActions(markdown, draft, articleDate, statuses)).toContain('needs one more review')
     expect(articleActionRecords(draft, articleDate, statuses).find(record => record.key === key)?.state).toBe('proposed')
     const corrected = applyVerifiedActionReview({ cycle: revisionActionCycle('fixture'), registry: draft, articleStatuses: statuses, articleDate: laterDate, markdown: laterMarkdown, sources, roundId: 'f'.repeat(64), proposal: { ...proposal, changes: [{ ...proposal.changes[0], state: 'open' }] }, verification })
     expect(corrected.records[1].state).toBe('open')

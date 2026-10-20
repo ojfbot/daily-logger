@@ -39,6 +39,24 @@ describe('accepted prior closing continuity', () => {
     expect(prompt).toContain('revalidate current state')
   })
 
+  it('projects ranked shortlist fields and canonicalizes fragment targets for the next evidence cycle', () => {
+    const content = readFileSync(`${repoRoot}/_articles/2026-10-19.md`, 'utf8')
+    const snapshot = structuredClone(readActionRegistry(repoRoot).articles.find(article => article.date === '2026-10-19'))
+    if (!snapshot || snapshot.closing?.kind !== 'options') throw new Error('Missing October 19 legacy closing fixture')
+    const [first, second] = snapshot.closing.options
+    const third = { ...first, kind: 'checkpoint' as const, target: 'https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6271042441', title: 'Review the prepared timing repair', outcome: 'Return a bounded timing-repair adoption decision.' }
+    snapshot.closing = { kind: 'shortlist', options: [
+      { ...first, rank: 1, identity: 'checkpoint:first', benefit: 'Check the first retained decision.', start: 'Review the first current source.', rationale: first.whyNow, replaces: [] },
+      { ...second, rank: 2, identity: 'checkpoint:second', benefit: 'Check the second retained decision.', start: 'Review the second current source.', rationale: second.whyNow, replaces: [] },
+      { ...third, rank: 3, identity: 'checkpoint:third', benefit: 'Check the prepared timing decision.', start: 'Review the timing source.', rationale: third.whyNow, replaces: [] },
+    ] }
+    snapshot.verification.verdicts.push({ item: 'closing:2', verdict: 'pass', reason: 'The timing checkpoint was independently checked.' })
+
+    const continuity = acceptedClosingContinuity({ date: '2026-10-19', content, snapshot })
+    expect(continuity).toMatchObject({ status: 'available', optionCount: 3, options: [{ whyNow: first.whyNow }, { whyNow: second.whyNow }, { whyNow: third.whyNow }] })
+    expect(acceptedClosingContinuityTargets([{ date: '2026-10-19', excerpt: '', closingContinuity: continuity }])).toContain('https://github.com/ojfbot/daily-logger/issues/357')
+  })
+
   it('reaches both next-day request consumers with binding and review context', () => {
     const previousArticles: BlogContext['previousArticles'] = [{
       date: '2026-10-19',

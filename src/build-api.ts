@@ -22,7 +22,7 @@ import { requiresShipmentTimeCoverage } from './shipment-time-coverage.js'
 import type { TimeReference } from './time-references.js'
 import { type CanonicalAction } from './action-model.js'
 import { verifyRecordedAdmissions } from './action-intake.js'
-import { readActionRegistry, projectRegistry, renderArticleActions, articleActionRecords, renderArticleActionHtml, stripManagedActions } from './action-registry.js'
+import { readActionRegistry, projectRegistry, renderArticleActions, articleActionRecords, articleActionCard, renderArticleActionHtml, stripManagedActions } from './action-registry.js'
 
 import { KNOWN_REPOS } from './fleet.js'
 
@@ -368,7 +368,7 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
     const bodyHtml = renderArticleActionHtml(content, registry, date, statuses)
     writeFileSync(
       join(articlesApiDir, `${date}.json`),
-      JSON.stringify({ ...entry, actionSuggestions: articleActionRecords(registry, date, statuses), sourceBlobSha: createHash('sha1').update(`blob ${Buffer.byteLength(content)}\0`).update(content).digest('hex'), bodyHtml }, null, 2),
+      JSON.stringify({ ...entry, actionSuggestions: articleActionRecords(registry, date, statuses), suggestedActionsCard: articleActionCard(registry, date, statuses), sourceBlobSha: createHash('sha1').update(`blob ${Buffer.byteLength(content)}\0`).update(content).digest('hex'), bodyHtml }, null, 2),
     )
   }
   console.log(`  articles/    — ${files.length} per-article JSON files`)
