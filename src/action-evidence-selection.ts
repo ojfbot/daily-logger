@@ -1,4 +1,4 @@
-import { acceptedActionState, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionSource, type DraftRecommendationContext } from './action-registry.js'
+import { acceptedActionState, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionSource, type DraftRecommendationContext, type RankedClosingOption, type RecommendationMaintenanceDescriptor } from './action-registry.js'
 import { EXCLUDED_REPOS, KNOWN_REPOS } from './fleet.js'
 import { extractDraftRecommendationContext } from './recommendation-prose.js'
 
@@ -10,6 +10,24 @@ export const CONTINUITY_TARGETS_SOURCE = 'accepted-closing-continuity-targets'
 const sourceKey = (id: string) => id.replace(/@[a-f0-9]{64}$/, '')
 
 export type ContinuityGithubReference = { id: string; repo: string; kind: string; number: string }
+
+export function recommendationMaintenanceDescriptor(option: RankedClosingOption): RecommendationMaintenanceDescriptor {
+  return option.kind === 'action'
+    ? { kind: option.kind, identity: option.identity, actionKey: option.actionKey, title: option.title, outcome: option.outcome }
+    : { kind: option.kind, identity: option.identity, target: option.target, title: option.title, outcome: option.outcome }
+}
+
+export function recommendationMaintenanceProjection(previous: ActionRegistry['articles'][number] | undefined) {
+  if (!previous?.closing || previous.closing.kind === 'options') return null
+  const recommendations = previous.closing.kind === 'shortlist' ? previous.closing.options : previous.closing.recommendations
+  return {
+    authority: 'Maintenance memory only. These descriptors are not current evidence and cannot justify display, disposition, replacement or execution. Revalidate against the supplied current sources; when an unresolved identity lacks a descriptor, request source-bound clarification instead of inferring its meaning.',
+    reviewState: previous.review.state,
+    recommendations: recommendations.map(option => ({ ...recommendationMaintenanceDescriptor(option), replaces: option.replaces })),
+    unresolvedIdentities: previous.closing.kind === 'needs-evidence' ? previous.closing.unresolvedIdentities ?? [] : [],
+    unresolvedRecommendations: previous.closing.kind === 'needs-evidence' ? previous.closing.unresolvedRecommendations ?? [] : [],
+  }
+}
 
 export function acceptedContinuityGithubReferences(targets: readonly string[]): ContinuityGithubReference[] {
   const refs = new Map<string, ContinuityGithubReference>()
@@ -67,9 +85,8 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
     ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? snapshot?.draftContext)
   const nextSection = prepared.context.kind === 'retained' ? prepared.context.markdown : ''
-  const closing = snapshot?.closing
-    ? JSON.stringify(snapshot.closing.kind === 'needs-evidence' ? snapshot.closing.recommendations : snapshot.closing.options)
-    : ''
+  const maintenance = recommendationMaintenanceProjection(snapshot)
+  const closing = maintenance ? JSON.stringify(maintenance) : snapshot?.closing?.kind === 'options' ? JSON.stringify(snapshot.closing.options) : ''
   const requested = [input.feedback, nextSection, closing].join('\n')
   const carried = input.registry.records.filter(record => current.includes(record.key) || requested.includes(record.key))
   const text = [requested, ...carried.map(record => JSON.stringify({ key: record.key, workKey: record.workKey,

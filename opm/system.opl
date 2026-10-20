@@ -232,6 +232,7 @@ Action Reconciling invokes Source Evidence Selecting. [src: src/review-actions.t
 Source Evidence Selecting requires Article. [src: src/action-evidence-selection.ts]
 Source Evidence Selecting requires Action Registry. [src: src/action-evidence-selection.ts]
 Source Evidence Selecting requires Source Evidence. [src: src/action-evidence-selection.ts]
+Source Evidence Selecting requires Recommendation Maintenance Memory. [src: src/action-evidence-selection.ts]
 Source Evidence Selecting yields Selected Source Evidence. [src: src/action-evidence-selection.ts]
 Source Evidence Selecting yields Evidence Coverage. [src: src/action-evidence-selection.ts]
 Suggestion Proposing requires Selected Source Evidence. [src: src/review-actions.ts]

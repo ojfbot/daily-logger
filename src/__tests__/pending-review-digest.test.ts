@@ -158,4 +158,48 @@ describe('dated pending-review state digests', () => {
     const built = JSON.parse(readFileSync(join(root, 'api', 'articles', `${firstDate}.json`), 'utf8')) as { bodyHtml: string }
     expect(built.bodyHtml).toContain('Action review pending')
   })
+
+  it('retires an unresolved action recommendation after its verified terminal disposition', () => {
+    const delivery = 'Repository receipt proves the bounded action completion condition is satisfied.'
+    const evidence: ActionSource[] = [...sources, { id: 'delivery', kind: 'repository', locator: 'evidence/delivery.md', content: delivery }]
+    const statuses = new Map([[firstDate, 'draft']])
+    const apply = (registry: ActionRegistry, nextProposal: ActionProposal, round: string) => applyVerifiedActionReview({
+      registry,
+      cycle: revisionActionCycle('terminal-unresolved-action'),
+      articleDate: firstDate,
+      articleStatuses: statuses,
+      markdown: firstMarkdown,
+      sources: evidence,
+      roundId: sha256(round),
+      proposal: nextProposal,
+      verification: {
+        changes: nextProposal.changes.map(change => ({ actionKey: change.actionKey, verdict: 'pass' as const, reason: 'The authoritative evidence supports this disposition.' })),
+        suggestions: [],
+        closingOptions: (nextProposal.closingOptions ?? []).map((_, optionIndex) => ({ optionIndex, verdict: 'pass' as const, reason: 'Current facts, goal, entry point and next checkpoint are supported.' })),
+      },
+    })
+    const readyProposal = proposal()
+    const ready = apply(seed(), readyProposal, 'terminal-ready')
+    const readyClosing = ready.articles[0].closing
+    if (readyClosing?.kind !== 'shortlist' || readyClosing.options[0].kind !== 'action') throw new Error('Missing ready action recommendation')
+    const actionIdentity = readyClosing.options[0].identity
+    const partialProposal: ActionProposal = { ...proposal(), closingOptions: [checkpoint('Confirm the owner checkpoint', 'Confirm the owner verdict.'), checkpoint('Confirm the roadmap checkpoint', 'Confirm the roadmap gate.')] }
+    const partial = apply(ready, partialProposal, 'terminal-partial')
+    const partialClosing = partial.articles[0].closing
+    if (partialClosing?.kind !== 'needs-evidence') throw new Error('Missing partial action recommendation')
+    expect(partialClosing.unresolvedRecommendations).toMatchObject([{ kind: 'action', identity: actionIdentity, actionKey: 'act-existing' }])
+    const terminalProposal = proposal()
+    terminalProposal.changes[0] = { actionKey: 'act-existing', state: 'done', description: 'The bounded handoff is complete.', reason: 'Repository delivery evidence satisfies the completion condition.', citations: [{ sourceId: 'delivery', quote: delivery }] }
+    terminalProposal.closingOptions = [
+      checkpoint('Confirm the owner checkpoint', 'Confirm the owner verdict.'),
+      checkpoint('Confirm the roadmap checkpoint', 'Confirm the roadmap gate.'),
+      checkpoint('Confirm the evidence checkpoint', 'Confirm the evidence gate.'),
+    ]
+
+    const terminal = apply(partial, terminalProposal, 'terminal-done')
+
+    expect(terminal.records[0].state).toBe('done')
+    expect(terminal.articles[0].closing).toMatchObject({ kind: 'shortlist' })
+    if (terminal.articles[0].closing?.kind === 'needs-evidence') expect(terminal.articles[0].closing.unresolvedIdentities).not.toContain(actionIdentity)
+  })
 })
