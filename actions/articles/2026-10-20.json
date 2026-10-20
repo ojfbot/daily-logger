@@ -7,28 +7,217 @@
     "date": "2026-10-20",
     "status": "draft",
     "review": {
-      "state": "pending",
-      "reason": "Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; review pending"
+      "state": "verified"
     },
-    "articleDigest": "b30123e0d736ac78c26af9acd8872719eae23b9b21620fb3078ef732a909b553",
-    "roundId": "7b2e4b5458116cd2650dae220976138dbd1ff9bea85b1ddfa008351c85dc47ac",
+    "articleDigest": "01251c30990e617822ae65603f5bc0299d7619c1f787fc49e85948aeb6b2fff0",
+    "roundId": "46c49fbed2684f697b02f669a297ffcd0c875bd57c5e1955646c1048183e07d4",
     "reviewCycle": {
-      "phase": "generation"
+      "phase": "revision",
+      "id": "https://github.com/ojfbot/daily-logger/pull/402#issuecomment-6295372166"
     },
     "actionKeys": [],
     "draftContext": {
       "kind": "retained",
-      "markdown": "Three active checkpoints carry forward from the accepted October 19 closing continuity, in priority order:\n\n1. Disposition of the progressive-retrieval trial for #386: candidate `907e490`, recorded base `1667af9`. This is the structurally significant open item — the token-aware admission budget is not yet implemented, and the failure mode when the 640 KiB ceiling is hit in production (silent drop, crash, or stale article ship) is not documented in available project context and should be confirmed.\n\n2. Rebase of #385 against current accepted main (`c79c895`) before requesting human visual verdict: prepared candidate `5v897125`, recorded base `730fb9f`. The rebase is a pipeline-owner action; the verdict gate is a human visual inspection requiring no further code change after rebind.\n\n3. Receipt settlement for three reviewed canonical actions (`act-2026-10-15-investigate-66e04675dca0`, `act-2026-10-15-validate-bf0fbc1d6c71`, `act-2026-10-15-orient-a778b3b2c5af`) — pending receipt from owning actor; no settlement authority present in this cycle.\n\nEvidence gap: the failure mode when the 640 KiB ceiling is hit (silent drop, crash, or stale ship) is not confirmed in available project context. This should be documented before the next ceiling event.\n\nEvidence gap: the rationale for the 393,216-byte source limit is not documented. Whether it is a principled design ceiling or an implementation constant is unknown.\n\nEvidence gap: cost per article cycle (token spend, retry cost on evidence overflow) is not tracked or reported in available project context.\n\nEvidence gap: pipeline green/clean run status as of October 20 is not confirmed. Monday established structural preconditions but no observed clean end-to-end run is recorded.\n\nHistorical receipts generated before #393 merged carry a weaker provenance guarantee — their envelope SHAs reference mutable PR head/base objects that GitHub may have since updated. Downstream verifiers should be aware that pre-#393 receipts are best-effort, not guaranteed-intact.\n\nThe `bf67063` legacy-heading normalization was applied retroactively to in-flight history. Downstream test authors should verify their fixtures use current heading formats before the next test run.\n\nThe lego-village-pipeline PRs (#44, #45, #46) are parked as design-phase artifacts until the HOUSE-WORLD phase gate closes. No owner action is required in the current cycle."
+      "markdown": "Tuesday's original generation stopped action review before either action agent ran: the required #357 discussion exceeded the 128 KiB source cap. Its original proposed suggestions were not retained and remain unknown. The three follow-ups in this article are new supervised curation from source-checked existing checkpoints; they do not recover that lost output.\n\nThe shortlist continues Monday's timing, recovery and timestamp work with the original identities and decision gates. No action was admitted, executed or settled in this revision. The later scheduled run skipped generation because the article already existed. Mac dispatcher implementation and activation remain deferred, and hosted evidence retention remains blocked."
     },
-    "stateDigest": "e420d05b87072300877c768d1b1fc36125903957f2c69a69928126027d376d44",
+    "closing": {
+      "kind": "shortlist",
+      "options": [
+        {
+          "kind": "checkpoint",
+          "target": "https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6271042441",
+          "title": "Review the 4 a.m. timing fix",
+          "entryPoint": "Refresh prepared candidate 5f897125 from its recorded 730fb9f base onto the latest accepted main, pinned at review time, before evaluating it.",
+          "context": "The local timing candidate targets a 03:30 America/Chicago workflow start and 04:00 public draft. It is unadopted, its recorded base predates accepted main, installed clocks were not inspected, and no schedule was changed. The original October 20 generation review remains historically pending because the complete #357 discussion was 202,337 bytes; this newly supervised curation instead uses the complete current issue body and exact selected OWNER comment with all other comments explicitly omitted and unknown.",
+          "whyNow": "Fresh 2026-10-20 scoped primary evidence keeps the timing target and prepared candidate relevant while leaving current installation, broader discussion state, and real public-read delivery explicitly unproven.",
+          "outcome": "Return a concrete adopt, reject, or amend decision for a current-base candidate and an evidence plan for the 03:30 start and 04:00 public-draft targets.",
+          "nextCheck": "Produce a current-base exact candidate review and source-adoption packet; do not activate a schedule or claim delivery without a live public-content receipt and explicit owner adoption.",
+          "factCitations": [
+            {
+              "sourceId": "github:daily-logger#357@252ad9708c153ba752a49fbbef564d79ffe8a179e0f2199ffd597cf6ace1e9a0",
+              "quote": "CURRENT API STATE daily-logger#357: state=open; head=not-a-PR; merged_at=none."
+            },
+            {
+              "sourceId": "repository:ojfbot/daily-logger:5f8971254bd2c7da425ec55d71dcc56718e0cfbf:docs/daily-schedule.md@dee60714bb192df742bbdf4c13728aef3a0749819e9140b1ad2e42b29a6c5d4a",
+              "quote": "The workflow start target is 03:30 America/Chicago. The initial draft should be\npublic by 04:00. Human editorial acceptance is a separate later decision."
+            }
+          ],
+          "goalCitations": [
+            {
+              "sourceId": "github:daily-logger#357@252ad9708c153ba752a49fbbef564d79ffe8a179e0f2199ffd597cf6ace1e9a0",
+              "quote": "The human’s timing targets are **Daily Dev Blog starts03:30Chicago; initial draft publicly available by04:00**. The existing fallback remains04:00 and reviewer07:00. Moving the clock alone is insufficient: the watchdog has no not-before guard and has run early; the reporting endpoint is fixed at09:00UTC (04:00CDT/03:00CST), with no enforced upper cutoff in inspected collectors. Reporting coverage needs an owner decision, then deterministic timing/DST/race controls, accepted-source deployment and a real public-read receipt. No schedule has changed."
+            }
+          ],
+          "rank": 1,
+          "identity": "checkpoint:d8e801b487140ebe8fd3",
+          "benefit": "Move the daily draft closer to a reliable 4 a.m. publish window.",
+          "start": "Review the prepared change against the publishing-time goal.",
+          "rationale": "Fresh 2026-10-20 scoped primary evidence keeps the timing target and prepared candidate relevant while leaving current installation, broader discussion state, and real public-read delivery explicitly unproven.",
+          "replaces": []
+        },
+        {
+          "kind": "checkpoint",
+          "target": "https://github.com/ojfbot/daily-logger/issues/386",
+          "title": "Check the existing recovery trial",
+          "entryPoint": "Inspect candidate 907e490 from its recorded 1667af9 base against the latest accepted main, pinned at review time, and issue #386; do not rebuild selection already delivered on main.",
+          "context": "The prepared progressive-retrieval trial is local-only and unadopted. Fresh 2026-10-20 scoped evidence confirms the issue body remains current but intentionally omits comments; injected token controls do not qualify a real provider window or output reserve.",
+          "whyNow": "The exact trial still exists and issue #386 remains open, so a bounded disposition can separate useful remaining controls from selection behavior already delivered by accepted main.",
+          "outcome": "Decide adopt, reject, or specifically amend the prepared local trial based on its actual controls, current-base differences, and operating limits.",
+          "nextCheck": "Write a reviewed local-only disposition packet for 907e490; do not publish, retain hosted private artifacts, call a provider, or begin storage expansion.",
+          "factCitations": [
+            {
+              "sourceId": "github:daily-logger#386@ee837eb8e6b659e0afca6d36fde8a6c25b20a1ed366153e298fced023173a908",
+              "quote": "CURRENT API STATE daily-logger#386: state=open; head=not-a-PR; merged_at=none."
+            },
+            {
+              "sourceId": "repository:ojfbot/daily-logger:907e4901bea706dbb6af5faa9e7914ac56292302:src/action-evidence-retrieval.ts@c8f595a4d0246252fc8736fe9e381686ae715ea1c38d3cc6cfe99324108fa680",
+              "quote": "export const ACTION_EVIDENCE_REQUEST_VERSION = 'action-evidence-request-v1'"
+            },
+            {
+              "sourceId": "repository:ojfbot/daily-logger:907e4901bea706dbb6af5faa9e7914ac56292302:src/__tests__/action-provider-budget.test.ts@e7ee15b939a5636458324212221466cd0e0c61acafbe0f461539e7912167f624",
+              "quote": "it('uses an injected full-request token count plus output reserve and stops on overflow or unknown qualification', async () => {"
+            }
+          ],
+          "goalCitations": [
+            {
+              "sourceId": "github:daily-logger#386@ee837eb8e6b659e0afca6d36fde8a6c25b20a1ed366153e298fced023173a908",
+              "quote": "Keep the receipt-free CI budget and add a near-window adversarial fixture. No live provider call is required without separate authorization."
+            },
+            {
+              "sourceId": "github:daily-logger#386@ee837eb8e6b659e0afca6d36fde8a6c25b20a1ed366153e298fced023173a908",
+              "quote": "This is safe to follow up after the cutover because the current runtime rejects oversized evidence and either complete prompt before calling a provider. Review failures preserve a pending draft with no new admissions, and acceptance remains blocked. A byte limit does not prove token-window fit or suggestion quality; those remain the scope of this issue."
+            }
+          ],
+          "rank": 2,
+          "identity": "checkpoint:a2c05cce92f08451469c",
+          "benefit": "Decide whether the already-built recovery approach is safe enough to keep.",
+          "start": "Compare the trial with the recovery gaps that remain.",
+          "rationale": "The exact trial still exists and issue #386 remains open, so a bounded disposition can separate useful remaining controls from selection behavior already delivered by accepted main.",
+          "replaces": []
+        },
+        {
+          "kind": "checkpoint",
+          "target": "https://github.com/ojfbot/daily-logger/pull/385",
+          "title": "Try the timestamp popover",
+          "entryPoint": "Start from draft PR #385 at exact head cc3c99bc; rebind or rebuild its preview before requesting a human verdict if the deployed source no longer matches.",
+          "context": "Fresh 2026-10-20 metadata keeps PR #385 open and draft at cc3c99bc, with mergeable=false and mergeable_state=dirty. This preflight did not reopen the preview; historical hosted reports are not human acceptance, and rebase is not asserted as a universal prerequisite.",
+          "whyNow": "The single-article pilot remains bounded and the outstanding human visual verdict is still useful, while current-base integration and merge approval remain separate decisions.",
+          "outcome": "Obtain human visual acceptance or requested corrections for the exact-source, four-control October 17 timestamp-popover pilot.",
+          "nextCheck": "Record the human visual verdict against a source-bound preview; preserve dirty-base limits and make any rebase, merge, or production decision separately.",
+          "factCitations": [
+            {
+              "sourceId": "github:daily-logger#385@7b298d5037943d78a517bae1f0b07ead7b59e493760a7ec27b8bfc1ba6d9da40",
+              "quote": "CURRENT API STATE daily-logger#385: state=open; head=cc3c99bc2f93afdcfa81c06b5ef813bb75934e81; merged_at=none."
+            },
+            {
+              "sourceId": "github:daily-logger#385@7b298d5037943d78a517bae1f0b07ead7b59e493760a7ec27b8bfc1ba6d9da40",
+              "quote": "Current candidate: `cc3c99bc2f93afdcfa81c06b5ef813bb75934e81`, based on accepted main `c88039f1167a824be7ef27f65453ec3dd83f55f8`. The rebuilt hosted preview is verified. This PR stays **draft and unmerged for human visual review**; no production deployment has been performed."
+            }
+          ],
+          "goalCitations": [
+            {
+              "sourceId": "github:daily-logger#385@7b298d5037943d78a517bae1f0b07ead7b59e493760a7ec27b8bfc1ba6d9da40",
+              "quote": "[The existing UIK-09 audit](https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6255409293) keeps skill instructions, few-shot/templated examples, executable fixtures and wider historical metadata backfill queued under the explicit **existing popover only** contract. No new issue or parallel backlog. The single-article pilot is proposed here; wider adoption remains separate."
+            }
+          ],
+          "rank": 3,
+          "identity": "checkpoint:edd972afb47f74ef416a",
+          "benefit": "See whether clustered timestamps feel clear before anything merges.",
+          "start": "Open a source-bound preview and try its four timestamp controls.",
+          "rationale": "The single-article pilot remains bounded and the outstanding human visual verdict is still useful, while current-base integration and merge approval remain separate decisions.",
+          "replaces": []
+        }
+      ]
+    },
+    "stateDigest": "3e5457a0bce713bf468e5d1de49032de8f581a3ce3188df0d8ff0ffa2338876f",
     "verification": {
-      "proposer": "not-verified",
-      "verifier": "not-verified",
-      "promptVersion": "action-review-pending-v4-maintained-recommendation-continuity",
-      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
-      "verdicts": []
+      "proposer": "Codex: supervised curation packet 9bef1167dd8714b1",
+      "verifier": "Codex: independent review chat 01a15689-8baa-7382-951b-086af45e5d85",
+      "promptVersion": "action-review-v13-maintained-recommendation-continuity",
+      "proposalSha256": "7009b9d422913ad79c24f3381fed6b5596801c0ba5cf66da9b30b6781539d538",
+      "verdicts": [
+        {
+          "item": "closing:0",
+          "verdict": "pass",
+          "reason": "The hash-pinned continuity report selects the current scoped #357 evidence on a first application as well as a re-review. The open issue and exact OWNER timing instruction support the preserved timing checkpoint; the option keeps current-base review, explicit owner adoption and a live public-content receipt as gates and grants no schedule or delivery authority."
+        },
+        {
+          "item": "closing:1",
+          "verdict": "pass",
+          "reason": "The hash-pinned continuity report selects the current scoped #386 evidence on a first application as well as a re-review. The open issue body and pinned local trial support the preserved recovery checkpoint; the option keeps provider, hosted-retention, storage, adoption and already-delivered selection behavior outside its authority."
+        },
+        {
+          "item": "closing:2",
+          "verdict": "pass",
+          "reason": "The hash-pinned continuity report selects the current scoped PR #385 evidence on a first application as well as a re-review. The draft, unmerged exact-head record supports the preserved timestamp checkpoint; the option still requires a source-bound human visual verdict and leaves preview rebinding, rebase, merge and production as separate decisions."
+        }
+      ]
     },
-    "sources": [],
+    "sources": [
+      {
+        "id": "action-evidence-coverage@2c0bd7ffcda64b0e48b477053e2da673545427fe212e1a46c939545aed271ab5",
+        "kind": "report",
+        "locator": "whole-action-sources-v2",
+        "content": "{\"version\":\"whole-action-sources-v2\",\"unit\":\"UTF-8 bytes\",\"collection\":\"Bounded collector output, not an exhaustive repository/discussion census. Missing or omitted content is unknown, never evidence of absence or approval.\",\"selection\":\"Whole sources only; no chronological comment window or excerpt. Only current carried actions, explicit feedback and retained draft continuation context require GitHub discussions. Shipment prose does not.\",\"authority\":\"This coverage index is context only. Hashes, identities, omission reasons and missing evidence cannot justify completion, supersession, dismissal or human approval.\",\"requiredReferences\":[\"daily-logger#357\",\"daily-logger#385\",\"daily-logger#386\"],\"expandedActionKeys\":[],\"sources\":[{\"id\":\"accepted-closing-continuity-targets@6b43a87d3d28dd790e61e3fa5803a5e6f4e9f35891e6844fe7c7f53b2c8fa86d\",\"kind\":\"report\",\"locator\":\"accepted-closing-continuity-targets-v1\",\"fullContentSha256\":\"6b43a87d3d28dd790e61e3fa5803a5e6f4e9f35891e6844fe7c7f53b2c8fa86d\",\"collectedContentSha256\":\"6b43a87d3d28dd790e61e3fa5803a5e6f4e9f35891e6844fe7c7f53b2c8fa86d\",\"bytes\":124,\"lines\":1,\"required\":false,\"included\":true,\"reason\":\"complete goal or contextual source\"},{\"id\":\"github:daily-logger#357@252ad9708c153ba752a49fbbef564d79ffe8a179e0f2199ffd597cf6ace1e9a0\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/issues/357\",\"fullContentSha256\":\"252ad9708c153ba752a49fbbef564d79ffe8a179e0f2199ffd597cf6ace1e9a0\",\"collectedContentSha256\":\"252ad9708c153ba752a49fbbef564d79ffe8a179e0f2199ffd597cf6ace1e9a0\",\"bytes\":18542,\"lines\":95,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"github:daily-logger#381@e3392f4e53b96f9166cf4c3dcac9e0b23d521eb74601adcc0b03f4b267a6446d\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/pull/381\",\"fullContentSha256\":\"e3392f4e53b96f9166cf4c3dcac9e0b23d521eb74601adcc0b03f4b267a6446d\",\"collectedContentSha256\":\"e3392f4e53b96f9166cf4c3dcac9e0b23d521eb74601adcc0b03f4b267a6446d\",\"bytes\":325,\"lines\":2,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"github:daily-logger#385@7b298d5037943d78a517bae1f0b07ead7b59e493760a7ec27b8bfc1ba6d9da40\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/pull/385\",\"fullContentSha256\":\"7b298d5037943d78a517bae1f0b07ead7b59e493760a7ec27b8bfc1ba6d9da40\",\"collectedContentSha256\":\"7b298d5037943d78a517bae1f0b07ead7b59e493760a7ec27b8bfc1ba6d9da40\",\"bytes\":18587,\"lines\":148,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"github:daily-logger#386@ee837eb8e6b659e0afca6d36fde8a6c25b20a1ed366153e298fced023173a908\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/issues/386\",\"fullContentSha256\":\"ee837eb8e6b659e0afca6d36fde8a6c25b20a1ed366153e298fced023173a908\",\"collectedContentSha256\":\"ee837eb8e6b659e0afca6d36fde8a6c25b20a1ed366153e298fced023173a908\",\"bytes\":2455,\"lines\":19,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"github:daily-logger#392@300b35a7aa9a136120cff6cc08a75541293793ba9fe8bb0aad1b939237a8a418\",\"kind\":\"github\",\"locator\":\"https://github.com/ojfbot/daily-logger/pull/392\",\"fullContentSha256\":\"300b35a7aa9a136120cff6cc08a75541293793ba9fe8bb0aad1b939237a8a418\",\"collectedContentSha256\":\"300b35a7aa9a136120cff6cc08a75541293793ba9fe8bb0aad1b939237a8a418\",\"bytes\":15096,\"lines\":42,\"required\":false,\"included\":false,\"reason\":\"outside current action/feedback scope\"},{\"id\":\"repository:ojfbot/daily-logger:5f8971254bd2c7da425ec55d71dcc56718e0cfbf:.github/scripts/daily_blog_schedule.py@695553752844c532430e615ca95ac6e1958f9ded4ea4f5c1311f8bca3f751cc2\",\"kind\":\"repository\",\"locator\":\"git:ojfbot/daily-logger@5f8971254bd2c7da425ec55d71dcc56718e0cfbf:.github/scripts/daily_blog_schedule.py (local, unadopted)\",\"fullContentSha256\":\"695553752844c532430e615ca95ac6e1958f9ded4ea4f5c1311f8bca3f751cc2\",\"collectedContentSha256\":\"695553752844c532430e615ca95ac6e1958f9ded4ea4f5c1311f8bca3f751cc2\",\"bytes\":15438,\"lines\":313,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"repository:ojfbot/daily-logger:5f8971254bd2c7da425ec55d71dcc56718e0cfbf:docs/daily-schedule.md@dee60714bb192df742bbdf4c13728aef3a0749819e9140b1ad2e42b29a6c5d4a\",\"kind\":\"repository\",\"locator\":\"git:ojfbot/daily-logger@5f8971254bd2c7da425ec55d71dcc56718e0cfbf:docs/daily-schedule.md (local, unadopted)\",\"fullContentSha256\":\"dee60714bb192df742bbdf4c13728aef3a0749819e9140b1ad2e42b29a6c5d4a\",\"collectedContentSha256\":\"dee60714bb192df742bbdf4c13728aef3a0749819e9140b1ad2e42b29a6c5d4a\",\"bytes\":6002,\"lines\":103,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"repository:ojfbot/daily-logger:5f8971254bd2c7da425ec55d71dcc56718e0cfbf:src/activity-window.ts@69b3384bd07bcde46a84852c1b15912eb94d70e5a800ad4b0d2e2ec113b87722\",\"kind\":\"repository\",\"locator\":\"git:ojfbot/daily-logger@5f8971254bd2c7da425ec55d71dcc56718e0cfbf:src/activity-window.ts (local, unadopted)\",\"fullContentSha256\":\"69b3384bd07bcde46a84852c1b15912eb94d70e5a800ad4b0d2e2ec113b87722\",\"collectedContentSha256\":\"69b3384bd07bcde46a84852c1b15912eb94d70e5a800ad4b0d2e2ec113b87722\",\"bytes\":2068,\"lines\":52,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"repository:ojfbot/daily-logger:907e4901bea706dbb6af5faa9e7914ac56292302:src/__tests__/action-provider-budget.test.ts@e7ee15b939a5636458324212221466cd0e0c61acafbe0f461539e7912167f624\",\"kind\":\"repository\",\"locator\":\"git:ojfbot/daily-logger@907e4901bea706dbb6af5faa9e7914ac56292302:src/__tests__/action-provider-budget.test.ts (local, unadopted)\",\"fullContentSha256\":\"e7ee15b939a5636458324212221466cd0e0c61acafbe0f461539e7912167f624\",\"collectedContentSha256\":\"e7ee15b939a5636458324212221466cd0e0c61acafbe0f461539e7912167f624\",\"bytes\":8440,\"lines\":107,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"repository:ojfbot/daily-logger:907e4901bea706dbb6af5faa9e7914ac56292302:src/__tests__/editorial-delivery-integration.test.ts@bc5fff0b7225ff0223fced5970e42a12a53383c7b9489ab62d2df4092e174550\",\"kind\":\"repository\",\"locator\":\"git:ojfbot/daily-logger@907e4901bea706dbb6af5faa9e7914ac56292302:src/__tests__/editorial-delivery-integration.test.ts (local, unadopted)\",\"fullContentSha256\":\"bc5fff0b7225ff0223fced5970e42a12a53383c7b9489ab62d2df4092e174550\",\"collectedContentSha256\":\"bc5fff0b7225ff0223fced5970e42a12a53383c7b9489ab62d2df4092e174550\",\"bytes\":10759,\"lines\":178,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"},{\"id\":\"repository:ojfbot/daily-logger:907e4901bea706dbb6af5faa9e7914ac56292302:src/action-evidence-retrieval.ts@c8f595a4d0246252fc8736fe9e381686ae715ea1c38d3cc6cfe99324108fa680\",\"kind\":\"repository\",\"locator\":\"git:ojfbot/daily-logger@907e4901bea706dbb6af5faa9e7914ac56292302:src/action-evidence-retrieval.ts (local, unadopted)\",\"fullContentSha256\":\"c8f595a4d0246252fc8736fe9e381686ae715ea1c38d3cc6cfe99324108fa680\",\"collectedContentSha256\":\"c8f595a4d0246252fc8736fe9e381686ae715ea1c38d3cc6cfe99324108fa680\",\"bytes\":20941,\"lines\":358,\"required\":true,\"included\":true,\"reason\":\"complete current-action/feedback dependency\"}]}",
+        "fullContentSha256": "2c0bd7ffcda64b0e48b477053e2da673545427fe212e1a46c939545aed271ab5"
+      },
+      {
+        "id": "github:daily-logger#357@252ad9708c153ba752a49fbbef564d79ffe8a179e0f2199ffd597cf6ace1e9a0",
+        "kind": "github",
+        "locator": "https://github.com/ojfbot/daily-logger/issues/357",
+        "content": "CURRENT API STATE daily-logger#357: state=open; head=not-a-PR; merged_at=none.\n\nThe human’s timing targets are **Daily Dev Blog starts03:30Chicago; initial draft publicly available by04:00**. The existing fallback remains04:00 and reviewer07:00. Moving the clock alone is insufficient: the watchdog has no not-before guard and has run early; the reporting endpoint is fixed at09:00UTC (04:00CDT/03:00CST), with no enforced upper cutoff in inspected collectors. Reporting coverage needs an owner decision, then deterministic timing/DST/race controls, accepted-source deployment and a real public-read receipt. No schedule has changed.",
+        "trustedContent": [
+          "CURRENT API STATE daily-logger#357: state=open; head=not-a-PR; merged_at=none.",
+          "The human’s timing targets are **Daily Dev Blog starts03:30Chicago; initial draft publicly available by04:00**. The existing fallback remains04:00 and reviewer07:00. Moving the clock alone is insufficient: the watchdog has no not-before guard and has run early; the reporting endpoint is fixed at09:00UTC (04:00CDT/03:00CST), with no enforced upper cutoff in inspected collectors. Reporting coverage needs an owner decision, then deterministic timing/DST/race controls, accepted-source deployment and a real public-read receipt. No schedule has changed."
+        ],
+        "fullContentSha256": "252ad9708c153ba752a49fbbef564d79ffe8a179e0f2199ffd597cf6ace1e9a0"
+      },
+      {
+        "id": "github:daily-logger#385@7b298d5037943d78a517bae1f0b07ead7b59e493760a7ec27b8bfc1ba6d9da40",
+        "kind": "github",
+        "locator": "https://github.com/ojfbot/daily-logger/pull/385",
+        "content": "CURRENT API STATE daily-logger#385: state=open; head=cc3c99bc2f93afdcfa81c06b5ef813bb75934e81; merged_at=none.\n\nCurrent candidate: `cc3c99bc2f93afdcfa81c06b5ef813bb75934e81`, based on accepted main `c88039f1167a824be7ef27f65453ec3dd83f55f8`. The rebuilt hosted preview is verified. This PR stays **draft and unmerged for human visual review**; no production deployment has been performed.\n\n[The existing UIK-09 audit](https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6255409293) keeps skill instructions, few-shot/templated examples, executable fixtures and wider historical metadata backfill queued under the explicit **existing popover only** contract. No new issue or parallel backlog. The single-article pilot is proposed here; wider adoption remains separate.",
+        "trustedContent": [
+          "CURRENT API STATE daily-logger#385: state=open; head=cc3c99bc2f93afdcfa81c06b5ef813bb75934e81; merged_at=none.",
+          "Current candidate: `cc3c99bc2f93afdcfa81c06b5ef813bb75934e81`, based on accepted main `c88039f1167a824be7ef27f65453ec3dd83f55f8`. The rebuilt hosted preview is verified. This PR stays **draft and unmerged for human visual review**; no production deployment has been performed.",
+          "[The existing UIK-09 audit](https://github.com/ojfbot/daily-logger/issues/357#issuecomment-6255409293) keeps skill instructions, few-shot/templated examples, executable fixtures and wider historical metadata backfill queued under the explicit **existing popover only** contract. No new issue or parallel backlog. The single-article pilot is proposed here; wider adoption remains separate."
+        ],
+        "fullContentSha256": "7b298d5037943d78a517bae1f0b07ead7b59e493760a7ec27b8bfc1ba6d9da40"
+      },
+      {
+        "id": "github:daily-logger#386@ee837eb8e6b659e0afca6d36fde8a6c25b20a1ed366153e298fced023173a908",
+        "kind": "github",
+        "locator": "https://github.com/ojfbot/daily-logger/issues/386",
+        "content": "CURRENT API STATE daily-logger#386: state=open; head=not-a-PR; merged_at=none.\n\nKeep the receipt-free CI budget and add a near-window adversarial fixture. No live provider call is required without separate authorization.\n\nThis is safe to follow up after the cutover because the current runtime rejects oversized evidence and either complete prompt before calling a provider. Review failures preserve a pending draft with no new admissions, and acceptance remains blocked. A byte limit does not prove token-window fit or suggestion quality; those remain the scope of this issue.",
+        "trustedContent": [
+          "CURRENT API STATE daily-logger#386: state=open; head=not-a-PR; merged_at=none.",
+          "Keep the receipt-free CI budget and add a near-window adversarial fixture. No live provider call is required without separate authorization.",
+          "This is safe to follow up after the cutover because the current runtime rejects oversized evidence and either complete prompt before calling a provider. Review failures preserve a pending draft with no new admissions, and acceptance remains blocked. A byte limit does not prove token-window fit or suggestion quality; those remain the scope of this issue."
+        ],
+        "fullContentSha256": "ee837eb8e6b659e0afca6d36fde8a6c25b20a1ed366153e298fced023173a908"
+      },
+      {
+        "id": "repository:ojfbot/daily-logger:5f8971254bd2c7da425ec55d71dcc56718e0cfbf:docs/daily-schedule.md@dee60714bb192df742bbdf4c13728aef3a0749819e9140b1ad2e42b29a6c5d4a",
+        "kind": "repository",
+        "locator": "git:ojfbot/daily-logger@5f8971254bd2c7da425ec55d71dcc56718e0cfbf:docs/daily-schedule.md (local, unadopted)",
+        "content": "The workflow start target is 03:30 America/Chicago. The initial draft should be\npublic by 04:00. Human editorial acceptance is a separate later decision.",
+        "fullContentSha256": "dee60714bb192df742bbdf4c13728aef3a0749819e9140b1ad2e42b29a6c5d4a"
+      },
+      {
+        "id": "repository:ojfbot/daily-logger:907e4901bea706dbb6af5faa9e7914ac56292302:src/__tests__/action-provider-budget.test.ts@e7ee15b939a5636458324212221466cd0e0c61acafbe0f461539e7912167f624",
+        "kind": "repository",
+        "locator": "git:ojfbot/daily-logger@907e4901bea706dbb6af5faa9e7914ac56292302:src/__tests__/action-provider-budget.test.ts (local, unadopted)",
+        "content": "it('uses an injected full-request token count plus output reserve and stops on overflow or unknown qualification', async () => {",
+        "fullContentSha256": "e7ee15b939a5636458324212221466cd0e0c61acafbe0f461539e7912167f624"
+      },
+      {
+        "id": "repository:ojfbot/daily-logger:907e4901bea706dbb6af5faa9e7914ac56292302:src/action-evidence-retrieval.ts@c8f595a4d0246252fc8736fe9e381686ae715ea1c38d3cc6cfe99324108fa680",
+        "kind": "repository",
+        "locator": "git:ojfbot/daily-logger@907e4901bea706dbb6af5faa9e7914ac56292302:src/action-evidence-retrieval.ts (local, unadopted)",
+        "content": "export const ACTION_EVIDENCE_REQUEST_VERSION = 'action-evidence-request-v1'",
+        "fullContentSha256": "c8f595a4d0246252fc8736fe9e381686ae715ea1c38d3cc6cfe99324108fa680"
+      }
+    ],
     "rejected": []
   }
 }
