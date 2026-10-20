@@ -498,6 +498,46 @@ describe('verified article closing options', () => {
     expect(repaired.articles[0].closing).toMatchObject({ kind: 'shortlist', options: [{ rank: 1 }, { rank: 2 }, { rank: 3, replaces: [readyClosing.options[2].identity] }] })
   })
 
+  it('does not consume a prior obligation through a mixed valid and invalid replacement declaration', () => {
+    const readyOptions = completeShortlist()
+    const ready = review(empty(), { changes: [], suggestions: [], closingOptions: readyOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    const readyClosing = ready.articles[0].closing
+    if (readyClosing?.kind !== 'shortlist') throw new Error('Missing ready shortlist')
+    const replacedIdentity = readyClosing.options[2].identity
+    const replacement = { ...readyOptions[2], title: 'A different third recommendation', outcome: 'Advance a different third outcome.' }
+    const invalidOptions = [readyOptions[0], readyOptions[1], { ...replacement, replaces: [replacedIdentity, 'checkpoint:unknown'] }]
+
+    const invalid = review(ready, { changes: [], suggestions: [], closingOptions: invalidOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    expect(invalid.articles[0].closing).toMatchObject({
+      kind: 'needs-evidence',
+      missingEvidence: 'A proposed replacement does not identify a prior displayed recommendation.',
+      unresolvedIdentities: [replacedIdentity],
+    })
+
+    const retryOptions = [readyOptions[0], readyOptions[1], { ...replacement, title: 'Another third recommendation', outcome: 'Advance another third outcome.', replaces: [] }]
+    const retry = review(invalid, { changes: [], suggestions: [], closingOptions: retryOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    expect(retry.articles[0].closing).toMatchObject({ kind: 'needs-evidence', unresolvedIdentities: [replacedIdentity] })
+
+    const duplicateOptions = [
+      { ...readyOptions[0], replaces: [replacedIdentity] },
+      { ...readyOptions[1], replaces: [replacedIdentity] },
+      { ...replacement, replaces: [] },
+    ]
+    const duplicate = review(ready, { changes: [], suggestions: [], closingOptions: duplicateOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    expect(duplicate.articles[0].closing).toMatchObject({ kind: 'needs-evidence', unresolvedIdentities: [replacedIdentity] })
+
+    const validOptions = [readyOptions[0], readyOptions[1], { ...replacement, replaces: [replacedIdentity] }]
+    const valid = review(ready, { changes: [], suggestions: [], closingOptions: validOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    const validClosing = valid.articles[0].closing
+    if (validClosing?.kind !== 'shortlist') throw new Error('Missing valid replacement shortlist')
+    const replacementIdentity = validClosing.options[2].identity
+    const selfReferentialOptions = [readyOptions[0], readyOptions[1], { ...replacement, replaces: [replacementIdentity] }]
+    const selfReferential = review(ready, { changes: [], suggestions: [], closingOptions: selfReferentialOptions }, { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(3) })
+    expect(selfReferential.articles[0].closing).toMatchObject({ kind: 'needs-evidence', unresolvedIdentities: [replacedIdentity] })
+
+    expect(valid.articles[0].closing).toMatchObject({ kind: 'shortlist', options: [{ rank: 1 }, { rank: 2 }, { rank: 3, replaces: [replacedIdentity] }] })
+  })
+
   it('does not manufacture distinct work from URL fragments', () => {
     const first = closingOption()
     const second = { ...closingOption(), target: `${target}#discussion` }
