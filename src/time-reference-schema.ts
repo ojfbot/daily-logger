@@ -16,6 +16,16 @@ export function canonicalInstant(value: string): string | undefined {
   return Number.isFinite(at) ? new Date(at).toISOString() : undefined
 }
 
+export function timeTokenMatchesInstant(text: string, at: string): boolean {
+  const instant = canonicalInstant(at)
+  if (!instant) return false
+  const explicit = canonicalInstant(text)
+  if (explicit) return explicit === instant
+  const match = /^(\d{2}):(\d{2})(?::(\d{2}))?(?:Z| UTC)$/.exec(text)
+  if (!match || Number(match[1]) > 23 || Number(match[2]) > 59 || (match[3] && Number(match[3]) > 59)) return false
+  return instant.slice(11, match[3] ? 19 : 16) === text.slice(0, match[3] ? 8 : 5)
+}
+
 export { scanVisibleTimeText } from './time-reference-text.js'
 
 export const TimeEvidenceSchema = z.discriminatedUnion('kind', [

@@ -6,8 +6,8 @@ import { scanVisibleTimeText } from './time-reference-text.js'
 import type { BlogContext } from './types.js'
 import { scanTimeExpressions, type TimeExpressionScan, type TimeExpressionToken } from './time-expression-text.js'
 
-import { canonicalInstant, TimeEvidenceSchema, TimeReferenceSchema, TimeExpressionSchema, timeExpressionMembers, type TimeEvidence, type TimeReference, type TimeExpression, type TimeExpressionMember } from './time-reference-schema.js'
-export { canonicalInstant, TimeEvidenceSchema, TimeReferenceSchema } from './time-reference-schema.js'
+import { canonicalInstant, timeTokenMatchesInstant, TimeEvidenceSchema, TimeReferenceSchema, TimeExpressionSchema, timeExpressionMembers, type TimeEvidence, type TimeReference, type TimeExpression, type TimeExpressionMember } from './time-reference-schema.js'
+export { canonicalInstant, timeTokenMatchesInstant, TimeEvidenceSchema, TimeReferenceSchema } from './time-reference-schema.js'
 export type { TimeEvidence, TimeReference } from './time-reference-schema.js'
 type GitTimeEvidence = Exclude<TimeEvidence, { kind: 'explicit-offset' }>
 type GitEvent = GitTimeEvidence['event']
@@ -97,15 +97,6 @@ export function unsupportedTimeTokens(markdown: string, excludeExpressions = fal
   return result
 }
 
-export function timeTokenMatchesInstant(text: string, at: string): boolean {
-  const instant = canonicalInstant(at)
-  if (!instant) return false
-  const explicit = canonicalInstant(text)
-  if (explicit) return explicit === instant
-  const match = /^(\d{2}):(\d{2})(?::(\d{2}))?(?:Z| UTC)$/.exec(text)
-  if (!match || Number(match[1]) > 23 || Number(match[2]) > 59 || (match[3] && Number(match[3]) > 59)) return false
-  return instant.slice(11, match[3] ? 19 : 16) === text.slice(0, match[3] ? 8 : 5)
-}
 
 function paragraphAt(projection: VisibleProjection, index: number): { before: string; start: number; heading: string } {
   const boundary = projection.text.lastIndexOf('\n\n', index)

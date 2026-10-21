@@ -1,4 +1,4 @@
-import { TimeDisplayReferenceSchema, timeExpressionMembers, type TimeDisplayReference, type TimeReference, type TimeExpressionMember } from '../../../../src/time-reference-schema.ts'
+import { TimeDisplayReferenceSchema, timeExpressionMembers, timeTokenMatchesInstant, type TimeDisplayReference, type TimeReference, type TimeExpressionMember } from '../../../../src/time-reference-schema.ts'
 import { scanVisibleTimeText } from '../../../../src/time-reference-text.ts'
 import { scanTimeExpressions } from '../../../../src/time-expression-text.ts'
 
@@ -101,6 +101,9 @@ export function attachTimeReferences(root: HTMLElement, input: unknown) {
     expression.members.forEach((member, memberIndex) => {
       const resolved = resolvedMembers[memberIndex]
       if (!resolved || resolved.resolution.kind !== 'supported') return
+      const certainty = expression.approximate || member.approximate ? 'approximate' : 'exact'
+      if (resolved.text !== member.text || resolved.precision !== member.precision || resolved.certainty !== certainty
+        || !member.normalized || !timeTokenMatchesInstant(member.normalized, resolved.resolution.at)) return
       plans.push({ index: member.index, end: member.end, reference: {
         certainty: resolved.certainty,
         reference: { text: member.text, occurrence: expression.occurrence, at: resolved.resolution.at, precision: resolved.precision, evidence: resolved.resolution.evidence },
