@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { afterEach, expect, it, vi } from 'vitest'
 import { generationActionCycle } from '../action-review-cycle.js'
 import { ActionEvidenceRequestSchema, ActionRegistrySchema, ActionSourceSchema, sha256, type ActionSource } from '../action-registry.js'
-import { ActionEvidenceRequestError, actionEvidenceCaseDigest, buildActionEvidenceProjection, closeActionEvidenceRequest, createActionEvidenceRequest, persistActionEvidenceRequest, persistActionEvidenceResolutions, persistActionEvidenceResponse, persistValidatedActionEvidenceReply, trustedActionSourceLineNumbers } from '../action-evidence-retrieval.js'
-import { selectActionEvidence } from '../action-evidence-selection.js'
+import { ActionEvidenceRequestError, actionEvidenceCaseDigest, buildActionEvidenceProjection, closeActionEvidenceRequest, createActionEvidenceRequest, persistActionEvidenceReply, persistActionEvidenceRequest, persistActionEvidenceResolutions, persistActionEvidenceResponse, persistValidatedActionEvidenceReply, trustedActionSourceLineNumbers } from '../action-evidence-retrieval.js'
+import { actionEvidenceScope, selectActionEvidence } from '../action-evidence-selection.js'
 import { applyVerifiedActionReview, resolveActionSourceLines, reviewDraftActions } from '../review-actions.js'
 
 const date = '2026-10-17'
@@ -189,9 +189,6 @@ it('restores a complete bounded reply and resumes the same captured candidate re
   const resultWithResolutionIntent = z.object({ evidenceResolutions: z.array(ActionSourceSchema).length(1) }).parse(resumed)
   expect(resultWithResolutionIntent.evidenceResolutions[0]?.id).toBe(correctedProjection.id)
   expect(readdirSync(directory).some(name => name.startsWith('resolution-'))).toBe(false)
-  persistActionEvidenceResolutions(repoRoot, resultWithResolutionIntent.evidenceResolutions)
-  expect(readdirSync(directory).filter(name => name.startsWith('resolution-'))).toHaveLength(1)
-
   const cached = await reviewDraftActions({
     ...base,
     registry: resumed.registry,
@@ -205,6 +202,9 @@ it('restores a complete bounded reply and resumes the same captured candidate re
   expect(cached.cached).toBe(true)
   expect(z.object({ evidenceResolutions: z.array(ActionSourceSchema).length(1) }).parse(cached).evidenceResolutions[0]?.id)
     .toBe(correctedProjection.id)
+  expect(readdirSync(directory).some(name => name.startsWith('resolution-'))).toBe(false)
+  persistActionEvidenceResolutions(repoRoot, cached.evidenceResolutions)
+  expect(readdirSync(directory).filter(name => name.startsWith('resolution-'))).toHaveLength(1)
 })
 
 it('does not let one action owner response authorize another action in the same case', () => {
@@ -242,6 +242,30 @@ it('does not let one action owner response authorize another action in the same 
   const { source } = persistActionEvidenceResponse({ repoRoot, request, responder: 'owner', answer })
   expect(() => persistActionEvidenceResponse({ repoRoot, request, responder: 'owner', answer: 'Keep this action open instead.' }))
     .toThrow(/distinct owner response|supersession/i)
+
+  const operator: ActionSource = { id: 'operator', kind: 'instruction', locator: 'feedback', content: 'Keep act-381 open pending explicit approval.' }
+  const resolvedRequest = {
+    version: request.version, id: request.id, kind: request.kind, caseDigest: request.caseDigest, articleDate: request.articleDate,
+    cycle: request.cycle, actionKeys: request.actionKeys, sourceKey: request.sourceKey, obligations: request.obligations,
+    recipient: request.recipient, status: 'resolved' as const,
+  }
+  const scoped = applyVerifiedActionReview({
+    registry: current,
+    articleDate: date,
+    cycle: generationActionCycle(),
+    markdown: `---\ndate: ${date}\nstatus: draft\n---\n`,
+    sources: [source, operator],
+    roundId: '3'.repeat(64),
+    articleStatuses: new Map([[date, 'draft']]),
+    requiredActionKeys: ['act-381'],
+    resolvedEvidenceRequests: [resolvedRequest],
+    proposal: {
+      changes: [{ actionKey: 'act-381', state: 'open', description: 'Keep act-381 open.', reason: 'The owner gate remains explicit.', citations: [{ sourceId: operator.id, quote: operator.content }] }],
+      suggestions: [],
+    },
+    verification: { changes: [{ actionKey: 'act-381', verdict: 'pass', reason: 'Scoped response.' }], suggestions: [] },
+  })
+  expect(scoped.articles[0]?.sources.find(candidate => candidate.id === source.id)?.response).toEqual(source.response)
 
   expect(() => applyVerifiedActionReview({
     registry: current,
@@ -497,4 +521,95 @@ it('records terminal request lifecycle and rejects late owner responses', () => 
   persistActionEvidenceRequest({ repoRoot, request })
   expect(closeActionEvidenceRequest({ repoRoot, request, status: 'expired' })).toMatchObject({ id: request.id, status: 'expired' })
   expect(() => persistActionEvidenceResponse({ repoRoot, request, responder: 'owner', answer: 'Dismiss it.' })).toThrow(/expired.*late replies/i)
+})
+
+it('does not write a resolution marker after a request has already closed another way', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'progressive-late-resolution-'))
+  roots.push(repoRoot)
+  const source: ActionSource = { id: 'review:late-resolution', kind: 'repository', locator: 'review.md', content: 'Owner gate remains open.\nNo delivery receipt exists.' }
+  const request = createActionEvidenceRequest({
+    kind: 'source-view', caseDigest: '3'.repeat(64), articleDate: date, cycle: generationActionCycle(), actionKeys: ['act-386'],
+    sourceKey: source.id, source, question: 'Read the retained owner gate.', obligations: ['4'.repeat(64)], recipient: 'source-producer',
+  })
+  persistActionEvidenceRequest({ repoRoot, request, source })
+  const projection = buildActionEvidenceProjection({
+    request, source, ranges: [{ startLine: 1, endLine: 1, role: 'support' }, { startLine: 2, endLine: 2, role: 'counterevidence' }],
+    coverage: [{ obligationId: request.obligations[0], status: 'counterevidence', rangeIndexes: [1] }],
+  })
+  persistValidatedActionEvidenceReply({ repoRoot, projection })
+  closeActionEvidenceRequest({ repoRoot, request, status: 'cancelled' })
+
+  expect(() => persistActionEvidenceReply({ repoRoot, projection, resolved: true })).toThrow(/cancelled.*late replies/i)
+  const directory = join(repoRoot, '.action-evidence', request.id)
+  expect(readdirSync(directory).some(name => name.startsWith('resolution-'))).toBe(false)
+})
+
+it('changes the evidence case when prior action authority becomes accepted', () => {
+  const current = registry()
+  const priorDate = '2026-10-16'
+  const priorRound = 'd'.repeat(64)
+  current.records.push({
+    key: 'act-386',
+    original: { id: 'act-386', command: '/review', description: 'Review daily-logger #386.', repo: 'daily-logger', status: 'open', sourceDate: priorDate },
+    origin: 'imported', workKey: 'daily-logger|386|review', state: 'dismissed', introducedBy: priorDate,
+    includeInIndex: true, inclusionOverride: null, goal: 'Review #386.', doneWhen: 'Owner decision.', gates: [],
+    history: [{ roundId: priorRound, articleDate: priorDate, state: 'dismissed', description: 'Dismiss act-386.', reason: 'The premise is obsolete.', citations: [], verifiedBy: 'reviewer', verificationReason: 'Verified.' }],
+  })
+  current.articles.push({
+    date: priorDate, status: 'accepted', review: { state: 'verified' }, articleDigest: '1'.repeat(64), roundId: priorRound,
+    actionKeys: ['act-386'], stateDigest: '2'.repeat(64),
+    verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'fixture', proposalSha256: '3'.repeat(64), verdicts: [] },
+    sources: [], rejected: [],
+  })
+  const articleStatuses = new Map([[priorDate, 'draft']])
+  expect(actionEvidenceScope({ registry: current, articleDate: date, markdown: `---\ndate: ${date}\nstatus: draft\n---\n`, feedback: 'Review act-386.', articleStatuses }))
+    .toMatchObject({ reviewActionKeys: ['act-386'], ambiguousTerminalActionKeys: [] })
+  const digest = () => actionEvidenceCaseDigest({
+    articleDate: date, cycle: generationActionCycle(), markdown: `---\ndate: ${date}\nstatus: draft\n---\n`, feedback: '', actionKeys: ['act-386'], registry: current, articleStatuses,
+  })
+  const before = digest()
+  articleStatuses.set(priorDate, 'accepted')
+  expect(actionEvidenceScope({ registry: current, articleDate: date, markdown: `---\ndate: ${date}\nstatus: draft\n---\n`, feedback: 'Review act-386.', articleStatuses }))
+    .toMatchObject({ reviewActionKeys: [], ambiguousTerminalActionKeys: ['act-386'] })
+  expect(digest()).not.toBe(before)
+})
+
+it('holds an explicitly selected incomplete correction instead of falling back to an older complete reply', () => {
+  const current = registry()
+  current.records.push({
+    key: 'act-386',
+    original: { id: 'act-386', command: '/review', description: 'Review daily-logger #386.', repo: 'daily-logger', status: 'open', sourceDate: '2026-10-16' },
+    origin: 'imported', workKey: 'daily-logger|386|review', state: 'open', introducedBy: '2026-10-16',
+    includeInIndex: true, inclusionOverride: null, goal: 'Review #386.', doneWhen: 'Owner decision.', gates: ['Keep the owner gate.'], history: [],
+  })
+  const source: ActionSource = {
+    id: 'review:explicit-incomplete', kind: 'repository', locator: 'review.md',
+    content: `Owner gate remains open.\n${'context\n'.repeat(20_000)}No delivery receipt exists.`,
+  }
+  const input = {
+    registry: current, articleDate: date, cycle: generationActionCycle(), markdown: `---\ndate: ${date}\nstatus: draft\n---\n`,
+    feedback: 'Review act-386 using the retained evidence.', sources: [source],
+  }
+  let request: ReturnType<typeof createActionEvidenceRequest> | undefined
+  try { selectActionEvidence(input) }
+  catch (error) {
+    if (error instanceof ActionEvidenceRequestError) request = error.request
+    else throw error
+  }
+  if (!request) throw new Error('Expected a bounded evidence request')
+  const lastLine = source.content.split('\n').length
+  const ranges = [{ startLine: 1, endLine: 1, role: 'support' as const }, { startLine: lastLine, endLine: lastLine, role: 'counterevidence' as const }]
+  const complete = buildActionEvidenceProjection({
+    request, source, ranges,
+    coverage: request.obligations.map(obligationId => ({ obligationId, status: 'counterevidence' as const, rangeIndexes: [1] })),
+  })
+  const incomplete = buildActionEvidenceProjection({
+    request, source, ranges,
+    coverage: request.obligations.map((obligationId, index) => index === 0
+      ? { obligationId, status: 'counterevidence' as const, rangeIndexes: [1] }
+      : { obligationId, status: 'unknown' as const, rangeIndexes: [] }),
+  })
+  expect(incomplete.id).not.toBe(complete.id)
+  expect(() => selectActionEvidence({ ...input, sources: [source, complete, incomplete], selectedEvidenceProjectionIds: [incomplete.id] }))
+    .toThrow(/explicitly selected.*leaves .* obligation\(s\) unknown/i)
 })

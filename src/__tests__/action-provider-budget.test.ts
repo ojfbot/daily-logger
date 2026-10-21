@@ -66,6 +66,11 @@ it.each([
   expect(create).not.toHaveBeenCalled()
 })
 
+it.each([Number.NaN, Number.POSITIVE_INFINITY, 12_000, 1.5, -1])('rejects an invalid injected token limit before constructing callable agents: %s', limitTokens => {
+  expect(() => createActionAgents({ tokenBudget: { limitTokens, count: async () => ({ kind: 'counted', inputTokens: 1 }) } }))
+    .toThrow(/limitTokens must be an integer greater than the 12000-token output reserve/)
+})
+
 it.skipIf(!process.env.ACTION_EVIDENCE_CAPSULE)('measures the saved Oct19 corpus through two explicit revisions and a five-proposal initial cycle with the SDK mocked', async () => {
   const capsule = process.env.ACTION_EVIDENCE_CAPSULE
   if (!capsule) throw new Error('Missing explicit local evidence capsule')

@@ -203,7 +203,7 @@ async function main() {
     const articleDate = result.revisedMarkdown.match(/^date:\s*"?(\d{4}-\d{2}-\d{2})/m)?.[1]
     if (!articleDate) throw new Error('Article date is missing')
     const statuses = readArticleStatuses(repoRoot)
-    const collectedSources = isMock ? [] : collectActionSources({ registry, repoRoot, markdown: result.revisedMarkdown, feedback, reassessActionKeys, preserveActionKeys })
+    const collectedSources = isMock ? [] : collectActionSources({ registry, articleStatuses: statuses, repoRoot, markdown: result.revisedMarkdown, feedback, reassessActionKeys, preserveActionKeys })
     const actions = await reviewDraftActions({ cycle, registry, articleStatuses: statuses, articleDate, markdown: result.revisedMarkdown, feedback, sources: [...collectedSources, ...evidenceReplies], agents: isMock ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, selectedEvidenceProjectionIds: evidenceReplies.map(reply => reply.id), ...(isDryRun ? {} : { repoRoot }) })
     const renderedHtml = renderArticleActionHtml(actions.markdown, actions.registry, articleDate, statuses)
     const evidence = readArticleTime({ repoRoot, date: articleDate, markdown: stripManagedActions(actions.markdown), bindingMarkdown: actions.markdown, renderedHtml })
