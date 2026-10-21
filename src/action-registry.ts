@@ -32,7 +32,7 @@ export function actionStateDigest(registry: ActionRegistry, keys: readonly strin
 }
 
 export function assertCandidateReviewHistoryIntegrity(registry: ActionRegistry, snapshot: ActionRegistry['articles'][number]): void {
-  if (!snapshot.candidateReviewHistory?.length) return
+  if (snapshot.candidateReviewHistory === undefined && snapshot.draftCandidateEvidence === undefined && snapshot.reviewOutput === undefined) return
   const expected = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, {
     articleDate: snapshot.date,
     roundId: snapshot.roundId,

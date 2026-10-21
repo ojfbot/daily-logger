@@ -261,6 +261,7 @@ Action Reconciling changes Article Action Files from pending to verified. [src: 
 Action Reconciling yields Article Action Files. [src: src/review-actions.ts]
 Action Reconciling yields Candidate Review History. [src: src/review-actions.ts]
 Action Reconciling requires valid Candidate Review History. [src: src/review-actions.ts]
+Action Reviewing requires valid Candidate Review History. [src: src/review-actions.ts]
 Action Registry Writing requires existing Candidate Review History. [src: src/action-registry.ts]
 Action Registry Writing yields Candidate Review History. [src: src/action-registry.ts]
 Action Projecting requires Imported Action Baseline. [src: src/action-registry.ts]

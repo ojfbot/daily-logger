@@ -61,6 +61,10 @@ function preparedRegistry(records: ActionRegistry['records'] = []) {
     })),
     unassignedReferences: [],
   } satisfies DraftCandidateEvidenceRequirements
+  snapshot.stateDigest = actionStateDigest(pending.registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, {
+    articleDate, roundId: snapshot.roundId, includePriorArticleRounds: true, draftCandidates: snapshot.draftCandidates,
+    draftCandidateEvidence: snapshot.draftCandidateEvidence,
+  })
   return pending.registry
 }
 
@@ -204,6 +208,19 @@ it('holds a cache miss when an already-related input action has prior output val
 
   expect(result.registry.articles[0]?.review).toMatchObject({ state: 'pending', reason: expect.stringMatching(/current-input binding/i) })
   expect(result.registry.articles[0]?.candidateReviewHistory?.[0]?.transitions[0]?.review).toMatchObject({ state: 'mapped-existing', actionKey: record.key })
+  expect(propose).not.toHaveBeenCalled()
+  expect(verify).not.toHaveBeenCalled()
+})
+
+it('rejects an evicted archive before review or pending retry can rehash the modern snapshot', async () => {
+  const registry = withNativePromotion()
+  const propose = vi.fn(), verify = vi.fn()
+  const archived = await reviewDraftActions({ registry, articleStatuses: statuses, articleDate, cycle, markdown, feedback: '', sources: [], agents: { propose, verify } })
+  const evicted = structuredClone(archived.registry)
+  delete evicted.articles[0]!.candidateReviewHistory
+
+  await expect(reviewDraftActions({ registry: evicted, articleStatuses: statuses, articleDate, cycle, markdown, feedback: '', sources: [], agents: { propose, verify } }))
+    .rejects.toThrow(/historical candidate review archive is stale/i)
   expect(propose).not.toHaveBeenCalled()
   expect(verify).not.toHaveBeenCalled()
 })
@@ -422,4 +439,6 @@ it('renders an unchanged legacy verified snapshot with captured candidates and n
   })
 
   expect(() => renderArticleActions(legacyMarkdown, registry, legacyDate, new Map([[legacyDate, 'draft']]))).not.toThrow()
+  expect(() => pendingActionReview({ registry, articleStatuses: new Map([[legacyDate, 'draft']]), articleDate: legacyDate,
+    cycle: revisionActionCycle('legacy-no-map-retry'), markdown: legacyMarkdown, reason: 'Legacy retry remains compatible.' })).not.toThrow()
 })
