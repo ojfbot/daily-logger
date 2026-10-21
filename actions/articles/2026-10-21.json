@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-21",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-10-21",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; review pending"
+    },
+    "articleDigest": "1e9baf52a3db0b8fab89fd77224a755e4acc3256ab88e03612b48489701e0df5",
+    "roundId": "3b1a23da3e79f1c11b8346188a5599d64d7e66d621c191477ed24418bd02769f",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "b89074a9d7629cec0b4962d0255a956f76dee0cd735aec550b365e7e70ef4681",
+        "payload": {
+          "command": "/merge daily-logger#407",
+          "description": "Merge the classic-space-venue fleet onboard PR — the last of three sibling surface registrations, both siblings already merged. No design work required.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-21"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "a83670de3a4c36d23cd2016404b6825f86de689eb0a95ee47b7b98d8bd031ae3",
+        "payload": {
+          "command": "/owner-gate core#561",
+          "description": "Surface core #561 (fleet-runner read-projection v0) to the fleet-runner owner for disposition. This is the venue's hard gate: no real feed, no arrival. There is no documented fallback. Requires a named owner commitment or an explicit decision to park.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-10-21"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "ccc62b6ac1492f339cf45d848d54bee639e5a633f7e5b3de7649a003cd3e1a2e",
+        "payload": {
+          "command": "/session wayfinder#543",
+          "description": "Begin AFK/serialized-deep-research on ticket #543 (fleet-runner object model) — no technical blocker, can proceed in parallel with #563 and #567 while the #561 owner gate resolves.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-10-21"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Daily-logger #407 is open and is the last fleet-onboard surface step before classic-space-venue is fully registered across core (#557, merged), morning-cockpit (#59, merged), and daily-logger (#407, pending). No reviewer or hold was stated in the available record.\n\nCore #561 (fleet-runner read-projection v0) is the venue's first-feed dependency. It is a delivery proposal for the fleet-runner owner. No accepted status, no named owner, no timeline, and no fallback feed source are documented. This is the venue's hard gate.\n\nThe `REPO_NOTES` entry for `classic-space-venue` in `src/fleet.ts` does not yet carry substantive context; that content waits on the repo's own CLAUDE.md and northstar registration stabilizing post-#542 ruling.\n\nLego-village-pipeline DRAFTs #44, #45, #46 carry explicit do-not-merge labels. #46's review conclusion is the stated precondition for #45. No closing condition or disposition date is documented for any of the three. No dependency link to the Classic Space Venue critical path is recorded.\n\nIssue #357 (4 a.m. public draft timing) is a local-only candidate on a stale base. A rebase is required before it is reviewable. No owner or timeline recorded.\n\nThe telemetry JSONL stream is frozen since 2026-05-12. The 0% quality gate coverage reading is consistent across windows but the instrument is unreliable. No committed response was recorded this window.\n\nThe PR #385 timestamp-popover checkpoint recorded in the October 20 accepted closing continuity predates the merge; that checkpoint may need to be retired or updated against the merged state.\n\nNo schedule change, provider call, or dispatch authority was introduced this window. The fallback guard and Chicago-cutoff logic changes from #408 are the only timing-related changes; the 4 a.m. public draft delivery path remains a separate human owner decision."
+    },
+    "stateDigest": "5dab2853b341fd27a269bd39b82576306fb5b8d79ba9c22cbebd476ca7a7833e",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "rejected": []
+  }
+}
