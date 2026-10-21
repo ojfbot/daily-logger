@@ -6,8 +6,8 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { generationActionCycle } from '../action-review-cycle.js'
 import { ActionEvidenceRequestSchema, ActionRegistrySchema, ActionSourceSchema, sha256, type ActionSource } from '../action-registry.js'
 import { ActionEvidenceRequestError, actionEvidenceCaseDigest, buildActionEvidenceProjection, closeActionEvidenceRequest, createActionEvidenceRequest, persistActionEvidenceReply, persistActionEvidenceRequest, persistActionEvidenceResolutions, persistActionEvidenceResponse, persistValidatedActionEvidenceReply, trustedActionSourceLineNumbers } from '../action-evidence-retrieval.js'
-import { actionEvidenceScope, selectActionEvidence } from '../action-evidence-selection.js'
-import { applyVerifiedActionReview, resolveActionSourceLines, reviewDraftActions } from '../review-actions.js'
+import { actionEvidenceScope, draftCandidateEvidenceBinding, selectActionEvidence } from '../action-evidence-selection.js'
+import { applyVerifiedActionReview, pendingActionReview, resolveActionSourceLines, reviewDraftActions } from '../review-actions.js'
 
 const date = '2026-10-17'
 const roots: string[] = []
@@ -29,6 +29,22 @@ const registry = () => ActionRegistrySchema.parse({
   articles: [],
 })
 
+function preparedCandidateRegistry(values: readonly unknown[], markdown: string) {
+  const captured = pendingActionReview({ registry: registry(), articleDate: date, cycle: generationActionCycle(), markdown, reason: 'Prepare explicit candidate evidence.',
+    articleStatuses: new Map([[date, 'draft']]), draftCandidates: values, draftContext: { kind: 'none' } })
+  const next = structuredClone(captured.registry)
+  const snapshot = next.articles[0]
+  if (!snapshot?.draftCandidates?.length || !snapshot.reviewCycle) throw new Error('Missing captured candidate fixture')
+  const binding = draftCandidateEvidenceBinding({ registry: next, articleDate: date, cycle: snapshot.reviewCycle, markdown: captured.markdown })
+  snapshot.draftCandidateEvidence = {
+    version: 'draft-candidate-evidence-v1', provenance: { kind: 'independent-reviewer', identity: 'progressive-fixture', decision: 'Fixture evidence associations.' },
+    ...binding,
+    candidates: snapshot.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references: [] })),
+    unassignedReferences: [],
+  }
+  return { registry: ActionRegistrySchema.parse(next), markdown: captured.markdown }
+}
+
 it('retains draft candidates and issues a durable bounded-view request before either reviewer runs', async () => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'progressive-retrieval-current-'))
   roots.push(repoRoot)
@@ -47,12 +63,13 @@ it('retains draft candidates and issues a durable bounded-view request before ei
     status: 'open' as const,
     sourceDate: date,
   }]
+  const prepared = preparedCandidateRegistry(draftCandidates, `---\ndate: ${date}\nstatus: draft\n---\n\n## What shipped\n\nA bounded incident fixture.\n`)
 
   const result = await reviewDraftActions({
-    registry: registry(),
+    registry: prepared.registry,
     articleDate: date,
     cycle: generationActionCycle(),
-    markdown: `---\ndate: ${date}\nstatus: draft\n---\n\n## What shipped\n\nA bounded incident fixture.\n`,
+    markdown: prepared.markdown,
     feedback: 'Review the complete retained discussion.',
     sources: [oversized],
     draftCandidates,
@@ -101,10 +118,12 @@ it('restores a complete bounded reply and resumes the same captured candidate re
     status: 'open' as const,
     sourceDate: date,
   }]
+  const initialMarkdown = `---\ndate: ${date}\nstatus: draft\n---\n\n## What shipped\n\nA bounded incident fixture.\n`
+  const prepared = preparedCandidateRegistry(draftCandidates, initialMarkdown)
   const base = {
     articleDate: date,
     cycle: generationActionCycle(),
-    markdown: `---\ndate: ${date}\nstatus: draft\n---\n\n## What shipped\n\nA bounded incident fixture.\n`,
+    markdown: prepared.markdown,
     feedback: 'Review the complete retained discussion.',
     sources: [oversized],
     draftCandidates,
@@ -113,7 +132,7 @@ it('restores a complete bounded reply and resumes the same captured candidate re
   }
   const first = await reviewDraftActions({
     ...base,
-    registry: registry(),
+    registry: prepared.registry,
     agents: { propose: vi.fn(), verify: vi.fn() },
   })
   const requestId = z.object({ evidenceRequests: z.array(z.object({ id: z.string() })).length(1) })

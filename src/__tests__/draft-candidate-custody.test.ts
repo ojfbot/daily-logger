@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { generationActionCycle } from '../action-review-cycle.js'
+import { generationActionCycle, revisionActionCycle } from '../action-review-cycle.js'
 import { ArticleActionFileContractSchema } from '../action-registry-contract.js'
 import {
   ArticleActionFileSchema,
@@ -15,11 +15,13 @@ import {
   readActionRegistry,
   registryRevision,
   renderArticleActions,
+  sha256,
   splitActionRegistry,
   writeActionRegistry,
   type ActionRegistry,
   type ActionSource,
 } from '../action-registry.js'
+import { draftCandidateEvidenceBinding } from '../action-evidence-selection.js'
 import { pendingActionReview, reviewArticleActions, reviewDraftActions } from '../review-actions.js'
 import { writeActionStore } from './action-store-fixture.js'
 
@@ -80,9 +82,30 @@ async function pending() {
   return result
 }
 
+function withCandidateEvidence(current: ActionRegistry, currentMarkdown: string): ActionRegistry {
+  const next = structuredClone(current)
+  const snapshot = next.articles.find(article => article.date === date)
+  if (!snapshot?.draftCandidates?.length || !snapshot.reviewCycle) throw new Error('Missing captured candidate fixture')
+  const binding = draftCandidateEvidenceBinding({ registry: next, articleDate: date, cycle: snapshot.reviewCycle, markdown: currentMarkdown })
+  snapshot.draftCandidateEvidence = {
+    version: 'draft-candidate-evidence-v1', provenance: { kind: 'independent-reviewer', identity: 'custody-fixture', decision: 'Fixture evidence associations.' },
+    ...binding,
+    candidates: snapshot.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references: [] })),
+    unassignedReferences: [],
+  }
+  return ActionRegistrySchema.parse(next)
+}
+
+function preparedCandidateReview(values: typeof candidates) {
+  const pending = pendingActionReview({ cycle: generationActionCycle(), registry: registry(), articleStatuses: statuses, articleDate: date, markdown,
+    reason: 'Prepare explicit candidate evidence.', draftCandidates: values, draftContext: { kind: 'none' } })
+  return { ...pending, registry: withCandidateEvidence(pending.registry, pending.markdown) }
+}
+
 describe('initial draft candidate custody', () => {
   it('lets independent review account for a short genuine list without inventing filler', async () => {
     const captured = captureDraftActionCandidates(candidates.slice(0, 2))
+    const prepared = preparedCandidateReview(candidates.slice(0, 2))
     const proposal = {
       changes: [], suggestions: [], closingOptions: [],
       candidateDispositions: captured.map(candidate => ({ candidateId: candidate.candidateId, kind: 'reject' as const, reason: 'Current evidence does not support this draft suggestion.', citations: [{ sourceId: 'evidence', quote: 'bounded evidence path' }] })),
@@ -93,10 +116,10 @@ describe('initial draft candidate custody', () => {
     }
     const result = await reviewArticleActions({
       cycle: generationActionCycle(),
-      registry: registry(),
+      registry: prepared.registry,
       articleStatuses: statuses,
       articleDate: date,
-      markdown,
+      markdown: prepared.markdown,
       feedback: '',
       draftCandidates: candidates.slice(0, 2),
       sources,
@@ -187,6 +210,7 @@ describe('initial draft candidate custody', () => {
 
   it('requires a verified disposition for every retained candidate on retry and projects the result to API and UI', async () => {
     const first = await pending()
+    first.registry = withCandidateEvidence(first.registry, first.markdown)
     const proposal = {
       changes: [],
       suggestions: [
@@ -265,6 +289,12 @@ describe('initial draft candidate custody', () => {
     expect(result.markdown).toContain('How draft suggestions were handled')
     expect(result.markdown).toContain('Mapped to existing action')
     expect(renderArticleActions(result.markdown, result.registry, date, statuses)).toBe(result.markdown)
+    const cached = await reviewArticleActions({ cycle: generationActionCycle(), registry: result.registry, articleStatuses: statuses, articleDate: date,
+      markdown: result.markdown, feedback: '', sources, agents: { propose: async () => { throw new Error('cached retry called proposer') }, verify: async () => { throw new Error('cached retry called verifier') } } })
+    expect(cached.cached).toBe(true)
+    await expect(reviewArticleActions({ cycle: revisionActionCycle('new-explicit-cycle'), registry: result.registry, articleStatuses: statuses, articleDate: date,
+      markdown: result.markdown, feedback: '', sources, agents: { propose: async () => { throw new Error('stale plan called proposer') }, verify: async () => { throw new Error('stale plan called verifier') } } }))
+      .rejects.toThrow(/stale or foreign/i)
     const root = mkdtempSync(join(tmpdir(), 'candidate-custody-transition-'))
     try {
       writeActionStore(root, first.registry)

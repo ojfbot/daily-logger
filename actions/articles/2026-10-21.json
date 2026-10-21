@@ -58,6 +58,151 @@
         }
       }
     ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v1",
+      "provenance": {
+        "kind": "coordinator",
+        "identity": "flywheel-coordinator:01a135fd-dad7-7691-b64c-c81a899337b9",
+        "decision": "Prepared by the coordinator session under user decision call_0da278a0b2084a4db823e4974f704436, which authorizes preparation only; these classifications remain subject to independent review."
+      },
+      "articleDate": "2026-10-21",
+      "articleDigest": "fd78de3c9d6e05ddf8d0ad4d9d519792ec08fb651a378b5af21ad0986f180f9c",
+      "reviewCycle": {
+        "phase": "revision",
+        "id": "manual:editorial-cycle-20261021-supported-corrections"
+      },
+      "draftContextSha256": "b8ee65cd1287eca6b7b8ccfb506bc900c5d60fe3ce150430c7a26420ce91aae9",
+      "candidatePayloadsSha256": "1923fd2821d3d67b6073c85409af9b26b15a1b9ca6079d255e9dc4be162ba7cb",
+      "actionStateSha256": "dd0f19090ac64b8d973e14bb9f215f7632d20895efb7e629bec3d748d3ad964d",
+      "candidates": [
+        {
+          "candidateId": "b89074a9d7629cec0b4962d0255a956f76dee0cd735aec550b365e7e70ef4681",
+          "payloadSha256": "c9621912969c6f65eb440b3853e85c792f546c15130676a46b794b8359a58d08",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#407",
+              "role": "target",
+              "reason": "The immutable merge candidate targets this PR; its current lifecycle is required for any disposition."
+            }
+          ]
+        },
+        {
+          "candidateId": "a83670de3a4c36d23cd2016404b6825f86de689eb0a95ee47b7b98d8bd031ae3",
+          "payloadSha256": "2c2c26a630eb850b884c7429e181e136c457a9cf9dfaf06f77470bdec37a27e4",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#561",
+              "role": "target",
+              "reason": "The immutable owner-gate candidate targets this proposal and its consumer review."
+            },
+            {
+              "classification": "required",
+              "reference": "core#307",
+              "role": "owner",
+              "reason": "The retained record identifies the initiative owner through this canonical issue."
+            },
+            {
+              "classification": "required",
+              "reference": "core#560",
+              "role": "gate",
+              "reason": "The retained owner ruling defines the proposal's governing decision boundary."
+            }
+          ]
+        },
+        {
+          "candidateId": "ccc62b6ac1492f339cf45d848d54bee639e5a633f7e5b3de7649a003cd3e1a2e",
+          "payloadSha256": "ef28575b15b25fa2ff0d2c8b861d7f1888ae64912dd1049ca5a46ca9d55b0bfd",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#543",
+              "role": "target",
+              "reason": "The unchanged wayfinder#543 shorthand resolves uniquely to the core repository target in retained context."
+            },
+            {
+              "classification": "required",
+              "reference": "classic-space-venue#4",
+              "role": "counterevidence",
+              "reason": "The existing Tier 0 report contradicts the candidate's parallel-dispatch premise."
+            },
+            {
+              "classification": "required",
+              "reference": "core#567",
+              "role": "lifecycle",
+              "reason": "The recorded sequence starts here and must be checked before reviewing the proposed session."
+            },
+            {
+              "classification": "required",
+              "reference": "core#563",
+              "role": "lifecycle",
+              "reason": "The recorded later sequence step constrains the candidate's parallel-work claim."
+            },
+            {
+              "classification": "required",
+              "reference": "core#544",
+              "role": "counterevidence",
+              "reason": "The open authored-scope question prevents the article review from treating architecture as settled; it does not block research pickup or authorize dispatch."
+            },
+            {
+              "classification": "required",
+              "reference": "core#551",
+              "role": "counterevidence",
+              "reason": "The open spatial-source question prevents the article review from treating architecture as settled; it does not block research pickup or authorize dispatch."
+            },
+            {
+              "classification": "required",
+              "reference": "core#564",
+              "role": "counterevidence",
+              "reason": "The open image and layout question prevents the article review from treating architecture as settled; it does not block research pickup or authorize dispatch."
+            }
+          ]
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "context",
+          "reference": "daily-logger#357",
+          "reason": "Retained evidence-recovery context; explicit operator feedback promotes it to a required dependency for the current preflight."
+        },
+        {
+          "classification": "context",
+          "reference": "daily-logger#385",
+          "reason": "Delivered prior-day checkpoint history, not a current candidate target."
+        },
+        {
+          "classification": "context",
+          "reference": "daily-logger#408",
+          "reason": "Separate delivered timing-checkpoint history, not a current candidate target."
+        },
+        {
+          "classification": "context",
+          "reference": "daily-logger#410",
+          "reason": "Article methodology and replay provenance, not a current candidate dependency."
+        },
+        {
+          "classification": "context",
+          "reference": "daily-logger#411",
+          "reason": "Delivered source-adoption provenance; it does not itself complete the pending action review."
+        },
+        {
+          "classification": "context",
+          "reference": "lego-village-pipeline#44",
+          "reason": "Parallel-work history with no current candidate dependency or dispatch authority."
+        },
+        {
+          "classification": "context",
+          "reference": "lego-village-pipeline#45",
+          "reason": "Parallel-work history with no current candidate dependency or dispatch authority."
+        },
+        {
+          "classification": "context",
+          "reference": "lego-village-pipeline#46",
+          "reason": "Parallel-work history with no current candidate dependency or dispatch authority."
+        }
+      ]
+    },
     "draftContext": {
       "kind": "retained",
       "markdown": "The original candidate commands and descriptions above are immutable producer history. All three are still awaiting independent review. They are not ranked, admitted, executable or settled. The corrections below are proposed editorial context, not reviewer verdicts or merge instructions.\n\nCandidate `b89074a9d7629cec0b4962d0255a956f76dee0cd735aec550b365e7e70ef4681` retains original command `/merge daily-logger#407` and its exact original payload as unverified producer history. At the reporting cutoff, [#407](https://github.com/ojfbot/daily-logger/pull/407) remained open at `ef7c02ab`; the earlier `cba0042b` review and owner chat `01a15c0b-ee0d-7990-89b8-e75c9211f7c1` are prior-work evidence. Post-cutoff review update: the PR merged on October 21 at 2026-10-21T16:25:52Z, from head `214e9e12fe3e7b3c12a59891697445704fbbf29b` into main at [fc31c9e5](https://github.com/ojfbot/daily-logger/commit/fc31c9e5bc9c12987fb0a8da3d9e9a5a1c304a48). The useful fleet-onboard checkpoint is delivered, including substantive planned-feed context, labelled mock-dev-host status and private collection opt-in. Do not redispatch implementation, review or merge. This evidence does not admit or settle the original candidate, and it does not add the private repository's earlier foundation commit to the historical 31-commit count.\n\nCandidate `a83670de3a4c36d23cd2016404b6825f86de689eb0a95ee47b7b98d8bd031ae3` retains `/owner-gate core#561`. The recorded initiative owner is fleet-runner under [core #307](https://github.com/ojfbot/core/issues/307), as [#560's ruling](https://github.com/ojfbot/core/issues/560#issuecomment-6304270768) states. Present the [#561 proposal and consumer review](https://github.com/ojfbot/core/issues/561#issuecomment-6305227157) for accept, reshape or park. An individual assignee, accepted commitment and checkpoint are still absent. Keep neutral parseable snapshot, freshness, stable cross-snapshot identity, and real second-client acceptance questions open. Live arrival needs the served versioned contract with live producers; fixture proof does not count. This is an owner decision, not an implementation order.\n\nCandidate `ccc62b6ac1492f339cf45d848d54bee639e5a633f7e5b3de7649a003cd3e1a2e` retains `/session wayfinder#543`. Its parallel-dispatch premise is unsupported. [#567's existing Tier 0 report in Classic Space Venue PR #4](https://github.com/ojfbot/classic-space-venue/pull/4) remains open and unmerged. The next pickup should account for that report and preserve the recorded order; no new allocation or dispatch is inferred here. The recorded order is [#567](https://github.com/ojfbot/core/issues/567), then [#543](https://github.com/ojfbot/core/issues/543), then [#563](https://github.com/ojfbot/core/issues/563), one cycle at a time. No harness allocation or dispatch is inferred. The report resolves no ticket, chooses no tool and does not adopt a stack. Blender's world-hub role is ruled, while [#544](https://github.com/ojfbot/core/issues/544) authored scope/export, [#551](https://github.com/ojfbot/core/issues/551) authoritative spatial source and [#564](https://github.com/ojfbot/core/issues/564) image/layout decisions remain open.\n\nPrior-day checkpoint `checkpoint:edd972afb47f74ef416a` is delivered. [#385](https://github.com/ojfbot/daily-logger/pull/385) merged at `d741aa8`; retained verification records seven October 17 and thirteen October 20 clock controls. Preserve that delivery evidence and do not redispatch the old visual-verdict task.\n\nTiming checkpoint `checkpoint:d8e801b487140ebe8fd3` remains distinct from [#357](https://github.com/ojfbot/daily-logger/issues/357), the article-page review/correspondence issue. [#408](https://github.com/ojfbot/daily-logger/pull/408) merged the Chicago-cutoff collection and fallback guards at `510149c`. The existing Daily blog fallback check remains active at 04:00 local. Its prepared time/prompt amendment still needs separate human adoption; first public availability is unknown. Run [#261](https://github.com/ojfbot/daily-logger/actions/runs/39573841916)'s 04:02:17 Chicago start is a different event. No installed schedule changed.\n\nEvidence-recovery checkpoint `checkpoint:a2c05cce92f08451469c` retains its existing owner and prior local-candidate lineage `a6e857c` / tree `ecfcb00`. Retained earlier evidence reports 1,068 tests, ten offline cases and independent review; this editorial revision did not rerun that earlier candidate. Post-cutoff source update: [#411](https://github.com/ojfbot/daily-logger/pull/411) merged on October 21 at 2026-10-21T16:40:52Z, adopting the reviewed source at [656e0a29](https://github.com/ojfbot/daily-logger/commit/656e0a295fcacecc50def71a35f34499774fa371). Local real [#357](https://github.com/ojfbot/daily-logger/issues/357) recovery and provider qualification remain pending. Hosted private retention remains blocked and no real SDK trial is authorized here. Do not duplicate the adopted source or treat source merge as completed action review, provider qualification or canonical settlement.\n\nLEGO drafts [#44](https://github.com/ojfbot/lego-village-pipeline/pull/44) and [#46](https://github.com/ojfbot/lego-village-pipeline/pull/46) retain close-or-supersede overlay exits and complete-cut/preflight requirements for later operative import. [#45](https://github.com/ojfbot/lego-village-pipeline/pull/45) retains HOUSE-WORLD R0, the second-steward register check and James's merge decision. Existing [#46](https://github.com/ojfbot/lego-village-pipeline/pull/46) role assignments do not prove dispatch. The Classic Space map places the venue in parallel with LEGO Village Pipeline; no new dependency follows.\n\nThe [immutable telemetry branch source](https://github.com/ojfbot/core/blob/fe264bd89298639518e401d60572bc2a0959c512/skill-telemetry.jsonl) contradicts a May 12 freeze: the invocation series contains October 20 events and the dispositions ledger contains October 21 events. The exact selected generation-time payload is unavailable. A later [native replay](https://github.com/ojfbot/daily-logger/pull/410#issuecomment-6320752943) reproduces 0% quality-gate coverage and one of fourteen suggestion conversions, or 7%. The replay is separate from the unavailable exact generation payload; the ratios do not establish actual invocation coverage. Do not resurrect completed `act-2026-04-12-validate-c53d7a` from those readings.\n\nRequired [#357](https://github.com/ojfbot/daily-logger/issues/357) evidence still exceeds the existing 128 KiB per-source limit. This retained context does not truncate that source, complete independent action review or permit acceptance. No action key, admission, disposition, merge, research dispatch, provider call, schedule change or tooling adoption is introduced by this pending revision. No checkpoint deadline is agreed."

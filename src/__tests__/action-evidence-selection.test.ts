@@ -4,12 +4,12 @@ import { join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 const { github } = vi.hoisted(() => ({ github: vi.fn() }))
 vi.mock('node:child_process', () => ({ execFileSync: github }))
-import { acceptedActionState, ActionRegistrySchema, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
+import { acceptedActionState, ActionRegistrySchema, captureDraftActionCandidates, managedArticleDigest, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
 import { writeActionStore } from './action-store-fixture.js'
-import { ACTION_EVIDENCE_SELECTION_VERSION, actionEvidenceScope, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from '../action-evidence-selection.js'
-import { actionEvidenceCaseDigest } from '../action-evidence-retrieval.js'
-import { revisionActionCycle } from '../action-review-cycle.js'
-import { collectActionSources, reviewArticleActions, reviewDraftActions, type ActionVerification } from '../review-actions.js'
+import { ACTION_EVIDENCE_SELECTION_VERSION, actionEvidenceScope, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, draftCandidateEvidenceBinding, prepareConservativeDraftCandidateEvidence, selectActionEvidence } from '../action-evidence-selection.js'
+import { ActionEvidenceRequestError, actionEvidenceCaseDigest } from '../action-evidence-retrieval.js'
+import { generationActionCycle, revisionActionCycle } from '../action-review-cycle.js'
+import { actionModelSourcePromptView, collectActionSources, reviewArticleActions, reviewDraftActions, type ActionVerification } from '../review-actions.js'
 
 const date = '2030-01-01'
 const empty = () => ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
@@ -37,6 +37,70 @@ function fixture(options: { markdown?: string; feedback?: string; acceptedPrevie
   return { root, sources, ownerGate, completion }
 }
 function input(sources: ActionSource[]) { return { registry: empty(), articleDate: date, cycle: revisionActionCycle('offline-source-selection-control'), articleStatuses: new Map([[date, 'draft']]), markdown, feedback: '', sources } }
+
+function candidateEvidenceFixture() {
+  const article = `---\ndate: ${date}\nstatus: draft\n---\n## What shipped\nNo reader-facing candidate verdict.\n`
+  const cycle = revisionActionCycle('candidate-evidence-contract')
+  const draftContext = { kind: 'retained' as const, markdown: 'Candidate one requires daily-logger #407. Candidate two requires core #561 with owner core #307 and ruling core #560. Delivered history daily-logger #385 remains context.' }
+  const draftCandidates = captureDraftActionCandidates([
+    { command: '/merge daily-logger#407', description: 'Review the exact merge target.', repo: 'daily-logger', status: 'open', sourceDate: date },
+    { command: '/owner-gate core#561', description: 'Ask the recorded owner for a disposition.', repo: 'core', status: 'open', sourceDate: date },
+  ])
+  const articleDigest = managedArticleDigest(article)
+  const roundId = '5'.repeat(64)
+  const stateDigest = '6'.repeat(64)
+  const draftCandidateEvidence = {
+    version: 'draft-candidate-evidence-v1' as const,
+    provenance: { kind: 'coordinator' as const, identity: 'fixture-coordinator', decision: 'Approve the explicit per-candidate evidence association fixture.' },
+    articleDate: date,
+    articleDigest,
+    reviewCycle: cycle,
+    draftContextSha256: sha256(JSON.stringify(draftContext)),
+    candidatePayloadsSha256: sha256(JSON.stringify(draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))),
+    actionStateSha256: sha256(JSON.stringify([])),
+    candidates: [
+      { candidateId: draftCandidates[0].candidateId, payloadSha256: sha256(JSON.stringify(draftCandidates[0].payload)), references: [
+        { classification: 'required' as const, reference: 'daily-logger#407', role: 'target' as const, reason: 'Exact immutable candidate target.' },
+      ] },
+      { candidateId: draftCandidates[1].candidateId, payloadSha256: sha256(JSON.stringify(draftCandidates[1].payload)), references: [
+        { classification: 'required' as const, reference: 'core#561', role: 'target' as const, reason: 'Exact immutable candidate target.' },
+        { classification: 'required' as const, reference: 'core#307', role: 'owner' as const, reason: 'Recorded initiative owner.' },
+        { classification: 'required' as const, reference: 'core#560', role: 'gate' as const, reason: 'Recorded owner ruling.' },
+      ] },
+    ],
+    unassignedReferences: [{ classification: 'context' as const, reference: 'daily-logger#385', reason: 'Delivered prior-day checkpoint history.' }],
+  }
+  const registry = empty()
+  registry.articles.push({
+    date, status: 'draft', review: { state: 'pending', reason: 'Independent review is pending.' }, articleDigest, roundId, reviewCycle: cycle,
+    actionKeys: [], draftCandidates, draftCandidateEvidence, draftContext, stateDigest,
+    verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'action-review-pending-v5-draft-candidate-custody', proposalSha256: '7'.repeat(64), verdicts: [] },
+    sources: [], rejected: [],
+  })
+  return { article, cycle, draftContext, draftCandidates, draftCandidateEvidence, registry: ActionRegistrySchema.parse(registry) }
+}
+
+function singleCandidateEvidenceFixture(input: { command: string; description: string; repo: string; context: string; references: Array<{ reference: string; role: 'target' | 'lifecycle' | 'owner' | 'gate' | 'counterevidence' }> }) {
+  const article = `---\ndate: ${date}\nstatus: draft\n---\n## What shipped\nNo reader-facing candidate verdict.\n`
+  const cycle = revisionActionCycle('candidate-target-normalization')
+  const draftContext = { kind: 'retained' as const, markdown: input.context }
+  const draftCandidates = captureDraftActionCandidates([{ command: input.command, description: input.description, repo: input.repo, status: 'open', sourceDate: date }])
+  const articleDigest = managedArticleDigest(article)
+  const registry = empty()
+  registry.articles.push({
+    date, status: 'draft', review: { state: 'pending', reason: 'Independent review is pending.' }, articleDigest, roundId: '8'.repeat(64), reviewCycle: cycle,
+    actionKeys: [], draftCandidates,
+    draftCandidateEvidence: {
+      version: 'draft-candidate-evidence-v1', provenance: { kind: 'independent-reviewer', identity: 'fixture-reviewer', decision: 'Classify the exact immutable candidate sources.' },
+      articleDate: date, articleDigest, reviewCycle: cycle, draftContextSha256: sha256(JSON.stringify(draftContext)),
+      candidatePayloadsSha256: sha256(JSON.stringify(draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))),
+      actionStateSha256: sha256(JSON.stringify([])), candidates: [{ candidateId: draftCandidates[0].candidateId, payloadSha256: sha256(JSON.stringify(draftCandidates[0].payload)),
+        references: input.references.map(reference => ({ classification: 'required' as const, ...reference, reason: `Required ${reference.role} evidence.` })) }], unassignedReferences: [],
+    },
+    draftContext, stateDigest: '9'.repeat(64), verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'action-review-pending-v5-draft-candidate-custody', proposalSha256: 'a'.repeat(64), verdicts: [] }, sources: [], rejected: [],
+  })
+  return { article, cycle, registry: ActionRegistrySchema.parse(registry) }
+}
 
 it('uses one authoritative article-status premise across state, digest, scope, collection, writing, and cache', async () => {
   // Premise census: an action is accepted-terminal only when both the registry snapshot and
@@ -118,6 +182,251 @@ it('uses one authoritative article-status premise across state, digest, scope, c
 
   expect(new Set(digests.slice(0, 3))).toHaveLength(1)
   expect(digests[3]).not.toBe(digests[0])
+})
+
+it('does not treat a negative retained terminal-action mention as reassessment intent', () => {
+  const priorDate = '2029-12-31'
+  const priorRound = 'd'.repeat(64)
+  const registry = empty()
+  registry.records.push({
+    key: 'act-terminal',
+    original: { id: 'act-terminal', command: '/validate', description: 'Validate the prior result.', repo: 'daily-logger', status: 'open', sourceDate: priorDate },
+    origin: 'imported', workKey: 'daily-logger|terminal|validate', state: 'done', introducedBy: priorDate,
+    includeInIndex: true, inclusionOverride: null, goal: 'Validate once.', doneWhen: 'Validation is recorded.', gates: [],
+    history: [{ roundId: priorRound, articleDate: priorDate, state: 'done', description: 'Validation completed.', reason: 'The accepted review recorded completion.', citations: [], verifiedBy: 'fixture', verificationReason: 'Fixture decision.' }],
+  })
+  registry.articles.push({
+    date: priorDate, status: 'accepted', review: { state: 'verified' }, articleDigest: '1'.repeat(64), roundId: priorRound,
+    actionKeys: ['act-terminal'], stateDigest: '2'.repeat(64),
+    verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'fixture', proposalSha256: '3'.repeat(64), verdicts: [] },
+    sources: [], rejected: [],
+  }, {
+    date, status: 'draft', review: { state: 'pending', reason: 'Independent review is pending.' }, articleDigest: '4'.repeat(64), roundId: '5'.repeat(64),
+    reviewCycle: revisionActionCycle('negative-terminal-mention'), actionKeys: [],
+    draftContext: { kind: 'retained', markdown: 'Do not resurrect completed `act-terminal` from this historical note.' },
+    stateDigest: '6'.repeat(64), verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'action-review-pending-v5-draft-candidate-custody', proposalSha256: '7'.repeat(64), verdicts: [] },
+    sources: [], rejected: [],
+  })
+
+  const scope = actionEvidenceScope({ registry, articleStatuses: new Map([[priorDate, 'accepted'], [date, 'draft']]), articleDate: date, markdown: `---\ndate: ${date}\nstatus: draft\n---\n`, feedback: '' })
+
+  expect(scope.ambiguousTerminalActionKeys).toEqual([])
+  expect(scope.reviewActionKeys).toEqual([])
+})
+
+it('fails pending when awaiting candidates have no explicit evidence associations', () => {
+  const registry = empty()
+  const draftCandidates = captureDraftActionCandidates([{ command: '/merge daily-logger#407', description: 'Review the exact merge target.', repo: 'daily-logger', status: 'open', sourceDate: date }])
+  registry.articles.push({
+    date, status: 'draft', review: { state: 'pending', reason: 'Independent review is pending.' }, articleDigest: '4'.repeat(64), roundId: '5'.repeat(64),
+    reviewCycle: revisionActionCycle('missing-candidate-evidence'), actionKeys: [], draftCandidates,
+    draftContext: { kind: 'retained', markdown: 'Candidate context references daily-logger #407 and delivered history daily-logger #385.' },
+    stateDigest: '6'.repeat(64), verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'action-review-pending-v5-draft-candidate-custody', proposalSha256: '7'.repeat(64), verdicts: [] },
+    sources: [], rejected: [],
+  })
+
+  expect(() => actionEvidenceScope({ registry, articleDate: date, markdown: `---\ndate: ${date}\nstatus: draft\n---\n`, feedback: '' }))
+    .toThrow(/structured.*candidate.*evidence/i)
+})
+
+it('distinguishes legacy unknown candidate custody from an explicitly empty captured list', () => {
+  const make = (draftCandidates: ReturnType<typeof captureDraftActionCandidates> | undefined) => {
+    const registry = empty()
+    registry.articles.push({
+      date, status: 'draft', review: { state: 'pending', reason: 'Independent review is pending.' }, articleDigest: '4'.repeat(64), roundId: '5'.repeat(64),
+      reviewCycle: revisionActionCycle('candidate-custody-state'), actionKeys: [], ...(draftCandidates === undefined ? {} : { draftCandidates }),
+      draftContext: { kind: 'retained', markdown: `Candidate ${'a'.repeat(64)} remains in historical prose.` },
+      stateDigest: '6'.repeat(64), verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'legacy-fixture', proposalSha256: '7'.repeat(64), verdicts: [] }, sources: [], rejected: [],
+    })
+    return registry
+  }
+  expect(() => actionEvidenceScope({ registry: make(undefined), articleDate: date, markdown: `---\ndate: ${date}\nstatus: draft\n---\n`, feedback: '' })).toThrow(/custody is unknown/i)
+  expect(() => actionEvidenceScope({ registry: make([]), articleDate: date, markdown: `---\ndate: ${date}\nstatus: draft\n---\n`, feedback: '' })).not.toThrow()
+})
+
+it('uses explicit candidate associations for required evidence while retaining background in the audit census', () => {
+  const { article, cycle, registry } = candidateEvidenceFixture()
+
+  const scope = actionEvidenceScope({ registry, articleDate: date, cycle, markdown: article, feedback: '' })
+
+  expect([...scope.refs].sort()).toEqual(['core#307', 'core#560', 'core#561', 'daily-logger#407'])
+  expect([...scope.contextRefs]).toEqual(['daily-logger#385'])
+  expect(scope.referenceRequirements).toEqual(expect.arrayContaining([
+    expect.objectContaining({ reference: 'daily-logger#407', classification: 'required', source: `candidate:${registry.articles[0].draftCandidates?.[0].candidateId}` }),
+    expect.objectContaining({ reference: 'daily-logger#385', classification: 'context', source: 'unassigned' }),
+  ]))
+})
+
+it('prepares a source-bound conservative initial-generation map without claiming review authority or suppressing retained refs', () => {
+  const article = `---\ndate: ${date}\nstatus: draft\n---\n## What shipped\nNo verdict.\n## What's next\nRetain core #560 and daily-logger #385 until independent classification.\n`
+  const draftCandidates = captureDraftActionCandidates([
+    { command: '/merge daily-logger#407', description: 'Review the exact target.', repo: 'daily-logger', status: 'open', sourceDate: date },
+  ])
+  const cycle = generationActionCycle()
+  const registry = empty()
+  const requirements = prepareConservativeDraftCandidateEvidence({ registry, articleDate: date, cycle, markdown: article, draftCandidates })
+  const scope = actionEvidenceScope({ registry, articleDate: date, cycle, markdown: article, feedback: '', draftCandidates, draftCandidateEvidence: requirements })
+
+  expect(requirements.provenance.kind).toBe('deterministic-default')
+  expect(requirements.candidates[0].references).toMatchObject([{ classification: 'required', reference: 'daily-logger#407', role: 'target' }])
+  expect(requirements.unassignedReferences).toEqual(expect.arrayContaining([
+    expect.objectContaining({ classification: 'required', reference: 'core#560', role: 'retained-context' }),
+    expect.objectContaining({ classification: 'required', reference: 'daily-logger#385', role: 'retained-context' }),
+  ]))
+  expect([...scope.refs].sort()).toEqual(['core#560', 'daily-logger#385', 'daily-logger#407'])
+  expect([...scope.contextRefs]).toEqual([])
+
+  const root = mkdtempSync(join(tmpdir(), 'initial-candidate-evidence-')); roots.push(root)
+  github.mockImplementation((_command, args: string[]) => args.at(-1)?.includes('/comments')
+    ? JSON.stringify([[]])
+    : args.at(-1)?.includes('/issues/') ? JSON.stringify([{ state: 'open', body: 'Current primary evidence.' }]) : '[]')
+  const sources = collectActionSources({ registry, repoRoot: root, articleStatuses: new Map([[date, 'draft']]),
+    cycle, markdown: article, feedback: '', draftCandidates, draftCandidateEvidence: requirements })
+  expect(sources.filter(source => source.kind === 'github').map(source => source.id.replace(/@[a-f0-9]{64}$/, '')).sort())
+    .toEqual(['github:core#560', 'github:daily-logger#385', 'github:daily-logger#407'])
+  expect(sources.some(source => source.id.startsWith('candidate-evidence-scope@'))).toBe(false)
+})
+
+it('scopes bounded-view obligations and questions to the candidate requirements for that source', () => {
+  const prepared = candidateEvidenceFixture()
+  try {
+    selectActionEvidence({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '', sources: [] })
+    throw new Error('Expected a missing-source request')
+  } catch (error) {
+    expect(error).toBeInstanceOf(ActionEvidenceRequestError)
+    const request = (error as ActionEvidenceRequestError).request
+    expect(request.sourceKey).toBe('github:core#307')
+    expect(request.question).toContain('candidate:')
+    expect(request.question).toContain('owner')
+    expect(request.question).not.toContain('daily-logger#407')
+    expect(request.obligations).toHaveLength(1)
+  }
+})
+
+it('keeps trust line authority while omitting duplicate trusted text only from the model prompt view', () => {
+  const source: ActionSource = {
+    id: 'github:core#1@' + 'a'.repeat(64), kind: 'github', locator: 'https://github.com/ojfbot/core/issues/1',
+    content: 'CURRENT API STATE core#1: state=open.\nOwner gate remains open.',
+    trustedContent: ['CURRENT API STATE core#1: state=open.', 'Owner gate remains open.'],
+  }
+  const view = actionModelSourcePromptView(source)
+  expect(view).not.toHaveProperty('trustedContent')
+  expect(view.authoritativeLines).toEqual([1, 2])
+  expect(view.content).toBe('L1: CURRENT API STATE core#1: state=open.\nL2: Owner gate remains open.')
+  expect(source.trustedContent).toHaveLength(2)
+  expect(() => actionModelSourcePromptView({ ...source, trustedContent: ['Missing trusted text.'] })).toThrow(/not represented/i)
+})
+
+it('rejects candidate evidence maps that demote direct targets, omit candidates, drift, duplicate one association, or add foreign refs', () => {
+  const fixture = candidateEvidenceFixture()
+  const assertInvalid = (mutate: (registry: ActionRegistry) => void, expected: RegExp) => {
+    const registry = structuredClone(fixture.registry)
+    mutate(registry)
+    expect(() => actionEvidenceScope({ registry, articleDate: date, cycle: fixture.cycle, markdown: fixture.article, feedback: '' })).toThrow(expected)
+  }
+
+  assertInvalid(registry => { registry.articles[0].draftCandidateEvidence!.candidates[0].references[0] = { classification: 'context', reference: 'daily-logger#407', reason: 'Attempted demotion.' } }, /direct candidate target/i)
+  assertInvalid(registry => { registry.articles[0].draftCandidateEvidence!.candidates.pop() }, /every captured candidate/i)
+  assertInvalid(registry => { registry.articles[0].draftCandidateEvidence!.draftContextSha256 = '0'.repeat(64) }, /stale or foreign/i)
+  assertInvalid(registry => { registry.articles[0].draftCandidateEvidence!.candidates[1].references.push({ classification: 'context', reference: 'core#561', reason: 'Contradictory duplicate in one candidate association.' }) }, /duplicate/i)
+  assertInvalid(registry => { registry.articles[0].draftCandidateEvidence!.unassignedReferences.push({ classification: 'context', reference: 'core#999', reason: 'Foreign reference.' }) }, /unknown or foreign/i)
+})
+
+it('preserves per-candidate classifications while taking the monotone required union for shared evidence', () => {
+  const fixture = candidateEvidenceFixture()
+  fixture.registry.articles[0].draftCandidateEvidence!.unassignedReferences.push({ classification: 'context', reference: 'core#561', reason: 'Background to the other candidate.' })
+
+  const scope = actionEvidenceScope({ registry: fixture.registry, articleDate: date, cycle: fixture.cycle, markdown: fixture.article, feedback: '' })
+
+  expect(scope.refs).toContain('core#561')
+  expect(scope.contextRefs).not.toContain('core#561')
+  expect(scope.referenceRequirements.filter(requirement => requirement.reference === 'core#561')).toEqual(expect.arrayContaining([
+    expect.objectContaining({ classification: 'required' }),
+    expect.objectContaining({ classification: 'context' }),
+  ]))
+})
+
+it('collects every required candidate dependency before unrelated retained history', () => {
+  const { article, cycle, registry } = candidateEvidenceFixture()
+
+  fixture({ registry, markdown: article, compact: true })
+
+  const discussionCalls = github.mock.calls.map(([, args]) => args.at(-1) ?? '').filter(endpoint => /\/issues\/\d+$/.test(endpoint))
+  expect(discussionCalls).toEqual(expect.arrayContaining([
+    'repos/ojfbot/daily-logger/issues/407',
+    'repos/ojfbot/core/issues/307',
+    'repos/ojfbot/core/issues/560',
+    'repos/ojfbot/core/issues/561',
+  ]))
+  expect(discussionCalls).not.toContain('repos/ojfbot/daily-logger/issues/385')
+  expect(actionEvidenceScope({ registry, articleDate: date, cycle, markdown: article, feedback: '' }).referenceRequirements)
+    .toEqual(expect.arrayContaining([expect.objectContaining({ reference: 'daily-logger#385', classification: 'context' })]))
+})
+
+it('honors qualified cross-repo and URL targets, and resolves wayfinder shorthand only through one retained qualified identity', () => {
+  const qualified = singleCandidateEvidenceFixture({
+    command: '/review core#700', repo: 'daily-logger',
+    description: 'Compare https://github.com/ojfbot/classic-space-venue/issues/4 with daily-logger#701.',
+    context: 'Current sources are core #700, classic-space-venue #4, and daily-logger #701.',
+    references: [
+      { reference: 'core#700', role: 'target' },
+      { reference: 'classic-space-venue#4', role: 'counterevidence' },
+      { reference: 'daily-logger#701', role: 'lifecycle' },
+    ],
+  })
+  expect([...actionEvidenceScope({ registry: qualified.registry, articleDate: date, cycle: qualified.cycle, markdown: qualified.article, feedback: '' }).refs].sort())
+    .toEqual(['classic-space-venue#4', 'core#700', 'daily-logger#701'])
+
+  const wayfinder = singleCandidateEvidenceFixture({ command: '/session wayfinder#543', repo: 'core', description: 'Review the retained object-model session.',
+    context: 'The qualified target is core #543.', references: [{ reference: 'core#543', role: 'target' }] })
+  expect(actionEvidenceScope({ registry: wayfinder.registry, articleDate: date, cycle: wayfinder.cycle, markdown: wayfinder.article, feedback: '' }).refs)
+    .toContain('core#543')
+
+  const ambiguous = structuredClone(wayfinder.registry)
+  ambiguous.articles[0].draftContext = { kind: 'retained', markdown: 'Possible targets are core #543 and daily-logger #543.' }
+  ambiguous.articles[0].draftCandidateEvidence!.draftContextSha256 = sha256(JSON.stringify(ambiguous.articles[0].draftContext))
+  ambiguous.articles[0].draftCandidateEvidence!.unassignedReferences.push({ classification: 'context', reference: 'daily-logger#543', reason: 'Second qualified identity makes shorthand ambiguous.' })
+  expect(() => actionEvidenceScope({ registry: ambiguous, articleDate: date, cycle: wayfinder.cycle, markdown: wayfinder.article, feedback: '' })).toThrow(/ambiguous candidate target/i)
+})
+
+it('promotes an audited context reference when explicit feedback requires it, forcing recollection and a new evidence case', () => {
+  const prepared = candidateEvidenceFixture()
+  const base = actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' })
+  const feedback = 'Inspect daily-logger #385 as current counterevidence.'
+  const promoted = actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback })
+
+  expect(base.contextRefs).toContain('daily-logger#385')
+  expect(promoted.refs).toContain('daily-logger#385')
+  expect(promoted.contextRefs).not.toContain('daily-logger#385')
+  const before = actionEvidenceCaseDigest({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '', actionKeys: ['article-feedback'] })
+  const after = actionEvidenceCaseDigest({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback, actionKeys: ['article-feedback'] })
+  expect(after).not.toBe(before)
+  github.mockClear()
+  fixture({ registry: prepared.registry, markdown: prepared.article, feedback, compact: true })
+  expect(github.mock.calls.some(([, args]) => args.at(-1) === 'repos/ojfbot/daily-logger/issues/385')).toBe(true)
+})
+
+it('invalidates prepared candidate evidence when a retained canonical gate becomes accepted', () => {
+  const prepared = candidateEvidenceFixture()
+  const priorDate = '2029-12-31'
+  const priorRound = 'b'.repeat(64)
+  prepared.registry.records.push({
+    key: 'gate-core-307', original: { id: 'gate-core-307', command: '/owner-gate core#307', description: 'Resolve core #307.', repo: 'core', status: 'open', sourceDate: priorDate },
+    origin: 'imported', workKey: 'core|307|owner', state: 'done', introducedBy: priorDate, includeInIndex: true, inclusionOverride: null,
+    goal: 'Resolve core #307 ownership.', doneWhen: 'The owner accepts the gate.', gates: ['Owner acceptance remains required.'],
+    history: [{ roundId: priorRound, articleDate: priorDate, state: 'done', description: 'Owner accepted the gate.', reason: 'Accepted owner record.', citations: [], verifiedBy: 'fixture', verificationReason: 'Fixture decision.' }],
+  })
+  prepared.registry.articles.push({
+    date: priorDate, status: 'draft', review: { state: 'verified' }, articleDigest: 'c'.repeat(64), roundId: priorRound, actionKeys: ['gate-core-307'], stateDigest: 'd'.repeat(64),
+    verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'fixture', proposalSha256: 'e'.repeat(64), verdicts: [] }, sources: [], rejected: [],
+  })
+  const initialBinding = draftCandidateEvidenceBinding({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article })
+  prepared.registry.articles.find(article => article.date === date)!.draftCandidateEvidence!.actionStateSha256 = initialBinding.actionStateSha256
+  expect(() => actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' })).not.toThrow()
+
+  prepared.registry.articles.find(article => article.date === priorDate)!.status = 'accepted'
+
+  expect(() => actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' })).toThrow(/stale or foreign/i)
 })
 
 it('revalidates a carried closing checkpoint even after authored next-step prose changes', () => {
@@ -262,14 +571,15 @@ it('keeps thirteen mandatory references pending under the unchanged twelve-discu
   const article = `---\ndate: ${date}\nstatus: draft\n---\n## What's next\nInspect the explicitly named evidence.\n`
   const feedback = Array.from({ length: 13 }, (_, index) => `Inspect daily-logger #${100 + index}.`).join('\n')
   const { sources } = fixture({ markdown: article, feedback, compact: true })
-  expect(sources.filter(source => source.kind === 'github')).toHaveLength(12)
+  expect(sources.filter(source => source.kind === 'github')).toHaveLength(0)
+  expect(sources.find(source => source.id.startsWith('required-evidence-budget@'))?.content).toContain('no required reference was silently sliced')
   const calls = vi.fn()
   const result = await reviewDraftActions({ ...input(sources), markdown: article, feedback, agents: {
     propose: async () => { calls(); return {} }, verify: async () => { calls(); return {} },
   } })
   expect(calls).not.toHaveBeenCalled()
   expect(result.registry.records).toEqual([])
-  expect(result.registry.articles[0].review).toMatchObject({ state: 'pending', reason: expect.stringContaining('Required action evidence unavailable') })
+  expect(result.registry.articles[0].review).toMatchObject({ state: 'pending', reason: expect.stringContaining('exceeds the unchanged 12-discussion cap') })
 })
 
 it('runs full collector→selection→both prompt paths with twelve oversized discussions, preserving an older owner gate', async () => {
