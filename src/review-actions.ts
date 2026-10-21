@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { isReviewedAction } from './action-model.js'
 import { ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, ActionReviewCycleSchema, actionAdmissionLimit, countCycleAdmissions, type ActionReviewCycle } from './action-review-cycle.js'
-import { ACTION_EVIDENCE_SELECTION_VERSION, CONTINUITY_TARGETS_SOURCE, acceptedContinuityGithubReferences, actionEvidenceScope, actionRecordSourceReferences, actionReviewIndex, actionSourceReferences, candidateReviewOutputFrontierGaps, canonicalActionSources, COVERAGE_SOURCE, deriveActionReviewOutput, prepareConservativeDraftCandidateEvidence, recommendationMaintenanceDescriptor, recommendationMaintenanceProjection, selectActionEvidence } from './action-evidence-selection.js'
+import { ACTION_EVIDENCE_SELECTION_VERSION, CONTINUITY_TARGETS_SOURCE, acceptedContinuityGithubReferences, actionEvidenceScope, actionRecordSourceReferences, actionReviewIndex, actionSourceReferences, canonicalActionSources, COVERAGE_SOURCE, deriveActionReviewOutput, prepareConservativeDraftCandidateEvidence, recommendationMaintenanceDescriptor, recommendationMaintenanceProjection, selectActionEvidence } from './action-evidence-selection.js'
 import {
   ActionEvidenceRequestError,
   ActionEvidenceLifecycleError,
@@ -844,12 +844,13 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     return { id: source.id, kind: source.kind, locator: source.locator, content: source.id.startsWith(`${COVERAGE_SOURCE}@`) ? source.content : quotes.join('\n\n'), ...(trustedContent?.length ? { trustedContent } : {}), fullContentSha256: source.fullContentSha256 ?? sha256(source.content), ...(source.projection ? { projection: source.projection } : {}), ...(source.response ? { response: source.response } : {}) }
   })
   const proposalSha256 = sha256(JSON.stringify(proposal))
-  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], ...(reviewedDraftCandidates === undefined ? {} : { draftCandidates: reviewedDraftCandidates }), ...(input.draftCandidateEvidence === undefined ? {} : { draftCandidateEvidence: input.draftCandidateEvidence }), draftContext: prepared.context, closing, stateDigest: sha256('native-review-output-pending'), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256, verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...verification.candidateDispositions.map(verdict => ({ item: `draft-candidate:${verdict.candidateId}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, evidenceRequests: input.resolvedEvidenceRequests ?? [], rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
+  const candidateReviewHistory = previous?.candidateReviewHistory
+  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], ...(reviewedDraftCandidates === undefined ? {} : { draftCandidates: reviewedDraftCandidates }), ...(candidateReviewHistory === undefined ? {} : { candidateReviewHistory }), ...(input.draftCandidateEvidence === undefined ? {} : { draftCandidateEvidence: input.draftCandidateEvidence }), draftContext: prepared.context, closing, stateDigest: sha256('native-review-output-pending'), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256, verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...verification.candidateDispositions.map(verdict => ({ item: `draft-candidate:${verdict.candidateId}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, evidenceRequests: input.resolvedEvidenceRequests ?? [], rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
   next.articles = [...next.articles.filter(article => article.date !== input.articleDate), snapshot]
   const normalizedNext = ActionRegistrySchema.parse(next)
   const reviewOutput = input.draftCandidateEvidence ? deriveActionReviewOutput({ before: input.registry, after: normalizedNext, articleStatuses: input.articleStatuses,
     articleDate: input.articleDate, reviewCycle: cycle, roundId: input.roundId, proposalSha256, consumedInputSha256: input.draftCandidateEvidence.canonicalIndexSha256 }) : undefined
-  const finalSnapshot = { ...snapshot, ...(reviewOutput ? { reviewOutput } : {}), stateDigest: actionStateDigest(normalizedNext, [...keys], closing, prepared.context, { articleDate: input.articleDate, roundId: input.roundId, draftCandidates: reviewedDraftCandidates, draftCandidateEvidence: input.draftCandidateEvidence, reviewOutput }) }
+  const finalSnapshot = { ...snapshot, ...(reviewOutput ? { reviewOutput } : {}), stateDigest: actionStateDigest(normalizedNext, [...keys], closing, prepared.context, { articleDate: input.articleDate, roundId: input.roundId, draftCandidates: reviewedDraftCandidates, candidateReviewHistory, draftCandidateEvidence: input.draftCandidateEvidence, reviewOutput }) }
   normalizedNext.articles = [...normalizedNext.articles.filter(article => article.date !== input.articleDate), finalSnapshot]
   const result = ActionRegistrySchema.parse(normalizedNext)
   for (const file of splitActionRegistry(result).files) articleActionFileBytes(file)
@@ -909,16 +910,25 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
     && (!source.projection || !source.projection.coverage.some(item => item.status === 'unknown')
       && (!input.selectedEvidenceProjectionIds?.length || input.selectedEvidenceProjectionIds.includes(source.id)))), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
 
-  if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === inputHash && JSON.stringify(previous.draftContext) === JSON.stringify(prepared.context) && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys, previous.closing, previous.draftContext, { articleDate: previous.date, roundId: previous.roundId, draftCandidates: previous.draftCandidates, draftCandidateEvidence: previous.draftCandidateEvidence, reviewOutput: previous.reviewOutput })) {
+  if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === inputHash && JSON.stringify(previous.draftContext) === JSON.stringify(prepared.context) && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys, previous.closing, previous.draftContext, { articleDate: previous.date, roundId: previous.roundId, draftCandidates: previous.draftCandidates, candidateReviewHistory: previous.candidateReviewHistory, draftCandidateEvidence: previous.draftCandidateEvidence, reviewOutput: previous.reviewOutput })) {
     const committedResolutionIds = new Set(previous.sources.filter(source => source.projection || source.response).map(source => source.id))
     return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true,
       evidenceResolutions: input.sources.filter(source => (source.projection || source.response) && committedResolutionIds.has(source.id)) }
   }
-  const outputFrontierGaps = candidateReviewOutputFrontierGaps(input.registry, previous, draftCandidateEvidence)
-  if (previous?.review.state === 'verified' && previous.reviewOutput
-    && JSON.stringify(previous.reviewOutput.reviewCycle) === JSON.stringify(input.cycle)
-    && outputFrontierGaps.length) {
-    throw new ActionInputFrontierError(`A new evidence case would consume prior native review outputs without a fresh explicit input association: ${outputFrontierGaps.join(', ')}; review pending`)
+  if (previous?.review.state === 'verified' && previous.reviewOutput && draftCandidateEvidence
+    && JSON.stringify(previous.reviewOutput.reviewCycle) === JSON.stringify(input.cycle)) {
+    const currentRegistry = structuredClone(input.registry)
+    const currentSnapshot = currentRegistry.articles.find(article => article.date === input.articleDate)
+    if (currentSnapshot) {
+      currentSnapshot.review = { state: 'pending', reason: 'Current-input frontier validation.' }
+      delete currentSnapshot.reviewOutput
+    }
+    try {
+      actionEvidenceScope({ ...input, registry: currentRegistry, draftCandidates, draftContext: prepared.context })
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'current candidate input binding is unavailable'
+      throw new ActionInputFrontierError(`A new evidence case would consume prior native review outputs without a fresh explicit current-input binding: ${detail}`)
+    }
   }
   const selection = selectActionEvidence({ ...input, draftCandidates, draftContext: prepared.context })
   input = { ...input, sources: selection.sources }
@@ -977,6 +987,24 @@ export function pendingActionReview(input: { registry: ActionRegistry; articleDa
   const capturedDraftCandidates = input.draftCandidates === undefined ? undefined : captureDraftActionCandidates(input.draftCandidates)
   if (previous?.draftCandidates && capturedDraftCandidates && JSON.stringify(previous.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload }))) !== JSON.stringify(capturedDraftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))) throw new Error('Initial draft candidates changed after capture')
   const retainedDraftCandidates = previous?.draftCandidates ?? capturedDraftCandidates
+  const priorTransitions = input.resetDraftCandidateReviews && previous?.review.state === 'verified' && previous.reviewCycle
+    ? (previous.draftCandidates ?? []).flatMap(candidate => candidate.review.state === 'awaiting-review' ? [] : [{ candidateId: candidate.candidateId, review: candidate.review }])
+    : []
+  const priorReceipt = priorTransitions.length && previous?.draftCandidateEvidence && previous.reviewOutput ? {
+    articleDigest: previous.articleDigest, reviewCycle: previous.reviewCycle!, roundId: previous.roundId, stateDigest: previous.stateDigest,
+    verification: previous.verification, draftCandidateEvidence: previous.draftCandidateEvidence, reviewOutput: previous.reviewOutput,
+    transitions: priorTransitions,
+    sources: previous.sources.map(source => ({ id: source.id, fullContentSha256: source.fullContentSha256 ?? sha256(source.content) })),
+    evidenceRequests: previous.evidenceRequests ?? [],
+  } : undefined
+  const existingHistory = previous?.candidateReviewHistory ?? []
+  if (priorReceipt) {
+    const key = (receipt: NonNullable<typeof priorReceipt>) => `${receipt.roundId}:${receipt.verification.proposalSha256}:${receipt.stateDigest}`
+    const existing = existingHistory.find(receipt => key(receipt) === key(priorReceipt))
+    if (existing && JSON.stringify(existing) !== JSON.stringify(priorReceipt)) throw new Error('Historical candidate review receipt changed; review pending')
+  }
+  const candidateReviewHistory = [...existingHistory, ...(priorReceipt && !existingHistory.some(receipt => receipt.roundId === priorReceipt.roundId
+    && receipt.verification.proposalSha256 === priorReceipt.verification.proposalSha256 && receipt.stateDigest === priorReceipt.stateDigest) ? [priorReceipt] : [])]
   const draftCandidates = input.resetDraftCandidateReviews && retainedDraftCandidates
     ? retainedDraftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload, review: { state: 'awaiting-review' as const } }))
     : retainedDraftCandidates
@@ -989,7 +1017,7 @@ export function pendingActionReview(input: { registry: ActionRegistry; articleDa
     .map(record => record.key)
   const closing = previous?.closing
   const roundId = sha256(JSON.stringify({ pending: managedArticleDigest(input.markdown), draftContext: prepared.context, draftCandidates, cycle: input.cycle }))
-  const snapshot = { date: input.articleDate, reviewCycle: ActionReviewCycleSchema.parse(input.cycle), status: 'draft' as const, review: { state: 'pending' as const, reason: input.reason.slice(0, 1000) }, articleDigest: managedArticleDigest(input.markdown), roundId, actionKeys: keys, ...(draftCandidates === undefined ? {} : { draftCandidates }), ...(draftCandidateEvidence === undefined ? {} : { draftCandidateEvidence }), draftContext: prepared.context, closing, stateDigest: actionStateDigest(registry, keys, closing, prepared.context, { articleDate: input.articleDate, roundId, includePriorArticleRounds: true, draftCandidates, draftCandidateEvidence }), verification: { proposer: 'not-verified', verifier: 'not-verified', promptVersion: PENDING_ACTION_REVIEW_PROMPT_VERSION, proposalSha256: sha256('pending'), verdicts: [] }, sources: previous?.sources ?? [], evidenceRequests: input.evidenceRequests ?? [], rejected: previous?.rejected ?? [] }
+  const snapshot = { date: input.articleDate, reviewCycle: ActionReviewCycleSchema.parse(input.cycle), status: 'draft' as const, review: { state: 'pending' as const, reason: input.reason.slice(0, 1000) }, articleDigest: managedArticleDigest(input.markdown), roundId, actionKeys: keys, ...(draftCandidates === undefined ? {} : { draftCandidates }), ...(candidateReviewHistory.length ? { candidateReviewHistory } : {}), ...(draftCandidateEvidence === undefined ? {} : { draftCandidateEvidence }), draftContext: prepared.context, closing, stateDigest: actionStateDigest(registry, keys, closing, prepared.context, { articleDate: input.articleDate, roundId, includePriorArticleRounds: true, draftCandidates, candidateReviewHistory: candidateReviewHistory.length ? candidateReviewHistory : undefined, draftCandidateEvidence }), verification: { proposer: 'not-verified', verifier: 'not-verified', promptVersion: PENDING_ACTION_REVIEW_PROMPT_VERSION, proposalSha256: sha256('pending'), verdicts: [] }, sources: previous?.sources ?? [], evidenceRequests: input.evidenceRequests ?? [], rejected: previous?.rejected ?? [] }
   registry.articles = [...registry.articles.filter(article => article.date !== input.articleDate), snapshot]
   return { registry: ActionRegistrySchema.parse(registry), markdown: renderArticleActions(input.markdown, registry, input.articleDate, new Map(input.articleStatuses).set(input.articleDate, 'draft')), cached: false, evidenceResolutions: [] }
 }

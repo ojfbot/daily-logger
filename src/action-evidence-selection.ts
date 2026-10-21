@@ -176,7 +176,7 @@ function applicableReviewOutput(registry: ActionRegistry, snapshot: ActionRegist
     throw new Error('Native review output provenance is stale or foreign; review pending')
   }
   if (snapshot.stateDigest !== actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId,
-    draftCandidates: snapshot.draftCandidates, draftCandidateEvidence: snapshot.draftCandidateEvidence, reviewOutput: snapshot.reviewOutput })) throw new Error('Native review output integrity changed after verification; review pending')
+    draftCandidates: snapshot.draftCandidates, candidateReviewHistory: snapshot.candidateReviewHistory, draftCandidateEvidence: snapshot.draftCandidateEvidence, reviewOutput: snapshot.reviewOutput })) throw new Error('Native review output integrity changed after verification; review pending')
   if (output.consumedInputSha256 !== requirements.canonicalIndexSha256) {
     if (!candidateReviewOutputFrontierGaps(registry, snapshot, requirements).length) return undefined
     throw new Error('Native review output provenance is stale or foreign; review pending')

@@ -88,6 +88,16 @@ function withNativePromotion() {
   snapshot.review = { state: 'verified' }
   snapshot.actionKeys = ['act-2030-01-01-promoted']
   snapshot.verification.proposalSha256 = 'e'.repeat(64)
+  const candidate = snapshot.draftCandidates![0]!
+  const sourceContent = 'CURRENT API STATE core#543: state=open; owner review remains required.'
+  const sourceId = `github:core#543@${sha256(sourceContent)}`
+  candidate.review = { state: 'promoted', actionKey: 'act-2030-01-01-promoted', reason: 'The source supports promotion.', citations: [{ sourceId, quote: sourceContent }] }
+  snapshot.sources = [{ id: sourceId, kind: 'github', locator: 'https://github.com/ojfbot/core/issues/543', content: sourceContent, trustedContent: [sourceContent], fullContentSha256: sha256(sourceContent) }]
+  snapshot.verification.verdicts = [
+    { item: `draft-candidate:${candidate.candidateId}`, verdict: 'pass', reason: 'Promotion is supported.' },
+    { item: 'control:rejected', verdict: 'reject', reason: 'Rejected control remains auditable.' },
+    { item: 'control:held', verdict: 'hold', reason: 'Held control remains auditable.' },
+  ]
   snapshot.reviewOutput = deriveActionReviewOutput({ before, after: registry, articleStatuses: statuses, articleDate, reviewCycle: cycle,
     roundId: snapshot.roundId, proposalSha256: snapshot.verification.proposalSha256, consumedInputSha256: snapshot.draftCandidateEvidence!.canonicalIndexSha256 })
   snapshot.stateDigest = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate, roundId: snapshot.roundId,
@@ -108,13 +118,72 @@ it('holds a cache miss before agents until prior native outputs receive a fresh 
   const result = await reviewDraftActions({ registry, articleStatuses: statuses, articleDate, cycle, markdown, feedback: '', sources: [], agents: { propose, verify } })
 
   expect(result.registry.articles[0]).toMatchObject({
-    review: { state: 'pending', reason: expect.stringMatching(/prior native review outputs.*fresh explicit input association/i) },
+    review: { state: 'pending', reason: expect.stringMatching(/prior native review outputs.*fresh explicit current-input binding/i) },
     draftCandidates: [{ candidateId: registry.articles[0]!.draftCandidates![0]!.candidateId, payload, review: { state: 'awaiting-review' } }],
   })
   expect(result.registry.articles[0]).not.toHaveProperty('reviewOutput')
   expect(result.registry.records).toContainEqual(expect.objectContaining({ key: 'act-2030-01-01-promoted', origin: 'suggested', admission: cycle }))
+  expect(result.registry.articles[0]?.candidateReviewHistory).toEqual([expect.objectContaining({
+    articleDigest: registry.articles[0]!.articleDigest,
+    reviewCycle: cycle,
+    roundId: registry.articles[0]!.roundId,
+    stateDigest: registry.articles[0]!.stateDigest,
+    verification: registry.articles[0]!.verification,
+    draftCandidateEvidence: registry.articles[0]!.draftCandidateEvidence,
+    reviewOutput: registry.articles[0]!.reviewOutput,
+    transitions: [{ candidateId: registry.articles[0]!.draftCandidates![0]!.candidateId, review: registry.articles[0]!.draftCandidates![0]!.review }],
+    sources: [{ id: registry.articles[0]!.sources[0]!.id, fullContentSha256: registry.articles[0]!.sources[0]!.fullContentSha256 }],
+  })])
+  expect(result.registry.articles[0]?.candidateReviewHistory?.[0]?.verification.verdicts.map(verdict => verdict.verdict)).toEqual(['pass', 'reject', 'hold'])
+  const repeatedPending = pendingActionReview({ registry: result.registry, articleStatuses: statuses, articleDate, cycle, markdown, reason: 'The same frontier remains pending.', resetDraftCandidateReviews: true })
+  expect(repeatedPending.registry.articles[0]?.candidateReviewHistory).toEqual(result.registry.articles[0]?.candidateReviewHistory)
+  const tamperedHistory = structuredClone(result.registry)
+  tamperedHistory.articles[0]!.candidateReviewHistory![0]!.transitions[0]!.review.reason = 'Substituted historical verdict.'
+  expect(() => renderArticleActions(markdown, tamperedHistory, articleDate, statuses)).toThrow(/state is stale/i)
   expect(propose).not.toHaveBeenCalled()
   expect(verify).not.toHaveBeenCalled()
+})
+
+it('holds a cache miss when an already-related input action has prior output values instead of the bound input values', async () => {
+  const record: ActionRegistry['records'][number] = {
+    key: 'existing-core-543',
+    original: { id: 'existing-core-543', command: '/investigate', description: 'Investigate core #543.', repo: 'core', status: 'open', sourceDate: '2029-12-31' },
+    origin: 'imported', workKey: normalizeWorkKey('core', 'core#543', 'Investigate the owner decision.'), state: 'open', introducedBy: '2029-12-31',
+    includeInIndex: true, inclusionOverride: null, goal: 'Preserve the original owner decision.', doneWhen: 'The owner records a disposition.', gates: ['Original owner gate.'], history: [],
+  }
+  const before = relateCandidate(preparedRegistry([record]), record.key)
+  const registry = structuredClone(before)
+  registry.records[0]!.gates = ['Updated by the first native review.']
+  const snapshot = registry.articles[0]!
+  snapshot.review = { state: 'verified' }
+  snapshot.actionKeys = [record.key]
+  snapshot.draftCandidates![0]!.review = { state: 'mapped-existing', actionKey: record.key, reason: 'The prior review mapped the candidate.', citations: [] }
+  snapshot.verification.proposalSha256 = 'd'.repeat(64)
+  snapshot.reviewOutput = deriveActionReviewOutput({ before, after: registry, articleStatuses: statuses, articleDate, reviewCycle: cycle,
+    roundId: snapshot.roundId, proposalSha256: snapshot.verification.proposalSha256, consumedInputSha256: snapshot.draftCandidateEvidence!.canonicalIndexSha256 })
+  snapshot.stateDigest = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate, roundId: snapshot.roundId,
+    draftCandidates: snapshot.draftCandidates, draftCandidateEvidence: snapshot.draftCandidateEvidence, reviewOutput: snapshot.reviewOutput })
+  const propose = vi.fn(), verify = vi.fn()
+
+  const result = await reviewDraftActions({ registry, articleStatuses: statuses, articleDate, cycle, markdown, feedback: '', sources: [], agents: { propose, verify } })
+
+  expect(result.registry.articles[0]?.review).toMatchObject({ state: 'pending', reason: expect.stringMatching(/current-input binding/i) })
+  expect(result.registry.articles[0]?.candidateReviewHistory?.[0]?.transitions[0]?.review).toMatchObject({ state: 'mapped-existing', actionKey: record.key })
+  expect(propose).not.toHaveBeenCalled()
+  expect(verify).not.toHaveBeenCalled()
+})
+
+it('preserves a prior rejected candidate transition when the current frontier returns to awaiting review', () => {
+  const registry = withNativePromotion()
+  const snapshot = registry.articles[0]!
+  snapshot.draftCandidates![0]!.review = { state: 'rejected', reason: 'The prior evidence rejected this candidate.', citations: [] }
+  snapshot.stateDigest = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate, roundId: snapshot.roundId,
+    draftCandidates: snapshot.draftCandidates, draftCandidateEvidence: snapshot.draftCandidateEvidence, reviewOutput: snapshot.reviewOutput })
+
+  const pending = pendingActionReview({ registry, articleStatuses: statuses, articleDate, cycle, markdown, reason: 'Fresh input binding required.', resetDraftCandidateReviews: true })
+
+  expect(pending.registry.articles[0]?.draftCandidates?.[0]?.review).toEqual({ state: 'awaiting-review' })
+  expect(pending.registry.articles[0]?.candidateReviewHistory?.[0]?.transitions[0]?.review).toEqual({ state: 'rejected', reason: 'The prior evidence rejected this candidate.', citations: [] })
 })
 
 it('accepts a fresh explicit frontier that binds the prior candidate output as a current input', () => {
