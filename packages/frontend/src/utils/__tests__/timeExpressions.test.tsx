@@ -5,11 +5,25 @@ import type { TimeExpression } from '../../../../../src/time-reference-schema.ts
 
 const interval: TimeExpression = {
   kind: 'interval', text: 'around 09:10–09:20Z', occurrence: 0, relation: 'elapsed',
-  start: { text: '09:10', precision: 'minute', certainty: 'approximate', resolution: { kind: 'supported', at: '2026-10-14T09:10:00.000Z', evidence: { kind: 'explicit-offset', value: '2026-10-14T09:10Z' } } },
+  start: { text: 'around 09:10', precision: 'minute', certainty: 'approximate', resolution: { kind: 'supported', at: '2026-10-14T09:10:00.000Z', evidence: { kind: 'explicit-offset', value: '2026-10-14T09:10Z' } } },
   end: { text: '09:20Z', precision: 'minute', certainty: 'approximate', resolution: { kind: 'supported', at: '2026-10-14T09:20:00.000Z', evidence: { kind: 'explicit-offset', value: '2026-10-14T09:20Z' } } },
 }
 
 describe('grouped time decoration', () => {
+  it.each(['instant', 'text', 'precision', 'certainty'] as const)('refuses an inconsistent %s on a network expression member without borrowing a sibling map', (field) => {
+    const root = document.createElement('article')
+    root.textContent = interval.text
+    const invalid: TimeExpression = { ...interval, end: { ...interval.end } }
+    if (field === 'instant') invalid.end.resolution = interval.start.resolution
+    if (field === 'text') invalid.end.text = interval.start.text
+    if (field === 'precision') invalid.end.precision = 'second'
+    if (field === 'certainty') invalid.end.certainty = 'exact'
+    const { attached, restore } = attachTimeReferences(root, [invalid])
+    expect(attached.map(({ element }) => element.textContent)).toEqual(['around 09:10'])
+    expect(root.textContent).toBe(interval.text)
+    restore()
+  })
+
   it('makes each stated time the control and restores original markup and nodes', () => {
     const root = document.createElement('article')
     root.innerHTML = '<p>It ran around <strong>09:10</strong>–09:20Z.</p>'
@@ -61,7 +75,7 @@ describe('grouped time decoration', () => {
     const root = document.createElement('article')
     const text = '2026-10-14T09:10Z–2026-10-14T09:20Z'
     root.innerHTML = `<p>${text}</p>`
-    const group: TimeExpression = { ...interval, text, start: { ...interval.start, text: '2026-10-14T09:10Z' }, end: { ...interval.end, text: '2026-10-14T09:20Z' } }
+    const group: TimeExpression = { ...interval, text, start: { ...interval.start, text: '2026-10-14T09:10Z', certainty: 'exact' }, end: { ...interval.end, text: '2026-10-14T09:20Z', certainty: 'exact' } }
     const flat = { text: '2026-10-14T09:20Z', occurrence: 0, at: '2026-10-14T09:20:00.000Z', precision: 'minute', evidence: { kind: 'explicit-offset', value: '2026-10-14T09:20Z' } }
     const { attached } = attachTimeReferences(root, [flat, group])
     expect(attached).toHaveLength(2)

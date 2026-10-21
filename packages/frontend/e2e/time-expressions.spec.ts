@@ -105,7 +105,7 @@ test.describe('existing map popovers on clustered PR timestamps', () => {
   })
 
   test('approximate clustered events use the same map with an approximation note; unknowns stay plain', async ({ page }) => {
-    const approximate: TimeExpression = { ...dst, text: 'around 06:30–07:30Z', relation: 'event-span', start: { ...dst.start, certainty: 'approximate' }, end: { ...dst.end, certainty: 'approximate' } }
+    const approximate: TimeExpression = { ...dst, text: 'around 06:30–07:30Z', relation: 'event-span', start: { ...dst.start, text: 'around 06:30', certainty: 'approximate' }, end: { ...dst.end, certainty: 'approximate' } }
     const unknown: TimeExpression = { ...dst, text: '09:10–09:20Z', start: { text: '09:10', precision: 'minute', certainty: 'exact', resolution: { kind: 'unresolved', reason: 'historical-claim-required' } }, end: { text: '09:20Z', precision: 'minute', certainty: 'exact', resolution: { kind: 'unresolved', reason: 'missing-date' } }, relation: 'unestablished' }
     const { trigger, panel } = await mount(page, '<p>around 06:30–07:30Z.</p><p>09:10–09:20Z.</p>', [approximate, unknown])
     await expect(trigger).toHaveText(['around 06:30', '07:30Z'])

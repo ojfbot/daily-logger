@@ -59,7 +59,7 @@ it('retains approximation in the existing clock/map rather than introducing an a
   const article = document.createElement('article'), host = document.createElement('div')
   article.textContent = '~06:30–07:30Z'
   document.body.append(article, host)
-  const expression: TimeExpression = { kind: 'interval', text: '~06:30–07:30Z', occurrence: 0, relation: 'event-span', start: { ...clustered.members[0], certainty: 'approximate' }, end: { ...clustered.members[1], certainty: 'approximate' } }
+  const expression: TimeExpression = { kind: 'interval', text: '~06:30–07:30Z', occurrence: 0, relation: 'event-span', start: { ...clustered.members[0], text: '~06:30', certainty: 'approximate' }, end: { ...clustered.members[1], certainty: 'approximate' } }
   const { attached, restore } = attachTimeReferences(article, [expression])
   const root = createRoot(host)
   try {
