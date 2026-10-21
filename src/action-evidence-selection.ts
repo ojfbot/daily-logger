@@ -146,15 +146,41 @@ function canonicalInputIndex(registry: ActionRegistry, statuses: ReadonlyMap<str
   return { sha256: sha256(JSON.stringify(view)), actions, rejectionMemorySha256 }
 }
 
+export function candidateReviewOutputFrontierGaps(registry: ActionRegistry, snapshot: ActionRegistry['articles'][number] | undefined, requirements: DraftCandidateEvidenceRequirements | undefined) {
+  if (!snapshot?.reviewOutput || !requirements) return []
+  const output = ActionReviewOutputSchema.parse(snapshot.reviewOutput)
+  const inputKeys = new Set(requirements.inputActionKeys)
+  const relatedKeys = new Set(requirements.candidates.flatMap(candidate => candidate.actionRelations.map(relation => relation.actionKey)))
+  const candidates = snapshot.draftCandidates ?? []
+  const gaps: string[] = []
+  for (const actionKey of [...output.createdRecords, ...output.updatedRecords].map(record => record.actionKey)) {
+    const record = registry.records.find(candidate => candidate.key === actionKey)
+    if (!record || !inputKeys.has(actionKey)) {
+      gaps.push(actionKey)
+      continue
+    }
+    const matchesCandidate = candidates.some(candidate => record.original.repo === candidate.payload.repo
+      && record.original.command === candidate.payload.command
+      && record.original.description === candidate.payload.description)
+    if (matchesCandidate && !relatedKeys.has(actionKey)) gaps.push(actionKey)
+  }
+  return [...new Set(gaps)].sort()
+}
+
 function applicableReviewOutput(registry: ActionRegistry, snapshot: ActionRegistry['articles'][number] | undefined, requirements: DraftCandidateEvidenceRequirements | undefined, cycle: ActionReviewCycle | undefined) {
   if (!snapshot?.reviewOutput || !requirements || !cycle || JSON.stringify(snapshot.reviewOutput.reviewCycle) !== JSON.stringify(cycle)) return undefined
   const output = ActionReviewOutputSchema.parse(snapshot.reviewOutput)
-  if (snapshot.review.state !== 'verified' || output.articleDate !== snapshot.date || output.roundId !== snapshot.roundId
-    || output.proposalSha256 !== snapshot.verification.proposalSha256 || output.consumedInputSha256 !== requirements.canonicalIndexSha256) {
+  if (snapshot.review.state !== 'verified') return undefined
+  if (output.articleDate !== snapshot.date || output.roundId !== snapshot.roundId
+    || output.proposalSha256 !== snapshot.verification.proposalSha256) {
     throw new Error('Native review output provenance is stale or foreign; review pending')
   }
   if (snapshot.stateDigest !== actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId,
     draftCandidates: snapshot.draftCandidates, draftCandidateEvidence: snapshot.draftCandidateEvidence, reviewOutput: snapshot.reviewOutput })) throw new Error('Native review output integrity changed after verification; review pending')
+  if (output.consumedInputSha256 !== requirements.canonicalIndexSha256) {
+    if (!candidateReviewOutputFrontierGaps(registry, snapshot, requirements).length) return undefined
+    throw new Error('Native review output provenance is stale or foreign; review pending')
+  }
   return output
 }
 
@@ -185,6 +211,17 @@ function candidateTargetReferences(candidate: DraftActionCandidate, retainedRefs
   return references
 }
 
+function exactImportedCandidateRecords(registry: ActionRegistry, candidate: DraftActionCandidate) {
+  const payload = candidate.payload
+  const workKey = normalizeWorkKey(payload.repo, payload.command, payload.description)
+  return registry.records.filter(record => record.origin === 'imported'
+    && record.original.repo === payload.repo
+    && record.original.command === payload.command
+    && record.original.description === payload.description
+    && record.workKey === workKey
+    && record.workKey === normalizeWorkKey(record.original.repo, record.original.command, record.original.description))
+}
+
 export function draftCandidateEvidenceBinding(input: CandidateEvidenceScopeInput, prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? input.registry.articles.find(article => article.date === input.articleDate)?.draftContext)) {
   const snapshot = input.registry.articles.find(article => article.date === input.articleDate)
   const candidates = snapshot?.draftCandidates ?? input.draftCandidates ?? []
@@ -199,7 +236,10 @@ export function draftCandidateEvidenceBinding(input: CandidateEvidenceScopeInput
   const canonical = canonicalInputIndex(input.registry, statuses, output)
   const visibleRecords = input.registry.records.filter(record => canonical.actions.has(record.key))
   const mandatoryKeys = new Set(visibleRecords.filter(record => contextText.includes(record.key) || contextText.includes(record.workKey)).map(record => record.key))
-  const relationKeys = new Set(requirements?.candidates.flatMap(candidate => candidate.actionRelations.map(relation => relation.actionKey)) ?? [])
+  const relationKeys = new Set([
+    ...(requirements?.candidates.flatMap(candidate => candidate.actionRelations.map(relation => relation.actionKey)) ?? []),
+    ...candidates.flatMap(candidate => exactImportedCandidateRecords(input.registry, candidate).map(record => record.key)),
+  ])
   const inputActionKeys = [...new Set([...mandatoryKeys, ...relationKeys])].sort()
   if (requirements && JSON.stringify([...requirements.inputActionKeys].sort()) !== JSON.stringify(inputActionKeys)) throw new Error('Structured draft candidate evidence input identities are stale or incomplete; review pending')
   const actionState = inputActionKeys.map(key => {
@@ -279,7 +319,18 @@ export function draftCandidateEvidenceScope(input: CandidateEvidenceScopeInput, 
     }
   }
   for (const reference of requirements.unassignedReferences) add(reference, 'unassigned')
-  const relations = requirements.candidates.flatMap(candidate => candidate.actionRelations)
+  const relations = requirements.candidates.flatMap(association => {
+    const candidate = candidatesById.get(association.candidateId)
+    if (!candidate) return association.actionRelations
+    const explicit = new Set(association.actionRelations.map(relation => `${relation.actionKey}\u0000${relation.sourceReference}`))
+    const inherited = exactImportedCandidateRecords(input.registry, candidate).flatMap(record => [...(targetRefs.get(candidate.candidateId) ?? [])].map(sourceReference => ({
+      actionKey: record.key,
+      sourceReference,
+      relation: 'same-work' as const,
+      reason: 'The frozen imported identity exactly matches the immutable candidate repository, command, and description.',
+    }))).filter(relation => !explicit.has(`${relation.actionKey}\u0000${relation.sourceReference}`))
+    return [...association.actionRelations, ...inherited]
+  })
   for (const relation of relations) {
     const record = input.registry.records.find(candidate => candidate.key === relation.actionKey)
     if (!record) throw new Error(`Candidate action relation references an unknown input action: ${relation.actionKey}; review pending`)
@@ -417,10 +468,14 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
   const completeSources = sources.filter(source => !source.projection)
   const projections = sources.filter(source => source.projection)
   const snapshot = input.registry.articles.find(article => article.date === input.articleDate)
+  const caseActionKeys = scope.reviewActionKeys.length
+    ? scope.reviewActionKeys
+    : scope.ambiguousTerminalActionKeys.length ? scope.ambiguousTerminalActionKeys : ['article-feedback']
+  const caseDigest = actionEvidenceCaseDigest({ ...input, cycle, actionKeys: caseActionKeys })
   const responseRequestIds = new Set(completeSources.flatMap(source => {
     if (!source.response) return []
     const request = snapshot?.evidenceRequests?.find(candidate => candidate.id === source.response?.requestId)
-    if (!request || request.status !== 'open' || request.caseDigest !== source.response.caseDigest
+    if (!request || request.status !== 'open' || request.caseDigest !== caseDigest || request.caseDigest !== source.response.caseDigest
       || source.response.actionKeys.some(key => !request.actionKeys.includes(key))) {
       throw new Error(`Action evidence response is stale, unsolicited, or outside its request scope: ${source.id}`)
     }
@@ -442,10 +497,6 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
   const resolvedRequests: string[] = [...responseRequestIds]
   let bytes = 0
   const dependencies = [scope.text, ...completeSources.filter(source => source.kind === 'github' && required(source)).map(source => source.content)].join('\n')
-  const caseActionKeys = scope.reviewActionKeys.length
-    ? scope.reviewActionKeys
-    : scope.ambiguousTerminalActionKeys.length ? scope.ambiguousTerminalActionKeys : ['article-feedback']
-  const caseDigest = actionEvidenceCaseDigest({ ...input, cycle, actionKeys: caseActionKeys })
   const obligation = (actionKey: string | undefined, kind: 'goal' | 'current-disposition' | 'done-when' | 'gate' | 'feedback' | 'candidate-evidence', text: string) => sha256(JSON.stringify({ actionKey, kind, text }))
   const actionObligations = input.registry.records.filter(record => scope.reviewActionKeys.includes(record.key)).flatMap(record => [
     ...(record.goal ? [obligation(record.key, 'goal', record.goal)] : []),

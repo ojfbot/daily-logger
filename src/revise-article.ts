@@ -21,7 +21,7 @@ import { dirname } from 'node:path'
 import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses, renderArticleActionHtml, stripManagedActions } from './action-registry.js'
 import { assertArticleReferenceContract } from './article-references.js'
 import { readArticleTime } from './article-time-metadata.js'
-import { collectActionSources, createActionAgents, mockActionAgents, reviewDraftActions } from './review-actions.js'
+import { collectActionSources, createActionAgents, mockActionAgents, reviewProducedDraftActions } from './review-actions.js'
 import { persistActionEvidenceResolutions, readActionEvidenceReply } from './action-evidence-retrieval.js'
 import { stampOutcome } from './stamp-outcome.js'
 import { detachArticleTime, preserveTimeDuringRevision, type RevisionResult } from './article-time-frontmatter.js'
@@ -203,8 +203,9 @@ async function main() {
     const articleDate = result.revisedMarkdown.match(/^date:\s*"?(\d{4}-\d{2}-\d{2})/m)?.[1]
     if (!articleDate) throw new Error('Article date is missing')
     const statuses = readArticleStatuses(repoRoot)
-    const collectedSources = isMock ? [] : collectActionSources({ cycle, registry, articleStatuses: statuses, repoRoot, markdown: result.revisedMarkdown, feedback, reassessActionKeys, preserveActionKeys })
-    const actions = await reviewDraftActions({ cycle, registry, articleStatuses: statuses, articleDate, markdown: result.revisedMarkdown, feedback, sources: [...collectedSources, ...evidenceReplies], agents: isMock ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, selectedEvidenceProjectionIds: evidenceReplies.map(reply => reply.id), ...(isDryRun ? {} : { repoRoot }) })
+    const actions = await reviewProducedDraftActions({ cycle, registry, articleStatuses: statuses, articleDate, markdown: result.revisedMarkdown, feedback,
+      collectSources: (draftCandidates, draftCandidateEvidence) => [...(isMock ? [] : collectActionSources({ cycle, registry, articleStatuses: statuses, repoRoot, markdown: result.revisedMarkdown, feedback, reassessActionKeys, preserveActionKeys, draftCandidates, draftCandidateEvidence })), ...evidenceReplies],
+      agents: isMock ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, selectedEvidenceProjectionIds: evidenceReplies.map(reply => reply.id), ...(isDryRun ? {} : { repoRoot }) })
     const renderedHtml = renderArticleActionHtml(actions.markdown, actions.registry, articleDate, statuses)
     const evidence = readArticleTime({ repoRoot, date: articleDate, markdown: stripManagedActions(actions.markdown), bindingMarkdown: actions.markdown, renderedHtml })
     const referenceAudit = assertArticleReferenceContract(actions.markdown, evidence.referenceKinds, renderedHtml)

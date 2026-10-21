@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 const { github } = vi.hoisted(() => ({ github: vi.fn() }))
 vi.mock('node:child_process', () => ({ execFileSync: github }))
-import { acceptedActionState, ActionRegistrySchema, captureDraftActionCandidates, managedArticleDigest, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
+import { acceptedActionState, ActionRegistrySchema, captureDraftActionCandidates, managedArticleDigest, normalizeWorkKey, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
 import { writeActionStore } from './action-store-fixture.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, actionEvidenceScope, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, draftCandidateEvidenceBinding, prepareConservativeDraftCandidateEvidence, selectActionEvidence } from '../action-evidence-selection.js'
 import { ActionEvidenceRequestError, actionEvidenceCaseDigest } from '../action-evidence-retrieval.js'
@@ -441,6 +441,31 @@ it('promotes every inherited canonical dependency behind a required candidate ta
   expect(scope.referenceRequirements).toEqual(expect.arrayContaining([
     expect.objectContaining({ reference: 'core#999', classification: 'required', source: 'canonical:existing-owner', role: 'gate' }),
   ]))
+})
+
+it('inherits duties from a frozen imported identity that exactly matches the immutable candidate payload', () => {
+  const prepared = singleCandidateEvidenceFixture({ command: '/review core#543', repo: 'core', description: 'Review the exact target.',
+    context: 'The target is core #543.', references: [{ reference: 'core#543', role: 'target' }] })
+  const record: ActionRegistry['records'][number] = {
+    key: 'legacy-imported-owner',
+    original: { id: 'legacy-imported-owner', command: '/review core#543', description: 'Review the exact target.', repo: 'core', status: 'open', sourceDate: '2029-12-31' },
+    origin: 'imported', workKey: normalizeWorkKey('core', '/review core#543', 'Review the exact target.'), state: 'open', introducedBy: '2029-12-31',
+    includeInIndex: true, inclusionOverride: null, goal: 'Preserve the owner decision at core #543.',
+    doneWhen: 'The owner records a disposition at core #543.', gates: ['Do not proceed before core #999 is resolved.'], history: [],
+  }
+  prepared.registry.records.push(record)
+  expect(() => draftCandidateEvidenceBinding({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' }))
+    .toThrow(/input identities/i)
+  prepared.registry.articles[0].draftCandidateEvidence!.inputActionKeys = [record.key]
+  Object.assign(prepared.registry.articles[0].draftCandidateEvidence!, draftCandidateEvidenceBinding({
+    registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '',
+  }))
+
+  const scope = actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' })
+
+  expect(prepared.registry.articles[0].draftCandidateEvidence?.inputActionKeys).toEqual([record.key])
+  expect(scope.refs).toContain('core#999')
+  expect(scope.referenceRequirements).toContainEqual(expect.objectContaining({ reference: 'core#999', source: `canonical:${record.key}`, role: 'gate' }))
 })
 
 it('does not attach an unrelated carried canonical action duties to a candidate source request', () => {

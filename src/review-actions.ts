@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { isReviewedAction } from './action-model.js'
 import { ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, ActionReviewCycleSchema, actionAdmissionLimit, countCycleAdmissions, type ActionReviewCycle } from './action-review-cycle.js'
-import { ACTION_EVIDENCE_SELECTION_VERSION, CONTINUITY_TARGETS_SOURCE, acceptedContinuityGithubReferences, actionEvidenceScope, actionRecordSourceReferences, actionReviewIndex, actionSourceReferences, canonicalActionSources, COVERAGE_SOURCE, deriveActionReviewOutput, recommendationMaintenanceDescriptor, recommendationMaintenanceProjection, selectActionEvidence } from './action-evidence-selection.js'
+import { ACTION_EVIDENCE_SELECTION_VERSION, CONTINUITY_TARGETS_SOURCE, acceptedContinuityGithubReferences, actionEvidenceScope, actionRecordSourceReferences, actionReviewIndex, actionSourceReferences, candidateReviewOutputFrontierGaps, canonicalActionSources, COVERAGE_SOURCE, deriveActionReviewOutput, prepareConservativeDraftCandidateEvidence, recommendationMaintenanceDescriptor, recommendationMaintenanceProjection, selectActionEvidence } from './action-evidence-selection.js'
 import {
   ActionEvidenceRequestError,
   ActionEvidenceLifecycleError,
@@ -71,6 +71,7 @@ export type ActionVerification = Omit<ParsedActionVerification, 'candidateDispos
   closingOptions?: ParsedActionVerification['closingOptions']
 }
 class ActionOutputError extends Error {}
+class ActionInputFrontierError extends Error {}
 const lineCitations = z.array(z.object({ sourceId: z.string(), startLine: z.number().int().positive(), endLine: z.number().int().positive() }).strict()).min(1)
 const LineProposalSchema = ActionProposalSchema.extend({
   changes: z.array(ActionProposalSchema.shape.changes.element.extend({ citations: lineCitations })),
@@ -913,6 +914,12 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
     return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true,
       evidenceResolutions: input.sources.filter(source => (source.projection || source.response) && committedResolutionIds.has(source.id)) }
   }
+  const outputFrontierGaps = candidateReviewOutputFrontierGaps(input.registry, previous, draftCandidateEvidence)
+  if (previous?.review.state === 'verified' && previous.reviewOutput
+    && JSON.stringify(previous.reviewOutput.reviewCycle) === JSON.stringify(input.cycle)
+    && outputFrontierGaps.length) {
+    throw new ActionInputFrontierError(`A new evidence case would consume prior native review outputs without a fresh explicit input association: ${outputFrontierGaps.join(', ')}; review pending`)
+  }
   const selection = selectActionEvidence({ ...input, draftCandidates, draftContext: prepared.context })
   input = { ...input, sources: selection.sources }
   const byteLength = (value: string) => Buffer.byteLength(value, 'utf8')
@@ -964,12 +971,15 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
 
 export const mockActionAgents: ActionAgents = { identity: { proposer: 'mock-llm', verifier: 'mock-llm' }, propose: async () => ({ changes: [], suggestions: [], closingOptions: [] }), verify: async () => ({ changes: [], suggestions: [], closingOptions: [] }) }
 
-export function pendingActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; reason: string; articleStatuses: ReadonlyMap<string, string>; draftCandidates?: readonly unknown[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftContext?: DraftRecommendationContext; evidenceRequests?: ActionRegistry['articles'][number]['evidenceRequests'] }) {
+export function pendingActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; reason: string; articleStatuses: ReadonlyMap<string, string>; draftCandidates?: readonly unknown[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftContext?: DraftRecommendationContext; evidenceRequests?: ActionRegistry['articles'][number]['evidenceRequests']; resetDraftCandidateReviews?: boolean }) {
   if (/^status:\s*"?accepted/m.test(input.markdown) || input.registry.articles.some(article => article.date === input.articleDate && article.status === 'accepted')) throw new Error('A pending action review cannot replace an accepted article')
   const registry = structuredClone(input.registry), previous = registry.articles.find(article => article.date === input.articleDate)
   const capturedDraftCandidates = input.draftCandidates === undefined ? undefined : captureDraftActionCandidates(input.draftCandidates)
   if (previous?.draftCandidates && capturedDraftCandidates && JSON.stringify(previous.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload }))) !== JSON.stringify(capturedDraftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))) throw new Error('Initial draft candidates changed after capture')
-  const draftCandidates = previous?.draftCandidates ?? capturedDraftCandidates
+  const retainedDraftCandidates = previous?.draftCandidates ?? capturedDraftCandidates
+  const draftCandidates = input.resetDraftCandidateReviews && retainedDraftCandidates
+    ? retainedDraftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload, review: { state: 'awaiting-review' as const } }))
+    : retainedDraftCandidates
   const draftCandidateEvidence = input.draftCandidateEvidence ?? previous?.draftCandidateEvidence
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? previous?.draftContext)
   input = { ...input, markdown: prepared.markdown, draftContext: prepared.context }
@@ -1002,25 +1012,30 @@ export async function reviewDraftActions(input: Parameters<typeof reviewArticleA
     const requests = new Map(prior.map(request => [request.id, request]))
     if (error instanceof ActionEvidenceRequestError) requests.set(error.request.id, actionEvidenceRequestReceipt(error.request))
     if (error instanceof ActionEvidenceLifecycleError) requests.set(error.receipt.id, error.receipt)
-    return pendingActionReview({ ...input, reason, evidenceRequests: [...requests.values()] })
+    return pendingActionReview({ ...input, reason, evidenceRequests: [...requests.values()], resetDraftCandidateReviews: error instanceof ActionInputFrontierError })
   }
 }
 
 export async function reviewProducedDraftActions(input: Omit<Parameters<typeof reviewArticleActions>[0], 'sources' | 'draftCandidates' | 'draftCandidateEvidence'> & {
-  draftCandidates: readonly unknown[]
-  prepareEvidence: (draftCandidates: readonly DraftActionCandidate[]) => DraftCandidateEvidenceRequirements | undefined
+  draftCandidates?: readonly unknown[]
+  prepareEvidence?: (draftCandidates: readonly DraftActionCandidate[]) => DraftCandidateEvidenceRequirements | undefined
   collectSources: (draftCandidates: readonly DraftActionCandidate[], draftCandidateEvidence: DraftCandidateEvidenceRequirements | undefined) => ActionSource[]
 }) {
-  const draftCandidates = captureDraftActionCandidates(input.draftCandidates)
+  const storedDraftCandidates = input.registry.articles.find(article => article.date === input.articleDate)?.draftCandidates
+  const draftCandidates = input.draftCandidates === undefined ? storedDraftCandidates ?? [] : captureDraftActionCandidates(input.draftCandidates)
   let draftCandidateEvidence: DraftCandidateEvidenceRequirements | undefined
   try {
-    draftCandidateEvidence = input.prepareEvidence(draftCandidates)
+    draftCandidateEvidence = input.prepareEvidence
+      ? input.prepareEvidence(draftCandidates)
+      : draftCandidates.length
+        ? prepareConservativeDraftCandidateEvidence({ ...input, draftCandidates })
+        : undefined
     const sources = input.collectSources(draftCandidates, draftCandidateEvidence)
     const { prepareEvidence: _prepareEvidence, collectSources: _collectSources, ...reviewInput } = input
-    return await reviewDraftActions({ ...reviewInput, draftCandidates: input.draftCandidates, draftCandidateEvidence, sources })
+    return await reviewDraftActions({ ...reviewInput, draftCandidateEvidence, sources })
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'Action evidence preparation unavailable'
     console.warn(`::warning::Action review pending for ${input.articleDate}: ${reason}`)
-    return pendingActionReview({ ...input, reason, draftCandidates: input.draftCandidates, draftCandidateEvidence })
+    return pendingActionReview({ ...input, reason, draftCandidateEvidence })
   }
 }
