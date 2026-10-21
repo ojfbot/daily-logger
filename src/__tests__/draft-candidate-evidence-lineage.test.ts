@@ -1,11 +1,17 @@
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { expect, it, vi } from 'vitest'
 import {
   ActionRegistrySchema,
   actionStateDigest,
+  articleActionCard,
   managedArticleDigest,
   normalizeWorkKey,
+  registryRevision,
   renderArticleActions,
   sha256,
+  writeActionRegistry,
   type ActionRegistry,
   type DraftCandidateEvidenceRequirements,
 } from '../action-registry.js'
@@ -13,6 +19,7 @@ import { actionEvidenceScope, deriveActionReviewOutput, draftCandidateEvidenceBi
 import { ActionEvidenceRequestError } from '../action-evidence-retrieval.js'
 import { ACTION_REVIEW_PROMPT_VERSION, revisionActionCycle } from '../action-review-cycle.js'
 import { pendingActionReview, reviewDraftActions, reviewProducedDraftActions } from '../review-actions.js'
+import { writeActionStore } from './action-store-fixture.js'
 
 const articleDate = '2030-01-01'
 const markdown = `---\ndate: ${articleDate}\nstatus: draft\n---\n## What shipped\nNo reader-facing candidate verdict.\n`
@@ -132,14 +139,42 @@ it('holds a cache miss before agents until prior native outputs receive a fresh 
     draftCandidateEvidence: registry.articles[0]!.draftCandidateEvidence,
     reviewOutput: registry.articles[0]!.reviewOutput,
     transitions: [{ candidateId: registry.articles[0]!.draftCandidates![0]!.candidateId, review: registry.articles[0]!.draftCandidates![0]!.review }],
-    sources: [{ id: registry.articles[0]!.sources[0]!.id, fullContentSha256: registry.articles[0]!.sources[0]!.fullContentSha256 }],
+    sources: [{
+      id: registry.articles[0]!.sources[0]!.id,
+      kind: registry.articles[0]!.sources[0]!.kind,
+      locator: registry.articles[0]!.sources[0]!.locator,
+      fullContentSha256: registry.articles[0]!.sources[0]!.fullContentSha256,
+    }],
   })])
+  const api = articleActionCard(result.registry, articleDate, statuses)
+  expect(api?.candidateReviewHistory[0]?.sources).toEqual(result.registry.articles[0]?.candidateReviewHistory?.[0]?.sources)
+  expect(api?.sources).toEqual([])
   expect(result.registry.articles[0]?.candidateReviewHistory?.[0]?.verification.verdicts.map(verdict => verdict.verdict)).toEqual(['pass', 'reject', 'hold'])
   const repeatedPending = pendingActionReview({ registry: result.registry, articleStatuses: statuses, articleDate, cycle, markdown, reason: 'The same frontier remains pending.', resetDraftCandidateReviews: true })
   expect(repeatedPending.registry.articles[0]?.candidateReviewHistory).toEqual(result.registry.articles[0]?.candidateReviewHistory)
   const tamperedHistory = structuredClone(result.registry)
   tamperedHistory.articles[0]!.candidateReviewHistory![0]!.transitions[0]!.review.reason = 'Substituted historical verdict.'
   expect(() => renderArticleActions(markdown, tamperedHistory, articleDate, statuses)).toThrow(/state is stale/i)
+  expect(() => pendingActionReview({ registry: tamperedHistory, articleStatuses: statuses, articleDate, cycle, markdown, reason: 'Retry must not rehash a tampered archive.' }))
+    .toThrow(/historical candidate review.*stale|archive.*stale/i)
+
+  const root = mkdtempSync(join(tmpdir(), 'candidate-history-writer-'))
+  try {
+    writeActionStore(root, result.registry)
+    const legitimate = pendingActionReview({ registry: result.registry, articleStatuses: statuses, articleDate, cycle, markdown, reason: 'Legitimate fresh-input recovery.' })
+    expect(() => writeActionRegistry(root, legitimate.registry, registryRevision(result.registry))).not.toThrow()
+    const substituted = structuredClone(legitimate.registry)
+    const substitutedSnapshot = substituted.articles[0]!
+    substitutedSnapshot.candidateReviewHistory![0]!.transitions[0]!.review.reason = 'Rehashed substituted historical verdict.'
+    substitutedSnapshot.stateDigest = actionStateDigest(substituted, substitutedSnapshot.actionKeys, substitutedSnapshot.closing, substitutedSnapshot.draftContext, {
+      articleDate, roundId: substitutedSnapshot.roundId, includePriorArticleRounds: true, draftCandidates: substitutedSnapshot.draftCandidates,
+      candidateReviewHistory: substitutedSnapshot.candidateReviewHistory, draftCandidateEvidence: substitutedSnapshot.draftCandidateEvidence,
+      reviewOutput: substitutedSnapshot.reviewOutput,
+    })
+    expect(() => writeActionRegistry(root, substituted, registryRevision(legitimate.registry))).toThrow(/historical candidate review.*append-only/i)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
   expect(propose).not.toHaveBeenCalled()
   expect(verify).not.toHaveBeenCalled()
 })

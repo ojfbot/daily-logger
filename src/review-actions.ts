@@ -20,7 +20,7 @@ import {
 import { EXCLUDED_REPOS, KNOWN_REPOS, REPO_NOTES, classifyFleet } from './fleet.js'
 import {
   ActionRegistrySchema, CitationSchema, ClosingActionSchema, ClosingCheckpointSchema, RankedClosingActionSchema, RankedClosingCheckpointSchema, RankedShortlistSchema, managedArticleDigest, normalizeWorkKey,
-  renderArticleActions, sha256, stripManagedActions, actionStateDigest, acceptedActionState,
+  renderArticleActions, sha256, stripManagedActions, actionStateDigest, assertCandidateReviewHistoryIntegrity, acceptedActionState,
   normalizeLegacyActionProse, articleActionFileBytes, splitActionRegistry, captureDraftActionCandidates, type ActionRegistry, type ActionSource, type ClosingCheckpoint, type ClosingOption, type DraftActionCandidate, type DraftCandidateEvidenceRequirements, type DraftRecommendationContext,
   type ActionEvidenceRequestReceipt, type RecommendationMaintenanceDescriptor,
 } from './action-registry.js'
@@ -984,6 +984,7 @@ export const mockActionAgents: ActionAgents = { identity: { proposer: 'mock-llm'
 export function pendingActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; reason: string; articleStatuses: ReadonlyMap<string, string>; draftCandidates?: readonly unknown[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftContext?: DraftRecommendationContext; evidenceRequests?: ActionRegistry['articles'][number]['evidenceRequests']; resetDraftCandidateReviews?: boolean }) {
   if (/^status:\s*"?accepted/m.test(input.markdown) || input.registry.articles.some(article => article.date === input.articleDate && article.status === 'accepted')) throw new Error('A pending action review cannot replace an accepted article')
   const registry = structuredClone(input.registry), previous = registry.articles.find(article => article.date === input.articleDate)
+  if (previous) assertCandidateReviewHistoryIntegrity(registry, previous)
   const capturedDraftCandidates = input.draftCandidates === undefined ? undefined : captureDraftActionCandidates(input.draftCandidates)
   if (previous?.draftCandidates && capturedDraftCandidates && JSON.stringify(previous.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload }))) !== JSON.stringify(capturedDraftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))) throw new Error('Initial draft candidates changed after capture')
   const retainedDraftCandidates = previous?.draftCandidates ?? capturedDraftCandidates
@@ -994,7 +995,7 @@ export function pendingActionReview(input: { registry: ActionRegistry; articleDa
     articleDigest: previous.articleDigest, reviewCycle: previous.reviewCycle!, roundId: previous.roundId, stateDigest: previous.stateDigest,
     verification: previous.verification, draftCandidateEvidence: previous.draftCandidateEvidence, reviewOutput: previous.reviewOutput,
     transitions: priorTransitions,
-    sources: previous.sources.map(source => ({ id: source.id, fullContentSha256: source.fullContentSha256 ?? sha256(source.content) })),
+    sources: previous.sources.map(source => ({ id: source.id, kind: source.kind, locator: source.locator, fullContentSha256: source.fullContentSha256 ?? sha256(source.content) })),
     evidenceRequests: previous.evidenceRequests ?? [],
   } : undefined
   const existingHistory = previous?.candidateReviewHistory ?? []

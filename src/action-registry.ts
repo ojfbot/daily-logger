@@ -30,6 +30,20 @@ export function actionStateDigest(registry: ActionRegistry, keys: readonly strin
   if (draftContext !== undefined) return sha256(JSON.stringify({ records, closing: closing ?? null, draftContext }))
   return sha256(JSON.stringify(closing === undefined ? records : { records, closing }))
 }
+
+export function assertCandidateReviewHistoryIntegrity(registry: ActionRegistry, snapshot: ActionRegistry['articles'][number]): void {
+  if (!snapshot.candidateReviewHistory?.length) return
+  const expected = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, {
+    articleDate: snapshot.date,
+    roundId: snapshot.roundId,
+    includePriorArticleRounds: snapshot.review.state === 'pending',
+    draftCandidates: snapshot.draftCandidates,
+    candidateReviewHistory: snapshot.candidateReviewHistory,
+    draftCandidateEvidence: snapshot.draftCandidateEvidence,
+    reviewOutput: snapshot.reviewOutput,
+  })
+  if (snapshot.stateDigest !== expected) throw new Error(`Historical candidate review archive is stale for ${snapshot.date}; refresh before retrying`)
+}
 export function actionKey(action: CanonicalAction): string { return action.id ?? `legacy-${sha256(legacyActionKey(action))}` }
 export function normalizeWorkKey(repo: string, target: string, outcome: string): string { return [repo, target, outcome].map(value => value.toLowerCase().replace(/\s+/g, ' ').trim()).join('|') }
 
@@ -62,6 +76,14 @@ export function writeActionRegistry(repoRoot: string, registry: ActionRegistry, 
     if (before.articles.some(snapshot => !registry.articles.some(next => next.date === snapshot.date))) throw new Error('An article review cannot delete another article snapshot')
     for (const prior of before.articles) {
       const next = registry.articles.find(snapshot => snapshot.date === prior.date)!
+      assertCandidateReviewHistoryIntegrity(before, prior)
+      assertCandidateReviewHistoryIntegrity(registry, next)
+      const priorHistory = prior.candidateReviewHistory ?? []
+      const nextHistory = next.candidateReviewHistory ?? []
+      if (nextHistory.length < priorHistory.length
+        || JSON.stringify(nextHistory.slice(0, priorHistory.length)) !== JSON.stringify(priorHistory)) {
+        throw new Error(`Historical candidate review archive is append-only: ${prior.date}`)
+      }
       const priorCustody = prior.draftCandidates?.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload }))
       const nextCustody = next.draftCandidates?.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload }))
       if (JSON.stringify(priorCustody) !== JSON.stringify(nextCustody)) throw new Error(`Captured draft candidate custody cannot change after its first durable write: ${prior.date}`)
@@ -210,7 +232,6 @@ export function articleActionCard(registry: ActionRegistry, articleDate: string,
   const citedSourceIds = new Set([
     ...handled.flatMap(item => item.citations.map(citation => citation.sourceId)),
     ...(snapshot.draftCandidates ?? []).flatMap(candidate => candidate.review.state === 'awaiting-review' ? [] : candidate.review.citations.map(citation => citation.sourceId)),
-    ...(snapshot.candidateReviewHistory ?? []).flatMap(receipt => receipt.transitions.flatMap(transition => transition.review.citations.map(citation => citation.sourceId))),
     ...recommendations.flatMap(option => [...option.factCitations, ...option.goalCitations].map(citation => citation.sourceId)),
   ])
   const sources = snapshot.sources
