@@ -28,6 +28,7 @@ import { acceptedClosingContinuityTargets, collectContext } from './collect-cont
 import { currentArticleDate } from './activity-window.js'
 import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses, renderArticleActionHtml } from './action-registry.js'
 import { collectActionSources, createActionAgents, mockActionAgents, reviewDraftActions } from './review-actions.js'
+import { persistActionEvidenceResolutions } from './action-evidence-retrieval.js'
 import {
   ARTICLE_MODEL,
   ARTICLE_PROMPT_VERSION,
@@ -258,7 +259,7 @@ export async function main() {
   const articleStatuses = readArticleStatuses(REPO_ROOT)
   const draftCandidates = article.suggestedActions ?? []
   const actionSources = process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ registry, repoRoot: REPO_ROOT, markdown: originalMarkdown, feedback: '', context: `${buildUserPrompt(ctx)}\nStructured draft candidate evidence hints: ${JSON.stringify(draftCandidates)}`, continuityTargets: acceptedClosingContinuityTargets(ctx.previousArticles) })
-  const actionReview = await reviewDraftActions({ cycle: generationActionCycle(), registry, articleStatuses, articleDate: date, markdown: originalMarkdown, feedback: '', draftCandidates, sources: actionSources, agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents() })
+  const actionReview = await reviewDraftActions({ cycle: generationActionCycle(), registry, articleStatuses, articleDate: date, markdown: originalMarkdown, feedback: '', draftCandidates, sources: actionSources, agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents(), ...(isDryRun ? {} : { repoRoot: REPO_ROOT }) })
   const renderingStatuses = new Map(articleStatuses)
   if (!renderingStatuses.has(date)) renderingStatuses.set(date, 'draft')
   const renderedHtml = renderArticleActionHtml(actionReview.markdown, actionReview.registry, date, renderingStatuses)
@@ -285,6 +286,7 @@ export async function main() {
 
   // ── 4b. Write ──────────────────────────────────────────────────────────────
   writeActionRegistry(REPO_ROOT, actionReview.registry, registryRevision(registry), { path: articlePath, expected: previousArticle, next: markdown, publish: () => { persistGeneratedTime({ repoRoot: REPO_ROOT, prepared }) } })
+  persistActionEvidenceResolutions(REPO_ROOT, actionReview.evidenceResolutions)
   console.log(`     Written: _articles/${date}.md`)
 
   if (blogEngineUrl) {

@@ -240,7 +240,9 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
     const candidates = draftCandidatesHtml(snapshot.draftCandidates, true)
     const context = draftContextHtml(snapshot.draftContext, true)
     const reason = `<p class="action-review-pending-reason"><strong>Why review paused:</strong> ${oneLine(snapshot.review.reason)}</p>`
-    return `${unmanagedArticleProse(markdown).trimEnd()}\n\n${ACTIONS_START}\n<section class="suggested-actions-card suggested-actions-card-needs-review" aria-labelledby="suggested-actions-${escaped(articleDate)}">\n<header class="suggested-actions-header"><h3 id="suggested-actions-${escaped(articleDate)}">Suggested actions</h3><p>Action review pending. Acceptance remains blocked until the review is complete.</p></header>\n${[reason, ...candidates, ...context].join('\n')}\n</section>\n${ACTIONS_END}\n`
+    const requests = snapshot.evidenceRequests?.filter(request => request.status === 'open').map(request =>
+      `<p class="action-evidence-request"><strong>Evidence request pending:</strong> <code>${escaped(request.id)}</code> · Recipient: ${escaped(request.recipient)} · Private artifact: <code>.action-evidence/${escaped(request.id)}/request.json</code>.</p>`) ?? []
+    return `${unmanagedArticleProse(markdown).trimEnd()}\n\n${ACTIONS_START}\n<section class="suggested-actions-card suggested-actions-card-needs-review" aria-labelledby="suggested-actions-${escaped(articleDate)}">\n<header class="suggested-actions-header"><h3 id="suggested-actions-${escaped(articleDate)}">Suggested actions</h3><p>Action review pending. Acceptance remains blocked until the review is complete.</p></header>\n${[reason, ...requests, ...candidates, ...context].join('\n')}\n</section>\n${ACTIONS_END}\n`
   }
   if (articleDate >= '2026-10-19' && !snapshot.closing) {
     throw new Error(`Verified action review is missing its required closing for ${articleDate}; reconcile before publishing`)

@@ -6,6 +6,75 @@ import { ActionItemSchema } from './action-item-schema.js'
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 const digest = z.string().regex(/^[a-f0-9]{64}$/)
 
+export const ActionEvidenceRangeSchema = z.object({
+  startLine: z.number().int().positive(),
+  endLine: z.number().int().positive(),
+  role: z.enum(['support', 'counterevidence', 'context']),
+}).strict().refine(range => range.endLine >= range.startLine, 'Evidence range ends before it starts')
+
+export const ActionEvidenceCoverageSchema = z.object({
+  obligationId: digest,
+  status: z.enum(['support', 'counterevidence', 'unknown']),
+  rangeIndexes: z.array(z.number().int().nonnegative()).max(32),
+}).strict()
+
+export const ActionEvidenceRequestSchema = z.object({
+  version: z.literal('action-evidence-request-v1'),
+  id: digest,
+  kind: z.enum(['source-view', 'missing-source', 'clarification', 'authority', 'contradiction']),
+  status: z.enum(['open', 'resolved']),
+  caseDigest: digest,
+  articleDate: date,
+  cycle: ActionReviewCycleSchema,
+  actionKeys: z.array(z.string().min(1).max(256)).min(1).max(64),
+  sourceKey: z.string().min(1).max(512),
+  sourceId: z.string().min(1).max(1024).optional(),
+  sourceLocator: z.string().min(1).max(2048).optional(),
+  sourceFullContentSha256: digest.optional(),
+  question: z.string().min(1).max(512),
+  obligations: z.array(digest).min(1),
+  recipient: z.enum(['source-producer', 'coordinator-owner']),
+  limits: z.object({
+    perSourceBytes: z.number().int().positive(),
+    aggregateBytes: z.number().int().positive(),
+    providerEnvelopeBytes: z.number().int().positive(),
+  }).strict(),
+}).strict()
+export type ActionEvidenceRequest = z.infer<typeof ActionEvidenceRequestSchema>
+
+export const ActionEvidenceRequestReceiptSchema = ActionEvidenceRequestSchema.pick({
+  version: true,
+  id: true,
+  kind: true,
+  status: true,
+  caseDigest: true,
+  articleDate: true,
+  cycle: true,
+  actionKeys: true,
+  recipient: true,
+}).strict()
+export type ActionEvidenceRequestReceipt = z.infer<typeof ActionEvidenceRequestReceiptSchema>
+
+export const ActionEvidenceProjectionSchema = z.object({
+  version: z.literal('action-evidence-projection-v1'),
+  requestId: digest,
+  caseDigest: digest,
+  fullSourceId: z.string().min(1),
+  fullContentSha256: digest,
+  ranges: z.array(ActionEvidenceRangeSchema).min(1),
+  coverage: z.array(ActionEvidenceCoverageSchema).min(1),
+}).strict()
+
+export const ActionEvidenceResponseSchema = z.object({
+  version: z.literal('action-evidence-response-v1'),
+  id: digest,
+  requestId: digest,
+  caseDigest: digest,
+  responder: z.string().min(1).max(256),
+  answer: z.string().min(1).max(16000),
+}).strict()
+export type ActionEvidenceResponse = z.infer<typeof ActionEvidenceResponseSchema>
+
 export const CitationSchema = z.object({ sourceId: z.string().min(1), quote: z.string().min(12) }).strict()
 export const DraftActionCandidatePayloadSchema = ActionItemSchema.extend({ status: z.literal('open') }).strict()
 export type DraftActionCandidatePayload = z.infer<typeof DraftActionCandidatePayloadSchema>
@@ -30,6 +99,13 @@ export const ActionSourceSchema = z.object({
   content: z.string(),
   trustedContent: z.array(z.string()).optional(),
   fullContentSha256: digest.optional(),
+  projection: ActionEvidenceProjectionSchema.optional(),
+  response: z.object({
+    requestId: digest,
+    caseDigest: digest,
+    responseId: digest,
+    actionKeys: z.array(z.string().min(1).max(256)).max(64),
+  }).strict().optional(),
 }).strict()
 export type ActionSource = z.infer<typeof ActionSourceSchema>
 export const ActionStateSchema = z.enum(['proposed', 'open', 'done', 'dismissed', 'superseded', 'deferred'])
@@ -155,6 +231,7 @@ function createArticleActionSchema(candidateIdentity?: DraftCandidateIdentity) {
     stateDigest: digest,
     verification: z.object({ proposer: z.string(), verifier: z.string(), promptVersion: z.string(), proposalSha256: digest, verdicts: z.array(z.object({ item: z.string(), verdict: z.enum(['pass', 'reject', 'hold']), reason: z.string() }).strict()) }).strict(),
     sources: z.array(ActionSourceSchema),
+    evidenceRequests: z.array(ActionEvidenceRequestReceiptSchema).optional(),
     rejected: z.array(z.object({ description: z.string(), reason: z.string(), workKey: z.string().optional(), evidenceDigest: digest.optional(), quotaHold: z.object({ articleDate: date, cycle: ActionReviewCycleSchema }).strict().optional() }).strict()),
     binding: z.object({ mode: z.literal('editorial-rebind'), fromDigest: digest, actor: z.string().min(1), instructionSha256: digest }).strict().optional(),
   }).strict().superRefine((article, context) => {
