@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261021-60f4e551b913",
+  "article": {
+    "date": "2026-10-21",
+    "sourceCommitSha": "60f4e551b913fce642a53e1ff0abcecc8f513a3b",
+    "blobSha": "e38e2f91731509981116fb3e66db6bbd5f800249"
+  },
+  "reviewer": {
+    "name": "Codex — independent October 21 factual review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-21T13:55:16Z",
+  "scope": "Visible draft, deployed JSON, October 21 activity counts, fleet onboarding, October 20 review chain, Classic Space owner and research gates, action candidates and timing identity. Read-only review; no acceptance, action or scheduling authority.",
+  "fullRecordBlobSha": "ed08679b6a4a3142e3f83e7a91a0f8b9aaae18ad",
+  "fullRecordPath": "reviews/articles/2026-10-21-60f4e551b913fce642a53e1ff0abcecc8f513a3b.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Deployed API reports 13 commits for a 31-commit window",
+      "location": "Frontmatter summary: “Thirty-one commits across three repos”; deployed JSON: `commitCount: 13`.",
+      "explanation": "Primary GitHub commit queries over the consecutive 03:30 Chicago cutoff interval return 19 core, 11 daily-logger and one morning-cockpit commit. Thirteen is the number of explicitly listed short SHAs, not the activity total.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/_articles/2026-10-21.md#L1-L24",
+        "https://log.jim.software/api/articles/2026-10-21.json",
+        "https://api.github.com/repos/ojfbot/core/commits?since=2026-10-20T08%3A30%3A00Z&until=2026-10-21T08%3A30%3A00Z&per_page=100",
+        "https://api.github.com/repos/ojfbot/daily-logger/commits?since=2026-10-20T08%3A30%3A00Z&until=2026-10-21T08%3A30%3A00Z&per_page=100",
+        "https://api.github.com/repos/ojfbot/morning-cockpit/commits?since=2026-10-20T08%3A30%3A00Z&until=2026-10-21T08%3A30%3A00Z&per_page=100"
+      ],
+      "correction": "Preserve 31 as the sourced activity count and make the API report 31, or relabel 13 as explicitly listed commit references.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Fleet onboarding paragraph has wrong links and an impossible count",
+      "location": "Line 39: “surface 5 of 3 required surfaces” with morning-cockpit links for core #557, daily-logger #407 and core #542.",
+      "explanation": "The links target nonexistent pull requests in morning-cockpit and create three false unavailable timestamp controls. Daily-logger #407 documents surfaces 3 and 4; morning-cockpit #59 is a separate sibling, and no primary record supports 5 of 3.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/_articles/2026-10-21.md#L37-L41",
+        "https://github.com/ojfbot/daily-logger/pull/407",
+        "https://github.com/ojfbot/morning-cockpit/pull/59",
+        "https://github.com/ojfbot/core/pull/557",
+        "https://github.com/ojfbot/core/issues/542"
+      ],
+      "correction": "Use the actual repositories for all three links and replace the contradictory ordinal with the documented onboarding walk or omit it.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Merged review data already itemizes the ten October 20 errors",
+      "location": "Lines 28 and 71: “The specific nature of the ten errors is not itemized in the available commit record.”",
+      "explanation": "Merged PR #402 registers a full C1–C10 source-bound report with locations, evidence, corrections and open dispositions. PR #406 records their final resolution; the data is discoverable by the current article-review service.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/_articles/2026-10-21.md#L26-L28",
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/reviews/articles/2026-10-20-972d2966f8ef962f71da1bab48276850cc28e5eb.md",
+        "https://github.com/ojfbot/daily-logger/pull/402",
+        "https://github.com/ojfbot/daily-logger/pull/406"
+      ],
+      "correction": "Summarize or link the actual ten-finding taxonomy and preserve its source-pinned dispositions.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "PR #407 has review context and no admitted merge authority",
+      "location": "Lines 77 and 95–96: “No stated reviewer or hold was recorded” and “Merge ... No design work required.”",
+      "explanation": "An OWNER comment reviewed an earlier head, recorded one wording refinement for James's review and disclosed an omitted local typecheck. The PR later advanced; checks are green, but the article action review remains pending and no suggestion is admitted.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/_articles/2026-10-21.md#L75-L83",
+        "https://github.com/ojfbot/daily-logger/pull/407#issuecomment-6305221024",
+        "https://github.com/ojfbot/daily-logger/pull/407",
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/actions/articles/2026-10-21.json"
+      ],
+      "correction": "Record the bounded nonblocking review and exact head, keep final-head review and merge separate, and do not treat the pending candidate as merge authority.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Fleet-runner ownership is recorded under core #307",
+      "location": "Lines 77 and 97: core #561 has “no named owner.”",
+      "explanation": "The #560 ruling explicitly assigns ownership to fleet-runner under core #307 and says review belongs there. #561 has no individual assignee or timeline, but that is different from no owner; its consumer review also records open contract gaps.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/_articles/2026-10-21.md#L75-L83",
+        "https://github.com/ojfbot/core/issues/560#issuecomment-6304270768",
+        "https://github.com/ojfbot/core/issues/561",
+        "https://github.com/ojfbot/core/issues/561#issuecomment-6305227157"
+      ],
+      "correction": "Name fleet-runner under core #307 as owner while separately stating that individual assignment, acceptance and timeline remain open.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Research tickets are serialized and #567 already ran",
+      "location": "Lines 83 and 95: #543, #563 and #567 “can begin independently” and “proceed in parallel.”",
+      "explanation": "Issue #563 is serialized after #543; #567 is ordered before both and already records a landed Tier 0 cycle. The article says serialized while prescribing the opposite execution shape.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/_articles/2026-10-21.md#L81-L85",
+        "https://github.com/ojfbot/core/issues/543",
+        "https://github.com/ojfbot/core/issues/563",
+        "https://github.com/ojfbot/core/issues/567",
+        "https://github.com/ojfbot/core/issues/567#issuecomment-6305428911",
+        "https://github.com/ojfbot/classic-space-venue/pull/4"
+      ],
+      "correction": "Preserve the recorded serial order and existing #567 result; do not admit or dispatch the #543 candidate from this review.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Issue #357 is misidentified as the 4 a.m. timing candidate",
+      "location": "Lines 81 and 100: “The 4 a.m. public draft timing candidate (issue #357).”",
+      "explanation": "#357 is the article-review surface and current correspondence/evidence target. The timing candidate is a separate retained local proposal; #408 leaves the 4 a.m. fallback and earlier public-delivery adoption to a separate owner decision.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/_articles/2026-10-21.md#L81-L100",
+        "https://github.com/ojfbot/daily-logger/issues/357",
+        "https://github.com/ojfbot/daily-logger/pull/408",
+        "https://github.com/ojfbot/daily-logger/pull/408#issuecomment-6305856379",
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/reviews/articles/2026-10-20-b609203983af3d03ee2b3a88ade1ad08b1882247.md"
+      ],
+      "correction": "Keep #357 as the review-surface identity, refer to the timing proposal by its own retained identity, and keep start and public-availability goals separately unproven.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "Blender's world-hub role does not settle the authoritative geometry source",
+      "location": "Line 53: “established Blender as the authoritative geometry authoring surface.”",
+      "explanation": "The ruling puts Blender in the pipeline, but #544 still asks what Blender authors and how it exports, while #551 still asks which source is authoritative and is blocked on #544 plus route proof.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/_articles/2026-10-21.md#L51-L55",
+        "https://github.com/ojfbot/core/issues/544",
+        "https://github.com/ojfbot/core/issues/551",
+        "https://github.com/ojfbot/core/issues/564"
+      ],
+      "correction": "State that Blender's participation and world-hub role are ruled while authored scope, export contract and authoritative spatial source remain HITL decisions.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The historical rationale for choosing 03:30 is unsupported",
+      "location": "Lines 28 and 65: 03:30 was chosen “to clear the overnight processing window before the morning cockpit surface activates.”",
+      "explanation": "#408 proves the declared cutoff, DST-safe interval and guard, but not this historical rationale. Run #261 started at 04:02:17 Chicago after a 1,937-second delay and does not establish by-04:00 public availability.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/_articles/2026-10-21.md#L26-L28",
+        "https://github.com/ojfbot/daily-logger/pull/408",
+        "https://github.com/ojfbot/daily-logger/actions/runs/39573841916",
+        "https://log.jim.software/api/articles/2026-10-21.json"
+      ],
+      "correction": "Retain the declared cutoff and actual receipt; attribute the rationale only to a primary decision and keep start, completion, merge and public availability separate.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "The five-PR chain is not an adopted universal reference pattern",
+      "location": "Line 71: “first fully documented supervised correction train” and “now the reference pattern for future multi-finding corrections.”",
+      "explanation": "The five PRs and their order are real, but no reviewed ADR or process source adopts that exact sequence for future cycles. #404 was a source-specific runtime repair, not a universal stage.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/_articles/2026-10-21.md#L69-L73",
+        "https://github.com/ojfbot/daily-logger/pull/402",
+        "https://github.com/ojfbot/daily-logger/pull/403",
+        "https://github.com/ojfbot/daily-logger/pull/404",
+        "https://github.com/ojfbot/daily-logger/pull/405",
+        "https://github.com/ojfbot/daily-logger/pull/406",
+        "https://github.com/ojfbot/daily-logger/blob/60f4e551b913fce642a53e1ff0abcecc8f513a3b/decisions/adr/0038-editorial-revision-workflow.md"
+      ],
+      "correction": "Describe the observed October 20 sequence without promoting it to an adopted future pattern absent an explicit decision.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
