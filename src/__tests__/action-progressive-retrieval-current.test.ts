@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { afterEach, expect, it, vi } from 'vitest'
-import { generationActionCycle } from '../action-review-cycle.js'
+import { generationActionCycle, revisionActionCycle } from '../action-review-cycle.js'
 import { ActionEvidenceRequestSchema, ActionRegistrySchema, ActionSourceSchema, sha256, type ActionSource } from '../action-registry.js'
 import { ActionEvidenceRequestError, actionEvidenceCaseDigest, buildActionEvidenceProjection, closeActionEvidenceRequest, createActionEvidenceRequest, persistActionEvidenceReply, persistActionEvidenceRequest, persistActionEvidenceResolutions, persistActionEvidenceResponse, persistValidatedActionEvidenceReply, trustedActionSourceLineNumbers } from '../action-evidence-retrieval.js'
 import { actionEvidenceScope, draftCandidateEvidenceBinding, selectActionEvidence } from '../action-evidence-selection.js'
@@ -310,6 +310,41 @@ it('does not let one action owner response authorize another action in the same 
       suggestions: [],
     },
   })).toThrow(/owner response.*act-381/i)
+})
+
+it('rejects an explicit owner response when the current review cycle changes its evidence case', async () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'progressive-owner-current-case-'))
+  roots.push(repoRoot)
+  const current = registry()
+  current.records.push({
+    key: 'act-381',
+    original: { id: 'act-381', command: '/review', description: 'Review daily-logger #381.', repo: 'daily-logger', status: 'open', sourceDate: date },
+    origin: 'imported', workKey: 'daily-logger|381|review', state: 'open', introducedBy: date,
+    includeInIndex: true, inclusionOverride: null, goal: 'Review the actual evidence.', doneWhen: 'Owner acceptance is explicit.', gates: [], history: [],
+  })
+  const markdown = `---\ndate: ${date}\nstatus: draft\n---\n`
+  const oldCycle = generationActionCycle()
+  const request = createActionEvidenceRequest({
+    kind: 'authority', caseDigest: actionEvidenceCaseDigest({ articleDate: date, cycle: oldCycle, markdown, feedback: '', actionKeys: ['act-381'] }),
+    articleDate: date, cycle: oldCycle, actionKeys: ['act-381'], sourceKey: 'action:act-381', question: 'Resolve act-381 authority.',
+    obligations: ['1'.repeat(64)], recipient: 'coordinator-owner',
+  })
+  const { source } = persistActionEvidenceResponse({ repoRoot, request, responder: 'owner', answer: 'Keep this action open.' })
+  const prepared = pendingActionReview({ registry: current, articleDate: date, cycle: oldCycle, markdown,
+    reason: 'Await owner response.', articleStatuses: new Map([[date, 'draft']]), evidenceRequests: [{
+      version: request.version, id: request.id, kind: request.kind, caseDigest: request.caseDigest, articleDate: request.articleDate,
+      cycle: request.cycle, actionKeys: request.actionKeys, sourceKey: request.sourceKey, obligations: request.obligations,
+      recipient: request.recipient, status: 'open',
+    }] })
+  const propose = vi.fn(), verify = vi.fn()
+
+  const result = await reviewDraftActions({ registry: prepared.registry, articleDate: date, cycle: revisionActionCycle('new-owner-case'),
+    markdown: prepared.markdown, feedback: '', sources: [source], articleStatuses: new Map([[date, 'draft']]), agents: { propose, verify } })
+
+  expect(result.registry.articles[0]?.review).toMatchObject({ state: 'pending', reason: expect.stringMatching(/stale|unsolicited|scope/i) })
+  expect(result.registry.articles[0]?.evidenceRequests).toEqual([])
+  expect(propose).not.toHaveBeenCalled()
+  expect(verify).not.toHaveBeenCalled()
 })
 
 it('rejects a new #386 suggestion whose evidence is about unrelated #391', () => {

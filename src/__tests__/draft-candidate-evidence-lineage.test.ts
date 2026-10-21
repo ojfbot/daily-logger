@@ -12,7 +12,7 @@ import {
 import { actionEvidenceScope, deriveActionReviewOutput, draftCandidateEvidenceBinding, prepareConservativeDraftCandidateEvidence, selectActionEvidence } from '../action-evidence-selection.js'
 import { ActionEvidenceRequestError } from '../action-evidence-retrieval.js'
 import { ACTION_REVIEW_PROMPT_VERSION, revisionActionCycle } from '../action-review-cycle.js'
-import { pendingActionReview, reviewProducedDraftActions } from '../review-actions.js'
+import { pendingActionReview, reviewDraftActions, reviewProducedDraftActions } from '../review-actions.js'
 
 const articleDate = '2030-01-01'
 const markdown = `---\ndate: ${articleDate}\nstatus: draft\n---\n## What shipped\nNo reader-facing candidate verdict.\n`
@@ -81,7 +81,8 @@ function withNativePromotion() {
     goal: 'Review core #543.',
     doneWhen: 'The current target has an evidence-backed disposition.',
     gates: [],
-    history: [],
+    history: [{ roundId: registry.articles[0]!.roundId, articleDate, state: 'proposed', description: 'Review core #543 current target.',
+      reason: 'The native candidate review promoted the captured proposal.', citations: [], verifiedBy: 'lineage-fixture-verifier', verificationReason: 'Fixture promotion.' }],
   })
   const snapshot = registry.articles.find(article => article.date === articleDate)!
   snapshot.review = { state: 'verified' }
@@ -96,6 +97,39 @@ function withNativePromotion() {
 
 it('keeps an exact retry bound to the original prestate after its own valid promotion', () => {
   const registry = withNativePromotion()
+
+  expect(() => actionEvidenceScope({ registry, articleStatuses: statuses, articleDate, cycle, markdown, feedback: '' })).not.toThrow()
+})
+
+it('holds a cache miss before agents until prior native outputs receive a fresh explicit input association', async () => {
+  const registry = withNativePromotion()
+  const propose = vi.fn(), verify = vi.fn()
+
+  const result = await reviewDraftActions({ registry, articleStatuses: statuses, articleDate, cycle, markdown, feedback: '', sources: [], agents: { propose, verify } })
+
+  expect(result.registry.articles[0]).toMatchObject({
+    review: { state: 'pending', reason: expect.stringMatching(/prior native review outputs.*fresh explicit input association/i) },
+    draftCandidates: [{ candidateId: registry.articles[0]!.draftCandidates![0]!.candidateId, payload, review: { state: 'awaiting-review' } }],
+  })
+  expect(result.registry.articles[0]).not.toHaveProperty('reviewOutput')
+  expect(result.registry.records).toContainEqual(expect.objectContaining({ key: 'act-2030-01-01-promoted', origin: 'suggested', admission: cycle }))
+  expect(propose).not.toHaveBeenCalled()
+  expect(verify).not.toHaveBeenCalled()
+})
+
+it('accepts a fresh explicit frontier that binds the prior candidate output as a current input', () => {
+  const registry = withNativePromotion()
+  const snapshot = registry.articles[0]!
+  const reviewOutput = snapshot.reviewOutput
+  delete snapshot.reviewOutput
+  snapshot.draftCandidateEvidence!.inputActionKeys = ['act-2030-01-01-promoted']
+  snapshot.draftCandidateEvidence!.candidates[0]!.actionRelations = [{
+    actionKey: 'act-2030-01-01-promoted', sourceReference: 'core#543', relation: 'same-work', reason: 'Fresh reviewer association after the prior native output.',
+  }]
+  Object.assign(snapshot.draftCandidateEvidence!, draftCandidateEvidenceBinding({ registry, articleStatuses: statuses, articleDate, cycle, markdown, feedback: '' }))
+  snapshot.reviewOutput = reviewOutput
+  snapshot.stateDigest = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate, roundId: snapshot.roundId,
+    draftCandidates: snapshot.draftCandidates, draftCandidateEvidence: snapshot.draftCandidateEvidence, reviewOutput: snapshot.reviewOutput })
 
   expect(() => actionEvidenceScope({ registry, articleStatuses: statuses, articleDate, cycle, markdown, feedback: '' })).not.toThrow()
 })
@@ -208,6 +242,24 @@ it('refreshes a cycle-only binding before collection and records derived lineage
 
   const result = await reviewProducedDraftActions({ registry, articleStatuses: statuses, articleDate, cycle: nextCycle, markdown, feedback: '', draftCandidates: [payload],
     prepareEvidence: candidates => prepareConservativeDraftCandidateEvidence({ registry, articleStatuses: statuses, articleDate, cycle: nextCycle, markdown, feedback: '', draftCandidates: candidates }),
+    collectSources, agents: { propose, verify } })
+
+  expect(result.registry.articles[0]).toMatchObject({ review: { state: 'pending' }, draftCandidateEvidence: { reviewCycle: nextCycle, provenance: { kind: 'derived-refresh' } } })
+  expect(collectSources).toHaveBeenCalledOnce()
+  expect(propose).not.toHaveBeenCalled()
+  expect(verify).not.toHaveBeenCalled()
+})
+
+it('refreshes stored candidate evidence before a later production caller collects sources', async () => {
+  const registry = preparedRegistry()
+  const nextCycle = revisionActionCycle('candidate-prestate-lineage-census-production-caller')
+  const collectSources = vi.fn((_candidates, evidence) => {
+    expect(evidence).toMatchObject({ reviewCycle: nextCycle, provenance: { kind: 'derived-refresh', lineage: { kind: 'cycle-only-refresh', priorReviewCycle: cycle } } })
+    throw new Error('Stop after observing stored-candidate pre-collection refresh.')
+  })
+  const propose = vi.fn(), verify = vi.fn()
+
+  const result = await reviewProducedDraftActions({ registry, articleStatuses: statuses, articleDate, cycle: nextCycle, markdown, feedback: '',
     collectSources, agents: { propose, verify } })
 
   expect(result.registry.articles[0]).toMatchObject({ review: { state: 'pending' }, draftCandidateEvidence: { reviewCycle: nextCycle, provenance: { kind: 'derived-refresh' } } })

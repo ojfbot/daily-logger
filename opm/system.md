@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `3abc77a0a7b232f2390cac64a729162f3570d2f27564f75e90c3d2d249e83889`.
+> Source SHA-256: `0f635abd8c705f11b982d314266078624143d5f916b521b00051064e4a4be32c`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -191,6 +191,8 @@ flowchart TD
   n42 -->|"invokes"| n28
   n43 -->|"requires (instrument)"| n42
   n20 -->|"yields"| n29
+  n42 -->|"invokes"| n39
+  n20 -->|"invokes"| n39
   n20 -->|"invokes"| n28
   n112 -->|"part of"| n23
   n94 -->|"part of"| n23
@@ -362,6 +364,8 @@ Editorial Revising yields Action Review Cycle. [src: src/revise-article.ts]
 Editorial Revising invokes Action Reconciling. [src: src/revise-article.ts]
 Editorial Revising requires Editorial Revision Request. [src: .github/scripts/editorial-revision-admission.mjs]
 Editorial Accepting yields Action Review Cycle. [src: scripts/reconcile-actions.ts]
+Editorial Revising invokes Candidate Evidence Preparing. [src: src/revise-article.ts]
+Editorial Accepting invokes Candidate Evidence Preparing. [src: scripts/reconcile-actions.ts]
 Editorial Accepting invokes Action Reconciling. [src: .github/workflows/editorial-revise.yml]
 Draft Suggestion can be proposed, open, done, dismissed, superseded, or deferred. [src: src/action-registry-schema.ts]
 Action Registry consists of Imported Action Baseline and Article Action Files. [src: src/action-registry-schema.ts]

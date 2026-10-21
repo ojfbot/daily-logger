@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { readActionRegistry, registryRevision, writeActionRegistry, setActionInclusion, renderArticleActions, readArticleStatuses } from '../src/action-registry.js'
-import { collectActionSources, createActionAgents, mockActionAgents, reviewDraftActions } from '../src/review-actions.js'
+import { collectActionSources, createActionAgents, mockActionAgents, reviewProducedDraftActions } from '../src/review-actions.js'
 import { persistActionEvidenceResolutions, readActionEvidenceReply } from '../src/action-evidence-retrieval.js'
 
 const repoRoot = process.env.ACTION_REPO_ROOT ? resolve(process.env.ACTION_REPO_ROOT) : resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -31,7 +31,9 @@ const evidenceReplies = actionKeys('ACTION_EVIDENCE_REPLY').map(path => readActi
 const reviewCycle = acceptanceActionCycle(requestIdentity ?? '', registry.articles.find(article => article.date === articleDate))
 const reviewed = process.env.ACTION_KEY
   ? { registry: setActionInclusion(registry, process.env.ACTION_KEY, process.env.INCLUDE_IN_INDEX !== 'false', process.env.ACTION_ACTOR ?? '', `Explicit editorial inclusion instruction: ${feedback.trim()}`, statuses), markdown, evidenceResolutions: [] }
-  : await reviewDraftActions({ cycle: reviewCycle, registry, articleStatuses: statuses, articleDate, markdown, feedback, sources: [...(process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ cycle: reviewCycle, registry, articleStatuses: statuses, repoRoot, markdown, feedback, reassessActionKeys, preserveActionKeys })), ...evidenceReplies], agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, selectedEvidenceProjectionIds: evidenceReplies.map(reply => reply.id), ...(process.env.DRY_RUN === 'true' ? {} : { repoRoot }) })
+  : await reviewProducedDraftActions({ cycle: reviewCycle, registry, articleStatuses: statuses, articleDate, markdown, feedback,
+      collectSources: (draftCandidates, draftCandidateEvidence) => [...(process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ cycle: reviewCycle, registry, articleStatuses: statuses, repoRoot, markdown, feedback, reassessActionKeys, preserveActionKeys, draftCandidates, draftCandidateEvidence })), ...evidenceReplies],
+      agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, selectedEvidenceProjectionIds: evidenceReplies.map(reply => reply.id), ...(process.env.DRY_RUN === 'true' ? {} : { repoRoot }) })
 reviewed.markdown = renderArticleActions(reviewed.markdown, reviewed.registry, articleDate, statuses)
 if (process.env.DRY_RUN !== 'true') {
   if (readFileSync(resolve(repoRoot, articlePath), 'utf8') !== markdown) throw new Error('Article changed during action review')
