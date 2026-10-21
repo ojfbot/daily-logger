@@ -6,6 +6,7 @@ import { ActionSourceSchema, readActionRegistry, readArticleStatuses } from '../
 import { generationActionCycle, revisionActionCycle } from '../action-review-cycle.js'
 const { create, countTokens } = vi.hoisted(() => ({ create: vi.fn(), countTokens: vi.fn(async (): Promise<unknown> => ({ input_tokens: 1000 })) }))
 vi.mock('@anthropic-ai/sdk', () => ({ default: class { messages = { create, countTokens } } }))
+import { parseActionModelView } from '../action-model-view.js'
 import { createActionAgents, reviewArticleActions } from '../review-actions.js'
 
 it('bounds the full provider envelope, including rules and tool schema, before each provider call', async () => {
@@ -85,7 +86,8 @@ it.skipIf(!process.env.ACTION_EVIDENCE_CAPSULE)('measures the saved Oct19 corpus
     measurements.push({ scenario, role, promptBytes: Buffer.byteLength(prompt), envelopeBytes: Buffer.byteLength(JSON.stringify(value)) })
     let output: unknown
     if (role === 'proposer') {
-      const context = z.object({ sources: z.array(z.object({ id: z.string(), kind: z.string(), locator: z.string(), content: z.string() })) }).parse(JSON.parse(prompt.split('\n')[0]))
+      const contextEnd = prompt.indexOf('\nReturn a change for every requiredActionKey.')
+      const context = z.object({ sources: z.array(z.object({ id: z.string(), kind: z.string(), locator: z.string(), content: z.string() })) }).parse(parseActionModelView(prompt.slice(0, contextEnd)))
       const goal = context.sources.find(source => source.kind === 'goal')
       const goalLine = goal?.content.split('\n').findIndex(line => line.replace(/^L\d+: /, '').length > 20)
       if (!goal || goalLine === undefined || goalLine < 0) throw new Error('No exact goal source line')

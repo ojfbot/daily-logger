@@ -26,8 +26,8 @@ import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { acceptedClosingContinuityTargets, collectContext } from './collect-context.js'
 import { currentArticleDate } from './activity-window.js'
-import { captureDraftActionCandidates, readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses, renderArticleActionHtml } from './action-registry.js'
-import { collectActionSources, createActionAgents, mockActionAgents, reviewDraftActions } from './review-actions.js'
+import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses, renderArticleActionHtml } from './action-registry.js'
+import { collectActionSources, createActionAgents, mockActionAgents, reviewProducedDraftActions } from './review-actions.js'
 import { prepareConservativeDraftCandidateEvidence } from './action-evidence-selection.js'
 import { persistActionEvidenceResolutions } from './action-evidence-retrieval.js'
 import {
@@ -259,11 +259,11 @@ export async function main() {
   const previousArticle = existsSync(articlePath) ? readFileSync(articlePath, 'utf8') : null
   const articleStatuses = readArticleStatuses(REPO_ROOT)
   const rawDraftCandidates = article.suggestedActions ?? []
-  const draftCandidates = captureDraftActionCandidates(rawDraftCandidates)
   const actionCycle = generationActionCycle()
-  const draftCandidateEvidence = draftCandidates.length ? prepareConservativeDraftCandidateEvidence({ cycle: actionCycle, registry, articleStatuses, articleDate: date, markdown: originalMarkdown, draftCandidates }) : undefined
-  const actionSources = process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ cycle: actionCycle, registry, articleStatuses, repoRoot: REPO_ROOT, markdown: originalMarkdown, feedback: '', context: `${buildUserPrompt(ctx)}\nStructured draft candidate evidence hints: ${JSON.stringify(draftCandidates)}`, continuityTargets: acceptedClosingContinuityTargets(ctx.previousArticles), draftCandidates, draftCandidateEvidence })
-  const actionReview = await reviewDraftActions({ cycle: actionCycle, registry, articleStatuses, articleDate: date, markdown: originalMarkdown, feedback: '', draftCandidates: rawDraftCandidates, draftCandidateEvidence, sources: actionSources, agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents(), ...(isDryRun ? {} : { repoRoot: REPO_ROOT }) })
+  const actionReview = await reviewProducedDraftActions({ cycle: actionCycle, registry, articleStatuses, articleDate: date, markdown: originalMarkdown, feedback: '', draftCandidates: rawDraftCandidates,
+    prepareEvidence: candidates => candidates.length ? prepareConservativeDraftCandidateEvidence({ cycle: actionCycle, registry, articleStatuses, articleDate: date, markdown: originalMarkdown, draftCandidates: candidates }) : undefined,
+    collectSources: (candidates, draftCandidateEvidence) => process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ cycle: actionCycle, registry, articleStatuses, repoRoot: REPO_ROOT, markdown: originalMarkdown, feedback: '', context: `${buildUserPrompt(ctx)}\nStructured draft candidate evidence hints: ${JSON.stringify(candidates)}`, continuityTargets: acceptedClosingContinuityTargets(ctx.previousArticles), draftCandidates: candidates, draftCandidateEvidence }),
+    agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents(), ...(isDryRun ? {} : { repoRoot: REPO_ROOT }) })
   const renderingStatuses = new Map(articleStatuses)
   if (!renderingStatuses.has(date)) renderingStatuses.set(date, 'draft')
   const renderedHtml = renderArticleActionHtml(actionReview.markdown, actionReview.registry, date, renderingStatuses)

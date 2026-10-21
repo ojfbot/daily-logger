@@ -114,17 +114,28 @@ type CandidateEvidenceScopeInput = {
 
 type DraftCandidateEvidenceRole = 'target' | 'lifecycle' | 'owner' | 'gate' | 'counterevidence' | 'retained-context'
 
+const REVIEWED_CANDIDATE_ALIASES = new Map<string, string>([
+  ['wayfinder#543', 'core#543'],
+])
+
 function candidateTargetReferences(candidate: DraftActionCandidate, retainedRefs: ReadonlySet<string>): Set<string> {
-  const references = actionSourceReferences(JSON.stringify(candidate.payload))
-  for (const match of JSON.stringify(candidate.payload).matchAll(/\b([\w-]+)#(\d+)\b/g)) {
+  const payload = JSON.stringify(candidate.payload)
+  const references = actionSourceReferences(payload)
+  for (const match of payload.matchAll(/https:\/\/github\.com\/([^/]+)\/([\w-]+)\/(?:pull|issues)\/(\d+)/g)) {
+    if (match[1] !== 'ojfbot') throw new Error(`Foreign candidate reference ${match[0]} for ${candidate.candidateId}; review pending`)
+    if (!KNOWN_REPOS.has(match[2]) || EXCLUDED_REPOS.has(match[2])) throw new Error(`Unsupported qualified candidate reference ${match[2]}#${match[3]} for ${candidate.candidateId}; review pending`)
+  }
+  for (const match of payload.matchAll(/\b([\w-]+)#(\d+)\b/g)) {
+    const qualified = `${match[1]}#${match[2]}`
     if (KNOWN_REPOS.has(match[1])) {
-      references.add(`${match[1]}#${match[2]}`)
+      references.add(qualified)
       continue
     }
-    if (!candidate.payload.command.includes(match[0])) continue
+    const reviewed = REVIEWED_CANDIDATE_ALIASES.get(qualified)
+    if (!reviewed) throw new Error(`Unsupported qualified candidate reference ${qualified} for ${candidate.candidateId}; review pending`)
     const matches = [...retainedRefs].filter(reference => reference.endsWith(`#${match[2]}`))
-    if (matches.length !== 1) throw new Error(`Ambiguous candidate target ${match[0]} for ${candidate.candidateId}; explicit qualified evidence association required; review pending`)
-    references.add(matches[0])
+    if (matches.length !== 1 || matches[0] !== reviewed) throw new Error(`Ambiguous candidate target ${qualified} for ${candidate.candidateId}; explicit qualified evidence association required; review pending`)
+    references.add(reviewed)
   }
   for (const match of candidate.payload.command.matchAll(/(?:^|\s)#(\d+)\b/g)) {
     const matches = [...retainedRefs].filter(reference => reference.endsWith(`#${match[1]}`))
@@ -143,10 +154,10 @@ export function draftCandidateEvidenceBinding(input: CandidateEvidenceScopeInput
   const statuses = input.articleStatuses ?? new Map(input.registry.articles.map(article => [article.date, article.status]))
   const contextText = prepared.context.kind === 'retained' ? prepared.context.markdown : ''
   const retainedRefs = actionSourceReferences(contextText)
+  const candidateRefs = new Set(candidates.flatMap(candidate => [...candidateTargetReferences(candidate, retainedRefs)]))
   const boundActionKeys = new Set([
-    ...(snapshot?.actionKeys ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)),
     ...input.registry.records.filter(record => contextText.includes(record.key) || contextText.includes(record.workKey)
-      || actionRecordSourceReferences(record).some(reference => retainedRefs.has(reference))).map(record => record.key),
+      || actionRecordSourceReferences(record).some(reference => retainedRefs.has(reference) || candidateRefs.has(reference))).map(record => record.key),
   ])
   const actionState = [...boundActionKeys].sort().map(key => {
     const record = input.registry.records.find(candidate => candidate.key === key)
@@ -181,7 +192,7 @@ export function draftCandidateEvidenceScope(input: CandidateEvidenceScopeInput, 
   if (requirements.articleDate !== binding.articleDate || requirements.articleDigest !== binding.articleDigest || snapshot && requirements.articleDigest !== snapshot.articleDigest
     || JSON.stringify(requirements.reviewCycle) !== JSON.stringify(binding.reviewCycle)
     || requirements.draftContextSha256 !== binding.draftContextSha256 || requirements.candidatePayloadsSha256 !== binding.candidatePayloadsSha256
-    || (!snapshot || snapshot.review.state !== 'verified') && requirements.actionStateSha256 !== binding.actionStateSha256) {
+    || requirements.actionStateSha256 !== binding.actionStateSha256) {
     throw new Error('Structured draft candidate evidence binding is stale or foreign; review pending')
   }
   const candidatesById = new Map(candidates.map(candidate => [candidate.candidateId, candidate]))
@@ -209,6 +220,20 @@ export function draftCandidateEvidenceScope(input: CandidateEvidenceScopeInput, 
     }
   }
   for (const reference of requirements.unassignedReferences) add(reference, 'unassigned')
+  const directTargets = new Set([...targetRefs.values()].flatMap(references => [...references]))
+  const inheritedRecords = input.registry.records.filter(record => actionRecordSourceReferences(record).some(reference => directTargets.has(reference)))
+  for (const record of inheritedRecords) {
+    const inherited = [
+      { text: record.original.description, role: 'lifecycle' as const, reason: 'Canonical work description inherited by the direct candidate target.' },
+      { text: record.goal, role: 'owner' as const, reason: 'Canonical goal or owner obligation inherited by the direct candidate target.' },
+      { text: record.doneWhen, role: 'lifecycle' as const, reason: 'Canonical completion condition inherited by the direct candidate target.' },
+      ...record.gates.map(text => ({ text, role: 'gate' as const, reason: 'Canonical gate inherited by the direct candidate target.' })),
+    ]
+    for (const obligation of inherited) for (const reference of actionSourceReferences(obligation.text)) {
+      knownRefs.add(reference)
+      add({ reference, classification: 'required', role: obligation.role, reason: obligation.reason }, `canonical:${record.key}`)
+    }
+  }
   const unknown = [...classifications.keys()].filter(reference => !knownRefs.has(reference)).sort()
   if (unknown.length) throw new Error(`Structured draft candidate evidence contains unknown or foreign references: ${unknown.join(', ')}; review pending`)
   const unclassified = [...retainedRefs].filter(reference => !classifications.has(reference)).sort()
@@ -352,7 +377,18 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     const reference = key.replace(/^github:/, '')
     const requirements = scope.referenceRequirements.filter(requirement => requirement.classification === 'required' && requirement.reference === reference)
     const candidateObligations = requirements.map(requirement => obligation(requirement.source, 'candidate-evidence', `${requirement.reference}:${requirement.role ?? 'unspecified'}:${requirement.reason}`))
-    const values = [...actionObligations, ...feedbackObligations, ...candidateObligations]
+    const scopedActionObligations = !key.startsWith('github:') ? actionObligations : input.registry.records.filter(record => scope.reviewActionKeys.includes(record.key)
+      || requirements.some(requirement => requirement.source === `canonical:${record.key}`)).flatMap(record => {
+      const currentDescription = record.history.at(-1)?.description ?? record.original.description
+      return [
+        ...(record.goal && actionSourceReferences(record.goal).has(reference) ? [obligation(record.key, 'goal', record.goal)] : []),
+        ...(actionSourceReferences(currentDescription).has(reference) ? [obligation(record.key, 'current-disposition', currentDescription)] : []),
+        ...(record.doneWhen && actionSourceReferences(record.doneWhen).has(reference) ? [obligation(record.key, 'done-when', record.doneWhen)] : []),
+        ...record.gates.filter(gate => actionSourceReferences(gate).has(reference)).map(gate => obligation(record.key, 'gate', gate)),
+      ]
+    })
+    const scopedFeedbackObligations = input.feedback.trim() && (!key.startsWith('github:') || !actionSourceReferences(input.feedback).size || actionSourceReferences(input.feedback).has(reference)) ? feedbackObligations : []
+    const values = [...scopedActionObligations, ...scopedFeedbackObligations, ...candidateObligations]
     return values.length ? [...new Set(values)] : [obligation(undefined, 'feedback', `Resolve ${key} without inventing a disposition.`)]
   }
   const requestFor = (kind: 'source-view' | 'missing-source', key: string, source?: ActionSource) => {

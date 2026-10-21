@@ -102,6 +102,16 @@ function singleCandidateEvidenceFixture(input: { command: string; description: s
   return { article, cycle, registry: ActionRegistrySchema.parse(registry) }
 }
 
+function canonicalRecord(key: string, reference: string, gateReference: string): ActionRegistry['records'][number] {
+  return {
+    key,
+    original: { id: key, command: '/investigate', description: `Investigate ${reference}.`, repo: 'core', status: 'open', sourceDate: '2029-12-31' },
+    origin: 'imported', workKey: `core|${key}|investigate`, state: 'open', introducedBy: '2029-12-31',
+    includeInIndex: true, inclusionOverride: null, goal: `Resolve the owner question at ${reference}.`,
+    doneWhen: `The owner records a decision at ${reference}.`, gates: [`Preserve the separate gate at ${gateReference}.`], history: [],
+  }
+}
+
 it('uses one authoritative article-status premise across state, digest, scope, collection, writing, and cache', async () => {
   // Premise census: an action is accepted-terminal only when both the registry snapshot and
   // the authoritative article status say that its matching decision round was accepted.
@@ -389,6 +399,61 @@ it('honors qualified cross-repo and URL targets, and resolves wayfinder shorthan
   expect(() => actionEvidenceScope({ registry: ambiguous, articleDate: date, cycle: wayfinder.cycle, markdown: wayfinder.article, feedback: '' })).toThrow(/ambiguous candidate target/i)
 })
 
+it('rejects unreviewed aliases, foreign GitHub targets, and unknown qualified description references instead of dropping them', () => {
+  const cases = [
+    singleCandidateEvidenceFixture({ command: '/session unknown-repo#543', repo: 'core', description: 'Review the retained target.', context: 'The qualified retained target is core #543.', references: [{ reference: 'core#543', role: 'target' }] }),
+    singleCandidateEvidenceFixture({ command: '/review core#543', repo: 'core', description: 'Compare https://github.com/foreign-org/core/issues/543.', context: 'The local target is core #543.', references: [{ reference: 'core#543', role: 'target' }] }),
+    singleCandidateEvidenceFixture({ command: '/review core#543', repo: 'core', description: 'Compare mystery-repo#700 before review.', context: 'The local target is core #543.', references: [{ reference: 'core#543', role: 'target' }] }),
+  ]
+  for (const item of cases) {
+    expect(() => actionEvidenceScope({ registry: item.registry, articleDate: date, cycle: item.cycle, markdown: item.article, feedback: '' }))
+      .toThrow(/unsupported|foreign|qualified candidate reference/i)
+  }
+})
+
+it('promotes every inherited canonical dependency behind a required candidate target without making it a review instruction', () => {
+  const prepared = singleCandidateEvidenceFixture({ command: '/review core#543', repo: 'core', description: 'Review the exact target.',
+    context: 'The target is core #543 and its inherited gate is core #999.', references: [{ reference: 'core#543', role: 'target' }] })
+  prepared.registry.records.push(canonicalRecord('existing-owner', 'core #543', 'core #999'))
+  const snapshot = prepared.registry.articles[0]
+  snapshot.draftCandidateEvidence!.unassignedReferences.push({ classification: 'context', reference: 'core#999', reason: 'Candidate metadata attempted to leave the canonical gate contextual.' })
+  snapshot.draftCandidateEvidence!.actionStateSha256 = draftCandidateEvidenceBinding({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article }).actionStateSha256
+
+  const scope = actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' })
+
+  expect(scope.refs).toContain('core#999')
+  expect(scope.contextRefs).not.toContain('core#999')
+  expect(scope.reviewActionKeys).toEqual([])
+  expect(scope.referenceRequirements).toEqual(expect.arrayContaining([
+    expect.objectContaining({ reference: 'core#999', classification: 'required', source: 'canonical:existing-owner', role: 'gate' }),
+  ]))
+})
+
+it('does not attach an unrelated carried canonical action duties to a candidate source request', () => {
+  const prepared = singleCandidateEvidenceFixture({ command: '/review core#543', repo: 'core', description: 'Review the exact target.',
+    context: 'The candidate target is core #543.', references: [{ reference: 'core#543', role: 'target' }] })
+  const unrelated = canonicalRecord('unrelated-700', 'core #700', 'core #701')
+  prepared.registry.records.push(unrelated)
+  prepared.registry.articles[0].actionKeys = [unrelated.key]
+  prepared.registry.articles[0].draftCandidateEvidence!.actionStateSha256 = draftCandidateEvidenceBinding({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article }).actionStateSha256
+
+  try {
+    selectActionEvidence({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '', sources: [] })
+    throw new Error('Expected a missing-source request')
+  } catch (error) {
+    expect(error).toBeInstanceOf(ActionEvidenceRequestError)
+    const request = (error as ActionEvidenceRequestError).request
+    expect(request.sourceKey).toBe('github:core#543')
+    const unrelatedHashes = [
+      ['goal', unrelated.goal],
+      ['current-disposition', unrelated.original.description],
+      ['done-when', unrelated.doneWhen],
+      ['gate', unrelated.gates[0]],
+    ].map(([kind, text]) => sha256(JSON.stringify({ actionKey: unrelated.key, kind, text })))
+    expect(request.obligations).not.toEqual(expect.arrayContaining(unrelatedHashes))
+  }
+})
+
 it('promotes an audited context reference when explicit feedback requires it, forcing recollection and a new evidence case', () => {
   const prepared = candidateEvidenceFixture()
   const base = actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' })
@@ -421,7 +486,9 @@ it('invalidates prepared candidate evidence when a retained canonical gate becom
     verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'fixture', proposalSha256: 'e'.repeat(64), verdicts: [] }, sources: [], rejected: [],
   })
   const initialBinding = draftCandidateEvidenceBinding({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article })
-  prepared.registry.articles.find(article => article.date === date)!.draftCandidateEvidence!.actionStateSha256 = initialBinding.actionStateSha256
+  const candidateSnapshot = prepared.registry.articles.find(article => article.date === date)!
+  candidateSnapshot.draftCandidateEvidence!.actionStateSha256 = initialBinding.actionStateSha256
+  candidateSnapshot.review = { state: 'verified' }
   expect(() => actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' })).not.toThrow()
 
   prepared.registry.articles.find(article => article.date === priorDate)!.status = 'accepted'
