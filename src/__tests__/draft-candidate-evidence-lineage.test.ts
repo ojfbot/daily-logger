@@ -491,6 +491,25 @@ it('rejects an Accepted status that lacks the workflow-owned accepted outcome st
   })).toThrow(/changed beyond.*fresh classification/i)
 })
 
+it.each([
+  ['a conflicting duplicate outcome key', (value: string) => value.replace('outcome: accepted', 'outcome: accepted\noutcome: rejected')],
+  ['an unrecognized duplicate status key', (value: string) => value.replace('status: "accepted"', 'status: "accepted"\nstatus: nonsense')],
+  ['mismatched status quotes', (value: string) => value.replace('status: "accepted"', 'status: "accepted\'')],
+])('rejects acceptance frontmatter with %s', (_name, mutate) => {
+  const registry = preparedRegistry()
+  const accepted = stampOutcome(markdown.replace(/^status:\s*draft$/m, 'status: "accepted"'), 'accepted')
+
+  expect(() => prepareConservativeDraftCandidateEvidence({
+    registry,
+    articleStatuses: new Map(statuses).set(articleDate, 'accepted'),
+    articleDate,
+    cycle: revisionActionCycle('pull-request:413:clean-acceptance'),
+    markdown: mutate(accepted),
+    feedback: '',
+    draftCandidates: registry.articles[0]!.draftCandidates!,
+  })).toThrow(/changed beyond.*fresh classification/i)
+})
+
 it('keeps changed prose pending before collection instead of refreshing the old classification', async () => {
   const registry = preparedRegistry()
   const collectSources = vi.fn(), propose = vi.fn(), verify = vi.fn()
