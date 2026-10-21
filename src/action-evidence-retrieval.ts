@@ -3,6 +3,7 @@ import { chmodSync, closeSync, existsSync, fsyncSync, linkSync, lstatSync, mkdir
 import { dirname, join } from 'node:path'
 import { z } from 'zod'
 import {
+  acceptedActionState,
   ActionEvidenceRequestSchema,
   ActionEvidenceRequestReceiptSchema,
   ActionEvidenceResponseSchema,
@@ -63,14 +64,19 @@ export function actionEvidenceCaseDigest(input: {
   markdown: string
   feedback: string
   actionKeys: readonly string[]
-  registry?: Pick<ActionRegistry, 'records'>
+  registry?: ActionRegistry
+  articleStatuses?: ReadonlyMap<string, string>
 }): string {
+  const articleStatuses = input.articleStatuses ?? new Map(input.registry?.articles.map(article => [article.date, article.status]) ?? [])
   const actionState = input.registry?.records
     .filter(record => input.actionKeys.includes(record.key))
     .sort((a, b) => a.key.localeCompare(b.key))
     .map(record => {
-      const history = record.history.filter(decision => decision.articleDate !== input.articleDate)
-      const state = history.at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed')
+      const history = record.history.filter(decision => decision.articleDate !== input.articleDate
+        && articleStatuses.get(decision.articleDate) === 'accepted'
+        && input.registry?.articles.some(article => article.date === decision.articleDate
+          && article.status === 'accepted' && article.roundId === decision.roundId))
+      const state = input.registry ? acceptedActionState(record, articleStatuses, input.registry) : record.origin === 'imported' ? record.original.status : 'proposed'
       return { key: record.key, workKey: record.workKey, state, goal: record.goal,
         doneWhen: record.doneWhen, gates: record.gates, history }
     }) ?? []
@@ -310,7 +316,10 @@ export function persistActionEvidenceReply(input: { repoRoot: string; projection
   const projection = ActionSourceSchema.parse(input.projection)
   if (!projection.projection) throw new Error('Cannot retain an action evidence reply without projection metadata')
   const { request } = readActionEvidenceRequest({ repoRoot: input.repoRoot, requestId: projection.projection.requestId })
-  if (!input.resolved) requireOpenActionEvidenceRequest(input.repoRoot, request)
+  const closure = actionEvidenceClosure(input.repoRoot, request.id)
+  if (closure && (!input.resolved || closure.status !== 'resolved')) {
+    throw new Error(`Action evidence request ${request.id} is ${closure.status}; late replies are rejected`)
+  }
   const directory = actionEvidenceDirectory(input.repoRoot, projection.projection.requestId)
   const projectionDigest = projection.id.match(/@([a-f0-9]{64})$/)?.[1] ?? sha256(JSON.stringify(projection))
   writeImmutableJson(join(directory, `reply-${projectionDigest}.json`), projection)

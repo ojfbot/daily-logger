@@ -4,9 +4,10 @@ import { join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 const { github } = vi.hoisted(() => ({ github: vi.fn() }))
 vi.mock('node:child_process', () => ({ execFileSync: github }))
-import { ActionRegistrySchema, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
+import { acceptedActionState, ActionRegistrySchema, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
 import { writeActionStore } from './action-store-fixture.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, actionEvidenceScope, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, selectActionEvidence } from '../action-evidence-selection.js'
+import { actionEvidenceCaseDigest } from '../action-evidence-retrieval.js'
 import { revisionActionCycle } from '../action-review-cycle.js'
 import { collectActionSources, reviewArticleActions, reviewDraftActions, type ActionVerification } from '../review-actions.js'
 
@@ -16,7 +17,7 @@ const markdown = `---\ndate: ${date}\nstatus: draft\n---\n## What shipped\n${Arr
 const roots: string[] = []
 afterEach(() => { roots.splice(0).forEach(root => rmSync(root, { recursive: true, force: true })); vi.restoreAllMocks(); github.mockReset() })
 
-function fixture(options: { markdown?: string; feedback?: string; acceptedPreview?: boolean; registry?: ActionRegistry; compact?: boolean } = {}) {
+function fixture(options: { markdown?: string; feedback?: string; acceptedPreview?: boolean; registry?: ActionRegistry; articleStatuses?: ReadonlyMap<string, string>; compact?: boolean } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'action-selection-')); roots.push(root)
   const ownerGate = 'OWNER GATE: human visual acceptance is required before merge.'
   const completion = 'OWNER DELIVERY: the human accepted the visual preview and verified every preview acceptance check.'
@@ -32,10 +33,92 @@ function fixture(options: { markdown?: string; feedback?: string; acceptedPrevie
     throw new Error(`Unexpected fake GitHub endpoint: ${endpoint}`)
   })
   vi.spyOn(console, 'warn').mockImplementation(() => {})
-  const sources = collectActionSources({ repoRoot: root, registry: options.registry ?? empty(), markdown: options.markdown ?? markdown, feedback: options.feedback ?? '' })
+  const sources = collectActionSources({ repoRoot: root, registry: options.registry ?? empty(), articleStatuses: options.articleStatuses, markdown: options.markdown ?? markdown, feedback: options.feedback ?? '' })
   return { root, sources, ownerGate, completion }
 }
 function input(sources: ActionSource[]) { return { registry: empty(), articleDate: date, cycle: revisionActionCycle('offline-source-selection-control'), articleStatuses: new Map([[date, 'draft']]), markdown, feedback: '', sources } }
+
+it('uses one authoritative article-status premise across state, digest, scope, collection, writing, and cache', async () => {
+  // Premise census: an action is accepted-terminal only when both the registry snapshot and
+  // the authoritative article status say that its matching decision round was accepted.
+  const priorDate = '2029-12-31'
+  const priorRound = 'd'.repeat(64)
+  const article = `---\ndate: ${date}\nstatus: draft\n---\n## What shipped\nA bounded status-authority census.\n`
+  const rows = [
+    { registryStatus: 'draft', authoritativeStatus: 'draft', expectedState: 'open' },
+    { registryStatus: 'accepted', authoritativeStatus: 'draft', expectedState: 'open' },
+    { registryStatus: 'draft', authoritativeStatus: 'accepted', expectedState: 'open' },
+    { registryStatus: 'accepted', authoritativeStatus: 'accepted', expectedState: 'dismissed' },
+  ] as const
+  const digests: string[] = []
+
+  for (const row of rows) {
+    github.mockClear()
+    const registry = empty()
+    registry.records.push({
+      key: 'act-owner',
+      original: { id: 'act-owner', command: '/review', description: 'Review daily-logger #386.', repo: 'daily-logger', status: 'open', sourceDate: priorDate },
+      origin: 'imported', workKey: 'daily-logger|386|review', state: 'dismissed', introducedBy: priorDate,
+      includeInIndex: true, inclusionOverride: null, goal: 'Keep the owner decision explicit.', doneWhen: 'The owner records a disposition.', gates: [],
+      history: [{ roundId: priorRound, articleDate: priorDate, state: 'dismissed', description: 'Dismiss act-owner.', reason: 'The owner closed the review.', citations: [], verifiedBy: 'fixture', verificationReason: 'Fixture decision.' }],
+    })
+    registry.articles.push({
+      date: priorDate, status: row.registryStatus, review: { state: 'verified' }, articleDigest: '1'.repeat(64), roundId: priorRound,
+      actionKeys: ['act-owner'], stateDigest: '2'.repeat(64),
+      verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'fixture', proposalSha256: '3'.repeat(64), verdicts: [] },
+      sources: [], rejected: [],
+    })
+    const articleStatuses = new Map([[priorDate, row.authoritativeStatus], [date, 'draft']])
+    const state = acceptedActionState(registry.records[0], articleStatuses, registry)
+    expect(state).toBe(row.expectedState)
+
+    const digest = actionEvidenceCaseDigest({ registry, articleStatuses, articleDate: date, cycle: revisionActionCycle('status-authority-census'), markdown: article, feedback: 'Review act-owner.', actionKeys: ['act-owner'] })
+    digests.push(digest)
+    const scope = actionEvidenceScope({ registry, articleStatuses, articleDate: date, markdown: article, feedback: 'Review act-owner.' })
+    const terminal = row.expectedState === 'dismissed'
+    expect(scope).toMatchObject(terminal
+      ? { reviewActionKeys: [], ambiguousTerminalActionKeys: ['act-owner'] }
+      : { reviewActionKeys: ['act-owner'], ambiguousTerminalActionKeys: [] })
+
+    const { sources } = fixture({ registry, articleStatuses, markdown: article, feedback: 'Review act-owner.', compact: true })
+    const issueCalls = github.mock.calls.filter(([, args]) => /\/issues\/386$/.test(args.at(-1) ?? ''))
+    expect(issueCalls).toHaveLength(terminal ? 0 : 1)
+    expect(sources.some(source => source.id.startsWith('github:daily-logger#386@'))).toBe(!terminal)
+
+    const propose = vi.fn(async () => {
+      const source = sources.find(candidate => candidate.id.startsWith('github:daily-logger#386@'))
+      if (!source) throw new Error('Missing current issue evidence')
+      const quote = source.content.split('\n')[0]
+      return { changes: [{ actionKey: 'act-owner', state: 'open' as const, description: 'Keep act-owner open for the current owner decision.', reason: 'Current issue evidence retains the owner gate.', citations: [{ sourceId: source.id, quote }] }], suggestions: [] }
+    })
+    const verify = vi.fn(async () => ({ changes: [{ actionKey: 'act-owner', verdict: 'pass' as const, reason: 'The exact current issue and owner gate were checked.' }], suggestions: [] }))
+    const reviewed = await reviewDraftActions({
+      registry, articleStatuses, articleDate: date, cycle: revisionActionCycle('status-authority-census'), markdown: article,
+      feedback: 'Review act-owner.', sources, agents: { identity: { proposer: 'matrix', verifier: 'matrix' }, propose, verify },
+    })
+    if (terminal) {
+      expect(reviewed.registry.articles.find(snapshot => snapshot.date === date)?.review.state).toBe('pending')
+      expect(propose).not.toHaveBeenCalled()
+      expect(verify).not.toHaveBeenCalled()
+    } else {
+      expect(reviewed.registry.articles.find(snapshot => snapshot.date === date)?.review.state).toBe('verified')
+      expect(propose).toHaveBeenCalledOnce()
+      expect(verify).toHaveBeenCalledOnce()
+      const retryPropose = vi.fn(async () => { throw new Error('A cache hit must not call the proposer') })
+      const retryVerify = vi.fn(async () => { throw new Error('A cache hit must not call the verifier') })
+      const retry = await reviewDraftActions({
+        registry: reviewed.registry, articleStatuses, articleDate: date, cycle: revisionActionCycle('status-authority-census'), markdown: reviewed.markdown,
+        feedback: 'Review act-owner.', sources, agents: { identity: { proposer: 'matrix', verifier: 'matrix' }, propose: retryPropose, verify: retryVerify },
+      })
+      expect(retry.cached).toBe(true)
+      expect(retryPropose).not.toHaveBeenCalled()
+      expect(retryVerify).not.toHaveBeenCalled()
+    }
+  }
+
+  expect(new Set(digests.slice(0, 3))).toHaveLength(1)
+  expect(digests[3]).not.toBe(digests[0])
+})
 
 it('revalidates a carried closing checkpoint even after authored next-step prose changes', () => {
   const registry = empty()

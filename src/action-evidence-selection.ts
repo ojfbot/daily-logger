@@ -101,7 +101,7 @@ export function actionRecordSourceReferences(record: ActionRegistry['records'][n
   }))].sort()
 }
 
-export function actionEvidenceScope(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string; draftContext?: DraftRecommendationContext; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[] }) {
+export function actionEvidenceScope(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string; articleStatuses?: ReadonlyMap<string, string>; draftContext?: DraftRecommendationContext; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[] }) {
   const snapshot = input.registry.articles.find(article => article.date === input.articleDate)
   const current = snapshot?.actionKeys
     ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
@@ -110,7 +110,7 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
   const maintenance = recommendationMaintenanceProjection(snapshot)
   const closing = maintenance ? JSON.stringify(maintenance) : snapshot?.closing?.kind === 'options' ? JSON.stringify(snapshot.closing.options) : ''
   const requested = [input.feedback, nextSection, closing].join('\n')
-  const statuses = new Map(input.registry.articles.map(article => [article.date, article.status]))
+  const statuses = input.articleStatuses ?? new Map(input.registry.articles.map(article => [article.date, article.status]))
   const terminal = (record: ActionRegistry['records'][number]) => ['done', 'dismissed', 'superseded'].includes(acceptedActionState(record, statuses, input.registry))
   const reassessActionKeys = [...new Set(input.reassessActionKeys ?? [])].sort()
   const preserveActionKeys = [...new Set(input.preserveActionKeys ?? [])].sort()
@@ -149,7 +149,7 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
 }
 
 /** Select complete sources, never first/last-N comments or inferred summaries. */
-export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; cycle?: ActionReviewCycle; markdown: string; feedback: string; sources: readonly ActionSource[]; draftContext?: DraftRecommendationContext; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; selectedEvidenceProjectionIds?: readonly string[] }) {
+export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; cycle?: ActionReviewCycle; markdown: string; feedback: string; sources: readonly ActionSource[]; articleStatuses?: ReadonlyMap<string, string>; draftContext?: DraftRecommendationContext; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; selectedEvidenceProjectionIds?: readonly string[] }) {
   const cycle: ActionReviewCycle = input.cycle ?? { phase: 'generation' }
   const scope = actionEvidenceScope(input)
   const sources = canonicalActionSources(input.sources)
@@ -235,9 +235,16 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
         const candidates = projections
           .filter(candidate => candidate.projection?.fullSourceId === source.id && candidate.projection.caseDigest === caseDigest)
           .map(projection => validateActionEvidenceProjection({ request, source, projection }))
+        const explicitlySelected = candidates.filter(candidate => input.selectedEvidenceProjectionIds?.includes(candidate.id))
+        if (explicitlySelected.length > 1) {
+          throw new Error(`Multiple bounded evidence replies were explicitly selected for ${source.id}; select exactly one reply; review pending`)
+        }
+        if (explicitlySelected[0]?.projection?.coverage.some(item => item.status === 'unknown')) {
+          const unknown = explicitlySelected[0].projection.coverage.filter(item => item.status === 'unknown').map(item => item.obligationId)
+          throw new ActionEvidenceRequestError(request, `Explicitly selected bounded evidence reply leaves ${unknown.length} obligation(s) unknown: ${unknown.join(', ')}; review pending`)
+        }
         const completeCandidates = candidates.filter(candidate => !candidate.projection?.coverage.some(item => item.status === 'unknown'))
-        const explicitlySelected = completeCandidates.filter(candidate => input.selectedEvidenceProjectionIds?.includes(candidate.id))
-        if (explicitlySelected.length > 1 || completeCandidates.length > 1 && explicitlySelected.length !== 1) {
+        if (completeCandidates.length > 1 && explicitlySelected.length !== 1) {
           throw new Error(`Multiple complete bounded evidence replies for ${source.id}; select exactly one reply explicitly; review pending`)
         }
         const projection = explicitlySelected[0] ?? completeCandidates[0]

@@ -112,6 +112,7 @@ type ActionHoldContext = {
   markdown: string
   feedback: string
   actionKeys: readonly string[]
+  articleStatuses: ReadonlyMap<string, string>
 }
 
 function actionHoldRequest(input: ActionHoldContext & {
@@ -191,7 +192,8 @@ When evidence is missing, contradictory, truncated or stale, hold the change or 
 export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } = {}): ActionAgents {
   const client = new Anthropic({ timeout: 120000, maxRetries: 0 })
   const configuredLimit = Number(process.env.ACTION_PROVIDER_TOKEN_LIMIT ?? '200000')
-  if (!Number.isSafeInteger(configuredLimit) || configuredLimit <= 12000) throw new Error('ACTION_PROVIDER_TOKEN_LIMIT must be an integer greater than the 12000-token output reserve')
+  const tokenLimit = options.tokenBudget?.limitTokens ?? configuredLimit
+  if (!Number.isSafeInteger(tokenLimit) || tokenLimit <= 12000) throw new Error(`${options.tokenBudget ? 'Action token budget limitTokens' : 'ACTION_PROVIDER_TOKEN_LIMIT'} must be an integer greater than the 12000-token output reserve`)
   async function call(role: 'proposer' | 'verifier', prompt: string, sources: ActionSource[]): Promise<unknown> {
     const schema = role === 'proposer' ? LineProposalSchema : ActionVerificationSchema
     // Strict tool decoding supports types but not these Zod value constraints.
@@ -207,7 +209,6 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
     }
     const requestBytes = Buffer.byteLength(JSON.stringify(request), 'utf8')
     if (requestBytes > 640 * 1024) throw new Error(`Complete action provider request exceeds 640 KiB (${requestBytes} bytes); review pending`)
-    const tokenLimit = options.tokenBudget?.limitTokens ?? configuredLimit
     const count = options.tokenBudget
       ? await options.tokenBudget.count(request)
       : await (async (): Promise<ActionTokenCount> => {
@@ -273,7 +274,7 @@ export function actionGithubReferences(input: { markdown: string; feedback: stri
   return actionGithubReferenceSelection(input).references
 }
 
-export function collectActionSources(input: { registry: ActionRegistry; repoRoot: string; markdown: string; feedback: string; context?: string; continuityTargets?: readonly string[]; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[] }): ActionSource[] {
+export function collectActionSources(input: { registry: ActionRegistry; articleStatuses?: ReadonlyMap<string, string>; repoRoot: string; markdown: string; feedback: string; context?: string; continuityTargets?: readonly string[]; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[] }): ActionSource[] {
   const articleDate = input.markdown.match(/^date:\s*["']?(\d{4}-\d{2}-\d{2})/m)?.[1]
   const priorContext = input.registry.articles.find(article => article.date === articleDate)?.draftContext
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), priorContext)
@@ -798,11 +799,11 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   const closingOptions = closing.kind === 'shortlist' ? closing.options : closing.recommendations
   const draftCandidateCitations = reviewedDraftCandidates?.flatMap(candidate => candidate.review.state === 'awaiting-review' ? [] : candidate.review.citations) ?? []
   const resolvedRequestIds = new Set((input.resolvedEvidenceRequests ?? []).filter(request => request.status === 'resolved').map(request => request.id))
-  const usedSources = new Set([...next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.map(citation => citation.sourceId))), ...draftCandidateCitations.map(citation => citation.sourceId), ...closingOptions.flatMap(option => [...option.factCitations, ...option.goalCitations].map(citation => citation.sourceId)), ...input.sources.filter(source => source.id.startsWith(`${COVERAGE_SOURCE}@`) || source.projection && resolvedRequestIds.has(source.projection.requestId)).map(source => source.id)])
+  const usedSources = new Set([...next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.map(citation => citation.sourceId))), ...draftCandidateCitations.map(citation => citation.sourceId), ...closingOptions.flatMap(option => [...option.factCitations, ...option.goalCitations].map(citation => citation.sourceId)), ...input.sources.filter(source => source.id.startsWith(`${COVERAGE_SOURCE}@`) || source.projection && resolvedRequestIds.has(source.projection.requestId) || source.response && resolvedRequestIds.has(source.response.requestId)).map(source => source.id)])
   const retainedSources = [...new Map([...(previous?.sources ?? []), ...input.sources.filter(source => usedSources.has(source.id))].map(source => [source.id, source])).values()].filter(source => usedSources.has(source.id)).map(source => {
     const quotes = [...new Set([...next.records.flatMap(record => record.history.filter(decision => decision.articleDate === input.articleDate).flatMap(decision => decision.citations.filter(citation => citation.sourceId === source.id).map(citation => citation.quote))), ...draftCandidateCitations.filter(citation => citation.sourceId === source.id).map(citation => citation.quote), ...closingOptions.flatMap(option => [...option.factCitations, ...option.goalCitations].filter(citation => citation.sourceId === source.id).map(citation => citation.quote))])]
     const trustedContent = source.kind === 'github' ? quotes.filter(quote => source.trustedContent?.some(text => text.includes(quote))) : undefined
-    return { id: source.id, kind: source.kind, locator: source.locator, content: source.id.startsWith(`${COVERAGE_SOURCE}@`) ? source.content : quotes.join('\n\n'), ...(trustedContent?.length ? { trustedContent } : {}), fullContentSha256: source.fullContentSha256 ?? sha256(source.content), ...(source.projection ? { projection: source.projection } : {}) }
+    return { id: source.id, kind: source.kind, locator: source.locator, content: source.id.startsWith(`${COVERAGE_SOURCE}@`) ? source.content : quotes.join('\n\n'), ...(trustedContent?.length ? { trustedContent } : {}), fullContentSha256: source.fullContentSha256 ?? sha256(source.content), ...(source.projection ? { projection: source.projection } : {}), ...(source.response ? { response: source.response } : {}) }
   })
   const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], ...(reviewedDraftCandidates === undefined ? {} : { draftCandidates: reviewedDraftCandidates }), draftContext: prepared.context, closing, stateDigest: actionStateDigest(next, [...keys], closing, prepared.context, { articleDate: input.articleDate, roundId: input.roundId, draftCandidates: reviewedDraftCandidates }), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256: sha256(JSON.stringify(proposal)), verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...verification.candidateDispositions.map(verdict => ({ item: `draft-candidate:${verdict.candidateId}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, evidenceRequests: input.resolvedEvidenceRequests ?? [], rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
   next.articles = [...next.articles.filter(article => article.date !== input.articleDate), snapshot]

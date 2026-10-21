@@ -269,6 +269,7 @@ Source Evidence Projecting requires an open Action Evidence Request. [src: src/a
 Source Evidence Selecting requires Action Evidence Projection. [src: src/action-evidence-selection.ts]
 Source Evidence Selecting requires current Private Local Complete Source Artifact identity. [src: src/review-actions.ts]
 Source Evidence Selecting requires explicit corrected Action Evidence Projection selection when multiple complete projections exist. [src: src/action-evidence-selection.ts]
+Source Evidence Selecting with an explicitly selected incomplete Action Evidence Projection yields Action Evidence Request. [src: src/action-evidence-selection.ts]
 Action Evidence Request Closing changes Action Evidence Request from open to resolved, cancelled, expired, superseded, or declined. [src: src/action-evidence-retrieval.ts]
 Action Evidence Request Closing yields Private Local Resolution Artifact. [src: src/action-evidence-retrieval.ts]
 Suggestion Proposing requires Selected Source Evidence. [src: src/review-actions.ts]
