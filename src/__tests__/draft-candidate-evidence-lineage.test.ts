@@ -19,6 +19,7 @@ import { actionEvidenceScope, deriveActionReviewOutput, draftCandidateEvidenceBi
 import { ActionEvidenceRequestError } from '../action-evidence-retrieval.js'
 import { ACTION_REVIEW_PROMPT_VERSION, revisionActionCycle } from '../action-review-cycle.js'
 import { pendingActionReview, reviewDraftActions, reviewProducedDraftActions } from '../review-actions.js'
+import { stampOutcome } from '../stamp-outcome.js'
 import { writeActionStore } from './action-store-fixture.js'
 
 const articleDate = '2030-01-01'
@@ -393,6 +394,101 @@ it('refreshes stored candidate evidence before a later production caller collect
   expect(collectSources).toHaveBeenCalledOnce()
   expect(propose).not.toHaveBeenCalled()
   expect(verify).not.toHaveBeenCalled()
+})
+
+it('refreshes the exact UI and workflow Draft-to-Accepted status transition before collection', () => {
+  const registry = preparedRegistry()
+  const previous = registry.articles[0]!.draftCandidateEvidence!
+  const nextCycle = revisionActionCycle('pull-request:413:clean-acceptance')
+  const acceptedMarkdown = stampOutcome(markdown.replace(/^status:\s*draft$/m, 'status: "accepted"'), 'accepted')
+  const acceptedStatuses = new Map(statuses).set(articleDate, 'accepted')
+
+  const refreshed = prepareConservativeDraftCandidateEvidence({
+    registry,
+    articleStatuses: acceptedStatuses,
+    articleDate,
+    cycle: nextCycle,
+    markdown: acceptedMarkdown,
+    feedback: '',
+    draftCandidates: registry.articles[0]!.draftCandidates!,
+  })
+
+  expect(refreshed).toMatchObject({
+    articleDigest: previous.articleDigest,
+    reviewCycle: nextCycle,
+    candidates: previous.candidates,
+    unassignedReferences: previous.unassignedReferences,
+    provenance: {
+      kind: 'derived-refresh',
+      lineage: {
+        kind: 'acceptance-status-refresh',
+        priorArticleStatus: 'draft',
+        articleStatus: 'accepted',
+        priorReviewCycle: cycle,
+      },
+    },
+  })
+  expect(refreshed.articleStatusesSha256).not.toBe(previous.articleStatusesSha256)
+})
+
+it.each([
+  ['prose', (fixture: { registry: ActionRegistry; markdown: string; feedback: string; articleStatuses: Map<string, string> }) => { fixture.markdown += '\nUnrelated editorial prose.\n' }],
+  ['feedback', (fixture: { registry: ActionRegistry; markdown: string; feedback: string; articleStatuses: Map<string, string> }) => { fixture.feedback = 'Unrelated owner instruction.' }],
+  ['canonical input', (fixture: { registry: ActionRegistry; markdown: string; feedback: string; articleStatuses: Map<string, string> }) => {
+    fixture.registry.records.push({
+      key: 'unrelated-core-700', original: { id: 'unrelated-core-700', command: '/review', description: 'Review core #700.', repo: 'core', status: 'open', sourceDate: '2029-12-31' },
+      origin: 'imported', workKey: normalizeWorkKey('core', '/review', 'Review core #700.'), state: 'open', introducedBy: '2029-12-31',
+      includeInIndex: true, inclusionOverride: null, goal: 'Review the separate target.', doneWhen: 'The separate review is recorded.', gates: [], history: [],
+    })
+  }],
+  ['other article status', (fixture: { registry: ActionRegistry; markdown: string; feedback: string; articleStatuses: Map<string, string> }) => { fixture.articleStatuses.set('2029-12-31', 'accepted') }],
+])('rejects an unrelated %s change during the acceptance-status refresh', (_name, mutate) => {
+  const registry = preparedRegistry()
+  const fixture = {
+    registry,
+    markdown: stampOutcome(markdown.replace(/^status:\s*draft$/m, 'status: "accepted"'), 'accepted'),
+    feedback: '',
+    articleStatuses: new Map(statuses).set(articleDate, 'accepted'),
+  }
+  mutate(fixture)
+
+  expect(() => prepareConservativeDraftCandidateEvidence({
+    ...fixture,
+    articleDate,
+    cycle: revisionActionCycle('pull-request:413:clean-acceptance'),
+    draftCandidates: registry.articles[0]!.draftCandidates!,
+  })).toThrow(/changed beyond.*fresh classification/i)
+})
+
+it('rejects a captured classification altered outside the saved snapshot integrity digest', () => {
+  const registry = preparedRegistry()
+  registry.articles[0]!.draftCandidateEvidence!.candidates[0]!.references[0]!.reason = 'Substituted classification rationale.'
+  const acceptedMarkdown = stampOutcome(markdown.replace(/^status:\s*draft$/m, 'status: "accepted"'), 'accepted')
+
+  expect(() => prepareConservativeDraftCandidateEvidence({
+    registry,
+    articleStatuses: new Map(statuses).set(articleDate, 'accepted'),
+    articleDate,
+    cycle: revisionActionCycle('pull-request:413:clean-acceptance'),
+    markdown: acceptedMarkdown,
+    feedback: '',
+    draftCandidates: registry.articles[0]!.draftCandidates!,
+  })).toThrow(/state is stale/i)
+})
+
+it('rejects an Accepted status that lacks the workflow-owned accepted outcome stamp', () => {
+  const registry = preparedRegistry()
+  const acceptedWithoutOutcome = markdown.replace(/^status:\s*draft$/m, 'status: "accepted"')
+
+  expect(() => prepareConservativeDraftCandidateEvidence({
+    registry,
+    articleStatuses: new Map(statuses).set(articleDate, 'accepted'),
+    articleDate,
+    cycle: revisionActionCycle('pull-request:413:clean-acceptance'),
+    markdown: acceptedWithoutOutcome,
+    feedback: '',
+    draftCandidates: registry.articles[0]!.draftCandidates!,
+  })).toThrow(/changed beyond.*fresh classification/i)
 })
 
 it('keeps changed prose pending before collection instead of refreshing the old classification', async () => {

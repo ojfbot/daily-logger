@@ -1,4 +1,4 @@
-import { ActionReviewOutputSchema, DraftCandidateEvidenceRequirementsSchema, acceptedActionState, actionStateDigest, managedArticleDigest, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionReviewOutput, type ActionSource, type DraftActionCandidate, type DraftCandidateEvidenceRequirements, type DraftRecommendationContext, type RankedClosingOption, type RecommendationMaintenanceDescriptor } from './action-registry.js'
+import { ActionReviewOutputSchema, DraftCandidateEvidenceRequirementsSchema, acceptedActionState, actionStateDigest, assertActionSnapshotStateIntegrity, managedArticleDigest, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionReviewOutput, type ActionSource, type DraftActionCandidate, type DraftCandidateEvidenceRequirements, type DraftRecommendationContext, type RankedClosingOption, type RecommendationMaintenanceDescriptor } from './action-registry.js'
 import type { ActionReviewCycle } from './action-review-cycle.js'
 import {
   ACTION_EVIDENCE_PER_SOURCE_LIMIT,
@@ -121,6 +121,16 @@ const REVIEWED_CANDIDATE_ALIASES = new Map<string, string>([
 
 function sortedStatuses(statuses: ReadonlyMap<string, string>) {
   return [...statuses].sort(([left], [right]) => left.localeCompare(right))
+}
+
+function restoreAcceptedArticleToDraft(markdown: string): string | undefined {
+  const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(markdown)
+  if (!frontmatter) return undefined
+  const statuses = [...frontmatter[1].matchAll(/^status:\s*["']?(draft|accepted|rejected)["']?\s*$/gm)]
+  const acceptedOutcomes = [...frontmatter[1].matchAll(/^outcome:\s*["']?accepted["']?\s*$/gm)]
+  if (statuses.length !== 1 || statuses[0]?.[1] !== 'accepted' || acceptedOutcomes.length !== 1) return undefined
+  const restoredFrontmatter = frontmatter[1].replace(/^status:\s*["']?accepted["']?\s*$/m, 'status: draft')
+  return markdown.replace(frontmatter[1], restoredFrontmatter)
 }
 
 function canonicalInputIndex(registry: ActionRegistry, statuses: ReadonlyMap<string, string>, output?: ActionReviewOutput) {
@@ -367,18 +377,63 @@ export function prepareConservativeDraftCandidateEvidence(input: CandidateEviden
     const parsed = DraftCandidateEvidenceRequirementsSchema.parse(previous)
     const priorComparable = { ...parsed, reviewCycle: binding.reviewCycle, provenance: undefined }
     const nextComparable = { ...parsed, ...binding, provenance: undefined }
-    if (JSON.stringify(priorComparable) !== JSON.stringify(nextComparable)) throw new Error('Structured draft candidate evidence changed beyond its review cycle; fresh classification required; review pending')
-    if (JSON.stringify(parsed.reviewCycle) === JSON.stringify(binding.reviewCycle)) return parsed
-    return DraftCandidateEvidenceRequirementsSchema.parse({
-      ...parsed,
-      ...binding,
-      provenance: {
-        kind: 'derived-refresh',
-        identity: parsed.provenance.identity,
-        decision: 'Cycle-only refresh preserves the prior evidence classification; it grants no new review authority.',
-        lineage: { kind: 'cycle-only-refresh', priorReviewCycle: parsed.reviewCycle, priorRequirementsSha256: sha256(JSON.stringify(parsed)) },
-      },
-    })
+    if (JSON.stringify(priorComparable) === JSON.stringify(nextComparable)) {
+      if (JSON.stringify(parsed.reviewCycle) === JSON.stringify(binding.reviewCycle)) return parsed
+      return DraftCandidateEvidenceRequirementsSchema.parse({
+        ...parsed,
+        ...binding,
+        provenance: {
+          kind: 'derived-refresh',
+          identity: parsed.provenance.identity,
+          decision: 'Cycle-only refresh preserves the prior evidence classification; it grants no new review authority.',
+          lineage: { kind: 'cycle-only-refresh', priorReviewCycle: parsed.reviewCycle, priorRequirementsSha256: sha256(JSON.stringify(parsed)) },
+        },
+      })
+    }
+    const snapshot = input.registry.articles.find(article => article.date === input.articleDate)
+    const draftMarkdown = restoreAcceptedArticleToDraft(input.markdown)
+    if (snapshot?.status === 'draft' && draftMarkdown && input.articleStatuses?.get(input.articleDate) === 'accepted') {
+      assertActionSnapshotStateIntegrity(input.registry, snapshot)
+      const exactSnapshotStateDigest = actionStateDigest(input.registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, {
+        articleDate: snapshot.date,
+        roundId: snapshot.roundId,
+        includePriorArticleRounds: snapshot.review.state === 'pending',
+        draftCandidates: snapshot.draftCandidates,
+        candidateReviewHistory: snapshot.candidateReviewHistory,
+        draftCandidateEvidence: snapshot.draftCandidateEvidence,
+        reviewOutput: snapshot.reviewOutput,
+      })
+      if (snapshot.stateDigest !== exactSnapshotStateDigest || snapshot.articleDigest !== parsed.articleDigest) throw new Error(`Action review state is stale for ${snapshot.date}; refresh before retrying`)
+      const priorStatuses = new Map(input.articleStatuses).set(input.articleDate, 'draft')
+      const priorBinding = draftCandidateEvidenceBinding({
+        ...input,
+        articleStatuses: priorStatuses,
+        cycle: parsed.reviewCycle,
+        markdown: draftMarkdown,
+        draftCandidateEvidence: parsed,
+      })
+      const capturedComparable = { ...parsed, provenance: undefined }
+      const restoredComparable = { ...parsed, ...priorBinding, provenance: undefined }
+      if (JSON.stringify(capturedComparable) === JSON.stringify(restoredComparable)) {
+        return DraftCandidateEvidenceRequirementsSchema.parse({
+          ...parsed,
+          ...binding,
+          provenance: {
+            kind: 'derived-refresh',
+            identity: parsed.provenance.identity,
+            decision: 'Acceptance-status refresh preserves the prior evidence classification after proving the exact Draft input view; it grants no new review authority.',
+            lineage: {
+              kind: 'acceptance-status-refresh',
+              priorArticleStatus: 'draft',
+              articleStatus: 'accepted',
+              priorReviewCycle: parsed.reviewCycle,
+              priorRequirementsSha256: sha256(JSON.stringify(parsed)),
+            },
+          },
+        })
+      }
+    }
+    throw new Error('Structured draft candidate evidence changed beyond its review cycle; fresh classification required; review pending')
   }
   const retainedRefs = prepared.context.kind === 'retained' ? actionSourceReferences(prepared.context.markdown) : new Set<string>()
   const assigned = new Set<string>()

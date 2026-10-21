@@ -125,11 +125,20 @@ export const DraftCandidateEvidenceRequirementsSchema = z.object({
     kind: z.enum(['coordinator', 'independent-reviewer', 'deterministic-default', 'derived-refresh']),
     identity: z.string().min(1).max(256),
     decision: z.string().min(1).max(512),
-    lineage: z.object({
-      kind: z.literal('cycle-only-refresh'),
-      priorReviewCycle: ActionReviewCycleSchema,
-      priorRequirementsSha256: digest,
-    }).strict().optional(),
+    lineage: z.discriminatedUnion('kind', [
+      z.object({
+        kind: z.literal('cycle-only-refresh'),
+        priorReviewCycle: ActionReviewCycleSchema,
+        priorRequirementsSha256: digest,
+      }).strict(),
+      z.object({
+        kind: z.literal('acceptance-status-refresh'),
+        priorArticleStatus: z.literal('draft'),
+        articleStatus: z.literal('accepted'),
+        priorReviewCycle: ActionReviewCycleSchema,
+        priorRequirementsSha256: digest,
+      }).strict(),
+    ]).optional(),
   }).strict(),
   articleDate: date,
   articleDigest: digest,
