@@ -200,7 +200,12 @@ const CandidateReviewHistorySchema = z.object({
     candidateId: digest,
     review: DraftActionCandidateReviewSchema.refine(review => review.state !== 'awaiting-review', 'Historical candidate transition must be reviewed'),
   }).strict()).min(1).max(5),
-  sources: z.array(z.object({ id: z.string().min(1), fullContentSha256: digest }).strict()),
+  sources: z.array(z.object({
+    id: z.string().min(1),
+    kind: z.enum(['repository', 'github', 'goal', 'instruction', 'report']),
+    locator: z.string().min(1),
+    fullContentSha256: digest,
+  }).strict()),
   evidenceRequests: z.array(ActionEvidenceRequestReceiptSchema),
 }).strict().superRefine((receipt, context) => {
   if (receipt.reviewOutput.roundId !== receipt.roundId
