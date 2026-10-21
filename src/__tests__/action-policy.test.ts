@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { ActionRegistrySchema, ArticleActionFileSchema, articleActionFileBytes, hydrateActionRegistry, projectRegistry, renderArticleActions, sha256, splitActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
 import { acceptanceActionCycle, generationActionCycle, revisionActionCycle, type ActionReviewCycle } from '../action-review-cycle.js'
 import { ActionProposalSchema, applyVerifiedActionReview, reviewArticleActions, reviewDraftActions, type ActionProposal, type ActionVerification } from '../review-actions.js'
+import { parseActionModelView } from '../action-model-view.js'
 
 const date = '2026-10-20'
 const markdown = `---\ndate: ${date}\nstatus: draft\n---\nA bounded article.\n`
@@ -111,7 +112,8 @@ describe('trusted generation and revision action budgets', () => {
     expect((await reviewArticleActions({ ...input, registry, markdown: first.markdown })).cached).toBe(false)
     const revised = await reviewArticleActions({ ...input, registry, cycle: revisionActionCycle('request-1'), markdown: first.markdown })
     expect(revised.cached).toBe(false)
-    expect(JSON.parse(agents.propose.mock.calls.at(-1)?.[0].split('\n')[0] ?? '{}').reviewCycle).toEqual(revisionActionCycle('request-1'))
+    const prompt = agents.propose.mock.calls.at(-1)?.[0] ?? ''
+    expect(parseActionModelView(prompt.slice(0, prompt.indexOf('\nReturn a change for every requiredActionKey.'))).reviewCycle).toEqual(revisionActionCycle('request-1'))
   })
   it('requires the phase protocol when loading an isolated v6 dated file', () => {
     const result = apply(seed(), generationActionCycle(), [candidate(0)])

@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ActionRegistrySchema, actionStateDigest, articleActionRecords, projectRegistry, readActionRegistry, registryBytes, registryRevision, renderArticleActions, renderArticleActionHtml, setActionInclusion, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
 import { ActionVerificationSchema, actionGithubReferences, applyVerifiedActionReview, reviewArticleActions, reviewDraftActions, renderGithubEvidence, resolveActionSourceLines, type ActionProposal, type ActionVerification } from '../review-actions.js'
+import { parseActionModelView, unpackActionIndexRows } from '../action-model-view.js'
 
 const articleDate = '2026-10-17'
 const articleStatuses = new Map([[articleDate, 'accepted']])
@@ -228,7 +229,11 @@ describe('canonical action review and publication', () => {
     registry.records[0].gates = ['Owner decides readiness.']
     const contexts: string[] = []
     await reviewArticleActions({ cycle: revisionActionCycle('fixture'), registry, articleDate: date, articleStatuses: new Map([[articleDate, 'accepted'], [date, 'draft']]), markdown: markdown.replace(articleDate, date).replace('"accepted"', '"draft"'), feedback: '', sources, agents: { propose: async context => { contexts.push(context); return { changes: [], suggestions: [] } }, verify: async context => { contexts.push(context); return { changes: [], suggestions: [] } } } })
-    for (const context of contexts) { const action = JSON.parse(context.split('\n')[0]).actions[0]; expect(action.description).toBe('Review with the documented owner and preview gates.'); expect(action.gates).toEqual(['Owner decides readiness.']) }
+    for (const context of contexts) {
+      const boundary = context.indexOf('\nReturn a change for every requiredActionKey.') >= 0 ? context.indexOf('\nReturn a change for every requiredActionKey.') : context.indexOf('\nPROPOSAL (claims to verify, not evidence):')
+      const action = unpackActionIndexRows(parseActionModelView(context.slice(0, boundary)).actions as never)[0]
+      expect(action.description).toBe('Review with the documented owner and preview gates.'); expect(action.gates).toEqual(['Owner decides readiness.'])
+    }
   })
 
   it('uses one result for retries without re-running agents or adding history', async () => {

@@ -22,7 +22,7 @@ import {
   type ActionSource,
 } from '../action-registry.js'
 import { draftCandidateEvidenceBinding } from '../action-evidence-selection.js'
-import { pendingActionReview, reviewArticleActions, reviewDraftActions } from '../review-actions.js'
+import { pendingActionReview, reviewArticleActions, reviewDraftActions, reviewProducedDraftActions } from '../review-actions.js'
 import { writeActionStore } from './action-store-fixture.js'
 
 const date = '2026-10-17'
@@ -103,6 +103,23 @@ function preparedCandidateReview(values: typeof candidates) {
 }
 
 describe('initial draft candidate custody', () => {
+  it('captures the original candidates and publishes pending when producer evidence preparation fails', async () => {
+    const propose = vi.fn(), verify = vi.fn(), collectSources = vi.fn()
+    const result = await reviewProducedDraftActions({
+      cycle: generationActionCycle(), registry: registry(), articleStatuses: statuses, articleDate: date, markdown, feedback: '', draftCandidates: candidates,
+      prepareEvidence: () => { throw new Error('Ambiguous candidate target #543; review pending') },
+      collectSources,
+      agents: { propose, verify },
+    })
+    expect(result.registry.articles[0]).toMatchObject({ review: { state: 'pending' } })
+    expect(result.registry.articles[0]).not.toHaveProperty('draftCandidateEvidence')
+    expect(result.registry.articles[0]?.draftCandidates?.map(candidate => candidate.payload)).toEqual(candidates)
+    expect(result.markdown).toContain('Action review pending')
+    expect(collectSources).not.toHaveBeenCalled()
+    expect(propose).not.toHaveBeenCalled()
+    expect(verify).not.toHaveBeenCalled()
+  })
+
   it('lets independent review account for a short genuine list without inventing filler', async () => {
     const captured = captureDraftActionCandidates(candidates.slice(0, 2))
     const prepared = preparedCandidateReview(candidates.slice(0, 2))
@@ -289,6 +306,9 @@ describe('initial draft candidate custody', () => {
     expect(result.markdown).toContain('How draft suggestions were handled')
     expect(result.markdown).toContain('Mapped to existing action')
     expect(renderArticleActions(result.markdown, result.registry, date, statuses)).toBe(result.markdown)
+    const tamperedAssociation = structuredClone(result.registry)
+    tamperedAssociation.articles[0]!.draftCandidateEvidence!.provenance.decision = 'Substituted after the verified verdict.'
+    expect(() => renderArticleActions(result.markdown, tamperedAssociation, date, statuses)).toThrow(/state is stale/i)
     const cached = await reviewArticleActions({ cycle: generationActionCycle(), registry: result.registry, articleStatuses: statuses, articleDate: date,
       markdown: result.markdown, feedback: '', sources, agents: { propose: async () => { throw new Error('cached retry called proposer') }, verify: async () => { throw new Error('cached retry called verifier') } } })
     expect(cached.cached).toBe(true)
