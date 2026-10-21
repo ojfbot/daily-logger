@@ -24,7 +24,9 @@ The workflow runs on a daily cron scheduled in America/Chicago and can also be t
 
 ## Run eligibility
 
-The run gate checks meaningful changes in the 24-hour activity window. In
+The run gate checks meaningful changes between consecutive 03:30 America/Chicago
+cutoffs, inclusive at the start and exclusive at the end. The interval lasts
+23 or 25 hours across DST transitions and 24 hours otherwise. In
 `daily-logger`, generated article and editorial commits plus PRs from dated
 `article/YYYY-MM-DD` and `accept/YYYY-MM-DD` branches do not qualify, regardless
 of author. The exclusion covers the full PR lifecycle. Unmerged generated cleaner

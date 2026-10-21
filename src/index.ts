@@ -3,7 +3,7 @@ import { generationActionCycle } from './action-review-cycle.js'
  * ojfbot daily-logger
  *
  * Four-phase pipeline:
- *   1. Collect  — 24 h of GitHub activity across all ojfbot repos
+ *   1. Collect  — one Chicago reporting interval of GitHub activity across all ojfbot repos
  *   2. Draft    — Claude generates an initial article
  *   3. Council  — each persona in personas/*.md critiques the draft independently
  *   4. Synthesize + Write — Claude incorporates the council feedback into a final article
@@ -15,7 +15,7 @@ import { generationActionCycle } from './action-review-cycle.js'
  *   ANTHROPIC_API_KEY    required
  *   GITHUB_TOKEN         required (set automatically in GitHub Actions)
  *   OJFBOT_ORG           default: "ojfbot"
- *   DATE_OVERRIDE        ISO date string, default: today UTC
+ *   DATE_OVERRIDE        ISO date string, default: today in America/Chicago
  *   DRY_RUN              "true" → print article, skip all writes
  *   SKIP_COUNCIL         "true" → skip council review (faster, lower quality)
  *   BLOGENGINE_API_URL   optional: POST to BlogEngine on completion
@@ -25,6 +25,7 @@ import { readFileSync, existsSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { acceptedClosingContinuityTargets, collectContext } from './collect-context.js'
+import { currentArticleDate } from './activity-window.js'
 import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses, renderArticleActionHtml } from './action-registry.js'
 import { collectActionSources, createActionAgents, mockActionAgents, reviewDraftActions } from './review-actions.js'
 import {
@@ -63,10 +64,6 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
 
-function todayUTC(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
 function packageVersion(): string | undefined {
   try {
     const manifest: unknown = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf-8'))
@@ -98,7 +95,7 @@ async function postToBlogEngine(markdown: string, apiUrl: string): Promise<void>
 }
 
 export async function main() {
-  const date = process.env.DATE_OVERRIDE?.trim().slice(0, 10) || todayUTC()
+  const date = process.env.DATE_OVERRIDE?.trim().slice(0, 10) || currentArticleDate()
   const isDryRun = process.env.DRY_RUN === 'true'
   const skipCouncil = process.env.SKIP_COUNCIL === 'true'
   const blogEngineUrl = process.env.BLOGENGINE_API_URL

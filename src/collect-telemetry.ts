@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
+import { occurredInWindow, type ActivityWindow } from './activity-window.js'
 
 /**
  * Which stream produced the skill-invocation counts:
@@ -101,8 +102,8 @@ function readJsonl<T>(path: string): T[] {
   }
 }
 
-function filterBySince<T extends { ts: string }>(entries: T[], since: string): T[] {
-  return entries.filter((e) => e.ts >= since)
+function filterByWindow<T extends { ts: string }>(entries: T[], window: ActivityWindow): T[] {
+  return entries.filter((e) => occurredInWindow(e.ts, window))
 }
 
 /**
@@ -112,7 +113,7 @@ function filterBySince<T extends { ts: string }>(entries: T[], since: string): T
  * Returns null if no telemetry files exist — callers should treat null as
  * "telemetry unavailable" and skip gracefully.
  */
-export function collectTelemetry(since: string): TelemetrySummary | null {
+export function collectTelemetry(window: ActivityWindow): TelemetrySummary | null {
   const telemetryDir = process.env.TELEMETRY_DIR || join(homedir(), '.claude')
 
   const toolPath = join(telemetryDir, 'tool-telemetry.jsonl')
@@ -129,15 +130,15 @@ export function collectTelemetry(since: string): TelemetrySummary | null {
     process.env.SKILL_DISPOSITIONS_PATH ||
     join(homedir(), 'selfco', 'tracking', 'skill-dispositions.jsonl')
 
-  const toolEntries = filterBySince(readJsonl<ToolEntry>(toolPath), since)
-  const sessionEntries = filterBySince(readJsonl<SessionEntry>(sessionPath), since)
-  const skillEntries = filterBySince(readJsonl<SkillEntry>(skillPath), since)
-  const suggestionEntries = filterBySince(readJsonl<SuggestionEntry>(suggestionPath), since)
+  const toolEntries = filterByWindow(readJsonl<ToolEntry>(toolPath), window)
+  const sessionEntries = filterByWindow(readJsonl<SessionEntry>(sessionPath), window)
+  const skillEntries = filterByWindow(readJsonl<SkillEntry>(skillPath), window)
+  const suggestionEntries = filterByWindow(readJsonl<SuggestionEntry>(suggestionPath), window)
 
   const allDispositionEntries = readJsonl<DispositionEntry>(dispositionsPath)
   // A skill was USED when its disposition record has engaged:true — raw
   // disposition events without engaged are not user-facing invocations.
-  const dispositionInvocations = filterBySince(allDispositionEntries, since).filter(
+  const dispositionInvocations = filterByWindow(allDispositionEntries, window).filter(
     (e) => e.event === 'skill:disposition' && e.engaged === true,
   )
 

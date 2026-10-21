@@ -133,7 +133,7 @@ describe('collectContext — merged PR outcomes reach the drafter', () => {
     expect(ctx.recentPRs.find((candidate) => candidate.number === 509)?.body).toBe(body)
     const prompt = buildUserPrompt(ctx)
     const mergedWeek = prompt.split('## PRs merged in last 7 days')[1].split('## Open PRs')[0]
-    const mergedDay = prompt.split('### MERGED IN LAST 24H')[1].split('### OPEN')[0]
+    const mergedDay = prompt.split('### MERGED IN REPORTING WINDOW')[1].split('### OTHER PR ACTIVITY')[0]
     for (const section of [mergedWeek, buildReportUserPrompt(ctx)]) {
       expect(section).toContain('All 24 public defaults verified.')
       expect(section).toContain('27 active private repositories remain pending: current GitHub plan rejects private rulesets.')
@@ -229,7 +229,7 @@ describe('collectContext — merged PR outcomes reach the drafter', () => {
     expect(ctx.recentPRs).toHaveLength(30)
     for (const buildPrompt of [buildUserPrompt, buildReportUserPrompt]) {
       const prompt = buildPrompt(ctx)
-      const mergedSections = prompt.split(/(?=^#{2,3} )/m).filter((section) => /^## PRs merged|^### MERGED IN LAST 24H/.test(section)).join('\n')
+      const mergedSections = prompt.split(/(?=^#{2,3} )/m).filter((section) => /^## PRs merged|^### MERGED IN REPORTING WINDOW/.test(section)).join('\n')
       const quotes = mergedSections.split('\n').filter((line) => line.startsWith('  > ')).join('\n')
       expect(quotes.length).toBeLessThanOrEqual(24000)
       expect(MERGED_PR_EVIDENCE_CHARS).toBe(24000)

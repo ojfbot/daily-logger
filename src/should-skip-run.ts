@@ -1,15 +1,9 @@
 import type { BlogContext, CommitInfo, RecentPRInfo } from './types.js'
-import { activityWindow } from './activity-window.js'
+import { activityWindow, occurredInWindow } from './activity-window.js'
 
 const ARTICLE_EDITORIAL_COMMIT = /^(?:blog: \d{4}-\d{2}-\d{2}|editorial: (?:accept \d{4}-\d{2}-\d{2} draft|revise \d{4}-\d{2}-\d{2} per feedback|stamp outcome accepted))(?: \[skip ci\])?(?: \(#\d+\))?$/
 const ARTICLE_EDITORIAL_MERGE = /^Merge pull request #\d+ from [^/]+\/(?:article|accept)\/\d{4}-\d{2}-\d{2}$/
 type ActivityWindow = ReturnType<typeof activityWindow>
-
-function occurredInWindow(timestamp: string | undefined, window: ActivityWindow): boolean {
-  if (!timestamp) return false
-  const time = Date.parse(timestamp)
-  return Number.isFinite(time) && time >= window.start && time < window.end
-}
 
 function isArticleEditorialCommit(commit: CommitInfo): boolean {
   return commit.repo === 'daily-logger' &&
@@ -67,13 +61,13 @@ export function shouldSkipRun(ctx: BlogContext): SkipDecision {
 
   const observedItems = ctx.commits.length + ctx.recentPRs.length
   if (observedItems === 0) {
-    return { skip: true, reason: 'no activity in 24h window' }
+    return { skip: true, reason: 'no activity in reporting window' }
   }
 
   return {
     skip: true,
     reason:
-      `no meaningful activity in 24h window ` +
+      `no meaningful activity in reporting window ` +
       `(${ctx.commits.length} commit(s), ${ctx.recentPRs.length} PR(s) observed)`,
   }
 }

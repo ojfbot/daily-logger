@@ -259,3 +259,14 @@ Source Evidence Selecting yields Selected Source Evidence. [src: src/action-evid
 Source Evidence Selecting yields Evidence Coverage. [src: src/action-evidence-selection.ts]
 Suggestion Proposing requires Selected Source Evidence. [src: src/review-actions.ts]
 Suggestion Verifying requires Selected Source Evidence. [src: src/review-actions.ts]
+
+## SD1.3 — Reporting interval and fallback start checking
+
+Activity Window Resolving requires Article Date. [src: src/activity-window.ts]
+Activity Window Resolving yields Activity Window. [src: src/activity-window.ts]
+Context Collecting requires Activity Window. [src: src/collect-context.ts]
+Context Collecting invokes Activity Window Resolving. [src: src/collect-context.ts]
+Start Target Waiting requires Clock. [src: .github/scripts/daily_blog_schedule.py]
+Start Target Waiting yields Due Start Target. [src: .github/scripts/daily_blog_schedule.py]
+Fallback Checking invokes Start Target Waiting. [src: .github/scripts/daily_blog_schedule.py]
+Fallback Dispatching requires Due Start Target. [src: .github/scripts/daily_blog_schedule.py]

@@ -7,7 +7,7 @@ import type { AcceptedClosingContinuity, ADRRegistryEntry, BlogContext, CommitIn
 import { collectTelemetry } from './collect-telemetry.js'
 import { discoverRepos, reportSurfaceDrift } from './fleet.js'
 import { SYSTEM_PROMPT } from './generate-article.js'
-import { activityWindow } from './activity-window.js'
+import { activityWindow, occurredInWindow, type ActivityWindow } from './activity-window.js'
 import { boundedMergedPRBody, RECENT_PR_PREVIEW_CHARS } from './pr-body.js'
 import { type CanonicalAction } from './action-model.js'
 import { managedArticleDigest, readRegistryProjection } from './action-registry.js'
@@ -126,17 +126,17 @@ export function parseCommitTrailers(message: string): Pick<CommitInfo, 'sessionU
   }
 }
 
-function getCommits(org: string, repo: string, since: string): CommitInfo[] {
+function getCommits(org: string, repo: string, window: ActivityWindow): CommitInfo[] {
   type GHCommit = {
     sha: string
     commit: { message: string; author: { name: string; date: string }; committer?: { date: string } }
     html_url: string
   }
   const data = ghApi<GHCommit[]>(
-    `repos/${org}/${repo}/commits?since=${encodeURIComponent(since)}&per_page=100`
+    `repos/${org}/${repo}/commits?since=${encodeURIComponent(new Date(window.start).toISOString())}&until=${encodeURIComponent(new Date(window.end).toISOString())}&per_page=100`
   )
   if (!data) return []
-  return data.map((c) => ({
+  return data.filter((c) => occurredInWindow(c.commit.author.date, window)).map((c) => ({
     hash: c.sha.slice(0, 7),
     fullHash: c.sha,
     authoredAt: c.commit.author.date,
@@ -155,7 +155,7 @@ function getCommits(org: string, repo: string, since: string): CommitInfo[] {
   }))
 }
 
-function getMergedPRs(org: string, repo: string, since: string): PRInfo[] {
+function getMergedPRs(org: string, repo: string, window: ActivityWindow): PRInfo[] {
   type GHPR = {
     number: number
     title: string
@@ -171,7 +171,7 @@ function getMergedPRs(org: string, repo: string, since: string): PRInfo[] {
   )
   if (!data) return []
   return data
-    .filter((pr): pr is GHPR & { merged_at: string } => !!pr.merged_at && pr.merged_at >= since)
+    .filter((pr): pr is GHPR & { merged_at: string } => pr.merged_at !== null && occurredInWindow(pr.merged_at, window))
     .map((pr) => ({
       number: pr.number,
       title: pr.title,
@@ -185,7 +185,7 @@ function getMergedPRs(org: string, repo: string, since: string): PRInfo[] {
     }))
 }
 
-function getClosedIssues(org: string, repo: string, since: string, since24h: string): IssueInfo[] {
+function getClosedIssues(org: string, repo: string, window: ActivityWindow, reportingWindow: ActivityWindow): IssueInfo[] {
   type GHIssue = {
     number: number
     title: string
@@ -202,23 +202,23 @@ function getClosedIssues(org: string, repo: string, since: string, since24h: str
   )
   if (!data) return []
   return data
-    .filter((i) => !i.pull_request && !!i.closed_at && i.closed_at >= since)
+    .filter((i): i is GHIssue & { closed_at: string } => !i.pull_request && i.closed_at !== null && occurredInWindow(i.closed_at, window))
     .map((i) => ({
       number: i.number,
       title: i.title,
       state: 'closed' as const,
       labels: i.labels.map((l) => l.name),
       createdAt: i.created_at,
-      createdInWindow: i.created_at >= since24h,
+      createdInWindow: occurredInWindow(i.created_at, reportingWindow),
       updatedAt: i.updated_at,
-      closedAt: i.closed_at!,
+      closedAt: i.closed_at,
       url: i.html_url,
       repo,
       body: i.body ? i.body.slice(0, 300) : undefined,
     }))
 }
 
-function getOpenIssues(org: string, repo: string, since24h: string): IssueInfo[] {
+function getOpenIssues(org: string, repo: string, window: ActivityWindow): IssueInfo[] {
   type GHIssue = {
     number: number
     title: string
@@ -238,9 +238,9 @@ function getOpenIssues(org: string, repo: string, since24h: string): IssueInfo[]
   return data
     .filter((i) => !i.pull_request)
     .map((i) => {
-      // Active = created OR updated in the last 24h (catches both new issues
-      // and existing issues that received comments, labels, or edits today).
-      const isNew = i.created_at >= since24h || i.updated_at >= since24h
+      // The issue remains current queue context. Only these bounded events
+      // qualify it as active in this article's reporting period.
+      const isNew = occurredInWindow(i.created_at, window) || occurredInWindow(i.updated_at, window)
       return {
         number: i.number,
         title: i.title,
@@ -253,7 +253,7 @@ function getOpenIssues(org: string, repo: string, since24h: string): IssueInfo[]
         // Active issues get full body up to 800 chars — stale ones stay at 200.
         body: i.body ? i.body.slice(0, isNew ? 800 : 200) : undefined,
         isNew,
-        createdInWindow: i.created_at >= since24h,
+        createdInWindow: occurredInWindow(i.created_at, window),
       }
     })
     // Active issues first so they're never bumped off by the global cap
@@ -284,7 +284,7 @@ function getOpenPRs(org: string, repo: string): OpenPRInfo[] {
   }))
 }
 
-function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo[] {
+function getRecentPRs(org: string, repo: string, window: ActivityWindow): RecentPRInfo[] {
   type GHPullState = { merged?: boolean }
   type GHCommit = {
     commit?: {
@@ -312,12 +312,12 @@ function getRecentPRs(org: string, repo: string, since24h: string): RecentPRInfo
   )
   if (!data) return []
   return data
-    .filter((pr) => pr.created_at >= since24h || pr.updated_at >= since24h || (pr.merged_at && pr.merged_at >= since24h))
+    .filter((pr) => [pr.created_at, pr.updated_at, pr.closed_at, pr.merged_at].some((timestamp) => occurredInWindow(timestamp, window)))
     .map((pr) => {
       const lifecycleChanged =
-        pr.created_at >= since24h ||
-        (pr.closed_at !== null && pr.closed_at >= since24h) ||
-        (pr.merged_at !== null && pr.merged_at >= since24h)
+        occurredInWindow(pr.created_at, window) ||
+        occurredInWindow(pr.closed_at, window) ||
+        occurredInWindow(pr.merged_at, window)
       let headCommitAt: string | undefined
       const currentState = pr.state === 'closed' && pr.merged_at === null
         ? ghApi<GHPullState>(`repos/${org}/${repo}/pulls/${pr.number}`)?.merged
@@ -414,12 +414,12 @@ export function acceptedClosingContinuity(input: { date: string; content: string
   return Buffer.byteLength(JSON.stringify(projection), 'utf8') <= CLOSING_CONTINUITY_MAX_BYTES ? projection : unavailable('oversize')
 }
 
-export function getPreviousArticles(repoRoot = REPO_ROOT): PreviousArticleContext[] {
+export function getPreviousArticles(repoRoot = REPO_ROOT, beforeDate?: string): PreviousArticleContext[] {
   const articlesDirectory = join(repoRoot, '_articles')
   if (!existsSync(articlesDirectory)) return []
   try {
     return readdirSync(articlesDirectory)
-      .filter((f) => f.endsWith('.md') && f !== '.gitkeep')
+      .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f) && (!beforeDate || f.slice(0, 10) < beforeDate))
       .sort()
       .reverse()
       .slice(0, 5)
@@ -474,13 +474,15 @@ function getOpenActions(): CanonicalAction[] {
 const SKILL_COMMENT_MARKER = '<!-- skill-usage-report -->'
 const SKILL_UPDATE_MARKER = '<!-- skill-usage-update'
 
-function getSkillUsageFromPRComments(org: string, repo: string, prNumber: number): PRSkillUsage | undefined {
-  type GHComment = { body: string }
+function getSkillUsageFromPRComments(org: string, repo: string, prNumber: number, window: ActivityWindow): PRSkillUsage | undefined {
+  type GHComment = { body: string; created_at: string; updated_at: string }
   const comments = ghApi<GHComment[]>(`repos/${org}/${repo}/issues/${prNumber}/comments?per_page=100`)
   if (!comments) return undefined
 
   const skillComments = comments.filter(
-    (c) => c.body.includes(SKILL_COMMENT_MARKER) || c.body.includes(SKILL_UPDATE_MARKER)
+    // A later edit replaces the body. Without comment-version history it
+    // cannot establish what a report said during the closed interval.
+    (c) => occurredInWindow(c.updated_at, window) && (c.body.includes(SKILL_COMMENT_MARKER) || c.body.includes(SKILL_UPDATE_MARKER))
   )
   if (skillComments.length === 0) return undefined
 
@@ -524,6 +526,9 @@ function getSkillUsageFromPRComments(org: string, repo: string, prNumber: number
 
 export async function collectContext(date: string): Promise<BlogContext> {
   const org = process.env.OJFBOT_ORG ?? 'ojfbot'
+  const window = activityWindow(date)
+  if (window.end > Date.now()) throw new Error('Reporting interval has not closed at 03:30 America/Chicago; no collection')
+  const week = activityWindow(date, 7)
 
   // Auth preflight: an expired/invalid token makes every ghApi call fail
   // "skipped", the sweep comes back empty, and shouldSkipRun retires the day
@@ -544,13 +549,8 @@ export async function collectContext(date: string): Promise<BlogContext> {
     )
   }
 
-  // Anchor sweep windows to the article date at 09:00 UTC (cron fire time)
-  // rather than Date.now(). This gives stable, predictable windows for both
-  // cron runs and DATE_OVERRIDE re-generations, and makes tests deterministic
-  // (fixture dates don't expire as calendar time advances).
-  const window = activityWindow(date)
-  const since24h = new Date(window.start).toISOString()
-  const since7d = new Date(window.end - 7 * 24 * 60 * 60 * 1000).toISOString()
+  // Calendar cutoffs stay at 03:30 Chicago even across 23/25-hour DST days.
+  // Current queue metadata is separate from the bounded event evidence.
 
   const allCommits: CommitInfo[] = []
   const allPRs: PRInfo[] = []
@@ -570,17 +570,17 @@ export async function collectContext(date: string): Promise<BlogContext> {
 
   for (const repo of repos) {
     console.log(`  ${repo}...`)
-    allCommits.push(...getCommits(org, repo, since24h))
-    allPRs.push(...getMergedPRs(org, repo, since7d))
+    allCommits.push(...getCommits(org, repo, window))
+    allPRs.push(...getMergedPRs(org, repo, week))
     allOpenPRs.push(...getOpenPRs(org, repo))
-    const recentPRs = getRecentPRs(org, repo, since24h)
+    const recentPRs = getRecentPRs(org, repo, window)
     // Scrape skill usage comments from recent PRs
     for (const pr of recentPRs) {
-      pr.skillUsage = getSkillUsageFromPRComments(org, repo, pr.number)
+      pr.skillUsage = getSkillUsageFromPRComments(org, repo, pr.number, window)
     }
     allRecentPRs.push(...recentPRs)
-    allClosed.push(...getClosedIssues(org, repo, since7d, since24h))
-    allOpen.push(...getOpenIssues(org, repo, since24h))
+    allClosed.push(...getClosedIssues(org, repo, week, window))
+    allOpen.push(...getOpenIssues(org, repo, window))
     allADRs.push(...getADRRegistry(org, repo))
   }
 
@@ -601,7 +601,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
   const openActions = getOpenActions()
 
   // ── Claude Code telemetry (optional) ──────────────────────────────────────
-  const telemetry = collectTelemetry(since24h)
+  const telemetry = collectTelemetry(window)
   if (telemetry) {
     console.log(
       `  → telemetry: ${telemetry.totalToolCalls} tool calls · ` +
@@ -620,7 +620,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
     openIssues: sortedOpen,
     openActions,
     projectVision: getProjectVision(),
-    previousArticles: getPreviousArticles(),
+    previousArticles: getPreviousArticles(REPO_ROOT, date),
     telemetry,
     adrRegistry: allADRs.sort((a, b) =>
       a.repo === b.repo ? a.number - b.number : a.repo.localeCompare(b.repo)
@@ -629,7 +629,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
 
   console.log(
     `  → ${ctx.commits.length} commits · ${ctx.mergedPRs.length} merged PRs · ` +
-      `${ctx.openPRs.length} open PRs · ${ctx.recentPRs.length} recent PRs (24h) · ` +
+      `${ctx.openPRs.length} current open PRs · ${ctx.recentPRs.length} reporting-window PR snapshots · ` +
       `${ctx.closedIssues.length} closed issues · ${ctx.openIssues.length} open issues · ` +
       `${(ctx.adrRegistry ?? []).length} ADRs`
   )
