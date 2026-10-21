@@ -368,7 +368,7 @@ describe('verified article closing options', () => {
     expect(renderArticleActions(markdown, result, articleDate, statuses)).toContain('Validate the newly admitted evidence action')
   })
 
-  it('invalidates the review cache when a stored closing handoff is tampered', async () => {
+  it('rejects a tampered stored closing handoff before reviewers can bless it', async () => {
     const cacheIssue = { ...sources[0], id: `github:daily-logger#900@${sha256(sources[0].content)}`, fullContentSha256: sha256(sources[0].content) }
     const cacheSources = [cacheIssue, sources[1]]
     const option = closingOption(); option.factCitations = option.factCitations.map(citation => ({ ...citation, sourceId: cacheIssue.id }))
@@ -383,11 +383,9 @@ describe('verified article closing options', () => {
     stored.recommendations[0].context = 'Unreviewed replacement context.'
     calls = 0
 
-    const repaired = await reviewArticleActions({ registry: tampered, cycle: revisionActionCycle('cache-tamper-fixture'), articleDate, articleStatuses: statuses, markdown: first.markdown, feedback: target, sources: cacheSources, agents })
-
-    expect(repaired.cached).toBe(false)
-    expect(calls).toBe(2)
-    expect(repaired.registry.articles[0].closing).toMatchObject({ kind: 'needs-evidence', recommendations: [{ context: closingOption().context }] })
+    await expect(reviewArticleActions({ registry: tampered, cycle: revisionActionCycle('cache-tamper-fixture'), articleDate, articleStatuses: statuses, markdown: first.markdown, feedback: target, sources: cacheSources, agents }))
+      .rejects.toThrow(/action review state is stale/i)
+    expect(calls).toBe(0)
   })
 
   it('does not reuse a digest-valid v8 cache that stored a raw checkpoint beside its same-round identity', async () => {

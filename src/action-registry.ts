@@ -31,8 +31,8 @@ export function actionStateDigest(registry: ActionRegistry, keys: readonly strin
   return sha256(JSON.stringify(closing === undefined ? records : { records, closing }))
 }
 
-export function assertCandidateReviewHistoryIntegrity(registry: ActionRegistry, snapshot: ActionRegistry['articles'][number]): void {
-  if (snapshot.candidateReviewHistory === undefined && snapshot.draftCandidateEvidence === undefined && snapshot.reviewOutput === undefined) return
+export function assertActionSnapshotStateIntegrity(registry: ActionRegistry, snapshot: ActionRegistry['articles'][number]): void {
+  if (!new Set<string>(CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS).has(snapshot.verification.promptVersion)) return
   const expected = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, {
     articleDate: snapshot.date,
     roundId: snapshot.roundId,
@@ -42,7 +42,10 @@ export function assertCandidateReviewHistoryIntegrity(registry: ActionRegistry, 
     draftCandidateEvidence: snapshot.draftCandidateEvidence,
     reviewOutput: snapshot.reviewOutput,
   })
-  if (snapshot.stateDigest !== expected) throw new Error(`Historical candidate review archive is stale for ${snapshot.date}; refresh before retrying`)
+  const legacyPending = snapshot.review.state === 'pending' && snapshot.closing === undefined
+    ? actionStateDigest(registry, snapshot.actionKeys, undefined, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId })
+    : undefined
+  if (snapshot.stateDigest !== expected && snapshot.stateDigest !== legacyPending) throw new Error(`Action review state is stale for ${snapshot.date}; refresh before retrying`)
 }
 export function actionKey(action: CanonicalAction): string { return action.id ?? `legacy-${sha256(legacyActionKey(action))}` }
 export function normalizeWorkKey(repo: string, target: string, outcome: string): string { return [repo, target, outcome].map(value => value.toLowerCase().replace(/\s+/g, ' ').trim()).join('|') }
@@ -76,8 +79,8 @@ export function writeActionRegistry(repoRoot: string, registry: ActionRegistry, 
     if (before.articles.some(snapshot => !registry.articles.some(next => next.date === snapshot.date))) throw new Error('An article review cannot delete another article snapshot')
     for (const prior of before.articles) {
       const next = registry.articles.find(snapshot => snapshot.date === prior.date)!
-      assertCandidateReviewHistoryIntegrity(before, prior)
-      assertCandidateReviewHistoryIntegrity(registry, next)
+      assertActionSnapshotStateIntegrity(before, prior)
+      assertActionSnapshotStateIntegrity(registry, next)
       const priorHistory = prior.candidateReviewHistory ?? []
       const nextHistory = next.candidateReviewHistory ?? []
       if (nextHistory.length < priorHistory.length
@@ -245,16 +248,12 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
     if (!Object.hasOwn(registry.baseline.articleActions, articleDate)) throw new Error(`Action review is missing for ${articleDate}; reconcile before publishing`)
     return markdown
   }
+  assertActionSnapshotStateIntegrity(registry, snapshot)
   const sourceBoundContext = new Set<string>(CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS).has(snapshot.verification.promptVersion)
   if (sourceBoundContext) {
     const prepared = extractDraftRecommendationContext(stripManagedActions(markdown), snapshot.draftContext)
     if (JSON.stringify(prepared.context) !== JSON.stringify(snapshot.draftContext)) throw new Error(`Action review draft context is stale for ${articleDate}; reconcile before publishing`)
     markdown = prepared.markdown
-    const currentStateDigest = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId, includePriorArticleRounds: snapshot.review.state === 'pending', draftCandidates: snapshot.draftCandidates, candidateReviewHistory: snapshot.candidateReviewHistory, draftCandidateEvidence: snapshot.draftCandidateEvidence, reviewOutput: snapshot.reviewOutput })
-    const legacyPendingStateDigest = snapshot.review.state === 'pending' && snapshot.closing === undefined
-      ? actionStateDigest(registry, snapshot.actionKeys, undefined, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId })
-      : undefined
-    if (snapshot.stateDigest !== currentStateDigest && snapshot.stateDigest !== legacyPendingStateDigest) throw new Error(`Action review state is stale for ${articleDate}; reconcile before publishing`)
   }
   if (managedArticleDigest(markdown) !== snapshot.articleDigest) throw new Error(`Action review is stale for ${articleDate}; reconcile before publishing`)
   if (snapshot.status !== statuses.get(articleDate)) throw new Error(`Action review status is stale for ${articleDate}; reconcile before publishing`)
