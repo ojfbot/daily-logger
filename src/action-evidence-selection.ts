@@ -126,9 +126,11 @@ function sortedStatuses(statuses: ReadonlyMap<string, string>) {
 function restoreAcceptedArticleToDraft(markdown: string): string | undefined {
   const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(markdown)
   if (!frontmatter) return undefined
-  const statuses = [...frontmatter[1].matchAll(/^status:\s*["']?(draft|accepted|rejected)["']?\s*$/gm)]
-  const acceptedOutcomes = [...frontmatter[1].matchAll(/^outcome:\s*["']?accepted["']?\s*$/gm)]
-  if (statuses.length !== 1 || statuses[0]?.[1] !== 'accepted' || acceptedOutcomes.length !== 1) return undefined
+  const statusLines = [...frontmatter[1].matchAll(/^status:.*$/gm)].map(match => match[0])
+  const outcomeLines = [...frontmatter[1].matchAll(/^outcome:.*$/gm)].map(match => match[0])
+  if (statusLines.length !== 1 || outcomeLines.length !== 1
+    || !/^status:\s*(?:accepted|"accepted"|'accepted')\s*$/.test(statusLines[0]!)
+    || !/^outcome:\s*(?:accepted|"accepted"|'accepted')\s*$/.test(outcomeLines[0]!)) return undefined
   const restoredFrontmatter = frontmatter[1].replace(/^status:\s*["']?accepted["']?\s*$/m, 'status: draft')
   return markdown.replace(frontmatter[1], restoredFrontmatter)
 }
