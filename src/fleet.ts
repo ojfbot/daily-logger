@@ -74,7 +74,7 @@ export const REPO_NOTES: Record<string, string> = {
   'lego-village-pipeline': 'play-well cluster — digital twin + build harness for the family LEGO Christmas village (correspondence register, design packages, DT-DESIGN cuts)',
   'play-well-library': 'play-well cluster — canonical LEGO village content library (branch flow play/<user> → staging → main)',
   'foundry-recipes': 'Blender tutorial extraction pipeline — sped-up reels become structured BlenderRecipe records in Notion, read on demand by asset-foundry',
-  'classic-space-venue': 'Classic Space Venue (CSV) — ambient Arcade venue where LEGO Classic Space minifigs represent live ojfbot agents/tasks read from fleet-runner only; standing dev-host on labelled mock data; founded 2026-10-20 from core wayfinder map #541',
+  'classic-space-venue': 'Classic Space Venue (CSV) — ambient Arcade venue where LEGO Classic Space minifigs will represent live ojfbot agents/tasks via fleet-runner only; standing dev-host on labelled mock data; founded 2026-10-20 from core wayfinder map #541',
 }
 
 /** Names that appear in older article tags/bodies but are no longer org repos (renames). */
