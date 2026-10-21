@@ -52,7 +52,7 @@ work triggers generation.
 ┌──────────────────────────────────────────────────────────────────┐
 │  Phase 1: Collect Context                                        │
 │  collect-context.ts — GitHub API sweep across 20+ repos          │
-│  Commits (24h) + PRs/Issues (7d) + ROADMAP.md injection         │
+│  Commits (local reporting interval) + PRs/Issues (7 local days)│
 │  + Claude Code telemetry aggregation (skill/tool usage)          │
 └──────────────┬───────────────────────────────────────────────────┘
                ▼

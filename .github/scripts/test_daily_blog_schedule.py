@@ -65,6 +65,11 @@ class FakeGitHub:
 
 
 class AdmissionTests(unittest.TestCase):
+    def setUp(self):
+        self.clock = patch.object(schedule, 'chicago_now', return_value=schedule.datetime.fromisoformat(DAY + 'T03:30:00-05:00'))
+        self.clock.start()
+        self.addCleanup(self.clock.stop)
+
     def test_run_evidence_uses_target_schedule_for_manual_fallbacks(self):
         current = run(created='2026-10-10T14:36:24Z', event='workflow_dispatch')
         current.update({'run_started_at': '2026-10-10T14:36:30Z', 'run_attempt': 1})
@@ -132,6 +137,11 @@ class AdmissionTests(unittest.TestCase):
 
 
 class WatchdogTests(unittest.TestCase):
+    def setUp(self):
+        self.clock = patch.object(schedule, 'chicago_now', return_value=schedule.datetime.fromisoformat(DAY + 'T03:30:00-05:00'))
+        self.clock.start()
+        self.addCleanup(self.clock.stop)
+
     def test_missing_run_dispatches_exact_date_once(self):
         github = FakeGitHub()
         result = schedule.watchdog(github, DAY, True)
@@ -283,7 +293,13 @@ class GitHubBoundaryTests(unittest.TestCase):
                             "else: print(json.dumps([{'total_count': 0, 'workflow_runs': []}]))\n")
             fake.chmod(0o755)
             env = dict(os.environ, PATH=folder + os.pathsep + os.environ['PATH'], FAKE_DISPATCH_LOG=str(log))
-            result = subprocess.run([sys.executable, str(Path(schedule.__file__)), 'watchdog', '--date', DAY, '--dispatch'],
+            wrapper = Path(folder) / 'run_schedule.py'
+            wrapper.write_text('import importlib.util\n'
+                               f'spec = importlib.util.spec_from_file_location("schedule", {str(Path(schedule.__file__))!r})\n'
+                               'schedule = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(schedule)\n'
+                               f'schedule.chicago_now = lambda: schedule.datetime.fromisoformat("{DAY}T03:30:00-05:00")\n'
+                               'schedule.main()\n')
+            result = subprocess.run([sys.executable, str(wrapper), 'watchdog', '--date', DAY, '--dispatch'],
                                     capture_output=True, text=True, env=env)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(json.loads(result.stdout)['run_id'], 123)
@@ -305,6 +321,83 @@ class GitHubBoundaryTests(unittest.TestCase):
                                     capture_output=True, text=True, env=env)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(json.loads(result.stdout)['state'], 'missing')
+
+
+class DispatchTimeTests(unittest.TestCase):
+    def test_maximum_early_wait_reaches_target_in_ten_intervals(self):
+        start = schedule.datetime.fromisoformat(DAY + 'T03:25:00-05:00')
+        times = [schedule.datetime.fromtimestamp(start.timestamp() + 30 * index, schedule.CHICAGO) for index in range(11)]
+        with patch.object(schedule, 'chicago_now', side_effect=times), patch.object(schedule.clock, 'sleep') as sleep:
+            schedule.wait_for_dispatch_target(DAY)
+        self.assertEqual(sleep.call_count, 10)
+        self.assertEqual(sum(call.args[0] for call in sleep.call_args_list), 300)
+
+    def test_date_rollover_while_waiting_never_reads_github(self):
+        github = FakeGitHub()
+        with patch.object(schedule, 'chicago_now', side_effect=[
+            schedule.datetime.fromisoformat(DAY + 'T03:29:59-05:00'),
+            schedule.datetime.fromisoformat('2026-10-07T03:30:00-05:00'),
+        ]), patch.object(schedule.clock, 'sleep'):
+            with self.assertRaisesRegex(ValueError, 'date changed'):
+                schedule.watchdog(github, DAY, True)
+        self.assertEqual(github.calls, [])
+
+    def test_early_invocation_waits_then_reads_fresh_state_once(self):
+        times = [schedule.datetime.fromisoformat(DAY + suffix) for suffix in
+                 ['T03:29:00-05:00', 'T03:29:30-05:00', 'T03:30:00-05:00', 'T03:30:01-05:00']]
+        github = FakeGitHub()
+        with patch.object(schedule, 'chicago_now', side_effect=times), patch.object(schedule.clock, 'sleep') as sleep:
+            result = schedule.watchdog(github, DAY, True)
+        self.assertEqual(result['state'], 'dispatched')
+        self.assertEqual([call.args[0] for call in sleep.call_args_list], [30, 30])
+        self.assertEqual(len(github.dispatches()), 1)
+
+    def test_no_github_call_when_more_than_five_minutes_early(self):
+        github = FakeGitHub()
+        with patch.object(schedule, 'chicago_now', return_value=schedule.datetime.fromisoformat(DAY + 'T03:24:59-05:00')):
+            with self.assertRaisesRegex(ValueError, 'five minutes'):
+                schedule.watchdog(github, DAY, True)
+        self.assertEqual(github.calls, [])
+
+    def test_frozen_or_backwards_clock_cannot_wait_indefinitely(self):
+        github = FakeGitHub()
+        with patch.object(schedule, 'chicago_now', return_value=schedule.datetime.fromisoformat(DAY + 'T03:29:00-05:00')), \
+                patch.object(schedule.clock, 'sleep') as sleep:
+            with self.assertRaisesRegex(ValueError, 'bounded wait'):
+                schedule.watchdog(github, DAY, True)
+        self.assertEqual(sleep.call_count, 10)
+        self.assertEqual(github.calls, [])
+
+    def test_date_rollover_during_reads_stops_before_post(self):
+        github = FakeGitHub()
+        with patch.object(schedule, 'chicago_now', side_effect=[
+            schedule.datetime.fromisoformat(DAY + 'T23:59:59-05:00'),
+            schedule.datetime.fromisoformat('2026-10-07T00:00:00-05:00'),
+        ]):
+            with self.assertRaisesRegex(ValueError, 'date changed'):
+                schedule.watchdog(github, DAY, True)
+        self.assertEqual(github.dispatches(), [])
+
+    def test_clock_returning_before_target_during_reads_stops_before_post(self):
+        github = FakeGitHub()
+        with patch.object(schedule, 'chicago_now', side_effect=[
+            schedule.datetime.fromisoformat(DAY + 'T03:30:00-05:00'),
+            schedule.datetime.fromisoformat(DAY + 'T03:29:59-05:00'),
+        ]):
+            with self.assertRaisesRegex(ValueError, 'Clock moved'):
+                schedule.watchdog(github, DAY, True)
+        self.assertEqual(github.dispatches(), [])
+
+    def test_exact_and_late_targets_in_both_dst_offsets(self):
+        for target, offset in [('2026-03-08', '-05:00'), ('2026-11-01', '-06:00')]:
+            for time in ['03:30:00', '03:40:00']:
+                with self.subTest(target=target, time=time), \
+                        patch.object(schedule, 'chicago_now', return_value=schedule.datetime.fromisoformat(f'{target}T{time}{offset}')), \
+                        patch.object(schedule.clock, 'sleep') as sleep:
+                    github = FakeGitHub()
+                    self.assertEqual(schedule.watchdog(github, target, True)['state'], 'dispatched')
+                    self.assertEqual(len(github.dispatches()), 1)
+                    sleep.assert_not_called()
 
 
 if __name__ == '__main__':

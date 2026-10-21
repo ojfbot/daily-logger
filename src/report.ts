@@ -11,7 +11,7 @@
  * Env vars:
  *   ANTHROPIC_API_KEY    required
  *   GITHUB_TOKEN         required (set automatically in GitHub Actions)
- *   DATE_OVERRIDE        ISO date string, default: today UTC
+ *   DATE_OVERRIDE        ISO date string, default: today in America/Chicago
  *   DRY_RUN              "true" → print reports, skip all writes
  *   PERSONA_SLUG         run only the persona with this slug (default: all)
  */
@@ -20,6 +20,7 @@ import { writeFileSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
+import { currentArticleDate } from './activity-window.js'
 import { generateReport, reportToMarkdown } from './generate-report.js'
 import { loadPersonas } from './council.js'
 
@@ -27,12 +28,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
 const REPORTS_DIR = join(REPO_ROOT, '_reports')
 
-function todayUTC(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
 async function main() {
-  const date = process.env.DATE_OVERRIDE?.trim().slice(0, 10) || todayUTC()
+  const date = process.env.DATE_OVERRIDE?.trim().slice(0, 10) || currentArticleDate()
   const isDryRun = process.env.DRY_RUN === 'true'
   const personaSlug = process.env.PERSONA_SLUG?.trim() || undefined
 

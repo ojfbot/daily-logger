@@ -79,7 +79,7 @@ describe('shouldSkipRun', () => {
   it('skips when there is no activity at all', () => {
     const decision = shouldSkipRun(makeCtx())
     expect(decision.skip).toBe(true)
-    expect(decision.reason).toBe('no activity in 24h window')
+    expect(decision.reason).toBe('no activity in reporting window')
   })
 
   it('skips when the only commit is from ojfbot-blog[bot]', () => {

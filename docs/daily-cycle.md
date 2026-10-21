@@ -44,6 +44,13 @@ and editorial tangents outside the revision payload.
 
 ## Timing evidence
 
+The reporting interval uses consecutive 03:30 America/Chicago cutoffs, including
+23/25-hour DST periods, with an inclusive start and exclusive end. Current queue
+metadata remains distinct from bounded activity evidence. See
+[Daily article timing](daily-schedule.md) for the dispatch guard, retained gates,
+repeatable controls and the separate 03:30 workflow-start and 04:00 public-draft
+targets. The installed local fallback remains at 04:00 until separately approved.
+
 The October 10 merged declaration schedules Daily Dev Blog at 03:30
 America/Chicago. The activity-window anchor is a separate contract. Actions
 creation and start, generation completion, editorial merge, and deployment each

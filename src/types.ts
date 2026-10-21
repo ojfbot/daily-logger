@@ -35,7 +35,7 @@ export interface IssueInfo {
   url: string
   repo: string
   body?: string
-  /** True when the issue was created in the last 24h (first time the sweep sees it). */
+  /** Created or updated in the reporting interval. Body and status remain current context. */
   isNew?: boolean
   /** Created in the collection window; distinct from recently updated activity. */
   createdInWindow?: boolean
@@ -153,7 +153,7 @@ export interface BlogContext {
   commits: CommitInfo[]
   mergedPRs: PRInfo[]
   openPRs: OpenPRInfo[]
-  /** All PRs (open + closed) created or updated in the last 24h */
+  /** Current PR snapshots with an observed event in the reporting interval. */
   recentPRs: RecentPRInfo[]
   closedIssues: IssueInfo[]
   openIssues: IssueInfo[]
@@ -161,7 +161,7 @@ export interface BlogContext {
   openActions: CanonicalAction[]
   projectVision: string
   previousArticles: PreviousArticleContext[]
-  /** Claude Code tool/skill telemetry for the 24h window. Null if unavailable. */
+  /** Tool/skill telemetry for the local reporting interval. Null if unavailable. */
   telemetry?: TelemetrySummary | null
   /**
    * Cross-repo ADR registry — every ADR file present in `decisions/adr/` of the

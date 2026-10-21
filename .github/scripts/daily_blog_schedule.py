@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import time as clock
 from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
@@ -16,6 +17,31 @@ WORKFLOW = 'daily-blog.yml'
 READY_STEP = 'Article ready for cleaner'
 RUN_TITLE = re.compile(r'^Daily Dev Blog \| date=(auto|\d{4}-\d{2}-\d{2}) \| dry_run=(true|false)$')
 ACTIVE = {'queued', 'in_progress', 'requested', 'waiting', 'pending'}
+
+
+def chicago_now():
+    return datetime.now(CHICAGO)
+
+
+def dispatch_seconds_remaining(target_date):
+    observed = chicago_now()
+    if observed.date().isoformat() != target_date:
+        raise ValueError('Fallback dispatch requires today in America/Chicago; date changed or is not current')
+    target = datetime.combine(date.fromisoformat(target_date), time(3, 30), CHICAGO)
+    return (target - observed).total_seconds()
+
+
+def wait_for_dispatch_target(target_date):
+    """A local task may start early. Wait at most five minutes before any reads/POST."""
+    for _ in range(10):
+        remaining = dispatch_seconds_remaining(target_date)
+        if remaining <= 0:
+            return
+        if remaining > 300:
+            raise ValueError('Fallback started more than five minutes before the 03:30 Chicago target')
+        clock.sleep(min(30, remaining))
+    if dispatch_seconds_remaining(target_date) > 0:
+        raise ValueError('Fallback could not reach the 03:30 Chicago target within its bounded wait')
 
 
 def run_evidence(run, target_date, schedule_expression, timezone_name):
@@ -189,6 +215,8 @@ def preflight(github, target_date, dry_run, run_id, attempt=1):
 
 
 def watchdog(github, target_date, dispatch):
+    if dispatch:
+        wait_for_dispatch_target(target_date)
     if github.article(target_date) is not None:
         return {'state': 'complete', 'date': target_date}
     runs = github.runs(target_date)
@@ -207,6 +235,9 @@ def watchdog(github, target_date, dispatch):
         if state == 'failed':
             raise ValueError('A live run failed during the check; no dispatch: ' + ', '.join(run['html_url'] for run in refreshed))
         return {'state': state, 'date': target_date, 'runs': [run['html_url'] for run in refreshed]}
+    # Long reads or a clock change must not carry an admitted request into another date.
+    if dispatch_seconds_remaining(target_date) > 0:
+        raise ValueError('Clock moved before the 03:30 target; no dispatch')
     receipt = github.api(f'actions/workflows/{WORKFLOW}/dispatches', data={
         'ref': 'main', 'inputs': {'date_override': target_date, 'dry_run': False},
     })

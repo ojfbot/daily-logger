@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `979ca8cf7cf3b17480fbf24a6e11283be9e39c626135dce1c45e367b91015adc`.
+> Source SHA-256: `15bcb59a582b7a891829cebe5987fff212bb2da6acab99011f2212631bd5c6df`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -58,8 +58,8 @@ flowchart TD
   n32("Suggestion Proposing")
   n33("Suggestion Verifying")
   n35["Draft Action Candidate — states: awaiting-review, promoted, mapped-existing, rejected, verified-closure"]
-  n113["Ranked Recommendations"]
-  n114["Handled Suggestions"]
+  n119["Ranked Recommendations"]
+  n120["Handled Suggestions"]
   n36("Editorial Revising")
   n37["Editorial Revision Request"]
   n38["Draft Suggestion — states: proposed, open, done, dismissed, superseded, deferred"]
@@ -67,7 +67,7 @@ flowchart TD
   n88["Article Action Files — states: pending, verified"]
   n39("Inclusion Choosing")
   n40["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
-  n115["Canonical Actions"]
+  n121["Canonical Actions"]
   n41["JSON API"]
   n42("Frontend Rendering")
   n43["Rendered Site"]
@@ -78,8 +78,8 @@ flowchart TD
   n48["Revision Request"]
   n49("Conversation Saving")
   n50["Saved Message"]
-  n116["Review Records"]
-  n117["Correspondence"]
+  n122["Review Records"]
+  n123["Correspondence"]
   n51["Time Record Pointer"]
   n52("Time Recording")
   n53["Commit Context"]
@@ -157,10 +157,10 @@ flowchart TD
   n28 -->|"yields"| n31
   n28 -->|"changes: transient to retained"| n27
   n35 -->|"part of"| n18
-  n113 -->|"part of"| n26
+  n119 -->|"part of"| n26
   n18 -->|"part of"| n26
   n27 -->|"part of"| n26
-  n114 -->|"part of"| n26
+  n120 -->|"part of"| n26
   n7 -->|"yields"| n29
   n7 -->|"invokes"| n28
   n36 -->|"yields"| n29
@@ -174,7 +174,7 @@ flowchart TD
   n4 -->|"requires (instrument)"| n39
   n39 <-->|"affects"| n23
   n19 -->|"handles (human)"| n39
-  n115 -->|"part of"| n13
+  n121 -->|"part of"| n13
   n40 -->|"part of"| n13
   n21 -->|"invokes"| n22
   n13 -->|"requires (instrument)"| n21
@@ -196,8 +196,8 @@ flowchart TD
   n46 -->|"requires (instrument)"| n49
   n49 -->|"yields"| n50
   n49 <-->|"affects"| n4
-  n116 -->|"part of"| n46
-  n117 -->|"part of"| n46
+  n122 -->|"part of"| n46
+  n123 -->|"part of"| n46
   n0 -->|"exhibits"| n51
   n0 -->|"requires (instrument)"| n52
   n13 -->|"requires (instrument)"| n52
@@ -687,4 +687,50 @@ Source Evidence Selecting yields Selected Source Evidence. [src: src/action-evid
 Source Evidence Selecting yields Evidence Coverage. [src: src/action-evidence-selection.ts]
 Suggestion Proposing requires Selected Source Evidence. [src: src/review-actions.ts]
 Suggestion Verifying requires Selected Source Evidence. [src: src/review-actions.ts]
+```
+
+## SD1.3 — Reporting interval and fallback start checking
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD1.3 — Reporting interval and fallback start checking"
+---
+flowchart TD
+  accTitle: SD1.3 — Reporting interval and fallback start checking
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n113["Article Date"]
+  n114("Activity Window Resolving")
+  n115["Activity Window"]
+  n77("Context Collecting")
+  n116["Clock"]
+  n117("Start Target Waiting")
+  n118["Due Start Target"]
+  n14("Fallback Checking")
+  n16("Fallback Dispatching")
+  n113 -->|"requires (instrument)"| n114
+  n114 -->|"yields"| n115
+  n115 -->|"requires (instrument)"| n77
+  n77 -->|"invokes"| n114
+  n116 -->|"requires (instrument)"| n117
+  n117 -->|"yields"| n118
+  n14 -->|"invokes"| n117
+  n118 -->|"requires (instrument)"| n16
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Activity Window Resolving requires Article Date. [src: src/activity-window.ts]
+Activity Window Resolving yields Activity Window. [src: src/activity-window.ts]
+Context Collecting requires Activity Window. [src: src/collect-context.ts]
+Context Collecting invokes Activity Window Resolving. [src: src/collect-context.ts]
+Start Target Waiting requires Clock. [src: .github/scripts/daily_blog_schedule.py]
+Start Target Waiting yields Due Start Target. [src: .github/scripts/daily_blog_schedule.py]
+Fallback Checking invokes Start Target Waiting. [src: .github/scripts/daily_blog_schedule.py]
+Fallback Dispatching requires Due Start Target. [src: .github/scripts/daily_blog_schedule.py]
 ```
