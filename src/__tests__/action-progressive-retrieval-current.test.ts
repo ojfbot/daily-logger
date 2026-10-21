@@ -29,17 +29,17 @@ const registry = () => ActionRegistrySchema.parse({
   articles: [],
 })
 
-function preparedCandidateRegistry(values: readonly unknown[], markdown: string) {
+function preparedCandidateRegistry(values: readonly unknown[], markdown: string, feedback = '') {
   const captured = pendingActionReview({ registry: registry(), articleDate: date, cycle: generationActionCycle(), markdown, reason: 'Prepare explicit candidate evidence.',
     articleStatuses: new Map([[date, 'draft']]), draftCandidates: values, draftContext: { kind: 'none' } })
   const next = structuredClone(captured.registry)
   const snapshot = next.articles[0]
   if (!snapshot?.draftCandidates?.length || !snapshot.reviewCycle) throw new Error('Missing captured candidate fixture')
-  const binding = draftCandidateEvidenceBinding({ registry: next, articleDate: date, cycle: snapshot.reviewCycle, markdown: captured.markdown })
+  const binding = draftCandidateEvidenceBinding({ registry: next, articleDate: date, cycle: snapshot.reviewCycle, markdown: captured.markdown, feedback })
   snapshot.draftCandidateEvidence = {
-    version: 'draft-candidate-evidence-v1', provenance: { kind: 'independent-reviewer', identity: 'progressive-fixture', decision: 'Fixture evidence associations.' },
+    version: 'draft-candidate-evidence-v2', provenance: { kind: 'independent-reviewer', identity: 'progressive-fixture', decision: 'Fixture evidence associations.' },
     ...binding,
-    candidates: snapshot.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references: [] })),
+    candidates: snapshot.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references: [], actionRelations: [] })),
     unassignedReferences: [],
   }
   return { registry: ActionRegistrySchema.parse(next), markdown: captured.markdown }
@@ -63,14 +63,15 @@ it('retains draft candidates and issues a durable bounded-view request before ei
     status: 'open' as const,
     sourceDate: date,
   }]
-  const prepared = preparedCandidateRegistry(draftCandidates, `---\ndate: ${date}\nstatus: draft\n---\n\n## What shipped\n\nA bounded incident fixture.\n`)
+  const feedback = 'Review the complete retained discussion.'
+  const prepared = preparedCandidateRegistry(draftCandidates, `---\ndate: ${date}\nstatus: draft\n---\n\n## What shipped\n\nA bounded incident fixture.\n`, feedback)
 
   const result = await reviewDraftActions({
     registry: prepared.registry,
     articleDate: date,
     cycle: generationActionCycle(),
     markdown: prepared.markdown,
-    feedback: 'Review the complete retained discussion.',
+    feedback,
     sources: [oversized],
     draftCandidates,
     repoRoot,
@@ -119,7 +120,7 @@ it('restores a complete bounded reply and resumes the same captured candidate re
     sourceDate: date,
   }]
   const initialMarkdown = `---\ndate: ${date}\nstatus: draft\n---\n\n## What shipped\n\nA bounded incident fixture.\n`
-  const prepared = preparedCandidateRegistry(draftCandidates, initialMarkdown)
+  const prepared = preparedCandidateRegistry(draftCandidates, initialMarkdown, 'Review the complete retained discussion.')
   const base = {
     articleDate: date,
     cycle: generationActionCycle(),

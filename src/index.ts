@@ -261,7 +261,7 @@ export async function main() {
   const rawDraftCandidates = article.suggestedActions ?? []
   const actionCycle = generationActionCycle()
   const actionReview = await reviewProducedDraftActions({ cycle: actionCycle, registry, articleStatuses, articleDate: date, markdown: originalMarkdown, feedback: '', draftCandidates: rawDraftCandidates,
-    prepareEvidence: candidates => candidates.length ? prepareConservativeDraftCandidateEvidence({ cycle: actionCycle, registry, articleStatuses, articleDate: date, markdown: originalMarkdown, draftCandidates: candidates }) : undefined,
+    prepareEvidence: candidates => candidates.length ? prepareConservativeDraftCandidateEvidence({ cycle: actionCycle, registry, articleStatuses, articleDate: date, markdown: originalMarkdown, feedback: '', draftCandidates: candidates }) : undefined,
     collectSources: (candidates, draftCandidateEvidence) => process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ cycle: actionCycle, registry, articleStatuses, repoRoot: REPO_ROOT, markdown: originalMarkdown, feedback: '', context: `${buildUserPrompt(ctx)}\nStructured draft candidate evidence hints: ${JSON.stringify(candidates)}`, continuityTargets: acceptedClosingContinuityTargets(ctx.previousArticles), draftCandidates: candidates, draftCandidateEvidence }),
     agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents(), ...(isDryRun ? {} : { repoRoot: REPO_ROOT }) })
   const renderingStatuses = new Map(articleStatuses)

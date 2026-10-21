@@ -120,32 +120,67 @@ export const DraftCandidateEvidenceReferenceSchema = z.discriminatedUnion('class
   DraftCandidateContextEvidenceReferenceSchema,
 ])
 export const DraftCandidateEvidenceRequirementsSchema = z.object({
-  version: z.literal('draft-candidate-evidence-v1'),
+  version: z.literal('draft-candidate-evidence-v2'),
   provenance: z.object({
-    kind: z.enum(['coordinator', 'independent-reviewer', 'deterministic-default']),
+    kind: z.enum(['coordinator', 'independent-reviewer', 'deterministic-default', 'derived-refresh']),
     identity: z.string().min(1).max(256),
     decision: z.string().min(1).max(512),
+    lineage: z.object({
+      kind: z.literal('cycle-only-refresh'),
+      priorReviewCycle: ActionReviewCycleSchema,
+      priorRequirementsSha256: digest,
+    }).strict().optional(),
   }).strict(),
   articleDate: date,
   articleDigest: digest,
   reviewCycle: ActionReviewCycleSchema,
   draftContextSha256: digest,
   candidatePayloadsSha256: digest,
+  feedbackSha256: digest,
+  articleStatusesSha256: digest,
+  canonicalIndexSha256: digest,
+  inputActionKeys: z.array(z.string().min(1).max(256)).max(64),
   actionStateSha256: digest,
   candidates: z.array(z.object({
     candidateId: digest,
     payloadSha256: digest,
     references: z.array(DraftCandidateEvidenceReferenceSchema).max(32),
+    actionRelations: z.array(z.object({
+      actionKey: z.string().min(1).max(256),
+      sourceReference: githubActionReference,
+      relation: z.enum(['same-work', 'dependency']),
+      reason: z.string().min(1).max(512),
+    }).strict()).max(32),
   }).strict()).min(1).max(5),
   unassignedReferences: z.array(DraftCandidateEvidenceReferenceSchema).max(64),
 }).strict().superRefine((requirements, context) => {
+  if (requirements.provenance.kind === 'derived-refresh' !== !!requirements.provenance.lineage) context.addIssue({ code: 'custom', message: 'Derived candidate evidence refresh requires exact cycle lineage' })
+  if (new Set(requirements.inputActionKeys).size !== requirements.inputActionKeys.length) context.addIssue({ code: 'custom', message: 'Duplicate draft candidate input action identity' })
   if (new Set(requirements.candidates.map(candidate => candidate.candidateId)).size !== requirements.candidates.length) context.addIssue({ code: 'custom', message: 'Duplicate draft candidate evidence identity' })
   for (const candidate of requirements.candidates) {
     if (new Set(candidate.references.map(reference => reference.reference)).size !== candidate.references.length) context.addIssue({ code: 'custom', message: `Duplicate draft candidate evidence reference: ${candidate.candidateId}` })
+    const relations = candidate.actionRelations.map(relation => `${relation.actionKey}:${relation.sourceReference}`)
+    if (new Set(relations).size !== relations.length) context.addIssue({ code: 'custom', message: `Duplicate draft candidate action relation: ${candidate.candidateId}` })
+    for (const relation of candidate.actionRelations) if (!requirements.inputActionKeys.includes(relation.actionKey)) context.addIssue({ code: 'custom', message: `Candidate action relation is outside the captured input: ${relation.actionKey}` })
   }
   if (new Set(requirements.unassignedReferences.map(reference => reference.reference)).size !== requirements.unassignedReferences.length) context.addIssue({ code: 'custom', message: 'Duplicate unassigned evidence reference' })
 })
 export type DraftCandidateEvidenceRequirements = z.infer<typeof DraftCandidateEvidenceRequirementsSchema>
+export const ActionReviewOutputSchema = z.object({
+  version: z.literal('action-review-output-v1'),
+  articleDate: date,
+  reviewCycle: ActionReviewCycleSchema,
+  roundId: digest,
+  proposalSha256: digest,
+  consumedInputSha256: digest,
+  createdRecords: z.array(z.object({ actionKey: z.string().min(1).max(256), afterRecordSha256: digest, afterInputSha256: digest }).strict()).max(64),
+  updatedRecords: z.array(z.object({ actionKey: z.string().min(1).max(256), beforeRecordSha256: digest, afterRecordSha256: digest, beforeInputSha256: digest, afterInputSha256: digest }).strict()).max(64),
+  rejectionMemory: z.object({ beforeSha256: digest, afterSha256: digest }).strict(),
+}).strict().superRefine((output, context) => {
+  const keys = [...output.createdRecords.map(record => record.actionKey), ...output.updatedRecords.map(record => record.actionKey)]
+  if (new Set(keys).size !== keys.length) context.addIssue({ code: 'custom', message: 'Duplicate action review output identity' })
+})
+export type ActionReviewOutput = z.infer<typeof ActionReviewOutputSchema>
 export const ActionSourceSchema = z.object({
   id: z.string().min(1),
   kind: z.enum(['repository', 'github', 'goal', 'instruction', 'report']),
@@ -279,6 +314,7 @@ function createArticleActionSchema(candidateIdentity?: DraftCandidateIdentity) {
     roundId: digest,
     reviewCycle: ActionReviewCycleSchema.optional(),
     actionKeys: z.array(z.string()),
+    reviewOutput: ActionReviewOutputSchema.optional(),
     draftCandidates: z.array(DraftActionCandidateSchema).max(5).optional(),
     draftCandidateEvidence: DraftCandidateEvidenceRequirementsSchema.optional(),
     draftContext: DraftRecommendationContextSchema.optional(),
@@ -319,6 +355,10 @@ function createActionRegistrySchema(ArticleActionSchema: ReturnType<typeof creat
   for (const article of registry.articles) {
     if (article.review.state === 'pending' && article.status !== 'draft') context.addIssue({ code: 'custom', message: `Pending action review cannot publish: ${article.date}` })
     if (new Set(article.actionKeys).size !== article.actionKeys.length || article.actionKeys.some(key => !keys.includes(key))) context.addIssue({ code: 'custom', message: `Invalid action references for ${article.date}` })
+    if (article.reviewOutput && (article.review.state !== 'verified' || article.reviewOutput.articleDate !== article.date || article.reviewOutput.roundId !== article.roundId
+      || JSON.stringify(article.reviewOutput.reviewCycle) !== JSON.stringify(article.reviewCycle) || article.reviewOutput.proposalSha256 !== article.verification.proposalSha256)) {
+      context.addIssue({ code: 'custom', message: `Invalid native review output provenance for ${article.date}` })
+    }
     if (article.closing) {
       const options = article.closing.kind === 'needs-evidence' ? article.closing.recommendations : article.closing.options
       const optionKeys = options.flatMap(option => option.kind === 'action' ? [option.actionKey] : [])

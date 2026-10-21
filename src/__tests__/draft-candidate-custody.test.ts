@@ -88,9 +88,9 @@ function withCandidateEvidence(current: ActionRegistry, currentMarkdown: string)
   if (!snapshot?.draftCandidates?.length || !snapshot.reviewCycle) throw new Error('Missing captured candidate fixture')
   const binding = draftCandidateEvidenceBinding({ registry: next, articleDate: date, cycle: snapshot.reviewCycle, markdown: currentMarkdown })
   snapshot.draftCandidateEvidence = {
-    version: 'draft-candidate-evidence-v1', provenance: { kind: 'independent-reviewer', identity: 'custody-fixture', decision: 'Fixture evidence associations.' },
+    version: 'draft-candidate-evidence-v2', provenance: { kind: 'independent-reviewer', identity: 'custody-fixture', decision: 'Fixture evidence associations.' },
     ...binding,
-    candidates: snapshot.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references: [] })),
+    candidates: snapshot.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references: [], actionRelations: [] })),
     unassignedReferences: [],
   }
   return ActionRegistrySchema.parse(next)

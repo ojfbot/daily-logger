@@ -17,7 +17,7 @@ import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hyd
 export function sha256(value: string): string { return createHash('sha256').update(value).digest('hex') }
 export function registryBytes(registry: ActionRegistry): string { return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
 export function registryRevision(registry: ActionRegistry): string { return sha256(registryBytes(registry)) }
-export function actionStateDigest(registry: ActionRegistry, keys: readonly string[], closing?: ClosingPrompt, draftContext?: ActionRegistry['articles'][number]['draftContext'], boundary?: { articleDate: string; roundId: string; includePriorArticleRounds?: boolean; draftCandidates?: ActionRegistry['articles'][number]['draftCandidates']; draftCandidateEvidence?: ActionRegistry['articles'][number]['draftCandidateEvidence'] }): string {
+export function actionStateDigest(registry: ActionRegistry, keys: readonly string[], closing?: ClosingPrompt, draftContext?: ActionRegistry['articles'][number]['draftContext'], boundary?: { articleDate: string; roundId: string; includePriorArticleRounds?: boolean; draftCandidates?: ActionRegistry['articles'][number]['draftCandidates']; draftCandidateEvidence?: ActionRegistry['articles'][number]['draftCandidateEvidence']; reviewOutput?: ActionRegistry['articles'][number]['reviewOutput'] }): string {
   const records = registry.records.filter(record => keys.includes(record.key)).map(record => {
     if (!boundary) return { key: record.key, state: record.state, history: record.history, admission: record.admission }
     const history = record.history.filter(decision => decision.articleDate < boundary.articleDate
@@ -25,7 +25,8 @@ export function actionStateDigest(registry: ActionRegistry, keys: readonly strin
     const state = history.at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed')
     return { key: record.key, state, history, admission: record.admission }
   })
-  if (boundary?.draftCandidates !== undefined || boundary?.draftCandidateEvidence !== undefined) return sha256(JSON.stringify({ records, closing: closing ?? null, draftContext: draftContext ?? null, draftCandidates: boundary.draftCandidates ?? null, draftCandidateEvidence: boundary.draftCandidateEvidence ?? null }))
+  if (boundary?.draftCandidateEvidence !== undefined || boundary?.reviewOutput !== undefined) return sha256(JSON.stringify({ records, closing: closing ?? null, draftContext: draftContext ?? null, draftCandidates: boundary?.draftCandidates ?? null, draftCandidateEvidence: boundary?.draftCandidateEvidence ?? null, reviewOutput: boundary?.reviewOutput ?? null }))
+  if (boundary?.draftCandidates !== undefined) return sha256(JSON.stringify({ records, closing: closing ?? null, draftContext: draftContext ?? null, draftCandidates: boundary.draftCandidates }))
   if (draftContext !== undefined) return sha256(JSON.stringify({ records, closing: closing ?? null, draftContext }))
   return sha256(JSON.stringify(closing === undefined ? records : { records, closing }))
 }
@@ -227,7 +228,7 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
     const prepared = extractDraftRecommendationContext(stripManagedActions(markdown), snapshot.draftContext)
     if (JSON.stringify(prepared.context) !== JSON.stringify(snapshot.draftContext)) throw new Error(`Action review draft context is stale for ${articleDate}; reconcile before publishing`)
     markdown = prepared.markdown
-    const currentStateDigest = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId, includePriorArticleRounds: snapshot.review.state === 'pending', draftCandidates: snapshot.draftCandidates, draftCandidateEvidence: snapshot.draftCandidateEvidence })
+    const currentStateDigest = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId, includePriorArticleRounds: snapshot.review.state === 'pending', draftCandidates: snapshot.draftCandidates, draftCandidateEvidence: snapshot.draftCandidateEvidence, reviewOutput: snapshot.reviewOutput })
     const legacyPendingStateDigest = snapshot.review.state === 'pending' && snapshot.closing === undefined
       ? actionStateDigest(registry, snapshot.actionKeys, undefined, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId })
       : undefined
