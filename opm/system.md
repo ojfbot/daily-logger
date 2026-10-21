@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `60362c5eba451cae86fbf7a3e8d00f7d284246059419fa74b3a186dbe96a23e9`.
+> Source SHA-256: `fe668efe01c19f918b1aed0188c73e0dce3774aad687cc601719517ab4165611`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -640,8 +640,8 @@ flowchart TD
   n28("Action Reconciling")
   n114["valid Candidate Review History"]
   n115("Action Reviewing")
-  n116["existing Candidate Review History"]
-  n117("Action Registry Writing")
+  n116("Action Registry Writing")
+  n117["existing Candidate Review History"]
   n118["Imported Action Baseline"]
   n22("Action Projecting")
   n119("Editorial Output Binding")
@@ -706,8 +706,10 @@ flowchart TD
   n28 -->|"yields"| n113
   n114 -->|"requires (instrument)"| n28
   n114 -->|"requires (instrument)"| n115
-  n116 -->|"requires (instrument)"| n117
-  n117 -->|"yields"| n113
+  n112 -->|"requires (instrument)"| n115
+  n112 -->|"requires (instrument)"| n116
+  n117 -->|"requires (instrument)"| n116
+  n116 -->|"yields"| n113
   n118 -->|"requires (instrument)"| n22
   n4 -->|"requires (instrument)"| n119
   n119 -->|"yields"| n120
@@ -792,6 +794,8 @@ Action Reconciling yields Article Action Files. [src: src/review-actions.ts]
 Action Reconciling yields Candidate Review History. [src: src/review-actions.ts]
 Action Reconciling requires valid Candidate Review History. [src: src/review-actions.ts]
 Action Reviewing requires valid Candidate Review History. [src: src/review-actions.ts]
+Action Reviewing requires Dated Action State Digest. [src: src/review-actions.ts]
+Action Registry Writing requires Dated Action State Digest. [src: src/action-registry.ts]
 Action Registry Writing requires existing Candidate Review History. [src: src/action-registry.ts]
 Action Registry Writing yields Candidate Review History. [src: src/action-registry.ts]
 Action Projecting requires Imported Action Baseline. [src: src/action-registry.ts]

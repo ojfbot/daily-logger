@@ -160,7 +160,7 @@ it('holds a cache miss before agents until prior native outputs receive a fresh 
   tamperedHistory.articles[0]!.candidateReviewHistory![0]!.transitions[0]!.review.reason = 'Substituted historical verdict.'
   expect(() => renderArticleActions(markdown, tamperedHistory, articleDate, statuses)).toThrow(/state is stale/i)
   expect(() => pendingActionReview({ registry: tamperedHistory, articleStatuses: statuses, articleDate, cycle, markdown, reason: 'Retry must not rehash a tampered archive.' }))
-    .toThrow(/historical candidate review.*stale|archive.*stale/i)
+    .toThrow(/action review state is stale/i)
 
   const root = mkdtempSync(join(tmpdir(), 'candidate-history-writer-'))
   try {
@@ -220,7 +220,13 @@ it('rejects an evicted archive before review or pending retry can rehash the mod
   delete evicted.articles[0]!.candidateReviewHistory
 
   await expect(reviewDraftActions({ registry: evicted, articleStatuses: statuses, articleDate, cycle, markdown, feedback: '', sources: [], agents: { propose, verify } }))
-    .rejects.toThrow(/historical candidate review archive is stale/i)
+    .rejects.toThrow(/action review state is stale/i)
+  const optionalFieldsEvicted = structuredClone(archived.registry)
+  delete optionalFieldsEvicted.articles[0]!.candidateReviewHistory
+  delete optionalFieldsEvicted.articles[0]!.draftCandidateEvidence
+  delete optionalFieldsEvicted.articles[0]!.reviewOutput
+  await expect(reviewDraftActions({ registry: optionalFieldsEvicted, articleStatuses: statuses, articleDate, cycle, markdown, feedback: '', sources: [], agents: { propose, verify } }))
+    .rejects.toThrow(/action review state is stale/i)
   expect(propose).not.toHaveBeenCalled()
   expect(verify).not.toHaveBeenCalled()
 })
