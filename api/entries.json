@@ -1,8 +1,345 @@
 [
   {
+    "date": "2026-10-21",
+    "title": "Classic Space takes shape: charting the agent-world wayfinder and hardening daily-logger's reporting clock",
+    "summary": "Thirty-one commits across three repos chartered the Classic Space Venue agent world, corrected Chicago-cutoff reporting, and closed the October 20 article's editorial cycle.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "wayfinder",
+        "type": "concept"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "classic-space-venue",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-onboard",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "morning-cockpit"
+    ],
+    "commitCount": 13,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Classic Space Venue reads only fleet-runner's orchestration layer — cockpit and daily-logger are subjects, not feeds",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "World-building pipeline before interface and agent binding — Blender as world hub",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Arrival gate requires one real read-only fleet-runner feed — mock data permitted only with explicit labelling",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Daily reporting interval uses consecutive 03:30 America/Chicago cutoffs — not calendar days",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "October 20 correction cycle ran the full supervised train: review → revise → runtime-harden → accept → register",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "557",
+          "url": "https://github.com/ojfbot/core/pull/557"
+        },
+        "at": "2026-10-21T01:33:18.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "568",
+          "url": "https://github.com/ojfbot/core/pull/568"
+        },
+        "at": "2026-10-21T01:32:25.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "569",
+          "url": "https://github.com/ojfbot/core/pull/569"
+        },
+        "at": "2026-10-21T01:31:43.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "408",
+          "url": "https://github.com/ojfbot/daily-logger/pull/408"
+        },
+        "at": "2026-10-21T01:34:40.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "406",
+          "url": "https://github.com/ojfbot/daily-logger/pull/406"
+        },
+        "at": "2026-10-20T22:07:37.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "405",
+          "url": "https://github.com/ojfbot/daily-logger/pull/405"
+        },
+        "at": "2026-10-20T22:00:08.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "404",
+          "url": "https://github.com/ojfbot/daily-logger/pull/404"
+        },
+        "at": "2026-10-20T21:15:39.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "403",
+          "url": "https://github.com/ojfbot/daily-logger/pull/403"
+        },
+        "at": "2026-10-20T20:03:03.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "402",
+          "url": "https://github.com/ojfbot/daily-logger/pull/402"
+        },
+        "at": "2026-10-20T15:59:04.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "401",
+          "url": "https://github.com/ojfbot/daily-logger/pull/401"
+        },
+        "at": "2026-10-20T09:38:26.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "400",
+          "url": "https://github.com/ojfbot/daily-logger/pull/400"
+        },
+        "at": "2026-10-20T04:19:55.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "399",
+          "url": "https://github.com/ojfbot/daily-logger/pull/399"
+        },
+        "at": "2026-10-20T04:05:38.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "398",
+          "url": "https://github.com/ojfbot/daily-logger/pull/398"
+        },
+        "at": "2026-10-20T03:01:22.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "385",
+          "url": "https://github.com/ojfbot/daily-logger/pull/385"
+        },
+        "at": "2026-10-21T01:23:01.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/morning-cockpit",
+          "ref": "59",
+          "url": "https://github.com/ojfbot/morning-cockpit/pull/59"
+        },
+        "at": "2026-10-21T02:30:58.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/morning-cockpit",
+          "ref": "557",
+          "url": "https://github.com/ojfbot/morning-cockpit/pull/557"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/morning-cockpit",
+          "ref": "407",
+          "url": "https://github.com/ojfbot/morning-cockpit/pull/407"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/morning-cockpit",
+          "ref": "542",
+          "url": "https://github.com/ojfbot/morning-cockpit/pull/542"
+        },
+        "reason": "missing-merge-time"
+      }
+    ],
+    "issueTimes": [
+      {
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "561",
+          "url": "https://github.com/ojfbot/core/issues/561"
+        },
+        "event": "created",
+        "at": "2026-10-20T23:39:42.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "542",
+          "url": "https://github.com/ojfbot/core/issues/542"
+        },
+        "event": "created",
+        "at": "2026-10-20T21:56:09.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "567",
+          "url": "https://github.com/ojfbot/core/issues/567"
+        },
+        "event": "created",
+        "at": "2026-10-21T00:45:23.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "560",
+          "url": "https://github.com/ojfbot/core/issues/560"
+        },
+        "event": "created",
+        "at": "2026-10-20T23:02:17.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-10-21T09:03:14.566Z",
+        "runId": "39573841916",
+        "runNumber": 261,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/39573841916",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "510149ca1990501270a375f5dfa8ba88926535ae",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-10-21T09:02:17.000Z",
+          "startedAt": "2026-10-21T09:02:17.000Z",
+          "expectedAt": "2026-10-21T08:30:00.000Z",
+          "dispatchDelaySeconds": 1937,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v5-2026-10-20-local-window-single-recommendation",
+          "promptSha256": "4992e3c558030df343f26e37896c8314cc3f25b6e0054d535b769174346ad1ed"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.0",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-20",
-    "title": "Monday's action-review flywheel: 25 commits hardening the suggested-actions lifecycle in daily-logger",
-    "summary": "Twenty-five commits and eleven merged PRs on Monday tightened every layer of daily-logger's suggested-actions lifecycle, from evidence selection through single-card rendering to delivery verification.",
+    "title": "Monday's daily-logger repairs: what shipped and what still needs proving",
+    "summary": "Eleven merged PRs completed the supervised October 19 article and repaired evidence, receipts and follow-up presentation; the next run exposed a remaining action-review intake failure.",
     "tags": [
       {
         "name": "daily-logger",
@@ -36,55 +373,44 @@
     "reposActive": [
       "daily-logger"
     ],
-    "commitCount": 32,
+    "commitCount": 25,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "edited",
     "decisions": [
       {
-        "title": "Whole-discussion evidence selection with bounded new-identity budgets",
+        "title": "Keep evidence bounds explicit and preserve pending outcomes",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Immutable run-input binding for editorial receipts",
+        "title": "Bind receipts to the run that produced them",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Single Suggested Actions card as the sole recommendation surface",
+        "title": "Make one useful shortlist serve people and coordinating agents",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Shipment-time controls derived from immutable source facts",
+        "title": "Supply merge-time evidence in code",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Legacy suggested-action heading normalization and legacy fixture isolation",
+        "title": "Keep historical tests stable while checking current behavior separately",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       }
     ],
     "actions": [],
-    "timeReferences": [
-      {
-        "text": "2026-10-19T19:28:21Z",
-        "occurrence": 0,
-        "precision": "second",
-        "at": "2026-10-19T19:28:21.000Z",
-        "evidence": {
-          "kind": "explicit-offset",
-          "value": "2026-10-19T19:28:21Z"
-        }
-      }
-    ],
     "shipmentTimes": [
       {
         "status": "available",
@@ -184,15 +510,26 @@
           "url": "https://github.com/ojfbot/daily-logger/pull/400"
         },
         "at": "2026-10-20T04:19:55.000Z"
-      },
+      }
+    ],
+    "issueTimes": [
       {
-        "status": "unavailable",
         "source": {
           "repo": "ojfbot/daily-logger",
           "ref": "386",
-          "url": "https://github.com/ojfbot/daily-logger/pull/386"
+          "url": "https://github.com/ojfbot/daily-logger/issues/386"
         },
-        "reason": "missing-merge-time"
+        "event": "created",
+        "at": "2026-10-18T15:57:36.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "357",
+          "url": "https://github.com/ojfbot/daily-logger/issues/357"
+        },
+        "event": "created",
+        "at": "2026-10-13T15:53:55.000Z"
       }
     ],
     "provenance": {
@@ -318,6 +655,32 @@
         "status": "open",
         "sourceDate": "2026-10-18",
         "id": "act-2026-10-18-pr-review-0de366"
+      }
+    ],
+    "timeReferences": [
+      {
+        "text": "~19:28–19:42Z",
+        "occurrence": 0,
+        "kind": "interval",
+        "start": {
+          "text": "~19:28",
+          "precision": "minute",
+          "certainty": "approximate",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "missing-date"
+          }
+        },
+        "end": {
+          "text": "19:42Z",
+          "precision": "minute",
+          "certainty": "approximate",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "missing-date"
+          }
+        },
+        "relation": "unestablished"
       }
     ],
     "shipmentTimes": [
@@ -807,6 +1170,82 @@
           "event": "merged",
           "url": "https://github.com/ojfbot/daily-logger/pull/366"
         }
+      },
+      {
+        "text": "~19:28–19:42Z",
+        "occurrence": 0,
+        "kind": "interval",
+        "start": {
+          "text": "~19:28",
+          "precision": "minute",
+          "certainty": "approximate",
+          "resolution": {
+            "kind": "supported",
+            "at": "2026-10-16T19:28:00.000Z",
+            "evidence": {
+              "kind": "github-pull-request",
+              "repo": "ojfbot/daily-logger",
+              "ref": "369",
+              "event": "merged",
+              "url": "https://github.com/ojfbot/daily-logger/pull/369"
+            }
+          }
+        },
+        "end": {
+          "text": "19:42Z",
+          "precision": "minute",
+          "certainty": "approximate",
+          "resolution": {
+            "kind": "supported",
+            "at": "2026-10-16T19:42:31.000Z",
+            "evidence": {
+              "kind": "github-pull-request",
+              "repo": "ojfbot/daily-logger",
+              "ref": "371",
+              "event": "merged",
+              "url": "https://github.com/ojfbot/daily-logger/pull/371"
+            }
+          }
+        },
+        "relation": "event-span"
+      },
+      {
+        "text": "~18:15–18:21Z",
+        "occurrence": 0,
+        "kind": "interval",
+        "start": {
+          "text": "~18:15",
+          "precision": "minute",
+          "certainty": "approximate",
+          "resolution": {
+            "kind": "supported",
+            "at": "2026-10-16T18:15:07.000Z",
+            "evidence": {
+              "kind": "github-pull-request",
+              "repo": "ojfbot/daily-logger",
+              "ref": "368",
+              "event": "merged",
+              "url": "https://github.com/ojfbot/daily-logger/pull/368"
+            }
+          }
+        },
+        "end": {
+          "text": "18:21Z",
+          "precision": "minute",
+          "certainty": "approximate",
+          "resolution": {
+            "kind": "supported",
+            "at": "2026-10-16T18:21:35.000Z",
+            "evidence": {
+              "kind": "github-pull-request",
+              "repo": "ojfbot/daily-logger",
+              "ref": "367",
+              "event": "merged",
+              "url": "https://github.com/ojfbot/daily-logger/pull/367"
+            }
+          }
+        },
+        "relation": "event-span"
       }
     ],
     "provenance": {
@@ -1468,6 +1907,30 @@
           "event": "merged",
           "url": "https://github.com/ojfbot/morning-cockpit/pull/56"
         }
+      },
+      {
+        "text": "04:00 Tuesday to 04:00 Wednesday",
+        "occurrence": 0,
+        "kind": "interval",
+        "start": {
+          "text": "04:00 Tuesday",
+          "precision": "minute",
+          "certainty": "exact",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "unsupported-format"
+          }
+        },
+        "end": {
+          "text": "04:00 Wednesday",
+          "precision": "minute",
+          "certainty": "exact",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "unsupported-format"
+          }
+        },
+        "relation": "unestablished"
       }
     ],
     "provenance": {
