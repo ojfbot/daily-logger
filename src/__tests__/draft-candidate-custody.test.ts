@@ -93,6 +93,10 @@ function withCandidateEvidence(current: ActionRegistry, currentMarkdown: string)
     candidates: snapshot.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references: [], actionRelations: [] })),
     unassignedReferences: [],
   }
+  snapshot.stateDigest = actionStateDigest(next, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, {
+    articleDate: date, roundId: snapshot.roundId, includePriorArticleRounds: true, draftCandidates: snapshot.draftCandidates,
+    draftCandidateEvidence: snapshot.draftCandidateEvidence,
+  })
   return ActionRegistrySchema.parse(next)
 }
 

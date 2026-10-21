@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { afterEach, expect, it, vi } from 'vitest'
 import { generationActionCycle, revisionActionCycle } from '../action-review-cycle.js'
-import { ActionEvidenceRequestSchema, ActionRegistrySchema, ActionSourceSchema, sha256, type ActionSource } from '../action-registry.js'
+import { ActionEvidenceRequestSchema, ActionRegistrySchema, ActionSourceSchema, actionStateDigest, sha256, type ActionSource } from '../action-registry.js'
 import { ActionEvidenceRequestError, actionEvidenceCaseDigest, buildActionEvidenceProjection, closeActionEvidenceRequest, createActionEvidenceRequest, persistActionEvidenceReply, persistActionEvidenceRequest, persistActionEvidenceResolutions, persistActionEvidenceResponse, persistValidatedActionEvidenceReply, trustedActionSourceLineNumbers } from '../action-evidence-retrieval.js'
 import { actionEvidenceScope, draftCandidateEvidenceBinding, selectActionEvidence } from '../action-evidence-selection.js'
 import { applyVerifiedActionReview, pendingActionReview, resolveActionSourceLines, reviewDraftActions } from '../review-actions.js'
@@ -42,6 +42,10 @@ function preparedCandidateRegistry(values: readonly unknown[], markdown: string,
     candidates: snapshot.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references: [], actionRelations: [] })),
     unassignedReferences: [],
   }
+  snapshot.stateDigest = actionStateDigest(next, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, {
+    articleDate: date, roundId: snapshot.roundId, includePriorArticleRounds: true, draftCandidates: snapshot.draftCandidates,
+    draftCandidateEvidence: snapshot.draftCandidateEvidence,
+  })
   return { registry: ActionRegistrySchema.parse(next), markdown: captured.markdown }
 }
 
