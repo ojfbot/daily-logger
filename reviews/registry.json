@@ -60,6 +60,10 @@
     {
       "date": "2026-10-20",
       "path": "reviews/registered/2026-10-20-b609203983af3d03ee2b3a88ade1ad08b1882247.json"
+    },
+    {
+      "date": "2026-10-21",
+      "path": "reviews/registered/2026-10-21-60f4e551b913fce642a53e1ff0abcecc8f513a3b.json"
     }
   ],
   "requestTargets": [
@@ -100,6 +104,11 @@
     },
     {
       "date": "2026-10-20",
+      "issueNumber": 357,
+      "contextUrl": "https://github.com/ojfbot/daily-logger/issues/357"
+    },
+    {
+      "date": "2026-10-21",
       "issueNumber": 357,
       "contextUrl": "https://github.com/ojfbot/daily-logger/issues/357"
     }

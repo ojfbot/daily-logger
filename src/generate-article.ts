@@ -69,6 +69,7 @@ Additional repos:
 - **lego-village-pipeline** — play-well cluster: digital twin + build harness for the family LEGO Christmas village — correspondence register (numbered memos, attach-never-paste), design packages, DT-DESIGN cuts; sibling of play-well-library.
 - **play-well-library** — play-well cluster: the canonical LEGO village content library; branch flow play/<user> → staging → main.
 - **foundry-recipes** — Blender tutorial extraction pipeline: sped-up screen-recording reels become structured BlenderRecipe records in Notion, read on demand by asset-foundry.
+- **classic-space-venue** — Classic Space Venue (CSV): an ambient desk-monitor venue where LEGO Classic Space minifigs will stand for live ojfbot agents and tasks; its planned live feed will read only from fleet-runner's orchestration layer; dev-host work uses labelled mock data while that read projection is pending; decisions live in core's wayfinder map #541.
 
 ## Authoritative dev environment ports (frame-dev.sh)
 - shell: :3000
