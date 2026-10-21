@@ -50,23 +50,24 @@ function candidateEvidenceFixture() {
   const roundId = '5'.repeat(64)
   const stateDigest = '6'.repeat(64)
   const draftCandidateEvidence = {
-    version: 'draft-candidate-evidence-v1' as const,
+    version: 'draft-candidate-evidence-v2' as const,
     provenance: { kind: 'coordinator' as const, identity: 'fixture-coordinator', decision: 'Approve the explicit per-candidate evidence association fixture.' },
     articleDate: date,
     articleDigest,
     reviewCycle: cycle,
     draftContextSha256: sha256(JSON.stringify(draftContext)),
     candidatePayloadsSha256: sha256(JSON.stringify(draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))),
+    feedbackSha256: sha256(''), articleStatusesSha256: '0'.repeat(64), canonicalIndexSha256: '0'.repeat(64), inputActionKeys: [],
     actionStateSha256: sha256(JSON.stringify([])),
     candidates: [
       { candidateId: draftCandidates[0].candidateId, payloadSha256: sha256(JSON.stringify(draftCandidates[0].payload)), references: [
         { classification: 'required' as const, reference: 'daily-logger#407', role: 'target' as const, reason: 'Exact immutable candidate target.' },
-      ] },
+      ], actionRelations: [] },
       { candidateId: draftCandidates[1].candidateId, payloadSha256: sha256(JSON.stringify(draftCandidates[1].payload)), references: [
         { classification: 'required' as const, reference: 'core#561', role: 'target' as const, reason: 'Exact immutable candidate target.' },
         { classification: 'required' as const, reference: 'core#307', role: 'owner' as const, reason: 'Recorded initiative owner.' },
         { classification: 'required' as const, reference: 'core#560', role: 'gate' as const, reason: 'Recorded owner ruling.' },
-      ] },
+      ], actionRelations: [] },
     ],
     unassignedReferences: [{ classification: 'context' as const, reference: 'daily-logger#385', reason: 'Delivered prior-day checkpoint history.' }],
   }
@@ -77,7 +78,9 @@ function candidateEvidenceFixture() {
     verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'action-review-pending-v5-draft-candidate-custody', proposalSha256: '7'.repeat(64), verdicts: [] },
     sources: [], rejected: [],
   })
-  return { article, cycle, draftContext, draftCandidates, draftCandidateEvidence, registry: ActionRegistrySchema.parse(registry) }
+  const parsed = ActionRegistrySchema.parse(registry)
+  Object.assign(parsed.articles[0].draftCandidateEvidence!, draftCandidateEvidenceBinding({ registry: parsed, articleDate: date, cycle, markdown: article, feedback: '' }))
+  return { article, cycle, draftContext, draftCandidates, draftCandidateEvidence: parsed.articles[0].draftCandidateEvidence!, registry: ActionRegistrySchema.parse(parsed) }
 }
 
 function singleCandidateEvidenceFixture(input: { command: string; description: string; repo: string; context: string; references: Array<{ reference: string; role: 'target' | 'lifecycle' | 'owner' | 'gate' | 'counterevidence' }> }) {
@@ -91,15 +94,18 @@ function singleCandidateEvidenceFixture(input: { command: string; description: s
     date, status: 'draft', review: { state: 'pending', reason: 'Independent review is pending.' }, articleDigest, roundId: '8'.repeat(64), reviewCycle: cycle,
     actionKeys: [], draftCandidates,
     draftCandidateEvidence: {
-      version: 'draft-candidate-evidence-v1', provenance: { kind: 'independent-reviewer', identity: 'fixture-reviewer', decision: 'Classify the exact immutable candidate sources.' },
+      version: 'draft-candidate-evidence-v2', provenance: { kind: 'independent-reviewer', identity: 'fixture-reviewer', decision: 'Classify the exact immutable candidate sources.' },
       articleDate: date, articleDigest, reviewCycle: cycle, draftContextSha256: sha256(JSON.stringify(draftContext)),
       candidatePayloadsSha256: sha256(JSON.stringify(draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))),
+      feedbackSha256: sha256(''), articleStatusesSha256: '0'.repeat(64), canonicalIndexSha256: '0'.repeat(64), inputActionKeys: [],
       actionStateSha256: sha256(JSON.stringify([])), candidates: [{ candidateId: draftCandidates[0].candidateId, payloadSha256: sha256(JSON.stringify(draftCandidates[0].payload)),
-        references: input.references.map(reference => ({ classification: 'required' as const, ...reference, reason: `Required ${reference.role} evidence.` })) }], unassignedReferences: [],
+        references: input.references.map(reference => ({ classification: 'required' as const, ...reference, reason: `Required ${reference.role} evidence.` })), actionRelations: [] }], unassignedReferences: [],
     },
     draftContext, stateDigest: '9'.repeat(64), verification: { proposer: 'fixture', verifier: 'fixture', promptVersion: 'action-review-pending-v5-draft-candidate-custody', proposalSha256: 'a'.repeat(64), verdicts: [] }, sources: [], rejected: [],
   })
-  return { article, cycle, registry: ActionRegistrySchema.parse(registry) }
+  const parsed = ActionRegistrySchema.parse(registry)
+  Object.assign(parsed.articles[0].draftCandidateEvidence!, draftCandidateEvidenceBinding({ registry: parsed, articleDate: date, cycle, markdown: article, feedback: '' }))
+  return { article, cycle, registry: ActionRegistrySchema.parse(parsed) }
 }
 
 function canonicalRecord(key: string, reference: string, gateReference: string): ActionRegistry['records'][number] {
@@ -397,12 +403,18 @@ it('honors qualified cross-repo and URL targets, and resolves wayfinder shorthan
   ambiguous.articles[0].draftCandidateEvidence!.draftContextSha256 = sha256(JSON.stringify(ambiguous.articles[0].draftContext))
   ambiguous.articles[0].draftCandidateEvidence!.unassignedReferences.push({ classification: 'context', reference: 'daily-logger#543', reason: 'Second qualified identity makes shorthand ambiguous.' })
   expect(() => actionEvidenceScope({ registry: ambiguous, articleDate: date, cycle: wayfinder.cycle, markdown: wayfinder.article, feedback: '' })).toThrow(/ambiguous candidate target/i)
+
+  const ordinaryTicket = singleCandidateEvidenceFixture({ command: '/review', repo: 'core', description: 'Review ticket #543 without treating the word ticket as a repository namespace.',
+    context: 'The qualified target is core #543.', references: [{ reference: 'core#543', role: 'target' }] })
+  expect(actionEvidenceScope({ registry: ordinaryTicket.registry, articleDate: date, cycle: ordinaryTicket.cycle, markdown: ordinaryTicket.article, feedback: '' }).refs)
+    .toContain('core#543')
 })
 
 it('rejects unreviewed aliases, foreign GitHub targets, and unknown qualified description references instead of dropping them', () => {
   const cases = [
     singleCandidateEvidenceFixture({ command: '/session unknown-repo#543', repo: 'core', description: 'Review the retained target.', context: 'The qualified retained target is core #543.', references: [{ reference: 'core#543', role: 'target' }] }),
     singleCandidateEvidenceFixture({ command: '/review core#543', repo: 'core', description: 'Compare https://github.com/foreign-org/core/issues/543.', context: 'The local target is core #543.', references: [{ reference: 'core#543', role: 'target' }] }),
+    singleCandidateEvidenceFixture({ command: '/review core#543', repo: 'core', description: 'Compare https://github.example/ojfbot/core/issues/999.', context: 'The local target is core #543.', references: [{ reference: 'core#543', role: 'target' }] }),
     singleCandidateEvidenceFixture({ command: '/review core#543', repo: 'core', description: 'Compare mystery-repo#700 before review.', context: 'The local target is core #543.', references: [{ reference: 'core#543', role: 'target' }] }),
   ]
   for (const item of cases) {
@@ -416,8 +428,10 @@ it('promotes every inherited canonical dependency behind a required candidate ta
     context: 'The target is core #543 and its inherited gate is core #999.', references: [{ reference: 'core#543', role: 'target' }] })
   prepared.registry.records.push(canonicalRecord('existing-owner', 'core #543', 'core #999'))
   const snapshot = prepared.registry.articles[0]
+  snapshot.draftCandidateEvidence!.candidates[0]!.actionRelations.push({ actionKey: 'existing-owner', sourceReference: 'core#543', relation: 'same-work', reason: 'The reviewed association identifies the canonical owner record.' })
+  snapshot.draftCandidateEvidence!.inputActionKeys = ['existing-owner']
   snapshot.draftCandidateEvidence!.unassignedReferences.push({ classification: 'context', reference: 'core#999', reason: 'Candidate metadata attempted to leave the canonical gate contextual.' })
-  snapshot.draftCandidateEvidence!.actionStateSha256 = draftCandidateEvidenceBinding({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article }).actionStateSha256
+  Object.assign(snapshot.draftCandidateEvidence!, draftCandidateEvidenceBinding({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' }))
 
   const scope = actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' })
 
@@ -435,7 +449,7 @@ it('does not attach an unrelated carried canonical action duties to a candidate 
   const unrelated = canonicalRecord('unrelated-700', 'core #700', 'core #701')
   prepared.registry.records.push(unrelated)
   prepared.registry.articles[0].actionKeys = [unrelated.key]
-  prepared.registry.articles[0].draftCandidateEvidence!.actionStateSha256 = draftCandidateEvidenceBinding({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article }).actionStateSha256
+  Object.assign(prepared.registry.articles[0].draftCandidateEvidence!, draftCandidateEvidenceBinding({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' }))
 
   try {
     selectActionEvidence({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '', sources: [] })
@@ -454,21 +468,16 @@ it('does not attach an unrelated carried canonical action duties to a candidate 
   }
 })
 
-it('promotes an audited context reference when explicit feedback requires it, forcing recollection and a new evidence case', () => {
+it('requires fresh candidate classification when feedback changes the bound evidence obligations', () => {
   const prepared = candidateEvidenceFixture()
   const base = actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' })
   const feedback = 'Inspect daily-logger #385 as current counterevidence.'
-  const promoted = actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback })
 
   expect(base.contextRefs).toContain('daily-logger#385')
-  expect(promoted.refs).toContain('daily-logger#385')
-  expect(promoted.contextRefs).not.toContain('daily-logger#385')
+  expect(() => actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback })).toThrow(/feedback.*review pending/i)
   const before = actionEvidenceCaseDigest({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '', actionKeys: ['article-feedback'] })
   const after = actionEvidenceCaseDigest({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback, actionKeys: ['article-feedback'] })
   expect(after).not.toBe(before)
-  github.mockClear()
-  fixture({ registry: prepared.registry, markdown: prepared.article, feedback, compact: true })
-  expect(github.mock.calls.some(([, args]) => args.at(-1) === 'repos/ojfbot/daily-logger/issues/385')).toBe(true)
 })
 
 it('invalidates prepared candidate evidence when a retained canonical gate becomes accepted', () => {
@@ -487,7 +496,7 @@ it('invalidates prepared candidate evidence when a retained canonical gate becom
   })
   const initialBinding = draftCandidateEvidenceBinding({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article })
   const candidateSnapshot = prepared.registry.articles.find(article => article.date === date)!
-  candidateSnapshot.draftCandidateEvidence!.actionStateSha256 = initialBinding.actionStateSha256
+  Object.assign(candidateSnapshot.draftCandidateEvidence!, initialBinding)
   candidateSnapshot.review = { state: 'verified' }
   expect(() => actionEvidenceScope({ registry: prepared.registry, articleDate: date, cycle: prepared.cycle, markdown: prepared.article, feedback: '' })).not.toThrow()
 

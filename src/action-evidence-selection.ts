@@ -1,4 +1,4 @@
-import { DraftCandidateEvidenceRequirementsSchema, acceptedActionState, managedArticleDigest, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionSource, type DraftActionCandidate, type DraftCandidateEvidenceRequirements, type DraftRecommendationContext, type RankedClosingOption, type RecommendationMaintenanceDescriptor } from './action-registry.js'
+import { ActionReviewOutputSchema, DraftCandidateEvidenceRequirementsSchema, acceptedActionState, actionStateDigest, managedArticleDigest, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionReviewOutput, type ActionSource, type DraftActionCandidate, type DraftCandidateEvidenceRequirements, type DraftRecommendationContext, type RankedClosingOption, type RecommendationMaintenanceDescriptor } from './action-registry.js'
 import type { ActionReviewCycle } from './action-review-cycle.js'
 import {
   ACTION_EVIDENCE_PER_SOURCE_LIMIT,
@@ -110,6 +110,7 @@ type CandidateEvidenceScopeInput = {
   draftContext?: DraftRecommendationContext
   draftCandidateEvidence?: DraftCandidateEvidenceRequirements
   draftCandidates?: readonly DraftActionCandidate[]
+  feedback?: string
 }
 
 type DraftCandidateEvidenceRole = 'target' | 'lifecycle' | 'owner' | 'gate' | 'counterevidence' | 'retained-context'
@@ -118,12 +119,51 @@ const REVIEWED_CANDIDATE_ALIASES = new Map<string, string>([
   ['wayfinder#543', 'core#543'],
 ])
 
+function sortedStatuses(statuses: ReadonlyMap<string, string>) {
+  return [...statuses].sort(([left], [right]) => left.localeCompare(right))
+}
+
+function canonicalInputIndex(registry: ActionRegistry, statuses: ReadonlyMap<string, string>, output?: ActionReviewOutput) {
+  const index = actionReviewIndex({ registry, articleDate: output?.articleDate ?? '', articleStatuses: statuses, expandedActionKeys: registry.records.map(record => record.key) })
+  const actions = new Map(index.actions.map(action => [action.key, sha256(JSON.stringify(action))]))
+  let rejectionMemorySha256 = sha256(JSON.stringify(index.rejectionMemory))
+  if (output) {
+    const records = new Map(registry.records.map(record => [record.key, record]))
+    for (const created of output.createdRecords) {
+      const record = records.get(created.actionKey)
+      if (!record || sha256(JSON.stringify(record)) !== created.afterRecordSha256 || actions.get(created.actionKey) !== created.afterInputSha256) throw new Error(`Native review output changed after verification: ${created.actionKey}; review pending`)
+      actions.delete(created.actionKey)
+    }
+    for (const updated of output.updatedRecords) {
+      const record = records.get(updated.actionKey)
+      if (!record || sha256(JSON.stringify(record)) !== updated.afterRecordSha256 || actions.get(updated.actionKey) !== updated.afterInputSha256) throw new Error(`Native review output changed after verification: ${updated.actionKey}; review pending`)
+      actions.set(updated.actionKey, updated.beforeInputSha256)
+    }
+    if (rejectionMemorySha256 !== output.rejectionMemory.afterSha256) throw new Error('Native review rejection memory changed after verification; review pending')
+    rejectionMemorySha256 = output.rejectionMemory.beforeSha256
+  }
+  const view = { actions: [...actions].sort(([left], [right]) => left.localeCompare(right)), held: index.held, rejectionMemorySha256 }
+  return { sha256: sha256(JSON.stringify(view)), actions, rejectionMemorySha256 }
+}
+
+function applicableReviewOutput(registry: ActionRegistry, snapshot: ActionRegistry['articles'][number] | undefined, requirements: DraftCandidateEvidenceRequirements | undefined, cycle: ActionReviewCycle | undefined) {
+  if (!snapshot?.reviewOutput || !requirements || !cycle || JSON.stringify(snapshot.reviewOutput.reviewCycle) !== JSON.stringify(cycle)) return undefined
+  const output = ActionReviewOutputSchema.parse(snapshot.reviewOutput)
+  if (snapshot.review.state !== 'verified' || output.articleDate !== snapshot.date || output.roundId !== snapshot.roundId
+    || output.proposalSha256 !== snapshot.verification.proposalSha256 || output.consumedInputSha256 !== requirements.canonicalIndexSha256) {
+    throw new Error('Native review output provenance is stale or foreign; review pending')
+  }
+  if (snapshot.stateDigest !== actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId,
+    draftCandidates: snapshot.draftCandidates, draftCandidateEvidence: snapshot.draftCandidateEvidence, reviewOutput: snapshot.reviewOutput })) throw new Error('Native review output integrity changed after verification; review pending')
+  return output
+}
+
 function candidateTargetReferences(candidate: DraftActionCandidate, retainedRefs: ReadonlySet<string>): Set<string> {
   const payload = JSON.stringify(candidate.payload)
   const references = actionSourceReferences(payload)
-  for (const match of payload.matchAll(/https:\/\/github\.com\/([^/]+)\/([\w-]+)\/(?:pull|issues)\/(\d+)/g)) {
-    if (match[1] !== 'ojfbot') throw new Error(`Foreign candidate reference ${match[0]} for ${candidate.candidateId}; review pending`)
-    if (!KNOWN_REPOS.has(match[2]) || EXCLUDED_REPOS.has(match[2])) throw new Error(`Unsupported qualified candidate reference ${match[2]}#${match[3]} for ${candidate.candidateId}; review pending`)
+  for (const match of payload.matchAll(/https:\/\/([^/\s]+)\/([^/\s]+)\/([\w-]+)\/(?:pull|issues)\/(\d+)/g)) {
+    if (match[1] !== 'github.com' || match[2] !== 'ojfbot') throw new Error(`Foreign candidate reference ${match[0]} for ${candidate.candidateId}; review pending`)
+    if (!KNOWN_REPOS.has(match[3]) || EXCLUDED_REPOS.has(match[3])) throw new Error(`Unsupported qualified candidate reference ${match[3]}#${match[4]} for ${candidate.candidateId}; review pending`)
   }
   for (const match of payload.matchAll(/\b([\w-]+)#(\d+)\b/g)) {
     const qualified = `${match[1]}#${match[2]}`
@@ -151,19 +191,21 @@ export function draftCandidateEvidenceBinding(input: CandidateEvidenceScopeInput
   if (!candidates.length) throw new Error('Draft candidate evidence binding requires captured candidates')
   const cycle = input.cycle ?? snapshot?.reviewCycle
   if (!cycle) throw new Error('Draft candidate evidence binding requires an action review cycle')
-  const statuses = input.articleStatuses ?? new Map(input.registry.articles.map(article => [article.date, article.status]))
+  const requirements = input.draftCandidateEvidence ?? snapshot?.draftCandidateEvidence
+  const statuses = new Map(input.articleStatuses ?? input.registry.articles.map(article => [article.date, article.status]))
+  statuses.set(input.articleDate, input.markdown.match(/^status:\s*["']?(accepted|rejected)/m)?.[1] ?? 'draft')
   const contextText = prepared.context.kind === 'retained' ? prepared.context.markdown : ''
-  const retainedRefs = actionSourceReferences(contextText)
-  const candidateRefs = new Set(candidates.flatMap(candidate => [...candidateTargetReferences(candidate, retainedRefs)]))
-  const boundActionKeys = new Set([
-    ...input.registry.records.filter(record => contextText.includes(record.key) || contextText.includes(record.workKey)
-      || actionRecordSourceReferences(record).some(reference => retainedRefs.has(reference) || candidateRefs.has(reference))).map(record => record.key),
-  ])
-  const actionState = [...boundActionKeys].sort().map(key => {
-    const record = input.registry.records.find(candidate => candidate.key === key)
-    if (!record) throw new Error(`Draft candidate evidence binding references unknown canonical action: ${key}`)
-    return { key, state: acceptedActionState(record, statuses, input.registry), workKey: record.workKey, goal: record.goal, doneWhen: record.doneWhen, gates: record.gates,
-      history: record.history.filter(decision => decision.articleDate !== input.articleDate && statuses.get(decision.articleDate) === 'accepted') }
+  const output = applicableReviewOutput(input.registry, snapshot, requirements, cycle)
+  const canonical = canonicalInputIndex(input.registry, statuses, output)
+  const visibleRecords = input.registry.records.filter(record => canonical.actions.has(record.key))
+  const mandatoryKeys = new Set(visibleRecords.filter(record => contextText.includes(record.key) || contextText.includes(record.workKey)).map(record => record.key))
+  const relationKeys = new Set(requirements?.candidates.flatMap(candidate => candidate.actionRelations.map(relation => relation.actionKey)) ?? [])
+  const inputActionKeys = [...new Set([...mandatoryKeys, ...relationKeys])].sort()
+  if (requirements && JSON.stringify([...requirements.inputActionKeys].sort()) !== JSON.stringify(inputActionKeys)) throw new Error('Structured draft candidate evidence input identities are stale or incomplete; review pending')
+  const actionState = inputActionKeys.map(key => {
+    const digest = canonical.actions.get(key)
+    if (!digest) throw new Error(`Draft candidate evidence binding references unknown canonical action: ${key}`)
+    return { key, digest }
   })
   return {
     articleDate: input.articleDate,
@@ -171,6 +213,10 @@ export function draftCandidateEvidenceBinding(input: CandidateEvidenceScopeInput
     reviewCycle: cycle,
     draftContextSha256: sha256(JSON.stringify(prepared.context)),
     candidatePayloadsSha256: sha256(JSON.stringify(candidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))),
+    feedbackSha256: sha256(input.feedback ?? ''),
+    articleStatusesSha256: sha256(JSON.stringify(sortedStatuses(statuses))),
+    canonicalIndexSha256: canonical.sha256,
+    inputActionKeys,
     actionStateSha256: sha256(JSON.stringify(actionState)),
   }
 }
@@ -189,12 +235,20 @@ export function draftCandidateEvidenceScope(input: CandidateEvidenceScopeInput, 
   if (!rawRequirements) throw new Error('Structured draft candidate evidence requirements are missing; review pending')
   const requirements = DraftCandidateEvidenceRequirementsSchema.parse(rawRequirements)
   const binding = draftCandidateEvidenceBinding(input, prepared)
-  if (requirements.articleDate !== binding.articleDate || requirements.articleDigest !== binding.articleDigest || snapshot && requirements.articleDigest !== snapshot.articleDigest
-    || JSON.stringify(requirements.reviewCycle) !== JSON.stringify(binding.reviewCycle)
-    || requirements.draftContextSha256 !== binding.draftContextSha256 || requirements.candidatePayloadsSha256 !== binding.candidatePayloadsSha256
-    || requirements.actionStateSha256 !== binding.actionStateSha256) {
-    throw new Error('Structured draft candidate evidence binding is stale or foreign; review pending')
-  }
+  const staleFields = [
+    requirements.articleDate !== binding.articleDate && 'articleDate',
+    requirements.articleDigest !== binding.articleDigest && 'articleDigest',
+    snapshot && requirements.articleDigest !== snapshot.articleDigest && 'snapshotArticleDigest',
+    JSON.stringify(requirements.reviewCycle) !== JSON.stringify(binding.reviewCycle) && 'reviewCycle',
+    requirements.draftContextSha256 !== binding.draftContextSha256 && 'draftContext',
+    requirements.candidatePayloadsSha256 !== binding.candidatePayloadsSha256 && 'candidatePayloads',
+    requirements.feedbackSha256 !== binding.feedbackSha256 && 'feedback',
+    requirements.articleStatusesSha256 !== binding.articleStatusesSha256 && 'articleStatuses',
+    requirements.canonicalIndexSha256 !== binding.canonicalIndexSha256 && 'canonicalIndex',
+    JSON.stringify(requirements.inputActionKeys) !== JSON.stringify(binding.inputActionKeys) && 'inputActionKeys',
+    requirements.actionStateSha256 !== binding.actionStateSha256 && 'actionState',
+  ].filter(Boolean)
+  if (staleFields.length) throw new Error(`Structured draft candidate evidence binding is stale or foreign (${staleFields.join(', ')}); review pending`)
   const candidatesById = new Map(candidates.map(candidate => [candidate.candidateId, candidate]))
   const requirementIds = requirements.candidates.map(candidate => candidate.candidateId).sort()
   if (JSON.stringify([...candidatesById.keys()].sort()) !== JSON.stringify(requirementIds)) throw new Error('Structured draft candidate evidence must account for every captured candidate; review pending')
@@ -218,11 +272,18 @@ export function draftCandidateEvidenceScope(input: CandidateEvidenceScopeInput, 
       const linked = association.references.find(reference => reference.reference === target)
       if (!linked || linked.classification !== 'required') throw new Error(`Direct candidate target cannot be omitted or classified as background: ${association.candidateId} ${target}; review pending`)
     }
+    for (const relation of association.actionRelations) {
+      if (!targetRefs.get(candidate.candidateId)?.has(relation.sourceReference)) throw new Error(`Candidate action relation is not attached to a direct target: ${association.candidateId} ${relation.sourceReference}; review pending`)
+      if (!association.references.some(reference => reference.reference === relation.sourceReference && reference.classification === 'required')) throw new Error(`Candidate action relation source is not required: ${association.candidateId} ${relation.sourceReference}; review pending`)
+      if (!input.registry.records.some(record => record.key === relation.actionKey) || !requirements.inputActionKeys.includes(relation.actionKey)) throw new Error(`Candidate action relation references an unknown input action: ${relation.actionKey}; review pending`)
+    }
   }
   for (const reference of requirements.unassignedReferences) add(reference, 'unassigned')
-  const directTargets = new Set([...targetRefs.values()].flatMap(references => [...references]))
-  const inheritedRecords = input.registry.records.filter(record => actionRecordSourceReferences(record).some(reference => directTargets.has(reference)))
-  for (const record of inheritedRecords) {
+  const relations = requirements.candidates.flatMap(candidate => candidate.actionRelations)
+  for (const relation of relations) {
+    const record = input.registry.records.find(candidate => candidate.key === relation.actionKey)
+    if (!record) throw new Error(`Candidate action relation references an unknown input action: ${relation.actionKey}; review pending`)
+    add({ reference: relation.sourceReference, classification: 'required', role: 'lifecycle', reason: relation.reason }, `canonical:${record.key}`)
     const inherited = [
       { text: record.original.description, role: 'lifecycle' as const, reason: 'Canonical work description inherited by the direct candidate target.' },
       { text: record.goal, role: 'owner' as const, reason: 'Canonical goal or owner obligation inherited by the direct candidate target.' },
@@ -249,23 +310,43 @@ export function draftCandidateEvidenceScope(input: CandidateEvidenceScopeInput, 
 /** Initial generation has no trusted classifier yet, so it may only widen the required set. */
 export function prepareConservativeDraftCandidateEvidence(input: CandidateEvidenceScopeInput & { cycle: ActionReviewCycle; draftCandidates: readonly DraftActionCandidate[] }): DraftCandidateEvidenceRequirements {
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? input.registry.articles.find(article => article.date === input.articleDate)?.draftContext)
+  const previous = input.registry.articles.find(article => article.date === input.articleDate)?.draftCandidateEvidence
+  const binding = draftCandidateEvidenceBinding(input, prepared)
+  if (previous) {
+    const parsed = DraftCandidateEvidenceRequirementsSchema.parse(previous)
+    const priorComparable = { ...parsed, reviewCycle: binding.reviewCycle, provenance: undefined }
+    const nextComparable = { ...parsed, ...binding, provenance: undefined }
+    if (JSON.stringify(priorComparable) !== JSON.stringify(nextComparable)) throw new Error('Structured draft candidate evidence changed beyond its review cycle; fresh classification required; review pending')
+    if (JSON.stringify(parsed.reviewCycle) === JSON.stringify(binding.reviewCycle)) return parsed
+    return DraftCandidateEvidenceRequirementsSchema.parse({
+      ...parsed,
+      ...binding,
+      provenance: {
+        kind: 'derived-refresh',
+        identity: parsed.provenance.identity,
+        decision: 'Cycle-only refresh preserves the prior evidence classification; it grants no new review authority.',
+        lineage: { kind: 'cycle-only-refresh', priorReviewCycle: parsed.reviewCycle, priorRequirementsSha256: sha256(JSON.stringify(parsed)) },
+      },
+    })
+  }
   const retainedRefs = prepared.context.kind === 'retained' ? actionSourceReferences(prepared.context.markdown) : new Set<string>()
   const assigned = new Set<string>()
   const candidates = input.draftCandidates.map(candidate => {
-    const references = [...candidateTargetReferences(candidate, retainedRefs)].sort().map(reference => {
+    const targetReferences = [...candidateTargetReferences(candidate, retainedRefs)].sort()
+    const references = targetReferences.map(reference => {
       assigned.add(reference)
       return { classification: 'required' as const, reference, role: 'target' as const, reason: 'Direct immutable candidate target requires current primary evidence.' }
     })
-    return { candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references }
+    return { candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references, actionRelations: [] }
   })
   return DraftCandidateEvidenceRequirementsSchema.parse({
-    version: 'draft-candidate-evidence-v1',
+    version: 'draft-candidate-evidence-v2',
     provenance: {
       kind: 'deterministic-default',
       identity: ACTION_EVIDENCE_SELECTION_VERSION,
       decision: 'Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority.',
     },
-    ...draftCandidateEvidenceBinding(input, prepared),
+    ...binding,
     candidates,
     unassignedReferences: [...retainedRefs].filter(reference => !assigned.has(reference)).sort().map(reference => ({
       classification: 'required' as const,
@@ -377,9 +458,16 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     const reference = key.replace(/^github:/, '')
     const requirements = scope.referenceRequirements.filter(requirement => requirement.classification === 'required' && requirement.reference === reference)
     const candidateObligations = requirements.map(requirement => obligation(requirement.source, 'candidate-evidence', `${requirement.reference}:${requirement.role ?? 'unspecified'}:${requirement.reason}`))
+    const canonicalKeys = new Set(requirements.flatMap(requirement => requirement.source.startsWith('canonical:') ? [requirement.source.slice('canonical:'.length)] : []))
     const scopedActionObligations = !key.startsWith('github:') ? actionObligations : input.registry.records.filter(record => scope.reviewActionKeys.includes(record.key)
-      || requirements.some(requirement => requirement.source === `canonical:${record.key}`)).flatMap(record => {
+      || canonicalKeys.has(record.key)).flatMap(record => {
       const currentDescription = record.history.at(-1)?.description ?? record.original.description
+      if (canonicalKeys.has(record.key)) return [
+        ...(record.goal ? [obligation(record.key, 'goal', record.goal)] : []),
+        obligation(record.key, 'current-disposition', currentDescription),
+        ...(record.doneWhen ? [obligation(record.key, 'done-when', record.doneWhen)] : []),
+        ...record.gates.map(gate => obligation(record.key, 'gate', gate)),
+      ]
       return [
         ...(record.goal && actionSourceReferences(record.goal).has(reference) ? [obligation(record.key, 'goal', record.goal)] : []),
         ...(actionSourceReferences(currentDescription).has(reference) ? [obligation(record.key, 'current-disposition', currentDescription)] : []),
@@ -516,4 +604,43 @@ export function actionReviewIndex(input: { registry: ActionRegistry; articleDate
   const rejectionMemory = [...new Map(input.registry.articles.flatMap(article => article.rejected).filter(item => item.workKey)
     .map(item => [JSON.stringify([item.workKey, item.evidenceDigest, item.quotaHold]), { workKey: item.workKey, evidenceDigest: item.evidenceDigest, ...(item.quotaHold ? { quotaHold: item.quotaHold } : {}) }])).values()]
   return { actions, held, rejectionMemory }
+}
+
+export function deriveActionReviewOutput(input: {
+  before: ActionRegistry
+  after: ActionRegistry
+  articleStatuses: ReadonlyMap<string, string>
+  articleDate: string
+  reviewCycle: ActionReviewCycle
+  roundId: string
+  proposalSha256: string
+  consumedInputSha256: string
+}): ActionReviewOutput {
+  const beforeIndex = canonicalInputIndex(input.before, input.articleStatuses)
+  const afterIndex = canonicalInputIndex(input.after, input.articleStatuses)
+  const beforeRecords = new Map(input.before.records.map(record => [record.key, record]))
+  const afterRecords = new Map(input.after.records.map(record => [record.key, record]))
+  const createdRecords = [...afterRecords].filter(([key]) => !beforeRecords.has(key)).map(([actionKey, record]) => {
+    const afterInputSha256 = afterIndex.actions.get(actionKey)
+    if (!afterInputSha256) throw new Error(`Native review output cannot bind created action input: ${actionKey}`)
+    return { actionKey, afterRecordSha256: sha256(JSON.stringify(record)), afterInputSha256 }
+  }).sort((left, right) => left.actionKey.localeCompare(right.actionKey))
+  const updatedRecords = [...beforeRecords].flatMap(([actionKey, before]) => {
+    const after = afterRecords.get(actionKey)
+    if (!after || JSON.stringify(before) === JSON.stringify(after)) return []
+    const beforeInputSha256 = beforeIndex.actions.get(actionKey), afterInputSha256 = afterIndex.actions.get(actionKey)
+    if (!beforeInputSha256 || !afterInputSha256) throw new Error(`Native review output cannot bind canonical action input: ${actionKey}`)
+    return [{ actionKey, beforeRecordSha256: sha256(JSON.stringify(before)), afterRecordSha256: sha256(JSON.stringify(after)), beforeInputSha256, afterInputSha256 }]
+  }).sort((left, right) => left.actionKey.localeCompare(right.actionKey))
+  return ActionReviewOutputSchema.parse({
+    version: 'action-review-output-v1',
+    articleDate: input.articleDate,
+    reviewCycle: input.reviewCycle,
+    roundId: input.roundId,
+    proposalSha256: input.proposalSha256,
+    consumedInputSha256: input.consumedInputSha256,
+    createdRecords,
+    updatedRecords,
+    rejectionMemory: { beforeSha256: beforeIndex.rejectionMemorySha256, afterSha256: afterIndex.rejectionMemorySha256 },
+  })
 }
