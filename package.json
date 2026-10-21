@@ -17,6 +17,8 @@
     "check:action-intake": "tsx scripts/check-action-intake.ts",
     "actions:migrate": "tsx scripts/migrate-actions.ts",
     "actions:reconcile": "tsx scripts/reconcile-actions.ts",
+    "actions:evidence:project": "tsx scripts/project-action-evidence.ts",
+    "actions:evidence:respond": "tsx scripts/respond-action-evidence.ts",
     "actions:check-review": "tsx scripts/check-action-review.ts",
     "dev": "tsx src/build-api.ts && cd packages/frontend && pnpm dev",
     "type-check": "tsc --noEmit",

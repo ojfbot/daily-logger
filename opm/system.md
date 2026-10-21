@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `15bcb59a582b7a891829cebe5987fff212bb2da6acab99011f2212631bd5c6df`.
+> Source SHA-256: `0c8fed47a17e48bbd7ebbc3d330f576bd808433bbeed59d12df19f784129350d`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -58,8 +58,8 @@ flowchart TD
   n32("Suggestion Proposing")
   n33("Suggestion Verifying")
   n35["Draft Action Candidate — states: awaiting-review, promoted, mapped-existing, rejected, verified-closure"]
-  n119["Ranked Recommendations"]
-  n120["Handled Suggestions"]
+  n127["Ranked Recommendations"]
+  n128["Handled Suggestions"]
   n36("Editorial Revising")
   n37["Editorial Revision Request"]
   n38["Draft Suggestion — states: proposed, open, done, dismissed, superseded, deferred"]
@@ -67,7 +67,7 @@ flowchart TD
   n88["Article Action Files — states: pending, verified"]
   n39("Inclusion Choosing")
   n40["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
-  n121["Canonical Actions"]
+  n129["Canonical Actions"]
   n41["JSON API"]
   n42("Frontend Rendering")
   n43["Rendered Site"]
@@ -78,8 +78,8 @@ flowchart TD
   n48["Revision Request"]
   n49("Conversation Saving")
   n50["Saved Message"]
-  n122["Review Records"]
-  n123["Correspondence"]
+  n130["Review Records"]
+  n131["Correspondence"]
   n51["Time Record Pointer"]
   n52("Time Recording")
   n53["Commit Context"]
@@ -157,10 +157,10 @@ flowchart TD
   n28 -->|"yields"| n31
   n28 -->|"changes: transient to retained"| n27
   n35 -->|"part of"| n18
-  n119 -->|"part of"| n26
+  n127 -->|"part of"| n26
   n18 -->|"part of"| n26
   n27 -->|"part of"| n26
-  n120 -->|"part of"| n26
+  n128 -->|"part of"| n26
   n7 -->|"yields"| n29
   n7 -->|"invokes"| n28
   n36 -->|"yields"| n29
@@ -174,7 +174,7 @@ flowchart TD
   n4 -->|"requires (instrument)"| n39
   n39 <-->|"affects"| n23
   n19 -->|"handles (human)"| n39
-  n121 -->|"part of"| n13
+  n129 -->|"part of"| n13
   n40 -->|"part of"| n13
   n21 -->|"invokes"| n22
   n13 -->|"requires (instrument)"| n21
@@ -196,8 +196,8 @@ flowchart TD
   n46 -->|"requires (instrument)"| n49
   n49 -->|"yields"| n50
   n49 <-->|"affects"| n4
-  n122 -->|"part of"| n46
-  n123 -->|"part of"| n46
+  n130 -->|"part of"| n46
+  n131 -->|"part of"| n46
   n0 -->|"exhibits"| n51
   n0 -->|"requires (instrument)"| n52
   n13 -->|"requires (instrument)"| n52
@@ -599,8 +599,19 @@ flowchart TD
   n31["Recommendation Maintenance Memory"]
   n111["Selected Source Evidence"]
   n112["Evidence Coverage"]
+  n113["Action Evidence Request — states: open, resolved"]
+  n114["Private Local Complete Source Artifact"]
+  n115["Action Evidence Request Receipt"]
+  n116("Source Evidence Projecting")
+  n117["Action Evidence Projection"]
   n32("Suggestion Proposing")
   n33("Suggestion Verifying")
+  n118["Evidence Resolution Intent"]
+  n119("Evidence Resolution Recording")
+  n120["Private Local Resolution Artifact"]
+  n7("Article Generating")
+  n36("Editorial Revising")
+  n20("Editorial Accepting")
   n4 -->|"requires (instrument)"| n93
   n44 -->|"requires (instrument)"| n93
   n93 -->|"yields"| n94
@@ -639,8 +650,23 @@ flowchart TD
   n31 -->|"requires (instrument)"| n110
   n110 -->|"yields"| n111
   n110 -->|"yields"| n112
+  n28 -->|"yields"| n113
+  n28 -->|"yields"| n114
+  n28 -->|"yields"| n115
+  n115 -->|"part of"| n88
+  n113 -->|"requires (instrument)"| n116
+  n114 -->|"requires (instrument)"| n116
+  n116 -->|"yields"| n117
+  n117 -->|"requires (instrument)"| n110
   n111 -->|"requires (instrument)"| n32
   n111 -->|"requires (instrument)"| n33
+  n28 -->|"yields"| n118
+  n118 -->|"requires (instrument)"| n119
+  n88 -->|"requires (instrument)"| n119
+  n119 -->|"yields"| n120
+  n7 -->|"invokes"| n119
+  n36 -->|"invokes"| n119
+  n20 -->|"invokes"| n119
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -685,8 +711,24 @@ Source Evidence Selecting requires Source Evidence. [src: src/action-evidence-se
 Source Evidence Selecting requires Recommendation Maintenance Memory. [src: src/action-evidence-selection.ts]
 Source Evidence Selecting yields Selected Source Evidence. [src: src/action-evidence-selection.ts]
 Source Evidence Selecting yields Evidence Coverage. [src: src/action-evidence-selection.ts]
+Action Evidence Request can be open or resolved. [src: src/action-registry-contract.ts]
+Action Reconciling yields Action Evidence Request. [src: src/review-actions.ts]
+Action Reconciling yields Private Local Complete Source Artifact. [src: src/action-evidence-retrieval.ts]
+Action Reconciling yields Action Evidence Request Receipt. [src: src/review-actions.ts]
+Article Action Files consists of Action Evidence Request Receipt. [src: src/action-registry-contract.ts]
+Source Evidence Projecting requires Action Evidence Request. [src: src/action-evidence-retrieval.ts]
+Source Evidence Projecting requires Private Local Complete Source Artifact. [src: src/action-evidence-retrieval.ts]
+Source Evidence Projecting yields Action Evidence Projection. [src: src/action-evidence-retrieval.ts]
+Source Evidence Selecting requires Action Evidence Projection. [src: src/action-evidence-selection.ts]
 Suggestion Proposing requires Selected Source Evidence. [src: src/review-actions.ts]
 Suggestion Verifying requires Selected Source Evidence. [src: src/review-actions.ts]
+Action Reconciling yields Evidence Resolution Intent. [src: src/review-actions.ts]
+Evidence Resolution Recording requires Evidence Resolution Intent. [src: src/action-evidence-retrieval.ts]
+Evidence Resolution Recording requires Article Action Files. [src: src/action-registry.ts]
+Evidence Resolution Recording yields Private Local Resolution Artifact. [src: src/action-evidence-retrieval.ts]
+Article Generating invokes Evidence Resolution Recording. [src: src/index.ts]
+Editorial Revising invokes Evidence Resolution Recording. [src: src/revise-article.ts]
+Editorial Accepting invokes Evidence Resolution Recording. [src: scripts/reconcile-actions.ts]
 ```
 
 ## SD1.3 — Reporting interval and fallback start checking
@@ -703,23 +745,23 @@ title: "SD1.3 — Reporting interval and fallback start checking"
 flowchart TD
   accTitle: SD1.3 — Reporting interval and fallback start checking
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n113["Article Date"]
-  n114("Activity Window Resolving")
-  n115["Activity Window"]
+  n121["Article Date"]
+  n122("Activity Window Resolving")
+  n123["Activity Window"]
   n77("Context Collecting")
-  n116["Clock"]
-  n117("Start Target Waiting")
-  n118["Due Start Target"]
+  n124["Clock"]
+  n125("Start Target Waiting")
+  n126["Due Start Target"]
   n14("Fallback Checking")
   n16("Fallback Dispatching")
-  n113 -->|"requires (instrument)"| n114
-  n114 -->|"yields"| n115
-  n115 -->|"requires (instrument)"| n77
-  n77 -->|"invokes"| n114
-  n116 -->|"requires (instrument)"| n117
-  n117 -->|"yields"| n118
-  n14 -->|"invokes"| n117
-  n118 -->|"requires (instrument)"| n16
+  n121 -->|"requires (instrument)"| n122
+  n122 -->|"yields"| n123
+  n123 -->|"requires (instrument)"| n77
+  n77 -->|"invokes"| n122
+  n124 -->|"requires (instrument)"| n125
+  n125 -->|"yields"| n126
+  n14 -->|"invokes"| n125
+  n126 -->|"requires (instrument)"| n16
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**

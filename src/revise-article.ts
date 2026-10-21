@@ -21,7 +21,8 @@ import { dirname } from 'node:path'
 import { readActionRegistry, registryRevision, writeActionRegistry, readArticleStatuses, renderArticleActionHtml, stripManagedActions } from './action-registry.js'
 import { assertArticleReferenceContract } from './article-references.js'
 import { readArticleTime } from './article-time-metadata.js'
-import { collectActionSources, createActionAgents, mockActionAgents, reviewArticleActions } from './review-actions.js'
+import { collectActionSources, createActionAgents, mockActionAgents, reviewDraftActions } from './review-actions.js'
+import { persistActionEvidenceResolutions, readActionEvidenceReply } from './action-evidence-retrieval.js'
 import { stampOutcome } from './stamp-outcome.js'
 import { detachArticleTime, preserveTimeDuringRevision, type RevisionResult } from './article-time-frontmatter.js'
 import {
@@ -181,6 +182,10 @@ async function main() {
   const requestIdentity = process.env.ACTION_REVIEW_REQUEST?.trim()
   if (!requestIdentity) throw new Error('ACTION_REVIEW_REQUEST must identify this logical editorial request; retries retain it')
   const cycle = revisionActionCycle(requestIdentity)
+  const actionKeys = (name: string) => (process.env[name] ?? '').split(',').map(value => value.trim()).filter(Boolean)
+  const reassessActionKeys = actionKeys('ACTION_REASSESS_KEYS')
+  const preserveActionKeys = actionKeys('ACTION_PRESERVE_KEYS')
+  const evidenceReplies = actionKeys('ACTION_EVIDENCE_REPLY').map(path => readActionEvidenceReply(resolve(path)))
 
   const articleContent = readFileSync(articlePath, 'utf-8')
 
@@ -198,7 +203,8 @@ async function main() {
     const articleDate = result.revisedMarkdown.match(/^date:\s*"?(\d{4}-\d{2}-\d{2})/m)?.[1]
     if (!articleDate) throw new Error('Article date is missing')
     const statuses = readArticleStatuses(repoRoot)
-    const actions = await reviewArticleActions({ cycle, registry, articleStatuses: statuses, articleDate, markdown: result.revisedMarkdown, feedback, sources: isMock ? [] : collectActionSources({ registry, repoRoot, markdown: result.revisedMarkdown, feedback }), agents: isMock ? mockActionAgents : createActionAgents() })
+    const collectedSources = isMock ? [] : collectActionSources({ registry, repoRoot, markdown: result.revisedMarkdown, feedback, reassessActionKeys, preserveActionKeys })
+    const actions = await reviewDraftActions({ cycle, registry, articleStatuses: statuses, articleDate, markdown: result.revisedMarkdown, feedback, sources: [...collectedSources, ...evidenceReplies], agents: isMock ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, ...(isDryRun ? {} : { repoRoot }) })
     const renderedHtml = renderArticleActionHtml(actions.markdown, actions.registry, articleDate, statuses)
     const evidence = readArticleTime({ repoRoot, date: articleDate, markdown: stripManagedActions(actions.markdown), bindingMarkdown: actions.markdown, renderedHtml })
     const referenceAudit = assertArticleReferenceContract(actions.markdown, evidence.referenceKinds, renderedHtml)
@@ -206,7 +212,10 @@ async function main() {
     result.revisedMarkdown = actions.markdown
     result.changed = result.revisedMarkdown.trim() !== articleContent.trim()
     registryChanged = registryRevision(actions.registry) !== registryRevision(registry)
-    if (!isDryRun) writeActionRegistry(repoRoot, actions.registry, registryRevision(registry), { path: articlePath, expected: articleContent, next: result.revisedMarkdown, publish: () => writeFileSync(articlePath, result.revisedMarkdown, 'utf8') })
+    if (!isDryRun) {
+      writeActionRegistry(repoRoot, actions.registry, registryRevision(registry), { path: articlePath, expected: articleContent, next: result.revisedMarkdown, publish: () => writeFileSync(articlePath, result.revisedMarkdown, 'utf8') })
+      persistActionEvidenceResolutions(repoRoot, actions.evidenceResolutions)
+    }
   } catch (err) {
     console.error(`\n❌ Revision failed: ${err instanceof Error ? err.message : err}`)
     process.exit(2)

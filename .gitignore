@@ -17,6 +17,7 @@ evals/results/raw.json
 # Local assistant state and generated site previews
 /.codex/
 /.serena/
+/.action-evidence/
 /_site/
 /_site_preview/
 /playwright-report/
