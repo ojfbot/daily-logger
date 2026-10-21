@@ -1,16 +1,16 @@
 import { useEffect, useId, useRef, useState, useCallback } from 'react'
-import type { TimeReference } from '../../../../src/time-reference-schema.ts'
+import type { TimeReferenceInput } from '../../../../src/time-reference-schema.ts'
 import type { ShipmentTime } from '../../../../src/shipment-times.ts'
 import type { IssueTime } from '../../../../src/issue-times.ts'
 import type { CodeReference } from '../store/types.ts'
 import { findCodeElements, resolveRef, PR_LINK_RE } from '../utils/codeRefUtils.ts'
 import { useGithubCache } from './useGithubCache.ts'
 import type { PopoverState } from '../components/Popover.tsx'
-import { attachTimeReferences } from '../utils/timeReferences.ts'
+import { attachTimeReferences, type TimePopoverReference } from '../utils/timeReferences.ts'
 import { attachShipmentTimes, shipmentTimeReference } from '../utils/shipmentTimes.ts'
 import { attachIssueTimes, issueTimeReference } from '../utils/issueTimes.ts'
-import { viewerClock } from '../utils/timeDisplay.ts'
 import { scanVisibleTimeText } from '../../../../src/time-reference-text.ts'
+import { scanTimeExpressions } from '../../../../src/time-expression-text.ts'
 
 const SHOW_DELAY = 200
 const EMPTY_SHIPMENT_TIMES: ShipmentTime[] = []
@@ -20,7 +20,7 @@ export function useArticlePopovers(
   contentRef: React.RefObject<HTMLDivElement | null>,
   codeReferences: CodeReference[],
   reposActive: string[],
-  timeReferences: TimeReference[],
+  timeReferences: TimeReferenceInput[],
   contentRevision?: string,
   shipmentTimes: ShipmentTime[] = EMPTY_SHIPMENT_TIMES,
   issueTimes: IssueTime[] = EMPTY_ISSUE_TIMES,
@@ -111,7 +111,7 @@ export function useArticlePopovers(
 
     for (const { element, ref } of codeRefEls) {
       // Clock tokens have their own evidence gate, including when Markdown uses inline code.
-      if (scanVisibleTimeText(ref.text).some(token => token.text === ref.text)) continue
+      if (scanVisibleTimeText(ref.text).some(token => token.text === ref.text) || scanTimeExpressions(ref.text).some(expression => expression.text === ref.text)) continue
       element.classList.add('code-ref', `ref-type-${ref.type}`)
       element.dataset.refType = ref.type
       if (ref.repo) element.dataset.repo = ref.repo
@@ -205,14 +205,14 @@ export function useArticlePopovers(
     const proseTimes = attachTimeReferences(root, timeReferences)
     const shipmentStates = attachShipmentTimes(root, shipmentTimes)
     const issueStates = attachIssueTimes(root, issueTimes)
-    const show = (element: HTMLButtonElement, reference: TimeReference) => {
+    const show = (element: HTMLButtonElement, reference: TimePopoverReference) => {
         if (!element.isConnected || !root.contains(element)) return
         hidePopover()
         activeAnchor.current = element
         element.setAttribute('aria-describedby', tooltipId)
         element.setAttribute('aria-expanded', 'true')
         setPopover({ visible: true, anchor: element, variant: {
-          kind: 'time', reference, tooltipId, viewer: viewerClock(new Date(reference.at), reference.precision),
+          kind: 'time', reference, tooltipId,
         } })
     }
     const cleanups = proseTimes.attached.map(({ element, reference }) => {
@@ -257,16 +257,16 @@ export function useArticlePopovers(
     })
     const shipmentByUrl = new Map(shipmentTimes.flatMap((shipment) => shipment.status === 'available' ? [[shipment.source.url, shipment] as const] : []))
     const issueByUrl = new Map(issueTimes.map((issue) => [issue.source.url, issue]))
-    const shipmentTarget = (event: Event) => {
+    const shipmentTarget = (event: Event): { element: HTMLButtonElement; reference: TimePopoverReference } | undefined => {
       if (!(event.target instanceof Element)) return undefined
       const element = event.target.closest<HTMLButtonElement>('.shipment-time-ref, .issue-time-ref')
       if (!element || !root.contains(element)) return undefined
       const shipmentUrl = element.closest<HTMLElement>('.shipment-time-state')?.dataset.shipmentUrl
       const shipment = shipmentUrl ? shipmentByUrl.get(shipmentUrl) : undefined
-      if (shipment) return { element, reference: shipmentTimeReference(shipment) }
+      if (shipment) return { element, reference: { reference: shipmentTimeReference(shipment), certainty: 'exact' } }
       const issueUrl = element.closest<HTMLElement>('.issue-time-state')?.dataset.issueUrl
       const issue = issueUrl ? issueByUrl.get(issueUrl) : undefined
-      return issue ? { element, reference: issueTimeReference(issue) } : undefined
+      return issue ? { element, reference: { reference: issueTimeReference(issue), certainty: 'exact' } } : undefined
     }
     const onShipmentOver = (event: MouseEvent) => {
       const target = shipmentTarget(event)

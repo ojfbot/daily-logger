@@ -593,6 +593,84 @@
             "url": "https://github.com/ojfbot/daily-logger/pull/366"
           }
         }
+      ],
+      "expressions": [
+        {
+          "text": "~19:28–19:42Z",
+          "occurrence": 0,
+          "kind": "interval",
+          "start": {
+            "text": "~19:28",
+            "precision": "minute",
+            "certainty": "approximate",
+            "resolution": {
+              "kind": "supported",
+              "at": "2026-10-16T19:28:00.000Z",
+              "evidence": {
+                "kind": "github-pull-request",
+                "repo": "ojfbot/daily-logger",
+                "ref": "369",
+                "event": "merged",
+                "url": "https://github.com/ojfbot/daily-logger/pull/369"
+              }
+            }
+          },
+          "end": {
+            "text": "19:42Z",
+            "precision": "minute",
+            "certainty": "approximate",
+            "resolution": {
+              "kind": "supported",
+              "at": "2026-10-16T19:42:31.000Z",
+              "evidence": {
+                "kind": "github-pull-request",
+                "repo": "ojfbot/daily-logger",
+                "ref": "371",
+                "event": "merged",
+                "url": "https://github.com/ojfbot/daily-logger/pull/371"
+              }
+            }
+          },
+          "relation": "event-span"
+        },
+        {
+          "text": "~18:15–18:21Z",
+          "occurrence": 0,
+          "kind": "interval",
+          "start": {
+            "text": "~18:15",
+            "precision": "minute",
+            "certainty": "approximate",
+            "resolution": {
+              "kind": "supported",
+              "at": "2026-10-16T18:15:07.000Z",
+              "evidence": {
+                "kind": "github-pull-request",
+                "repo": "ojfbot/daily-logger",
+                "ref": "368",
+                "event": "merged",
+                "url": "https://github.com/ojfbot/daily-logger/pull/368"
+              }
+            }
+          },
+          "end": {
+            "text": "18:21Z",
+            "precision": "minute",
+            "certainty": "approximate",
+            "resolution": {
+              "kind": "supported",
+              "at": "2026-10-16T18:21:35.000Z",
+              "evidence": {
+                "kind": "github-pull-request",
+                "repo": "ojfbot/daily-logger",
+                "ref": "367",
+                "event": "merged",
+                "url": "https://github.com/ojfbot/daily-logger/pull/367"
+              }
+            }
+          },
+          "relation": "event-span"
+        }
       ]
     }
   }

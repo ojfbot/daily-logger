@@ -4,7 +4,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
 import { KNOWN_REPOS } from './fleet.js'
-import { articleBody, articleBodySha256, canonicalInstant, resolveTimeReferences, scanTimeTokens, unsupportedTimeTokens, TimeRecordSchema, TimeReferenceSidecarSchema, type TimeRecord, type TimeReferenceSidecar } from './time-references.js'
+import { articleBody, articleBodySha256, canonicalInstant, resolveTimeReferences, scanTimeTokens, unsupportedTimeTokens, timeReferenceCoverage, TimeRecordSchema, TimeReferenceSidecarSchema, type TimeRecord, type TimeReferenceSidecar } from './time-references.js'
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
 const EvidenceSnapshotSchema = z.object({
@@ -16,15 +16,17 @@ export type EvidenceSnapshot = z.infer<typeof EvidenceSnapshotSchema>
 export interface ArticleInput { date: string; markdown: string }
 export interface TimeSourceRequest { kind: 'commit' | 'pull' | 'issue'; repo: string; ref: string }
 
-export function parseBackfillOptions(args: string[]): { harvest: boolean; write: boolean; snapshot: string; output: string; report: string; shard?: { index: number; count: number }; merge: string[] } {
+export function parseBackfillOptions(args: string[]): { harvest: boolean; write: boolean; snapshot: string; output: string; report: string; shard?: { index: number; count: number }; merge: string[]; includeExpressions: boolean } {
   let harvest = false, write = false, snapshot = join(ROOT, 'api/time-evidence.json'), output = join(ROOT, 'api/time-refs.json'), report = join(ROOT, 'api/time-refs-report.json')
   let shard: { index: number; count: number } | undefined
   let explicitOutput = false
   const merge: string[] = []
+  let includeExpressions = false
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
     if (arg === '--harvest') { harvest = true; continue }
     if (arg === '--write') { write = true; continue }
+    if (arg === '--include-expressions') { includeExpressions = true; continue }
     if (!['--snapshot', '--output', '--report', '--shard', '--merge'].includes(arg)) throw new Error(`Unknown option: ${arg}`)
     const value = args[++i]
     if (!value || value.startsWith('--')) throw new Error(`Missing value for ${arg}`)
@@ -44,7 +46,7 @@ export function parseBackfillOptions(args: string[]): { harvest: boolean; write:
   if (merge.length && harvest) throw new Error('Merge cannot also harvest')
   if (new Set([snapshot, output, report]).size !== 3) throw new Error('Snapshot, output, and report must be distinct paths')
   if (merge.includes(output) || merge.includes(report)) throw new Error('Merge output/report must not overwrite an input shard')
-  return { harvest, write, snapshot, output, report, shard, merge }
+  return { harvest, write, snapshot, output, report, shard, merge, includeExpressions }
 }
 
 /** Only time-bearing blocks are harvested. No issue bodies, credentials, or general repository content are cached. */
@@ -153,7 +155,7 @@ function harvestEvidence(requests: TimeSourceRequest[]): EvidenceSnapshot {
   return { schemaVersion: 1, records: unique, failures }
 }
 
-export function buildTimeBackfill(articles: ArticleInput[], records: TimeRecord[], shard?: { index: number; count: number }) {
+export function buildTimeBackfill(articles: ArticleInput[], records: TimeRecord[], shard?: { index: number; count: number }, includeExpressions = false) {
   const sidecar: TimeReferenceSidecar = { schemaVersion: 1, articles: {} }
   const report = []
   const sorted = [...articles].sort((a, b) => a.date.localeCompare(b.date))
@@ -161,10 +163,12 @@ export function buildTimeBackfill(articles: ArticleInput[], records: TimeRecord[
     if (shard && index % shard.count !== shard.index) continue
     const body = articleBody(article.markdown)
     const unsupported = unsupportedTimeTokens(body)
-    if (!scanTimeTokens(body).length && !unsupported.length) continue
     const resolved = resolveTimeReferences(body, records)
-    sidecar.articles[article.date] = { bodySha256: articleBodySha256(article.markdown), references: resolved.references }
-    report.push({ date: article.date, resolved: resolved.references.length, unresolved: [...resolved.unresolved, ...unsupported] })
+    if (!scanTimeTokens(body).length && !unsupported.length && !(includeExpressions && resolved.expressions?.length)) continue
+    sidecar.articles[article.date] = { bodySha256: articleBodySha256(article.markdown), references: resolved.references, ...(includeExpressions && resolved.expressions?.length ? { expressions: resolved.expressions } : {}) }
+    report.push(includeExpressions
+      ? { date: article.date, ...timeReferenceCoverage(body, resolved), expressions: resolved.expressions ?? [] }
+      : { date: article.date, resolved: resolved.references.length, unresolved: [...resolved.unresolved, ...unsupported] })
   }
   return { sidecar: TimeReferenceSidecarSchema.parse(sidecar), report }
 }
@@ -207,7 +211,7 @@ export function main(args = process.argv.slice(2)): void {
     snapshot.records = [...new Map(snapshot.records.map((record) => [JSON.stringify(record), record])).values()].sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
   }
   if (options.harvest) writeJson(options.snapshot, snapshot)
-  const result = buildTimeBackfill(articles, snapshot.records, options.shard)
+  const result = buildTimeBackfill(articles, snapshot.records, options.shard, options.includeExpressions)
   console.log(JSON.stringify({ articlesScanned: articles.length, timeBearingArticles: result.report.length, resolved: result.report.reduce((sum, item) => sum + item.resolved, 0), unresolved: result.report.reduce((sum, item) => sum + item.unresolved.length, 0), sourceFailures: snapshot.failures.length, mode: options.write ? 'write' : 'report-only', report: result.report }, null, 2))
   if (options.write) { writeJson(options.output, TimeReferenceSidecarSchema.parse(result.sidecar)); writeJson(options.report, result.report) }
 }

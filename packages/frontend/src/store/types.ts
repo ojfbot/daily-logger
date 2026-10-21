@@ -1,5 +1,5 @@
 // Shared types for the React frontend — mirrors the static JSON API shape
-import type { TimeReference } from '../../../../src/time-reference-schema.ts'
+import type { TimeReferenceInput } from '../../../../src/time-reference-schema.ts'
 import type { ShipmentTime } from '../../../../src/shipment-times.ts'
 import type { IssueTime } from '../../../../src/issue-times.ts'
 import type { CanonicalAction, ReviewedCanonicalAction } from '../../../../src/action-model.ts'
@@ -85,7 +85,7 @@ export interface EntryData {
   decisions?: DecisionEntry[]
   actions?: ActionItem[]
   codeReferences?: CodeReference[]
-  timeReferences?: TimeReference[]
+  timeReferences?: TimeReferenceInput[]
   shipmentTimes?: ShipmentTime[]
   issueTimes?: IssueTime[]
   provenance?: ArticleProvenance

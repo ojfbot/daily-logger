@@ -2,8 +2,8 @@ import { useLayoutEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { TYPE_LABELS, type CodeReferenceType } from '../utils/codeRefUtils.ts'
 import type { CacheEntry, CommitData, PRData } from '../hooks/useGithubCache.ts'
-import type { TimeReference } from '../../../../src/time-reference-schema.ts'
-import type { ClockDisplay } from '../utils/timeDisplay.ts'
+import type { TimePopoverReference } from '../utils/timeReferences.ts'
+import { viewerClock } from '../utils/timeDisplay.ts'
 import { TimePopoverContent } from './TimePopoverContent.tsx'
 
 export interface PopoverState {
@@ -13,7 +13,7 @@ export interface PopoverState {
     | { kind: 'ref'; type: CodeReferenceType; label: string; detail: string; url: string | null }
     | { kind: 'commit'; entry: CacheEntry<CommitData>; text: string; repo: string }
     | { kind: 'pr'; entry: CacheEntry<PRData>; repo: string; number: number; sourceKind: 'pull' | 'issues'; targetUrl: string }
-    | { kind: 'time'; reference: TimeReference; viewer: ClockDisplay; tooltipId: string }
+    | { kind: 'time'; reference: TimePopoverReference; tooltipId: string }
 }
 
 export function Popover({ state, onMouseEnter, onMouseLeave }: { state: PopoverState; onMouseEnter?: () => void; onMouseLeave?: () => void }) {
@@ -23,7 +23,11 @@ export function Popover({ state, onMouseEnter, onMouseLeave }: { state: PopoverS
     if (!state.visible || !state.anchor || !ref.current) return
     const pop = ref.current
     const anchor = state.anchor
-    const reposition = () => positionPopover(pop, anchor)
+    const reposition = (event?: Event) => {
+      // Scrolling the panel must not reset its own scroll range while measuring.
+      if (event?.type === 'scroll' && event.target instanceof Node && pop.contains(event.target)) return
+      positionPopover(pop, anchor)
+    }
     reposition()
     if (onMouseEnter) pop.addEventListener('mouseenter', onMouseEnter)
     if (onMouseLeave) pop.addEventListener('mouseleave', onMouseLeave)
@@ -105,7 +109,9 @@ export function Popover({ state, onMouseEnter, onMouseLeave }: { state: PopoverS
       data-url={url}
       onClick={() => { if (url) window.open(url, '_blank', 'noopener') }}
     >
-      {variant.kind === 'time' ? <TimePopoverContent reference={variant.reference} viewer={variant.viewer} /> : <>
+      {variant.kind === 'time'
+        ? <TimePopoverContent reference={variant.reference.reference} certainty={variant.reference.certainty} viewer={viewerClock(new Date(variant.reference.reference.at), variant.reference.reference.precision)} />
+        : <>
       <div className={`commit-popover-type ${typeClass}`}>{typeBadge}</div>
       <div className="commit-popover-sha">{sha}</div>
       {message && <div className={messageClass}>{message}</div>}

@@ -7,6 +7,7 @@ import { assertArticleReferenceContract, githubReferenceKey, type GithubReferenc
 import { IssueEventChoiceSchema, resolveIssueTimes, type IssueEventChoice, type IssueTime } from './issue-times.js'
 import { assertShipmentCoverage, resolveShipmentTimes, ShipmentSourceStateSchema, type ShipmentCoverage, type ShipmentSourceState } from './shipment-times.js'
 import { TimeRecordSchema, TimeReferenceSchema, TimeReferenceSidecarSchema, articleBodySha256, canonicalInstant, resolveTimeReferences, selectTimeRecords, type TimeRecord, type TimeReference, type UnresolvedTime } from './time-references.js'
+import { TimeExpressionSchema, type TimeExpression, type TimeExpressionMember } from './time-reference-schema.js'
 
 const MAX_RECORDS = 256
 const MAX_ARTIFACT_BYTES = 64 * 1024
@@ -43,6 +44,7 @@ export interface ArticleTimeResult {
   shipmentCoverage: ArticleShipmentCoverage
   referenceKinds: GithubReferenceKinds
   capture?: Capture
+  expressions?: TimeExpression[]
 }
 export interface PreparedGeneratedTime {
   readonly date: string
@@ -96,7 +98,7 @@ function articleDate(markdown: string): string | undefined {
 }
 function boundedWarnings(warnings: string[]): string[] { return warnings.slice(0, 16).map((warning) => warning.slice(0, 240)) }
 function sameReference(a: TimeReference, b: TimeReference): boolean { return canonicalBytes(a) === canonicalBytes(b) }
-function tokenKey(reference: TimeReference): string { return JSON.stringify([reference.text, reference.occurrence]) }
+function tokenKey(reference: Pick<TimeReference, 'text' | 'occurrence'>): string { return JSON.stringify([reference.text, reference.occurrence]) }
 
 export function parseTimeReferenceSidecar(raw: unknown) { return TimeReferenceSidecarSchema.safeParse(raw) }
 
@@ -105,7 +107,7 @@ export function articleTimeMetadata(input: {
   content: string
   bindingContent?: string
   records?: TimeRecord[]
-  sidecar?: { bodySha256: string; references: TimeReference[] }
+  sidecar?: { bodySha256: string; references: TimeReference[]; expressions?: TimeExpression[] }
 }): Omit<ArticleTimeResult, 'shipmentCoverage' | 'issueTimes' | 'referenceKinds' | 'capture'> {
   const resolved = resolveTimeReferences(input.content, input.records ?? [])
   const warnings: string[] = []
@@ -148,7 +150,28 @@ export function articleTimeMetadata(input: {
       admitted.set(key, reference)
     }
   }
-  return { references: resolved.references.filter((reference) => admitted.has(tokenKey(reference))), warnings: boundedWarnings(warnings), unresolved: resolved.unresolved }
+  const allowedExpressions = new Set<string>()
+  if (input.sidecar?.bodySha256 === articleBodySha256(input.bindingContent ?? input.content) && input.sidecar.expressions) {
+    const parsed = TimeExpressionSchema.array().max(512).safeParse(input.sidecar.expressions)
+    if (parsed.success) {
+      const expectedExpressions = new Map((resolved.expressions ?? []).map((expression) => [tokenKey(expression), expression]))
+      for (const expression of parsed.data) {
+        if (canonicalBytes(expression) === canonicalBytes(expectedExpressions.get(tokenKey(expression)))) allowedExpressions.add(tokenKey(expression))
+        else warnings.push('Dropped grouped time claim without matching independent current-prose/source evidence')
+      }
+    } else warnings.push('Invalid grouped time-reference backfill metadata')
+  }
+  const historicalMember = (member: TimeExpressionMember): TimeExpressionMember => member.resolution.kind === 'supported' && member.resolution.evidence.kind !== 'explicit-offset'
+    ? { ...member, resolution: { kind: 'unresolved', reason: 'historical-claim-required' } } : member
+  const expressions = (resolved.expressions ?? []).map((expression): TimeExpression => {
+    if (allowedExpressions.has(tokenKey(expression))) return expression
+    switch (expression.kind) {
+      case 'point': return { ...expression, member: historicalMember(expression.member) }
+      case 'list': return { ...expression, members: expression.members.map(historicalMember) }
+      case 'interval': return { ...expression, start: historicalMember(expression.start), end: historicalMember(expression.end) }
+    }
+  })
+  return { references: resolved.references.filter((reference) => admitted.has(tokenKey(reference))), warnings: boundedWarnings(warnings), unresolved: resolved.unresolved, ...(expressions.length ? { expressions } : {}) }
 }
 
 /** Pure preparation: observation metadata is supplied by the collector; article date never supplies an event day or window. */
@@ -278,7 +301,7 @@ export function readArticleTime(input: { repoRoot: string; date: string; markdow
     } catch { warnings.push('Missing or invalid immutable time-record artifact; no Git time evidence admitted'); return empty() }
   }
   let records: TimeRecord[] = []
-  let sidecar: { bodySha256: string; references: TimeReference[] } | undefined
+  let sidecar: { bodySha256: string; references: TimeReference[]; expressions?: TimeExpression[] } | undefined
   try {
     const api = directories(root, ['api'])
     const raw: unknown = JSON.parse(regularBytes(join(api, 'time-evidence.json'), MAX_LEGACY_BYTES))

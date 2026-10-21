@@ -6,7 +6,7 @@ interface SectionData {
   codeRefs: string[]
 }
 
-export function extractSectionContent(container: HTMLElement, sectionHeading: string): SectionData | null {
+export function extractSectionContent(container: HTMLElement | DocumentFragment, sectionHeading: string): SectionData | null {
   const headings = container.querySelectorAll('h2')
   let targetH2: Element | null = null
 
@@ -47,17 +47,18 @@ export function extractSectionContent(container: HTMLElement, sectionHeading: st
 }
 
 /**
- * Extracts section content from the article DOM.
+ * Extracts section content from the versioned article HTML, before UI decoration.
  * Walks from the target h2 element, collecting text until the next h2 or end of article.
  */
-export function useSectionContent(contentRef: React.RefObject<HTMLElement | null>) {
+export function useSectionContent(bodyHtml: string | undefined) {
   const extractSection = useCallback(
     (sectionHeading: string): SectionData | null => {
-      const container = contentRef.current
-      if (!container) return null
-      return extractSectionContent(container, sectionHeading)
+      if (!bodyHtml) return null
+      const source = document.createElement('template')
+      source.innerHTML = bodyHtml
+      return extractSectionContent(source.content, sectionHeading)
     },
-    [contentRef],
+    [bodyHtml],
   )
 
   return { extractSection }

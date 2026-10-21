@@ -2,6 +2,28 @@
 
 A time popover describes one complete instant, either recovered from an event record or stated explicitly with its date and offset. `Z` means UTC, so `09:10Z` gives a clock time but does not identify a day. The article date is not a substitute for an event date. For example, the October 15 article refers to daily-logger PR #359, which merged on October 14 at `2026-10-14T09:10:41Z`.
 
+Each source-supported timestamp in a clustered PR sentence opens the existing timezone-offset and day/night-map popover, just like a standalone timestamp. Lists and interval syntax are parsed to bind each clock to its correct source event; they do not create a different UI. Approximate values keep a `~` qualifier and a short approximation note. Unsupported or unverified timestamps remain plain prose. There is no grouped-event panel, duration display, map selector or added Local times link.
+
+## Lists, intervals and uncertainty
+
+The bounded grammar supports clocks joined by a dash, `to`, `between … and`, or list commas/`and`, with explicit `Z`/`UTC` on every member or shared by the last member. Complete dated offset timestamps remain supported. Approximation uses `~`, `about`, `around`, `approximately` or `roughly` immediately before the relevant clock expression. It does not combine separate paragraphs or infer arbitrary natural-language time relationships. Unsupported zones, missing dates, conflicting facts and ambiguous associations stay visible without an invented conversion.
+
+An equally sized source/time list pairs in prose order only when it explicitly says `respectively` and contains no repeated source identity. Ordered mentions are retained separately from the unique source set; a qualified point uses the final prose mention. A plural-PR range naming one shared immutable event can describe an **event span**: the resolver first fixes every named source, requires one unambiguous event instant for each, then verifies that the stated endpoints match the earliest and latest recorded instants. It does not match clocks to manufacture source identity. Missing sources, competing facts, contradictory stated calendar dates and mismatched bounds prevent that qualification. A recorded merge span does not claim continuous work between the merges.
+
+The scanner owns the complete connected expression before validating individual clock spellings. Unsupported zones or malformed members stay unresolved inside that expression. They cannot release a later clock as an independent exact claim or supply a shared zone. Long lists are consumed completely rather than truncated at a member count. Size validation rejects an oversized record as a whole.
+
+One source with explicit ordered start/end events, or two complete stated timestamps, can establish an elapsed interval. A clock-only end does not inherit a start date or acquire a next-day date from clock ordering. Each endpoint is formatted using its own event-date timezone rules: a daylight-saving transition can produce identical local clocks with different offsets, and fractional offsets can cross the local date. These relationships are retained for source validation. Each supported endpoint opens the existing single-instant clock/map popover. No duration, relationship panel or map selector is rendered.
+
+`src/time-reference-schema.ts` owns the wire validation and inferred types. The article API has one `timeReferences` array. Existing flat instant items retain their v1 wire shape; new qualified point/list/interval items have explicit discriminants. The browser validates that input union and projects each supported member into the existing single-instant popover. Contradictory or malformed items are rejected without suppressing valid siblings.
+
+Grouped spans are classified before exact-instant admission, including unresolved and approximate groups. Their clock-only endpoints cannot leak into independent exact references. Existing complete stated instants retain their recorded claims; the UI avoids duplicate controls when a qualified group owns the same displayed span.
+
+## Historical group admission
+
+New-format articles derive qualified groups from the immutable generation-owned fact artifact. Historical articles retain the existing current-prose/body-digest and independent evidence checks. Newly supported Git-backed group values additionally require a matching `expressions` claim under that article's existing sidecar entry. The optional claim is re-resolved and compared in full; it cannot assert a source, date, event, qualifier or relationship the current prose and facts do not establish.
+
+Without that group claim, affected historical timestamps remain plain. Machine metadata retains the **historical claim required** diagnostic; the UI does not add a diagnostic panel or revive a withheld exact endpoint. Complete dated timestamps may still describe their own stated values. Stale, forged, malformed or missing claims do not enrich authority. [Reconstruction](backfill-time-references.md) can propose group claims explicitly for a separately reviewed metadata publication. Deploying this reader does not silently rewrite the accepted October backfill, prose, review history, action IDs or article states.
+
 ![Local time first, with a solid blue offset meridian and secondary dashed UTC reference](assets/time-popovers.png)
 
 ## Source timestamps

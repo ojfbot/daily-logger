@@ -55,7 +55,7 @@ export function ArticlePage() {
   const popoverContentRevision = `${article?.sourceBlobSha ?? decoratedBodyHtml}:${sectionHeadings.length}`
 
   const popover = useArticlePopovers(contentRef, codeReferences, reposActive, timeReferences, popoverContentRevision, shipmentTimes, issueTimes)
-  const { extractSection } = useSectionContent(contentRef)
+  const { extractSection } = useSectionContent(article?.bodyHtml)
 
   const displayEntry = article ?? entry
 
