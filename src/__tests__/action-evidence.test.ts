@@ -72,10 +72,9 @@ it('collects accepted continuity targets before a saturated current-action refer
   const sources = collectActionSources({ registry, repoRoot: root, markdown, feedback: '', context, continuityTargets: acceptedClosingContinuityTargets(previousArticles) })
   const collected = sources.filter(source => source.kind === 'github').map(source => source.id.replace(/@[a-f0-9]{64}$/, ''))
 
-  expect(collected).toHaveLength(12)
-  expect(collected.slice(0, 2)).toEqual(['github:daily-logger#386', 'github:daily-logger#385'])
-  expect(collected).not.toContain('github:daily-logger#710')
-  expect(() => selectActionEvidence({ registry, articleDate: '2026-10-20', markdown, feedback: '', sources })).toThrow(/Required action evidence unavailable.*daily-logger#710/)
+  expect(collected).toEqual([])
+  expect(sources.find(source => source.id.startsWith('required-evidence-budget@'))?.content).toContain('daily-logger#710')
+  expect(() => selectActionEvidence({ registry, articleDate: '2026-10-20', markdown, feedback: '', sources })).toThrow(/unchanged 12-discussion cap/i)
 })
 
 it('fails closed with explicit accounting when accepted continuity alone exceeds the fetch cap', () => {
@@ -88,8 +87,9 @@ it('fails closed with explicit accounting when accepted continuity alone exceeds
   const sources = collectActionSources({ registry, repoRoot: root, markdown, feedback: '', context: '',
     continuityTargets: Array.from({ length: 13 }, (_, index) => `https://github.com/ojfbot/daily-logger/issues/${600 + index}`) })
 
-  expect(sources.find(source => source.id.startsWith('continuity-evidence-budget@'))?.content).toContain('daily-logger#612')
-  expect(() => selectActionEvidence({ registry, articleDate: '2026-10-20', markdown, feedback: '', sources })).toThrow(/Required action evidence unavailable.*daily-logger#612/)
+  expect(sources.find(source => source.id.startsWith('required-evidence-budget@'))?.content).toContain('daily-logger#612')
+  expect(sources.filter(source => source.kind === 'github')).toEqual([])
+  expect(() => selectActionEvidence({ registry, articleDate: '2026-10-20', markdown, feedback: '', sources })).toThrow(/unchanged 12-discussion cap/i)
 })
 
 it('marks only current API facts and member-authored body/diff text as terminal evidence (F12r)', () => {

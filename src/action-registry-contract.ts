@@ -103,6 +103,49 @@ export const DraftActionCandidateSchema = z.object({
   review: DraftActionCandidateReviewSchema,
 }).strict()
 export type DraftActionCandidate = z.infer<typeof DraftActionCandidateSchema>
+const githubActionReference = z.string().regex(/^[a-z0-9-]+#\d+$/)
+const DraftCandidateRequiredEvidenceReferenceSchema = z.object({
+  classification: z.literal('required'),
+  reference: githubActionReference,
+  role: z.enum(['target', 'lifecycle', 'owner', 'gate', 'counterevidence', 'retained-context']),
+  reason: z.string().min(1).max(512),
+}).strict()
+const DraftCandidateContextEvidenceReferenceSchema = z.object({
+  classification: z.literal('context'),
+  reference: githubActionReference,
+  reason: z.string().min(1).max(512),
+}).strict()
+export const DraftCandidateEvidenceReferenceSchema = z.discriminatedUnion('classification', [
+  DraftCandidateRequiredEvidenceReferenceSchema,
+  DraftCandidateContextEvidenceReferenceSchema,
+])
+export const DraftCandidateEvidenceRequirementsSchema = z.object({
+  version: z.literal('draft-candidate-evidence-v1'),
+  provenance: z.object({
+    kind: z.enum(['coordinator', 'independent-reviewer', 'deterministic-default']),
+    identity: z.string().min(1).max(256),
+    decision: z.string().min(1).max(512),
+  }).strict(),
+  articleDate: date,
+  articleDigest: digest,
+  reviewCycle: ActionReviewCycleSchema,
+  draftContextSha256: digest,
+  candidatePayloadsSha256: digest,
+  actionStateSha256: digest,
+  candidates: z.array(z.object({
+    candidateId: digest,
+    payloadSha256: digest,
+    references: z.array(DraftCandidateEvidenceReferenceSchema).max(32),
+  }).strict()).min(1).max(5),
+  unassignedReferences: z.array(DraftCandidateEvidenceReferenceSchema).max(64),
+}).strict().superRefine((requirements, context) => {
+  if (new Set(requirements.candidates.map(candidate => candidate.candidateId)).size !== requirements.candidates.length) context.addIssue({ code: 'custom', message: 'Duplicate draft candidate evidence identity' })
+  for (const candidate of requirements.candidates) {
+    if (new Set(candidate.references.map(reference => reference.reference)).size !== candidate.references.length) context.addIssue({ code: 'custom', message: `Duplicate draft candidate evidence reference: ${candidate.candidateId}` })
+  }
+  if (new Set(requirements.unassignedReferences.map(reference => reference.reference)).size !== requirements.unassignedReferences.length) context.addIssue({ code: 'custom', message: 'Duplicate unassigned evidence reference' })
+})
+export type DraftCandidateEvidenceRequirements = z.infer<typeof DraftCandidateEvidenceRequirementsSchema>
 export const ActionSourceSchema = z.object({
   id: z.string().min(1),
   kind: z.enum(['repository', 'github', 'goal', 'instruction', 'report']),
@@ -237,6 +280,7 @@ function createArticleActionSchema(candidateIdentity?: DraftCandidateIdentity) {
     reviewCycle: ActionReviewCycleSchema.optional(),
     actionKeys: z.array(z.string()),
     draftCandidates: z.array(DraftActionCandidateSchema).max(5).optional(),
+    draftCandidateEvidence: DraftCandidateEvidenceRequirementsSchema.optional(),
     draftContext: DraftRecommendationContextSchema.optional(),
     closing: ClosingPromptSchema.optional(),
     stateDigest: digest,

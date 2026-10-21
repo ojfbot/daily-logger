@@ -15,6 +15,9 @@ import {
   type ActionEvidenceResponse,
   type ActionRegistry,
   type ActionSource,
+  type DraftCandidateEvidenceRequirements,
+  type DraftActionCandidate,
+  type DraftRecommendationContext,
 } from './action-registry.js'
 import type { ActionReviewCycle } from './action-review-cycle.js'
 
@@ -66,6 +69,9 @@ export function actionEvidenceCaseDigest(input: {
   actionKeys: readonly string[]
   registry?: ActionRegistry
   articleStatuses?: ReadonlyMap<string, string>
+  draftCandidateEvidence?: DraftCandidateEvidenceRequirements
+  draftCandidates?: readonly DraftActionCandidate[]
+  draftContext?: DraftRecommendationContext
 }): string {
   const articleStatuses = input.articleStatuses ?? new Map(input.registry?.articles.map(article => [article.date, article.status]) ?? [])
   const actionState = input.registry?.records
@@ -80,6 +86,10 @@ export function actionEvidenceCaseDigest(input: {
       return { key: record.key, workKey: record.workKey, state, goal: record.goal,
         doneWhen: record.doneWhen, gates: record.gates, history }
     }) ?? []
+  const snapshot = input.registry?.articles.find(article => article.date === input.articleDate)
+  const draftCandidateEvidence = input.draftCandidateEvidence ?? snapshot?.draftCandidateEvidence
+  const draftContext = input.draftContext ?? snapshot?.draftContext ?? null
+  const draftCandidates = (snapshot?.draftCandidates ?? input.draftCandidates ?? []).map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload }))
   return sha256(JSON.stringify({
     version: 'action-evidence-request-v1' as const,
     articleDate: input.articleDate,
@@ -88,6 +98,9 @@ export function actionEvidenceCaseDigest(input: {
     feedbackSha256: sha256(input.feedback),
     actionKeys: [...input.actionKeys].sort(),
     actionState,
+    draftCandidateEvidenceSha256: draftCandidateEvidence ? sha256(JSON.stringify(draftCandidateEvidence)) : null,
+    draftContextSha256: sha256(JSON.stringify(draftContext)),
+    candidatePayloadsSha256: sha256(JSON.stringify(draftCandidates)),
   }))
 }
 

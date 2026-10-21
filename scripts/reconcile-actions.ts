@@ -28,9 +28,10 @@ const actionKeys = (name: string) => (process.env[name] ?? '').split(',').map(va
 const reassessActionKeys = actionKeys('ACTION_REASSESS_KEYS')
 const preserveActionKeys = actionKeys('ACTION_PRESERVE_KEYS')
 const evidenceReplies = actionKeys('ACTION_EVIDENCE_REPLY').map(path => readActionEvidenceReply(resolve(path)))
+const reviewCycle = acceptanceActionCycle(requestIdentity ?? '', registry.articles.find(article => article.date === articleDate))
 const reviewed = process.env.ACTION_KEY
   ? { registry: setActionInclusion(registry, process.env.ACTION_KEY, process.env.INCLUDE_IN_INDEX !== 'false', process.env.ACTION_ACTOR ?? '', `Explicit editorial inclusion instruction: ${feedback.trim()}`, statuses), markdown, evidenceResolutions: [] }
-  : await reviewDraftActions({ cycle: acceptanceActionCycle(requestIdentity ?? '', registry.articles.find(article => article.date === articleDate)), registry, articleStatuses: statuses, articleDate, markdown, feedback, sources: [...(process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ registry, articleStatuses: statuses, repoRoot, markdown, feedback, reassessActionKeys, preserveActionKeys })), ...evidenceReplies], agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, selectedEvidenceProjectionIds: evidenceReplies.map(reply => reply.id), ...(process.env.DRY_RUN === 'true' ? {} : { repoRoot }) })
+  : await reviewDraftActions({ cycle: reviewCycle, registry, articleStatuses: statuses, articleDate, markdown, feedback, sources: [...(process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ cycle: reviewCycle, registry, articleStatuses: statuses, repoRoot, markdown, feedback, reassessActionKeys, preserveActionKeys })), ...evidenceReplies], agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, selectedEvidenceProjectionIds: evidenceReplies.map(reply => reply.id), ...(process.env.DRY_RUN === 'true' ? {} : { repoRoot }) })
 reviewed.markdown = renderArticleActions(reviewed.markdown, reviewed.registry, articleDate, statuses)
 if (process.env.DRY_RUN !== 'true') {
   if (readFileSync(resolve(repoRoot, articlePath), 'utf8') !== markdown) throw new Error('Article changed during action review')

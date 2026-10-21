@@ -1,4 +1,4 @@
-import { acceptedActionState, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionSource, type DraftRecommendationContext, type RankedClosingOption, type RecommendationMaintenanceDescriptor } from './action-registry.js'
+import { DraftCandidateEvidenceRequirementsSchema, acceptedActionState, managedArticleDigest, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionSource, type DraftActionCandidate, type DraftCandidateEvidenceRequirements, type DraftRecommendationContext, type RankedClosingOption, type RecommendationMaintenanceDescriptor } from './action-registry.js'
 import type { ActionReviewCycle } from './action-review-cycle.js'
 import {
   ACTION_EVIDENCE_PER_SOURCE_LIMIT,
@@ -13,7 +13,7 @@ import { extractDraftRecommendationContext } from './recommendation-prose.js'
 
 const SOURCE_LIMIT = ACTION_EVIDENCE_PER_SOURCE_LIMIT
 const TOTAL_LIMIT = ACTION_EVIDENCE_TOTAL_LIMIT
-export const ACTION_EVIDENCE_SELECTION_VERSION = 'progressive-action-evidence-v4'
+export const ACTION_EVIDENCE_SELECTION_VERSION = 'progressive-action-evidence-v5-candidate-requirements'
 export const COVERAGE_SOURCE = 'action-evidence-coverage'
 export const CONTINUITY_TARGETS_SOURCE = 'accepted-closing-continuity-targets'
 const sourceKey = (id: string) => id.replace(/@[a-f0-9]{64}$/, '')
@@ -101,11 +101,162 @@ export function actionRecordSourceReferences(record: ActionRegistry['records'][n
   }))].sort()
 }
 
-export function actionEvidenceScope(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string; articleStatuses?: ReadonlyMap<string, string>; draftContext?: DraftRecommendationContext; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[] }) {
+type CandidateEvidenceScopeInput = {
+  registry: ActionRegistry
+  articleDate: string
+  markdown: string
+  cycle?: ActionReviewCycle
+  articleStatuses?: ReadonlyMap<string, string>
+  draftContext?: DraftRecommendationContext
+  draftCandidateEvidence?: DraftCandidateEvidenceRequirements
+  draftCandidates?: readonly DraftActionCandidate[]
+}
+
+type DraftCandidateEvidenceRole = 'target' | 'lifecycle' | 'owner' | 'gate' | 'counterevidence' | 'retained-context'
+
+function candidateTargetReferences(candidate: DraftActionCandidate, retainedRefs: ReadonlySet<string>): Set<string> {
+  const references = actionSourceReferences(JSON.stringify(candidate.payload))
+  for (const match of JSON.stringify(candidate.payload).matchAll(/\b([\w-]+)#(\d+)\b/g)) {
+    if (KNOWN_REPOS.has(match[1])) {
+      references.add(`${match[1]}#${match[2]}`)
+      continue
+    }
+    if (!candidate.payload.command.includes(match[0])) continue
+    const matches = [...retainedRefs].filter(reference => reference.endsWith(`#${match[2]}`))
+    if (matches.length !== 1) throw new Error(`Ambiguous candidate target ${match[0]} for ${candidate.candidateId}; explicit qualified evidence association required; review pending`)
+    references.add(matches[0])
+  }
+  for (const match of candidate.payload.command.matchAll(/(?:^|\s)#(\d+)\b/g)) {
+    const matches = [...retainedRefs].filter(reference => reference.endsWith(`#${match[1]}`))
+    if (matches.length !== 1) throw new Error(`Ambiguous candidate target #${match[1]} for ${candidate.candidateId}; explicit qualified evidence association required; review pending`)
+    references.add(matches[0])
+  }
+  return references
+}
+
+export function draftCandidateEvidenceBinding(input: CandidateEvidenceScopeInput, prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? input.registry.articles.find(article => article.date === input.articleDate)?.draftContext)) {
+  const snapshot = input.registry.articles.find(article => article.date === input.articleDate)
+  const candidates = snapshot?.draftCandidates ?? input.draftCandidates ?? []
+  if (!candidates.length) throw new Error('Draft candidate evidence binding requires captured candidates')
+  const cycle = input.cycle ?? snapshot?.reviewCycle
+  if (!cycle) throw new Error('Draft candidate evidence binding requires an action review cycle')
+  const statuses = input.articleStatuses ?? new Map(input.registry.articles.map(article => [article.date, article.status]))
+  const contextText = prepared.context.kind === 'retained' ? prepared.context.markdown : ''
+  const retainedRefs = actionSourceReferences(contextText)
+  const boundActionKeys = new Set([
+    ...(snapshot?.actionKeys ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)),
+    ...input.registry.records.filter(record => contextText.includes(record.key) || contextText.includes(record.workKey)
+      || actionRecordSourceReferences(record).some(reference => retainedRefs.has(reference))).map(record => record.key),
+  ])
+  const actionState = [...boundActionKeys].sort().map(key => {
+    const record = input.registry.records.find(candidate => candidate.key === key)
+    if (!record) throw new Error(`Draft candidate evidence binding references unknown canonical action: ${key}`)
+    return { key, state: acceptedActionState(record, statuses, input.registry), workKey: record.workKey, goal: record.goal, doneWhen: record.doneWhen, gates: record.gates,
+      history: record.history.filter(decision => decision.articleDate !== input.articleDate && statuses.get(decision.articleDate) === 'accepted') }
+  })
+  return {
+    articleDate: input.articleDate,
+    articleDigest: managedArticleDigest(prepared.markdown),
+    reviewCycle: cycle,
+    draftContextSha256: sha256(JSON.stringify(prepared.context)),
+    candidatePayloadsSha256: sha256(JSON.stringify(candidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))),
+    actionStateSha256: sha256(JSON.stringify(actionState)),
+  }
+}
+
+export function draftCandidateEvidenceScope(input: CandidateEvidenceScopeInput, prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? input.registry.articles.find(article => article.date === input.articleDate)?.draftContext)) {
+  const snapshot = input.registry.articles.find(article => article.date === input.articleDate)
+  const candidates = snapshot?.draftCandidates ?? input.draftCandidates ?? []
+  const rawRequirements = input.draftCandidateEvidence ?? snapshot?.draftCandidateEvidence
+  if (!candidates.length) {
+    if (rawRequirements) throw new Error('Structured draft candidate evidence exists without captured candidates; review pending')
+    if (snapshot && snapshot.draftCandidates === undefined && prepared.context.kind === 'retained' && /\b[a-f0-9]{64}\b/.test(prepared.context.markdown)) {
+      throw new Error('Draft candidate custody is unknown for retained candidate identities; review pending')
+    }
+    return { hasAssociations: false, requiredRefs: new Set<string>(), contextRefs: new Set<string>(), referenceRequirements: [] as Array<{ reference: string; classification: 'required' | 'context'; source: string; reason: string; role?: DraftCandidateEvidenceRole }> }
+  }
+  if (!rawRequirements) throw new Error('Structured draft candidate evidence requirements are missing; review pending')
+  const requirements = DraftCandidateEvidenceRequirementsSchema.parse(rawRequirements)
+  const binding = draftCandidateEvidenceBinding(input, prepared)
+  if (requirements.articleDate !== binding.articleDate || requirements.articleDigest !== binding.articleDigest || snapshot && requirements.articleDigest !== snapshot.articleDigest
+    || JSON.stringify(requirements.reviewCycle) !== JSON.stringify(binding.reviewCycle)
+    || requirements.draftContextSha256 !== binding.draftContextSha256 || requirements.candidatePayloadsSha256 !== binding.candidatePayloadsSha256
+    || (!snapshot || snapshot.review.state !== 'verified') && requirements.actionStateSha256 !== binding.actionStateSha256) {
+    throw new Error('Structured draft candidate evidence binding is stale or foreign; review pending')
+  }
+  const candidatesById = new Map(candidates.map(candidate => [candidate.candidateId, candidate]))
+  const requirementIds = requirements.candidates.map(candidate => candidate.candidateId).sort()
+  if (JSON.stringify([...candidatesById.keys()].sort()) !== JSON.stringify(requirementIds)) throw new Error('Structured draft candidate evidence must account for every captured candidate; review pending')
+
+  const retainedRefs = prepared.context.kind === 'retained' ? actionSourceReferences(prepared.context.markdown) : new Set<string>()
+  const targetRefs = new Map(candidates.map(candidate => [candidate.candidateId, candidateTargetReferences(candidate, retainedRefs)]))
+  const knownRefs = new Set([...retainedRefs, ...[...targetRefs.values()].flatMap(references => [...references])])
+  const classifications = new Map<string, Set<'required' | 'context'>>()
+  const referenceRequirements: Array<{ reference: string; classification: 'required' | 'context'; source: string; reason: string; role?: DraftCandidateEvidenceRole }> = []
+  const add = (entry: { reference: string; classification: 'required' | 'context'; reason: string; role?: DraftCandidateEvidenceRole }, source: string) => {
+    const values = classifications.get(entry.reference) ?? new Set<'required' | 'context'>()
+    values.add(entry.classification)
+    classifications.set(entry.reference, values)
+    referenceRequirements.push({ reference: entry.reference, classification: entry.classification, source, reason: entry.reason, ...(entry.role ? { role: entry.role } : {}) })
+  }
+  for (const association of requirements.candidates) {
+    const candidate = candidatesById.get(association.candidateId)
+    if (!candidate || association.payloadSha256 !== sha256(JSON.stringify(candidate.payload))) throw new Error(`Structured draft candidate evidence payload binding is stale or foreign: ${association.candidateId}; review pending`)
+    for (const reference of association.references) add(reference, `candidate:${association.candidateId}`)
+    for (const target of targetRefs.get(candidate.candidateId) ?? []) {
+      const linked = association.references.find(reference => reference.reference === target)
+      if (!linked || linked.classification !== 'required') throw new Error(`Direct candidate target cannot be omitted or classified as background: ${association.candidateId} ${target}; review pending`)
+    }
+  }
+  for (const reference of requirements.unassignedReferences) add(reference, 'unassigned')
+  const unknown = [...classifications.keys()].filter(reference => !knownRefs.has(reference)).sort()
+  if (unknown.length) throw new Error(`Structured draft candidate evidence contains unknown or foreign references: ${unknown.join(', ')}; review pending`)
+  const unclassified = [...retainedRefs].filter(reference => !classifications.has(reference)).sort()
+  if (unclassified.length) throw new Error(`Structured draft candidate evidence census is incomplete: ${unclassified.join(', ')}; review pending`)
+  return {
+    hasAssociations: true,
+    requiredRefs: new Set([...classifications].filter(([, values]) => values.has('required')).map(([reference]) => reference)),
+    contextRefs: new Set([...classifications].filter(([, values]) => !values.has('required') && values.has('context')).map(([reference]) => reference)),
+    referenceRequirements,
+  }
+}
+
+/** Initial generation has no trusted classifier yet, so it may only widen the required set. */
+export function prepareConservativeDraftCandidateEvidence(input: CandidateEvidenceScopeInput & { cycle: ActionReviewCycle; draftCandidates: readonly DraftActionCandidate[] }): DraftCandidateEvidenceRequirements {
+  const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? input.registry.articles.find(article => article.date === input.articleDate)?.draftContext)
+  const retainedRefs = prepared.context.kind === 'retained' ? actionSourceReferences(prepared.context.markdown) : new Set<string>()
+  const assigned = new Set<string>()
+  const candidates = input.draftCandidates.map(candidate => {
+    const references = [...candidateTargetReferences(candidate, retainedRefs)].sort().map(reference => {
+      assigned.add(reference)
+      return { classification: 'required' as const, reference, role: 'target' as const, reason: 'Direct immutable candidate target requires current primary evidence.' }
+    })
+    return { candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references }
+  })
+  return DraftCandidateEvidenceRequirementsSchema.parse({
+    version: 'draft-candidate-evidence-v1',
+    provenance: {
+      kind: 'deterministic-default',
+      identity: ACTION_EVIDENCE_SELECTION_VERSION,
+      decision: 'Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority.',
+    },
+    ...draftCandidateEvidenceBinding(input, prepared),
+    candidates,
+    unassignedReferences: [...retainedRefs].filter(reference => !assigned.has(reference)).sort().map(reference => ({
+      classification: 'required' as const,
+      reference,
+      role: 'retained-context' as const,
+      reason: 'Conservative deterministic default retains this reference as required until trusted classification.',
+    })),
+  })
+}
+
+export function actionEvidenceScope(input: { registry: ActionRegistry; articleDate: string; markdown: string; feedback: string; cycle?: ActionReviewCycle; articleStatuses?: ReadonlyMap<string, string>; draftContext?: DraftRecommendationContext; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftCandidates?: readonly DraftActionCandidate[]; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[] }) {
   const snapshot = input.registry.articles.find(article => article.date === input.articleDate)
   const current = snapshot?.actionKeys
     ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? snapshot?.draftContext)
+  const candidateEvidence = draftCandidateEvidenceScope(input, prepared)
   const nextSection = prepared.context.kind === 'retained' ? prepared.context.markdown : ''
   const maintenance = recommendationMaintenanceProjection(snapshot)
   const closing = maintenance ? JSON.stringify(maintenance) : snapshot?.closing?.kind === 'options' ? JSON.stringify(snapshot.closing.options) : ''
@@ -120,36 +271,40 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
     if (!record || !terminal(record)) throw new Error(`Terminal intent requires an existing accepted terminal action identity: ${key}`)
   }
   const requestedRecords = input.registry.records.filter(record => requested.includes(record.key) || requested.includes(record.workKey))
-  const ambiguousTerminalActionKeys = requestedRecords
+  const explicitTerminalRecords = input.registry.records.filter(record => input.feedback.includes(record.key) || input.feedback.includes(record.workKey))
+  const ambiguousTerminalActionKeys = explicitTerminalRecords
     .filter(record => terminal(record) && !reassessActionKeys.includes(record.key) && !preserveActionKeys.includes(record.key))
     .map(record => record.key)
     .sort()
-  const preservedTerminalActionKeys = requestedRecords
-    .filter(record => preserveActionKeys.includes(record.key))
-    .map(record => record.key)
-    .sort()
+  const preservedTerminalActionKeys = preserveActionKeys
   const reviewActionKeys = input.registry.records
     .filter(record => (current.includes(record.key) || requestedRecords.includes(record) || reassessActionKeys.includes(record.key))
       && (!terminal(record) || reassessActionKeys.includes(record.key)))
     .map(record => record.key)
     .sort()
   const carried = input.registry.records.filter(record => reviewActionKeys.includes(record.key))
-  const text = [requested, ...carried.map(record => JSON.stringify({ key: record.key, workKey: record.workKey,
+  const text = [input.feedback, closing, ...(candidateEvidence.hasAssociations ? [] : [nextSection]), ...carried.map(record => JSON.stringify({ key: record.key, workKey: record.workKey,
     originalDescription: record.original.description, description: record.history.at(-1)?.description ?? record.original.description, goal: record.goal, doneWhen: record.doneWhen, gates: record.gates }))].join('\n')
-  const refs = actionSourceReferences(text)
+  const refs = new Set([...actionSourceReferences(text), ...candidateEvidence.requiredRefs])
+  const contextRefs = new Set(candidateEvidence.contextRefs)
   // Citation identities are also dependencies when the prose uses a short #N.
   for (const record of carried) for (const decision of record.history) for (const citation of decision.citations) {
     const ref = sourceKey(citation.sourceId).match(/^github:([\w-]+#\d+)$/)?.[1]
     if (ref) refs.add(ref)
   }
+  for (const ref of refs) contextRefs.delete(ref)
   const expanded = input.registry.records.filter(record => current.includes(record.key)
     || text.includes(record.key)
     || [...actionSourceReferences(JSON.stringify(record))].some(ref => refs.has(ref))).map(record => record.key)
-  return { current, refs, expanded, text, reviewActionKeys, preservedTerminalActionKeys, ambiguousTerminalActionKeys }
+  const referenceRequirements = [...candidateEvidence.referenceRequirements]
+  for (const reference of refs) if (!referenceRequirements.some(requirement => requirement.reference === reference && requirement.classification === 'required')) {
+    referenceRequirements.push({ reference, classification: 'required', source: 'action-or-feedback', reason: 'Explicit feedback, maintained recommendation, or canonical action obligation requires current evidence.' })
+  }
+  return { current, refs, contextRefs, referenceRequirements, expanded, text, reviewActionKeys, preservedTerminalActionKeys, ambiguousTerminalActionKeys }
 }
 
 /** Select complete sources, never first/last-N comments or inferred summaries. */
-export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; cycle?: ActionReviewCycle; markdown: string; feedback: string; sources: readonly ActionSource[]; articleStatuses?: ReadonlyMap<string, string>; draftContext?: DraftRecommendationContext; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; selectedEvidenceProjectionIds?: readonly string[] }) {
+export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; cycle?: ActionReviewCycle; markdown: string; feedback: string; sources: readonly ActionSource[]; articleStatuses?: ReadonlyMap<string, string>; draftContext?: DraftRecommendationContext; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftCandidates?: readonly DraftActionCandidate[]; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; selectedEvidenceProjectionIds?: readonly string[] }) {
   const cycle: ActionReviewCycle = input.cycle ?? { phase: 'generation' }
   const scope = actionEvidenceScope(input)
   const sources = canonicalActionSources(input.sources)
@@ -166,6 +321,7 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     return [request.id]
   }))
   const requiredRefs = new Set([...scope.refs, ...continuityRequiredReferences(sources)])
+  if (requiredRefs.size > 12) throw new Error(`Required action evidence exceeds the unchanged 12-discussion cap: ${[...requiredRefs].sort().join(', ')}; review pending`)
   const available = new Set(completeSources.map(source => sourceKey(source.id)))
   const required = (source: ActionSource) => ['article', 'operator'].includes(sourceKey(source.id))
     || source.kind === 'repository'
@@ -184,16 +340,25 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     ? scope.reviewActionKeys
     : scope.ambiguousTerminalActionKeys.length ? scope.ambiguousTerminalActionKeys : ['article-feedback']
   const caseDigest = actionEvidenceCaseDigest({ ...input, cycle, actionKeys: caseActionKeys })
-  const obligation = (actionKey: string | undefined, kind: 'goal' | 'current-disposition' | 'done-when' | 'gate' | 'feedback', text: string) => sha256(JSON.stringify({ actionKey, kind, text }))
-  const obligations = input.registry.records.filter(record => scope.reviewActionKeys.includes(record.key)).flatMap(record => [
+  const obligation = (actionKey: string | undefined, kind: 'goal' | 'current-disposition' | 'done-when' | 'gate' | 'feedback' | 'candidate-evidence', text: string) => sha256(JSON.stringify({ actionKey, kind, text }))
+  const actionObligations = input.registry.records.filter(record => scope.reviewActionKeys.includes(record.key)).flatMap(record => [
     ...(record.goal ? [obligation(record.key, 'goal', record.goal)] : []),
     obligation(record.key, 'current-disposition', record.history.at(-1)?.description ?? record.original.description),
     ...(record.doneWhen ? [obligation(record.key, 'done-when', record.doneWhen)] : []),
     ...record.gates.map(gate => obligation(record.key, 'gate', gate)),
   ])
-  if (input.feedback.trim()) obligations.push(obligation(undefined, 'feedback', input.feedback.trim().slice(0, 512)))
-  if (!obligations.length) obligations.push(obligation(undefined, 'feedback', 'Resolve the explicitly requested article evidence without inventing a disposition.'))
-  const requestFor = (kind: 'source-view' | 'missing-source', key: string, source?: ActionSource) => createActionEvidenceRequest({
+  const feedbackObligations = input.feedback.trim() ? [obligation(undefined, 'feedback', input.feedback.trim().slice(0, 512))] : []
+  const obligationsFor = (key: string) => {
+    const reference = key.replace(/^github:/, '')
+    const requirements = scope.referenceRequirements.filter(requirement => requirement.classification === 'required' && requirement.reference === reference)
+    const candidateObligations = requirements.map(requirement => obligation(requirement.source, 'candidate-evidence', `${requirement.reference}:${requirement.role ?? 'unspecified'}:${requirement.reason}`))
+    const values = [...actionObligations, ...feedbackObligations, ...candidateObligations]
+    return values.length ? [...new Set(values)] : [obligation(undefined, 'feedback', `Resolve ${key} without inventing a disposition.`)]
+  }
+  const requestFor = (kind: 'source-view' | 'missing-source', key: string, source?: ActionSource) => {
+    const requirements = scope.referenceRequirements.filter(requirement => requirement.classification === 'required' && requirement.reference === key.replace(/^github:/, ''))
+    const detail = requirements.map(requirement => `${requirement.source} ${requirement.role ?? 'evidence'}: ${requirement.reason}`).join(' | ')
+    return createActionEvidenceRequest({
     kind,
     caseDigest,
     articleDate: input.articleDate,
@@ -201,9 +366,10 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     actionKeys: caseActionKeys,
     sourceKey: key,
     ...(source ? { source } : {}),
-    question: `Which exact ranges in ${key} support or contradict the required action decision while retaining every obligation and owner gate?`.slice(0, 512),
-    obligations,
+    question: `Which exact ranges in ${key} support or contradict its required decision${detail ? ` (${detail})` : ''} while retaining applicable owner gates?`.slice(0, 512),
+    obligations: obligationsFor(key),
   })
+  }
   if (scope.ambiguousTerminalActionKeys.length) {
     const request = createActionEvidenceRequest({
       kind: 'clarification',
@@ -213,7 +379,9 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
       actionKeys: scope.ambiguousTerminalActionKeys,
       sourceKey: `terminal-intent:${scope.ambiguousTerminalActionKeys.join(',')}`,
       question: 'Specify preserve or reassess for each referenced accepted terminal action; no terminal state was changed.',
-      obligations,
+      obligations: [...new Set([...actionObligations, ...feedbackObligations])].length
+        ? [...new Set([...actionObligations, ...feedbackObligations])]
+        : [obligation(undefined, 'feedback', 'Clarify explicit terminal intent without inventing a disposition.')],
       recipient: 'coordinator-owner',
     })
     throw new ActionEvidenceRequestError(request, `Accepted terminal action intent is ambiguous: ${scope.ambiguousTerminalActionKeys.join(', ')}; review pending`)
@@ -283,7 +451,8 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     collection: 'Bounded collector output, not an exhaustive repository/discussion census. Missing or omitted content is unknown, never evidence of absence or approval.',
     selection: 'Whole sources only; no chronological comment window or excerpt. Only current carried actions, explicit feedback and retained draft continuation context require GitHub discussions. Shipment prose does not.',
     authority: 'This coverage index is context only. Hashes, identities, omission reasons and missing evidence cannot justify completion, supersession, dismissal or human approval.',
-    requiredReferences: [...requiredRefs].sort(), reviewActionKeys: scope.reviewActionKeys, preservedTerminalActionKeys: scope.preservedTerminalActionKeys,
+    requiredReferences: [...requiredRefs].sort(), contextReferences: [...scope.contextRefs].sort(), referenceRequirements: scope.referenceRequirements,
+    reviewActionKeys: scope.reviewActionKeys, preservedTerminalActionKeys: scope.preservedTerminalActionKeys,
     expandedActionKeys: scope.expanded.sort(), resolvedRequests: resolvedRequests.sort(), sources: coverage }
   const content = JSON.stringify(receipt)
   if (Buffer.byteLength(content) > SOURCE_LIMIT || bytes + Buffer.byteLength(content) > TOTAL_LIMIT) throw new Error('Action evidence coverage exceeds its source budget; review pending')
