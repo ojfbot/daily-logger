@@ -149,7 +149,7 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
 }
 
 /** Select complete sources, never first/last-N comments or inferred summaries. */
-export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; cycle?: ActionReviewCycle; markdown: string; feedback: string; sources: readonly ActionSource[]; draftContext?: DraftRecommendationContext; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[] }) {
+export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; cycle?: ActionReviewCycle; markdown: string; feedback: string; sources: readonly ActionSource[]; draftContext?: DraftRecommendationContext; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; selectedEvidenceProjectionIds?: readonly string[] }) {
   const cycle: ActionReviewCycle = input.cycle ?? { phase: 'generation' }
   const scope = actionEvidenceScope(input)
   const sources = canonicalActionSources(input.sources)
@@ -236,9 +236,12 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
           .filter(candidate => candidate.projection?.fullSourceId === source.id && candidate.projection.caseDigest === caseDigest)
           .map(projection => validateActionEvidenceProjection({ request, source, projection }))
         const completeCandidates = candidates.filter(candidate => !candidate.projection?.coverage.some(item => item.status === 'unknown'))
-        if (completeCandidates.length > 1) throw new Error(`Multiple complete bounded evidence replies for ${source.id}; review pending`)
-        if (completeCandidates.length === 1) {
-          const projection = completeCandidates[0]
+        const explicitlySelected = completeCandidates.filter(candidate => input.selectedEvidenceProjectionIds?.includes(candidate.id))
+        if (explicitlySelected.length > 1 || completeCandidates.length > 1 && explicitlySelected.length !== 1) {
+          throw new Error(`Multiple complete bounded evidence replies for ${source.id}; select exactly one reply explicitly; review pending`)
+        }
+        const projection = explicitlySelected[0] ?? completeCandidates[0]
+        if (projection) {
           const projectionEntry = coverage.find(item => item.id === projection.id)
           if (!projectionEntry) throw new Error('Missing bounded evidence coverage entry')
           if (bytes + projectionEntry.bytes > TOTAL_LIMIT - 16 * 1024) throw new ActionEvidenceRequestError(request, `Required action evidence ${source.id}: bounded question view does not fit total budget; review pending`)

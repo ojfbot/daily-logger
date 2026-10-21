@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { ActionSourceSchema, readActionRegistry, readArticleStatuses } from '../action-registry.js'
 import { generationActionCycle, revisionActionCycle } from '../action-review-cycle.js'
-const { create, countTokens } = vi.hoisted(() => ({ create: vi.fn(), countTokens: vi.fn(async () => ({ input_tokens: 1000 })) }))
+const { create, countTokens } = vi.hoisted(() => ({ create: vi.fn(), countTokens: vi.fn(async (): Promise<unknown> => ({ input_tokens: 1000 })) }))
 vi.mock('@anthropic-ai/sdk', () => ({ default: class { messages = { create, countTokens } } }))
 import { createActionAgents, reviewArticleActions } from '../review-actions.js'
 
@@ -49,6 +49,20 @@ it('uses an injected full-request token count plus output reserve and stops on o
 
   const unknown = createActionAgents({ tokenBudget: { limitTokens: 20_000, count: async () => ({ kind: 'unavailable', reason: 'no qualified provider counter configured' }) } })
   await expect(unknown.propose('Bounded evidence.', [])).rejects.toThrow(/token qualification unavailable/)
+  expect(create).not.toHaveBeenCalled()
+})
+
+it.each([
+  {},
+  { input_tokens: -1 },
+  { input_tokens: 1.5 },
+  { input_tokens: Number.POSITIVE_INFINITY },
+])('holds before generation when the provider token count is malformed: %j', async result => {
+  create.mockReset()
+  countTokens.mockReset()
+  countTokens.mockResolvedValue(result)
+  const agents = createActionAgents()
+  await expect(agents.verify('Bounded local trial.', [])).rejects.toThrow(/token qualification unavailable/i)
   expect(create).not.toHaveBeenCalled()
 })
 

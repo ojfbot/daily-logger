@@ -8,6 +8,7 @@ import { ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, Act
 import { ACTION_EVIDENCE_SELECTION_VERSION, CONTINUITY_TARGETS_SOURCE, acceptedContinuityGithubReferences, actionEvidenceScope, actionRecordSourceReferences, actionReviewIndex, actionSourceReferences, canonicalActionSources, COVERAGE_SOURCE, recommendationMaintenanceDescriptor, recommendationMaintenanceProjection, selectActionEvidence } from './action-evidence-selection.js'
 import {
   ActionEvidenceRequestError,
+  ActionEvidenceLifecycleError,
   actionEvidenceCaseDigest,
   actionEvidenceRequestReceipt,
   createActionEvidenceRequest,
@@ -21,7 +22,7 @@ import {
   ActionRegistrySchema, CitationSchema, ClosingActionSchema, ClosingCheckpointSchema, RankedClosingActionSchema, RankedClosingCheckpointSchema, RankedShortlistSchema, managedArticleDigest, normalizeWorkKey,
   renderArticleActions, sha256, stripManagedActions, actionStateDigest, acceptedActionState,
   normalizeLegacyActionProse, articleActionFileBytes, splitActionRegistry, captureDraftActionCandidates, type ActionRegistry, type ActionSource, type ClosingCheckpoint, type ClosingOption, type DraftActionCandidate, type DraftRecommendationContext,
-  type RecommendationMaintenanceDescriptor,
+  type ActionEvidenceRequestReceipt, type RecommendationMaintenanceDescriptor,
 } from './action-registry.js'
 import { extractDraftRecommendationContext } from './recommendation-prose.js'
 
@@ -94,7 +95,7 @@ export function resolveActionSourceLines(value: unknown, sources: readonly Actio
     if (citation.endLine < citation.startLine || citation.endLine > lines.length) throw new ActionOutputError(`Invalid citation range for ${citation.sourceId}; choose lines within 1–${lines.length}`)
     const quote = lines.slice(citation.startLine - 1, citation.endLine).join('\n')
     if (quote.length > 16000) throw new ActionOutputError(`Evidence selection for ${citation.sourceId} is too broad; select at most 16000 characters of relevant source lines`)
-    return { sourceId: source.id, quote }
+    return { sourceId: source.id, quote, sourceLineStart: citation.startLine, sourceLineEnd: citation.endLine }
   }
   return ActionProposalSchema.parse({ ...proposal, changes: proposal.changes.map(change => ({ ...change, citations: change.citations.map(resolve) })), suggestions: proposal.suggestions.map(candidate => ({ ...candidate, factCitations: candidate.factCitations.map(resolve), goalCitations: candidate.goalCitations.map(resolve) })), candidateDispositions: proposal.candidateDispositions.map(disposition => disposition.kind === 'reject' || disposition.kind === 'verified-closure' ? { ...disposition, citations: disposition.citations.map(resolve) } : disposition), closingOptions: proposal.closingOptions.map(option => ({ ...option, factCitations: option.factCitations.map(resolve), goalCitations: option.goalCitations.map(resolve) })) })
 }
@@ -158,6 +159,10 @@ function applicationHoldRequest(input: ActionHoldContext & { error: unknown }) {
 }
 
 export type ActionTokenCount = { kind: 'counted'; inputTokens: number } | { kind: 'unavailable'; reason: string }
+const ActionTokenCountSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('counted'), inputTokens: z.number().int().nonnegative().safe() }).strict(),
+  z.object({ kind: z.literal('unavailable'), reason: z.string().min(1) }).strict(),
+])
 export interface ActionTokenBudget {
   limitTokens: number
   count(request: unknown): Promise<ActionTokenCount>
@@ -214,15 +219,18 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
               tool_choice: request.tool_choice,
               messages: request.messages,
             })
-            return { kind: 'counted', inputTokens: result.input_tokens }
+            return ActionTokenCountSchema.parse({ kind: 'counted', inputTokens: result.input_tokens })
           } catch (error) {
             return { kind: 'unavailable', reason: error instanceof Error ? error.message : 'provider token counter failed' }
           }
         })()
-    if (count.kind === 'unavailable') throw new Error(`Action token qualification unavailable: ${count.reason}; review pending`)
-    const totalTokens = count.inputTokens + request.max_tokens
-    if (totalTokens > tokenLimit) throw new Error(`Complete action provider request exceeds token budget (${count.inputTokens} input + ${request.max_tokens} output reserve > ${tokenLimit}); review pending`)
-    console.warn(`Action ${role} token budget: input=${count.inputTokens}; output_reserve=${request.max_tokens}; total=${totalTokens}; limit=${tokenLimit}`)
+    const qualifiedCount = ActionTokenCountSchema.safeParse(count)
+    if (!qualifiedCount.success) throw new Error(`Action token qualification unavailable: invalid provider token count; review pending`)
+    if (qualifiedCount.data.kind === 'unavailable') throw new Error(`Action token qualification unavailable: ${qualifiedCount.data.reason}; review pending`)
+    const inputTokens = qualifiedCount.data.inputTokens
+    const totalTokens = inputTokens + request.max_tokens
+    if (totalTokens > tokenLimit) throw new Error(`Complete action provider request exceeds token budget (${inputTokens} input + ${request.max_tokens} output reserve > ${tokenLimit}); review pending`)
+    console.warn(`Action ${role} token budget: input=${inputTokens}; output_reserve=${request.max_tokens}; total=${totalTokens}; limit=${tokenLimit}`)
     const response = await client.messages.create(request)
     console.warn(`Action ${role}: stop=${response.stop_reason}; output_tokens=${response.usage?.output_tokens ?? 'unavailable'}`)
     if (response.stop_reason !== 'tool_use') throw new Error(`Action ${role} did not finish its structured review (${response.stop_reason})`)
@@ -385,9 +393,24 @@ export function renderGithubEvidence(json: string): string {
 }
 
 function checkedCitations(values: z.infer<typeof CitationSchema>[], sources: readonly ActionSource[], kinds: readonly ActionSource['kind'][], terminal = false): boolean {
+  const authoritativeGithubCitation = (source: ActionSource, citation: z.infer<typeof CitationSchema>) => {
+    const lines = source.content.split('\n')
+    const trusted = trustedActionSourceLineNumbers(source)
+    if (citation.sourceLineStart !== undefined && citation.sourceLineEnd !== undefined) {
+      if (citation.sourceLineEnd < citation.sourceLineStart || lines.slice(citation.sourceLineStart - 1, citation.sourceLineEnd).join('\n') !== citation.quote) return false
+      return Array.from({ length: citation.sourceLineEnd - citation.sourceLineStart + 1 }, (_, index) => citation.sourceLineStart! + index)
+        .every(line => trusted.has(line))
+    }
+    const offsets: number[] = []
+    for (let offset = source.content.indexOf(citation.quote); offset !== -1; offset = source.content.indexOf(citation.quote, offset + 1)) offsets.push(offset)
+    if (offsets.length !== 1) return false
+    const startLine = source.content.slice(0, offsets[0]).split('\n').length
+    const endLine = startLine + citation.quote.split('\n').length - 1
+    return Array.from({ length: endLine - startLine + 1 }, (_, index) => startLine + index).every(line => trusted.has(line))
+  }
   const authoritative = (citation: z.infer<typeof CitationSchema>) => {
     const source = sources.find(source => source.id === citation.sourceId)
-    return !!source && kinds.includes(source.kind) && (!terminal || source.kind !== 'github' || !!source.trustedContent?.some(text => text.includes(citation.quote)))
+    return !!source && kinds.includes(source.kind) && (!terminal || source.kind !== 'github' || authoritativeGithubCitation(source, citation))
   }
   return values.length > 0 && values.every(citation => {
     const source = sources.find(source => source.id === citation.sourceId)
@@ -529,7 +552,7 @@ function recommendationIdentity(option: ProposedClosingOption, candidateActionKe
   return `checkpoint:${sha256(workKey).slice(0, 20)}`
 }
 
-export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; sources: ActionSource[]; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string }; draftCandidates?: readonly DraftActionCandidate[]; draftContext?: DraftRecommendationContext; requiredActionKeys?: readonly string[]; resolvedEvidenceRequests?: ActionRegistry['articles'][number]['evidenceRequests'] }): ActionRegistry {
+export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; sources: ActionSource[]; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string }; draftCandidates?: readonly DraftActionCandidate[]; draftContext?: DraftRecommendationContext; requiredActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; resolvedEvidenceRequests?: ActionRegistry['articles'][number]['evidenceRequests'] }): ActionRegistry {
   const cycle = ActionReviewCycleSchema.parse(input.cycle)
   const proposal = ActionProposalSchema.parse(input.proposal)
   const verification = ActionVerificationSchema.parse(input.verification)
@@ -541,8 +564,11 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   input = { ...input, markdown: prepared.markdown, draftContext: prepared.context }
   const keys = new Set(previous?.actionKeys ?? next.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key))
   const requiredActionKeys = new Set(input.requiredActionKeys ?? keys)
+  const preserveActionKeys = new Set(input.preserveActionKeys ?? [])
   const rejected: ActionRegistry['articles'][number]['rejected'] = [...(previous?.rejected ?? [])]
   const changeKeys = proposal.changes.map(change => change.actionKey)
+  const preservedChange = changeKeys.find(key => preserveActionKeys.has(key))
+  if (preservedChange) throw new Error(`Preserved action cannot receive a new disposition or history entry: ${preservedChange}`)
   if (new Set(changeKeys).size !== changeKeys.length) throw new Error('Duplicate action disposition in one round')
   if (verification.changes.length !== proposal.changes.length || verification.suggestions.length !== proposal.suggestions.length || verification.candidateDispositions.length !== proposal.candidateDispositions.length || verification.closingOptions.length !== proposal.closingOptions.length) throw new Error('Independent verification is incomplete')
   if (new Set(verification.changes.map(verdict => verdict.actionKey)).size !== verification.changes.length || new Set(verification.suggestions.map(verdict => verdict.candidateIndex)).size !== verification.suggestions.length || new Set(verification.candidateDispositions.map(verdict => verdict.candidateId)).size !== verification.candidateDispositions.length || new Set(verification.closingOptions.map(verdict => verdict.optionIndex)).size !== verification.closingOptions.length) throw new Error('Duplicate independent verdict')
@@ -595,6 +621,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     if (candidate.existingKey && !verdict.existingKey) { rejectCandidate('Proposer and verifier disagree about an existing identity; no new admission'); continue }
     const existingKey = verdict.existingKey ?? next.records.find(record => record.workKey === workKey)?.key
     if (existingKey) {
+      if (preserveActionKeys.has(existingKey)) { rejectCandidate(`Preserved action cannot receive a new disposition or history entry: ${existingKey}`); continue }
       const existing = next.records.find(record => record.key === existingKey)
       if (!existing || existing.original.repo !== candidate.repo) { rejectCandidate('Verifier linked to an unknown action or a different repository'); continue }
       const equivalent = existing.workKey === workKey
@@ -757,9 +784,9 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
         ? 'A prior displayed recommendation was omitted without an evidence-backed rank change.'
         : `Only ${ranked.length} distinct recommendation${ranked.length === 1 ? '' : 's'} passed source and authority checks.`, nextCheck: 'Reconcile current primary evidence and rank rationale before presenting a ready shortlist.', recommendations: partialRecommendations, unresolvedIdentities, unresolvedRecommendations }
   // Git retains prior rounds; the dated working state retains only this round.
-  const preservedActionKeys = new Set([...keys].filter(key => !requiredActionKeys.has(key)))
+  const carriedActionKeys = new Set([...keys].filter(key => !requiredActionKeys.has(key)))
   for (const record of next.records) {
-    const acceptedSameDate = preservedActionKeys.has(record.key)
+    const acceptedSameDate = carriedActionKeys.has(record.key)
       ? record.history.find(decision => decision.articleDate === input.articleDate
         && previous?.status === 'accepted'
         && previous.roundId === decision.roundId
@@ -784,7 +811,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   return result
 }
 
-export async function reviewArticleActions(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; feedback: string; sources: ActionSource[]; agents: ActionAgents; articleStatuses: ReadonlyMap<string, string>; draftCandidates?: readonly unknown[]; repoRoot?: string; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[] }): Promise<{ registry: ActionRegistry; markdown: string; cached: boolean; evidenceResolutions: ActionSource[] }> {
+export async function reviewArticleActions(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; feedback: string; sources: ActionSource[]; agents: ActionAgents; articleStatuses: ReadonlyMap<string, string>; draftCandidates?: readonly unknown[]; repoRoot?: string; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; selectedEvidenceProjectionIds?: readonly string[] }): Promise<{ registry: ActionRegistry; markdown: string; cached: boolean; evidenceResolutions: ActionSource[] }> {
   input = { ...input, cycle: ActionReviewCycleSchema.parse(input.cycle) }
   if (process.env.ACTION_REVIEW_DISABLED === 'true') throw new Error('Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked')
   if (!input.registry.articles.some(article => article.date === input.articleDate) && Object.hasOwn(input.registry.baseline.articleActions, input.articleDate)) input = { ...input, markdown: normalizeLegacyActionProse(input.markdown) }
@@ -795,8 +822,19 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), previous?.draftContext)
   input = { ...input, markdown: prepared.markdown }
   input = { ...input, articleStatuses: new Map(input.articleStatuses).set(input.articleDate, input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft') }
+  const currentRequestMatches = (request: ActionEvidenceRequestReceipt) => {
+    if (request.caseDigest !== actionEvidenceCaseDigest({ ...input, actionKeys: request.actionKeys })) return false
+    if (!request.sourceId || !request.sourceFullContentSha256) return true
+    const current = input.sources.find(source => source.id === request.sourceId)
+    return !!current && (current.fullContentSha256 ?? sha256(current.content)) === request.sourceFullContentSha256
+      && sha256(current.content) === request.sourceFullContentSha256
+  }
+  const terminalRequest = previous?.evidenceRequests?.find(request => ['cancelled', 'expired', 'superseded', 'declined'].includes(request.status) && currentRequestMatches(request))
+  if (terminalRequest) throw new ActionEvidenceLifecycleError(terminalRequest, `Action evidence request ${terminalRequest.id} is ${terminalRequest.status}; review remains pending until the evidence case changes`)
   if (input.repoRoot && previous?.evidenceRequests?.length) {
-    const matchingRequests = previous.evidenceRequests.filter(request => request.caseDigest === actionEvidenceCaseDigest({ ...input, actionKeys: request.actionKeys }))
+    const matchingRequests = previous.evidenceRequests.filter(request => {
+      return request.status === 'open' && currentRequestMatches(request)
+    })
     const restored = readActionEvidenceArtifacts({ repoRoot: input.repoRoot, requests: matchingRequests })
     const pinnedKeys = new Set(restored.filter(source => !source.projection).map(source => source.id.replace(/@[a-f0-9]{64}$/, '')))
     input = {
@@ -807,16 +845,26 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
       ],
     }
   }
+  const committedRequests = (previous?.evidenceRequests ?? []).filter(request => request.status === 'resolved' && currentRequestMatches(request))
+  const committedRequestIds = new Set(committedRequests.map(request => request.id))
+  if (input.repoRoot && committedRequests.length) {
+    const committedSourceIds = new Set(previous?.sources.filter(source => source.projection || source.response).map(source => source.id) ?? [])
+    const restored = readActionEvidenceArtifacts({ repoRoot: input.repoRoot, requests: committedRequests })
+      .filter(source => !source.projection && !source.response || committedSourceIds.has(source.id))
+    input = { ...input, sources: [...input.sources, ...restored] }
+  }
   input = { ...input, sources: canonicalActionSources(input.sources) }
   if (input.repoRoot) for (const projection of input.sources.filter(source => source.projection)) {
-    persistValidatedActionEvidenceReply({ repoRoot: input.repoRoot, projection })
+    if (!projection.projection || !committedRequestIds.has(projection.projection.requestId)) persistValidatedActionEvidenceReply({ repoRoot: input.repoRoot, projection })
   }
-  const inputHash = sha256(JSON.stringify({ version: ACTION_REVIEW_PROMPT_VERSION, evidenceSelectionVersion: ACTION_EVIDENCE_SELECTION_VERSION, cycle: input.cycle, reassessActionKeys: [...(input.reassessActionKeys ?? [])].sort(), preserveActionKeys: [...(input.preserveActionKeys ?? [])].sort(), statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), draftContext: prepared.context, draftCandidates: draftCandidates?.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })), feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
+  const inputHash = sha256(JSON.stringify({ version: ACTION_REVIEW_PROMPT_VERSION, evidenceSelectionVersion: ACTION_EVIDENCE_SELECTION_VERSION, cycle: input.cycle, reassessActionKeys: [...(input.reassessActionKeys ?? [])].sort(), preserveActionKeys: [...(input.preserveActionKeys ?? [])].sort(), statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), draftContext: prepared.context, draftCandidates: draftCandidates?.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })), feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')
+    && (!source.projection || !source.projection.coverage.some(item => item.status === 'unknown')
+      && (!input.selectedEvidenceProjectionIds?.length || input.selectedEvidenceProjectionIds.includes(source.id)))), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
 
   if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === inputHash && JSON.stringify(previous.draftContext) === JSON.stringify(prepared.context) && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys, previous.closing, previous.draftContext, { articleDate: previous.date, roundId: previous.roundId, draftCandidates: previous.draftCandidates })) {
-    const committedProjectionIds = new Set(previous.sources.filter(source => source.projection).map(source => source.id))
+    const committedResolutionIds = new Set(previous.sources.filter(source => source.projection || source.response).map(source => source.id))
     return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true,
-      evidenceResolutions: input.sources.filter(source => source.projection && committedProjectionIds.has(source.id)) }
+      evidenceResolutions: input.sources.filter(source => (source.projection || source.response) && committedResolutionIds.has(source.id)) }
   }
   const selection = selectActionEvidence({ ...input, draftContext: prepared.context })
   input = { ...input, sources: selection.sources }
@@ -853,6 +901,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
     let registry: ActionRegistry
     try {
       registry = applyVerifiedActionReview({ ...input, roundId: inputHash, proposal, verification, identity: input.agents.identity, draftCandidates, draftContext: prepared.context, requiredActionKeys: selection.receipt.reviewActionKeys,
+        preserveActionKeys: input.preserveActionKeys,
         resolvedEvidenceRequests: previous?.evidenceRequests?.filter(request => selection.receipt.resolvedRequests.includes(request.id)).map(request => ({ ...request, status: 'resolved' as const })) })
     } catch (error) {
       const request = applicationHoldRequest({ ...input, actionKeys: selection.receipt.reviewActionKeys, error })
@@ -860,7 +909,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
       throw error
     }
     return { registry, markdown: renderArticleActions(input.markdown, registry, input.articleDate, input.articleStatuses), cached: false,
-      evidenceResolutions: selection.sources.filter(source => !!source.projection) }
+      evidenceResolutions: selection.sources.filter(source => !!source.projection || !!source.response) }
   }
   throw new Error('Action review returned no result')
 }
@@ -891,6 +940,7 @@ export async function reviewDraftActions(input: Parameters<typeof reviewArticleA
   catch (error) {
     const reason = error instanceof ActionEvidenceRequestError
       ? `Action evidence request ${error.request.id} remains pending: ${error.message}`
+      : error instanceof ActionEvidenceLifecycleError ? error.message
       : error instanceof Error ? error.message : 'Action reviewer unavailable'
     console.warn(`::warning::Action review pending for ${input.articleDate}: ${reason}`)
     if (error instanceof ActionEvidenceRequestError && input.repoRoot) {
@@ -901,6 +951,7 @@ export async function reviewDraftActions(input: Parameters<typeof reviewArticleA
       .filter(request => request.caseDigest === actionEvidenceCaseDigest({ ...input, actionKeys: request.actionKeys }))
     const requests = new Map(prior.map(request => [request.id, request]))
     if (error instanceof ActionEvidenceRequestError) requests.set(error.request.id, actionEvidenceRequestReceipt(error.request))
+    if (error instanceof ActionEvidenceLifecycleError) requests.set(error.receipt.id, error.receipt)
     return pendingActionReview({ ...input, reason, evidenceRequests: [...requests.values()] })
   }
 }

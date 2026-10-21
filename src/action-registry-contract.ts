@@ -18,11 +18,10 @@ export const ActionEvidenceCoverageSchema = z.object({
   rangeIndexes: z.array(z.number().int().nonnegative()).max(32),
 }).strict()
 
-export const ActionEvidenceRequestSchema = z.object({
+const ActionEvidenceRequestFields = {
   version: z.literal('action-evidence-request-v1'),
   id: digest,
   kind: z.enum(['source-view', 'missing-source', 'clarification', 'authority', 'contradiction']),
-  status: z.enum(['open', 'resolved']),
   caseDigest: digest,
   articleDate: date,
   cycle: ActionReviewCycleSchema,
@@ -39,20 +38,27 @@ export const ActionEvidenceRequestSchema = z.object({
     aggregateBytes: z.number().int().positive(),
     providerEnvelopeBytes: z.number().int().positive(),
   }).strict(),
+}
+
+export const ActionEvidenceRequestSchema = z.object({
+  ...ActionEvidenceRequestFields,
+  status: z.literal('open'),
 }).strict()
 export type ActionEvidenceRequest = z.infer<typeof ActionEvidenceRequestSchema>
 
-export const ActionEvidenceRequestReceiptSchema = ActionEvidenceRequestSchema.pick({
-  version: true,
-  id: true,
-  kind: true,
-  status: true,
-  caseDigest: true,
-  articleDate: true,
-  cycle: true,
-  actionKeys: true,
-  recipient: true,
-}).strict()
+const ActionEvidenceRequestReceiptFields = z.object(ActionEvidenceRequestFields).pick({
+  version: true, id: true, kind: true, caseDigest: true, articleDate: true, cycle: true,
+  actionKeys: true, sourceKey: true, sourceId: true, sourceFullContentSha256: true,
+  obligations: true, recipient: true,
+}).shape
+export const ActionEvidenceRequestReceiptSchema = z.discriminatedUnion('status', [
+  z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('open') }).strict(),
+  z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('resolved') }).strict(),
+  z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('cancelled') }).strict(),
+  z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('expired') }).strict(),
+  z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('superseded') }).strict(),
+  z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('declined') }).strict(),
+])
 export type ActionEvidenceRequestReceipt = z.infer<typeof ActionEvidenceRequestReceiptSchema>
 
 export const ActionEvidenceProjectionSchema = z.object({
@@ -75,7 +81,12 @@ export const ActionEvidenceResponseSchema = z.object({
 }).strict()
 export type ActionEvidenceResponse = z.infer<typeof ActionEvidenceResponseSchema>
 
-export const CitationSchema = z.object({ sourceId: z.string().min(1), quote: z.string().min(12) }).strict()
+export const CitationSchema = z.object({
+  sourceId: z.string().min(1),
+  quote: z.string().min(12),
+  sourceLineStart: z.number().int().positive().optional(),
+  sourceLineEnd: z.number().int().positive().optional(),
+}).strict().refine(citation => (citation.sourceLineStart === undefined) === (citation.sourceLineEnd === undefined), 'Citation source range must include both endpoints')
 export const DraftActionCandidatePayloadSchema = ActionItemSchema.extend({ status: z.literal('open') }).strict()
 export type DraftActionCandidatePayload = z.infer<typeof DraftActionCandidatePayloadSchema>
 const ReviewedDraftActionCandidateFields = { reason: z.string().min(1), citations: z.array(CitationSchema) }

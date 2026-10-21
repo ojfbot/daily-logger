@@ -163,7 +163,7 @@ describe('canonical action review and publication', () => {
   it('resolves bounded source-line selections into exact evidence before verification', () => {
     const source: ActionSource = { id: 's1', kind: 'github', locator: 'source', content: 'Heading\nThe **exact** primary evidence.\nA second source line.' }
     const proposal = { changes: [{ ...propose().changes[0], citations: [{ sourceId: 's1', startLine: 2, endLine: 3 }] }], suggestions: [] }
-    expect(resolveActionSourceLines(proposal, [source]).changes[0].citations).toEqual([{ sourceId: 's1', quote: 'The **exact** primary evidence.\nA second source line.' }])
+    expect(resolveActionSourceLines(proposal, [source]).changes[0].citations).toEqual([{ sourceId: 's1', quote: 'The **exact** primary evidence.\nA second source line.', sourceLineStart: 2, sourceLineEnd: 3 }])
     expect(() => resolveActionSourceLines({ ...proposal, changes: [{ ...proposal.changes[0], citations: [{ sourceId: 's1', startLine: 2, endLine: 99 }] }] }, [source])).toThrow(/Invalid citation range/)
     expect(() => resolveActionSourceLines(proposal, [])).toThrow(/Unknown citation source/)
     const longer = { ...source, content: Array.from({ length: 20 }, () => 'A complete short evidence line.').join('\n') }
