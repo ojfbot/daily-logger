@@ -181,6 +181,38 @@ export const ActionReviewOutputSchema = z.object({
   if (new Set(keys).size !== keys.length) context.addIssue({ code: 'custom', message: 'Duplicate action review output identity' })
 })
 export type ActionReviewOutput = z.infer<typeof ActionReviewOutputSchema>
+const ActionVerificationReceiptSchema = z.object({
+  proposer: z.string(),
+  verifier: z.string(),
+  promptVersion: z.string(),
+  proposalSha256: digest,
+  verdicts: z.array(z.object({ item: z.string(), verdict: z.enum(['pass', 'reject', 'hold']), reason: z.string() }).strict()),
+}).strict()
+const CandidateReviewHistorySchema = z.object({
+  articleDigest: digest,
+  reviewCycle: ActionReviewCycleSchema,
+  roundId: digest,
+  stateDigest: digest,
+  verification: ActionVerificationReceiptSchema,
+  draftCandidateEvidence: DraftCandidateEvidenceRequirementsSchema,
+  reviewOutput: ActionReviewOutputSchema,
+  transitions: z.array(z.object({
+    candidateId: digest,
+    review: DraftActionCandidateReviewSchema.refine(review => review.state !== 'awaiting-review', 'Historical candidate transition must be reviewed'),
+  }).strict()).min(1).max(5),
+  sources: z.array(z.object({ id: z.string().min(1), fullContentSha256: digest }).strict()),
+  evidenceRequests: z.array(ActionEvidenceRequestReceiptSchema),
+}).strict().superRefine((receipt, context) => {
+  if (receipt.reviewOutput.roundId !== receipt.roundId
+    || JSON.stringify(receipt.reviewOutput.reviewCycle) !== JSON.stringify(receipt.reviewCycle)
+    || receipt.reviewOutput.proposalSha256 !== receipt.verification.proposalSha256
+    || receipt.reviewOutput.consumedInputSha256 !== receipt.draftCandidateEvidence.canonicalIndexSha256
+    || receipt.draftCandidateEvidence.articleDigest !== receipt.articleDigest) {
+    context.addIssue({ code: 'custom', message: 'Historical candidate review receipt binding is inconsistent' })
+  }
+  if (new Set(receipt.transitions.map(transition => transition.candidateId)).size !== receipt.transitions.length) context.addIssue({ code: 'custom', message: 'Duplicate historical candidate transition' })
+  if (new Set(receipt.sources.map(source => source.id)).size !== receipt.sources.length) context.addIssue({ code: 'custom', message: 'Duplicate historical candidate source identity' })
+})
 export const ActionSourceSchema = z.object({
   id: z.string().min(1),
   kind: z.enum(['repository', 'github', 'goal', 'instruction', 'report']),
@@ -316,11 +348,12 @@ function createArticleActionSchema(candidateIdentity?: DraftCandidateIdentity) {
     actionKeys: z.array(z.string()),
     reviewOutput: ActionReviewOutputSchema.optional(),
     draftCandidates: z.array(DraftActionCandidateSchema).max(5).optional(),
+    candidateReviewHistory: z.array(CandidateReviewHistorySchema).optional(),
     draftCandidateEvidence: DraftCandidateEvidenceRequirementsSchema.optional(),
     draftContext: DraftRecommendationContextSchema.optional(),
     closing: ClosingPromptSchema.optional(),
     stateDigest: digest,
-    verification: z.object({ proposer: z.string(), verifier: z.string(), promptVersion: z.string(), proposalSha256: digest, verdicts: z.array(z.object({ item: z.string(), verdict: z.enum(['pass', 'reject', 'hold']), reason: z.string() }).strict()) }).strict(),
+    verification: ActionVerificationReceiptSchema,
     sources: z.array(ActionSourceSchema),
     evidenceRequests: z.array(ActionEvidenceRequestReceiptSchema).optional(),
     rejected: z.array(z.object({ description: z.string(), reason: z.string(), workKey: z.string().optional(), evidenceDigest: digest.optional(), quotaHold: z.object({ articleDate: date, cycle: ActionReviewCycleSchema }).strict().optional() }).strict()),
@@ -337,6 +370,13 @@ function createArticleActionSchema(candidateIdentity?: DraftCandidateIdentity) {
     for (const [ordinal, candidate] of candidates.entries()) {
       if (candidateIdentity && candidateIdentity(candidate.payload, ordinal) !== candidate.candidateId) context.addIssue({ code: 'custom', message: `Draft candidate payload digest changed: ${candidate.candidateId}` })
       if (article.review.state === 'verified' && candidate.review.state === 'awaiting-review') context.addIssue({ code: 'custom', message: `Verified review must account for draft candidate: ${candidate.candidateId}` })
+    }
+    const historyKeys = (article.candidateReviewHistory ?? []).map(receipt => `${receipt.roundId}:${receipt.verification.proposalSha256}:${receipt.stateDigest}`)
+    if (new Set(historyKeys).size !== historyKeys.length) context.addIssue({ code: 'custom', message: `Duplicate candidate review history receipt: ${article.date}` })
+    for (const receipt of article.candidateReviewHistory ?? []) {
+      if (receipt.reviewOutput.articleDate !== article.date || receipt.transitions.some(transition => !candidates.some(candidate => candidate.candidateId === transition.candidateId))) {
+        context.addIssue({ code: 'custom', message: `Historical candidate review receipt is outside article custody: ${article.date}` })
+      }
     }
   })
 }
