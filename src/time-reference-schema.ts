@@ -34,3 +34,39 @@ export const TimeReferenceSchema = z.object({
 })
 export type TimeReference = z.infer<typeof TimeReferenceSchema>
 export type TimeEvidence = TimeReference['evidence']
+
+const unresolvedReasonSchema = z.enum(['missing-evidence', 'missing-date', 'ambiguous-source', 'clock-mismatch', 'mutable-event', 'unsupported-format', 'historical-claim-required', 'ineligible-context'])
+const memberResolutionSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('supported'), at: z.string().refine((value) => canonicalInstant(value) === value), evidence: TimeEvidenceSchema }).strict(),
+  z.object({ kind: z.literal('unresolved'), reason: unresolvedReasonSchema }).strict(),
+])
+export const TimeExpressionMemberSchema = z.object({
+  text: z.string().min(1).max(256),
+  precision: z.enum(['minute', 'second']),
+  certainty: z.enum(['exact', 'approximate']),
+  resolution: memberResolutionSchema,
+}).strict()
+const expressionIdentity = { text: z.string().min(1).max(2048), occurrence: z.number().int().nonnegative() }
+export const TimeExpressionSchema = z.discriminatedUnion('kind', [
+  z.object({ ...expressionIdentity, kind: z.literal('point'), member: TimeExpressionMemberSchema }).strict(),
+  z.object({ ...expressionIdentity, kind: z.literal('list'), members: z.array(TimeExpressionMemberSchema).min(2) }).strict(),
+  z.object({ ...expressionIdentity, kind: z.literal('interval'), start: TimeExpressionMemberSchema, end: TimeExpressionMemberSchema, relation: z.enum(['elapsed', 'event-span', 'unestablished']) }).strict(),
+])
+export type TimeExpression = z.infer<typeof TimeExpressionSchema>
+export type TimeExpressionMember = z.infer<typeof TimeExpressionMemberSchema>
+
+export function timeExpressionMembers(expression: TimeExpression): TimeExpressionMember[] {
+  switch (expression.kind) {
+    case 'point': return [expression.member]
+    case 'list': return expression.members
+    case 'interval': return [expression.start, expression.end]
+  }
+}
+
+/** Decode the existing v1 instant wire format into one display union. Stored claims stay unchanged. */
+export const TimeDisplayReferenceSchema = z.union([
+  TimeReferenceSchema.strict().transform((reference) => ({ kind: 'instant' as const, reference })),
+  TimeExpressionSchema,
+])
+export type TimeDisplayReference = z.output<typeof TimeDisplayReferenceSchema>
+export type TimeReferenceInput = z.input<typeof TimeDisplayReferenceSchema>

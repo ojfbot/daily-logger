@@ -2,7 +2,15 @@ import type { TimeReference } from '../../../../src/time-reference-schema.ts'
 import { nightPath, offsetLabel, offsetLongitude, solarPosition, utcClock, type ClockDisplay } from '../utils/timeDisplay.ts'
 import { WORLD_LAND_PATH } from '../utils/worldLand.ts'
 
-export function TimePopoverContent({ reference, viewer }: { reference: TimeReference; viewer: ClockDisplay }) {
+interface TimePopoverContentProps {
+  reference: TimeReference
+  viewer: ClockDisplay
+  certainty?: 'exact' | 'approximate'
+}
+
+export function TimePopoverContent({ reference, viewer, certainty = 'exact' }: TimePopoverContentProps) {
+  const approximate = certainty === 'approximate'
+  const qualifier = approximate ? '~' : ''
   const at = new Date(reference.at)
   const utc = utcClock(at, reference.precision)
   const sun = solarPosition(at)
@@ -12,7 +20,7 @@ export function TimePopoverContent({ reference, viewer }: { reference: TimeRefer
 
   return <>
     <div className="time-popover-heading">The same moment, two clocks</div>
-    <svg className="time-world-map" viewBox="0 0 360 180" role="img" aria-label={`World day and night at ${viewer.date} ${viewer.clock} in ${viewer.zone} (${offsetLabel(viewer.offsetMinutes)}). Solid blue marks your time zone's UTC offset; dashed amber marks Greenwich (UTC).`}>
+    <svg className="time-world-map" viewBox="0 0 360 180" role="img" aria-label={`World day and night at ${approximate ? 'approximately ' : ''}${viewer.date} ${viewer.clock} in ${viewer.zone} (${offsetLabel(viewer.offsetMinutes)}). Solid blue marks your time zone's UTC offset; dashed amber marks Greenwich (UTC).`}>
       <rect width="360" height="180" className="time-map-ocean" />
       <path d={WORLD_LAND_PATH} className="time-map-land" />
       <path d="M0,45H360M0,90H360M0,135H360M90,0V180M180,0V180M270,0V180" className="time-map-grid" />
@@ -27,13 +35,14 @@ export function TimePopoverContent({ reference, viewer }: { reference: TimeRefer
     </svg>
     <div className="time-clock time-clock-viewer">
       <span className="time-clock-label"><i aria-hidden="true" />{viewer.source === 'utc' ? 'UTC fallback' : 'Your time'} <span>{offsetLabel(viewer.offsetMinutes)}</span></span>
-      <span className="time-clock-value"><time dateTime={reference.at}>{viewer.clock}</time><span>{viewer.date}</span></span>
+      <span className="time-clock-value"><time dateTime={reference.at}>{qualifier}{viewer.clock}</time><span>{viewer.date}</span></span>
       <span className="time-clock-zone">{viewer.source === 'iana' ? `Device time zone: ${viewer.zone}` : viewer.zone}</span>
     </div>
     <div className="time-clock time-clock-utc">
       <span className="time-clock-label"><i aria-hidden="true" />Zulu / UTC <span>{offsetLabel(0)}</span></span>
-      <span className="time-clock-value"><time dateTime={reference.at}>{utc.clock}</time><span>{utc.date}</span></span>
+      <span className="time-clock-value"><time dateTime={reference.at}>{qualifier}{utc.clock}</time><span>{utc.date}</span></span>
     </div>
+    {approximate && <p className="time-popover-note">The article states this time approximately.</p>}
     <p className="time-popover-note">{sameMeridian ? 'Both clocks share Greenwich; the lines are separated for clarity. ' : ''}Blue shows your clock’s UTC offset, not your location. Shading shows approximate night.</p>
     {viewer.source === 'device-offset' && <p className="time-popover-note">Using the device’s offset at this moment; its time zone name is unavailable.</p>}
     {viewer.source === 'utc' && <p className="time-popover-note">The device’s time zone and offset are unavailable. Showing UTC.</p>}

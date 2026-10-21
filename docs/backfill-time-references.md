@@ -58,3 +58,30 @@ pnpm backfill:times --merge /tmp/time-refs-0.json --merge /tmp/time-refs-1.json 
 The same partition rule supports any positive worker count. Conflicting outputs for the same article fail instead of choosing a winner. Use `--snapshot <path>` to select a separately preserved evidence snapshot. Keep the article revision fixed while workers run.
 
 Read [Article time references](time-popovers.md) for provenance rules, timezone tradeoffs, and calculation sources.
+
+## Propose historical grouped clocks
+
+Historical group admission is separate from existing v1 instant claims. To review
+new list/interval claims against a frozen evidence snapshot, use a dedicated output:
+
+```bash
+pnpm backfill:times --include-expressions --snapshot /private/tmp/frozen-time-evidence.json --output /private/tmp/group-proposal.json --report /private/tmp/group-report.json
+```
+
+This previews the proposal. Add `--write` to save those dedicated files; inspect
+the source identities, full instants, qualifier, relationship and unresolved
+members before proposing any replacement of accepted metadata. The existing
+writer stores optional `expressions` claims beside each current article body
+digest. The reader independently recomputes every claim. Ordinary reconstruction
+without this flag preserves the original v1 output shape.
+
+The grouped report separates independently displayed instant references,
+expressions, supported members and unresolved members. Its resolved total counts
+each converted member once, including shared-zone clocks, without counting a
+preserved complete-timestamp claim again inside its group. Unsupported spellings
+inside a recognized group use that member's explicit unresolved reason.
+
+Do not overwrite the accepted October sidecar with generic raw output: that
+backfill has separate frozen occurrence adjudications and conservation guards.
+Its original script remains a source-pinned historical replay. A new reader or
+instruction update is not publication authority for new historical bindings.

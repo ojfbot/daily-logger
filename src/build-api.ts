@@ -21,7 +21,7 @@ import { assertShipmentCoverage, type ShipmentTime } from './shipment-times.js'
 import type { IssueTime } from './issue-times.js'
 import { requiresShipmentTimeCoverage } from './shipment-time-coverage.js'
 import { assertArticleReferenceContract } from './article-references.js'
-import type { TimeReference } from './time-references.js'
+import type { TimeReferenceInput } from './time-reference-schema.js'
 import { type CanonicalAction } from './action-model.js'
 import { verifyRecordedAdmissions } from './action-intake.js'
 import { readActionRegistry, projectRegistry, renderArticleActions, articleActionRecords, articleActionCard, renderArticleActionHtml, stripManagedActions } from './action-registry.js'
@@ -54,7 +54,7 @@ interface EntryData {
   decisions?: Array<{ title: string; summary: string; repo: string; pillar?: string; relatedTags: string[] }>
   actions?: CanonicalAction[]
   codeReferences?: CodeReference[]
-  timeReferences?: TimeReference[]
+  timeReferences?: TimeReferenceInput[]
   shipmentTimes?: ShipmentTime[]
   issueTimes?: IssueTime[]
   provenance?: ArticleProvenance
@@ -271,6 +271,7 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
     }
     if (requiresShipmentTimeCoverage(datedFilename, narrative) && timeMetadata.shipmentCoverage.status !== 'complete') throw new Error(`${datedFilename}: required immutable shipment-time coverage is unavailable`)
     if (timeMetadata.shipmentCoverage.status === 'complete') assertShipmentCoverage(narrative, timeMetadata.shipmentCoverage)
+    const timeReferences = [...timeMetadata.references, ...(timeMetadata.expressions ?? [])]
     for (const warning of timeMetadata.warnings) console.warn(`::warning::${date}: ${warning}`)
     for (const missing of timeMetadata.unresolved) console.warn(`::warning::${date}: time ${missing.text} occurrence ${missing.occurrence}: ${missing.reason}`)
 
@@ -325,7 +326,7 @@ export function buildApi(repoRoot = REPO_ROOT): BuildApiResult {
       decisions,
       actions,
       codeReferences: codeRefsByDate[date],
-      ...(timeMetadata.references.length > 0 ? { timeReferences: timeMetadata.references } : {}),
+      ...(timeReferences.length > 0 ? { timeReferences } : {}),
       ...(timeMetadata.shipmentCoverage.status === 'complete' && timeMetadata.shipmentCoverage.times.length > 0 ? { shipmentTimes: timeMetadata.shipmentCoverage.times } : {}),
       ...(timeMetadata.issueTimes.length > 0 ? { issueTimes: timeMetadata.issueTimes } : {}),
       provenance: fm.provenance as ArticleProvenance | undefined,
