@@ -204,7 +204,7 @@ async function main() {
     if (!articleDate) throw new Error('Article date is missing')
     const statuses = readArticleStatuses(repoRoot)
     const collectedSources = isMock ? [] : collectActionSources({ registry, repoRoot, markdown: result.revisedMarkdown, feedback, reassessActionKeys, preserveActionKeys })
-    const actions = await reviewDraftActions({ cycle, registry, articleStatuses: statuses, articleDate, markdown: result.revisedMarkdown, feedback, sources: [...collectedSources, ...evidenceReplies], agents: isMock ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, ...(isDryRun ? {} : { repoRoot }) })
+    const actions = await reviewDraftActions({ cycle, registry, articleStatuses: statuses, articleDate, markdown: result.revisedMarkdown, feedback, sources: [...collectedSources, ...evidenceReplies], agents: isMock ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, selectedEvidenceProjectionIds: evidenceReplies.map(reply => reply.id), ...(isDryRun ? {} : { repoRoot }) })
     const renderedHtml = renderArticleActionHtml(actions.markdown, actions.registry, articleDate, statuses)
     const evidence = readArticleTime({ repoRoot, date: articleDate, markdown: stripManagedActions(actions.markdown), bindingMarkdown: actions.markdown, renderedHtml })
     const referenceAudit = assertArticleReferenceContract(actions.markdown, evidence.referenceKinds, renderedHtml)
