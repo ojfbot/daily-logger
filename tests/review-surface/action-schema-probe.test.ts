@@ -59,7 +59,7 @@ describe('manual synthetic probe — no transport', () => {
     const result = await run([{ input_tokens: 1 }, response({ error: { message: secret } }, 400, { 'request-id': 'bad\tvalue' })])
     expect(result.calls).toHaveLength(2); expect(result.compilerAcceptance).toEqual([]); expect(result.errorCode).toBe('PROVIDER_400')
     expect(JSON.stringify(result)).not.toContain(secret); expect(result.calls[1].requestId).toBeNull()
-    const unknown = await run([new Error(secret)]); expect(unknown.errorCode).toBe('PROBE_STOPPED'); expect(JSON.stringify(unknown)).not.toContain(secret)
+    const unknown = await run([new Error(secret)]); expect(unknown.errorCode).toBe('TRANSPORT_FAILURE'); expect(JSON.stringify(unknown)).not.toContain(secret)
   })
   it.each([201, 202, 204, 302, 307, 429, 500])('requires exact200, stops at %s without retry/redirect', async status => {
     const result = await run([status === 204 ? new Response(null, { status }) : response({}, status)]); expect(result.calls).toHaveLength(1); expect(result.errorCode).toBe('PROVIDER_HTTP_FAILURE')
@@ -77,6 +77,23 @@ describe('manual synthetic probe — no transport', () => {
   })
   it('bounds all response bytes before SDK parsing', async () => {
     const result = await run([new Response('x'.repeat(131073))]); expect(result.errorCode).toBe('RESPONSE_BYTE_LIMIT'); expect(result.calls).toHaveLength(1)
+  })
+  it('marks a generic stream rejection on the current200 call without leaking its message or qualifying the compiler', async () => {
+    const partial = new Response(new ReadableStream({ pull(controller) { controller.error(new Error('PRIVATE_STREAM_ERROR_MUST_NOT_ESCAPE')) } }))
+    const result = await run([{ input_tokens: 1 }, partial])
+    expect(result.calls).toHaveLength(2); expect(result.errorCode).toBe('TRANSPORT_FAILURE'); expect(result.calls[1].failureCode).toBe('TRANSPORT_FAILURE')
+    expect(result.compilerAcceptance).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(JSON.stringify(result)).not.toContain('PRIVATE_STREAM_ERROR')
+  })
+  it('does not reassign a later pre-network rejection to an earlier successful call', async () => {
+    const receipts: Parameters<typeof createGuardedFetch>[2] = []
+    const guarded = createGuardedFetch(loaded, async () => response({}), receipts, 'offline-not-a-real-key')
+    for (const kind of ['count', 'messages'] as const) {
+      const body = JSON.stringify(loaded.data.get(`proposer.synthetic-${kind}-request.json`), null, 2)
+      await guarded(`https://api.anthropic.com/v1/messages${kind === 'count' ? '/count_tokens' : ''}`, { method: 'POST', body, signal: new AbortController().signal, headers: expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)) })
+    }
+    const prior = structuredClone(receipts)
+    await expect(guarded('https://unapproved.test/v1/messages/count_tokens', { method: 'POST' })).rejects.toThrow()
+    expect(receipts).toEqual(prior); expect(receipts[1].failureCode).toBeUndefined()
   })
   it('consumes permission before an unknown transport result and denies a fifth call', async () => {
     const receipts: Parameters<typeof createGuardedFetch>[2] = []
