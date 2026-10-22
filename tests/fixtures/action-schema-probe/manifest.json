@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "candidateCommit": "31c45e2331f2997be55fa8e261682d1368cc40df",
+  "candidateTree": "b1962d52b99b4c4dec309caaa4c3d17aa59c5a3c",
+  "syntheticOnly": true,
+  "models": {
+    "proposer": "claude-sonnet-4-6",
+    "verifier": "claude-opus-4-6"
+  },
+  "outputTokens": 128,
+  "contextLimit": 200000,
+  "requestByteLimit": 655360,
+  "responseByteLimit": 131072,
+  "timeoutMs": 120000,
+  "maxRetries": 0,
+  "files": {
+    "proposer.tool-schema.json": {
+      "sha256": "e33c14d1253ec55adf07dcd2352170884b8709295a488c95b5e333cfd5bb5477",
+      "bytes": 4961,
+      "bodySha256": "ca756990c0710e0a7aa12358a2a6252f3359a6c6713ddf68006b2cc17a2c1d6a",
+      "bodyBytes": 4960
+    },
+    "proposer.synthetic-count-request.json": {
+      "sha256": "0dbee46781b39a9d623efe3d2d1599e46ad400d3c761a216d1f1dd93e6a88703",
+      "bytes": 12533,
+      "bodySha256": "5fd42d191ae6ace981dfc27aa365bb4b017c57eaa480d8fdc2b8fbe7e5e9cf9f",
+      "bodyBytes": 12532
+    },
+    "proposer.synthetic-messages-request.json": {
+      "sha256": "f547d79eba3c12adb18528a01805b5fa5c6972df90edfe9fc31dbcdc47d63d07",
+      "bytes": 12550,
+      "bodySha256": "c463e517bf6c5efc2ea93612b9f71abe2c4862834cffbc701664c9dee7e9eac9",
+      "bodyBytes": 12549
+    },
+    "verifier.tool-schema.json": {
+      "sha256": "12fcd57769de856e9a8d2eff515190b41c3828db3a8f187c9e21a137a87169e1",
+      "bytes": 1370,
+      "bodySha256": "483393c7a0e8e2eb78bba00a18823cfcea4f5f7013fdefa48b58fdf92eef470b",
+      "bodyBytes": 1369
+    },
+    "verifier.synthetic-count-request.json": {
+      "sha256": "f3b32818e2f51ac3773dda43ff1d75dfcc088830792e8a861eeb238db540be68",
+      "bytes": 9143,
+      "bodySha256": "eb35f2f2e856e031ec5ddbbc2608dd837f429424ffe4fbe843829897c1468bde",
+      "bodyBytes": 9142
+    },
+    "verifier.synthetic-messages-request.json": {
+      "sha256": "efbb0befdbad1d62e5e15f78405c2bcbbead8b9d16cea404eb60273e94646af4",
+      "bytes": 9160,
+      "bodySha256": "220223fe6877f1356c6d774e17dee00266c0fb84620c0fe268e186b2b3f21991",
+      "bodyBytes": 9159
+    }
+  }
+}
