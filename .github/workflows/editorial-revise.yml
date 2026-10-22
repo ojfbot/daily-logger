@@ -509,6 +509,7 @@ jobs:
       - name: Claim request and prepare editorial continuation from trusted code
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: pnpm exec tsx .github/scripts/continue-editorial.ts prepare
       - name: Push validated article and record outcome
