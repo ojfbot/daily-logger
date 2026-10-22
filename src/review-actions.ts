@@ -865,16 +865,15 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   })
   const proposalSha256 = sha256(JSON.stringify(proposal))
   const candidateReviewHistory = previous?.candidateReviewHistory
-  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], ...(reviewedDraftCandidates === undefined ? {} : { draftCandidates: reviewedDraftCandidates }), ...(candidateReviewHistory === undefined ? {} : { candidateReviewHistory }), ...(input.draftCandidateEvidence === undefined ? {} : { draftCandidateEvidence: input.draftCandidateEvidence }), draftContext: prepared.context, closing, stateDigest: sha256('native-review-output-pending'), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256, evidenceView: input.evidenceView.receipt, evidenceViewOutputSha256: actionEvidenceRegistryDigest(next, input.articleDate), verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...verification.candidateDispositions.map(verdict => ({ item: `draft-candidate:${verdict.candidateId}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, evidenceRequests: input.resolvedEvidenceRequests ?? [], rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
+  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], ...(reviewedDraftCandidates === undefined ? {} : { draftCandidates: reviewedDraftCandidates }), ...(candidateReviewHistory === undefined ? {} : { candidateReviewHistory }), ...(input.draftCandidateEvidence === undefined ? {} : { draftCandidateEvidence: input.draftCandidateEvidence }), draftContext: prepared.context, closing, stateDigest: sha256('native-review-output-pending'), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256, evidenceView: input.evidenceView.receipt, evidenceViewOutputSha256: sha256('native-view-output-pending'), verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...verification.candidateDispositions.map(verdict => ({ item: `draft-candidate:${verdict.candidateId}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, evidenceRequests: input.resolvedEvidenceRequests ?? [], rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
   next.articles = [...next.articles.filter(article => article.date !== input.articleDate), snapshot]
   const normalizedNext = ActionRegistrySchema.parse(next)
-  snapshot.verification.evidenceViewOutputSha256 = actionEvidenceRegistryDigest(normalizedNext, input.articleDate)
-  const normalizedSnapshot = normalizedNext.articles.find(article => article.date === input.articleDate)
-  if (normalizedSnapshot) normalizedSnapshot.verification.evidenceViewOutputSha256 = snapshot.verification.evidenceViewOutputSha256
   const reviewOutput = input.draftCandidateEvidence ? deriveActionReviewOutput({ before: input.registry, after: normalizedNext, articleStatuses: input.articleStatuses,
     articleDate: input.articleDate, reviewCycle: cycle, roundId: input.roundId, proposalSha256, consumedInputSha256: input.draftCandidateEvidence.canonicalIndexSha256 }) : undefined
-  const finalSnapshot = { ...snapshot, ...(reviewOutput ? { reviewOutput } : {}), stateDigest: actionStateDigest(normalizedNext, [...keys], closing, prepared.context, { articleDate: input.articleDate, roundId: input.roundId, draftCandidates: reviewedDraftCandidates, candidateReviewHistory, draftCandidateEvidence: input.draftCandidateEvidence, reviewOutput }) }
+  const finalSnapshot = { ...snapshot, ...(reviewOutput ? { reviewOutput } : {}) }
   normalizedNext.articles = [...normalizedNext.articles.filter(article => article.date !== input.articleDate), finalSnapshot]
+  finalSnapshot.verification.evidenceViewOutputSha256 = actionEvidenceRegistryDigest(normalizedNext, input.articleDate)
+  finalSnapshot.stateDigest = actionStateDigest(normalizedNext, [...keys], closing, prepared.context, { articleDate: input.articleDate, roundId: input.roundId, draftCandidates: reviewedDraftCandidates, candidateReviewHistory, draftCandidateEvidence: input.draftCandidateEvidence, reviewOutput })
   const result = ActionRegistrySchema.parse(normalizedNext)
   for (const file of splitActionRegistry(result).files) articleActionFileBytes(file)
   return result
@@ -1068,11 +1067,14 @@ export async function reviewDraftActions(input: Parameters<typeof reviewArticleA
   const draftCandidates = input.draftCandidates === undefined ? undefined : captureDraftActionCandidates(input.draftCandidates)
   try { return await reviewArticleActions(input) }
   catch (error) {
+    const contextNeed = error instanceof ActionEvidenceVisibilityError || error instanceof ActionContextNeedError
     if (error instanceof ActionEvidenceVisibilityError || error instanceof ActionContextNeedError) {
       const currentKeys = input.registry.articles.find(article => article.date === input.articleDate)?.actionKeys ?? []
       const actionKeys = currentKeys.length ? currentKeys : ['article-feedback']
-      const request = createActionEvidenceRequest({ kind: 'clarification', caseDigest: actionEvidenceCaseDigest({ ...input, draftCandidates, actionKeys }), articleDate: input.articleDate, cycle: input.cycle, actionKeys,
-        sourceKey: 'model-context', question: `Prepare a fully visible bounded evidence context without weakening source duties or limits: ${error.message}`.slice(0, 512), obligations: [sha256('All required sources, owner/counterevidence, full identity/history and fixed provider limits remain required.')], recipient: 'coordinator-owner' })
+      const location = error instanceof ActionEvidenceVisibilityError ? error.location : undefined
+      const locationQuestion = location ? `View round ${location.viewRoundId}; policy ${location.policySha256}; collected SHA256 ${location.collectedSha256}; original lines ${location.startLine}-${location.endLine}. ` : ''
+      const request = createActionEvidenceRequest({ kind: location ? 'source-view' : 'clarification', caseDigest: actionEvidenceCaseDigest({ ...input, draftCandidates, actionKeys }), articleDate: input.articleDate, cycle: input.cycle, actionKeys,
+        sourceKey: 'model-context', ...(location ? { sourceIdentity: { id: location.sourceId, locator: location.sourceLocator, fullContentSha256: location.fullContentSha256 } } : {}), question: `${locationQuestion}Prepare a fully visible bounded evidence context without weakening source duties or limits: ${error.message}`.slice(0, 512), obligations: [sha256('All required sources, owner/counterevidence, full identity/history and fixed provider limits remain required.')], recipient: 'coordinator-owner' })
       error = new ActionEvidenceRequestError(request, error.message)
     }
     const reason = error instanceof ActionEvidenceRequestError
@@ -1081,7 +1083,7 @@ export async function reviewDraftActions(input: Parameters<typeof reviewArticleA
       : error instanceof Error ? error.message : 'Action reviewer unavailable'
     console.warn(`::warning::Action review pending for ${input.articleDate}: ${reason}`)
     if (error instanceof ActionEvidenceRequestError && input.repoRoot) {
-      const source = error.request.sourceId ? input.sources.find(candidate => candidate.id === error.request.sourceId) : undefined
+      const source = !contextNeed && error.request.sourceId ? input.sources.find(candidate => candidate.id === error.request.sourceId) : undefined
       persistActionEvidenceRequest({ repoRoot: input.repoRoot, request: error.request, ...(source ? { source } : {}) })
     }
     const prior = (input.registry.articles.find(article => article.date === input.articleDate)?.evidenceRequests ?? [])

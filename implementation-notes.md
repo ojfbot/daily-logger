@@ -1,6 +1,11 @@
 # Implementation notes
 
 ## Deviations
+- 2026-10-22 (typed context-need retention): existing dated evidence receipts omitted the request question. Model-context receipts now retain an optional bounded question/source locator so canonical range, collected raw hash, consumed view round and policy survive after process exit; older receipts and representation-independent case/lifecycle rules are unchanged. No raw source body is automatically persisted for these context needs.
+
+- 2026-10-22 (independent typed-view review): genuine collector identity mismatches had been falling back as legacy raw sources. Same captured identity now fails closed on content/trust/locator/kind/pin drift; unknown raw sources and existing validated projections/replies retain their separate fallback. Visibility needs persist canonical source identity, collected/full digests and original range through the existing request fields, without automatically retaining a raw source body.
+- 2026-10-22 (independent typed-view cache review): excluding the entire current snapshot omitted consumed rejection memory. The registry input/output projection now retains the whole snapshot except its two self-referential hashes, and computes output binding after final review-output installation. Conditional metadata compaction is also explicit in the OPM twin; legacy full-view serialization requires no collector provenance.
+
 - 2026-10-22 (typed view diagnostics): existing evidence requests require at least one subject. Context failures before any canonical admission use the established `article-feedback` subject, so request construction cannot replace the original token/visibility error with an empty-subject schema error. Pre-cache selection also preserves the existing fresh-frontier hold/archive path on a scope failure.
 
 - 2026-10-22 (typed metadata evidence view): preparing the selected view before cache lookup exposed regenerated coverage mentioning the same round's own outputs. Cache comparison reuses only the prior integrity-checked coverage bytes when raw case, selected source/view identities and exact native post-review registry digest match; new reviews retain fresh coverage. Full pre/post registry digests bind canonical records, held memory and other-date snapshots, without reconstructing mutable ownership from reference overlap.

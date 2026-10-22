@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CitationSchema, sha256, type ActionSource, type ActionRegistry, type ActionEvidenceViewReceipt } from './action-registry.js'
+import { ActionRegistrySchema, CitationSchema, sha256, type ActionSource, type ActionRegistry, type ActionEvidenceViewReceipt } from './action-registry.js'
 import { trustedActionSourceLineNumbers } from './action-evidence-retrieval.js'
 
 type Citation = z.infer<typeof CitationSchema>
@@ -61,7 +61,14 @@ class GithubSourceCapture {
   }
   get source(): ActionSource { return structuredClone(this.#source) }
   rowsFor(source: ActionSource): readonly MetadataRow[] {
-    return source.kind === 'github' && !source.projection && !source.response && source.id.replace(/@[a-f0-9]{64}$/, '') === this.#source.id && source.content === this.#source.content && source.locator === this.#source.locator && JSON.stringify(source.trustedContent) === JSON.stringify(this.#source.trustedContent) ? this.#rows : []
+    if (source.projection || source.response || source.id.replace(/@[a-f0-9]{64}$/, '') !== this.#source.id) return []
+    const expectedId = `${this.#source.id}@${sha256(this.#source.content)}`
+    if (source.kind !== this.#source.kind || source.content !== this.#source.content || source.locator !== this.#source.locator
+      || JSON.stringify(source.trustedContent) !== JSON.stringify(this.#source.trustedContent)
+      || source.id !== this.#source.id && source.id !== expectedId) {
+      throw new ActionEvidenceVisibilityError(`Collector provenance changed for ${source.id}; review pending`)
+    }
+    return this.#rows
   }
 }
 
@@ -80,10 +87,22 @@ export class ActionSourceCollection extends Array<ActionSource> {
 }
 
 export function actionEvidenceRegistryDigest(registry: ActionRegistry, articleDate: string): string {
-  return sha256(JSON.stringify({ baseline: registry.baseline, records: registry.records, articles: registry.articles.filter(article => article.date !== articleDate) }))
+  const normalized = ActionRegistrySchema.parse(registry)
+  return sha256(JSON.stringify({ baseline: normalized.baseline, records: normalized.records, articles: normalized.articles.map(article => {
+    if (article.date !== articleDate) return article
+    // Only these two output hashes refer to this projection itself. All consumed
+    // current-snapshot memory, duties, context, sources and verdicts remain bound.
+    const { stateDigest: _stateDigest, verification, ...snapshot } = article
+    const { evidenceViewOutputSha256: _outputSha256, ...review } = verification
+    return { ...snapshot, verification: review }
+  }) }))
 }
 
-export class ActionEvidenceVisibilityError extends Error {}
+type EvidenceLineLocation = { viewRoundId: string; policySha256: string; sourceId: string; sourceLocator: string; collectedSha256: string; fullContentSha256: string; startLine: number; endLine: number }
+export class ActionEvidenceVisibilityError extends Error {
+  readonly location?: Readonly<EvidenceLineLocation>
+  constructor(message: string, location?: EvidenceLineLocation) { super(message); this.location = location && Object.freeze({ ...location }) }
+}
 
 export class PreparedActionEvidenceView {
   readonly receipt: ActionEvidenceViewReceipt
@@ -134,11 +153,12 @@ export class PreparedActionEvidenceView {
     const alias = /^s([1-9]\d*)$/.exec(sourceId)
     const source = alias ? this.#sources[Number(alias[1]) - 1] : this.#sources.find(source => source.id === sourceId)
     if (!source) throw new ActionEvidenceVisibilityError(`Unknown citation source: ${sourceId}`)
+    const location = { viewRoundId: this.roundId, policySha256: this.receipt.policySha256, sourceId: source.id, sourceLocator: source.locator, collectedSha256: sha256(source.content), fullContentSha256: source.fullContentSha256 ?? sha256(source.content), startLine, endLine }
     const lines = source.content.split('\n')
     if (!Number.isInteger(startLine) || !Number.isInteger(endLine) || startLine < 1 || endLine < startLine || endLine > lines.length) throw new ActionEvidenceVisibilityError(`Invalid citation range for ${sourceId}`)
-    for (let line = startLine; line <= endLine; line++) if (this.#hidden.get(source.id)?.has(line)) throw new ActionEvidenceVisibilityError(`Unseen or partial metadata line ${line} in ${sourceId}; request full-row evidence instead`)
+    for (let line = startLine; line <= endLine; line++) if (this.#hidden.get(source.id)?.has(line)) throw new ActionEvidenceVisibilityError(`Unseen or partial metadata line ${line} in ${source.id}; request full-row evidence instead`, location)
     const quote = lines.slice(startLine - 1, endLine).join('\n')
-    if (quote.length > 16000) throw new ActionEvidenceVisibilityError(`Evidence selection for ${sourceId} is too broad; select at most 16000 characters of relevant source lines`)
+    if (quote.length > 16000) throw new ActionEvidenceVisibilityError(`Evidence selection for ${source.id} is too broad; select at most 16000 characters of relevant source lines`, location)
     return { sourceId, quote, sourceLineStart: startLine, sourceLineEnd: endLine }
   }
   assertCitation(citation: Citation): void {
