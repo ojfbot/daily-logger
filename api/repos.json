@@ -1,18 +1,20 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 138,
-    "totalCommits": 1701,
+    "articleCount": 139,
+    "totalCommits": 1731,
     "relatedTags": [
-      "core",
+      "classic-space-venue",
       "daily-logger",
-      "morning-cockpit",
-      "wayfinder",
+      "module-federation",
       "editorial-pipeline",
       "ci-cd",
       "assistant-centric",
+      "sprint",
       "model-behavior-as-design",
-      "classic-space-venue",
+      "core",
+      "morning-cockpit",
+      "wayfinder",
       "fleet-onboard",
       "hardening",
       "provenance",
@@ -28,7 +30,6 @@
       "security-scanning",
       "workstation-yuri",
       "pipeline-reliability",
-      "sprint",
       "rest-day",
       "editorial-workflow",
       "audit",
@@ -48,7 +49,6 @@
       "lean-canvas",
       "gastown-pilot",
       "production-safety",
-      "module-federation",
       "BlogEngine",
       "skill-catalog",
       "dependency-management",
@@ -243,7 +243,7 @@
   {
     "name": "core",
     "articleCount": 84,
-    "totalCommits": 1484,
+    "totalCommits": 1502,
     "relatedTags": [
       "core",
       "daily-logger",
@@ -1369,7 +1369,7 @@
   {
     "name": "morning-cockpit",
     "articleCount": 17,
-    "totalCommits": 343,
+    "totalCommits": 361,
     "relatedTags": [
       "core",
       "daily-logger",
@@ -2040,6 +2040,21 @@
       "fleet-onboard",
       "skill-telemetry",
       "assistant-centric"
+    ]
+  },
+  {
+    "name": "classic-space-venue",
+    "articleCount": 1,
+    "totalCommits": 12,
+    "relatedTags": [
+      "classic-space-venue",
+      "daily-logger",
+      "module-federation",
+      "editorial-pipeline",
+      "ci-cd",
+      "assistant-centric",
+      "sprint",
+      "model-behavior-as-design"
     ]
   },
   {

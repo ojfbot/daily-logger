@@ -1,8 +1,268 @@
 [
   {
+    "date": "2026-10-22",
+    "title": "Classic Space Venue lands its dev-host foundation while daily-logger hardens its acceptance pipeline",
+    "summary": "Thirty-seven commits across two repos merged four Classic Space Venue PRs and nine daily-logger PRs hardening action-evidence binding and article acceptance.",
+    "tags": [
+      {
+        "name": "classic-space-venue",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "module-federation",
+        "type": "arch"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "classic-space-venue"
+    ],
+    "commitCount": 12,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Classic Space Venue dev-host uses labeled mock data behind a provenance header while live fleet-runner read projection is pending",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Root AGENTS.md names core map and fleet boundaries; bundle scene guidance lives in walkway-pass/AGENTS.md",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Design bible intake preserves the immutable supplied kit and isolates derivative repairs in a separate consumer harness",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Acceptance pipeline now requires the complete saved evidence binding before deriving Accepted status",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Action reviews now bind to explicit per-suggestion evidence requirements rather than treating historical citations as current requirements",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Oversized evidence leaves a typed, auditable pending request rather than silently failing",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/classic-space-venue",
+          "ref": "1",
+          "url": "https://github.com/ojfbot/classic-space-venue/pull/1"
+        },
+        "at": "2026-10-22T02:21:12.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/classic-space-venue",
+          "ref": "2",
+          "url": "https://github.com/ojfbot/classic-space-venue/pull/2"
+        },
+        "at": "2026-10-22T02:22:36.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/classic-space-venue",
+          "ref": "3",
+          "url": "https://github.com/ojfbot/classic-space-venue/pull/3"
+        },
+        "at": "2026-10-22T02:23:37.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/classic-space-venue",
+          "ref": "7",
+          "url": "https://github.com/ojfbot/classic-space-venue/pull/7"
+        },
+        "at": "2026-10-22T02:32:52.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "407",
+          "url": "https://github.com/ojfbot/daily-logger/pull/407"
+        },
+        "at": "2026-10-21T16:25:52.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "408",
+          "url": "https://github.com/ojfbot/daily-logger/pull/408"
+        },
+        "at": "2026-10-21T01:34:40.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "409",
+          "url": "https://github.com/ojfbot/daily-logger/pull/409"
+        },
+        "at": "2026-10-21T09:12:07.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "410",
+          "url": "https://github.com/ojfbot/daily-logger/pull/410"
+        },
+        "at": "2026-10-21T16:18:38.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "411",
+          "url": "https://github.com/ojfbot/daily-logger/pull/411"
+        },
+        "at": "2026-10-21T16:40:52.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "412",
+          "url": "https://github.com/ojfbot/daily-logger/pull/412"
+        },
+        "at": "2026-10-21T16:52:31.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "413",
+          "url": "https://github.com/ojfbot/daily-logger/pull/413"
+        },
+        "at": "2026-10-21T21:48:59.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "414",
+          "url": "https://github.com/ojfbot/daily-logger/pull/414"
+        },
+        "at": "2026-10-22T01:45:06.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "415",
+          "url": "https://github.com/ojfbot/daily-logger/pull/415"
+        },
+        "at": "2026-10-22T01:50:04.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "418",
+          "url": "https://github.com/ojfbot/daily-logger/pull/418"
+        },
+        "at": "2026-10-22T02:26:53.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-10-22T09:09:19.623Z",
+        "runId": "39753052782",
+        "runNumber": 263,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/39753052782",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "3ddc76f09e382fdc8603c305088af988ffcb8eb2",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-10-22T09:08:04.000Z",
+          "startedAt": "2026-10-22T09:08:04.000Z",
+          "expectedAt": "2026-10-22T08:30:00.000Z",
+          "dispatchDelaySeconds": 2284,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v5-2026-10-20-local-window-single-recommendation",
+          "promptSha256": "4d0913bc1df4f1496367ed05ac8939fc955ce0da56df65e5ecc8e67232c4e342"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.21.0",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-21",
     "title": "Classic Space takes shape: charting the agent-world wayfinder and hardening daily-logger's reporting clock",
-    "summary": "Thirty-one commits across three repos chartered the Classic Space Venue agent world, corrected Chicago-cutoff reporting, and closed the October 20 article's editorial cycle.",
+    "summary": "Thirty-one commits across three swept repositories chartered the Classic Space Venue agent world, corrected Chicago-cutoff reporting, and closed the October 20 article's editorial cycle.",
     "tags": [
       {
         "name": "core",
@@ -38,7 +298,7 @@
       },
       {
         "name": "classic-space-venue",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "fleet-onboard",
@@ -46,11 +306,11 @@
       }
     ],
     "reposActive": [
-      "daily-logger",
       "core",
+      "daily-logger",
       "morning-cockpit"
     ],
-    "commitCount": 13,
+    "commitCount": 31,
     "activityType": "build",
     "schemaVersion": 1,
     "status": "draft",
@@ -80,13 +340,35 @@
         "relatedTags": []
       },
       {
-        "title": "October 20 correction cycle ran the full supervised train: review → revise → runtime-harden → accept → register",
+        "title": "October 20 correction cycle completed source-specific review and acceptance",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       }
     ],
     "actions": [],
+    "timeReferences": [
+      {
+        "text": "2026-10-21T09:02:17Z",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-21T09:02:17.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-10-21T09:02:17Z"
+        }
+      },
+      {
+        "text": "2026-10-21T16:25:52Z",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-21T16:25:52.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-10-21T16:25:52Z"
+        }
+      }
+    ],
     "shipmentTimes": [
       {
         "status": "available",
@@ -182,33 +464,6 @@
         "status": "available",
         "source": {
           "repo": "ojfbot/daily-logger",
-          "ref": "400",
-          "url": "https://github.com/ojfbot/daily-logger/pull/400"
-        },
-        "at": "2026-10-20T04:19:55.000Z"
-      },
-      {
-        "status": "available",
-        "source": {
-          "repo": "ojfbot/daily-logger",
-          "ref": "399",
-          "url": "https://github.com/ojfbot/daily-logger/pull/399"
-        },
-        "at": "2026-10-20T04:05:38.000Z"
-      },
-      {
-        "status": "available",
-        "source": {
-          "repo": "ojfbot/daily-logger",
-          "ref": "398",
-          "url": "https://github.com/ojfbot/daily-logger/pull/398"
-        },
-        "at": "2026-10-20T03:01:22.000Z"
-      },
-      {
-        "status": "available",
-        "source": {
-          "repo": "ojfbot/daily-logger",
           "ref": "385",
           "url": "https://github.com/ojfbot/daily-logger/pull/385"
         },
@@ -222,45 +477,9 @@
           "url": "https://github.com/ojfbot/morning-cockpit/pull/59"
         },
         "at": "2026-10-21T02:30:58.000Z"
-      },
-      {
-        "status": "unavailable",
-        "source": {
-          "repo": "ojfbot/morning-cockpit",
-          "ref": "557",
-          "url": "https://github.com/ojfbot/morning-cockpit/pull/557"
-        },
-        "reason": "missing-merge-time"
-      },
-      {
-        "status": "unavailable",
-        "source": {
-          "repo": "ojfbot/morning-cockpit",
-          "ref": "407",
-          "url": "https://github.com/ojfbot/morning-cockpit/pull/407"
-        },
-        "reason": "missing-merge-time"
-      },
-      {
-        "status": "unavailable",
-        "source": {
-          "repo": "ojfbot/morning-cockpit",
-          "ref": "542",
-          "url": "https://github.com/ojfbot/morning-cockpit/pull/542"
-        },
-        "reason": "missing-merge-time"
       }
     ],
     "issueTimes": [
-      {
-        "source": {
-          "repo": "ojfbot/core",
-          "ref": "561",
-          "url": "https://github.com/ojfbot/core/issues/561"
-        },
-        "event": "created",
-        "at": "2026-10-20T23:39:42.000Z"
-      },
       {
         "source": {
           "repo": "ojfbot/core",
@@ -287,6 +506,15 @@
         },
         "event": "created",
         "at": "2026-10-20T23:02:17.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "561",
+          "url": "https://github.com/ojfbot/core/issues/561"
+        },
+        "event": "created",
+        "at": "2026-10-20T23:39:42.000Z"
       }
     ],
     "provenance": {
