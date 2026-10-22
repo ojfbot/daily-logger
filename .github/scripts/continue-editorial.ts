@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
 import { createEditorialService, cleanAcceptanceTitle, decodeEditorial, editorialDigest, repo, revisionTitle } from '../../api/_lib/editorial-continuation.js'
 import { createReviewSource, githubCommentSchema, ReviewError, type GitHub } from '../../api/_lib/article-review-sources.js'
-import { cleanAcceptanceSchema, runEditorialSchema, sha } from '../../shared/article-review.js'
+import { cleanAcceptanceSchema, isExecutableEditorialRecord, runEditorialSchema, sha } from '../../shared/article-review.js'
 import { ArticleActionFileSchema } from '../../src/action-registry-schema.js'
 import { editorialProofSchema, verifyEditorialProof } from '../../shared/editorial-action-proof.js'
 import { admitActionRegistry } from './editorial-action-registry.js'
@@ -28,7 +28,7 @@ export async function admitEditorial(execution: Execution) {
   if (execution.attempt !== 1 || ![revisionTitle, cleanAcceptanceTitle].some(title => event.comment.body.startsWith(title)) || event.sender.login.toLowerCase() !== 'ojfbot' || event.comment.user.login.toLowerCase() !== 'ojfbot') throw new ReviewError(403, 'Only a new explicit owner request can execute. A rerun cannot replay a provider attempt.')
   if (Date.now() - Date.parse(event.comment.created_at) > 86400000 || Date.parse(event.comment.created_at) > Date.now() + 300000) throw new ReviewError(409, 'Request is outside the supported execution-history window. Create a new explicit request.')
   const record = decodeEditorial(event.comment.body)
-  if (!record || (record.intent !== 'request_editorial_revision' && record.intent !== 'request_clean_acceptance') || record.pullRequest !== event.issue.number || event.issue.pull_request.url !== `https://api.github.com${repo}/pulls/${record.pullRequest}`) throw new ReviewError(409, 'Request event target disagrees with its executable record.')
+  if (!record || !isExecutableEditorialRecord(record) || record.pullRequest !== event.issue.number || event.issue.pull_request.url !== `https://api.github.com${repo}/pulls/${record.pullRequest}`) throw new ReviewError(409, 'Request event target disagrees with its executable record.')
   const source = createReviewSource(execution.github)
   if (record.intent === 'request_clean_acceptance' && (record.policySha !== execution.policySha || await source.main(true) !== execution.policySha)) throw new ReviewError(409, 'Clean acceptance policy is not the still-current trusted main.')
   const comments = await source.comments(record.pullRequest)
@@ -74,7 +74,7 @@ export type Prepared = z.infer<typeof preparedSchema>
 async function receipt(execution: Execution, requestDigest: string, outcome: string, extra: object = {}) {
   if (outcome === 'changed' || outcome === 'no_change') {
     const record = decodeEditorial(eventSchema.parse(execution.event).comment.body)
-    if (!record || (record.intent !== 'request_editorial_revision' && record.intent !== 'request_clean_acceptance')) throw new Error('A non-executable editorial record cannot produce an execution receipt')
+    if (!record || !isExecutableEditorialRecord(record)) throw new Error('A non-executable editorial record cannot produce an execution receipt')
     const manifest = editorialProofSchema.parse({ repository: 'ojfbot/daily-logger', date: record.date, pullRequest: record.pullRequest, requestDigest, requestCommentId: eventSchema.parse(execution.event).comment.id, requestIntent: record.intent, outcome, actionReviewMode: record.intent === 'request_clean_acceptance' ? 'clean-acceptance' : 'revision', runId: execution.runId, runAttempt: execution.attempt, policySha: execution.policySha, ...extra })
     writeFileSync(resolve(execution.workspace, '.git/editorial-output.json'), JSON.stringify(manifest))
     return
@@ -179,7 +179,7 @@ async function recordAdmissionFailure(execution: Execution) {
   try {
     const event = eventSchema.parse(execution.event)
     const record = decodeEditorial(event.comment.body)
-    if (!record || record.intent === 'append_editorial_feedback' || event.sender.login.toLowerCase() !== 'ojfbot' || event.comment.user.login.toLowerCase() !== 'ojfbot' || record.pullRequest !== event.issue.number) return
+    if (!record || !isExecutableEditorialRecord(record) || event.sender.login.toLowerCase() !== 'ojfbot' || event.comment.user.login.toLowerCase() !== 'ojfbot' || record.pullRequest !== event.issue.number) return
     const comments = await createReviewSource(execution.github).comments(record.pullRequest)
     const live = comments.find(item => item.id === event.comment.id)
     if (!live || live.body !== event.comment.body || live.user.login.toLowerCase() !== 'ojfbot') return

@@ -236,3 +236,19 @@ it('keeps historical resolution valid across later main/head/output noise but bl
     registryBlobSha: blocked.registryBlobSha, policySha: blocked.policySha }
   await expect(f.service.write(next, 'ojfbot')).rejects.toMatchObject({ outcome: 'rejected_before_append' })
 })
+
+it('keeps save-only feedback available while additional old execution correspondence holds new execution', async () => {
+  const f = await failedCleanAttempt()
+  await f.service.write(await resolutionInput(f), 'ojfbot')
+  f.state.prComments.get(42)?.push(makeComment(`## Editorial execution claim\n${JSON.stringify({ ...f.claim,
+    materialObservation: 'A distinct late claim requires diagnosis.' })}`, 5, 'github-actions[bot]', 42))
+  const blocked = editorialProjectionSchema.parse(await f.service.load(today, 'ojfbot'))
+  if (blocked.status !== 'existing') throw new Error('Missing blocked projection')
+  expect(blocked.executionReadiness.kind).toBe('blocked')
+  const feedback = { schemaVersion: 1 as const, intent: 'append_editorial_feedback' as const, requestId: crypto.randomUUID(), date: today,
+    pullRequest: 42, headSha: blocked.pullRequest.headSha, visibleBlobSha: blocked.article.blobSha, supersedes: blocked.originalDigest,
+    feedback: { version: 2 as const, notes: [{ kind: 'root' as const, content: 'Preserve genuine notes while execution is held.' }] } }
+  await expect(f.service.write(feedback, 'ojfbot')).resolves.toMatchObject({ execution: 'not_started' })
+  expect(await f.service.load(today, 'ojfbot')).toMatchObject({ status: 'existing', executionReadiness: { kind: 'blocked' },
+    versions: [{ record: { intent: 'append_editorial_feedback' } }] })
+})

@@ -167,7 +167,8 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
   const outstandingLabel = view.requests.at(-1)?.record.intent === 'request_clean_acceptance' ? 'A clean acceptance request' : 'A revision request'
   const editingReason = freshness === 'loading' ? 'Refreshing acceptance history. Displayed history may be stale; saves, requests and retries are disabled.' : freshness === 'unavailable' ? `${discoveryError || 'Acceptance history unavailable.'} Displayed history may be stale; saves, requests and retries are disabled.` : !view.eligible ? view.reason : view.outstanding ? `${outstandingLabel} is outstanding. Refresh its receipts before another save or request.` : submission.kind === 'unreadable' ? 'Retained submission evidence requires manual GitHub diagnosis; new writes are blocked.' : busy ? 'Submission is in progress. Local edits are separate from the frozen submission.' : pending ? (retryReady ? 'Submission is unconfirmed. Refreshed history has no matching receipt. Only the retained submission can be retried.' : 'Submission is unconfirmed. Refresh history before retrying the same submission.') : null
   const saveHelp = editingReason ? 'Saving is disabled. See the submission status below.' : (!visibleBlobSha ? 'Reload the main article before saving feedback.' : !currentNotes.length ? 'Enter feedback before saving a new version.' : 'Saving appends this complete version without starting a revision.')
-  const requestHelp = editingReason ? 'Revision requests are disabled. See the submission status below.' : (!latest ? 'Save a feedback version before requesting another revision.' : !draftMatchesSaved ? (!draftEdited && currentNotes.length === 0 ? 'Copy prior version to select the saved feedback before reviewing and requesting it.' : 'Save the edited full version before requesting it.') : !reviewed ? 'Review the pinned PR-head article before requesting its revision.' : 'Request uses the saved version and reviewed PR article shown here.')
+  const executionHold = view.executionReadiness.kind === 'blocked' ? view.executionReadiness.reason : null
+  const requestHelp = editingReason ? 'Revision requests are disabled. See the submission status below.' : executionHold ? `Revision requests are held: ${executionHold}` : (!latest ? 'Save a feedback version before requesting another revision.' : !draftMatchesSaved ? (!draftEdited && currentNotes.length === 0 ? 'Copy prior version to select the saved feedback before reviewing and requesting it.' : 'Save the edited full version before requesting it.') : !reviewed ? 'Review the pinned PR-head article before requesting its revision.' : 'Request uses the saved version and reviewed PR article shown here.')
   const base: Pick<EditorialInput, 'schemaVersion' | 'date' | 'pullRequest' | 'headSha'> = { schemaVersion: 1, date, pullRequest: view.pullRequest.number, headSha: view.pullRequest.headSha }
   return <section className="editorial-sidebar editorial-continuation" aria-label="Continue editorial feedback">
     <div className="editorial-heading">EDITORIAL</div>
@@ -209,7 +210,7 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
     <p id="continued-save-help">{saveHelp}</p>
     {latest && <p>Selected saved version <code>{latest.record.requestId}</code> · digest <code>{latest.digest}</code> · <a href={latest.url}>Feedback receipt</a></p>}
     <p>Request another revision authorizes one model attempt for the selected saved version and this exact PR article. Human merge remains separate.</p>
-    <button className="editorial-action editorial-action-primary" aria-describedby={editingReason ? 'continued-request-help continued-status' : 'continued-request-help'} disabled={!canEdit || !latest || !reviewed || !draftMatchesSaved} onClick={() => {
+    <button className="editorial-action editorial-action-primary" aria-describedby={editingReason ? 'continued-request-help continued-status' : 'continued-request-help'} disabled={!canEdit || !!executionHold || !latest || !reviewed || !draftMatchesSaved} onClick={() => {
       if (!latest) return
       void submit({ ...base, intent: 'request_editorial_revision', requestId: crypto.randomUUID(), articleBlobSha: view.article.blobSha,
         feedbackId: latest.record.requestId, feedbackDigest: latest.digest })
@@ -224,7 +225,7 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
     {view.requests.map(item => <p key={item.commentId}><a href={item.url}>{item.record.intent === 'request_clean_acceptance' ? 'Explicit clean acceptance request' : 'Explicit revision request'}</a>{item.duplicateUrls.map(url => <a key={url} href={url}>Duplicate delivery receipt</a>)} · {item.record.actor} · {item.createdAt}</p>)}
     {view.resolutions.map(item => item.record.intent === 'resolve_editorial_request' && <details key={item.commentId}>
       <summary>Owner-resolved prior editorial request · {item.record.actor} · {item.createdAt}</summary>
-      <p>This scheduling acknowledgment preserves the failed attempt and uncertainty. It does not establish successful review, provider absence, or billing status.</p>
+      <p>This owner decision records how to proceed while preserving the failed attempt and uncertainty. It does not establish successful review, provider absence, or billing status.</p>
       <pre className="review-correspondence-text">{item.record.reason}</pre>
       <a href={item.url}>Owner resolution receipt</a>
     </details>)}
