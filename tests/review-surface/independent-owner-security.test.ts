@@ -174,4 +174,3 @@ it('SEC5: non-executing resolution event cannot emit an execution-failure receip
   await expect(prepareEditorial({ github: f.github, workspace: process.cwd(), policySha: f.request.policySha, runId: 202, attempt: 1, event })).rejects.toThrow()
   expect(f.state.calls.filter(call => call.startsWith('POST '))).toEqual([])
 })
-

@@ -182,4 +182,3 @@ it('independent: historical resolution remains attributed and save-only usable a
     expect(ui.container.querySelector('textarea')?.value).toBe('Unsaved notes survive branch movement.')
   } finally { await ui.close() }
 })
-
