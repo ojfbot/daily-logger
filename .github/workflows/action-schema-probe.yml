@@ -1,0 +1,70 @@
+name: Action review schema probe
+run-name: Action review schema probe ${{ inputs.probe_id }} / ${{ inputs.capability_sha }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      capability_sha:
+        description: Exact adopted probe capability commit approved for this ONE dispatch
+        required: true
+        type: string
+      manifest_sha:
+        description: Reviewed public fixture manifest SHA256
+        required: true
+        type: string
+      probe_id:
+        description: Fresh UUID reserved by the approved sole coordinator
+        required: true
+        type: string
+      approval_receipt:
+        description: NEW human execution approval receipt (preparation approval is invalid)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    if: github.repository == 'ojfbot/daily-logger' && github.actor == 'ojfbot' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      PROBE_CAPABILITY_SHA: ${{ inputs.capability_sha }}
+      PROBE_MANIFEST_SHA: ${{ inputs.manifest_sha }}
+      PROBE_ID: ${{ inputs.probe_id }}
+      PROBE_APPROVAL_RECEIPT: ${{ inputs.approval_receipt }}
+      PROBE_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/workflows/action-schema-probe.yml
+            /scripts/probe-action-schema.ts
+            /tests/fixtures/action-schema-probe/
+            /package.json
+            /pnpm-lock.yaml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Enable exact package manager
+        run: corepack enable && corepack prepare pnpm@9.15.4 --activate
+      - name: Install exact lock without provider credentials
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Validate source and reserve the runner-local permission without a provider key
+        run: pnpm exec node --import tsx scripts/probe-action-schema.ts --prepare
+      - name: Execute the finite synthetic probe once
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: pnpm exec node --import tsx scripts/probe-action-schema.ts --execute
+      - name: Retain only the bounded safe summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-action-schema-probe-safe
+          path: probe-safe/summary.json
+          if-no-files-found: ignore
+          retention-days: 7
