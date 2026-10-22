@@ -147,6 +147,7 @@ export function expectedSdkHeaders(secret: string, wireBytes: number): Record<st
 export function createGuardedFetch(loaded: Loaded, wire: Wire, receipts: CallReceipt[], secret = ''): Fetch {
   let next = 0; let stopped = false
   return async (input, init) => {
+    let currentReceipt: CallReceipt | undefined
     try {
       requireThat(!stopped, 'TRANSPORT_ALREADY_STOPPED')
       const url = typeof input === 'string' ? input : 'href' in input ? input.href : input.url
@@ -163,7 +164,7 @@ export function createGuardedFetch(loaded: Loaded, wire: Wire, receipts: CallRec
       requireThat([...headers.keys()].sort().join() === Object.keys(expectedHeaders).sort().join()
         && Object.entries(expectedHeaders).every(([name, value]) => headers.get(name) === value), 'WIRE_HEADERS_DENIED')
       const receipt: CallReceipt = { role: expectedRole, endpoint: kind, canonicalBodySha256: sha(canonical(expected)), wireSha256: sha(body), wireBytes }
-      next += 1; receipts.push(receipt) // Consume before transport, including exceptions/unknown outcomes.
+      currentReceipt = receipt; next += 1; receipts.push(receipt) // Consume before transport, including exceptions/unknown outcomes.
       const response = await wire(url, { method: 'POST', headers, body, signal: init.signal as AbortSignal, redirect: 'error' })
       receipt.status = response.status; receipt.requestId = safeId(response.headers.get('request-id'), secret)
       if (response.redirected || response.status !== 200) {
@@ -180,7 +181,7 @@ export function createGuardedFetch(loaded: Loaded, wire: Wire, receipts: CallRec
       return new Response(Buffer.concat(chunks), { status: response.status, headers: { 'content-type': 'application/json', ...(receipt.requestId ? { 'request-id': receipt.requestId } : {}) } }) as unknown as Awaited<ReturnType<Fetch>>
     } catch (error) {
       stopped = true
-      const receipt = receipts.at(-1); if (receipt && error instanceof ProbeError) receipt.failureCode = error.message
+      if (currentReceipt) currentReceipt.failureCode = error instanceof ProbeError ? error.message : 'TRANSPORT_FAILURE'
       throw error
     }
   }

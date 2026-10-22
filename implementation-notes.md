@@ -1,6 +1,8 @@
 # Implementation notes
 
 ## Deviations
+- 2026-10-22 (probe failure ownership): a generic response-stream error did not mark its own HTTP200 receipt, and a later pre-network rejection could instead mark the preceding call. A per-invocation receipt now owns every transport failure, using a fixed code for unknown exceptions; successful prior observations remain intact and incomplete responses never qualify the compiler.
+
 - 2026-10-22 (probe rejected transport diagnosis): a fake redirected response with status 200 correctly stopped execution but still appeared in the status-only compiler summary. Compiler qualification now excludes any transport receipt carrying an internal failure; protocol success and HTTP observations remain separate.
 
 - 2026-10-22 (probe exact status): the first transport guard admitted any 2xx, permitting synthetic protocol success without the promised HTTP200 compiler observation. Both endpoints now require exactly 200 and stop otherwise; no retry or second-role continuation occurs.
