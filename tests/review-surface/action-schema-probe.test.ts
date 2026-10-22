@@ -68,6 +68,13 @@ describe('manual synthetic probe — no transport', () => {
     const result = await run([{ input_tokens: 1 }, response(reply, status)])
     expect(result.calls).toHaveLength(2); expect(result.compilerAcceptance).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(result.errorCode).toBe('PROVIDER_HTTP_FAILURE')
   })
+  it('does not qualify a rejected redirected200 response as compiler acceptance', async () => {
+    const redirected = response(reply)
+    Object.defineProperty(redirected, 'redirected', { value: true }) // Fake response only; no redirect/network is performed.
+    const result = await run([{ input_tokens: 1 }, redirected])
+    expect(result.calls).toHaveLength(2); expect(result.errorCode).toBe('PROVIDER_HTTP_FAILURE')
+    expect(result.compilerAcceptance).toEqual([]); expect(result.protocolSuccess).toEqual([])
+  })
   it('bounds all response bytes before SDK parsing', async () => {
     const result = await run([new Response('x'.repeat(131073))]); expect(result.errorCode).toBe('RESPONSE_BYTE_LIMIT'); expect(result.calls).toHaveLength(1)
   })
