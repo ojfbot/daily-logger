@@ -214,6 +214,7 @@ function providerDiscriminatedUnion(value: unknown): unknown[] {
   let discriminator: string | undefined
   const values = new Set<string>()
   for (const branch of branches) {
+    if (branch.type !== 'object') throw new Error('Provider oneOf conversion requires object branches')
     const properties = ProviderSchemaObject.parse(branch.properties)
     const required = new Set(z.array(z.string()).parse(branch.required))
     const candidates = Object.entries(properties).flatMap(([key, property]) => {
@@ -232,7 +233,7 @@ function providerDiscriminatedUnion(value: unknown): unknown[] {
   return branches.map(providerToolSchema)
 }
 
-function providerToolSchema(value: unknown): unknown {
+export function providerToolSchema(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(providerToolSchema)
   const parsed = ProviderSchemaObject.safeParse(value)
   if (!parsed.success) return value
@@ -252,7 +253,7 @@ function providerToolSchema(value: unknown): unknown {
 export function actionProviderRequest(role: 'proposer' | 'verifier', prompt: string) {
     const schema = role === 'proposer' ? LineProposalSchema : ActionVerificationSchema
     // The provider supports anyOf but not oneOf. Converting only required, disjoint const
-    // discriminators preserves the native union while every other unsupported construct fails closed.
+    // discriminators preserves the native union while every other oneOf shape fails closed.
     // Keep every original Zod constraint in the application-side parse below.
     const jsonSchema: unknown = JSON.parse(JSON.stringify(z.toJSONSchema(schema)))
     const wireSchema = ProviderSchemaObject.parse(providerToolSchema(jsonSchema))

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
   ActionVerificationSchema,
   actionProviderRequest,
+  providerToolSchema,
   resolveActionSourceLines,
 } from '../review-actions.js'
 
@@ -111,6 +112,26 @@ describe('action provider schema compatibility', () => {
         kinds: ['action', 'candidate', 'checkpoint'],
       },
     ])
+  })
+
+  it.each([
+    ['type-less', undefined],
+    ['nullable object', ['object', 'null']],
+    ['array', 'array'],
+  ] as const)('rejects %s oneOf branches before transport projection', (_label, branchType) => {
+    const branch = (kind: string) => ({
+      ...(branchType === undefined ? {} : { type: branchType }),
+      properties: { kind: { type: 'string', const: kind } },
+      required: ['kind'],
+      additionalProperties: false,
+    })
+    const schema = {
+      type: 'object',
+      properties: { choice: { oneOf: [branch('first'), branch('second')] } },
+      required: ['choice'],
+      additionalProperties: false,
+    }
+    expect(() => providerToolSchema(schema)).toThrow('object branches')
   })
 
   it('retains all seven native domain variants and rejects invalid payloads after transport projection', () => {
