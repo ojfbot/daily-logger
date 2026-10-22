@@ -1,3 +1,4 @@
+import { reviewDraftActions, reviewProducedDraftActions } from './evidence-view-fixtures.js'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -18,7 +19,7 @@ import {
 import { actionEvidenceScope, deriveActionReviewOutput, draftCandidateEvidenceBinding, prepareConservativeDraftCandidateEvidence, selectActionEvidence } from '../action-evidence-selection.js'
 import { ActionEvidenceRequestError } from '../action-evidence-retrieval.js'
 import { ACTION_REVIEW_PROMPT_VERSION, revisionActionCycle } from '../action-review-cycle.js'
-import { pendingActionReview, reviewDraftActions, reviewProducedDraftActions } from '../review-actions.js'
+import { pendingActionReview} from '../review-actions.js'
 import { stampOutcome } from '../stamp-outcome.js'
 import { writeActionStore } from './action-store-fixture.js'
 

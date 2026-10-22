@@ -1,3 +1,4 @@
+import { applyVerifiedActionReview, reviewDraftActions } from './evidence-view-fixtures.js'
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -8,7 +9,7 @@ vi.mock('../action-intake.js', () => ({ verifyRecordedAdmissions: vi.fn() }))
 import { revisionActionCycle } from '../action-review-cycle.js'
 import { ActionRegistrySchema, renderArticleActions, sha256, type ActionRegistry, type ActionSource } from '../action-registry.js'
 import { buildApi } from '../build-api.js'
-import { applyVerifiedActionReview, reviewDraftActions, type ActionProposal, type ActionVerification } from '../review-actions.js'
+import { type ActionProposal, type ActionVerification } from '../review-actions.js'
 import { writeActionStore } from './action-store-fixture.js'
 
 const firstDate = '2030-02-01'

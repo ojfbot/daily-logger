@@ -1,3 +1,4 @@
+import { applyVerifiedActionReview, reviewDraftActions } from './evidence-view-fixtures.js'
 import { revisionActionCycle } from '../action-review-cycle.js'
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, writeFileSync, renameSync, existsSync, rmSync } from 'node:fs'
@@ -5,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, it, vi } from 'vitest'
 import { ActionRegistrySchema, ACTIONS_START, readActionRegistry, registryBytes, registryRevision, writeActionRegistry, setActionInclusion, rebindArticleSnapshot, renderArticleActions, splitActionRegistry, articleActionFileBytes, managedArticleDigest, projectRegistry, type ActionRegistry } from '../action-registry.js'
-import { applyVerifiedActionReview, reviewDraftActions } from '../review-actions.js'
+
 import { writeActionStore } from './action-store-fixture.js'
 
 const faults = vi.hoisted(() => ({ rename: false }))

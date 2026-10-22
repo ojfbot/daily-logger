@@ -1,3 +1,4 @@
+import { reviewArticleActions, reviewDraftActions, reviewProducedDraftActions } from './evidence-view-fixtures.js'
 import { describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -22,7 +23,7 @@ import {
   type ActionSource,
 } from '../action-registry.js'
 import { draftCandidateEvidenceBinding } from '../action-evidence-selection.js'
-import { pendingActionReview, reviewArticleActions, reviewDraftActions, reviewProducedDraftActions } from '../review-actions.js'
+import { pendingActionReview} from '../review-actions.js'
 import { writeActionStore } from './action-store-fixture.js'
 
 const date = '2026-10-17'

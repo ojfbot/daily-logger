@@ -1,3 +1,4 @@
+import { applyVerifiedActionReview, resolveActionSourceLines, reviewDraftActions } from './evidence-view-fixtures.js'
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -7,7 +8,7 @@ import { generationActionCycle, revisionActionCycle } from '../action-review-cyc
 import { ActionEvidenceRequestSchema, ActionRegistrySchema, ActionSourceSchema, actionStateDigest, sha256, type ActionSource } from '../action-registry.js'
 import { ActionEvidenceRequestError, actionEvidenceCaseDigest, buildActionEvidenceProjection, closeActionEvidenceRequest, createActionEvidenceRequest, persistActionEvidenceReply, persistActionEvidenceRequest, persistActionEvidenceResolutions, persistActionEvidenceResponse, persistValidatedActionEvidenceReply, trustedActionSourceLineNumbers } from '../action-evidence-retrieval.js'
 import { actionEvidenceScope, draftCandidateEvidenceBinding, selectActionEvidence } from '../action-evidence-selection.js'
-import { applyVerifiedActionReview, pendingActionReview, resolveActionSourceLines, reviewDraftActions } from '../review-actions.js'
+import { pendingActionReview} from '../review-actions.js'
 
 const date = '2026-10-17'
 const roots: string[] = []
@@ -176,7 +177,8 @@ it('restores a complete bounded reply and resumes the same captured candidate re
   })
   persistValidatedActionEvidenceReply({ repoRoot, projection: correctedProjection })
 
-  const propose = vi.fn(async (_prompt: string, sources: ActionSource[]) => {
+  const propose = vi.fn(async (_prompt: string, view: import('../action-evidence-view.js').PreparedActionEvidenceView) => {
+    const sources = view.rawSources(true)
     const selected = sources.find(candidate => candidate.content.includes('COUNTEREVIDENCE'))
     if (!selected) throw new Error('Bounded reply was not restored into the review')
     const quote = selected.content.split('\n').find(line => line.includes('COUNTEREVIDENCE'))

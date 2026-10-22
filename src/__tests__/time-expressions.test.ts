@@ -1,6 +1,7 @@
+import { reviewArticleActions } from './evidence-view-fixtures.js'
 import { generationActionCycle } from '../action-review-cycle.js'
 import { readActionRegistry, registryRevision, writeActionRegistry } from '../action-registry.js'
-import { reviewArticleActions, mockActionAgents } from '../review-actions.js'
+import { mockActionAgents } from '../review-actions.js'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'

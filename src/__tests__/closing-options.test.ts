@@ -1,3 +1,4 @@
+import { applyVerifiedActionReview, reviewArticleActions, reviewDraftActions } from './evidence-view-fixtures.js'
 import { describe, expect, it } from 'vitest'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
@@ -20,9 +21,6 @@ import {
   type ActionSource,
 } from '../action-registry.js'
 import {
-  applyVerifiedActionReview,
-  reviewArticleActions,
-  reviewDraftActions,
   type ActionProposal,
   type ActionVerification,
 } from '../review-actions.js'
@@ -320,7 +318,7 @@ describe('verified article closing options', () => {
   })
 
   it('reconciles a resolved checkpoint instead of reissuing it even when both roles pass it', () => {
-    const merged = sources.map(source => source.id === 'issue' ? { ...source, content: source.content.replace('state=open', 'state=merged') } : source)
+    const merged = sources.map(source => source.id === 'issue' ? { ...source, content: source.content.replace('state=open', 'state=merged'), trustedContent: source.trustedContent?.map(text => text.replace('state=open', 'state=merged')) } : source)
     const proposal = { changes: [], suggestions: [], closingOptions: [closingOption()] }
     const verification = { changes: [], suggestions: [], closingOptions: [{ optionIndex: 0, verdict: 'pass' as const, reason: 'The proposed text sounds useful.' }] }
 

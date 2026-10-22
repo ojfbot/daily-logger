@@ -1,3 +1,4 @@
+import { ActionSourceCollection } from '../src/action-evidence-view.js'
 import { acceptanceActionCycle } from '../src/action-review-cycle.js'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
@@ -32,7 +33,7 @@ const reviewCycle = acceptanceActionCycle(requestIdentity ?? '', registry.articl
 const reviewed = process.env.ACTION_KEY
   ? { registry: setActionInclusion(registry, process.env.ACTION_KEY, process.env.INCLUDE_IN_INDEX !== 'false', process.env.ACTION_ACTOR ?? '', `Explicit editorial inclusion instruction: ${feedback.trim()}`, statuses), markdown, evidenceResolutions: [] }
   : await reviewProducedDraftActions({ cycle: reviewCycle, registry, articleStatuses: statuses, articleDate, markdown, feedback,
-      collectSources: (draftCandidates, draftCandidateEvidence) => [...(process.env.MOCK_LLM === 'true' ? [] : collectActionSources({ cycle: reviewCycle, registry, articleStatuses: statuses, repoRoot, markdown, feedback, reassessActionKeys, preserveActionKeys, draftCandidates, draftCandidateEvidence })), ...evidenceReplies],
+      collectSources: (draftCandidates, draftCandidateEvidence) => (process.env.MOCK_LLM === 'true' ? new ActionSourceCollection([]) : collectActionSources({ cycle: reviewCycle, registry, articleStatuses: statuses, repoRoot, markdown, feedback, reassessActionKeys, preserveActionKeys, draftCandidates, draftCandidateEvidence })).appendRaw(evidenceReplies),
       agents: process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, selectedEvidenceProjectionIds: evidenceReplies.map(reply => reply.id), ...(process.env.DRY_RUN === 'true' ? {} : { repoRoot }) })
 reviewed.markdown = renderArticleActions(reviewed.markdown, reviewed.registry, articleDate, statuses)
 if (process.env.DRY_RUN !== 'true') {

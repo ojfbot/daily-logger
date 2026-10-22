@@ -1,3 +1,4 @@
+import { reviewArticleActions, reviewDraftActions } from './evidence-view-fixtures.js'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -9,7 +10,7 @@ import { writeActionStore } from './action-store-fixture.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, actionEvidenceScope, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, draftCandidateEvidenceBinding, prepareConservativeDraftCandidateEvidence, selectActionEvidence } from '../action-evidence-selection.js'
 import { ActionEvidenceRequestError, actionEvidenceCaseDigest } from '../action-evidence-retrieval.js'
 import { generationActionCycle, revisionActionCycle } from '../action-review-cycle.js'
-import { actionModelSourcePromptView, collectActionSources, reviewArticleActions, reviewDraftActions, type ActionVerification } from '../review-actions.js'
+import { collectActionSources, type ActionVerification } from '../review-actions.js'
 import { stampOutcome } from '../stamp-outcome.js'
 
 const date = '2030-01-01'
@@ -318,20 +319,6 @@ it('scopes bounded-view obligations and questions to the candidate requirements 
     expect(request.question).not.toContain('daily-logger#407')
     expect(request.obligations).toHaveLength(1)
   }
-})
-
-it('keeps trust line authority while omitting duplicate trusted text only from the model prompt view', () => {
-  const source: ActionSource = {
-    id: 'github:core#1@' + 'a'.repeat(64), kind: 'github', locator: 'https://github.com/ojfbot/core/issues/1',
-    content: 'CURRENT API STATE core#1: state=open.\nOwner gate remains open.',
-    trustedContent: ['CURRENT API STATE core#1: state=open.', 'Owner gate remains open.'],
-  }
-  const view = actionModelSourcePromptView(source)
-  expect(view).not.toHaveProperty('trustedContent')
-  expect(view.authoritativeLines).toEqual([1, 2])
-  expect(view.content).toBe('L1: CURRENT API STATE core#1: state=open.\nL2: Owner gate remains open.')
-  expect(source.trustedContent).toHaveLength(2)
-  expect(() => actionModelSourcePromptView({ ...source, trustedContent: ['Missing trusted text.'] })).toThrow(/not represented/i)
 })
 
 it('rejects candidate evidence maps that demote direct targets, omit candidates, drift, duplicate one association, or add foreign refs', () => {
@@ -647,7 +634,7 @@ it.each(['feedback', 'next-actions'])('follows an older action explicitly named 
   const result = await reviewArticleActions({ ...reviewInput, agents: {
     propose: async (prompt, modelSources) => {
       prompts.push(prompt)
-      const source = modelSources.find(source => source.locator === 'https://github.com/ojfbot/daily-logger/issues/385')
+      const source = modelSources.rawSources(true).find(source => source.locator === 'https://github.com/ojfbot/daily-logger/issues/385')
       if (!source) throw new Error('Named older action lost its collected dependency')
       expect(source.content).toContain(ownerGate)
       expect(source.content).toContain(completion)
@@ -691,8 +678,8 @@ it('runs full collector→selection→both prompt paths with twelve oversized di
   const result = await reviewArticleActions({ ...input(sources), agents: {
     propose: async (prompt, selected) => {
       prompts.push(prompt)
-      expect(selected.filter(source => source.kind === 'github')).toHaveLength(2)
-      for (const source of selected.filter(source => source.kind === 'github')) {
+      expect(selected.rawSources(true).filter(source => source.kind === 'github')).toHaveLength(2)
+      for (const source of selected.rawSources(true).filter(source => source.kind === 'github')) {
         expect(source.content).toContain(ownerGate)
         expect(source.trustedContent).toContain(ownerGate)
         expect(source.content).toContain('Comment 0:'); expect(source.content).toContain('Comment 200:')
@@ -897,7 +884,7 @@ it('refuses a terminal disposition supported only by the coverage index, even if
   registry.records.push({ key: 'carried', original: { id: 'carried', command: '/review', description: 'Inspect daily-logger #385.', repo: 'daily-logger', status: 'open', sourceDate: date }, origin: 'imported', workKey: 'existing', state: 'open', introducedBy: date, includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: 'Owner accepts the preview.', gates: ['Human acceptance required.'], history: [] })
   const result = await reviewDraftActions({ ...input(sources), registry, agents: {
     propose: async (_prompt, selected) => {
-      const coverage = selected.find(source => source.locator === ACTION_EVIDENCE_SELECTION_VERSION)
+      const coverage = selected.rawSources(true).find(source => source.locator === ACTION_EVIDENCE_SELECTION_VERSION)
       if (!coverage) throw new Error('Missing coverage')
       return { changes: [{ actionKey: 'carried', state: 'done', description: 'Completed.', reason: 'The index exists.', citations: [{ sourceId: coverage.id, quote: 'Missing or omitted content is unknown' }] }], suggestions: [] }
     }, verify: async () => ({ changes: [{ actionKey: 'carried', verdict: 'pass', reason: 'Index says unknown.' }], suggestions: [] }),

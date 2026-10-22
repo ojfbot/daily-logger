@@ -1,4 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { actionEvidenceRegistryDigest, ActionSourceCollection, PreparedActionEvidenceView, ActionEvidenceVisibilityError, captureGithubActionSource } from './action-evidence-view.js'
+export { renderGithubEvidence } from './action-evidence-view.js'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -72,6 +74,7 @@ export type ActionVerification = Omit<ParsedActionVerification, 'candidateDispos
 }
 class ActionOutputError extends Error {}
 class ActionInputFrontierError extends Error {}
+export class ActionContextNeedError extends Error {}
 const lineCitations = z.array(z.object({ sourceId: z.string(), startLine: z.number().int().positive(), endLine: z.number().int().positive() }).strict()).min(1)
 const LineProposalSchema = ActionProposalSchema.extend({
   changes: z.array(ActionProposalSchema.shape.changes.element.extend({ citations: lineCitations })),
@@ -88,38 +91,16 @@ const LineProposalSchema = ActionProposalSchema.extend({
     ClosingCheckpointProposalSchema.extend({ factCitations: lineCitations, goalCitations: lineCitations }),
   ])).max(5).default([]),
 })
-export function resolveActionSourceLines(value: unknown, sources: readonly ActionSource[]): ActionProposal {
+export function resolveActionSourceLines(value: unknown, view: PreparedActionEvidenceView): ActionProposal {
+  if (!(view instanceof PreparedActionEvidenceView)) throw new ActionEvidenceVisibilityError('A prepared consumed evidence view is required')
   const proposal = LineProposalSchema.parse(value)
-  const resolve = (citation: z.infer<typeof lineCitations>[number]) => {
-    const source = sources.find(source => source.id === citation.sourceId)
-    if (!source) throw new ActionOutputError(`Unknown citation source: ${citation.sourceId}`)
-    const lines = source.content.split('\n')
-    if (citation.endLine < citation.startLine || citation.endLine > lines.length) throw new ActionOutputError(`Invalid citation range for ${citation.sourceId}; choose lines within 1–${lines.length}`)
-    const quote = lines.slice(citation.startLine - 1, citation.endLine).join('\n')
-    if (quote.length > 16000) throw new ActionOutputError(`Evidence selection for ${citation.sourceId} is too broad; select at most 16000 characters of relevant source lines`)
-    return { sourceId: source.id, quote, sourceLineStart: citation.startLine, sourceLineEnd: citation.endLine }
-  }
+  const resolve = (citation: z.infer<typeof lineCitations>[number]) => view.resolve(citation.sourceId, citation.startLine, citation.endLine)
   return ActionProposalSchema.parse({ ...proposal, changes: proposal.changes.map(change => ({ ...change, citations: change.citations.map(resolve) })), suggestions: proposal.suggestions.map(candidate => ({ ...candidate, factCitations: candidate.factCitations.map(resolve), goalCitations: candidate.goalCitations.map(resolve) })), candidateDispositions: proposal.candidateDispositions.map(disposition => disposition.kind === 'reject' || disposition.kind === 'verified-closure' ? { ...disposition, citations: disposition.citations.map(resolve) } : disposition), closingOptions: proposal.closingOptions.map(option => ({ ...option, factCitations: option.factCitations.map(resolve), goalCitations: option.goalCitations.map(resolve) })) })
 }
 export interface ActionAgents {
   identity?: { proposer: string; verifier: string }
-  propose(prompt: string, sources: ActionSource[]): Promise<unknown>
-  verify(prompt: string, sources: ActionSource[]): Promise<unknown>
-}
-
-/** Keep the immutable source for citation checks while removing duplicated trust text from the model-only view. */
-export function actionModelSourcePromptView(source: ActionSource): Omit<ActionSource, 'trustedContent'> & { authoritativeLines: number[] | string; content: string } {
-  const { trustedContent, ...sourceWithoutTrustedContent } = source
-  if (trustedContent?.some(value => !source.content.includes(value))) {
-    throw new Error(`Trusted action text is not represented in the immutable source content: ${source.id}; review pending`)
-  }
-  return {
-    ...sourceWithoutTrustedContent,
-    authoritativeLines: source.kind === 'github' ? [...trustedActionSourceLineNumbers(source)]
-      : source.kind === 'repository' ? 'repository source'
-      : source.kind === 'instruction' ? 'operator instruction' : 'context only',
-    content: source.content.split('\n').map((line, index) => `L${index + 1}: ${line}`).join('\n'),
-  }
+  propose(prompt: string, view: PreparedActionEvidenceView): Promise<unknown>
+  verify(prompt: string, view: PreparedActionEvidenceView): Promise<unknown>
 }
 
 type ActionHoldContext = {
@@ -271,10 +252,10 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
   const configuredLimit = Number(process.env.ACTION_PROVIDER_TOKEN_LIMIT ?? '200000')
   const tokenLimit = options.tokenBudget?.limitTokens ?? configuredLimit
   if (!Number.isSafeInteger(tokenLimit) || tokenLimit <= 12000) throw new Error(`${options.tokenBudget ? 'Action token budget limitTokens' : 'ACTION_PROVIDER_TOKEN_LIMIT'} must be an integer greater than the 12000-token output reserve`)
-  async function call(role: 'proposer' | 'verifier', prompt: string, sources: ActionSource[]): Promise<unknown> {
+  async function call(role: 'proposer' | 'verifier', prompt: string, view: PreparedActionEvidenceView): Promise<unknown> {
     const request = actionProviderRequest(role, prompt)
     const requestBytes = Buffer.byteLength(JSON.stringify(request), 'utf8')
-    if (requestBytes > 640 * 1024) throw new Error(`Complete action provider request exceeds 640 KiB (${requestBytes} bytes); review pending`)
+    if (requestBytes > 640 * 1024) throw new ActionContextNeedError(`Complete action provider request exceeds 640 KiB (${requestBytes} bytes); review pending`)
     const count = options.tokenBudget
       ? await options.tokenBudget.count(request)
       : await (async (): Promise<ActionTokenCount> => {
@@ -292,18 +273,18 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
           }
         })()
     const qualifiedCount = ActionTokenCountSchema.safeParse(count)
-    if (!qualifiedCount.success) throw new Error(`Action token qualification unavailable: invalid provider token count; review pending`)
-    if (qualifiedCount.data.kind === 'unavailable') throw new Error(`Action token qualification unavailable: ${qualifiedCount.data.reason}; review pending`)
+    if (!qualifiedCount.success) throw new ActionContextNeedError(`Action token qualification unavailable: invalid provider token count; review pending`)
+    if (qualifiedCount.data.kind === 'unavailable') throw new ActionContextNeedError(`Action token qualification unavailable: ${qualifiedCount.data.reason}; review pending`)
     const inputTokens = qualifiedCount.data.inputTokens
     const totalTokens = inputTokens + request.max_tokens
-    if (totalTokens > tokenLimit) throw new Error(`Complete action provider request exceeds token budget (${inputTokens} input + ${request.max_tokens} output reserve > ${tokenLimit}); review pending`)
+    if (totalTokens > tokenLimit) throw new ActionContextNeedError(`Complete action provider request exceeds token budget (${inputTokens} input + ${request.max_tokens} output reserve > ${tokenLimit}); review pending`)
     console.warn(`Action ${role} token budget: input=${inputTokens}; output_reserve=${request.max_tokens}; total=${totalTokens}; limit=${tokenLimit}`)
     const response = await client.messages.create(request)
     console.warn(`Action ${role}: stop=${response.stop_reason}; output_tokens=${response.usage?.output_tokens ?? 'unavailable'}`)
     if (response.stop_reason !== 'tool_use') throw new Error(`Action ${role} did not finish its structured review (${response.stop_reason})`)
     const result = response.content.find(block => block.type === 'tool_use')
     if (!result || result.type !== 'tool_use') throw new Error(`${role} returned no structured action review`)
-    return role === 'proposer' ? resolveActionSourceLines(result.input, sources) : result.input
+    return role === 'proposer' ? resolveActionSourceLines(result.input, view) : result.input
   }
   return { identity: { proposer: 'claude-sonnet-4-6', verifier: 'claude-opus-4-6' }, propose: (prompt, sources) => call('proposer', prompt, sources), verify: (prompt, sources) => call('verifier', prompt, sources) }
 }
@@ -340,11 +321,12 @@ export function actionGithubReferences(input: { markdown: string; feedback: stri
   return actionGithubReferenceSelection(input).references
 }
 
-export function collectActionSources(input: { registry: ActionRegistry; articleStatuses?: ReadonlyMap<string, string>; repoRoot: string; markdown: string; feedback: string; context?: string; continuityTargets?: readonly string[]; cycle?: ActionReviewCycle; draftCandidates?: readonly DraftActionCandidate[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[] }): ActionSource[] {
+export function collectActionSources(input: { registry: ActionRegistry; articleStatuses?: ReadonlyMap<string, string>; repoRoot: string; markdown: string; feedback: string; context?: string; continuityTargets?: readonly string[]; cycle?: ActionReviewCycle; draftCandidates?: readonly DraftActionCandidate[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[] }): ActionSourceCollection {
   const articleDate = input.markdown.match(/^date:\s*["']?(\d{4}-\d{2}-\d{2})/m)?.[1]
   const priorContext = input.registry.articles.find(article => article.date === articleDate)?.draftContext
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), priorContext)
   const draftContext = prepared.context.kind === 'retained' ? `\n\nDRAFT CONTINUATION CONTEXT (not a current recommendation list):\n${prepared.context.markdown}` : ''
+  const captures: ReturnType<typeof captureGithubActionSource>[] = []
   const sources: ActionSource[] = [
     { id: 'article', kind: 'report', locator: 'current revised article', content: `${stripManagedActions(prepared.markdown)}${draftContext}` },
     { id: 'operator', kind: 'instruction', locator: 'editorial feedback', content: input.feedback },
@@ -363,7 +345,7 @@ export function collectActionSources(input: { registry: ActionRegistry; articleS
     }
   }
   if (existsSync(reviewDir)) visit(reviewDir, 0)
-  const finish = () => sources.map(source => ({ ...source, id: `${source.id}@${sha256(source.content)}` }))
+  const finish = () => new ActionSourceCollection(sources.map(source => ({ ...source, id: `${source.id}@${sha256(source.content)}` })), captures)
   let evidenceScope: ReturnType<typeof actionEvidenceScope>
   try {
     evidenceScope = actionEvidenceScope({ ...input, articleDate: articleDate ?? '' })
@@ -442,7 +424,9 @@ export function collectActionSources(input: { registry: ActionRegistry; articleS
         const item = z.object({ body: z.string().nullish(), diff_hunk: z.string().nullish() }).parse(value)
         return [item.body, item.diff_hunk].filter(Boolean).join('\n')
       }).filter(Boolean)]
-      sources.push({ id: `github:${id}`, kind: 'github', locator: `https://github.com/ojfbot/${ref.repo}/${kind}/${ref.number}`, content: [observation, ...content.map(renderGithubEvidence)].join('\n'), trustedContent })
+      const capture = captureGithubActionSource({ id: `github:${id}`, locator: `https://github.com/ojfbot/${ref.repo}/${kind}/${ref.number}`, observation, responses: content, trustedContent })
+      captures.push(capture)
+      sources.push(capture.source)
     } catch { console.warn(`::warning::Action evidence unavailable for ${id}; candidates requiring it must be held`) }
   }
   for (const source of sources) {
@@ -461,19 +445,6 @@ export function collectActionSources(input: { registry: ActionRegistry; articleS
     } catch { console.warn(`::warning::Action goal unavailable for ${repo}/${path}; it cannot justify a suggestion`) }
   }
   return finish()
-}
-
-// Preserve discussion bodies as text so quoted newlines and punctuation are
-// verifiable bytes rather than JSON escape sequences inferred by the model.
-export function renderGithubEvidence(json: string): string {
-  const render = (value: unknown): string => {
-    if (Array.isArray(value)) return value.map(render).join('\n\n')
-    if (value === null || typeof value !== 'object') return String(value)
-    const object = value as Record<string, unknown>
-    const { body, diff_hunk: diff, ...metadata } = object
-    return [JSON.stringify(metadata), typeof body === 'string' ? body : '', typeof diff === 'string' ? diff : ''].filter(Boolean).join('\n')
-  }
-  return render(JSON.parse(json))
 }
 
 function checkedCitations(values: z.infer<typeof CitationSchema>[], sources: readonly ActionSource[], kinds: readonly ActionSource['kind'][], terminal = false): boolean {
@@ -636,10 +607,14 @@ function recommendationIdentity(option: ProposedClosingOption, candidateActionKe
   return `checkpoint:${sha256(workKey).slice(0, 20)}`
 }
 
-export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; sources: ActionSource[]; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string }; draftCandidates?: readonly DraftActionCandidate[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftContext?: DraftRecommendationContext; requiredActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; resolvedEvidenceRequests?: ActionRegistry['articles'][number]['evidenceRequests'] }): ActionRegistry {
+export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; sources: ActionSource[]; evidenceView: PreparedActionEvidenceView; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string }; draftCandidates?: readonly DraftActionCandidate[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftContext?: DraftRecommendationContext; requiredActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; resolvedEvidenceRequests?: ActionRegistry['articles'][number]['evidenceRequests'] }): ActionRegistry {
   const cycle = ActionReviewCycleSchema.parse(input.cycle)
   const proposal = ActionProposalSchema.parse(input.proposal)
   const verification = ActionVerificationSchema.parse(input.verification)
+  if (!(input.evidenceView instanceof PreparedActionEvidenceView)) throw new ActionEvidenceVisibilityError('A prepared consumed evidence view is required for a current review')
+  input.evidenceView.assertBinding(input.sources, input.roundId, actionEvidenceRegistryDigest(input.registry, input.articleDate))
+  const allCitations = [...proposal.changes.flatMap(change => change.citations), ...proposal.suggestions.flatMap(candidate => [...candidate.factCitations, ...candidate.goalCitations]), ...proposal.candidateDispositions.flatMap(disposition => disposition.kind === 'reject' || disposition.kind === 'verified-closure' ? disposition.citations : []), ...proposal.closingOptions.flatMap(option => [...option.factCitations, ...option.goalCitations])]
+  for (const citation of allCitations) input.evidenceView.assertCitation(citation)
   const next = structuredClone(input.registry)
   const previous = next.articles.find(article => article.date === input.articleDate)
   const draftCandidates = structuredClone(input.draftCandidates ?? previous?.draftCandidates)
@@ -890,9 +865,12 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   })
   const proposalSha256 = sha256(JSON.stringify(proposal))
   const candidateReviewHistory = previous?.candidateReviewHistory
-  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], ...(reviewedDraftCandidates === undefined ? {} : { draftCandidates: reviewedDraftCandidates }), ...(candidateReviewHistory === undefined ? {} : { candidateReviewHistory }), ...(input.draftCandidateEvidence === undefined ? {} : { draftCandidateEvidence: input.draftCandidateEvidence }), draftContext: prepared.context, closing, stateDigest: sha256('native-review-output-pending'), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256, verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...verification.candidateDispositions.map(verdict => ({ item: `draft-candidate:${verdict.candidateId}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, evidenceRequests: input.resolvedEvidenceRequests ?? [], rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
+  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], ...(reviewedDraftCandidates === undefined ? {} : { draftCandidates: reviewedDraftCandidates }), ...(candidateReviewHistory === undefined ? {} : { candidateReviewHistory }), ...(input.draftCandidateEvidence === undefined ? {} : { draftCandidateEvidence: input.draftCandidateEvidence }), draftContext: prepared.context, closing, stateDigest: sha256('native-review-output-pending'), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256, evidenceView: input.evidenceView.receipt, evidenceViewOutputSha256: actionEvidenceRegistryDigest(next, input.articleDate), verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...verification.candidateDispositions.map(verdict => ({ item: `draft-candidate:${verdict.candidateId}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, evidenceRequests: input.resolvedEvidenceRequests ?? [], rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
   next.articles = [...next.articles.filter(article => article.date !== input.articleDate), snapshot]
   const normalizedNext = ActionRegistrySchema.parse(next)
+  snapshot.verification.evidenceViewOutputSha256 = actionEvidenceRegistryDigest(normalizedNext, input.articleDate)
+  const normalizedSnapshot = normalizedNext.articles.find(article => article.date === input.articleDate)
+  if (normalizedSnapshot) normalizedSnapshot.verification.evidenceViewOutputSha256 = snapshot.verification.evidenceViewOutputSha256
   const reviewOutput = input.draftCandidateEvidence ? deriveActionReviewOutput({ before: input.registry, after: normalizedNext, articleStatuses: input.articleStatuses,
     articleDate: input.articleDate, reviewCycle: cycle, roundId: input.roundId, proposalSha256, consumedInputSha256: input.draftCandidateEvidence.canonicalIndexSha256 }) : undefined
   const finalSnapshot = { ...snapshot, ...(reviewOutput ? { reviewOutput } : {}), stateDigest: actionStateDigest(normalizedNext, [...keys], closing, prepared.context, { articleDate: input.articleDate, roundId: input.roundId, draftCandidates: reviewedDraftCandidates, candidateReviewHistory, draftCandidateEvidence: input.draftCandidateEvidence, reviewOutput }) }
@@ -903,6 +881,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
 }
 
 export async function reviewArticleActions(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; feedback: string; sources: ActionSource[]; agents: ActionAgents; articleStatuses: ReadonlyMap<string, string>; draftCandidates?: readonly unknown[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; repoRoot?: string; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; selectedEvidenceProjectionIds?: readonly string[] }): Promise<{ registry: ActionRegistry; markdown: string; cached: boolean; evidenceResolutions: ActionSource[] }> {
+  const collectedSources = input.sources instanceof ActionSourceCollection ? input.sources : undefined
   input = { ...input, cycle: ActionReviewCycleSchema.parse(input.cycle) }
   if (process.env.ACTION_REVIEW_DISABLED === 'true') throw new Error('Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked')
   if (!input.registry.articles.some(article => article.date === input.articleDate) && Object.hasOwn(input.registry.baseline.articleActions, input.articleDate)) input = { ...input, markdown: normalizeLegacyActionProse(input.markdown) }
@@ -952,55 +931,71 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   if (input.repoRoot) for (const projection of input.sources.filter(source => source.projection)) {
     if (!projection.projection || !committedRequestIds.has(projection.projection.requestId)) persistValidatedActionEvidenceReply({ repoRoot: input.repoRoot, projection })
   }
-  const inputHash = sha256(JSON.stringify({ version: ACTION_REVIEW_PROMPT_VERSION, evidenceSelectionVersion: ACTION_EVIDENCE_SELECTION_VERSION, cycle: input.cycle, reassessActionKeys: [...(input.reassessActionKeys ?? [])].sort(), preserveActionKeys: [...(input.preserveActionKeys ?? [])].sort(), statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), draftContext: prepared.context, draftCandidates: draftCandidates?.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })), draftCandidateEvidence, feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')
+  const rawCaseDigest = sha256(JSON.stringify({ version: ACTION_REVIEW_PROMPT_VERSION, evidenceSelectionVersion: ACTION_EVIDENCE_SELECTION_VERSION, cycle: input.cycle, reassessActionKeys: [...(input.reassessActionKeys ?? [])].sort(), preserveActionKeys: [...(input.preserveActionKeys ?? [])].sort(), statuses: [...input.articleStatuses].sort(), article: managedArticleDigest(input.markdown), draftContext: prepared.context, draftCandidates: draftCandidates?.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })), draftCandidateEvidence, feedback: input.feedback, sources: input.sources.filter(source => source.id !== 'article' && !source.id.startsWith('article@')
     && (!source.projection || !source.projection.coverage.some(item => item.status === 'unknown')
       && (!input.selectedEvidenceProjectionIds?.length || input.selectedEvidenceProjectionIds.includes(source.id)))), history: input.registry.records.filter(record => record.origin !== 'suggested' || record.introducedBy !== input.articleDate).map(record => ({ key: record.key, workKey: record.workKey, history: record.history.filter(item => item.articleDate !== input.articleDate) })) }))
 
-  if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === inputHash && JSON.stringify(previous.draftContext) === JSON.stringify(prepared.context) && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys, previous.closing, previous.draftContext, { articleDate: previous.date, roundId: previous.roundId, draftCandidates: previous.draftCandidates, candidateReviewHistory: previous.candidateReviewHistory, draftCandidateEvidence: previous.draftCandidateEvidence, reviewOutput: previous.reviewOutput })) {
+  const assertCurrentFrontier = () => {
+    if (previous?.review.state === 'verified' && previous.reviewOutput && draftCandidateEvidence
+      && JSON.stringify(previous.reviewOutput.reviewCycle) === JSON.stringify(input.cycle)) {
+      const currentRegistry = structuredClone(input.registry)
+      const currentSnapshot = currentRegistry.articles.find(article => article.date === input.articleDate)
+      if (currentSnapshot) {
+        currentSnapshot.review = { state: 'pending', reason: 'Current-input frontier validation.' }
+        delete currentSnapshot.reviewOutput
+      }
+      try {
+        actionEvidenceScope({ ...input, registry: currentRegistry, draftCandidates, draftContext: prepared.context })
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : 'current candidate input binding is unavailable'
+        throw new ActionInputFrontierError(`A new evidence case would consume prior native review outputs without a fresh explicit current-input binding: ${detail}`)
+      }
+    }
+  }
+  let selection: ReturnType<typeof selectActionEvidence>
+  try { selection = selectActionEvidence({ ...input, draftCandidates, draftContext: prepared.context }) }
+  catch (error) { assertCurrentFrontier(); throw error }
+  input = { ...input, sources: selection.sources }
+  const registryStateSha256 = actionEvidenceRegistryDigest(input.registry, input.articleDate)
+  const evidenceView = PreparedActionEvidenceView.prepare(input.sources, rawCaseDigest, registryStateSha256, collectedSources)
+  // Reuse the immutable consumed coverage only for an exact-input cache check.
+  // A fresh selection can mention this same round's own outputs; those must not
+  // manufacture a new provider review. Every other source/view still must match.
+  const priorView = previous?.verification.evidenceView
+  const priorCoverage = previous?.sources.find(source => source.id.startsWith(`${COVERAGE_SOURCE}@`))
+  const cacheView = priorView?.rawCaseDigest === rawCaseDigest && previous?.verification.evidenceViewOutputSha256 === registryStateSha256 && priorCoverage
+    ? PreparedActionEvidenceView.prepare(input.sources.map(source => source.id.startsWith(`${COVERAGE_SOURCE}@`) ? { id: priorCoverage.id, kind: priorCoverage.kind, locator: priorCoverage.locator, content: priorCoverage.content } : source), rawCaseDigest, priorView.inputStateSha256, collectedSources)
+    : evidenceView
+  const inputHash = evidenceView.roundId
+  if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === cacheView.roundId && JSON.stringify(previous.draftContext) === JSON.stringify(prepared.context) && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys, previous.closing, previous.draftContext, { articleDate: previous.date, roundId: previous.roundId, draftCandidates: previous.draftCandidates, candidateReviewHistory: previous.candidateReviewHistory, draftCandidateEvidence: previous.draftCandidateEvidence, reviewOutput: previous.reviewOutput })) {
     const committedResolutionIds = new Set(previous.sources.filter(source => source.projection || source.response).map(source => source.id))
     return { registry: input.registry, markdown: renderArticleActions(input.markdown, input.registry, input.articleDate, input.articleStatuses), cached: true,
       evidenceResolutions: input.sources.filter(source => (source.projection || source.response) && committedResolutionIds.has(source.id)) }
   }
-  if (previous?.review.state === 'verified' && previous.reviewOutput && draftCandidateEvidence
-    && JSON.stringify(previous.reviewOutput.reviewCycle) === JSON.stringify(input.cycle)) {
-    const currentRegistry = structuredClone(input.registry)
-    const currentSnapshot = currentRegistry.articles.find(article => article.date === input.articleDate)
-    if (currentSnapshot) {
-      currentSnapshot.review = { state: 'pending', reason: 'Current-input frontier validation.' }
-      delete currentSnapshot.reviewOutput
-    }
-    try {
-      actionEvidenceScope({ ...input, registry: currentRegistry, draftCandidates, draftContext: prepared.context })
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : 'current candidate input binding is unavailable'
-      throw new ActionInputFrontierError(`A new evidence case would consume prior native review outputs without a fresh explicit current-input binding: ${detail}`)
-    }
-  }
-  const selection = selectActionEvidence({ ...input, draftCandidates, draftContext: prepared.context })
-  input = { ...input, sources: selection.sources }
+  assertCurrentFrontier()
   const byteLength = (value: string) => Buffer.byteLength(value, 'utf8')
   if (input.sources.some(source => byteLength(source.content) > 128 * 1024) || input.sources.reduce((total, source) => total + byteLength(source.content), 0) > 384 * 1024) throw new Error('Action evidence exceeds its source budget (128 KiB each / 384 KiB total); review pending')
   const sourceAliases = new Map(input.sources.map((source, index) => [`s${index + 1}`, source.id]))
-  const modelSources = input.sources.map((source, index) => ({ ...source, id: `s${index + 1}` }))
   const currentActionKeys = previous?.actionKeys ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
   const reviewIndex = actionReviewIndex({ ...input, expandedActionKeys: selection.expandedActionKeys })
   const context = serializeActionModelView({ articleDate: input.articleDate, reviewCycle: input.cycle, newIdentityLimit: actionAdmissionLimit(input.cycle), remainingNewIdentitySlots: Math.max(0, actionAdmissionLimit(input.cycle) - countCycleAdmissions(input.registry.records.filter(record => record.origin === 'suggested' && record.introducedBy === input.articleDate), input.cycle)), articleStatuses: Object.fromEntries(input.articleStatuses),
     initialDraftCandidates: draftCandidates ?? [], initialDraftCandidatePolicy: 'Exact same-article producer candidates. Awaiting candidates are unverified and not admitted, ranked, executable, or settled. Account for each awaiting candidate exactly once as promote, reject, map-existing, or verified-closure. Promote and map-existing require the selected suggestion to preserve the captured command, repository and description exactly; this is an identity guard, not proof of semantic equivalence. Put amended or unrelated work in a separate suggestion and reject or otherwise account for the original candidate. Prior-day recommendation maintenance is separate context.',
-    sources: modelSources.map(actionModelSourcePromptView),
-    citationPolicy: { rule: 'Every quote must be exact. Completion, dismissal and supersession require every citation to be authoritative API/OWNER/MEMBER/COLLABORATOR text or repository evidence. Dismissal also permits explicit operator feedback. Article-only claims, metadata and third-party comments never establish terminal dispositions. Do not include source aliases or line labels in user-facing reasons.' },
+    sources: evidenceView.promptSources(),
+    evidenceView: evidenceView.receipt,
+    citationPolicy: { rule: 'Only complete original L-numbered lines are citable. CONTEXT ONLY metadata rows are partially visible and cannot be cited or prove absence. Request full-row evidence if such a fact is necessary. Every quote must be exact. Completion, dismissal and supersession require every citation to be authoritative API/OWNER/MEMBER/COLLABORATOR text or repository evidence. Dismissal also permits explicit operator feedback. Article-only claims, metadata and third-party comments never establish terminal dispositions. Do not include source aliases or line labels in user-facing reasons.' },
     ...packActionIndex(reviewIndex), actionIndexEncoding: ACTION_INDEX_ENCODING,
     previousRecommendationMaintenance: recommendationMaintenanceProjection(previous),
     previousRejections: previous?.rejected ?? [], currentActionKeys, requiredActionKeys: selection.receipt.reviewActionKeys,
     preservedTerminalActionKeys: selection.receipt.preservedTerminalActionKeys })
-  if (byteLength(context) > 640 * 1024) throw new Error('Action prompt exceeds 640 KiB; review pending')
-  const boundedPrompt = (prompt: string) => { if (byteLength(prompt) > 640 * 1024) throw new Error('Action prompt exceeds 640 KiB; review pending'); return prompt }
+  if (byteLength(context) > 640 * 1024) throw new ActionContextNeedError('Action prompt exceeds 640 KiB; review pending')
+  const boundedPrompt = (prompt: string) => { if (byteLength(prompt) > 640 * 1024) throw new ActionContextNeedError('Action prompt exceeds 640 KiB; review pending'); return prompt }
   let correction = ''
   // One repair of malformed output, never a recursive proposer/verifier negotiation.
   for (let attempt = 0; attempt < 2; attempt++) {
     let proposal: ParsedActionProposal, verification: ParsedActionVerification
     try {
-      proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every requiredActionKey. Preserve terminal currentActionKeys without creating a redundant decision unless they are explicitly listed in requiredActionKeys. An independently verified existingKey link also counts as reviewing a required identity. Return one candidateDisposition for every awaiting initialDraftCandidate; never reconstruct a missing candidate from draft context or prior-day maintenance. A promotion or existing-identity map must select a suggestion with the exact captured command, repository and description. If work is amended or unrelated, propose it separately and account for the original candidate with another supported disposition.\n${correction}`), modelSources))
-      verification = ActionVerificationSchema.parse(await input.agents.verify(boundedPrompt(`${context}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(proposal)}\n${correction}\nReturn ONLY the tool schema: changes, suggestions, candidateDispositions and closingOptions are arrays of verdict objects. Verify every initial candidate disposition independently. Check each closing option for current disposition, usefulness, prior-context relevance, goal connection, entry point and next checkpoint. Keep reasons concise.`), modelSources))
+      proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every requiredActionKey. Preserve terminal currentActionKeys without creating a redundant decision unless they are explicitly listed in requiredActionKeys. An independently verified existingKey link also counts as reviewing a required identity. Return one candidateDisposition for every awaiting initialDraftCandidate; never reconstruct a missing candidate from draft context or prior-day maintenance. A promotion or existing-identity map must select a suggestion with the exact captured command, repository and description. If work is amended or unrelated, propose it separately and account for the original candidate with another supported disposition.\n${correction}`), evidenceView))
+      verification = ActionVerificationSchema.parse(await input.agents.verify(boundedPrompt(`${context}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(proposal)}\n${correction}\nReturn ONLY the tool schema: changes, suggestions, candidateDispositions and closingOptions are arrays of verdict objects. Verify every initial candidate disposition independently. Check each closing option for current disposition, usefulness, prior-context relevance, goal connection, entry point and next checkpoint. Keep reasons concise.`), evidenceView))
       const resolveCitation = (citation: z.infer<typeof CitationSchema>) => ({ ...citation, sourceId: sourceAliases.get(citation.sourceId) ?? citation.sourceId })
       for (const change of proposal.changes) change.citations = change.citations.map(resolveCitation)
       for (const candidate of proposal.suggestions) { candidate.goalCitations = candidate.goalCitations.map(resolveCitation); candidate.factCitations = candidate.factCitations.map(resolveCitation) }
@@ -1011,7 +1006,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
     if (evidenceRequest) throw new ActionEvidenceRequestError(evidenceRequest, `Independent verification requires ${evidenceRequest.kind} evidence for ${evidenceRequest.actionKeys.join(', ')}`)
     let registry: ActionRegistry
     try {
-      registry = applyVerifiedActionReview({ ...input, roundId: inputHash, proposal, verification, identity: input.agents.identity, draftCandidates, draftCandidateEvidence, draftContext: prepared.context, requiredActionKeys: selection.receipt.reviewActionKeys,
+      registry = applyVerifiedActionReview({ ...input, evidenceView, roundId: inputHash, proposal, verification, identity: input.agents.identity, draftCandidates, draftCandidateEvidence, draftContext: prepared.context, requiredActionKeys: selection.receipt.reviewActionKeys,
         preserveActionKeys: input.preserveActionKeys,
         resolvedEvidenceRequests: previous?.evidenceRequests?.filter(request => selection.receipt.resolvedRequests.includes(request.id)).map(request => ({ ...request, status: 'resolved' as const })) })
     } catch (error) {
@@ -1073,6 +1068,13 @@ export async function reviewDraftActions(input: Parameters<typeof reviewArticleA
   const draftCandidates = input.draftCandidates === undefined ? undefined : captureDraftActionCandidates(input.draftCandidates)
   try { return await reviewArticleActions(input) }
   catch (error) {
+    if (error instanceof ActionEvidenceVisibilityError || error instanceof ActionContextNeedError) {
+      const currentKeys = input.registry.articles.find(article => article.date === input.articleDate)?.actionKeys ?? []
+      const actionKeys = currentKeys.length ? currentKeys : ['article-feedback']
+      const request = createActionEvidenceRequest({ kind: 'clarification', caseDigest: actionEvidenceCaseDigest({ ...input, draftCandidates, actionKeys }), articleDate: input.articleDate, cycle: input.cycle, actionKeys,
+        sourceKey: 'model-context', question: `Prepare a fully visible bounded evidence context without weakening source duties or limits: ${error.message}`.slice(0, 512), obligations: [sha256('All required sources, owner/counterevidence, full identity/history and fixed provider limits remain required.')], recipient: 'coordinator-owner' })
+      error = new ActionEvidenceRequestError(request, error.message)
+    }
     const reason = error instanceof ActionEvidenceRequestError
       ? `Action evidence request ${error.request.id} remains pending: ${error.message}`
       : error instanceof ActionEvidenceLifecycleError ? error.message
@@ -1087,7 +1089,8 @@ export async function reviewDraftActions(input: Parameters<typeof reviewArticleA
     const requests = new Map(prior.map(request => [request.id, request]))
     if (error instanceof ActionEvidenceRequestError) requests.set(error.request.id, actionEvidenceRequestReceipt(error.request))
     if (error instanceof ActionEvidenceLifecycleError) requests.set(error.receipt.id, error.receipt)
-    return pendingActionReview({ ...input, reason, evidenceRequests: [...requests.values()], resetDraftCandidateReviews: error instanceof ActionInputFrontierError })
+    try { return pendingActionReview({ ...input, reason, evidenceRequests: [...requests.values()], resetDraftCandidateReviews: error instanceof ActionInputFrontierError }) }
+    catch (persistenceError) { throw new Error(`${reason}; pending persistence refused: ${persistenceError instanceof Error ? persistenceError.message : String(persistenceError)}`, { cause: error }) }
   }
 }
 
@@ -1111,6 +1114,7 @@ export async function reviewProducedDraftActions(input: Omit<Parameters<typeof r
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'Action evidence preparation unavailable'
     console.warn(`::warning::Action review pending for ${input.articleDate}: ${reason}`)
-    return pendingActionReview({ ...input, reason, draftCandidateEvidence })
+    try { return pendingActionReview({ ...input, reason, draftCandidateEvidence }) }
+    catch (persistenceError) { throw new Error(`${reason}; pending persistence refused: ${persistenceError instanceof Error ? persistenceError.message : String(persistenceError)}`, { cause: error }) }
   }
 }

@@ -18,26 +18,28 @@ vi.mock('@anthropic-ai/sdk', () => ({ default: class { messages = { create: cont
 vi.mock('node:child_process', () => ({ execFileSync: control.github }))
 vi.mock('../../src/review-actions.js', async importOriginal => {
   const actual = await importOriginal<typeof import('../../src/review-actions.js')>()
+  const { ActionSourceCollection } = await import('../../src/action-evidence-view.js')
   return {
     ...actual,
     collectActionSources: () => {
       control.collectCalls++
       const content = 'CURRENT API STATE core#543: state=open; owner review remains required.'
-      return [{
+      return new ActionSourceCollection([{
         id: 'github:core#543',
         kind: 'github' as const,
         locator: 'https://github.com/ojfbot/core/issues/543',
         content,
         trustedContent: [content],
-      }]
+      }])
     },
     createActionAgents: () => ({
       identity: { proposer: 'offline-acceptance-proposer', verifier: 'offline-acceptance-verifier' },
-      propose: async (_prompt: string, sources: import('../../src/action-registry.js').ActionSource[]) => {
+      propose: async (_prompt: string, view: import('../../src/action-evidence-view.js').PreparedActionEvidenceView) => {
+        const sources = view.rawSources(true)
         control.proposeCalls++
         const source = sources.find(candidate => candidate.locator === 'https://github.com/ojfbot/core/issues/543')
         if (!source) throw new Error('Missing synthetic current source')
-        const citation = { sourceId: source.id, quote: source.content }
+        const citation = { sourceId: source.id, quote: source.content, sourceLineStart: 1, sourceLineEnd: source.content.split('\n').length }
         return {
           changes: [],
           suggestions: [],
