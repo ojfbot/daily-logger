@@ -18,6 +18,8 @@ export function sha256(value: string): string { return createHash('sha256').upda
 export function registryBytes(registry: ActionRegistry): string { return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
 export function registryRevision(registry: ActionRegistry): string { return sha256(registryBytes(registry)) }
 export function actionStateDigest(registry: ActionRegistry, keys: readonly string[], closing?: ClosingPrompt, draftContext?: ActionRegistry['articles'][number]['draftContext'], boundary?: { articleDate: string; roundId: string; includePriorArticleRounds?: boolean; draftCandidates?: ActionRegistry['articles'][number]['draftCandidates']; candidateReviewHistory?: ActionRegistry['articles'][number]['candidateReviewHistory']; draftCandidateEvidence?: ActionRegistry['articles'][number]['draftCandidateEvidence']; reviewOutput?: ActionRegistry['articles'][number]['reviewOutput'] }): string {
+  const verification = boundary ? registry.articles.find(article => article.date === boundary.articleDate && article.roundId === boundary.roundId)?.verification : undefined
+  const viewBinding = verification?.evidenceView === undefined ? {} : { evidenceView: verification.evidenceView, evidenceViewOutputSha256: verification.evidenceViewOutputSha256 }
   const records = registry.records.filter(record => keys.includes(record.key)).map(record => {
     if (!boundary) return { key: record.key, state: record.state, history: record.history, admission: record.admission }
     const history = record.history.filter(decision => decision.articleDate < boundary.articleDate
@@ -25,9 +27,9 @@ export function actionStateDigest(registry: ActionRegistry, keys: readonly strin
     const state = history.at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed')
     return { key: record.key, state, history, admission: record.admission }
   })
-  if (boundary?.draftCandidateEvidence !== undefined || boundary?.reviewOutput !== undefined || boundary?.candidateReviewHistory !== undefined) return sha256(JSON.stringify({ records, closing: closing ?? null, draftContext: draftContext ?? null, draftCandidates: boundary?.draftCandidates ?? null, draftCandidateEvidence: boundary?.draftCandidateEvidence ?? null, reviewOutput: boundary?.reviewOutput ?? null, ...(boundary?.candidateReviewHistory === undefined ? {} : { candidateReviewHistory: boundary.candidateReviewHistory }) }))
-  if (boundary?.draftCandidates !== undefined) return sha256(JSON.stringify({ records, closing: closing ?? null, draftContext: draftContext ?? null, draftCandidates: boundary.draftCandidates }))
-  if (draftContext !== undefined) return sha256(JSON.stringify({ records, closing: closing ?? null, draftContext }))
+  if (boundary?.draftCandidateEvidence !== undefined || boundary?.reviewOutput !== undefined || boundary?.candidateReviewHistory !== undefined) return sha256(JSON.stringify({ ...viewBinding, records, closing: closing ?? null, draftContext: draftContext ?? null, draftCandidates: boundary?.draftCandidates ?? null, draftCandidateEvidence: boundary?.draftCandidateEvidence ?? null, reviewOutput: boundary?.reviewOutput ?? null, ...(boundary?.candidateReviewHistory === undefined ? {} : { candidateReviewHistory: boundary.candidateReviewHistory }) }))
+  if (boundary?.draftCandidates !== undefined) return sha256(JSON.stringify({ ...viewBinding, records, closing: closing ?? null, draftContext: draftContext ?? null, draftCandidates: boundary.draftCandidates }))
+  if (draftContext !== undefined) return sha256(JSON.stringify({ ...viewBinding, records, closing: closing ?? null, draftContext }))
   return sha256(JSON.stringify(closing === undefined ? records : { records, closing }))
 }
 

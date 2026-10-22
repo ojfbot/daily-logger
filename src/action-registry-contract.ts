@@ -190,13 +190,26 @@ export const ActionReviewOutputSchema = z.object({
   if (new Set(keys).size !== keys.length) context.addIssue({ code: 'custom', message: 'Duplicate action review output identity' })
 })
 export type ActionReviewOutput = z.infer<typeof ActionReviewOutputSchema>
+export const ActionEvidenceViewReceiptSchema = z.object({
+  version: z.literal('action-evidence-view-v1'),
+  policySha256: digest,
+  rawCaseDigest: digest,
+  inputStateSha256: digest,
+  sources: z.array(z.object({ sourceId: z.string().min(1), rawSha256: digest, viewSha256: digest, hiddenLines: z.array(z.number().int().positive()), omittedPathsSha256: digest }).strict()),
+}).strict()
+export type ActionEvidenceViewReceipt = z.infer<typeof ActionEvidenceViewReceiptSchema>
 const ActionVerificationReceiptSchema = z.object({
   proposer: z.string(),
   verifier: z.string(),
   promptVersion: z.string(),
   proposalSha256: digest,
+  evidenceView: ActionEvidenceViewReceiptSchema.optional(),
+  evidenceViewOutputSha256: digest.optional(),
   verdicts: z.array(z.object({ item: z.string(), verdict: z.enum(['pass', 'reject', 'hold']), reason: z.string() }).strict()),
-}).strict()
+}).strict().superRefine((receipt, context) => {
+  if (receipt.promptVersion === 'action-review-v16-typed-evidence-view' && (!receipt.evidenceView || !receipt.evidenceViewOutputSha256)) context.addIssue({ code: 'custom', message: 'Current action review requires its consumed evidence view and output binding' })
+  if ((receipt.evidenceView === undefined) !== (receipt.evidenceViewOutputSha256 === undefined)) context.addIssue({ code: 'custom', message: 'Evidence view and native output binding must be retained together' })
+})
 const CandidateReviewHistorySchema = z.object({
   articleDigest: digest,
   reviewCycle: ActionReviewCycleSchema,

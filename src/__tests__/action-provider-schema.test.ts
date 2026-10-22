@@ -1,10 +1,10 @@
+import { resolveActionSourceLines } from './evidence-view-fixtures.js'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import {
   ActionVerificationSchema,
   actionProviderRequest,
   providerToolSchema,
-  resolveActionSourceLines,
 } from '../review-actions.js'
 
 const JsonObjectSchema = z.record(z.string(), z.unknown())

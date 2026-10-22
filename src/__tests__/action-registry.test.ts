@@ -1,3 +1,4 @@
+import { applyVerifiedActionReview, reviewArticleActions, reviewDraftActions, resolveActionSourceLines } from './evidence-view-fixtures.js'
 import { revisionActionCycle } from '../action-review-cycle.js'
 import { writeActionStore } from './action-store-fixture.js'
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
@@ -5,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ActionRegistrySchema, actionStateDigest, articleActionRecords, projectRegistry, readActionRegistry, registryBytes, registryRevision, renderArticleActions, renderArticleActionHtml, setActionInclusion, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
-import { ActionVerificationSchema, actionGithubReferences, applyVerifiedActionReview, reviewArticleActions, reviewDraftActions, renderGithubEvidence, resolveActionSourceLines, type ActionProposal, type ActionVerification } from '../review-actions.js'
+import { ActionVerificationSchema, actionGithubReferences, renderGithubEvidence, type ActionProposal, type ActionVerification } from '../review-actions.js'
 import { parseActionModelView, unpackActionIndexRows } from '../action-model-view.js'
 
 const articleDate = '2026-10-17'
@@ -13,7 +14,7 @@ const articleStatuses = new Map([[articleDate, 'accepted']])
 const markdown = `---\ntitle: "Review"\ndate: ${articleDate}\nstatus: "accepted"\n---\n## What's next\n`
 const sources: ActionSource[] = [
   { id: 'goal', kind: 'goal', locator: 'ROADMAP.md', content: 'The operator goal is reliable editorial acceptance.' },
-  { id: 'evidence', kind: 'github', locator: 'https://github.com/ojfbot/daily-logger/pull/373', content: 'The mandatory ADR prerequisite was explicitly superseded. The source confirms a queue and article mismatch.', trustedContent: ['The mandatory ADR prerequisite was explicitly superseded. The source confirms a queue and article mismatch.'] },
+  { id: 'evidence', kind: 'github', locator: 'https://github.com/ojfbot/daily-logger/pull/373', content: 'The mandatory ADR prerequisite was explicitly superseded.\nThe source confirms a queue and article mismatch.', trustedContent: ['The mandatory ADR prerequisite was explicitly superseded.\nThe source confirms a queue and article mismatch.'] },
 ]
 function seed(): ActionRegistry {
   return ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [{ key: 'act-existing', original: { id: 'act-existing', command: '/adr', description: 'Old generator output.', repo: 'daily-logger', status: 'open', sourceDate: articleDate }, origin: 'imported', workKey: 'old-adr', state: 'open', introducedBy: articleDate, includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: '', gates: [], history: [] }], articles: [] })
@@ -31,7 +32,7 @@ describe('canonical action review and publication', () => {
   it('does not treat third-party GitHub comments as terminal evidence (F12)', () => {
     const proposal = propose()
     const untrusted = sources.map(source => source.kind === 'github' ? { ...source, trustedContent: ['CURRENT API STATE: state=open; head=current.'] } : source)
-    expect(() => applyVerifiedActionReview({ cycle: revisionActionCycle('fixture'), registry: seed(), articleStatuses, articleDate, markdown, sources: untrusted, roundId: 'd'.repeat(64), proposal, verification: verify() })).toThrow(/OWNER\/MEMBER\/COLLABORATOR/)
+    expect(() => applyVerifiedActionReview({ cycle: revisionActionCycle('fixture'), registry: seed(), articleStatuses, articleDate, markdown, sources: untrusted, roundId: 'd'.repeat(64), proposal, verification: verify() })).toThrow(/OWNER\/MEMBER\/COLLABORATOR|Trusted text is absent/)
     const trusted = sources.map(source => source.kind === 'github' ? { ...source, trustedContent: [source.content] } : source)
     expect(applyVerifiedActionReview({ cycle: revisionActionCycle('fixture'), registry: seed(), articleStatuses, articleDate, markdown, sources: trusted, roundId: 'd'.repeat(64), proposal, verification: verify() }).records[0].state).toBe('superseded')
   })
@@ -205,7 +206,7 @@ describe('canonical action review and publication', () => {
     const repeat = applyVerifiedActionReview(input)
     expect(repeat.records.filter(record => record.origin === 'suggested')).toHaveLength(0)
     expect(repeat.articles.find(article => article.date === nextDate)?.rejected[0].reason).toContain('unchanged source evidence')
-    const amended = sources.map(source => source.id === 'evidence' ? { ...source, content: `${source.content} A new owner checkpoint is now required.` } : source)
+    const amended = sources.map(source => source.id === 'evidence' ? { ...source, content: `${source.content}\nA new owner checkpoint is now required.` } : source)
     for (const unchangedCitations of [amended, [...sources, { id: 'unrelated', kind: 'goal' as const, locator: 'OTHER.md', content: 'An unrelated source changed.' }]]) {
       const stillRejected = applyVerifiedActionReview({ ...input, sources: unchangedCitations })
       expect(stillRejected.records.filter(record => record.origin === 'suggested')).toHaveLength(0)
@@ -304,9 +305,8 @@ describe('canonical action review and publication', () => {
   it('holds unsupported candidates even when the model says pass, and retains valid work', () => {
     const proposal = propose(); proposal.suggestions.push({ ...candidate, target: 'unrelated', description: 'Invented architecture task.', factCitations: [{ sourceId: 'article', quote: 'The article says it is necessary.' }] })
     const verification = verify(); verification.suggestions.push({ candidateIndex: 1, verdict: 'pass', reason: 'Unsubstantiated model assertion.', existingKey: null })
-    const reviewed = apply(seed(), proposal, verification)
-    expect(reviewed.records.map(record => record.original.description)).toEqual(['Old generator output.', 'Make article actions and queue state agree.'])
-    expect(reviewed.articles[0].rejected).toEqual([expect.objectContaining({ description: 'Invented architecture task.', reason: 'Missing exact primary factual evidence. Unsubstantiated model assertion.', workKey: 'daily-logger|unrelated|consistent article and queue', evidenceDigest: expect.stringMatching(/^[a-f0-9]{64}$/) })])
+    expect(() => apply(seed(), proposal, verification)).toThrow(/fully visible original line endpoints/)
+    expect(apply().records.map(record => record.original.description)).toEqual(['Old generator output.', 'Make article actions and queue state agree.'])
   })
 
   it('cannot recreate terminal work under a different date or description', () => {
@@ -385,9 +385,7 @@ describe('canonical action review and publication', () => {
     expect(next.records).toHaveLength(2)
     expect(next.records[1].history.at(-1)?.description).toBe(candidate.description)
     expect(next.articles[0].rejected.at(-1)?.reason).toContain('lacks a matching target and outcome')
-    const inventedGoal = apply(registry, { ...proposal, suggestions: [{ ...candidate, existingKey: key, goalCitations: [{ sourceId: 'invented', quote: 'Unverifiable goal claim.' }] }] }, verification)
-    expect(inventedGoal.articles[0].rejected.at(-1)?.reason).toContain('contextual citation')
-    expect(inventedGoal.records[1].history.flatMap(decision => decision.citations).some(citation => citation.sourceId === 'invented')).toBe(false)
+    expect(() => apply(registry, { ...proposal, suggestions: [{ ...candidate, existingKey: key, goalCitations: [{ sourceId: 'invented', quote: 'Unverifiable goal claim.' }] }] }, verification)).toThrow(/fully visible original line endpoints/)
   })
 
   it('preserves suggested originals and birth cycles in the real canonical writer', () => {

@@ -1,10 +1,11 @@
+import { applyVerifiedActionReview } from '../../src/__tests__/evidence-view-fixtures.js'
 import { revisionActionCycle } from '../../src/action-review-cycle.js'
 import { actionFile } from '../../src/__tests__/action-store-fixture.js'
 import { afterEach, expect, it, vi } from 'vitest'
 import { createFixture, today } from './fixture.js'
 import { createEditorialService, repo } from '../../api/_lib/editorial-continuation.js'
 import { ActionRegistrySchema, isArticleFileInclusionChange } from '../../src/action-registry-schema.js'
-import { applyVerifiedActionReview } from '../../src/review-actions.js'
+
 import { stampDraft } from '../../packages/frontend/src/utils/stampDraft.ts'
 import { loadEditorialActions } from '../../packages/frontend/src/utils/actionInclusion.ts'
 

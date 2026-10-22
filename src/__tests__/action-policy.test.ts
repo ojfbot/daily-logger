@@ -1,7 +1,8 @@
+import { applyVerifiedActionReview, reviewArticleActions, reviewDraftActions } from './evidence-view-fixtures.js'
 import { describe, expect, it, vi } from 'vitest'
 import { ActionRegistrySchema, ArticleActionFileSchema, articleActionFileBytes, hydrateActionRegistry, projectRegistry, renderArticleActions, sha256, splitActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
 import { acceptanceActionCycle, generationActionCycle, revisionActionCycle, type ActionReviewCycle } from '../action-review-cycle.js'
-import { ActionProposalSchema, applyVerifiedActionReview, reviewArticleActions, reviewDraftActions, type ActionProposal, type ActionVerification } from '../review-actions.js'
+import { ActionProposalSchema, type ActionProposal, type ActionVerification } from '../review-actions.js'
 import { parseActionModelView } from '../action-model-view.js'
 
 const date = '2026-10-20'
@@ -89,7 +90,7 @@ describe('trusted generation and revision action budgets', () => {
     expect(apply(seed(), generationActionCycle(), []).records).toHaveLength(0)
     expect(apply(seed(), generationActionCycle(), [candidate(0)]).records).toHaveLength(1)
     const unsupported = { ...candidate(0), factCitations: [{ sourceId: 'absent', quote: 'Unsupported claimed gap.' }] }
-    expect(apply(seed(), generationActionCycle(), [unsupported]).records).toHaveLength(0)
+    expect(() => apply(seed(), generationActionCycle(), [unsupported])).toThrow(/fully visible original line endpoints/)
   })
   it('retains the generation budget through a pending initial retry and gives clean acceptance a follow-up cycle', async () => {
     const cycle = generationActionCycle()

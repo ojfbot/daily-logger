@@ -1,3 +1,4 @@
+import { ActionSourceCollection } from './action-evidence-view.js'
 import { revisionActionCycle } from './action-review-cycle.js'
 /**
  * Editorial revision script — applies human feedback to a generated article.
@@ -204,7 +205,7 @@ async function main() {
     if (!articleDate) throw new Error('Article date is missing')
     const statuses = readArticleStatuses(repoRoot)
     const actions = await reviewProducedDraftActions({ cycle, registry, articleStatuses: statuses, articleDate, markdown: result.revisedMarkdown, feedback,
-      collectSources: (draftCandidates, draftCandidateEvidence) => [...(isMock ? [] : collectActionSources({ cycle, registry, articleStatuses: statuses, repoRoot, markdown: result.revisedMarkdown, feedback, reassessActionKeys, preserveActionKeys, draftCandidates, draftCandidateEvidence })), ...evidenceReplies],
+      collectSources: (draftCandidates, draftCandidateEvidence) => (isMock ? new ActionSourceCollection([]) : collectActionSources({ cycle, registry, articleStatuses: statuses, repoRoot, markdown: result.revisedMarkdown, feedback, reassessActionKeys, preserveActionKeys, draftCandidates, draftCandidateEvidence })).appendRaw(evidenceReplies),
       agents: isMock ? mockActionAgents : createActionAgents(), reassessActionKeys, preserveActionKeys, selectedEvidenceProjectionIds: evidenceReplies.map(reply => reply.id), ...(isDryRun ? {} : { repoRoot }) })
     const renderedHtml = renderArticleActionHtml(actions.markdown, actions.registry, articleDate, statuses)
     const evidence = readArticleTime({ repoRoot, date: articleDate, markdown: stripManagedActions(actions.markdown), bindingMarkdown: actions.markdown, renderedHtml })

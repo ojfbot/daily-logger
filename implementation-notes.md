@@ -1,6 +1,11 @@
 # Implementation notes
 
 ## Deviations
+- 2026-10-22 (typed view diagnostics): existing evidence requests require at least one subject. Context failures before any canonical admission use the established `article-feedback` subject, so request construction cannot replace the original token/visibility error with an empty-subject schema error. Pre-cache selection also preserves the existing fresh-frontier hold/archive path on a scope failure.
+
+- 2026-10-22 (typed metadata evidence view): preparing the selected view before cache lookup exposed regenerated coverage mentioning the same round's own outputs. Cache comparison reuses only the prior integrity-checked coverage bytes when raw case, selected source/view identities and exact native post-review registry digest match; new reviews retain fresh coverage. Full pre/post registry digests bind canonical records, held memory and other-date snapshots, without reconstructing mutable ownership from reference overlap.
+- 2026-10-22 (typed metadata citation boundary): older semantic test fixtures injected quote-only proposals directly. Migrated those fixtures through an explicit test-only full-view/line-citation adapter; missing/unknown evidence now holds the whole current proposal at the native visibility boundary. Production application has no missing-view or quote-only fallback.
+
 
 - 2026-10-22 (provider tool schema): the strict-tool sanitizer assumed the provider accepted Zod's discriminated-union `oneOf`; the actual token-count boundary rejected it before review. Convert only unions whose branches share one required string-`const` discriminator with distinct values to the documented `anyOf` subset, fail closed on every other `oneOf`, and retain all native Zod parsing, evidence, history, and tool strictness.
 - 2026-10-22 (provider-schema checkout): the frozen offline install lacked one locked `@types/node` tarball. Reused the dependency tree from the exact adopted `51daa127` checkout for local tests only; no dependency, lockfile, provider, SDK-request, or network change.

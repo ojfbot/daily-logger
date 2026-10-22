@@ -1,9 +1,10 @@
 import { z } from 'zod'
 
-export const ACTION_REVIEW_PROMPT_VERSION = 'action-review-v15-draft-candidate-linkage'
+export const ACTION_REVIEW_PROMPT_VERSION = 'action-review-v16-typed-evidence-view'
 export const PENDING_ACTION_REVIEW_PROMPT_VERSION = 'action-review-pending-v5-draft-candidate-custody'
 export const CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS = [
   ACTION_REVIEW_PROMPT_VERSION,
+  'action-review-v15-draft-candidate-linkage',
   PENDING_ACTION_REVIEW_PROMPT_VERSION,
   'action-review-v14-draft-candidate-custody',
   'action-review-v13-maintained-recommendation-continuity',
@@ -11,7 +12,7 @@ export const CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS = [
   'action-review-v12-single-recommendation-surface',
   'action-review-pending-v3-single-recommendation-surface',
 ] as const
-export const RANKED_ACTION_REVIEW_PROMPT_VERSIONS = [ACTION_REVIEW_PROMPT_VERSION, 'action-review-v14-draft-candidate-custody', 'action-review-v13-maintained-recommendation-continuity', 'action-review-v12-single-recommendation-surface'] as const
+export const RANKED_ACTION_REVIEW_PROMPT_VERSIONS = [ACTION_REVIEW_PROMPT_VERSION, 'action-review-v15-draft-candidate-linkage', 'action-review-v14-draft-candidate-custody', 'action-review-v13-maintained-recommendation-continuity', 'action-review-v12-single-recommendation-surface'] as const
 export const ActionReviewCycleSchema = z.discriminatedUnion('phase', [
   z.object({ phase: z.literal('generation') }).strict(),
   z.object({ phase: z.literal('revision'), id: z.string().min(1).max(256) }).strict(),

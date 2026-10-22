@@ -1,3 +1,4 @@
+import { reviewArticleActions } from './evidence-view-fixtures.js'
 import { generationActionCycle } from '../action-review-cycle.js'
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
@@ -18,7 +19,7 @@ import { stampOutcome } from '../stamp-outcome.js'
 import { buildApi } from '../build-api.js'
 import { checkShipmentTimeCoverage, requiresShipmentTimeCoverage } from '../shipment-time-coverage.js'
 import { readActionRegistry, readArticleStatuses, registryRevision, rebindArticleSnapshot, renderArticleActionHtml, stripManagedActions, writeActionRegistry } from '../action-registry.js'
-import { reviewArticleActions, mockActionAgents } from '../review-actions.js'
+import { mockActionAgents } from '../review-actions.js'
 
 const { createMessage } = vi.hoisted(() => ({ createMessage: vi.fn() }))
 vi.mock('@anthropic-ai/sdk', () => ({ default: class { messages = { create: createMessage } } }))
