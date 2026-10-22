@@ -1,6 +1,8 @@
 # Implementation notes
 
 ## Deviations
+- 2026-10-22 (browser fixture intake): the native suite passed but excluded a Playwright inclusion fixture that still called the former missing-view API. The fixture now prepares its exact source/registry-bound consumed view and resolves visible whole-line citations; all browser assertions and production guards remain unchanged. The complete browser suite is now part of this candidate's qualification.
+
 - 2026-10-22 (full-cycle receipt representation): compact whole-file JSON fixed the pending archive but the second verified fixture still required 69,092 bytes. The unpublished view-v1 source receipt now uses lossless closed tuples with an explicit encoding marker; only a raw digest exactly present at the end of its source ID uses a null sentinel. Every decoded field/order remains identical, historical v15 receipt absence is unchanged, and all limits/history/source duties stay fixed.
 
 - 2026-10-22 (unknown own metadata keys): the root counterexample showed object assignment swallowed an own `__proto__` API field while removing an incidental avatar URL. The metadata visitor now constructs objects with `Object.fromEntries`, retaining own `__proto__`/`constructor` and nested unknown facts without changing known omission policy.
