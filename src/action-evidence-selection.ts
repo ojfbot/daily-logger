@@ -679,15 +679,41 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     const request = requestFor('missing-source', `github:${missing[0]}`)
     throw new ActionEvidenceRequestError(request, `Required action evidence unavailable (collection limit, privacy policy or fetch failure): ${missing.join(', ')}; review pending`)
   }
-  const receipt = { version: ACTION_EVIDENCE_SELECTION_VERSION, unit: 'UTF-8 bytes',
+  const buildReceipt = () => ({ version: ACTION_EVIDENCE_SELECTION_VERSION, unit: 'UTF-8 bytes' as const,
     collection: 'Bounded collector output, not an exhaustive repository/discussion census. Missing or omitted content is unknown, never evidence of absence or approval.',
     selection: 'Whole sources only; no chronological comment window or excerpt. Only current carried actions, explicit feedback and retained draft continuation context require GitHub discussions. Shipment prose does not.',
     authority: 'This coverage index is context only. Hashes, identities, omission reasons and missing evidence cannot justify completion, supersession, dismissal or human approval.',
     requiredReferences: [...requiredRefs].sort(), contextReferences: [...scope.contextRefs].sort(), referenceRequirements: scope.referenceRequirements,
     reviewActionKeys: scope.reviewActionKeys, preservedTerminalActionKeys: scope.preservedTerminalActionKeys,
-    expandedActionKeys: scope.expanded.sort(), resolvedRequests: resolvedRequests.sort(), sources: coverage }
-  const content = JSON.stringify(receipt)
-  if (Buffer.byteLength(content) > SOURCE_LIMIT || bytes + Buffer.byteLength(content) > TOTAL_LIMIT) throw new Error('Action evidence coverage exceeds its source budget; review pending')
+    expandedActionKeys: scope.expanded.sort(), resolvedRequests: resolvedRequests.sort(), sources: coverage })
+  let receipt = buildReceipt()
+  let content = JSON.stringify(receipt)
+  if (Buffer.byteLength(content) > SOURCE_LIMIT) throw new Error('Action evidence coverage exceeds its per-source budget; review pending')
+  while (bytes + Buffer.byteLength(content) > TOTAL_LIMIT) {
+    let removableIndex = -1
+    for (let index = selected.length - 1; index >= 0; index--) {
+      const entry = coverage.find(item => item.id === selected[index]?.id)
+      if (entry && !entry.required && !selected[index]?.projection) {
+        removableIndex = index
+        break
+      }
+    }
+    if (removableIndex === -1) {
+      const source = [...selected].reverse().find(candidate => !candidate.projection && Buffer.byteLength(candidate.content) > 0)
+      if (!source) throw new Error('Required action evidence and its complete coverage receipt exceed the total source budget; review pending')
+      const request = requestFor('source-view', sourceKey(source.id), source)
+      throw new ActionEvidenceRequestError(request, `Required action evidence ${source.id}: complete coverage receipt does not fit total budget; bounded source view requested; review pending`)
+    }
+    const [omitted] = selected.splice(removableIndex, 1)
+    const entry = omitted && coverage.find(item => item.id === omitted.id)
+    if (!omitted || !entry) throw new Error('Missing optional action coverage entry')
+    bytes -= entry.bytes
+    entry.included = false
+    entry.reason = 'complete optional whole source omitted so selected sources and complete coverage receipt fit total budget'
+    receipt = buildReceipt()
+    content = JSON.stringify(receipt)
+    if (Buffer.byteLength(content) > SOURCE_LIMIT) throw new Error('Action evidence coverage exceeds its per-source budget; review pending')
+  }
   const report: ActionSource = { id: `${COVERAGE_SOURCE}@${sha256(content)}`, kind: 'report', locator: ACTION_EVIDENCE_SELECTION_VERSION, content }
   return { sources: [...selected, report].sort((a, b) => a.id.localeCompare(b.id)), receipt, expandedActionKeys: scope.expanded }
 }
