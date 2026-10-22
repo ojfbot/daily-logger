@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-22",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-10-22",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action evidence request c90a4e15543ddcacdfb2c5044c14125b93423ce00ac51052bb0185575051b532 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
+    },
+    "articleDigest": "9e24aec40fb0957794abf4f987a17e59378a4897663795e9db4d6f94a750943a",
+    "roundId": "d39e4e302176c1ed704fef85277f8800063c583d005a70c64b9b391c5fcf2c05",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "52668da40c1ff0e702606fd68d12b33ec1721e69ccde9589476f90324d317d40",
+        "payload": {
+          "command": "/review daily-logger#417",
+          "description": "Confirm size-complete action evidence coverage for October 21 — this is the immediate gate before #416 (acceptance) can proceed. The evidence-size recovery mechanism from #411 is the operative path.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-22"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "3f6e9b8f203ddd48f63122a5006c03e40ed8d1bafc646dc44f878caf48277ca9",
+        "payload": {
+          "command": "/review classic-space-venue#4",
+          "description": "Unblock RFI-0002 multiagent orchestration research harness review. PR has been open and awaiting review; it feeds core #567 and the wayfinder grilling cluster (#564–#566, #544).",
+          "repo": "classic-space-venue",
+          "status": "open",
+          "sourceDate": "2026-10-22"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "19a1b1796df501c66824636b00a37a2c47480e5471d8542bcd9330b4d61b85dc",
+        "payload": {
+          "command": "/resolve skill-telemetry-stream",
+          "description": "Make a formal decision on the frozen skill telemetry stream (frozen since 2026-05-12): unfreeze, replace, or explicitly park as NEVER. Five reporting cycles of known-bad metrics with no stated owner or remediation date is a liability, not a caveat.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-22"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v5-candidate-requirements",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-10-22",
+      "articleDigest": "9e24aec40fb0957794abf4f987a17e59378a4897663795e9db4d6f94a750943a",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "227c5766ac6fef1d1efdb9a11449ad56cca7e92a18b3d1fceae14793fd48c6ce",
+      "candidatePayloadsSha256": "b338ed576e8515c19968dd88f261a27e63e25f5a1bea34fbf997e4038bf30f1a",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "23b80e5c7659002cfa27470bebc606da310b4667cff5769aa53ab8426159e1cb",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "52668da40c1ff0e702606fd68d12b33ec1721e69ccde9589476f90324d317d40",
+          "payloadSha256": "6684c485abab35bc955467552af0081790bdc786e29c5ed261f51b085ec9b179",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#417",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "3f6e9b8f203ddd48f63122a5006c03e40ed8d1bafc646dc44f878caf48277ca9",
+          "payloadSha256": "80e6b99c945cac66df0e400c890d97c0be243ab1839c2c3cb068953363dd584f",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "classic-space-venue#4",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "core#567",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "19a1b1796df501c66824636b00a37a2c47480e5471d8542bcd9330b4d61b85dc",
+          "payloadSha256": "d6e99f7feeb93c20b26c824548d5823dfc20e850beb587cb5b4b125273de0449",
+          "references": [],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": []
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "October 21 article acceptance is gated on two open PRs: daily-logger #417 (fix: size complete action evidence coverage) and #416 (editorial: review and accept October 21 draft). Both were opened before the 2026-10-22 03:30 America/Chicago cutoff but are not yet merged; their current state is unknown beyond creation timestamps. Issue #386 (token-aware action review budget) is the structural concern backing both PRs.\n\nClassic Space Venue dev-host is a local development environment — no public URL is attested. The provenance fixture path inside the walkway-pass strand is not explicitly attested beyond PR descriptions. No live adapter is active, no minifig is bound to a fleet-runner work item, and no idle/auto-degrade timer exists. Display composition issues #5 (32-inch desk-monitor) and #6 (narrow remote-browser) are owner-gated on operator hardware access. Core #561 (fleet-runner read-projection v0) is the architectural prerequisite for live data; owner and delivery timeline are unattested.\n\nClassic-space-venue #4 (RFI-0002 research harness) is open and awaiting review; it is not confirmed how long it has been open or who is reviewing it. Whether the core wayfinder grilling cluster (#564–#567, #544) can progress independently of that harness merging is not established.\n\nLego-village-pipeline DRAFT PRs #44, #45, #46 carry no in-window activity. Their named merge prerequisite conditions are not attested in current evidence; they are not confirmed candidates to close.\n\nMorning-cockpit #60 is open with no stated blocker or owner gate.\n\nSkill telemetry stream frozen since 2026-05-12. No owner, remediation date, or formal park decision attested in evidence. The 100% quality coverage metric and 0% conversion rate are both artifacts of the frozen legacy stream, not live measurements."
+    },
+    "stateDigest": "ff458c41f23b1b412501d06c376edcb2c731a24fee91e6f15c7812e2e60240c7",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [
+      {
+        "version": "action-evidence-request-v1",
+        "id": "c90a4e15543ddcacdfb2c5044c14125b93423ce00ac51052bb0185575051b532",
+        "kind": "source-view",
+        "caseDigest": "a82595754fb26a43e47263bf0ab89e395296030055849b81a1548a3f3f96abf3",
+        "articleDate": "2026-10-22",
+        "cycle": {
+          "phase": "generation"
+        },
+        "actionKeys": [
+          "article-feedback"
+        ],
+        "sourceKey": "github:daily-logger#357",
+        "sourceId": "github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe",
+        "sourceFullContentSha256": "6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe",
+        "obligations": [
+          "dbd87ed97a0c07e81a1689712d29fce78023beb160713d0060739969dd3596f0"
+        ],
+        "recipient": "source-producer",
+        "status": "open"
+      }
+    ],
+    "rejected": []
+  }
+}

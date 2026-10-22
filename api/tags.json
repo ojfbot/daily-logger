@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 92
+    "count": 93
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 78
+    "count": 79
   },
   {
     "name": "core",
@@ -17,7 +17,12 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 61
+    "count": 62
+  },
+  {
+    "name": "module-federation",
+    "type": "arch",
+    "count": 38
   },
   {
     "name": "shell",
@@ -25,14 +30,9 @@
     "count": 38
   },
   {
-    "name": "module-federation",
-    "type": "arch",
-    "count": 37
-  },
-  {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 35
+    "count": 36
   },
   {
     "name": "hardening",
@@ -60,14 +60,14 @@
     "count": 24
   },
   {
-    "name": "morning-cockpit",
-    "type": "repo",
+    "name": "sprint",
+    "type": "concept",
     "count": 22
   },
   {
-    "name": "sprint",
-    "type": "concept",
-    "count": 21
+    "name": "morning-cockpit",
+    "type": "repo",
+    "count": 22
   },
   {
     "name": "phase-1",
@@ -130,6 +130,11 @@
     "count": 10
   },
   {
+    "name": "editorial-pipeline",
+    "type": "concept",
+    "count": 9
+  },
+  {
     "name": "provenance",
     "type": "concept",
     "count": 9
@@ -143,11 +148,6 @@
     "name": "MrPlug",
     "type": "repo",
     "count": 9
-  },
-  {
-    "name": "editorial-pipeline",
-    "type": "concept",
-    "count": 8
   },
   {
     "name": "security-scanning",
@@ -360,6 +360,11 @@
     "count": 3
   },
   {
+    "name": "classic-space-venue",
+    "type": "repo",
+    "count": 2
+  },
+  {
     "name": "verification",
     "type": "concept",
     "count": 2
@@ -518,11 +523,6 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
-  },
-  {
-    "name": "classic-space-venue",
-    "type": "concept",
-    "count": 1
   },
   {
     "name": "graphql-federation",
