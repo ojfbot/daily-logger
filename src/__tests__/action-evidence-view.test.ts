@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ActionSourceCollection, PreparedActionEvidenceView, captureGithubActionSource, renderGithubEvidence, actionEvidenceRegistryDigest } from '../action-evidence-view.js'
-import { ActionRegistrySchema, ArticleActionFileContractSchema, ActionSourceSchema, captureDraftActionCandidates, assertActionSnapshotStateIntegrity, articleActionFileBytes, sha256, splitActionRegistry, type ActionSource } from '../action-registry.js'
+import { ActionRegistrySchema, ArticleActionFileContractSchema, ArticleActionFileSchema, ActionSourceSchema, captureDraftActionCandidates, assertActionSnapshotStateIntegrity, articleActionFileBytes, sha256, splitActionRegistry, type ActionSource } from '../action-registry.js'
 import { applyVerifiedActionReview, resolveActionSourceLines, pendingActionReview, reviewArticleActions, ActionContextNeedError, reviewProducedDraftActions, type ActionProposal } from '../review-actions.js'
 import { ACTION_REVIEW_PROMPT_VERSION, CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS, RANKED_ACTION_REVIEW_PROMPT_VERSIONS, generationActionCycle } from '../action-review-cycle.js'
 const date = '2026-10-17', markdown = `---\ndate: ${date}\nstatus: draft\n---\nA focused report.\n`
@@ -159,6 +159,53 @@ describe('typed generated metadata view', () => {
     const sizes = { qualification: 'pure synthetic source/candidate/verdict-double fixture', verifiedPrettyBytes: Buffer.byteLength(articleActionFileBytes(splitActionRegistry(result.registry).files[0])), archivedPrettyBytes: Buffer.byteLength(articleActionFileBytes(file)), archivedCompactBytes: Buffer.byteLength(JSON.stringify(file)), archivedViewBytes: Buffer.byteLength(JSON.stringify(archive?.verification.evidenceView)) }
     expect(sizes.archivedPrettyBytes).toBeLessThan(64 * 1024)
     console.info('METADATA_VIEW_STORAGE_FIXTURE ' + JSON.stringify(sizes))
+  })
+
+  it('rejects drift under a genuine captured identity rather than converting it to legacy fallback', () => {
+    const { source, collection } = fixture()
+    const metadata = source.content.split('\n')[1]
+    const variants = [
+      { ...source, content: source.content.replace('x'.repeat(1000), 'y'.repeat(1000)) },
+      { ...source, locator: source.locator + '/changed' },
+      { ...source, kind: 'instruction' as const },
+      { ...source, trustedContent: [...source.trustedContent!, metadata] },
+      { ...source, id: source.id.replace(/@[a-f0-9]{64}$/, '@' + 'f'.repeat(64)) },
+    ]
+    for (const changed of variants) expect(() => PreparedActionEvidenceView.prepare([changed], sha256('case'), sha256('state'), collection)).toThrow(/Collector provenance changed/)
+    expect(PreparedActionEvidenceView.prepare([source], sha256('case'), sha256('state'), collection).receipt.sources[0].hiddenLines).toEqual([2])
+    const unrelated = { ...source, id: 'github:unrelated#999' }
+    expect(PreparedActionEvidenceView.prepare([unrelated], sha256('case'), sha256('state'), collection).receipt.sources[0].hiddenLines).toEqual([])
+  })
+  it('persists canonical raw/view/range pins for a failed compact view without retaining source bodies', async () => {
+    const { source, collection } = fixture()
+    let consumedRound = '', policy = ''
+    const result = await reviewProducedDraftActions({ registry: empty(), articleDate: date, cycle: generationActionCycle(), markdown, feedback: 'Inspect daily-logger #385 current owner gate.', articleStatuses: new Map([[date, 'draft']]), collectSources: () => collection,
+      agents: { propose: async (_prompt, view) => { consumedRound = view.roundId; policy = view.receipt.policySha256; const alias = view.rawSources(true).find(source => source.kind === 'github')!; view.resolve(alias.id, 2, 2); throw new Error('Hidden line unexpectedly resolved') }, verify: vi.fn() } })
+    const parsed = ArticleActionFileContractSchema.parse(JSON.parse(articleActionFileBytes(splitActionRegistry(result.registry).files[0])))
+    const request = parsed.snapshot!.evidenceRequests![0]
+    expect(request).toMatchObject({ kind: 'source-view', sourceId: source.id, sourceLocator: source.locator, sourceFullContentSha256: sha256(source.content), status: 'open' })
+    expect(request.question).toContain(`View round ${consumedRound}`)
+    expect(request.question).toContain(`policy ${policy}`)
+    expect(request.question).toContain(`collected SHA256 ${sha256(source.content)}`)
+    expect(request.question).toContain('original lines 2-2')
+    expect(parsed.snapshot!.sources).toEqual([])
+    expect(request).not.toHaveProperty('content')
+    expect(ArticleActionFileSchema.parse(parsed).snapshot?.evidenceRequests?.[0]).toEqual(request)
+    expect(request.question?.length).toBeLessThanOrEqual(512)
+    expect(Buffer.byteLength(articleActionFileBytes(parsed))).toBeLessThan(64 * 1024)
+    expect(Buffer.byteLength(JSON.stringify(parsed))).toBeLessThan(64 * 1024)
+  })
+  it('includes current-snapshot rejection memory in cache input/output and still replays its own unchanged result', async () => {
+    const agents = { propose: vi.fn(async () => ({ changes: [], suggestions: [] })), verify: vi.fn(async () => ({ changes: [], suggestions: [] })) }
+    const input = { registry: empty(), articleDate: date, cycle: generationActionCycle(), markdown, feedback: '', sources: [] as ActionSource[], agents, articleStatuses: new Map([[date, 'draft']]) }
+    const first = await reviewArticleActions(input)
+    expect((await reviewArticleActions({ ...input, registry: first.registry, markdown: first.markdown })).cached).toBe(true)
+    const changed = structuredClone(first.registry)
+    changed.articles[0].rejected.push({ description: 'Synthetic newly held work', reason: 'Synthetic new owner/counterevidence context.', workKey: 'daily-logger|new-held-work|keep-held', evidenceDigest: sha256('new evidence') })
+    expect(actionEvidenceRegistryDigest(changed, date)).not.toBe(actionEvidenceRegistryDigest(first.registry, date))
+    const fresh = await reviewArticleActions({ ...input, registry: changed, markdown: first.markdown })
+    expect(fresh.cached).toBe(false); expect(agents.propose).toHaveBeenCalledTimes(2); expect(agents.verify).toHaveBeenCalledTimes(2)
+    expect((await reviewArticleActions({ ...input, registry: fresh.registry, markdown: fresh.markdown })).cached).toBe(true)
   })
 
 })

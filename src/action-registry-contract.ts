@@ -50,7 +50,7 @@ const ActionEvidenceRequestReceiptFields = z.object(ActionEvidenceRequestFields)
   version: true, id: true, kind: true, caseDigest: true, articleDate: true, cycle: true,
   actionKeys: true, sourceKey: true, sourceId: true, sourceFullContentSha256: true,
   obligations: true, recipient: true,
-}).shape
+}).extend({ question: z.string().min(1).max(512).optional(), sourceLocator: z.string().min(1).max(2048).optional() }).shape
 export const ActionEvidenceRequestReceiptSchema = z.discriminatedUnion('status', [
   z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('open') }).strict(),
   z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('resolved') }).strict(),
@@ -58,7 +58,10 @@ export const ActionEvidenceRequestReceiptSchema = z.discriminatedUnion('status',
   z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('expired') }).strict(),
   z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('superseded') }).strict(),
   z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('declined') }).strict(),
-])
+]).superRefine((receipt, context) => {
+  if ((receipt.question !== undefined || receipt.sourceLocator !== undefined) && receipt.sourceKey !== 'model-context') context.addIssue({ code: 'custom', message: 'Bounded context diagnostics belong to model-context requests' })
+  if (receipt.question !== undefined && receipt.kind === 'source-view' && (!receipt.sourceId || !receipt.sourceFullContentSha256)) context.addIssue({ code: 'custom', message: 'A bounded context source-view need requires canonical source pins' })
+})
 export type ActionEvidenceRequestReceipt = z.infer<typeof ActionEvidenceRequestReceiptSchema>
 
 export const ActionEvidenceProjectionSchema = z.object({

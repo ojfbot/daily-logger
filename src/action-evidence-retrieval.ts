@@ -112,10 +112,13 @@ export function createActionEvidenceRequest(input: {
   actionKeys: readonly string[]
   sourceKey: string
   source?: ActionSource
+  sourceIdentity?: { id: string; locator: string; fullContentSha256: string }
   question: string
   obligations: ActionEvidenceRequest['obligations']
   recipient?: ActionEvidenceRequest['recipient']
 }): ActionEvidenceRequest {
+  if (input.source && input.sourceIdentity) throw new Error('Use one evidence request source identity')
+  const sourceIdentity = input.source ? { id: input.source.id, locator: input.source.locator, fullContentSha256: input.source.fullContentSha256 ?? sha256(input.source.content) } : input.sourceIdentity
   const body = {
     version: 'action-evidence-request-v1' as const,
     kind: input.kind,
@@ -125,7 +128,7 @@ export function createActionEvidenceRequest(input: {
     cycle: input.cycle,
     actionKeys: [...input.actionKeys].sort(),
     sourceKey: input.sourceKey,
-    ...(input.source ? { sourceId: input.source.id, sourceLocator: input.source.locator, sourceFullContentSha256: input.source.fullContentSha256 ?? sha256(input.source.content) } : {}),
+    ...(sourceIdentity ? { sourceId: sourceIdentity.id, sourceLocator: sourceIdentity.locator, sourceFullContentSha256: sourceIdentity.fullContentSha256 } : {}),
     question: input.question,
     obligations: [...new Set(input.obligations)],
     recipient: input.recipient ?? 'source-producer' as const,
@@ -142,7 +145,8 @@ export function actionEvidenceRequestReceipt(request: ActionEvidenceRequest | Ac
   return ActionEvidenceRequestReceiptSchema.parse({ version: request.version, id: request.id, kind: request.kind, status: request.status,
     caseDigest: request.caseDigest, articleDate: request.articleDate, cycle: request.cycle, actionKeys: request.actionKeys,
     sourceKey: request.sourceKey, sourceId: request.sourceId, sourceFullContentSha256: request.sourceFullContentSha256,
-    obligations: request.obligations, recipient: request.recipient })
+    obligations: request.obligations, recipient: request.recipient,
+    ...(request.sourceKey === 'model-context' ? { question: request.question, sourceLocator: request.sourceLocator } : {}) })
 }
 
 export function trustedActionSourceLineNumbers(source: ActionSource): Set<number> {
