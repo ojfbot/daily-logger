@@ -77,6 +77,30 @@ it('shows a clean acceptance request in the existing PR history without adding a
   expect(container.textContent).toContain('A clean acceptance request is outstanding')
   expect([...container.querySelectorAll('button')].filter(item => item.textContent?.includes('clean acceptance'))).toHaveLength(0)
 })
+it('shows owner resolution as limited history without adding a recovery action', async () => {
+  const f = await fixture()
+  const view = await f.service.load(today, 'ojfbot')
+  if (view.status !== 'existing') throw new Error('Missing acceptance PR')
+  const resolution = {
+    record: { schemaVersion: 1 as const, intent: 'resolve_editorial_request' as const, requestId: crypto.randomUUID(), date: today,
+      pullRequest: 42, headSha: view.pullRequest.headSha, priorRequestDigest: '1'.repeat(64), articleBlobSha: view.article.blobSha,
+      registryBlobSha: view.registryBlobSha, policySha: view.policySha, prefix: { throughCommentId: 3, sha256: '2'.repeat(64) },
+      acknowledgment: 'close_uncertain_attempt_without_review_or_billing_claim' as const, reason: 'Preserve uncertainty and retire only the old scheduling slot.', actor: 'ojfbot' as const,
+      evidence: { requestCommentId: 1, requestDigest: '1'.repeat(64), claim: { commentId: 2, semanticDigest: '3'.repeat(64) },
+        receipt: { commentId: 3, semanticDigest: '4'.repeat(64) }, attempt: { runId: 101, number: 1 as const, policySha: '5'.repeat(40),
+          event: 'issue_comment' as const, branch: 'main' as const, path: '.github/workflows/editorial-revise.yml' as const,
+          displayTitle: 'Editorial continuation comment 1', status: 'completed' as const, conclusion: 'failure' as const } } },
+    digest: '6'.repeat(64), commentId: 4, url: 'https://github.com/ojfbot/daily-logger/issues/42#issuecomment-4',
+    createdAt: '2026-10-17T12:01:00Z', duplicateUrls: [],
+  }
+  const resolved = editorialProjectionSchema.parse({ ...view, resolutions: [resolution], requestState: { kind: 'owner_resolved', request: { digest: '1'.repeat(64), commentId: 1 }, resolutionCommentId: 4 }, outstanding: false })
+  if (resolved.status !== 'existing') throw new Error('Missing resolved projection')
+  await act(async () => root.render(createElement(EditorialContinuation, { view: resolved, date: today, login: 'ojfbot', visibleBlobSha: blob, refresh: async () => true })))
+  expect(container.textContent).toContain('Owner-resolved prior editorial request')
+  expect(container.textContent).toContain('does not establish successful review, provider absence, or billing status')
+  expect(container.textContent).toContain(resolution.record.reason)
+  expect([...container.querySelectorAll('button')].some(item => /resolve|recovery/i.test(item.textContent ?? ''))).toBe(false)
+})
 it('literal Save and a separately reviewed Request traverse the real service as different operations', async () => {
   const f = await fixture()
   const input = container.querySelector('textarea'); if (!input) throw new Error('No textarea')

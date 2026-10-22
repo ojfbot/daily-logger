@@ -32,7 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(await service.load(query.date, query.visibleBlobSha ?? null))
     }
     const request = postSchema.parse(typeof req.body === 'string' ? JSON.parse(req.body) : req.body)
-    if (request.intent === 'append_editorial_feedback' || request.intent === 'request_editorial_revision' || request.intent === 'request_clean_acceptance') return res.status(200).json(await createEditorialService(github).write(request, login))
+    if (request.intent === 'append_editorial_feedback' || request.intent === 'request_editorial_revision' || request.intent === 'request_clean_acceptance' || request.intent === 'resolve_editorial_request') return res.status(200).json(await createEditorialService(github).write(request, login))
     return res.status(200).json(request.intent === 'request_changes' ? await service.requestChanges(request, login) : await service.comment(request, login))
   } catch (error) {
     const cause = error instanceof EditorialWriteFailure ? error.cause : error
