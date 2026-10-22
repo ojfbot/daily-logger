@@ -109,13 +109,21 @@ function canonicalPrefix(comments: readonly EditorialComment[], throughCommentId
 
 async function workflowRuns(github: GitHub, createdAt: string) {
   const runs: z.infer<typeof listedRunSchema>[] = []
+  let declaredTotal: number | undefined
   for (let page = 1; page <= 5; page++) {
     const query = new URLSearchParams({ event: 'issue_comment', created: `>=${createdAt}`, per_page: '100', page: String(page) })
     const response = await github(`${repo}/actions/workflows/editorial-revise.yml/runs?${query}`)
     if (!response.ok) throw new ReviewError(503, 'Editorial execution history is unavailable.')
-    const result = z.object({ workflow_runs: z.array(listedRunSchema) }).parse(await response.json())
+    const result = z.object({ total_count: z.number().int().nonnegative().optional(), workflow_runs: z.array(listedRunSchema) }).parse(await response.json())
+    if (result.total_count !== undefined) {
+      if (declaredTotal !== undefined && declaredTotal !== result.total_count) throw new ReviewError(503, 'Editorial execution history count changed during pagination.')
+      declaredTotal = result.total_count
+    }
     runs.push(...result.workflow_runs)
-    if (!response.headers.get('link')?.includes('rel="next"')) return runs
+    if (!response.headers.get('link')?.includes('rel="next"')) {
+      if (declaredTotal !== undefined && new Set(runs.map(run => run.id)).size !== declaredTotal) throw new ReviewError(503, 'Editorial execution history is incomplete.')
+      return runs
+    }
   }
   throw new ReviewError(503, 'Editorial execution history exceeds the bounded reader; owner resolution is blocked.')
 }
@@ -141,6 +149,28 @@ async function failedAttempt(github: GitHub, runId: number) {
   const response = await github(`${repo}/actions/runs/${runId}/attempts/1`)
   if (!response.ok) throw new ReviewError(503, 'The original workflow attempt is unavailable.')
   return failedAttemptSchema.parse(await response.json())
+}
+
+function resolvedAttemptAssociationIssue(input: {
+  request: Extract<EditorialRecord, { intent: 'request_clean_acceptance' }>; requestDigest: string; requestCommentId: number;
+  claim: z.infer<typeof claimSchema>; receipt: z.infer<typeof executionReceiptSchema>; attempt: z.infer<typeof failedAttemptSchema>;
+}) {
+  const { request, requestDigest, requestCommentId, claim, receipt, attempt } = input
+  if (claim.requestDigest !== requestDigest || claim.requestCommentId !== requestCommentId || claim.requestId !== request.requestId ||
+      claim.intent !== request.intent || claim.actionReviewMode !== 'clean-acceptance' || claim.inputHead !== request.headSha ||
+      claim.inputBlob !== request.articleBlobSha || claim.inputRegistryBlob !== request.registryBlobSha || claim.policySha !== request.policySha) {
+    return 'The execution claim and original clean request do not bind the same immutable input.'
+  }
+  if (receipt.requestDigest !== requestDigest || receipt.requestCommentId !== requestCommentId || receipt.outcome !== 'uncertain' ||
+      receipt.runId !== claim.runId || receipt.policySha !== claim.policySha ||
+      (receipt.requestIntent !== undefined && receipt.requestIntent !== request.intent) ||
+      (receipt.actionReviewMode !== undefined && receipt.actionReviewMode !== 'clean-acceptance')) {
+    return 'The uncertain receipt and clean request do not bind the same immutable attempt.'
+  }
+  if (attempt.id !== claim.runId || attempt.head_sha !== claim.policySha || attempt.display_title !== `Editorial continuation comment ${requestCommentId}`) {
+    return 'The immutable failed attempt does not match the request, claim, and receipt.'
+  }
+  return null
 }
 
 function resolutionInputFromRecord(record: Extract<EditorialRecord, { intent: 'resolve_editorial_request' }>): ResolutionInput {
@@ -169,19 +199,14 @@ async function inspectRecovery(input: { github: GitHub; comments: readonly Edito
     const claim = claims[0], receipt = receipts[0]
     if (!claim || !receipt) return blocked('Owner resolution evidence is incomplete.')
     const request = input.request.record
-    if (claim.value.requestId !== request.requestId || claim.value.intent !== request.intent || claim.value.actionReviewMode !== 'clean-acceptance' ||
-        claim.value.inputHead !== request.headSha || claim.value.inputBlob !== request.articleBlobSha || claim.value.inputRegistryBlob !== request.registryBlobSha ||
-        claim.value.policySha !== request.policySha || receipt.value.runId !== claim.value.runId || receipt.value.policySha !== claim.value.policySha) {
-      return blocked('The execution claim, uncertain receipt, and original clean request do not bind the same immutable attempt.')
-    }
     if (input.headSha !== request.headSha || input.articleBlobSha !== request.articleBlobSha || input.registryBlobSha !== request.registryBlobSha) {
       return blocked('The current PR head, article, or action map no longer equals the claimed input. Resolve before integrating new branch data.')
     }
     const attempt = await failedAttempt(input.github, claim.value.runId)
+    const associationIssue = resolvedAttemptAssociationIssue({ request, requestDigest: input.request.digest,
+      requestCommentId: input.request.commentId, claim: claim.value, receipt: receipt.value, attempt })
+    if (associationIssue) return blocked(associationIssue)
     const expectedTitle = `Editorial continuation comment ${input.request.commentId}`
-    if (attempt.id !== claim.value.runId || attempt.head_sha !== claim.value.policySha || attempt.display_title !== expectedTitle) {
-      return blocked('The immutable failed attempt does not match the request and claim.')
-    }
     const matchingRuns = (await workflowRuns(input.github, input.request.createdAt)).filter(run => run.display_title === expectedTitle)
     if (matchingRuns.length !== 1 || matchingRuns[0]?.id !== claim.value.runId || matchingRuns[0]?.run_attempt !== 1 ||
         matchingRuns[0]?.status !== 'completed' || matchingRuns[0]?.conclusion !== 'failure') {
@@ -220,12 +245,7 @@ async function validateHistoricalResolution(input: { github: GitHub; comments: r
   const bot = botExecutionRecords(input.comments)
   const claim = bot.claims.find(item => item.comment.id === record.evidence.claim.commentId)
   const receipt = bot.receipts.find(item => item.comment.id === record.evidence.receipt.commentId)
-  if (!claim || !receipt || claim.digest !== record.evidence.claim.semanticDigest || receipt.digest !== record.evidence.receipt.semanticDigest ||
-      claim.value.requestDigest !== request.digest || claim.value.requestCommentId !== request.commentId || claim.value.requestId !== request.record.requestId ||
-      claim.value.inputHead !== request.record.headSha || claim.value.inputBlob !== request.record.articleBlobSha ||
-      claim.value.inputRegistryBlob !== request.record.registryBlobSha || claim.value.policySha !== request.record.policySha ||
-      receipt.value.requestDigest !== request.digest || receipt.value.requestCommentId !== request.commentId || receipt.value.outcome !== 'uncertain' ||
-      receipt.value.runId !== claim.value.runId || receipt.value.policySha !== claim.value.policySha) {
+  if (!claim || !receipt || claim.digest !== record.evidence.claim.semanticDigest || receipt.digest !== record.evidence.receipt.semanticDigest) {
     throw new ReviewError(409, 'Owner resolution claim or uncertain receipt changed.')
   }
   const attempt = await failedAttempt(input.github, record.evidence.attempt.runId)
@@ -234,16 +254,30 @@ async function validateHistoricalResolution(input: { github: GitHub; comments: r
     attempt: { runId: attempt.id, number: attempt.run_attempt, policySha: attempt.head_sha, event: attempt.event, branch: attempt.head_branch,
       path: attempt.path.replace(/@(?:main|refs\/heads\/main)$/, ''), displayTitle: attempt.display_title, status: attempt.status, conclusion: attempt.conclusion } })
   if (editorialDigest(observed) !== editorialDigest(record.evidence)) throw new ReviewError(409, 'Owner resolution immutable attempt facts changed.')
-  return request
+  const associationIssue = resolvedAttemptAssociationIssue({ request: request.record, requestDigest: request.digest,
+    requestCommentId: request.commentId, claim: claim.value, receipt: receipt.value, attempt })
+  const gap = canonicalPrefix(input.comments, input.resolution.commentId - 1).entries
+    .some(entry => entry.commentId > record.prefix.throughCommentId)
+  return { request, holdReason: associationIssue ?? (gap ? 'Material editorial correspondence appeared before the owner resolution was recorded.' : undefined) }
 }
 
-async function resolutionExecutionReadiness(github: GitHub, resolutions: readonly EditorialHistory[], requests: readonly EditorialHistory[], terminals: ReadonlyMap<string, number>) {
+async function resolutionExecutionReadiness(github: GitHub, comments: readonly EditorialComment[], resolutions: readonly EditorialHistory[], requests: readonly EditorialHistory[], terminals: ReadonlyMap<string, number>, holds: ReadonlyMap<string, string>) {
+  const bot = botExecutionRecords(comments)
   for (const resolution of resolutions) {
     const record = resolution.record
     if (record.intent !== 'resolve_editorial_request') continue
     const request = requests.find(item => item.digest === record.priorRequestDigest)
     if (!request) return { kind: 'blocked' as const, reason: 'A resolved request is missing from canonical history.' }
+    const hold = holds.get(request.digest)
+    if (hold) return { kind: 'blocked' as const, reason: hold }
     if (terminals.has(request.digest)) return { kind: 'blocked' as const, reason: 'A resolved request later acquired a successful output receipt and requires diagnosis.' }
+    const relatedClaims = bot.claims.filter(item => item.value.requestDigest === request.digest && item.value.requestCommentId === request.commentId)
+    const relatedReceipts = bot.receipts.filter(item => item.value.requestDigest === request.digest && item.value.requestCommentId === request.commentId)
+    if (relatedClaims.length !== 1 || relatedClaims[0]?.comment.id !== record.evidence.claim.commentId ||
+        relatedClaims[0]?.digest !== record.evidence.claim.semanticDigest || relatedReceipts.length !== 1 ||
+        relatedReceipts[0]?.comment.id !== record.evidence.receipt.commentId || relatedReceipts[0]?.digest !== record.evidence.receipt.semanticDigest) {
+      return { kind: 'blocked' as const, reason: 'A resolved request has additional or changed execution correspondence.' }
+    }
     const title = `Editorial continuation comment ${request.commentId}`
     const matching = (await workflowRuns(github, request.createdAt)).filter(run => run.display_title === title)
     if (matching.length !== 1 || matching[0]?.id !== record.evidence.attempt.runId || matching[0]?.run_attempt !== 1) {
@@ -337,10 +371,12 @@ export function createEditorialService(github: GitHub) {
       }
     }
     const resolved = new Map<string, number>()
+    const resolutionHolds = new Map<string, string>()
     for (const resolution of resolutions) {
-      const request = await validateHistoricalResolution({ github, comments, resolution, requests })
-      if (resolved.has(request.digest)) throw new ReviewError(409, 'Competing owner resolutions require diagnosis.')
-      resolved.set(request.digest, resolution.commentId)
+      const validated = await validateHistoricalResolution({ github, comments, resolution, requests })
+      if (resolved.has(validated.request.digest)) throw new ReviewError(409, 'Competing owner resolutions require diagnosis.')
+      resolved.set(validated.request.digest, resolution.commentId)
+      if (validated.holdReason) resolutionHolds.set(validated.request.digest, validated.holdReason)
     }
     for (let index = 1; index < requests.length; index++) {
       const previous = requests[index - 1], current = requests[index]
@@ -360,7 +396,7 @@ export function createEditorialService(github: GitHub) {
       ? await inspectRecovery({ github, comments, request: latestRequest, pullRequest: pr.number, headSha: pr.head.sha,
         articleBlobSha: article.blobSha, registryBlobSha: registry.blobSha, policySha })
       : { kind: 'none' as const }
-    const executionReadiness = await resolutionExecutionReadiness(github, resolutions, requests, terminals)
+    const executionReadiness = await resolutionExecutionReadiness(github, comments, resolutions, requests, terminals, resolutionHolds)
     return editorialProjectionSchema.parse({ status: 'existing', eligible,
       reason: 'Continued revisions are available only to ojfbot for acceptance PRs opened by ojfbot. Shared-account identity does not identify a person or agent.',
       originalBody, originalDigest: editorialDigest(originalBody),

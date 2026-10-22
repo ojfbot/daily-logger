@@ -103,6 +103,7 @@ export const runEditorialSchema = editorialTarget.extend({ intent: z.literal('re
   articleBlobSha: sha, feedbackId: z.uuid(), feedbackDigest: digest }).strict()
 export const cleanAcceptanceSchema = editorialTarget.extend({ intent: z.literal('request_clean_acceptance'),
   articleBlobSha: sha, registryBlobSha: sha, policySha: sha }).strict()
+export const executableEditorialIntentSchema = z.enum(['request_editorial_revision', 'request_clean_acceptance'])
 export const resolveEditorialRequestSchema = editorialTarget.extend({ intent: z.literal('resolve_editorial_request'),
   priorRequestDigest: digest, articleBlobSha: sha, registryBlobSha: sha, policySha: sha,
   prefix: z.object({ throughCommentId: z.number().int().positive(), sha256: digest }).strict(),
@@ -161,5 +162,9 @@ export const editorialWriteReceiptSchema = writeReceiptSchema.extend({ execution
 export const postSchema = z.discriminatedUnion('intent', [requestSchema, commentSchema, appendEditorialSchema, runEditorialSchema, cleanAcceptanceSchema, resolveEditorialRequestSchema])
 export type EditorialInput = z.infer<typeof editorialInputSchema>
 export type EditorialRecord = z.infer<typeof editorialRecordSchema>
+export type ExecutableEditorialRecord = Extract<EditorialRecord, { intent: z.infer<typeof executableEditorialIntentSchema> }>
+export function isExecutableEditorialRecord(record: EditorialRecord): record is ExecutableEditorialRecord {
+  return executableEditorialIntentSchema.safeParse(record.intent).success
+}
 export type EditorialProjection = z.infer<typeof editorialProjectionSchema>
 export type EditorialHistory = z.infer<typeof editorialHistorySchema>

@@ -4,7 +4,7 @@ import { ArticleActionFileSchema, isArticleFileInclusionChange, actionArticlePat
 import { createReviewSource, ReviewError, type GitHub } from '../../api/_lib/article-review-sources.js'
 import { decodeEditorial, editorialDigest, repo } from '../../api/_lib/editorial-continuation.js'
 import { verifyEditorialProof } from '../../shared/editorial-action-proof.js'
-import { sha } from '../../shared/article-review.js'
+import { isExecutableEditorialRecord, sha } from '../../shared/article-review.js'
 import { ACTION_REVIEW_PROMPT_VERSION, acceptanceActionCycle, revisionActionCycle } from '../../src/action-review-cycle.js'
 
 export async function admitActionRegistry(input: { workspace: string; base: string; head: string; date: string; actor: string; pullRequest: number; github: GitHub }) {
@@ -36,7 +36,7 @@ export async function admitActionRegistry(input: { workspace: string; base: stri
       const request = comments.find(item => item.id === receipt.requestCommentId)
       if (!request || request.user.login !== input.actor || request.created_at !== request.updated_at) continue
       const requestRecord = decodeEditorial(request.body)
-      if (!requestRecord || requestRecord.intent === 'append_editorial_feedback' || requestRecord.date !== input.date || receipt.requestDigest !== editorialDigest(requestRecord)) continue
+      if (!requestRecord || !isExecutableEditorialRecord(requestRecord) || requestRecord.date !== input.date || receipt.requestDigest !== editorialDigest(requestRecord)) continue
       continuationIntent = requestRecord.intent
       if (receipt.actionReviewMode !== (continuationIntent === 'request_clean_acceptance' ? 'clean-acceptance' : 'revision')
         || (continuationIntent === 'request_clean_acceptance' && receipt.requestIntent !== 'request_clean_acceptance')

@@ -101,7 +101,7 @@ export function createFixture() {
     if (method === 'GET' && route.startsWith('/git/trees/')) return Response.json({ truncated: false, tree: gitTrees.get(route.slice('/git/trees/'.length)) ?? [] })
     if (method === 'GET' && route.startsWith('/compare/')) return Response.json({ status: 'ahead', ahead_by: 1, total_commits: 1, commits: [{}], merge_base_commit: { sha: state.source }, files: [{ filename: `actions/articles/${today}.json`, status: 'modified' }] })
     if (method === 'GET' && route.startsWith('/git/blobs/')) {
-      for (const [key, text] of state.refFiles) if (hash(text) === route.slice('/git/blobs/'.length)) return Response.json({ sha: hash(text), encoding: 'base64', content: Buffer.from(text).toString('base64') })
+      for (const text of state.refFiles.values()) if (hash(text) === route.slice('/git/blobs/'.length)) return Response.json({ sha: hash(text), encoding: 'base64', content: Buffer.from(text).toString('base64') })
       return Response.json({}, { status: 404 })
     }
     if (method === 'GET' && route.startsWith('/contents/')) {
