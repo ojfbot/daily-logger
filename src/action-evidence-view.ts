@@ -61,9 +61,9 @@ class GithubSourceCapture {
   }
   get source(): ActionSource { return structuredClone(this.#source) }
   rowsFor(source: ActionSource): readonly MetadataRow[] {
-    if (source.projection || source.response || source.id.replace(/@[a-f0-9]{64}$/, '') !== this.#source.id) return []
+    if (source.id.replace(/@[a-f0-9]{64}$/, '') !== this.#source.id) return []
     const expectedId = `${this.#source.id}@${sha256(this.#source.content)}`
-    if (source.kind !== this.#source.kind || source.content !== this.#source.content || source.locator !== this.#source.locator
+    if (source.projection || source.response || source.kind !== this.#source.kind || source.content !== this.#source.content || source.locator !== this.#source.locator
       || JSON.stringify(source.trustedContent) !== JSON.stringify(this.#source.trustedContent)
       || source.id !== this.#source.id && source.id !== expectedId) {
       throw new ActionEvidenceVisibilityError(`Collector provenance changed for ${source.id}; review pending`)
@@ -88,7 +88,7 @@ export class ActionSourceCollection extends Array<ActionSource> {
 
 export function actionEvidenceRegistryDigest(registry: ActionRegistry, articleDate: string): string {
   const normalized = ActionRegistrySchema.parse(registry)
-  return sha256(JSON.stringify({ baseline: normalized.baseline, records: normalized.records, articles: normalized.articles.map(article => {
+  return sha256(JSON.stringify({ baseline: normalized.baseline, records: normalized.records, articles: [...normalized.articles].sort((left, right) => left.date.localeCompare(right.date)).map(article => {
     if (article.date !== articleDate) return article
     // Only these two output hashes refer to this projection itself. All consumed
     // current-snapshot memory, duties, context, sources and verdicts remain bound.

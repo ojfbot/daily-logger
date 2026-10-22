@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ActionSourceCollection, PreparedActionEvidenceView, captureGithubActionSource, renderGithubEvidence, actionEvidenceRegistryDigest } from '../action-evidence-view.js'
-import { ActionRegistrySchema, ArticleActionFileContractSchema, ArticleActionFileSchema, ActionSourceSchema, captureDraftActionCandidates, assertActionSnapshotStateIntegrity, articleActionFileBytes, sha256, splitActionRegistry, type ActionSource } from '../action-registry.js'
+import { ActionEvidenceRequestReceiptSchema, ActionRegistrySchema, ArticleActionFileContractSchema, ArticleActionFileSchema, ActionSourceSchema, captureDraftActionCandidates, assertActionSnapshotStateIntegrity, articleActionFileBytes, sha256, splitActionRegistry, type ActionSource } from '../action-registry.js'
 import { applyVerifiedActionReview, resolveActionSourceLines, pendingActionReview, reviewArticleActions, ActionContextNeedError, reviewProducedDraftActions, type ActionProposal } from '../review-actions.js'
+import { buildActionEvidenceProjection, createActionEvidenceRequest } from '../action-evidence-retrieval.js'
 import { ACTION_REVIEW_PROMPT_VERSION, CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS, RANKED_ACTION_REVIEW_PROMPT_VERSIONS, generationActionCycle } from '../action-review-cycle.js'
 const date = '2026-10-17', markdown = `---\ndate: ${date}\nstatus: draft\n---\nA focused report.\n`
 const empty = () => ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
@@ -170,6 +171,8 @@ describe('typed generated metadata view', () => {
       { ...source, kind: 'instruction' as const },
       { ...source, trustedContent: [...source.trustedContent!, metadata] },
       { ...source, id: source.id.replace(/@[a-f0-9]{64}$/, '@' + 'f'.repeat(64)) },
+      { ...source, trustedContent: [...source.trustedContent!, metadata], response: { requestId: sha256('request'), caseDigest: sha256('case'), responseId: sha256('reply'), actionKeys: ['article-feedback'] } },
+      { ...source, trustedContent: [...source.trustedContent!, metadata], projection: { version: 'action-evidence-projection-v1' as const, requestId: sha256('request'), caseDigest: sha256('case'), fullSourceId: source.id, fullContentSha256: sha256(source.content), ranges: [{ startLine: 2, endLine: 2, role: 'support' as const }], coverage: [{ obligationId: sha256('obligation'), status: 'support' as const, rangeIndexes: [0] }] } },
     ]
     for (const changed of variants) expect(() => PreparedActionEvidenceView.prepare([changed], sha256('case'), sha256('state'), collection)).toThrow(/Collector provenance changed/)
     expect(PreparedActionEvidenceView.prepare([source], sha256('case'), sha256('state'), collection).receipt.sources[0].hiddenLines).toEqual([2])
@@ -206,6 +209,37 @@ describe('typed generated metadata view', () => {
     const fresh = await reviewArticleActions({ ...input, registry: changed, markdown: first.markdown })
     expect(fresh.cached).toBe(false); expect(agents.propose).toHaveBeenCalledTimes(2); expect(agents.verify).toHaveBeenCalledTimes(2)
     expect((await reviewArticleActions({ ...input, registry: fresh.registry, markdown: fresh.markdown })).cached).toBe(true)
+  })
+
+  it('preserves distinct native exact-range projection identity through the existing source-view protocol', () => {
+    const { source, collection } = fixture()
+    const obligation = sha256('Synthetic projection control')
+    const request = createActionEvidenceRequest({ kind: 'source-view', caseDigest: sha256('case'), articleDate: date, cycle: generationActionCycle(), actionKeys: ['article-feedback'], sourceKey: 'github:daily-logger#385', source, question: 'Synthetic exact-range protocol control.', obligations: [obligation] })
+    const projected = buildActionEvidenceProjection({ request, source, ranges: [{ startLine: 1, endLine: 1, role: 'support' }, { startLine: 3, endLine: 3, role: 'counterevidence' }], coverage: [{ obligationId: obligation, status: 'counterevidence', rangeIndexes: [1] }] })
+    expect(projected.id).toMatch(/^action-evidence-view:/)
+    const view = PreparedActionEvidenceView.prepare([projected], sha256('case'), sha256('state'), collection)
+    expect(view.receipt.sources[0].hiddenLines).toEqual([])
+    expect(view.rawSources()[0]).toEqual(projected)
+  })
+  it('requires complete new source-view diagnostics while preserving legacy absence', () => {
+    const receipt = { version: 'action-evidence-request-v1', id: sha256('request'), kind: 'source-view', caseDigest: sha256('case'), articleDate: date, cycle: generationActionCycle(), actionKeys: ['article-feedback'], sourceKey: 'model-context', obligations: [sha256('obligation')], recipient: 'coordinator-owner', status: 'open' }
+    expect(ActionEvidenceRequestReceiptSchema.safeParse(receipt).success).toBe(true)
+    const complete = { ...receipt, question: 'Synthetic bounded view/range diagnostic.', sourceId: 'github:daily-logger#385', sourceLocator: 'https://github.com/ojfbot/daily-logger/issues/385', sourceFullContentSha256: sha256('raw') }
+    expect(ActionEvidenceRequestReceiptSchema.safeParse(complete).success).toBe(true)
+    for (const field of ['question', 'sourceLocator', 'sourceId', 'sourceFullContentSha256']) {
+      const partial: Record<string, unknown> = { ...complete }; delete partial[field]
+      expect(ActionEvidenceRequestReceiptSchema.safeParse(partial).success).toBe(false)
+    }
+    expect(ActionEvidenceRequestReceiptSchema.safeParse({ ...receipt, sourceLocator: complete.sourceLocator }).success).toBe(false)
+  })
+  it('canonicalizes only article membership order across native writer/read boundaries', () => {
+    const a = native(fixture().view, fixture().view.rawSources(), proposal(fixture().source.id, fixture().source.content.split('\n')[2], 3, 3))
+    const second = structuredClone(a.articles[0]); second.date = '2026-10-18'
+    const ordered = { ...a, articles: [a.articles[0], second] }
+    const reversed = structuredClone(ordered); reversed.articles.reverse()
+    expect(actionEvidenceRegistryDigest(ordered, date)).toBe(actionEvidenceRegistryDigest(reversed, date))
+    reversed.articles[0].rejected.push({ description: 'Different memory', reason: 'Retained values still matter.' })
+    expect(actionEvidenceRegistryDigest(ordered, date)).not.toBe(actionEvidenceRegistryDigest(reversed, date))
   })
 
 })
