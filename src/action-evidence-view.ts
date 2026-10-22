@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ActionRegistrySchema, CitationSchema, sha256, type ActionSource, type ActionRegistry, type ActionEvidenceViewReceipt } from './action-registry.js'
+import { ActionRegistrySchema, CitationSchema, encodeActionEvidenceViewSourceReceipt, sha256, type ActionSource, type ActionRegistry, type ActionEvidenceViewReceipt } from './action-registry.js'
 import { trustedActionSourceLineNumbers } from './action-evidence-retrieval.js'
 
 type Citation = z.infer<typeof CitationSchema>
@@ -21,15 +21,15 @@ function compactMetadata(value: unknown): { context: string; omitted: string[] }
     const record = item as Record<string, unknown>
     if (role === 'account' && (typeof record.login !== 'string' || typeof record.id !== 'number')) role = undefined
     if (role === 'repository' && (typeof record.id !== 'number' || typeof record.full_name !== 'string')) role = undefined
-    const result: Record<string, unknown> = {}
+    const result: Array<[string, unknown]> = []
     for (const [key, child] of Object.entries(item)) {
       const incidental = role === 'account' ? ACCOUNT_LINKS.has(key) : role === 'repository' && REPOSITORY_LINKS.has(key)
       // Type mismatches are unknown API shapes and default-retain.
       if (incidental && (typeof child === 'string' || child === null)) { omitted.push([...path, key].join('.')); continue }
       const nextRole = role === 'root' && ACCOUNT_FIELDS.has(key) || role === 'branch' && key === 'user' || role === 'repository' && key === 'owner' ? 'account' : role === 'root' && (key === 'head' || key === 'base') ? 'branch' : role === 'branch' && key === 'repo' ? 'repository' : undefined
-      result[key] = visit(child, [...path, key], nextRole)
+      result.push([key, visit(child, [...path, key], nextRole)])
     }
-    return result
+    return Object.fromEntries(result)
   }
   return { context: JSON.stringify(visit(value, [], 'root')), omitted }
 }
@@ -131,13 +131,13 @@ export class PreparedActionEvidenceView {
       }).join('\n')
       const authoritativeLines = source.kind === 'github' ? [...trustedActionSourceLineNumbers(source)].filter(line => !hidden.get(source.id)?.has(line)) : source.kind === 'repository' ? 'repository source' : source.kind === 'instruction' ? 'operator instruction' : 'context only'
       const modelSource = { ...rest, id: `s${index + 1}`, authoritativeLines, content }
-      receipts.push({ sourceId: source.id, rawSha256: sha256(source.content), viewSha256: sha256(JSON.stringify(modelSource)), hiddenLines, omittedPathsSha256: sha256(JSON.stringify(rows.map(row => ({ line: row.line, paths: row.omitted })))) })
+      receipts.push(encodeActionEvidenceViewSourceReceipt({ sourceId: source.id, rawSha256: sha256(source.content), viewSha256: sha256(JSON.stringify(modelSource)), hiddenLines, omittedPathsSha256: sha256(JSON.stringify(rows.map(row => ({ line: row.line, paths: row.omitted })))) }))
       return modelSource
     })
     this.#hidden = hidden
-    this.receipt = { version: ACTION_EVIDENCE_VIEW_VERSION, policySha256: POLICY, rawCaseDigest, inputStateSha256, sources: receipts }
+    this.receipt = { version: ACTION_EVIDENCE_VIEW_VERSION, sourceEncoding: 'source-tuples-v1', policySha256: POLICY, rawCaseDigest, inputStateSha256, sources: receipts }
     this.roundId = sha256(JSON.stringify({ rawCaseDigest, evidenceView: this.receipt }))
-    for (const receipt of this.receipt.sources) { Object.freeze(receipt.hiddenLines); Object.freeze(receipt) }
+    for (const receipt of this.receipt.sources) { Object.freeze(receipt[3]); Object.freeze(receipt) }
     Object.freeze(this.receipt.sources)
     Object.freeze(this.receipt)
     Object.freeze(this)

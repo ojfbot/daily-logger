@@ -193,14 +193,33 @@ export const ActionReviewOutputSchema = z.object({
   if (new Set(keys).size !== keys.length) context.addIssue({ code: 'custom', message: 'Duplicate action review output identity' })
 })
 export type ActionReviewOutput = z.infer<typeof ActionReviewOutputSchema>
+const ActionEvidenceViewSourceReceiptSchema = z.object({ sourceId: z.string().min(1), rawSha256: digest, viewSha256: digest, hiddenLines: z.array(z.number().int().positive()), omittedPathsSha256: digest }).strict()
+export type ActionEvidenceViewSourceReceipt = z.infer<typeof ActionEvidenceViewSourceReceiptSchema>
+const sourceIdRawSha256 = (sourceId: string): string | undefined => {
+  const suffix = /@([a-f0-9]{64})$/.exec(sourceId)?.[1]
+  return suffix !== undefined && sourceId.endsWith(`@${suffix}`) ? suffix : undefined
+}
+const ActionEvidenceViewSourceTupleSchema = z.tuple([z.string().min(1), digest.nullable(), digest, z.array(z.number().int().positive()), digest]).superRefine(([sourceId, rawSha256], context) => {
+  const suffix = sourceIdRawSha256(sourceId)
+  if (rawSha256 === null && suffix === undefined) context.addIssue({ code: 'custom', path: [1], message: 'A null raw digest requires an exact lowercase source-ID digest suffix' })
+  if (rawSha256 !== null && rawSha256 === suffix) context.addIssue({ code: 'custom', path: [1], message: 'A source-ID raw digest must use its canonical null sentinel' })
+})
+export function encodeActionEvidenceViewSourceReceipt(value: ActionEvidenceViewSourceReceipt): z.infer<typeof ActionEvidenceViewSourceTupleSchema> {
+  const source = ActionEvidenceViewSourceReceiptSchema.parse(value)
+  return ActionEvidenceViewSourceTupleSchema.parse([source.sourceId, source.rawSha256 === sourceIdRawSha256(source.sourceId) ? null : source.rawSha256, source.viewSha256, source.hiddenLines, source.omittedPathsSha256])
+}
 export const ActionEvidenceViewReceiptSchema = z.object({
   version: z.literal('action-evidence-view-v1'),
+  sourceEncoding: z.literal('source-tuples-v1'),
   policySha256: digest,
   rawCaseDigest: digest,
   inputStateSha256: digest,
-  sources: z.array(z.object({ sourceId: z.string().min(1), rawSha256: digest, viewSha256: digest, hiddenLines: z.array(z.number().int().positive()), omittedPathsSha256: digest }).strict()),
+  sources: z.array(ActionEvidenceViewSourceTupleSchema),
 }).strict()
 export type ActionEvidenceViewReceipt = z.infer<typeof ActionEvidenceViewReceiptSchema>
+export function decodeActionEvidenceViewSources(receipt: ActionEvidenceViewReceipt): ActionEvidenceViewSourceReceipt[] {
+  return ActionEvidenceViewReceiptSchema.parse(receipt).sources.map(([sourceId, rawSha256, viewSha256, hiddenLines, omittedPathsSha256]) => ActionEvidenceViewSourceReceiptSchema.parse({ sourceId, rawSha256: rawSha256 ?? sourceIdRawSha256(sourceId), viewSha256, hiddenLines, omittedPathsSha256 }))
+}
 const ActionVerificationReceiptSchema = z.object({
   proposer: z.string(),
   verifier: z.string(),

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ActionSourceCollection, PreparedActionEvidenceView, captureGithubActionSource, renderGithubEvidence, actionEvidenceRegistryDigest } from '../action-evidence-view.js'
-import { ActionEvidenceRequestReceiptSchema, ActionRegistrySchema, ArticleActionFileContractSchema, ArticleActionFileSchema, ActionSourceSchema, captureDraftActionCandidates, assertActionSnapshotStateIntegrity, articleActionFileBytes, sha256, splitActionRegistry, type ActionSource } from '../action-registry.js'
+import { decodeActionEvidenceViewSources, ActionEvidenceRequestReceiptSchema, ActionRegistrySchema, ArticleActionFileContractSchema, ArticleActionFileSchema, ActionSourceSchema, captureDraftActionCandidates, assertActionSnapshotStateIntegrity, articleActionFileBytes, sha256, splitActionRegistry, type ActionSource } from '../action-registry.js'
 import { applyVerifiedActionReview, resolveActionSourceLines, pendingActionReview, reviewArticleActions, ActionContextNeedError, reviewProducedDraftActions, type ActionProposal } from '../review-actions.js'
 import { buildActionEvidenceProjection, createActionEvidenceRequest } from '../action-evidence-retrieval.js'
 import { ACTION_REVIEW_PROMPT_VERSION, CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS, RANKED_ACTION_REVIEW_PROMPT_VERSIONS, generationActionCycle } from '../action-review-cycle.js'
@@ -57,16 +57,28 @@ describe('typed generated metadata view', () => {
   })
   it('retains unknown record variants/fields and unusual incidental value types', () => {
     const unknown = fixture([{ user: { avatar_url: 'x'.repeat(1000) }, body: 'Unknown record stays full.' }])
-    expect(unknown.view.receipt.sources[0].hiddenLines).toEqual([])
+    expect(decodeActionEvidenceViewSources(unknown.view.receipt)[0].hiddenLines).toEqual([])
     const known = fixture([{ ...issue(), extra: { user: { avatar_url: 'unknown nested data' } }, user: { avatar_url: { policy: 'not a transport string' }, login: 'ojfbot' } }])
     expect(known.view.promptSources()[0].content).toContain('unknown nested data')
     expect(known.view.promptSources()[0].content).toContain('not a transport string')
+  })
+  it('retains own prototype-shaped and constructor metadata keys at every unknown occurrence', () => {
+    const record = JSON.parse('{"id":1,"html_url":"https://github.com/ojfbot/core/issues/1","author_association":"OWNER","__proto__":{"future_required_fact":"retain this unknown value"},"constructor":{"future_owner_gate":"retain constructor value"},"user":{"id":1,"login":"ojfbot","avatar_url":"https://example.test/avatar","__proto__":{"nested_required_fact":"retain nested unknown value"}},"body":"visible authored text"}')
+    const { source, view } = fixture([record])
+    for (const fact of ['future_required_fact', 'retain this unknown value', 'future_owner_gate', 'retain constructor value', 'nested_required_fact', 'retain nested unknown value']) {
+      expect(source.content).toContain(fact)
+      expect(view.promptSources()[0].content).toContain(fact)
+    }
+    expect(view.promptSources()[0].content).toContain('"__proto__"')
+    expect(view.promptSources()[0].content).not.toContain('https://example.test/avatar')
+    expect(() => view.resolve('s1', 2, 2)).toThrow(/partial metadata/)
+    expect(view.resolve('s1', 3, 3).quote).toBe(record.body)
   })
   it('gives plain/serialized/spread sources verbatim fallback without minting provenance', () => {
     const { source, collection, view } = fixture()
     for (const raw of [[source], [...collection], JSON.parse(JSON.stringify(collection))]) {
       const fallback = PreparedActionEvidenceView.prepare(raw, sha256('raw case'), actionEvidenceRegistryDigest(empty(), date))
-      expect(fallback.receipt.sources[0].hiddenLines).toEqual([])
+      expect(decodeActionEvidenceViewSources(fallback.receipt)[0].hiddenLines).toEqual([])
       expect(fallback.resolve('s1', 2, 2).quote).toBe(source.content.split('\n')[1])
       expect(fallback.roundId).not.toBe(view.roundId)
     }
@@ -76,12 +88,12 @@ describe('typed generated metadata view', () => {
     const { collection } = fixture()
     const appended = collection.appendRaw([{ id: 'reply', kind: 'instruction', locator: 'test', content: 'A fully visible reply.' }])
     const view = PreparedActionEvidenceView.prepare(appended, sha256('case'), sha256('state'), appended)
-    expect(view.receipt.sources[0].hiddenLines).toEqual([2])
-    expect(view.receipt.sources[1].hiddenLines).toEqual([])
+    expect(decodeActionEvidenceViewSources(view.receipt)[0].hiddenLines).toEqual([2])
+    expect(decodeActionEvidenceViewSources(view.receipt)[1].hiddenLines).toEqual([])
   })
   it('does not expose mutable receipt, raw sources, or prompt object state', () => {
     const { view } = fixture()
-    expect(() => view.receipt.sources[0].hiddenLines.push(3)).toThrow()
+    expect(() => view.receipt.sources[0][3].push(3)).toThrow()
     const sources = view.rawSources(); sources[0].content = 'tampered'
     const shown = view.promptSources(); shown[0].content = 'tampered'
     expect(view.resolve('s1', 3, 3).quote).toContain('Owner gate')
@@ -107,7 +119,7 @@ describe('typed generated metadata view', () => {
     const { source, view } = fixture()
     const reviewed = native(view, [source], proposal(source.id, source.content.split('\n')[2], 3, 3))
     expect(() => assertActionSnapshotStateIntegrity(reviewed, reviewed.articles[0])).not.toThrow()
-    const tampered = structuredClone(reviewed); tampered.articles[0].verification.evidenceView!.sources[0].hiddenLines = []
+    const tampered = structuredClone(reviewed); tampered.articles[0].verification.evidenceView!.sources[0][3] = []
     expect(() => assertActionSnapshotStateIntegrity(tampered, tampered.articles[0])).toThrow(/stale/)
     const deleted = structuredClone(reviewed); delete deleted.articles[0].verification.evidenceView
     expect(() => assertActionSnapshotStateIntegrity(deleted, deleted.articles[0])).toThrow(/stale/)
@@ -175,9 +187,9 @@ describe('typed generated metadata view', () => {
       { ...source, trustedContent: [...source.trustedContent!, metadata], projection: { version: 'action-evidence-projection-v1' as const, requestId: sha256('request'), caseDigest: sha256('case'), fullSourceId: source.id, fullContentSha256: sha256(source.content), ranges: [{ startLine: 2, endLine: 2, role: 'support' as const }], coverage: [{ obligationId: sha256('obligation'), status: 'support' as const, rangeIndexes: [0] }] } },
     ]
     for (const changed of variants) expect(() => PreparedActionEvidenceView.prepare([changed], sha256('case'), sha256('state'), collection)).toThrow(/Collector provenance changed/)
-    expect(PreparedActionEvidenceView.prepare([source], sha256('case'), sha256('state'), collection).receipt.sources[0].hiddenLines).toEqual([2])
+    expect(decodeActionEvidenceViewSources(PreparedActionEvidenceView.prepare([source], sha256('case'), sha256('state'), collection).receipt)[0].hiddenLines).toEqual([2])
     const unrelated = { ...source, id: 'github:unrelated#999' }
-    expect(PreparedActionEvidenceView.prepare([unrelated], sha256('case'), sha256('state'), collection).receipt.sources[0].hiddenLines).toEqual([])
+    expect(decodeActionEvidenceViewSources(PreparedActionEvidenceView.prepare([unrelated], sha256('case'), sha256('state'), collection).receipt)[0].hiddenLines).toEqual([])
   })
   it('persists canonical raw/view/range pins for a failed compact view without retaining source bodies', async () => {
     const { source, collection } = fixture()
@@ -218,7 +230,7 @@ describe('typed generated metadata view', () => {
     const projected = buildActionEvidenceProjection({ request, source, ranges: [{ startLine: 1, endLine: 1, role: 'support' }, { startLine: 3, endLine: 3, role: 'counterevidence' }], coverage: [{ obligationId: obligation, status: 'counterevidence', rangeIndexes: [1] }] })
     expect(projected.id).toMatch(/^action-evidence-view:/)
     const view = PreparedActionEvidenceView.prepare([projected], sha256('case'), sha256('state'), collection)
-    expect(view.receipt.sources[0].hiddenLines).toEqual([])
+    expect(decodeActionEvidenceViewSources(view.receipt)[0].hiddenLines).toEqual([])
     expect(view.rawSources()[0]).toEqual(projected)
   })
   it('requires complete new source-view diagnostics while preserving legacy absence', () => {
