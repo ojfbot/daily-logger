@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test'
 import { applyVerifiedActionReview } from '../../../src/review-actions.js'
 import { revisionActionCycle } from '../../../src/action-review-cycle.js'
 import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry } from '../../../src/action-registry-schema.js'
+import { actionEvidenceRegistryDigest, PreparedActionEvidenceView } from '../../../src/action-evidence-view.js'
+import { sha256, type ActionSource } from '../../../src/action-registry.js'
 import { readFileSync } from 'node:fs'
 
 const date = '2026-10-18'
@@ -26,12 +28,16 @@ test('the reconciled October 17 article keeps completed and dismissed history co
 })
 const source = `---\ntitle: "Action review"\ndate: ${date}\nstatus: "draft"\n---\n## What's next\nReview the next checkpoint.\n`
 function fixture() {
+  const registry = ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
+  const sources: ActionSource[] = [{ id: 'proof', kind: 'github', locator: 'test proof', content: 'The next checkpoint requires the exact review.' }]
+  const evidenceView = PreparedActionEvidenceView.prepare(sources, sha256('browser-inclusion-fixture'), actionEvidenceRegistryDigest(registry, date))
+  const citation = evidenceView.resolve('proof', 1, 1)
   return applyVerifiedActionReview({
     cycle: revisionActionCycle('browser-inclusion-fixture'),
-    registry: ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] }),
-    articleDate: date, articleStatuses: new Map([[date, 'draft']]), markdown: source, roundId: 'd'.repeat(64),
-    sources: [{ id: 'proof', kind: 'github', locator: 'test proof', content: 'The next checkpoint requires the exact review.' }],
-    proposal: { changes: [], suggestions: [{ command: '/pr-review', description: 'Review the exact acceptance checkpoint.', repo: 'daily-logger', target: '#372', outcome: 'Owner receives a bounded review', goal: 'Verified article acceptance', goalCitations: [{ sourceId: 'proof', quote: 'requires the exact review' }], factCitations: [{ sourceId: 'proof', quote: 'The next checkpoint requires' }], doneWhen: 'The owner receives review evidence.', gates: ['The owner decides readiness.'], existingKey: null }] },
+    registry,
+    articleDate: date, articleStatuses: new Map([[date, 'draft']]), markdown: source, roundId: evidenceView.roundId,
+    sources, evidenceView,
+    proposal: { changes: [], suggestions: [{ command: '/pr-review', description: 'Review the exact acceptance checkpoint.', repo: 'daily-logger', target: '#372', outcome: 'Owner receives a bounded review', goal: 'Verified article acceptance', goalCitations: [citation], factCitations: [citation], doneWhen: 'The owner receives review evidence.', gates: ['The owner decides readiness.'], existingKey: null }] },
     verification: { changes: [], suggestions: [{ candidateIndex: 0, verdict: 'pass', reason: 'A grounded next checkpoint.', existingKey: null }] },
   })
 }
