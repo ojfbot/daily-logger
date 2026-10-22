@@ -1,6 +1,10 @@
 # Implementation notes
 
 ## Deviations
+- 2026-10-22 (full-cycle receipt representation): compact whole-file JSON fixed the pending archive but the second verified fixture still required 69,092 bytes. The unpublished view-v1 source receipt now uses lossless closed tuples with an explicit encoding marker; only a raw digest exactly present at the end of its source ID uses a null sentinel. Every decoded field/order remains identical, historical v15 receipt absence is unchanged, and all limits/history/source duties stay fixed.
+
+- 2026-10-22 (unknown own metadata keys): the root counterexample showed object assignment swallowed an own `__proto__` API field while removing an incidental avatar URL. The metadata visitor now constructs objects with `Object.fromEntries`, retaining own `__proto__`/`constructor` and nested unknown facts without changing known omission policy.
+
 - 2026-10-22 (typed-view archive capacity): the unchanged full-cycle fixture fit the 64-KiB compact schema bound, but modern receipt indentation made the pretty serializer reject its archive. Node now validates candidate identities then delegates to the shared browser/contract serializer: preserve existing pretty bytes when they fit, otherwise emit deterministic compact JSON plus newline only if those exact UTF-8 bytes fit the same limit. Every field/history/digest remains unchanged; no new receipt codec, source reduction or storage cap was introduced.
 
 - 2026-10-22 (native writer/read view replay): native review appends the current dated snapshot, while the existing reader restores date order. The registry digest now sorts only article membership by date, preserving record/history/list order and every field value. Added complete diagnostic-group validation and rejected response/projection flags attached to the same captured source identity; genuine native reply/view identities keep their existing path. Historical v8/v9 test fixtures now use valid legacy closing fields, and replay coverage runs the real review/cache boundary instead of applying a newly prepared round twice.
