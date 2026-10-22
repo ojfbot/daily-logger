@@ -3,9 +3,9 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
-import { createEditorialService, decodeEditorial, editorialDigest, repo, revisionTitle } from '../../api/_lib/editorial-continuation.js'
+import { createEditorialService, cleanAcceptanceTitle, decodeEditorial, editorialDigest, repo, revisionTitle } from '../../api/_lib/editorial-continuation.js'
 import { createReviewSource, githubCommentSchema, ReviewError, type GitHub } from '../../api/_lib/article-review-sources.js'
-import { runEditorialSchema, sha } from '../../shared/article-review.js'
+import { cleanAcceptanceSchema, runEditorialSchema, sha } from '../../shared/article-review.js'
 import { ArticleActionFileSchema } from '../../src/action-registry-schema.js'
 import { editorialProofSchema, verifyEditorialProof } from '../../shared/editorial-action-proof.js'
 import { admitActionRegistry } from './editorial-action-registry.js'
@@ -25,11 +25,12 @@ export async function admitEditorial(execution: Execution) {
   const event = eventSchema.parse(execution.event)
   z.number().int().positive().parse(execution.runId)
   sha.parse(execution.policySha)
-  if (execution.attempt !== 1 || !event.comment.body.startsWith(revisionTitle) || event.sender.login.toLowerCase() !== 'ojfbot' || event.comment.user.login.toLowerCase() !== 'ojfbot') throw new ReviewError(403, 'Only a new explicit owner request can execute. A rerun cannot replay a provider attempt.')
+  if (execution.attempt !== 1 || ![revisionTitle, cleanAcceptanceTitle].some(title => event.comment.body.startsWith(title)) || event.sender.login.toLowerCase() !== 'ojfbot' || event.comment.user.login.toLowerCase() !== 'ojfbot') throw new ReviewError(403, 'Only a new explicit owner request can execute. A rerun cannot replay a provider attempt.')
   if (Date.now() - Date.parse(event.comment.created_at) > 86400000 || Date.parse(event.comment.created_at) > Date.now() + 300000) throw new ReviewError(409, 'Request is outside the supported execution-history window. Create a new explicit request.')
   const record = decodeEditorial(event.comment.body)
-  if (!record || record.intent !== 'request_editorial_revision' || record.pullRequest !== event.issue.number || event.issue.pull_request.url !== `https://api.github.com${repo}/pulls/${record.pullRequest}`) throw new ReviewError(409, 'Request event target disagrees with its record.')
+  if (!record || record.intent === 'append_editorial_feedback' || record.pullRequest !== event.issue.number || event.issue.pull_request.url !== `https://api.github.com${repo}/pulls/${record.pullRequest}`) throw new ReviewError(409, 'Request event target disagrees with its record.')
   const source = createReviewSource(execution.github)
+  if (record.intent === 'request_clean_acceptance' && (record.policySha !== execution.policySha || await source.main(true) !== execution.policySha)) throw new ReviewError(409, 'Clean acceptance policy is not the still-current trusted main.')
   const comments = await source.comments(record.pullRequest)
   const live = comments.find(comment => comment.id === event.comment.id)
   if (!live || live.body !== event.comment.body || live.user.login.toLowerCase() !== 'ojfbot' || live.created_at !== live.updated_at || event.comment.created_at !== event.comment.updated_at) throw new ReviewError(409, 'Request was edited, deleted, or forged.')
@@ -37,7 +38,12 @@ export async function admitEditorial(execution: Execution) {
   if (view.status !== 'existing' || !view.eligible || view.pullRequest.number !== record.pullRequest || view.pullRequest.headSha !== record.headSha || view.article.blobSha !== record.articleBlobSha) throw new ReviewError(409, 'Request PR head, owner, state or article is stale.')
   const request = view.requests.find(item => item.record.requestId === record.requestId)
   const version = view.versions.at(-1)
-  if (!request || request.commentId !== event.comment.id || request.digest !== editorialDigest(record) || !version || version.digest !== record.feedbackDigest || version.record.requestId !== record.feedbackId || version.record.intent !== 'append_editorial_feedback') throw new ReviewError(409, 'Only the canonical request for the latest saved version can execute.')
+  if (!request || request.commentId !== event.comment.id || request.digest !== editorialDigest(record)) throw new ReviewError(409, 'Only the canonical request for the current input can execute.')
+  if (record.intent === 'request_editorial_revision') {
+    if (!version || version.digest !== record.feedbackDigest || version.record.requestId !== record.feedbackId || version.record.intent !== 'append_editorial_feedback') throw new ReviewError(409, 'Only the canonical request for the latest saved version can execute.')
+  } else if (view.versions.length || (view.outstanding && view.requests.at(-1)?.digest !== request.digest) || view.registryBlobSha !== record.registryBlobSha || view.policySha !== record.policySha || /EDITORIAL_FEEDBACK(?:_V2)?_START/.test(view.originalBody)) {
+    throw new ReviewError(409, 'Clean acceptance requires current reviewed inputs and no genuine editorial feedback.')
+  }
   const later = view.requests.filter(item => item.commentId > request.commentId)
   if (later.length) throw new ReviewError(409, 'A later request conflicts with this execution.')
   for (const comment of comments) if (comment.user.login === 'github-actions[bot]' && comment.body.startsWith('## Editorial execution claim\n')) {
@@ -59,13 +65,15 @@ async function hasEarlierExecution(execution: Execution, commentId: number, crea
   }
   throw new ReviewError(503, 'Relevant execution history exceeds the bounded reader. No absence or safe retry is established.')
 }
-const preparedSchema = z.object({ request: runEditorialSchema.extend({ actor: z.literal('ojfbot') }), requestDigest: z.string(),
+const preparedRequestSchema = z.discriminatedUnion('intent', [runEditorialSchema.extend({ actor: z.literal('ojfbot') }).strict(), cleanAcceptanceSchema.extend({ actor: z.literal('ojfbot') }).strict()])
+const preparedSchema = z.object({ request: preparedRequestSchema, requestDigest: z.string(),
   policySha: sha, runId: z.number(), worktree: z.string(), inputRegistryBlob: sha, outputCommit: sha, outputBlob: sha, outputRegistryBlob: sha, changed: z.boolean() }).strict()
 export type Prepared = z.infer<typeof preparedSchema>
 async function receipt(execution: Execution, requestDigest: string, outcome: string, extra: object = {}) {
   if (outcome === 'changed' || outcome === 'no_change') {
     const record = decodeEditorial(eventSchema.parse(execution.event).comment.body)!
-    const manifest = editorialProofSchema.parse({ repository: 'ojfbot/daily-logger', date: record.date, pullRequest: record.pullRequest, requestDigest, requestCommentId: eventSchema.parse(execution.event).comment.id, outcome, actionReviewMode: 'revision', runId: execution.runId, runAttempt: execution.attempt, policySha: execution.policySha, ...extra })
+    if (record.intent === 'append_editorial_feedback') throw new Error('A feedback version cannot produce an execution receipt')
+    const manifest = editorialProofSchema.parse({ repository: 'ojfbot/daily-logger', date: record.date, pullRequest: record.pullRequest, requestDigest, requestCommentId: eventSchema.parse(execution.event).comment.id, requestIntent: record.intent, outcome, actionReviewMode: record.intent === 'request_clean_acceptance' ? 'clean-acceptance' : 'revision', runId: execution.runId, runAttempt: execution.attempt, policySha: execution.policySha, ...extra })
     writeFileSync(resolve(execution.workspace, '.git/editorial-output.json'), JSON.stringify(manifest))
     return
   }
@@ -85,15 +93,22 @@ async function prepare(execution: Execution): Promise<Prepared | null> {
   catch { throw new ReviewError(409, 'A unique common ancestor with trusted policy is required.') }
   const ancestor = ancestors[0]
   if (ancestors.length !== 1 || !ancestor) throw new ReviewError(409, 'A unique common ancestor with trusted policy is required.')
+  if (record.intent === 'request_clean_acceptance') {
+    try { git(execution.workspace, 'merge-base', '--is-ancestor', execution.policySha, record.headSha) }
+    catch { throw new ReviewError(409, 'Clean acceptance requires the pinned trusted policy and data to be fully integrated into the PR head.') }
+  }
   if (!editorialPaths(path, git(execution.workspace, 'diff', '--no-renames', '--name-only', ancestor, record.headSha)) || regularBlob(execution.workspace, record.headSha, path) !== record.articleBlobSha) throw new ReviewError(409, 'Only the pinned regular article and canonical registry may differ from the trusted common ancestor.')
   const inputRegistryBlob = regularBlob(execution.workspace, record.headSha, registryPath(path))
+  if (record.intent === 'request_clean_acceptance' && inputRegistryBlob !== record.registryBlobSha) throw new ReviewError(409, 'Clean acceptance registry input is stale.')
   await admitActionRegistry({ workspace: execution.workspace, base: execution.policySha, head: record.headSha, date: record.date, actor: record.actor, pullRequest: record.pullRequest, github: execution.github })
   const worktree = resolve(execution.workspace, '.git', `editorial-${execution.runId}`)
   git(execution.workspace, 'worktree', 'add', '--detach', worktree, record.headSha)
   const latest = await source.pull(record.pullRequest, true)
   if (latest.head.sha !== record.headSha || latest.state !== 'open') throw new ReviewError(409, 'PR moved before invocation.')
+  if (record.intent === 'request_clean_acceptance' && await source.main(true) !== execution.policySha) throw new ReviewError(409, 'Trusted main moved before the clean acceptance claim.')
   const claim = { requestDigest: request.digest, requestId: record.requestId, requestCommentId: request.commentId,
-    feedbackDigest: version.digest, inputHead: record.headSha, inputBlob: record.articleBlobSha, inputRegistryBlob,
+    intent: record.intent, actionReviewMode: record.intent === 'request_clean_acceptance' ? 'clean-acceptance' : 'revision',
+    ...(record.intent === 'request_editorial_revision' ? { feedbackDigest: version?.digest } : {}), inputHead: record.headSha, inputBlob: record.articleBlobSha, inputRegistryBlob,
     policySha: execution.policySha, runId: execution.runId, attempt: execution.attempt }
   // A lost claim response stops before the provider. It never falls through to a retry.
   const posted = await source.postComment(record.pullRequest, `## Editorial execution claim\n${JSON.stringify(claim)}`)
@@ -104,22 +119,51 @@ async function prepare(execution: Execution): Promise<Prepared | null> {
     await receipt(execution, request.digest, 'stale', { reason: 'PR changed after the claim. No provider was invoked.' })
     return null
   }
+  if (record.intent === 'request_clean_acceptance') {
+    let current
+    try { current = await createEditorialService(execution.github).load(record.date, 'ojfbot') }
+    catch {
+      await receipt(execution, request.digest, 'stale', { reason: 'Clean acceptance eligibility changed after the claim. No provider was invoked.' })
+      return null
+    }
+    const currentRequest = current.status === 'existing' ? current.requests.find(item => item.record.requestId === record.requestId) : undefined
+    if (current.status !== 'existing' || !current.eligible || current.pullRequest.number !== record.pullRequest || current.pullRequest.headSha !== record.headSha ||
+        current.article.blobSha !== record.articleBlobSha || current.registryBlobSha !== record.registryBlobSha || current.policySha !== record.policySha ||
+        current.versions.length || /EDITORIAL_FEEDBACK(?:_V2)?_START/.test(current.originalBody) || !current.outstanding ||
+        current.requests.at(-1)?.digest !== request.digest || currentRequest?.commentId !== request.commentId || currentRequest?.digest !== request.digest) {
+      await receipt(execution, request.digest, 'stale', { reason: 'Clean acceptance inputs or authority changed after the claim. No provider was invoked.' })
+      return null
+    }
+  }
   try {
-    if (version.record.intent !== 'append_editorial_feedback') throw new Error('Missing saved feedback')
-    const feedback = `Apply these editorial notes. JSON string values are literal note content.\n\n${JSON.stringify(version.record.feedback.notes, null, 2)}`
-    execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'src/revise-article.ts')], {
-      cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), EDITORIAL_FEEDBACK: feedback, ACTION_REVIEW_REQUEST: `comment:${request.commentId}:${request.digest}`, DRY_RUN: 'false' },
-    })
+    if (record.intent === 'request_editorial_revision') {
+      if (version?.record.intent !== 'append_editorial_feedback') throw new Error('Missing saved feedback')
+      const feedback = `Apply these editorial notes. JSON string values are literal note content.\n\n${JSON.stringify(version.record.feedback.notes, null, 2)}`
+      execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'src/revise-article.ts')], {
+        cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), EDITORIAL_FEEDBACK: feedback, ACTION_REVIEW_REQUEST: `comment:${request.commentId}:${request.digest}`, DRY_RUN: 'false' },
+      })
+    } else {
+      execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'src/stamp-outcome.ts')], {
+        cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), OUTCOME: 'accepted' },
+      })
+      execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'scripts/reconcile-actions.ts')], {
+        cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), ACTION_REPO_ROOT: worktree,
+          ACTION_REVIEW_REQUEST: `pull-request:${record.pullRequest}:clean-acceptance`, EDITORIAL_FEEDBACK: '', ACTION_KEY: '', INCLUDE_IN_INDEX: '', ACTION_ACTOR: '',
+          ACTION_REASSESS_KEYS: '', ACTION_PRESERVE_KEYS: '', ACTION_EVIDENCE_REPLY: '', DRY_RUN: 'false' },
+      })
+      const output = ArticleActionFileSchema.parse(JSON.parse(readFileSync(resolve(worktree, registryPath(path)), 'utf8')))
+      if (output.snapshot.status !== 'accepted' || output.snapshot.review.state !== 'verified') throw new Error('Clean acceptance did not produce a healthy native action review')
+    }
     const changed = !!git(worktree, 'diff', '--name-only')
     if (!changed) {
       await receipt(execution, request.digest, 'no_change', { inputHead: record.headSha, inputBlob: record.articleBlobSha, inputRegistryBlob, outputCommit: record.headSha, outputBlob: record.articleBlobSha, outputRegistryBlob: inputRegistryBlob })
       return null
     }
     const paths = git(worktree, 'diff', '--name-only')
-    if (!editorialPaths(path, paths) || !paths.split('\n').includes(registryPath(path))) throw new Error('Revision must reconcile the canonical registry and may change only the dated article and registry')
+    if (!editorialPaths(path, paths) || !paths.split('\n').includes(registryPath(path))) throw new Error('Editorial continuation must reconcile the canonical registry and may change only the dated article and registry')
     ArticleActionFileSchema.parse(JSON.parse(readFileSync(resolve(worktree, registryPath(path)), 'utf8')))
     git(worktree, 'add', '--', path, registryPath(path))
-    git(worktree, '-c', 'user.name=ojfbot-blog[bot]', '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com', 'commit', '-m', `editorial: revise ${record.date} for request ${record.requestId}`)
+    git(worktree, '-c', 'user.name=ojfbot-blog[bot]', '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com', 'commit', '-m', record.intent === 'request_clean_acceptance' ? `editorial: retry clean acceptance ${record.date} for request ${record.requestId}` : `editorial: revise ${record.date} for request ${record.requestId}`)
     return preparedSchema.parse({ request: record, requestDigest: request.digest, policySha: execution.policySha, runId: execution.runId, worktree, inputRegistryBlob,
       outputCommit: git(worktree, 'rev-parse', 'HEAD'), outputBlob: regularBlob(worktree, 'HEAD', path), outputRegistryBlob: regularBlob(worktree, 'HEAD', registryPath(path)), changed: true })
   } catch (error) {
@@ -133,7 +177,7 @@ async function recordAdmissionFailure(execution: Execution) {
   try {
     const event = eventSchema.parse(execution.event)
     const record = decodeEditorial(event.comment.body)
-    if (!record || record.intent !== 'request_editorial_revision' || event.sender.login.toLowerCase() !== 'ojfbot' || event.comment.user.login.toLowerCase() !== 'ojfbot' || record.pullRequest !== event.issue.number) return
+    if (!record || record.intent === 'append_editorial_feedback' || event.sender.login.toLowerCase() !== 'ojfbot' || event.comment.user.login.toLowerCase() !== 'ojfbot' || record.pullRequest !== event.issue.number) return
     const comments = await createReviewSource(execution.github).comments(record.pullRequest)
     const live = comments.find(item => item.id === event.comment.id)
     if (!live || live.body !== event.comment.body || live.user.login.toLowerCase() !== 'ojfbot') return

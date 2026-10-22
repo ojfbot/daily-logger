@@ -63,6 +63,20 @@ it('recovers an existing acceptance PR and keeps main and pinned article distinc
   expect(button('Request another article revision').disabled).toBe(true)
   expect(f.posts).toEqual([])
 })
+it('shows a clean acceptance request in the existing PR history without adding another trigger button', async () => {
+  const f = await fixture()
+  const view = await f.service.load(today, 'ojfbot')
+  if (view.status !== 'existing') throw new Error('Missing acceptance PR')
+  await f.service.write({ schemaVersion: 1, intent: 'request_clean_acceptance', requestId: crypto.randomUUID(), date: today,
+    pullRequest: view.pullRequest.number, headSha: view.pullRequest.headSha, articleBlobSha: view.article.blobSha,
+    registryBlobSha: view.registryBlobSha, policySha: view.policySha }, 'ojfbot')
+  const history = await f.service.load(today, 'ojfbot')
+  if (history.status !== 'existing') throw new Error('Missing clean request history')
+  await act(async () => root.render(createElement(EditorialContinuation, { view: history, date: today, login: 'ojfbot', visibleBlobSha: blob, refresh: async () => true })))
+  expect(container.textContent).toContain('Explicit clean acceptance request')
+  expect(container.textContent).toContain('A clean acceptance request is outstanding')
+  expect([...container.querySelectorAll('button')].filter(item => item.textContent?.includes('clean acceptance'))).toHaveLength(0)
+})
 it('literal Save and a separately reviewed Request traverse the real service as different operations', async () => {
   const f = await fixture()
   const input = container.querySelector('textarea'); if (!input) throw new Error('No textarea')

@@ -101,15 +101,18 @@ export const appendEditorialSchema = editorialTarget.extend({ intent: z.literal(
   visibleBlobSha: sha, supersedes: digest, feedback: editorialFeedbackSchema }).strict()
 export const runEditorialSchema = editorialTarget.extend({ intent: z.literal('request_editorial_revision'),
   articleBlobSha: sha, feedbackId: z.uuid(), feedbackDigest: digest }).strict()
-export const editorialInputSchema = z.discriminatedUnion('intent', [appendEditorialSchema, runEditorialSchema])
+export const cleanAcceptanceSchema = editorialTarget.extend({ intent: z.literal('request_clean_acceptance'),
+  articleBlobSha: sha, registryBlobSha: sha, policySha: sha }).strict()
+export const editorialInputSchema = z.discriminatedUnion('intent', [appendEditorialSchema, runEditorialSchema, cleanAcceptanceSchema])
 export const editorialWriteFailureSchema = z.object({
   error: z.string(), outcome: z.enum(['rejected_before_append', 'uncertain']), requestId: z.uuid(),
-  intent: z.union([appendEditorialSchema.shape.intent, runEditorialSchema.shape.intent]),
+  intent: z.union([appendEditorialSchema.shape.intent, runEditorialSchema.shape.intent, cleanAcceptanceSchema.shape.intent]),
 }).strict()
 export type EditorialWriteFailureResponse = z.infer<typeof editorialWriteFailureSchema>
 export const editorialRecordSchema = z.discriminatedUnion('intent', [
   appendEditorialSchema.extend({ actor: z.literal('ojfbot'), originalBody: z.string() }).strict(),
   runEditorialSchema.extend({ actor: z.literal('ojfbot') }).strict(),
+  cleanAcceptanceSchema.extend({ actor: z.literal('ojfbot') }).strict(),
 ])
 export const editorialHistorySchema = z.object({ record: editorialRecordSchema, digest,
   commentId: z.number().int().positive(), url: githubUrl, createdAt: z.iso.datetime(), duplicateUrls: z.array(githubUrl) }).strict()
@@ -117,10 +120,11 @@ export const editorialProjectionSchema = z.discriminatedUnion('status', [
   z.object({ status: z.literal('none'), stagedHeadSha: sha.optional() }).strict(),
   z.object({ status: z.literal('existing'), eligible: z.boolean(), reason: z.string(), originalBody: z.string(), originalDigest: digest,
     pullRequest: pullRequestSchema, article: z.object({ blobSha: sha, text: z.string() }).strict(),
+    registryBlobSha: sha, policySha: sha,
     versions: z.array(editorialHistorySchema), requests: z.array(editorialHistorySchema), outstanding: z.boolean() }).strict(),
 ])
 export const editorialWriteReceiptSchema = writeReceiptSchema.extend({ execution: z.enum(['not_started', 'requested']) }).strict()
-export const postSchema = z.discriminatedUnion('intent', [requestSchema, commentSchema, appendEditorialSchema, runEditorialSchema])
+export const postSchema = z.discriminatedUnion('intent', [requestSchema, commentSchema, appendEditorialSchema, runEditorialSchema, cleanAcceptanceSchema])
 export type EditorialInput = z.infer<typeof editorialInputSchema>
 export type EditorialRecord = z.infer<typeof editorialRecordSchema>
 export type EditorialProjection = z.infer<typeof editorialProjectionSchema>

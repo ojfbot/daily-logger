@@ -1,7 +1,9 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
 import { Socket } from 'node:net'
+import { createHash } from 'node:crypto'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import handler from '../../api/article-reviews.js'
+import { emptyActionFile } from '../../src/__tests__/action-store-fixture.js'
 import { createFixture, makePullRequest, seedOpenReview, makeComment, today } from './fixture.js'
 vi.mock('../../api/_lib/cookies.js', () => ({ extractToken: () => 'fixture-token' }))
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs() })
@@ -83,6 +85,36 @@ it('uses separate explicit request binding and blocks a second outstanding reque
   expect((await invoke('POST', request)).output).toMatchObject({ reused: true })
   expect((await invoke('POST', { ...request, requestId: crypto.randomUUID() })).status).toBe(409)
   expect(state.calls.filter(call => !call.startsWith('GET '))).toEqual(Array(2).fill('POST /repos/ojfbot/daily-logger/issues/42/comments'))
+})
+it('appends one strict clean-acceptance request without saved feedback and reuses only the same UUID content', async () => {
+  const { state, pr } = setup()
+  const view = editorialProjectionSchema.parse((await invoke()).output)
+  if (view.status !== 'existing') throw new Error('No acceptance PR')
+  const registryText = JSON.stringify(emptyActionFile(today))
+  state.refFiles.set(`${pr.head.sha}:actions/articles/${today}.json`, registryText)
+  const registryBlobSha = createHash('sha1').update(`blob ${Buffer.byteLength(registryText)}\0`).update(registryText).digest('hex')
+  const request = { schemaVersion: 1, intent: 'request_clean_acceptance', requestId: crypto.randomUUID(), date: today,
+    pullRequest: 42, headSha: view.pullRequest.headSha, articleBlobSha: view.article.blobSha,
+    registryBlobSha, policySha: state.source }
+  expect((await invoke('POST', request)).output).toMatchObject({ reused: false, execution: 'requested' })
+  expect((await invoke('POST', request)).output).toMatchObject({ reused: true, execution: 'requested' })
+  expect((await invoke('POST', { ...request, policySha: 'd'.repeat(40) })).status).toBe(409)
+  const refreshed = editorialProjectionSchema.parse((await invoke()).output)
+  expect(refreshed).toMatchObject({ status: 'existing', requests: [{ record: { intent: 'request_clean_acceptance', registryBlobSha, policySha: state.source } }], outstanding: true })
+})
+it('never consumes or hides genuine saved feedback as a clean-acceptance request', async () => {
+  const { input, state, pr } = await saved()
+  expect((await invoke('POST', input)).status).toBe(200)
+  const view = editorialProjectionSchema.parse((await invoke()).output)
+  if (view.status !== 'existing') throw new Error('No acceptance PR')
+  const registryText = JSON.stringify(emptyActionFile(today))
+  state.refFiles.set(`${pr.head.sha}:actions/articles/${today}.json`, registryText)
+  const registryBlobSha = createHash('sha1').update(`blob ${Buffer.byteLength(registryText)}\0`).update(registryText).digest('hex')
+  expect((await invoke('POST', { schemaVersion: 1, intent: 'request_clean_acceptance', requestId: crypto.randomUUID(), date: today,
+    pullRequest: 42, headSha: view.pullRequest.headSha, articleBlobSha: view.article.blobSha,
+    registryBlobSha, policySha: state.source })).status).toBe(409)
+  const refreshed = editorialProjectionSchema.parse((await invoke()).output)
+  expect(refreshed).toMatchObject({ status: 'existing', versions: [{ record: { intent: 'append_editorial_feedback' } }], requests: [] })
 })
 it('fails closed for ambiguous and incomplete acceptance discovery', async () => {
   const { state } = setup()

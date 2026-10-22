@@ -11,6 +11,7 @@ export const editorialProofSchema = z.object({
   policySha: sha, inputHead: sha, outputCommit: sha, outputRegistryBlob: sha,
   outcome: z.enum(['changed', 'no_change']), requestDigest: z.string().regex(/^[a-f0-9]{64}$/).optional(), requestCommentId: z.number().int().positive().optional(),
   actionReviewMode: z.enum(['clean-acceptance', 'revision']).optional(),
+  requestIntent: z.enum(['request_editorial_revision', 'request_clean_acceptance']).optional(),
 })
 export function editorialProofName(value: unknown): string {
   return `editorial-action-receipt-v1-${createHash('sha256').update(JSON.stringify(editorialProofSchema.parse(value))).digest('hex')}`

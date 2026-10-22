@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { z } from 'zod'
 import { ArticleActionFileSchema, isArticleFileInclusionChange, actionArticlePath } from '../../src/action-registry-schema.js'
 import { createReviewSource, ReviewError, type GitHub } from '../../api/_lib/article-review-sources.js'
-import { decodeEditorial, repo } from '../../api/_lib/editorial-continuation.js'
+import { decodeEditorial, editorialDigest, repo } from '../../api/_lib/editorial-continuation.js'
 import { verifyEditorialProof } from '../../shared/editorial-action-proof.js'
 import { sha } from '../../shared/article-review.js'
 import { ACTION_REVIEW_PROMPT_VERSION, acceptanceActionCycle, revisionActionCycle } from '../../src/action-review-cycle.js'
@@ -26,14 +26,21 @@ export async function admitActionRegistry(input: { workspace: string; base: stri
     if (comment.user.login !== 'github-actions[bot]' || comment.created_at !== comment.updated_at) continue
     const initial = comment.body.startsWith('## Verified action registry\n'), continuation = comment.body.startsWith('## Editorial execution receipt\n')
     if (!initial && !continuation) continue
-    const value = z.object({ runId: z.number().int().positive(), policySha: sha, outputCommit: sha, outputRegistryBlob: sha, inputHead: sha.optional(), date: z.string().optional(), requestCommentId: z.number().optional(), requestDigest: z.string().regex(/^[a-f0-9]{64}$/).optional(), actionReviewMode: z.enum(['clean-acceptance', 'revision']).optional(), outcome: z.string().optional() }).passthrough().safeParse(JSON.parse(comment.body.slice(comment.body.indexOf('\n') + 1)))
+    const value = z.object({ runId: z.number().int().positive(), policySha: sha, outputCommit: sha, outputRegistryBlob: sha, inputHead: sha.optional(), date: z.string().optional(), requestCommentId: z.number().optional(), requestDigest: z.string().regex(/^[a-f0-9]{64}$/).optional(), requestIntent: z.enum(['request_editorial_revision', 'request_clean_acceptance']).optional(), actionReviewMode: z.enum(['clean-acceptance', 'revision']).optional(), outcome: z.string().optional() }).passthrough().safeParse(JSON.parse(comment.body.slice(comment.body.indexOf('\n') + 1)))
     if (!value.success) continue
     const receipt = value.data
     if (!await verifyEditorialProof(input.github, receipt) || receipt.pullRequest !== input.pullRequest || receipt.date !== input.date) continue
     if (initial ? receipt.date !== input.date : receipt.outcome !== 'changed') continue
+    let continuationIntent: 'request_editorial_revision' | 'request_clean_acceptance' | null = null
     if (continuation) {
       const request = comments.find(item => item.id === receipt.requestCommentId)
-      if (!request || request.user.login !== input.actor || request.created_at !== request.updated_at || decodeEditorial(request.body)?.date !== input.date) continue
+      if (!request || request.user.login !== input.actor || request.created_at !== request.updated_at) continue
+      const requestRecord = decodeEditorial(request.body)
+      if (!requestRecord || requestRecord.intent === 'append_editorial_feedback' || requestRecord.date !== input.date || receipt.requestDigest !== editorialDigest(requestRecord)) continue
+      continuationIntent = requestRecord.intent
+      if (receipt.actionReviewMode !== (continuationIntent === 'request_clean_acceptance' ? 'clean-acceptance' : 'revision')
+        || (continuationIntent === 'request_clean_acceptance' && receipt.requestIntent !== 'request_clean_acceptance')
+        || (receipt.requestIntent && receipt.requestIntent !== continuationIntent)) continue
     }
     const response = await input.github(`/repos/ojfbot/daily-logger/actions/runs/${receipt.runId}`)
     if (!response.ok) throw new ReviewError(503, 'Action registry receipt provenance unavailable.')
@@ -51,9 +58,9 @@ export async function admitActionRegistry(input: { workspace: string; base: stri
     } else if (run.head_branch !== 'main' || run.head_sha !== receipt.policySha || run.display_title !== `Editorial continuation comment ${receipt.requestCommentId}`) continue
     try {
       if (proposed.snapshot.reviewCycle || proposed.suggestions.some(record => record.admission)) {
-        if (!receipt.inputHead || !receipt.actionReviewMode || receipt.actionReviewMode === 'revision' && !receipt.requestDigest || continuation && (!receipt.requestCommentId || !receipt.requestDigest || receipt.actionReviewMode !== 'revision')) continue
+        if (!receipt.inputHead || !receipt.actionReviewMode || receipt.actionReviewMode === 'revision' && !receipt.requestDigest || continuation && (!receipt.requestCommentId || !receipt.requestDigest || !continuationIntent)) continue
         const before = registryAt(receipt.inputHead), output = registryAt(receipt.outputCommit)
-        const expectedCycle = initial && receipt.actionReviewMode === 'clean-acceptance'
+        const expectedCycle = receipt.actionReviewMode === 'clean-acceptance'
           ? acceptanceActionCycle(`pull-request:${input.pullRequest}:clean-acceptance`, before.snapshot)
           : revisionActionCycle(initial ? `pull-request:${input.pullRequest}:revision:${receipt.requestDigest}` : `comment:${receipt.requestCommentId}:${receipt.requestDigest}`)
         if (output.snapshot.verification.promptVersion !== ACTION_REVIEW_PROMPT_VERSION || JSON.stringify(output.snapshot.reviewCycle) !== JSON.stringify(expectedCycle)) continue
