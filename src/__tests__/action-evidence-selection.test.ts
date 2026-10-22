@@ -4,12 +4,13 @@ import { join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 const { github } = vi.hoisted(() => ({ github: vi.fn() }))
 vi.mock('node:child_process', () => ({ execFileSync: github }))
-import { acceptedActionState, ActionRegistrySchema, captureDraftActionCandidates, managedArticleDigest, normalizeWorkKey, readActionRegistry, registryRevision, sha256, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
+import { acceptedActionState, ActionRegistrySchema, ActionSourceSchema, captureDraftActionCandidates, DraftCandidateEvidenceRequirementsSchema, managedArticleDigest, normalizeWorkKey, readActionRegistry, readArticleStatuses, registryRevision, sha256, writeActionRegistry, type ActionRegistry, type ActionSource } from '../action-registry.js'
 import { writeActionStore } from './action-store-fixture.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, actionEvidenceScope, actionReviewIndex, canonicalActionSources, COVERAGE_SOURCE, draftCandidateEvidenceBinding, prepareConservativeDraftCandidateEvidence, selectActionEvidence } from '../action-evidence-selection.js'
 import { ActionEvidenceRequestError, actionEvidenceCaseDigest } from '../action-evidence-retrieval.js'
 import { generationActionCycle, revisionActionCycle } from '../action-review-cycle.js'
 import { actionModelSourcePromptView, collectActionSources, reviewArticleActions, reviewDraftActions, type ActionVerification } from '../review-actions.js'
+import { stampOutcome } from '../stamp-outcome.js'
 
 const date = '2030-01-01'
 const empty = () => ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
@@ -717,6 +718,101 @@ it('runs full collector→selection→both prompt paths with twelve oversized di
   } })
   expect(retry.cached).toBe(true)
   expect(retry.registry).toEqual(result.registry)
+})
+
+it('backs off optional whole-source context when the complete coverage receipt exceeds the fixed reserve', () => {
+  const sources: ActionSource[] = [
+    { id: 'article', kind: 'report', locator: 'current article', content: 'A'.repeat(1024) },
+    { id: 'operator', kind: 'instruction', locator: 'editorial feedback', content: '' },
+    ...Array.from({ length: 30 }, (_, index) => ({
+      id: `repo:optional-${String(index).padStart(2, '0')}`,
+      kind: 'goal' as const,
+      locator: `optional-${index}-${'l'.repeat(1024)}`,
+      content: String(index).padStart(2, '0') + 'x'.repeat(11_998),
+    })),
+  ]
+
+  const selection = selectActionEvidence({
+    registry: empty(), articleDate: date, cycle: revisionActionCycle('dynamic-coverage-receipt'),
+    articleStatuses: new Map([[date, 'draft']]), markdown: `---\ndate: ${date}\nstatus: draft\n---\nNo references.\n`, feedback: '', sources,
+  })
+  const totalBytes = selection.sources.reduce((total, source) => total + Buffer.byteLength(source.content), 0)
+  const omitted = selection.receipt.sources.filter(source => !source.required && !source.included)
+
+  expect(totalBytes).toBeLessThanOrEqual(384 * 1024)
+  expect(selection.receipt.sources.filter(source => source.required).every(source => source.included)).toBe(true)
+  expect(omitted.length).toBeGreaterThan(0)
+  expect(omitted.every(source => source.reason.includes('complete coverage receipt'))).toBe(true)
+  expect(omitted.map(source => source.id)).toEqual([...omitted.map(source => source.id)].sort().reverse())
+  expect(selection.receipt.sources).toHaveLength(sources.length)
+})
+
+it('requests a bounded view when required sources plus their complete coverage receipt cannot fit', () => {
+  const sources: ActionSource[] = [
+    { id: 'article', kind: 'report', locator: 'current article', content: 'A'.repeat(1024) },
+    { id: 'operator', kind: 'instruction', locator: 'editorial feedback', content: '' },
+    ...Array.from({ length: 30 }, (_, index) => ({
+      id: `review:required-${String(index).padStart(2, '0')}`,
+      kind: 'repository' as const,
+      locator: `required-${index}-${'l'.repeat(1024)}`,
+      content: String(index).padStart(2, '0') + 'x'.repeat(11_998),
+    })),
+  ]
+
+  try {
+    selectActionEvidence({
+      registry: empty(), articleDate: date, cycle: revisionActionCycle('required-dynamic-coverage-receipt'),
+      articleStatuses: new Map([[date, 'draft']]), markdown: `---\ndate: ${date}\nstatus: draft\n---\nNo references.\n`, feedback: '', sources,
+    })
+    throw new Error('Expected a bounded source-view request')
+  } catch (error) {
+    expect(error).toBeInstanceOf(ActionEvidenceRequestError)
+    expect((error as ActionEvidenceRequestError).request.kind).toBe('source-view')
+    expect((error as Error).message).toMatch(/complete coverage receipt.*bounded source view requested/i)
+  }
+})
+
+it.skipIf(!process.env.ACTION_EVIDENCE_LIVE_SNAPSHOT)('replays the private Oct21 failed corpus without dropping required evidence', () => {
+  const capsulePath = process.env.ACTION_EVIDENCE_LIVE_SNAPSHOT
+  if (!capsulePath) throw new Error('Missing explicit private live-source snapshot')
+  const capsule = JSON.parse(readFileSync(capsulePath, 'utf8')) as {
+    policySha: string
+    inputHead: string
+    collected: unknown
+    draftCandidateEvidence: unknown
+    observed: { receipt: { sources: Array<{ id: string; required: boolean; included: boolean }> }; receiptBytes: number }
+    providerCalls: number
+  }
+  expect(capsule).toMatchObject({
+    policySha: 'a2368c203ddebc52a74aaca9ce9472ffa6dd6d24',
+    inputHead: 'a30fb2fc925e1a633870ea0149d76f7b3d485292',
+    observed: { receiptBytes: 17_312 },
+    providerCalls: 0,
+  })
+  const registry = readActionRegistry(process.cwd())
+  const snapshot = registry.articles.find(article => article.date === '2026-10-21')
+  if (!snapshot?.draftCandidates) throw new Error('Missing Oct21 draft candidates')
+  const draft = readFileSync(join(process.cwd(), '_articles/2026-10-21.md'), 'utf8')
+  const markdown = stampOutcome(draft.replace(/^status:\s*"?draft"?\s*$/m, 'status: "accepted"'), 'accepted')
+  const selection = selectActionEvidence({
+    registry,
+    articleStatuses: readArticleStatuses(process.cwd()).set('2026-10-21', 'accepted'),
+    articleDate: '2026-10-21',
+    cycle: revisionActionCycle('pull-request:416:clean-acceptance'),
+    markdown,
+    feedback: '',
+    sources: ActionSourceSchema.array().parse(capsule.collected),
+    draftCandidates: snapshot.draftCandidates,
+    draftCandidateEvidence: DraftCandidateEvidenceRequirementsSchema.parse(capsule.draftCandidateEvidence),
+  })
+  const previousIncluded = new Set(capsule.observed.receipt.sources.filter(source => source.included).map(source => source.id))
+  const newlyOmitted = selection.receipt.sources.filter(source => previousIncluded.has(source.id) && !source.included)
+  const totalBytes = selection.sources.reduce((total, source) => total + Buffer.byteLength(source.content), 0)
+
+  expect(totalBytes).toBeLessThanOrEqual(384 * 1024)
+  expect(selection.receipt.sources).toHaveLength(capsule.observed.receipt.sources.length)
+  expect(selection.receipt.sources.filter(source => source.required).every(source => source.included)).toBe(true)
+  expect(newlyOmitted).toEqual([expect.objectContaining({ required: false, id: expect.stringMatching(/^repo:ROADMAP\.md@/) })])
 })
 
 it('canonicalizes exact duplicates and property-order equivalents without losing citation IDs', () => {
