@@ -206,12 +206,56 @@ Never automatically reopen completed, dismissed or superseded work. Material cha
 Never change inclusion preferences. The reviewer checkbox is an admission override, not completion or execution authority.
 When evidence is missing, contradictory, truncated or stale, hold the change or omit the new suggestion. Never infer missing approvals.`
 
+const ProviderSchemaObject = z.record(z.string(), z.unknown())
+const unsupportedProviderSchemaKeywords = new Set(['$schema', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'minLength', 'maxLength', 'maxItems'])
+
+function providerDiscriminatedUnion(value: unknown): unknown[] {
+  const branches = z.array(ProviderSchemaObject).min(2).parse(value)
+  let discriminator: string | undefined
+  const values = new Set<string>()
+  for (const branch of branches) {
+    const properties = ProviderSchemaObject.parse(branch.properties)
+    const required = new Set(z.array(z.string()).parse(branch.required))
+    const candidates = Object.entries(properties).flatMap(([key, property]) => {
+      const parsed = ProviderSchemaObject.safeParse(property)
+      return parsed.success && required.has(key) && typeof parsed.data.const === 'string'
+        ? [{ key, value: parsed.data.const }]
+        : []
+    })
+    if (candidates.length !== 1) throw new Error('Provider oneOf conversion requires exactly one required string const discriminator per branch')
+    const candidate = candidates[0]
+    if (!candidate || discriminator !== undefined && candidate.key !== discriminator) throw new Error('Provider oneOf conversion requires the same discriminator in every branch')
+    discriminator = candidate.key
+    if (values.has(candidate.value)) throw new Error('Provider oneOf conversion requires distinct discriminator values')
+    values.add(candidate.value)
+  }
+  return branches.map(providerToolSchema)
+}
+
+function providerToolSchema(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(providerToolSchema)
+  const parsed = ProviderSchemaObject.safeParse(value)
+  if (!parsed.success) return value
+  const output: Record<string, unknown> = {}
+  for (const [key, child] of Object.entries(parsed.data)) {
+    if (unsupportedProviderSchemaKeywords.has(key)) continue
+    if (key === 'oneOf') {
+      if (Object.hasOwn(parsed.data, 'anyOf')) throw new Error('Provider schema cannot merge oneOf with an existing anyOf')
+      output.anyOf = providerDiscriminatedUnion(child)
+      continue
+    }
+    output[key] = providerToolSchema(child)
+  }
+  return output
+}
+
 export function actionProviderRequest(role: 'proposer' | 'verifier', prompt: string) {
     const schema = role === 'proposer' ? LineProposalSchema : ActionVerificationSchema
-    // Strict tool decoding supports types but not these Zod value constraints.
-    // Keep every original constraint in the application-side parse below.
-    const unsupported = new Set(['$schema', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'minLength', 'maxLength', 'maxItems'])
-    const wireSchema = z.record(z.string(), z.unknown()).parse(JSON.parse(JSON.stringify(z.toJSONSchema(schema), (key, value) => unsupported.has(key) ? undefined : value)))
+    // The provider supports anyOf but not oneOf. Converting only required, disjoint const
+    // discriminators preserves the native union while every other unsupported construct fails closed.
+    // Keep every original Zod constraint in the application-side parse below.
+    const jsonSchema: unknown = JSON.parse(JSON.stringify(z.toJSONSchema(schema)))
+    const wireSchema = ProviderSchemaObject.parse(providerToolSchema(jsonSchema))
     const tool = { name: 'review_actions', description: 'Return the structured action review and independently grounded closing options.', strict: true, input_schema: { ...wireSchema, type: 'object' as const } }
     return {
       model: role === 'proposer' ? 'claude-sonnet-4-6' : 'claude-opus-4-6', max_tokens: 12000,
