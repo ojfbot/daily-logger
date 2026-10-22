@@ -13,7 +13,7 @@ export const MANIFEST_SHA = 'ddfb016b14633ebc0487153576c634a2e986de99102f025cd7f
 const WORKFLOW = '.github/workflows/action-schema-probe.yml'
 const DRIVER = 'scripts/probe-action-schema.ts'
 const ORIGIN = 'https://api.anthropic.com'
-const PREPARATION_APPROVAL = 'call_7b31265ee4994084ad41ca97a6ae4a6d'
+const UNUSABLE_APPROVALS = ['call_7b31265ee4994084ad41ca97a6ae4a6d', 'call_7d9b3db53550499184fb6c002b86fcab', 'call_b2c40b1e97cb46eca57715621e133b4b', 'call_0dd2adeda1c64d6ab5994b0ae17d437b']
 const roles = ['proposer', 'verifier'] as const
 type Role = typeof roles[number]
 type JsonObject = Record<string, unknown>
@@ -84,7 +84,8 @@ const contextSchema = z.strictObject({
 export type ProbeContext = z.infer<typeof contextSchema>
 export function parseContext(value: unknown): ProbeContext {
   const context = contextSchema.parse(value)
-  requireThat(context.approvalReceipt !== PREPARATION_APPROVAL, 'PREPARATION_IS_NOT_EXECUTION_AUTHORITY')
+  // The sole coordinator must authenticate fresh human approval externally; call_* is only its bound reference.
+  requireThat(!UNUSABLE_APPROVALS.includes(context.approvalReceipt), 'PRIOR_APPROVAL_IS_NOT_EXECUTION_AUTHORITY')
   return context
 }
 function envContext(env: NodeJS.ProcessEnv): ProbeContext {
@@ -136,6 +137,13 @@ export function assertEmptyOutput(value: unknown): void {
 }
 export type CallReceipt = { role: Role; endpoint: 'count' | 'messages'; canonicalBodySha256: string; wireSha256: string; wireBytes: number; status?: number; requestId?: string | null; failureCode?: string }
 export type SafeResult = { version: 1; syntheticOnly: true; compilerAcceptance: Role[]; protocolSuccess: Role[]; calls: CallReceipt[]; counts: Partial<Record<Role, number>>; usage: Partial<Record<Role, { inputTokens: number; outputTokens: number }>>; errorCode?: string }
+export function expectedSdkHeaders(secret: string, wireBytes: number): Record<string, string> {
+  requireThat((process.platform === 'linux' || process.platform === 'darwin') && (process.arch === 'x64' || process.arch === 'arm64'), 'UNSUPPORTED_RUNNER_PLATFORM')
+  return { accept: 'application/json', 'content-type': 'application/json', 'content-length': String(wireBytes),
+    'x-api-key': secret, 'anthropic-version': '2023-06-01', 'user-agent': 'Anthropic/JS 0.36.3',
+    'x-stainless-lang': 'js', 'x-stainless-package-version': '0.36.3', 'x-stainless-os': process.platform === 'linux' ? 'Linux' : 'MacOS',
+    'x-stainless-arch': process.arch, 'x-stainless-runtime': 'node', 'x-stainless-runtime-version': process.version, 'x-stainless-retry-count': '0' }
+}
 export function createGuardedFetch(loaded: Loaded, wire: Wire, receipts: CallReceipt[], secret = ''): Fetch {
   let next = 0; let stopped = false
   return async (input, init) => {
@@ -151,12 +159,14 @@ export function createGuardedFetch(loaded: Loaded, wire: Wire, receipts: CallRec
       const wireBytes = Buffer.byteLength(body)
       requireThat(wireBytes <= loaded.manifest.requestByteLimit, 'WIRE_BYTE_LIMIT')
       const headers = new Headers(init.headers as HeadersInit)
-      requireThat(headers.get('content-length') === String(wireBytes) && !headers.has('authorization'), 'WIRE_LENGTH_OR_AUTH')
+      const expectedHeaders = expectedSdkHeaders(secret, wireBytes)
+      requireThat([...headers.keys()].sort().join() === Object.keys(expectedHeaders).sort().join()
+        && Object.entries(expectedHeaders).every(([name, value]) => headers.get(name) === value), 'WIRE_HEADERS_DENIED')
       const receipt: CallReceipt = { role: expectedRole, endpoint: kind, canonicalBodySha256: sha(canonical(expected)), wireSha256: sha(body), wireBytes }
       next += 1; receipts.push(receipt) // Consume before transport, including exceptions/unknown outcomes.
       const response = await wire(url, { method: 'POST', headers, body, signal: init.signal as AbortSignal, redirect: 'error' })
       receipt.status = response.status; receipt.requestId = safeId(response.headers.get('request-id'), secret)
-      if (response.redirected || response.status < 200 || response.status >= 300) {
+      if (response.redirected || response.status !== 200) {
         await response.body?.cancel().catch(() => undefined)
         requireThat(false, response.status === 400 ? 'PROVIDER_400' : 'PROVIDER_HTTP_FAILURE')
       }

@@ -4,7 +4,7 @@ import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:f
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { ActionProposalSchema, ActionVerificationSchema } from '../../src/review-actions.js'
-import { assertEmptyOutput, assertSafeEnvironment, consume, createGuardedFetch, FIXTURES, loadFixtures, MANIFEST_SHA, parseContext, prepare, runProbe, type ProbeClientFactory, type ProbeContext, type Wire } from '../../scripts/probe-action-schema.js'
+import { assertEmptyOutput, assertSafeEnvironment, consume, createGuardedFetch, expectedSdkHeaders, FIXTURES, loadFixtures, MANIFEST_SHA, parseContext, prepare, runProbe, type ProbeClientFactory, type ProbeContext, type Wire } from '../../scripts/probe-action-schema.js'
 
 const root = process.cwd()
 const loaded = loadFixtures(root)
@@ -17,7 +17,7 @@ const factory: ProbeClientFactory = options => {
   return { post: async (path, request) => {
     // SDK source-matched factory double; actual SDK is exercised only in the isolated child.
     const body = JSON.stringify(request.body, null, 2)
-    const value = await fetch(`https://api.anthropic.com${path}`, { method: 'POST', body, signal: new AbortController().signal, headers: { 'content-length': String(Buffer.byteLength(body)) } })
+    const value = await fetch(`https://api.anthropic.com${path}`, { method: 'POST', body, signal: new AbortController().signal, headers: expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)) })
     return value.json()
   } }
 }
@@ -61,23 +61,27 @@ describe('manual synthetic probe — no transport', () => {
     expect(JSON.stringify(result)).not.toContain(secret); expect(result.calls[1].requestId).toBeNull()
     const unknown = await run([new Error(secret)]); expect(unknown.errorCode).toBe('PROBE_STOPPED'); expect(JSON.stringify(unknown)).not.toContain(secret)
   })
-  it.each([302, 307, 429, 500])('stops at non2xx %s without retry/redirect', async status => {
-    const result = await run([response({}, status)]); expect(result.calls).toHaveLength(1); expect(result.errorCode).toBe('PROVIDER_HTTP_FAILURE')
+  it.each([201, 202, 204, 302, 307, 429, 500])('requires exact200, stops at %s without retry/redirect', async status => {
+    const result = await run([status === 204 ? new Response(null, { status }) : response({}, status)]); expect(result.calls).toHaveLength(1); expect(result.errorCode).toBe('PROVIDER_HTTP_FAILURE')
+  })
+  it.each([201, 202])('does not call a non200 messages response protocol/compiler success (%s)', async status => {
+    const result = await run([{ input_tokens: 1 }, response(reply, status)])
+    expect(result.calls).toHaveLength(2); expect(result.compilerAcceptance).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(result.errorCode).toBe('PROVIDER_HTTP_FAILURE')
   })
   it('bounds all response bytes before SDK parsing', async () => {
     const result = await run([new Response('x'.repeat(131073))]); expect(result.errorCode).toBe('RESPONSE_BYTE_LIMIT'); expect(result.calls).toHaveLength(1)
   })
   it('consumes permission before an unknown transport result and denies a fifth call', async () => {
     const receipts: Parameters<typeof createGuardedFetch>[2] = []
-    const guarded = createGuardedFetch(loaded, async () => { expect(receipts).toHaveLength(1); throw new Error('unknown transport') }, receipts)
+    const guarded = createGuardedFetch(loaded, async () => { expect(receipts).toHaveLength(1); throw new Error('unknown transport') }, receipts, 'offline-not-a-real-key')
     const invoke = (fetch: typeof guarded, role: 'proposer' | 'verifier', kind: 'count' | 'messages') => {
       const body = JSON.stringify(loaded.data.get(`${role}.synthetic-${kind}-request.json`), null, 2)
-      return fetch(`https://api.anthropic.com/v1/messages${kind === 'count' ? '/count_tokens' : ''}`, { method: 'POST', body, signal: new AbortController().signal, headers: { 'content-length': String(Buffer.byteLength(body)) } })
+      return fetch(`https://api.anthropic.com/v1/messages${kind === 'count' ? '/count_tokens' : ''}`, { method: 'POST', body, signal: new AbortController().signal, headers: expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)) })
     }
     await expect(invoke(guarded, 'proposer', 'count')).rejects.toThrow('unknown transport')
     await expect(invoke(guarded, 'proposer', 'count')).rejects.toThrow('TRANSPORT_ALREADY_STOPPED')
     let calls = 0
-    const finite = createGuardedFetch(loaded, async () => { calls += 1; return response({}) }, [])
+    const finite = createGuardedFetch(loaded, async () => { calls += 1; return response({}) }, [], 'offline-not-a-real-key')
     for (const role of ['proposer', 'verifier'] as const) for (const kind of ['count', 'messages'] as const) await invoke(finite, role, kind)
     await expect(invoke(finite, 'proposer', 'count')).rejects.toThrow(); expect(calls).toBe(4)
   })
@@ -88,21 +92,32 @@ describe('manual synthetic probe — no transport', () => {
     const receipts: Parameters<typeof createGuardedFetch>[2] = []
     const guarded = createGuardedFetch(loaded, async () => response({}, 200, { 'request-id': 'req_Secret123' }), receipts, 'Secret123')
     const body = JSON.stringify(loaded.data.get('proposer.synthetic-count-request.json'), null, 2)
-    await guarded('https://api.anthropic.com/v1/messages/count_tokens', { method: 'POST', body, signal: new AbortController().signal, headers: { 'content-length': String(Buffer.byteLength(body)) } })
+    await guarded('https://api.anthropic.com/v1/messages/count_tokens', { method: 'POST', body, signal: new AbortController().signal, headers: expectedSdkHeaders('Secret123', Buffer.byteLength(body)) })
     expect(receipts[0].requestId).toBeNull(); expect(JSON.stringify(receipts)).not.toContain('Secret123')
   })
   it('pre-network guard rejects origin/query/path/method/body/length and permanently stops after a failure', async () => {
     let transport = 0
     for (const variant of ['origin', 'query', 'method', 'body', 'length']) {
       const receipts: Parameters<typeof createGuardedFetch>[2] = []
-      const guarded = createGuardedFetch(loaded, async () => { transport += 1; return response({}) }, receipts)
+      const guarded = createGuardedFetch(loaded, async () => { transport += 1; return response({}) }, receipts, 'offline-not-a-real-key')
       const body = JSON.stringify(loaded.data.get('proposer.synthetic-count-request.json'), null, 2)
       const url = variant === 'origin' ? 'https://example.test/v1/messages/count_tokens' : `https://api.anthropic.com/v1/messages/count_tokens${variant === 'query' ? '?beta=true' : ''}`
-      const options = { method: variant === 'method' ? 'GET' : 'POST', body: variant === 'body' ? '{}' : body, signal: new AbortController().signal, headers: { 'content-length': variant === 'length' ? '1' : String(Buffer.byteLength(body)) } }
+      const options = { method: variant === 'method' ? 'GET' : 'POST', body: variant === 'body' ? '{}' : body, signal: new AbortController().signal, headers: { ...expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)), 'content-length': variant === 'length' ? '1' : String(Buffer.byteLength(body)) } }
       await expect(guarded(url, options)).rejects.toThrow()
-      await expect(guarded('https://api.anthropic.com/v1/messages/count_tokens', { ...options, method: 'POST', body, headers: { 'content-length': String(Buffer.byteLength(body)) } })).rejects.toThrow('TRANSPORT_ALREADY_STOPPED')
+      await expect(guarded('https://api.anthropic.com/v1/messages/count_tokens', { ...options, method: 'POST', body, headers: expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)) })).rejects.toThrow('TRANSPORT_ALREADY_STOPPED')
     }
     expect(transport).toBe(0)
+  })
+  it.each([
+    { 'x-api-key': 'wrong-key' }, { authorization: 'Bearer forbidden' }, { 'x-unapproved-header': 'forbidden' },
+    { 'anthropic-version': 'future' }, { 'x-stainless-retry-count': '1' }, { 'content-type': 'text/plain' }, { 'x-stainless-package-version': 'future' },
+  ])('closes actual key/SDK header drift before transport', async patch => {
+    let calls = 0
+    const guarded = createGuardedFetch(loaded, async () => { calls += 1; return response({}) }, [], 'offline-not-a-real-key')
+    const body = JSON.stringify(loaded.data.get('proposer.synthetic-count-request.json'), null, 2)
+    await expect(guarded('https://api.anthropic.com/v1/messages/count_tokens', { method: 'POST', body, signal: new AbortController().signal,
+      headers: { ...expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)), ...patch } })).rejects.toThrow('WIRE_HEADERS_DENIED')
+    expect(calls).toBe(0)
   })
   it('denies debug/alternate routes or credentials and key-bearing preflight', () => {
     for (const key of ['DEBUG', 'ANTHROPIC_AUTH_TOKEN', 'ANTHROPIC_BASE_URL', 'GH_PAT', 'GH_TOKEN', 'GITHUB_TOKEN']) expect(() => assertSafeEnvironment({ [key]: 'not-a-secret' }, false)).toThrow()
@@ -143,7 +158,7 @@ describe('native exclusive runner custody', () => {
     try { writeFileSync(fixture, '{}'); expect(() => prepare(checkout, join(scratch, 'bad-fixture'), context)).toThrow('FIXTURE_FILE_PIN') } finally { writeFileSync(fixture, bytes) }
   })
   it('rejects old prep authority, rerun/fork/branch/source mismatches', () => {
-    for (const patch of [{ approvalReceipt: 'call_7b31265ee4994084ad41ca97a6ae4a6d' }, { runAttempt: '2' }, { ref: 'refs/heads/test' }, { actor: 'unknown' }, { workflowSha: '0'.repeat(40) }]) expect(() => parseContext({ ...context, ...patch })).toThrow()
+    for (const patch of [{ approvalReceipt: 'call_7b31265ee4994084ad41ca97a6ae4a6d' }, { approvalReceipt: 'call_7d9b3db53550499184fb6c002b86fcab' }, { approvalReceipt: 'call_b2c40b1e97cb46eca57715621e133b4b' }, { approvalReceipt: 'call_0dd2adeda1c64d6ab5994b0ae17d437b' }, { runAttempt: '2' }, { ref: 'refs/heads/test' }, { actor: 'unknown' }, { workflowSha: '0'.repeat(40) }]) expect(() => parseContext({ ...context, ...patch })).toThrow()
   })
 })
 

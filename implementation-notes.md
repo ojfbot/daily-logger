@@ -1,6 +1,10 @@
 # Implementation notes
 
 ## Deviations
+- 2026-10-22 (probe exact status): the first transport guard admitted any 2xx, permitting synthetic protocol success without the promised HTTP200 compiler observation. Both endpoints now require exactly 200 and stop otherwise; no retry or second-role continuation occurs.
+
+- 2026-10-22 (probe transport header boundary): exact constructor options alone did not prevent a supplied SDK header from crossing the injected transport. The probe now checks the full locked SDK0.36.3 header set, exact selected key, JSON/version/retry/platform values before consuming transport; no headers or key values are logged. A call receipt is a provenance reference, not authentication of human approval: the sole coordinator still validates a new approval and reserves one dispatch externally.
+
 - 2026-10-22 (manual schema diagnostic): the public request pins describe compact JSON, while locked SDK0.36.3 pretty-prints its wire body. The separate manual probe checks both canonical object pins and actual wire bytes/content length before forwarding; it neither imports runtime31c nor changes the production 12,000-token reserve. Raw synthetic responses are bounded in memory and discarded, with only closed safe metadata retained. This standalone manual diagnostic is outside the existing daily/editorial process model; no modeled pipeline dependency or lifecycle changes.
 
 - 2026-10-22 (browser fixture intake): the native suite passed but excluded a Playwright inclusion fixture that still called the former missing-view API. The fixture now prepares its exact source/registry-bound consumed view and resolves visible whole-line citations; all browser assertions and production guards remain unchanged. The complete browser suite is now part of this candidate's qualification.
