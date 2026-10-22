@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
-import { generationActionCycle, revisionActionCycle } from '../../src/action-review-cycle.js'
+import { acceptanceActionCycle, generationActionCycle, revisionActionCycle } from '../../src/action-review-cycle.js'
+import { editorialInputSchema } from '../../shared/article-review.js'
 import { editorialProofName, editorialProofSchema } from '../../shared/editorial-action-proof.js'
 import { actionFile, emptyActionFile, writeActionStore } from '../../src/__tests__/action-store-fixture.js'
 import { execFileSync } from 'node:child_process'
@@ -8,9 +9,9 @@ import { tmpdir } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 import { createFixture, makePullRequest, makeComment, today } from './fixture.js'
-import { createEditorialService, repo } from '../../api/_lib/editorial-continuation.js'
+import { createEditorialService, decodeEditorial, editorialDigest, encodeEditorial, repo } from '../../api/_lib/editorial-continuation.js'
 import { reviewArticleActions, mockActionAgents } from '../../src/review-actions.js'
-import { ActionRegistrySchema, ArticleActionFileSchema } from '../../src/action-registry-schema.js'
+import { ActionRegistrySchema, ArticleActionFileSchema, stripManagedActions } from '../../src/action-registry.js'
 import { admitActionRegistry } from '../../.github/scripts/editorial-action-registry.js'
 import { admitEditorial, prepareEditorial, pushEditorial, finalizeEditorial, type Execution } from '../../.github/scripts/continue-editorial.js'
 // Native revision cases create Git worktrees and run the actual CLI.
@@ -18,7 +19,7 @@ vi.setConfig({ testTimeout: 20_000 })
 const cleanups: string[] = []
 afterEach(() => { vi.unstubAllEnvs(); for (const path of cleanups.splice(0)) rmSync(path, { recursive: true, force: true }) })
 function git(cwd: string, ...args: string[]) { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim() }
-async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | 'missing-registry' | 'registry-symlink' | 'registry-executable' | 'cross-date-choice' | null = null, ambiguousAncestry = false, pendingInitial = false) {
+async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | 'missing-registry' | 'registry-symlink' | 'registry-executable' | 'cross-date-choice' | null = null, ambiguousAncestry = false, pendingInitial = false, requestKind: 'revision' | 'clean' = 'revision') {
   vi.stubEnv('MOCK_LLM', 'true')
   vi.stubEnv('DRY_RUN', 'false')
   const root = mkdtempSync(resolve(tmpdir(), 'uik01-consumer-')); cleanups.push(root)
@@ -73,21 +74,32 @@ async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executa
   state.acceptPullNumbers.push(42); state.pullFiles.set(42, [{ filename: path, status: 'modified' }])
   state.pullRequests.set(42, { ...pr, body: 'Original feedback receipt', head: { ...pr.head, sha: head, ref: `accept/${today}` } })
   state.refFiles.set(`${head}:${path}`, projectedContent)
-  state.refFiles.set(`${head}:actions/articles/${today}.json`, JSON.stringify(actionFile(ActionRegistrySchema.parse(JSON.parse(registry)), today)))
-  const github: Execution['github'] = async (path, options) => path.startsWith(`${repo}/actions/workflows/editorial-revise.yml/runs?`) ? Response.json({ workflow_runs: [] }) : path === `${repo}/actions/runs/101` ? Response.json({ id: 101, run_attempt: 1, event: 'issue_comment', head_branch: 'main', head_sha: execution.policySha, display_title: 'Editorial continuation comment 2', path: '.github/workflows/editorial-revise.yml' }) : fixtureGithub(path, options)
+  state.refFiles.set(`${head}:actions/articles/${today}.json`, ['missing-registry', 'registry-symlink'].includes(corruption ?? '')
+    ? JSON.stringify(actionFile(ActionRegistrySchema.parse(JSON.parse(registry)), today))
+    : git(workspace, 'show', `${head}:actions/articles/${today}.json`))
+  if (requestKind === 'clean') state.source = policySha
+  let requestCommentId = requestKind === 'clean' ? 1 : 2
+  const github: Execution['github'] = async (path, options) => path.startsWith(`${repo}/actions/workflows/editorial-revise.yml/runs?`) ? Response.json({ workflow_runs: [] }) : path === `${repo}/actions/runs/101` ? Response.json({ id: 101, run_attempt: 1, event: 'issue_comment', head_branch: 'main', head_sha: execution.policySha, display_title: `Editorial continuation comment ${requestCommentId}`, path: '.github/workflows/editorial-revise.yml' }) : fixtureGithub(path, options)
   const service = createEditorialService(github)
   const view = await service.load(today, 'ojfbot'); if (view.status !== 'existing') throw new Error('Missing acceptance')
-  const versionId = crypto.randomUUID()
-  await service.write({ schemaVersion: 1, intent: 'append_editorial_feedback', date: today, requestId: versionId, pullRequest: 42, headSha: head, visibleBlobSha: blob,
-    supersedes: view.originalDigest, feedback: { version: 2, notes: [{ kind: 'root', content: ' \t雪 @claude /run\n ' }] } }, 'ojfbot')
-  const saved = await service.load(today, 'ojfbot'); if (saved.status !== 'existing' || !saved.versions[0]) throw new Error('No version')
-  await service.write({ schemaVersion: 1, intent: 'request_editorial_revision', date: today, requestId: crypto.randomUUID(), pullRequest: 42, headSha: head, articleBlobSha: blob,
-    feedbackId: versionId, feedbackDigest: saved.versions[0].digest }, 'ojfbot')
-  const comment = state.prComments.get(42)?.[1]; if (!comment) throw new Error('No request comment')
+  if (requestKind === 'revision') {
+    const versionId = crypto.randomUUID()
+    await service.write({ schemaVersion: 1, intent: 'append_editorial_feedback', date: today, requestId: versionId, pullRequest: 42, headSha: head, visibleBlobSha: blob,
+      supersedes: view.originalDigest, feedback: { version: 2, notes: [{ kind: 'root', content: ' \t雪 @claude /run\n ' }] } }, 'ojfbot')
+    const saved = await service.load(today, 'ojfbot'); if (saved.status !== 'existing' || !saved.versions[0]) throw new Error('No version')
+    await service.write({ schemaVersion: 1, intent: 'request_editorial_revision', date: today, requestId: crypto.randomUUID(), pullRequest: 42, headSha: head, articleBlobSha: blob,
+      feedbackId: versionId, feedbackDigest: saved.versions[0].digest }, 'ojfbot')
+  } else {
+    const clean = editorialInputSchema.parse({ schemaVersion: 1, intent: 'request_clean_acceptance', date: today, requestId: crypto.randomUUID(), pullRequest: 42,
+      headSha: head, articleBlobSha: blob, registryBlobSha: git(workspace, 'rev-parse', `${head}:actions/articles/${today}.json`), policySha })
+    await service.write(clean, 'ojfbot')
+  }
+  const comment = state.prComments.get(42)?.[requestCommentId - 1]; if (!comment) throw new Error('No request comment')
+  requestCommentId = comment.id
   comment.created_at = new Date().toISOString(); comment.updated_at = comment.created_at
   const event = { action: 'created', repository: { full_name: 'ojfbot/daily-logger' }, sender: { login: 'ojfbot' }, issue: { number: 42, pull_request: { url: `https://api.github.com${repo}/pulls/42` } }, comment }
   const execution: Execution = { github, workspace, policyDirectory: process.cwd(), policySha, runId: 101, attempt: 1, event }
-  return { execution, state, head, blob, remote, path, comment }
+  return { execution, state, head, blob, remote, path, comment, requestKind }
 }
 async function publishProof(f: Awaited<ReturnType<typeof setup>>, initial = false) {
   const path = resolve(f.execution.workspace, '.git/editorial-output.json')
@@ -113,6 +125,97 @@ it.each(['edited', 'actor', 'pr_author', 'payload', 'head', 'blob', 'ordinary', 
   await expect(admitEditorial(f.execution)).rejects.toThrow()
   expect(f.state.prComments.get(42)).toHaveLength(2)
 })
+it.each(['actor', 'pr_author', 'repository', 'date', 'head', 'article', 'registry', 'policy', 'rerun'] as const)('clean admission rejects wrong %s before a claim', async kind => {
+  const f = await setup(false, null, false, false, 'clean')
+  const event = f.execution.event
+  if (!event || typeof event !== 'object') throw new Error('Missing event')
+  if (kind === 'actor') f.execution.event = { ...event, sender: { login: 'other' } }
+  if (kind === 'repository') f.execution.event = { ...event, repository: { full_name: 'other/daily-logger' } }
+  if (kind === 'rerun') f.execution.attempt = 2
+  if (kind === 'date') {
+    const record = decodeEditorial(f.comment.body)
+    if (!record || record.intent !== 'request_clean_acceptance') throw new Error('Missing clean request')
+    f.comment.body = encodeEditorial({ ...record, date: '2026-10-13' })
+  }
+  if (kind === 'pr_author' || kind === 'head') {
+    const pr = f.state.pullRequests.get(42); if (!pr) throw new Error('Missing PR')
+    f.state.pullRequests.set(42, kind === 'pr_author' ? { ...pr, user: { login: 'other' } } : { ...pr, head: { ...pr.head, sha: 'd'.repeat(40) } })
+  }
+  if (kind === 'article') f.state.refFiles.set(`${f.head}:${f.path}`, `${git(f.execution.workspace, 'show', `${f.head}:${f.path}`)}\nchanged`)
+  if (kind === 'registry') {
+    const path = `${f.head}:actions/articles/${today}.json`
+    const file = ArticleActionFileSchema.parse(JSON.parse(f.state.refFiles.get(path) ?? 'null'))
+    file.snapshot.verification.proposer = 'different-reviewed-agent'
+    f.state.refFiles.set(path, JSON.stringify(file))
+  }
+  if (kind === 'policy') f.state.source = 'f'.repeat(40)
+  await expect(admitEditorial(f.execution)).rejects.toThrow()
+  expect(f.state.prComments.get(42)?.some(comment => comment.body.startsWith('## Editorial execution claim\n'))).toBe(false)
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
+})
+it('clean admission never consumes a genuine feedback version added before invocation', async () => {
+  const f = await setup(false, null, false, false, 'clean')
+  const pr = f.state.pullRequests.get(42); if (!pr) throw new Error('Missing PR')
+  const feedback = encodeEditorial({ schemaVersion: 1, intent: 'append_editorial_feedback', requestId: crypto.randomUUID(), date: today,
+    pullRequest: 42, headSha: f.head, visibleBlobSha: f.blob, supersedes: editorialDigest(pr.body ?? ''),
+    feedback: { version: 2, notes: [{ kind: 'root', content: 'New genuine feedback must block clean mode.' }] }, actor: 'ojfbot', originalBody: pr.body ?? '' })
+  f.state.prComments.get(42)?.push(makeComment(feedback, 2, 'ojfbot', 42))
+  await expect(admitEditorial(f.execution)).rejects.toThrow('no genuine editorial feedback')
+  expect(f.state.prComments.get(42)?.some(comment => comment.body.startsWith('## Editorial execution claim\n'))).toBe(false)
+})
+it('a new trusted main before the clean invocation claim stops without calling the native review', async () => {
+  const f = await setup(false, null, false, false, 'clean'); f.state.login = 'github-actions[bot]'
+  const github = f.execution.github
+  let mainReads = 0
+  f.execution.github = (path, options) => {
+    if (path === `${repo}/git/ref/heads/main` && ++mainReads >= 3) return Promise.resolve(Response.json({ object: { sha: 'f'.repeat(40) } }))
+    return github(path, options)
+  }
+  await expect(prepareEditorial(f.execution)).rejects.toThrow('Trusted main moved before the clean acceptance claim')
+  expect(mainReads).toBeGreaterThanOrEqual(3)
+  expect(f.state.prComments.get(42)?.some(comment => comment.body.startsWith('## Editorial execution claim\n'))).toBe(false)
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
+})
+it('clean admission requires the PR head to integrate the complete pinned trusted policy before a claim', async () => {
+  const f = await setup(false, null, false, false, 'clean'); f.state.login = 'github-actions[bot]'
+  const oldPolicy = git(f.execution.workspace, 'rev-parse', `${f.head}^`)
+  git(f.execution.workspace, 'checkout', '--detach', oldPolicy)
+  const registryPath = resolve(f.execution.workspace, 'actions/registry.json')
+  const registry = ActionRegistrySchema.parse(JSON.parse(readFileSync(registryPath, 'utf8')))
+  registry.records[0]!.gates = [{ kind: 'owner', value: 'human-review-required' }]
+  writeFileSync(registryPath, JSON.stringify(registry))
+  git(f.execution.workspace, 'add', 'actions/registry.json'); git(f.execution.workspace, 'commit', '-qm', 'new trusted owner gate')
+  const currentPolicy = git(f.execution.workspace, 'rev-parse', 'HEAD')
+  git(f.execution.workspace, 'checkout', '--detach', f.head)
+  const record = decodeEditorial(f.comment.body)
+  if (!record || record.intent !== 'request_clean_acceptance') throw new Error('Missing clean request')
+  f.comment.body = encodeEditorial({ ...record, policySha: currentPolicy })
+  f.execution.policySha = currentPolicy; f.state.source = currentPolicy
+  await expect(prepareEditorial(f.execution)).rejects.toThrow('fully integrated into the PR head')
+  expect(f.state.prComments.get(42)?.some(comment => comment.body.startsWith('## Editorial execution claim\n'))).toBe(false)
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
+})
+it.each(['feedback', 'main'] as const)('clean preparation rechecks %s after the durable claim and before native invocation', async kind => {
+  const f = await setup(false, null, false, false, 'clean'); f.state.login = 'github-actions[bot]'
+  const original = f.execution.github
+  f.execution.github = async (path, options) => {
+    const response = await original(path, options)
+    if (options?.method === 'POST' && String(options.body).includes('Editorial execution claim')) {
+      if (kind === 'main') f.state.source = 'f'.repeat(40)
+      else {
+        const pr = f.state.pullRequests.get(42); if (!pr) throw new Error('Missing PR')
+        const feedback = encodeEditorial({ schemaVersion: 1, intent: 'append_editorial_feedback', requestId: crypto.randomUUID(), date: today,
+          pullRequest: 42, headSha: f.head, visibleBlobSha: f.blob, supersedes: editorialDigest(pr.body ?? ''),
+          feedback: { version: 2, notes: [{ kind: 'root', content: 'New canonical feedback arrived during claim acknowledgement.' }] }, actor: 'ojfbot', originalBody: pr.body ?? '' })
+        f.state.prComments.get(42)?.push(makeComment(feedback, 99, 'ojfbot', 42))
+      }
+    }
+    return response
+  }
+  await expect(prepareEditorial(f.execution)).resolves.toBeNull()
+  expect(f.state.prComments.get(42)?.at(-1)?.body).toContain('No provider was invoked')
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
+})
 it('actual consumer claims before native MOCK_LLM and pushes the article and registry to local bare remote', async () => {
   const f = await setup(); f.state.login = 'github-actions[bot]'
   const prepared = await prepareEditorial(f.execution)
@@ -126,6 +229,45 @@ it('actual consumer claims before native MOCK_LLM and pushes the article and reg
   expect(readFileSync(resolve(f.execution.workspace, '.git/editorial-output.json'), 'utf8')).toContain(`"outputCommit":"${prepared.outputCommit}"`)
   expect(readFileSync(resolve(f.execution.workspace, '.git/editorial-output.json'), 'utf8')).toContain('"outcome":"changed"')
   await expect(prepareEditorial(f.execution)).rejects.toThrow('invocation claim')
+})
+it('runs one guarded clean acceptance on the existing PR without revising prose or inventing a new logical cycle', async () => {
+  const f = await setup(false, null, false, false, 'clean'); f.state.login = 'github-actions[bot]'
+  const inputArticle = git(f.execution.workspace, 'show', `${f.head}:${f.path}`)
+  const inputFile = ArticleActionFileSchema.parse(JSON.parse(git(f.execution.workspace, 'show', `${f.head}:actions/articles/${today}.json`)))
+  const prepared = await prepareEditorial(f.execution)
+  expect(prepared).not.toBeNull()
+  if (!prepared) throw new Error('Missing clean output')
+  expect(prepared.request.intent).toBe('request_clean_acceptance')
+  expect(git(prepared.worktree, 'rev-parse', 'HEAD^')).toBe(f.head)
+  const outputArticle = git(prepared.worktree, 'show', `${prepared.outputCommit}:${f.path}`)
+  expect(stripManagedActions(outputArticle).replace(/^outcome: accepted\n/m, '').trimEnd()).toBe(stripManagedActions(inputArticle).trimEnd())
+  const outputFile = ArticleActionFileSchema.parse(JSON.parse(git(prepared.worktree, 'show', `${prepared.outputCommit}:actions/articles/${today}.json`)))
+  expect(outputFile.snapshot.review.state).toBe('verified')
+  expect(outputFile.snapshot.reviewCycle).toEqual(acceptanceActionCycle('pull-request:42:clean-acceptance', inputFile.snapshot))
+  expect(f.state.prComments.get(42)?.find(comment => comment.body.startsWith('## Editorial execution claim\n'))?.body).toContain('"actionReviewMode":"clean-acceptance"')
+  const pinnedPolicy = f.execution.policySha
+  f.state.source = 'f'.repeat(40)
+  await pushEditorial(f.execution, prepared)
+  await publishProof(f)
+  const manifest = editorialProofSchema.parse(JSON.parse(readFileSync(resolve(f.execution.workspace, '.git/editorial-output.json'), 'utf8')))
+  expect(manifest).toMatchObject({ actionReviewMode: 'clean-acceptance', requestIntent: 'request_clean_acceptance', requestCommentId: f.comment.id, policySha: pinnedPolicy, inputHead: f.head, outputCommit: prepared.outputCommit })
+  await expect(admitActionRegistry({ workspace: f.execution.workspace, base: f.execution.policySha, head: prepared.outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github })).resolves.toBeUndefined()
+  expect(await createEditorialService(f.execution.github).load(today, 'ojfbot')).toMatchObject({ status: 'existing', policySha: 'f'.repeat(40), outstanding: false })
+})
+it.each(['mode', 'intent', 'digest'] as const)('a clean continuation receipt cannot borrow the wrong %s', async kind => {
+  const f = await setup(false, null, false, false, 'clean'); f.state.login = 'github-actions[bot]'
+  const prepared = await prepareEditorial(f.execution); if (!prepared) throw new Error('Missing clean output')
+  await pushEditorial(f.execution, prepared)
+  await publishProof(f)
+  const manifest = editorialProofSchema.parse(JSON.parse(readFileSync(resolve(f.execution.workspace, '.git/editorial-output.json'), 'utf8')))
+  const changed = kind === 'mode' ? { ...manifest, actionReviewMode: 'revision' as const }
+    : kind === 'intent' ? { ...manifest, requestIntent: 'request_editorial_revision' as const }
+    : { ...manifest, requestDigest: 'd'.repeat(64) }
+  const receipt = f.state.prComments.get(42)?.at(-1); if (!receipt) throw new Error('Missing receipt')
+  receipt.body = `## Editorial execution receipt\n${JSON.stringify({ ...changed, artifactId: 101 })}`
+  f.state.artifacts.set(101, { id: 101, name: editorialProofName(changed), expired: false, workflow_run: { id: 101, head_sha: f.execution.policySha } })
+  await expect(admitActionRegistry({ workspace: f.execution.workspace, base: f.execution.policySha, head: prepared.outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github })).rejects.toThrow('trusted editorial output receipt')
+  expect(await createEditorialService(f.execution.github).load(today, 'ojfbot')).toMatchObject({ status: 'existing', outstanding: true })
 })
 it('native unchanged prose still publishes the new verified action receipt', async () => {
   const f = await setup(true); f.state.login = 'github-actions[bot]'
@@ -159,6 +301,8 @@ it('actual workflow admits before PR concurrency and retains legacy author guard
   expect(workflow).toContain('needs: admit-continuation')
   expect(workflow).toContain('editorial-revise-${{ needs.admit-continuation.outputs.pull_request }}')
   expect(workflow).toContain("github.event_name == 'pull_request_target'")
+  expect(workflow).toContain("startsWith(github.event.comment.body, '## Explicit clean acceptance request')")
+  expect(workflow).not.toContain('workflow_dispatch:')
   expect(workflow).toContain('pnpm exec tsx .github/scripts/continue-editorial.ts admit')
 })
 it('pre-invocation failure records failure without a claim or remote article write', async () => {

@@ -9,6 +9,7 @@ import { sha } from '../../shared/article-review.js'
 
 export const revisionTitle = '## Explicit editorial revision request\n'
 export const versionTitle = '## Superseding editorial feedback\n'
+export const cleanAcceptanceTitle = '## Explicit clean acceptance request\n'
 const start = '<!-- EDITORIAL_CONTINUATION_V1_START -->'
 const end = '<!-- EDITORIAL_CONTINUATION_V1_END -->'
 export const repo = '/repos/ojfbot/daily-logger'
@@ -25,19 +26,27 @@ export class EditorialWriteFailure extends Error {
   }
 }
 export function editorialDigest(value: unknown) { return createHash('sha256').update(JSON.stringify(value), 'utf8').digest('hex') }
+function editorialTitle(record: EditorialRecord) {
+  switch (record.intent) {
+    case 'append_editorial_feedback': return versionTitle
+    case 'request_editorial_revision': return revisionTitle
+    case 'request_clean_acceptance': return cleanAcceptanceTitle
+  }
+}
 export function decodeEditorial(body: string): EditorialRecord | null {
-  if (!body.startsWith(revisionTitle) && !body.startsWith(versionTitle)) return null
-  const pattern = new RegExp(`^${body.startsWith(revisionTitle) ? revisionTitle : versionTitle}\\n${start}\\n([A-Za-z0-9+/]+={0,2})\\n${end}$`)
+  const title = [revisionTitle, versionTitle, cleanAcceptanceTitle].find(candidate => body.startsWith(candidate))
+  if (!title) return null
+  const pattern = new RegExp(`^${title}\\n${start}\\n([A-Za-z0-9+/]+={0,2})\\n${end}$`)
   const encoded = pattern.exec(body)?.[1]
   if (!encoded) throw new ReviewError(409, 'Malformed editorial continuation record.')
   const bytes = Buffer.from(encoded, 'base64')
   if (bytes.toString('base64') !== encoded) throw new ReviewError(409, 'Invalid editorial encoding.')
   const record = editorialRecordSchema.parse(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)))
-  if (body.startsWith(revisionTitle) !== (record.intent === 'request_editorial_revision')) throw new ReviewError(409, 'Editorial title and intent disagree.')
+  if (title !== editorialTitle(record)) throw new ReviewError(409, 'Editorial title and intent disagree.')
   return record
 }
 export function encodeEditorial(record: EditorialRecord) {
-  const body = `${record.intent === 'request_editorial_revision' ? revisionTitle : versionTitle}\n${start}\n${Buffer.from(JSON.stringify(record), 'utf8').toString('base64')}\n${end}`
+  const body = `${editorialTitle(record)}\n${start}\n${Buffer.from(JSON.stringify(record), 'utf8').toString('base64')}\n${end}`
   if (body.length > 60000) throw new ReviewError(400, 'Feedback exceeds the saved correspondence size limit. Your draft is retained.')
   return body
 }
@@ -72,7 +81,7 @@ export function createEditorialService(github: GitHub) {
     const files = await source.files(pr.number)
     const articlePath = `_articles/${articleDate}.md`
     if (!files.some(file => file.filename === articlePath) || files.some(file => ![articlePath, actionArticlePath(articleDate)].includes(file.filename) || !['added', 'modified'].includes(file.status))) throw new ReviewError(409, 'Acceptance PR may change only its dated article and canonical action registry.')
-    const [article, registry] = await Promise.all([source.regularFile(articlePath, pr.head.sha), source.regularFile(actionArticlePath(articleDate), pr.head.sha)])
+    const [article, registry, policySha] = await Promise.all([source.regularFile(articlePath, pr.head.sha), source.regularFile(actionArticlePath(articleDate), pr.head.sha), source.main()])
     ArticleActionFileSchema.parse(JSON.parse(registry.text))
     if (!/^status:\s*"?accepted"?\s*$/m.test(article.text)) throw new ReviewError(409, 'Continuation requires the accepted PR article.')
     const comments = await source.comments(pr.number)
@@ -107,13 +116,17 @@ export function createEditorialService(github: GitHub) {
     if (requests.length) {
       for (const comment of comments) {
         if (comment.user.login !== 'github-actions[bot]' || !comment.body.startsWith('## Editorial execution receipt\n') || comment.created_at !== comment.updated_at) continue
-        const parsed = z.object({ requestDigest: z.string(), requestCommentId: z.number().int().positive(), runId: z.number().int().positive(), policySha: z.string().regex(/^[a-f0-9]{40}$/), outcome: z.enum(['changed', 'no_change', 'failed', 'stale', 'uncertain']) }).passthrough().safeParse(JSON.parse(comment.body.slice('## Editorial execution receipt\n'.length)))
+        const parsed = z.object({ requestDigest: z.string(), requestCommentId: z.number().int().positive(), runId: z.number().int().positive(), policySha: z.string().regex(/^[a-f0-9]{40}$/), requestIntent: z.enum(['request_editorial_revision', 'request_clean_acceptance']).optional(), actionReviewMode: z.enum(['clean-acceptance', 'revision']), outcome: z.enum(['changed', 'no_change', 'failed', 'stale', 'uncertain']) }).passthrough().safeParse(JSON.parse(comment.body.slice('## Editorial execution receipt\n'.length)))
         if (!parsed.success || !requests.some(item => item.digest === parsed.data.requestDigest) || !['changed', 'no_change'].includes(parsed.data.outcome)) continue
         if (!await verifyEditorialProof(github, parsed.data) || parsed.data.pullRequest !== pr.number || parsed.data.date !== articleDate) continue
         const response = await github(`${repo}/actions/runs/${parsed.data.runId}`)
         if (!response.ok) throw new ReviewError(503, 'Execution receipt provenance unavailable.')
         const run = z.object({ id: z.number(), run_attempt: z.literal(1), event: z.literal('issue_comment'), head_branch: z.literal('main'), head_sha: z.string(), display_title: z.string(), path: z.string().regex(/^\.github\/workflows\/editorial-revise\.yml(?:@(?:main|refs\/heads\/main))?$/) }).parse(await response.json())
         const canonical = requests.find(item => item.digest === parsed.data.requestDigest)
+        const expectedMode = canonical?.record.intent === 'request_clean_acceptance' ? 'clean-acceptance' : 'revision'
+        if (parsed.data.actionReviewMode !== expectedMode
+          || (canonical?.record.intent === 'request_clean_acceptance' && parsed.data.requestIntent !== 'request_clean_acceptance')
+          || (parsed.data.requestIntent && parsed.data.requestIntent !== canonical?.record.intent)) continue
         if (parsed.data.requestCommentId !== canonical?.commentId || run.display_title !== `Editorial continuation comment ${canonical?.commentId}` || run.id !== parsed.data.runId || run.head_sha !== parsed.data.policySha) throw new ReviewError(409, 'Execution receipt disagrees with trusted workflow provenance.')
         terminals.set(parsed.data.requestDigest, comment.id)
       }
@@ -129,7 +142,7 @@ export function createEditorialService(github: GitHub) {
       reason: 'Continued revisions are available only to ojfbot for acceptance PRs opened by ojfbot. Shared-account identity does not identify a person or agent.',
       originalBody, originalDigest: editorialDigest(originalBody),
       pullRequest: { kind: 'acceptance_pr', number: pr.number, url: pr.html_url, state: pr.state, merged: !!pr.merged_at, author: pr.user.login, headSha: pr.head.sha },
-      article, versions, requests, outstanding: requests.length > 0 && !terminals.has(requests.at(-1)?.digest ?? '') })
+      article, registryBlobSha: registry.blobSha, policySha, versions, requests, outstanding: requests.length > 0 && !terminals.has(requests.at(-1)?.digest ?? '') })
   }
   async function write(input: EditorialInput, actor: string) {
     const request = editorialInputSchema.parse(input)
@@ -152,13 +165,21 @@ export function createEditorialService(github: GitHub) {
         const main = await source.file(`_articles/${request.date}.md`, await source.main())
         if (![main.blobSha, view.article.blobSha].includes(request.visibleBlobSha)) throw new ReviewError(409, 'Viewed article is stale.')
         if (request.supersedes !== (view.versions.at(-1)?.digest ?? view.originalDigest) || request.feedback.notes.some(note => !note.content.trim())) throw new ReviewError(409, 'Feedback parent changed or a note is blank.')
-      } else {
+      } else if (request.intent === 'request_editorial_revision') {
         const version = view.versions.at(-1)
         if (view.outstanding || !version || version.record.requestId !== request.feedbackId || version.digest !== request.feedbackDigest || request.articleBlobSha !== view.article.blobSha) throw new ReviewError(409, 'Feedback, reviewed article, or outstanding request changed.')
+      } else {
+        if (view.outstanding || view.versions.length || /EDITORIAL_FEEDBACK(?:_V2)?_START/.test(view.originalBody)) throw new ReviewError(409, 'A clean acceptance request cannot consume or hide genuine editorial feedback.')
+        if (request.articleBlobSha !== view.article.blobSha || request.registryBlobSha !== view.registryBlobSha || request.policySha !== view.policySha) throw new ReviewError(409, 'Clean acceptance input or trusted policy changed.')
       }
       // Re-read without the request-scoped cache immediately before the append.
       const current = await createReviewSource(github).pull(request.pullRequest)
       if (current.head.sha !== request.headSha || current.state !== 'open' || current.body !== view.originalBody || current.user.login.toLowerCase() !== 'ojfbot') throw new ReviewError(409, 'Acceptance changed during submission.')
+      if (request.intent === 'request_clean_acceptance') {
+        const source = createReviewSource(github)
+        const currentRegistry = await source.regularFile(actionArticlePath(request.date), request.headSha)
+        if (await source.main(true) !== request.policySha || currentRegistry.blobSha !== request.registryBlobSha) throw new ReviewError(409, 'Clean acceptance input or trusted policy changed during submission.')
+      }
       const body = encodeEditorial(record)
       outcome = 'uncertain'
       const response = await createReviewSource(github).postComment(request.pullRequest, body)

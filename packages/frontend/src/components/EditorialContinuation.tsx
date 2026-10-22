@@ -81,23 +81,26 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
   const [draftEdited, setDraftEdited] = useState(false)
   useEffect(() => { try { sessionStorage.setItem(key, JSON.stringify({ version: 2, notes: notes.map(note => note.feedback).filter(note => note.content.trim()) })) } catch { /* In-memory draft remains available. */ } }, [key, notes])
   const latest = view.versions.at(-1)
-  const pendingMatchesTarget = pending?.date === date && pending.pullRequest === view.pullRequest.number && pending.headSha === view.pullRequest.headSha &&
-    (pending.intent === 'append_editorial_feedback'
-      ? pending.visibleBlobSha === visibleBlobSha && pending.supersedes === (latest?.digest ?? view.originalDigest)
-      : pending.articleBlobSha === view.article.blobSha && pending.feedbackId === latest?.record.requestId && pending.feedbackDigest === latest?.digest)
+  const pendingMatchesTarget = pending?.date === date && pending.pullRequest === view.pullRequest.number && pending.headSha === view.pullRequest.headSha && (() => {
+    switch (pending.intent) {
+      case 'append_editorial_feedback': return pending.visibleBlobSha === visibleBlobSha && pending.supersedes === (latest?.digest ?? view.originalDigest)
+      case 'request_editorial_revision': return pending.articleBlobSha === view.article.blobSha && pending.feedbackId === latest?.record.requestId && pending.feedbackDigest === latest?.digest
+      case 'request_clean_acceptance': return pending.articleBlobSha === view.article.blobSha && pending.registryBlobSha === view.registryBlobSha && pending.policySha === view.policySha
+    }
+  })()
   useEffect(() => {
     if (!pending || freshness !== 'fresh') return
     const saved = [...view.versions, ...view.requests].find(item => {
       const record = item.record
       if (record.requestId !== pending.requestId || record.intent !== pending.intent || record.date !== pending.date || record.pullRequest !== pending.pullRequest || record.headSha !== pending.headSha) return false
-      return record.intent === 'append_editorial_feedback' && pending.intent === 'append_editorial_feedback'
-        ? record.visibleBlobSha === pending.visibleBlobSha && record.supersedes === pending.supersedes && JSON.stringify(record.feedback) === JSON.stringify(pending.feedback)
-        : record.intent === 'request_editorial_revision' && pending.intent === 'request_editorial_revision' && record.articleBlobSha === pending.articleBlobSha && record.feedbackId === pending.feedbackId && record.feedbackDigest === pending.feedbackDigest
+      if (record.intent === 'append_editorial_feedback' && pending.intent === 'append_editorial_feedback') return record.visibleBlobSha === pending.visibleBlobSha && record.supersedes === pending.supersedes && JSON.stringify(record.feedback) === JSON.stringify(pending.feedback)
+      if (record.intent === 'request_editorial_revision' && pending.intent === 'request_editorial_revision') return record.articleBlobSha === pending.articleBlobSha && record.feedbackId === pending.feedbackId && record.feedbackDigest === pending.feedbackDigest
+      return record.intent === 'request_clean_acceptance' && pending.intent === 'request_clean_acceptance' && record.articleBlobSha === pending.articleBlobSha && record.registryBlobSha === pending.registryBlobSha && record.policySha === pending.policySha
     })
     if (!saved) return
     if (!transition({ kind: 'idle' }, submission)) return
     setReceipt(saved.url)
-    setMessage(saved.record.intent === 'append_editorial_feedback' ? 'Feedback version saved. Confirmed in refreshed history. No revision was requested.' : 'Revision request confirmed in refreshed history. Check execution receipts for its outcome.')
+    setMessage(saved.record.intent === 'append_editorial_feedback' ? 'Feedback version saved. Confirmed in refreshed history. No revision was requested.' : saved.record.intent === 'request_clean_acceptance' ? 'Clean acceptance request confirmed in refreshed history. Check execution receipts for its outcome.' : 'Revision request confirmed in refreshed history. Check execution receipts for its outcome.')
   }, [submission, freshness, view])
   async function refreshHistory() {
     retryGeneration.current = null
@@ -156,7 +159,8 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
   const currentNotes = notes.map(note => note.feedback).filter(note => note.content.trim())
   const draftMatchesSaved = latest?.record.intent === 'append_editorial_feedback' && JSON.stringify(currentNotes) === JSON.stringify(latest.record.feedback.notes)
   const canEdit = freshness === 'fresh' && view.eligible && !view.outstanding && submission.kind === 'idle'
-  const editingReason = freshness === 'loading' ? 'Refreshing acceptance history. Displayed history may be stale; saves, requests and retries are disabled.' : freshness === 'unavailable' ? `${discoveryError || 'Acceptance history unavailable.'} Displayed history may be stale; saves, requests and retries are disabled.` : !view.eligible ? view.reason : view.outstanding ? 'A revision request is outstanding. Refresh its receipts before another save or request.' : submission.kind === 'unreadable' ? 'Retained submission evidence requires manual GitHub diagnosis; new writes are blocked.' : busy ? 'Submission is in progress. Local edits are separate from the frozen submission.' : pending ? (retryReady ? 'Submission is unconfirmed. Refreshed history has no matching receipt. Only the retained submission can be retried.' : 'Submission is unconfirmed. Refresh history before retrying the same submission.') : null
+  const outstandingLabel = view.requests.at(-1)?.record.intent === 'request_clean_acceptance' ? 'A clean acceptance request' : 'A revision request'
+  const editingReason = freshness === 'loading' ? 'Refreshing acceptance history. Displayed history may be stale; saves, requests and retries are disabled.' : freshness === 'unavailable' ? `${discoveryError || 'Acceptance history unavailable.'} Displayed history may be stale; saves, requests and retries are disabled.` : !view.eligible ? view.reason : view.outstanding ? `${outstandingLabel} is outstanding. Refresh its receipts before another save or request.` : submission.kind === 'unreadable' ? 'Retained submission evidence requires manual GitHub diagnosis; new writes are blocked.' : busy ? 'Submission is in progress. Local edits are separate from the frozen submission.' : pending ? (retryReady ? 'Submission is unconfirmed. Refreshed history has no matching receipt. Only the retained submission can be retried.' : 'Submission is unconfirmed. Refresh history before retrying the same submission.') : null
   const saveHelp = editingReason ? 'Saving is disabled. See the submission status below.' : (!visibleBlobSha ? 'Reload the main article before saving feedback.' : !currentNotes.length ? 'Enter feedback before saving a new version.' : 'Saving appends this complete version without starting a revision.')
   const requestHelp = editingReason ? 'Revision requests are disabled. See the submission status below.' : (!latest ? 'Save a feedback version before requesting another revision.' : !draftMatchesSaved ? (!draftEdited && currentNotes.length === 0 ? 'Copy prior version to select the saved feedback before reviewing and requesting it.' : 'Save the edited full version before requesting it.') : !reviewed ? 'Review the pinned PR-head article before requesting its revision.' : 'Request uses the saved version and reviewed PR article shown here.')
   const base: Pick<EditorialInput, 'schemaVersion' | 'date' | 'pullRequest' | 'headSha'> = { schemaVersion: 1, date, pullRequest: view.pullRequest.number, headSha: view.pullRequest.headSha }
@@ -173,7 +177,7 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
       {item.record.intent === 'append_editorial_feedback' && item.record.feedback.notes.map((note, index) => <pre key={index} className="review-correspondence-text">{note.kind === 'section' ? `${note.section}\n` : ''}{note.content}</pre>)}
     </details>)}
     <details><summary>PR-head article preview</summary>
-      <p>Head <code>{view.pullRequest.headSha}</code> · article blob <code>{view.article.blobSha}</code></p>
+      <p>Head <code>{view.pullRequest.headSha}</code> · article blob <code>{view.article.blobSha}</code> · registry blob <code>{view.registryBlobSha}</code> · policy <code>{view.policySha}</code></p>
       <pre className="review-correspondence-text" tabIndex={0}>{view.article.text}</pre>
     </details>
     <label className="editorial-review-confirmation"><input type="checkbox" checked={reviewed} disabled={!canEdit} onChange={event => setReviewedIdentity(event.currentTarget.checked ? articleIdentity : null)} />I reviewed this pinned PR-head article</label>
@@ -212,7 +216,7 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
     {pending && freshness === 'fresh' && !pendingMatchesTarget && <p role="status">The submission target changed. Its frozen identity is retained; retry is disabled until the original outcome is reconciled.</p>}
     {pending && <button className="editorial-action" disabled={busy || freshness !== 'fresh' || !retryReady || !pendingMatchesTarget || !view.eligible || view.outstanding} onClick={() => void submit()}>Retry same submission</button>}
     <button className="editorial-action" disabled={busy} onClick={() => void refreshHistory()}>Refresh acceptance history</button>
-    {view.requests.map(item => <p key={item.commentId}><a href={item.url}>Explicit revision request</a>{item.duplicateUrls.map(url => <a key={url} href={url}>Duplicate delivery receipt</a>)} · {item.record.actor} · {item.createdAt}</p>)}
+    {view.requests.map(item => <p key={item.commentId}><a href={item.url}>{item.record.intent === 'request_clean_acceptance' ? 'Explicit clean acceptance request' : 'Explicit revision request'}</a>{item.duplicateUrls.map(url => <a key={url} href={url}>Duplicate delivery receipt</a>)} · {item.record.actor} · {item.createdAt}</p>)}
     {message && <p role="status">{message} {receipt && <a href={receipt}>Read receipt</a>}</p>}
   </section>
 }
