@@ -1,6 +1,10 @@
 # Implementation notes
 
 ## Deviations
+- 2026-10-22 (typed-view archive capacity): the unchanged full-cycle fixture fit the 64-KiB compact schema bound, but modern receipt indentation made the pretty serializer reject its archive. Node now validates candidate identities then delegates to the shared browser/contract serializer: preserve existing pretty bytes when they fit, otherwise emit deterministic compact JSON plus newline only if those exact UTF-8 bytes fit the same limit. Every field/history/digest remains unchanged; no new receipt codec, source reduction or storage cap was introduced.
+
+- 2026-10-22 (native writer/read view replay): native review appends the current dated snapshot, while the existing reader restores date order. The registry digest now sorts only article membership by date, preserving record/history/list order and every field value. Added complete diagnostic-group validation and rejected response/projection flags attached to the same captured source identity; genuine native reply/view identities keep their existing path. Historical v8/v9 test fixtures now use valid legacy closing fields, and replay coverage runs the real review/cache boundary instead of applying a newly prepared round twice.
+
 - 2026-10-22 (typed context-need retention): existing dated evidence receipts omitted the request question. Model-context receipts now retain an optional bounded question/source locator so canonical range, collected raw hash, consumed view round and policy survive after process exit; older receipts and representation-independent case/lifecycle rules are unchanged. No raw source body is automatically persisted for these context needs.
 
 - 2026-10-22 (independent typed-view review): genuine collector identity mismatches had been falling back as legacy raw sources. Same captured identity now fails closed on content/trust/locator/kind/pin drift; unknown raw sources and existing validated projections/replies retain their separate fallback. Visibility needs persist canonical source identity, collected/full digests and original range through the existing request fields, without automatically retaining a raw source body.

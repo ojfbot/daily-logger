@@ -288,13 +288,19 @@ describe('verified article closing options', () => {
     expect(() => renderArticleActions(markdown.replace('"draft"', '"accepted"'), partial, articleDate, new Map([[articleDate, 'accepted']]))).toThrow(/requires exactly three ranked suggestions/)
   })
 
-  it('carries actionable prior-review context without creating a queue identity and is byte-idempotent', () => {
+  it('carries actionable prior-review context without creating a queue identity and is byte-idempotent', async () => {
     const options = completeShortlist()
-    const proposal = { changes: [], suggestions: [], closingOptions: options }
+    const canonicalId = `github:daily-logger#900@${sha256(sources[0].content)}`
+    const evidence = [{ ...sources[0], id: canonicalId }, sources[1]]
+    const proposal = { changes: [], suggestions: [], closingOptions: options.map(option => ({ ...option, factCitations: option.factCitations.map(citation => ({ ...citation, sourceId: canonicalId })) })) }
     const verification = { changes: [], suggestions: [], closingOptions: passingClosingVerdicts(options.length) }
 
-    const first = review(empty(), proposal, verification)
-    const second = review(first, proposal, verification)
+    const input = { registry: empty(), cycle: revisionActionCycle('closing-options-fixture'), articleDate, articleStatuses: statuses, markdown, feedback: target, sources: evidence, agents: { propose: async () => proposal, verify: async () => verification } }
+    const initial = await reviewArticleActions(input)
+    const first = initial.registry
+    const retried = await reviewArticleActions({ ...input, registry: first, markdown: initial.markdown })
+    const second = retried.registry
+    expect(retried.cached).toBe(true)
     const rendered = renderArticleActions(markdown, first, articleDate, statuses)
 
     expect(first.records).toEqual([])
@@ -309,9 +315,9 @@ describe('verified article closing options', () => {
     expect(firstDefaultView).toContain('Review the bounded evidence cases')
     expect(firstDefaultView).not.toContain('Advance the roadmap from bounded selection')
     expect(firstDefaultView).not.toContain('issue #900 at the bounded source-reader acceptance cases')
-    expect(first.articles[0].sources.find(source => source.id === 'issue')?.trustedContent).toEqual([checkpoint])
+    expect(first.articles[0].sources.find(source => source.id === canonicalId)?.trustedContent).toEqual([checkpoint])
     expect(articleActionCard(first, articleDate, statuses)?.sources).toEqual([
-      { id: 'issue', kind: 'github', locator: target },
+      { id: canonicalId, kind: 'github', locator: target },
       { id: 'goal', kind: 'goal', locator: 'ROADMAP.md' },
     ])
     expect(registryBytes(second)).toBe(registryBytes(first))
@@ -400,7 +406,9 @@ describe('verified article closing options', () => {
     const actionKey = 'act-v8-raw-checkpoint'
     legacy.records.push({ key: actionKey, original: { id: actionKey, command: '/validate', description: 'Qualify the evidence reader.', repo: 'daily-logger', status: 'open', sourceDate: articleDate }, origin: 'suggested', workKey: normalizeWorkKey('daily-logger', option.target, option.outcome), state: 'proposed', introducedBy: articleDate, admission: cycle, includeInIndex: true, inclusionOverride: null, goal: 'Source-backed continuation options', doneWhen: option.nextCheck, gates: ['Owner reviews the evidence report.'], history: [] })
     legacy.articles[0].actionKeys = [actionKey]
-    legacy.articles[0].closing = { kind: 'options', options: [option] }
+    legacy.records.at(-1)!.history.push({ roundId: legacy.articles[0].roundId, articleDate, state: 'proposed', description: 'Qualify the evidence reader.', reason: 'Synthetic valid legacy v8 admission.', citations: option.factCitations, verifiedBy: 'legacy-fixture-double', verificationReason: 'Synthetic historical fixture, no real verification.' })
+    const { benefit: _benefit, start: _start, ...historicalOption } = option
+    legacy.articles[0].closing = { kind: 'options', options: [historicalOption] }
     legacy.articles[0].verification.promptVersion = 'action-review-v8-authoritative-closing-options'
     legacy.articles[0].stateDigest = actionStateDigest(legacy, [actionKey], legacy.articles[0].closing)
     const proposal: ActionProposal = { changes: [{ actionKey, state: 'open', description: 'Retain the canonical evidence-reader identity.', reason: 'The owner review remains pending.', citations: option.factCitations }], suggestions: [], closingOptions: [option] }
@@ -425,7 +433,8 @@ describe('verified article closing options', () => {
     const firstAgents = { propose: async () => { calls++; return firstProposal }, verify: async () => { calls++; return firstVerification } }
     const first = await reviewArticleActions({ registry, cycle, articleDate, articleStatuses: statuses, markdown, feedback: protectedTarget, sources: [source, sources[1]], agents: firstAgents })
     const legacy = structuredClone(first.registry)
-    legacy.articles[0].closing = { kind: 'options', options: [option] }
+    const { benefit: _benefit, start: _start, ...historicalOption } = option
+    legacy.articles[0].closing = { kind: 'options', options: [historicalOption] }
     legacy.articles[0].verification.promptVersion = 'action-review-v9-canonical-closing-options'
     legacy.articles[0].stateDigest = actionStateDigest(legacy, [], legacy.articles[0].closing)
     const proposal: ActionProposal = { changes: [], suggestions: [], closingOptions: [option] }

@@ -5,7 +5,7 @@ import { mkdtempSync, readFileSync, writeFileSync, renameSync, existsSync, rmSyn
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, it, vi } from 'vitest'
-import { ActionRegistrySchema, ACTIONS_START, readActionRegistry, registryBytes, registryRevision, writeActionRegistry, setActionInclusion, rebindArticleSnapshot, renderArticleActions, splitActionRegistry, articleActionFileBytes, managedArticleDigest, projectRegistry, type ActionRegistry } from '../action-registry.js'
+import { ActionRegistrySchema, ACTIONS_START, readActionRegistry, registryBytes, registryRevision, writeActionRegistry, setActionInclusion, rebindArticleSnapshot, renderArticleActions, splitActionRegistry, articleActionFileBytes, articleActionFileContractBytes, ArticleActionFileSchema, managedArticleDigest, projectRegistry, type ActionRegistry } from '../action-registry.js'
 
 import { writeActionStore } from './action-store-fixture.js'
 
@@ -107,4 +107,25 @@ it('bounds the verifier prompt including the proposed output before calling the 
   expect(proposals).toBe(1); expect(verifications).toBe(0)
   expect(result.registry.articles[0]!.review.state).toBe('pending')
   expect(result.registry.records).toEqual(registry.records)
+})
+
+it('keeps small dated files pretty and uses the same lossless bounded representation in Node and browser', () => {
+  const file = splitActionRegistry(propose('2030-01-01')).files[0]
+  const pretty = JSON.stringify(ArticleActionFileSchema.parse(file), null, 2) + '\n'
+  expect(articleActionFileBytes(file)).toBe(pretty)
+  expect(articleActionFileContractBytes(file)).toBe(pretty)
+  file.snapshot.rejected = [{ description: '🧪é', reason: 'Exact final UTF-8 byte boundary including newline.' }]
+  const room = 64 * 1024 - Buffer.byteLength(JSON.stringify(file) + '\n')
+  expect(room).toBeGreaterThan(0)
+  file.snapshot.rejected[0].description += 'x'.repeat(room)
+  const parsed = ArticleActionFileSchema.parse(file)
+  const node = articleActionFileBytes(file), browser = articleActionFileContractBytes(file)
+  expect(Buffer.byteLength(node)).toBe(65536)
+  expect(browser).toBe(node)
+  expect(JSON.parse(node)).toEqual(parsed)
+  expect(node).toBe(JSON.stringify(parsed) + '\n')
+  expect(articleActionFileBytes(JSON.parse(node))).toBe(node)
+  file.snapshot.rejected[0].description += 'x'
+  expect(() => articleActionFileBytes(file)).toThrow(/64 KiB/)
+  expect(() => articleActionFileContractBytes(file)).toThrow(/64 KiB/)
 })

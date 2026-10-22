@@ -60,7 +60,7 @@ export const ActionEvidenceRequestReceiptSchema = z.discriminatedUnion('status',
   z.object({ ...ActionEvidenceRequestReceiptFields, status: z.literal('declined') }).strict(),
 ]).superRefine((receipt, context) => {
   if ((receipt.question !== undefined || receipt.sourceLocator !== undefined) && receipt.sourceKey !== 'model-context') context.addIssue({ code: 'custom', message: 'Bounded context diagnostics belong to model-context requests' })
-  if (receipt.question !== undefined && receipt.kind === 'source-view' && (!receipt.sourceId || !receipt.sourceFullContentSha256)) context.addIssue({ code: 'custom', message: 'A bounded context source-view need requires canonical source pins' })
+  if ((receipt.question !== undefined || receipt.sourceLocator !== undefined) && receipt.kind === 'source-view' && (!receipt.question || !receipt.sourceLocator || !receipt.sourceId || !receipt.sourceFullContentSha256)) context.addIssue({ code: 'custom', message: 'A bounded context source-view need requires canonical source pins' })
 })
 export type ActionEvidenceRequestReceipt = z.infer<typeof ActionEvidenceRequestReceiptSchema>
 
@@ -502,9 +502,12 @@ export type ArticleActionFile = z.infer<typeof ArticleActionFileContractSchema>
 export const actionArticlePath = (date: string) => `actions/articles/${date}.json`
 export const ACTION_FILE_LIMIT = 64 * 1024
 export function articleActionFileContractBytes(file: ArticleActionFile): string {
-  const bytes = JSON.stringify(ArticleActionFileContractSchema.parse(file), null, 2) + '\n'
-  if (new TextEncoder().encode(bytes).length > ACTION_FILE_LIMIT) throw new Error('Article action state exceeds 64 KiB; compact the evidence before publishing')
-  return bytes
+  const parsed = ArticleActionFileContractSchema.parse(file)
+  const pretty = JSON.stringify(parsed, null, 2) + '\n'
+  if (new TextEncoder().encode(pretty).length <= ACTION_FILE_LIMIT) return pretty
+  const compact = JSON.stringify(parsed) + '\n'
+  if (new TextEncoder().encode(compact).length > ACTION_FILE_LIMIT) throw new Error('Article action state exceeds 64 KiB; compact the evidence before publishing')
+  return compact
 }
 export function isArticleFileInclusionChange(before: ArticleActionFile, after: ArticleActionFile, actor: string): boolean {
   if (before.snapshot.status !== 'draft') return false

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import {
-  ACTION_FILE_LIMIT,
+  articleActionFileContractBytes,
   DraftActionCandidatePayloadSchema,
   DraftActionCandidateSchema,
   createActionRegistrySchemas,
@@ -28,9 +28,7 @@ export function captureDraftActionCandidates(values: readonly unknown[]): DraftA
 export const { ArticleActionSchema, ActionRegistrySchema, ArticleActionFileSchema } = createActionRegistrySchemas(draftActionCandidateId)
 
 export function articleActionFileBytes(file: ArticleActionFile): string {
-  const bytes = JSON.stringify(ArticleActionFileSchema.parse(file), null, 2) + '\n'
-  if (new TextEncoder().encode(bytes).length > ACTION_FILE_LIMIT) throw new Error('Article action state exceeds 64 KiB; compact the evidence before publishing')
-  return bytes
+  return articleActionFileContractBytes(ArticleActionFileSchema.parse(file))
 }
 
 export function splitActionRegistry(registry: ActionRegistry): { baseline: ActionRegistry; files: ArticleActionFile[] } {
