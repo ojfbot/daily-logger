@@ -73,4 +73,3 @@ it('independent: prepare rejects a nonexecuting resolution without publishing an
   console.log(JSON.stringify({control:'resolution-through-prepare-native-caller',posts,lastBody:f.state.prComments.get(42)?.at(-1)?.body}))
   expect(posts).toEqual([])
 })
-
