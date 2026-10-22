@@ -39,6 +39,7 @@ export function createFixture() {
     prReviews: new Map<number, unknown[]>(), prInlineComments: new Map<number, unknown[]>(),
     failRoutes: new Set<string>(), nextPageRoutes: new Set<string>(),
     artifacts: new Map<number, unknown>(),
+    workflowRuns: new Map<number, unknown>(), workflowRunAttempts: new Map<string, unknown>(), runArtifacts: new Map<number, unknown[]>(),
     refs: new Map<string, string>(), fileModes: new Map<string, string>(), missingFiles: new Set<string>(), largeFiles: new Set<string>(),
   }
   const gitTrees = new Map<string, unknown[]>()
@@ -75,6 +76,22 @@ export function createFixture() {
     if (state.failRoutes.has(route)) return Response.json({ message: 'Unavailable' }, { status: 503 })
     const headers: HeadersInit = state.nextPageRoutes.has(route) ? { link: '<https://api.github.com/next>; rel="next"' } : {}
     if (method === 'GET' && route.startsWith('/actions/artifacts/')) { const artifact = state.artifacts.get(Number(route.split('/').at(-1))); return Response.json(artifact ?? {}, { status: artifact ? 200 : 404 }) }
+    if (method === 'GET' && route === '/actions/workflows/editorial-revise.yml/runs') return Response.json({ workflow_runs: [...state.workflowRuns.values()] }, { headers })
+    const attempt = route.match(/^\/actions\/runs\/(\d+)\/attempts\/(\d+)$/)
+    if (method === 'GET' && attempt) {
+      const value = state.workflowRunAttempts.get(`${attempt[1]}:${attempt[2]}`)
+      return Response.json(value ?? {}, { status: value ? 200 : 404 })
+    }
+    const runArtifacts = route.match(/^\/actions\/runs\/(\d+)\/artifacts$/)
+    if (method === 'GET' && runArtifacts) {
+      const artifacts = state.runArtifacts.get(Number(runArtifacts[1])) ?? []
+      return Response.json({ total_count: artifacts.length, artifacts }, { headers })
+    }
+    const workflowRun = route.match(/^\/actions\/runs\/(\d+)$/)
+    if (method === 'GET' && workflowRun) {
+      const value = state.workflowRuns.get(Number(workflowRun[1]))
+      return Response.json(value ?? {}, { status: value ? 200 : 404 })
+    }
     if (method === 'GET' && route === '/git/ref/heads/main') return Response.json({ object: { sha: state.source } })
     if (method === 'GET' && route.startsWith('/git/ref/heads/')) {
       const ref = state.refs.get(route.slice('/git/ref/heads/'.length))

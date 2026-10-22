@@ -28,7 +28,7 @@ export async function admitEditorial(execution: Execution) {
   if (execution.attempt !== 1 || ![revisionTitle, cleanAcceptanceTitle].some(title => event.comment.body.startsWith(title)) || event.sender.login.toLowerCase() !== 'ojfbot' || event.comment.user.login.toLowerCase() !== 'ojfbot') throw new ReviewError(403, 'Only a new explicit owner request can execute. A rerun cannot replay a provider attempt.')
   if (Date.now() - Date.parse(event.comment.created_at) > 86400000 || Date.parse(event.comment.created_at) > Date.now() + 300000) throw new ReviewError(409, 'Request is outside the supported execution-history window. Create a new explicit request.')
   const record = decodeEditorial(event.comment.body)
-  if (!record || record.intent === 'append_editorial_feedback' || record.pullRequest !== event.issue.number || event.issue.pull_request.url !== `https://api.github.com${repo}/pulls/${record.pullRequest}`) throw new ReviewError(409, 'Request event target disagrees with its record.')
+  if (!record || (record.intent !== 'request_editorial_revision' && record.intent !== 'request_clean_acceptance') || record.pullRequest !== event.issue.number || event.issue.pull_request.url !== `https://api.github.com${repo}/pulls/${record.pullRequest}`) throw new ReviewError(409, 'Request event target disagrees with its executable record.')
   const source = createReviewSource(execution.github)
   if (record.intent === 'request_clean_acceptance' && (record.policySha !== execution.policySha || await source.main(true) !== execution.policySha)) throw new ReviewError(409, 'Clean acceptance policy is not the still-current trusted main.')
   const comments = await source.comments(record.pullRequest)
@@ -39,6 +39,8 @@ export async function admitEditorial(execution: Execution) {
   const request = view.requests.find(item => item.record.requestId === record.requestId)
   const version = view.versions.at(-1)
   if (!request || request.commentId !== event.comment.id || request.digest !== editorialDigest(record)) throw new ReviewError(409, 'Only the canonical request for the current input can execute.')
+  if (view.executionReadiness.kind === 'blocked') throw new ReviewError(409, view.executionReadiness.reason)
+  if (view.requestState.kind === 'owner_resolved' && view.requestState.request.digest === request.digest && view.requestState.request.commentId === request.commentId) throw new ReviewError(409, 'This editorial request is owner-resolved and is no longer executable.')
   if (record.intent === 'request_editorial_revision') {
     if (!version || version.digest !== record.feedbackDigest || version.record.requestId !== record.feedbackId || version.record.intent !== 'append_editorial_feedback') throw new ReviewError(409, 'Only the canonical request for the latest saved version can execute.')
   } else if (view.versions.length || (view.outstanding && view.requests.at(-1)?.digest !== request.digest) || view.registryBlobSha !== record.registryBlobSha || view.policySha !== record.policySha || /EDITORIAL_FEEDBACK(?:_V2)?_START/.test(view.originalBody)) {
@@ -71,8 +73,8 @@ const preparedSchema = z.object({ request: preparedRequestSchema, requestDigest:
 export type Prepared = z.infer<typeof preparedSchema>
 async function receipt(execution: Execution, requestDigest: string, outcome: string, extra: object = {}) {
   if (outcome === 'changed' || outcome === 'no_change') {
-    const record = decodeEditorial(eventSchema.parse(execution.event).comment.body)!
-    if (record.intent === 'append_editorial_feedback') throw new Error('A feedback version cannot produce an execution receipt')
+    const record = decodeEditorial(eventSchema.parse(execution.event).comment.body)
+    if (!record || (record.intent !== 'request_editorial_revision' && record.intent !== 'request_clean_acceptance')) throw new Error('A non-executable editorial record cannot produce an execution receipt')
     const manifest = editorialProofSchema.parse({ repository: 'ojfbot/daily-logger', date: record.date, pullRequest: record.pullRequest, requestDigest, requestCommentId: eventSchema.parse(execution.event).comment.id, requestIntent: record.intent, outcome, actionReviewMode: record.intent === 'request_clean_acceptance' ? 'clean-acceptance' : 'revision', runId: execution.runId, runAttempt: execution.attempt, policySha: execution.policySha, ...extra })
     writeFileSync(resolve(execution.workspace, '.git/editorial-output.json'), JSON.stringify(manifest))
     return

@@ -86,21 +86,26 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
       case 'append_editorial_feedback': return pending.visibleBlobSha === visibleBlobSha && pending.supersedes === (latest?.digest ?? view.originalDigest)
       case 'request_editorial_revision': return pending.articleBlobSha === view.article.blobSha && pending.feedbackId === latest?.record.requestId && pending.feedbackDigest === latest?.digest
       case 'request_clean_acceptance': return pending.articleBlobSha === view.article.blobSha && pending.registryBlobSha === view.registryBlobSha && pending.policySha === view.policySha
+      case 'resolve_editorial_request': return false
     }
   })()
   useEffect(() => {
     if (!pending || freshness !== 'fresh') return
-    const saved = [...view.versions, ...view.requests].find(item => {
+    const saved = [...view.versions, ...view.requests, ...view.resolutions].find(item => {
       const record = item.record
       if (record.requestId !== pending.requestId || record.intent !== pending.intent || record.date !== pending.date || record.pullRequest !== pending.pullRequest || record.headSha !== pending.headSha) return false
       if (record.intent === 'append_editorial_feedback' && pending.intent === 'append_editorial_feedback') return record.visibleBlobSha === pending.visibleBlobSha && record.supersedes === pending.supersedes && JSON.stringify(record.feedback) === JSON.stringify(pending.feedback)
       if (record.intent === 'request_editorial_revision' && pending.intent === 'request_editorial_revision') return record.articleBlobSha === pending.articleBlobSha && record.feedbackId === pending.feedbackId && record.feedbackDigest === pending.feedbackDigest
-      return record.intent === 'request_clean_acceptance' && pending.intent === 'request_clean_acceptance' && record.articleBlobSha === pending.articleBlobSha && record.registryBlobSha === pending.registryBlobSha && record.policySha === pending.policySha
+      if (record.intent === 'request_clean_acceptance' && pending.intent === 'request_clean_acceptance') return record.articleBlobSha === pending.articleBlobSha && record.registryBlobSha === pending.registryBlobSha && record.policySha === pending.policySha
+      return record.intent === 'resolve_editorial_request' && pending.intent === 'resolve_editorial_request' &&
+        record.priorRequestDigest === pending.priorRequestDigest && record.articleBlobSha === pending.articleBlobSha &&
+        record.registryBlobSha === pending.registryBlobSha && record.policySha === pending.policySha &&
+        JSON.stringify(record.prefix) === JSON.stringify(pending.prefix) && record.acknowledgment === pending.acknowledgment && record.reason === pending.reason
     })
     if (!saved) return
     if (!transition({ kind: 'idle' }, submission)) return
     setReceipt(saved.url)
-    setMessage(saved.record.intent === 'append_editorial_feedback' ? 'Feedback version saved. Confirmed in refreshed history. No revision was requested.' : saved.record.intent === 'request_clean_acceptance' ? 'Clean acceptance request confirmed in refreshed history. Check execution receipts for its outcome.' : 'Revision request confirmed in refreshed history. Check execution receipts for its outcome.')
+    setMessage(saved.record.intent === 'append_editorial_feedback' ? 'Feedback version saved. Confirmed in refreshed history. No revision was requested.' : saved.record.intent === 'resolve_editorial_request' ? 'Owner resolution confirmed. The prior request remains historical and no model run was started.' : saved.record.intent === 'request_clean_acceptance' ? 'Clean acceptance request confirmed in refreshed history. Check execution receipts for its outcome.' : 'Revision request confirmed in refreshed history. Check execution receipts for its outcome.')
   }, [submission, freshness, view])
   async function refreshHistory() {
     retryGeneration.current = null
@@ -145,13 +150,13 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
         return
       }
       const result = editorialWriteReceiptSchema.safeParse(body)
-      if (!result.success || result.data.requestId !== frozen.requestId || result.data.execution !== (frozen.intent === 'append_editorial_feedback' ? 'not_started' : 'requested')) {
+      if (!result.success || result.data.requestId !== frozen.requestId || result.data.execution !== (frozen.intent === 'request_editorial_revision' || frozen.intent === 'request_clean_acceptance' ? 'requested' : 'not_started')) {
         uncertain('The acknowledgment did not match this submission.')
         return
       }
       transition({ kind: 'idle' }, posting)
       setReceipt(result.data.url)
-      setMessage(result.data.execution === 'requested' ? 'Revision requested for this saved feedback and PR head. Check execution receipts for its outcome.' : 'Feedback version saved. No revision was requested.')
+      setMessage(result.data.execution === 'requested' ? 'Revision requested for this saved feedback and PR head. Check execution receipts for its outcome.' : frozen.intent === 'resolve_editorial_request' ? 'Owner resolution recorded. It does not establish a successful review or start a model run.' : 'Feedback version saved. No revision was requested.')
       // No completion/finally callback may change a newer submission.
       void refresh().catch(() => { /* Discovery owns its status; the receipt remains confirmed. */ })
     } catch { uncertain('The submission response could not be confirmed.') }
@@ -217,6 +222,12 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
     {pending && <button className="editorial-action" disabled={busy || freshness !== 'fresh' || !retryReady || !pendingMatchesTarget || !view.eligible || view.outstanding} onClick={() => void submit()}>Retry same submission</button>}
     <button className="editorial-action" disabled={busy} onClick={() => void refreshHistory()}>Refresh acceptance history</button>
     {view.requests.map(item => <p key={item.commentId}><a href={item.url}>{item.record.intent === 'request_clean_acceptance' ? 'Explicit clean acceptance request' : 'Explicit revision request'}</a>{item.duplicateUrls.map(url => <a key={url} href={url}>Duplicate delivery receipt</a>)} · {item.record.actor} · {item.createdAt}</p>)}
+    {view.resolutions.map(item => item.record.intent === 'resolve_editorial_request' && <details key={item.commentId}>
+      <summary>Owner-resolved prior editorial request · {item.record.actor} · {item.createdAt}</summary>
+      <p>This scheduling acknowledgment preserves the failed attempt and uncertainty. It does not establish successful review, provider absence, or billing status.</p>
+      <pre className="review-correspondence-text">{item.record.reason}</pre>
+      <a href={item.url}>Owner resolution receipt</a>
+    </details>)}
     {message && <p role="status">{message} {receipt && <a href={receipt}>Read receipt</a>}</p>}
   </section>
 }

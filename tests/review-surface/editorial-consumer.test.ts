@@ -254,6 +254,76 @@ it('runs one guarded clean acceptance on the existing PR without revising prose 
   await expect(admitActionRegistry({ workspace: f.execution.workspace, base: f.execution.policySha, head: prepared.outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github })).resolves.toBeUndefined()
   expect(await createEditorialService(f.execution.github).load(today, 'ojfbot')).toMatchObject({ status: 'existing', policySha: 'f'.repeat(40), outstanding: false })
 })
+it('admits and prepares a distinct current request while the resolved old run stays permanently scoped to the old request', async () => {
+  const f = await setup(false, null, false, false, 'clean')
+  const current = decodeEditorial(f.comment.body)
+  if (!current || current.intent !== 'request_clean_acceptance') throw new Error('Missing current clean request')
+  const oldRequest = { ...current, requestId: crypto.randomUUID() }
+  const oldRequestDigest = editorialDigest(oldRequest)
+  const claim = { requestDigest: oldRequestDigest, requestId: oldRequest.requestId, requestCommentId: 1,
+    intent: oldRequest.intent, actionReviewMode: 'clean-acceptance', inputHead: oldRequest.headSha,
+    inputBlob: oldRequest.articleBlobSha, inputRegistryBlob: oldRequest.registryBlobSha,
+    policySha: oldRequest.policySha, runId: 100, attempt: 1 }
+  const receipt = { requestDigest: oldRequestDigest, requestCommentId: 1, runId: 100, policySha: oldRequest.policySha,
+    outcome: 'uncertain', reason: 'Invocation was claimed. Preparation failed; do not replay automatically.' }
+  const entries = [
+    { commentId: 1, kind: 'owner-record', semanticDigest: oldRequestDigest },
+    { commentId: 2, kind: 'claim', semanticDigest: editorialDigest(claim) },
+    { commentId: 3, kind: 'receipt', semanticDigest: editorialDigest(receipt) },
+  ]
+  const resolution = {
+    schemaVersion: 1 as const, intent: 'resolve_editorial_request' as const, requestId: crypto.randomUUID(),
+    date: today, pullRequest: 42, headSha: oldRequest.headSha, priorRequestDigest: oldRequestDigest,
+    articleBlobSha: oldRequest.articleBlobSha, registryBlobSha: oldRequest.registryBlobSha,
+    policySha: oldRequest.policySha, prefix: { throughCommentId: 3, sha256: editorialDigest(entries) },
+    acknowledgment: 'close_uncertain_attempt_without_review_or_billing_claim' as const,
+    reason: 'Retire only the failed old scheduling slot.', actor: 'ojfbot' as const,
+    evidence: { requestCommentId: 1, requestDigest: oldRequestDigest,
+      claim: { commentId: 2, semanticDigest: editorialDigest(claim) },
+      receipt: { commentId: 3, semanticDigest: editorialDigest(receipt) },
+      attempt: { runId: 100, number: 1 as const, policySha: oldRequest.policySha, event: 'issue_comment' as const,
+        branch: 'main' as const, path: '.github/workflows/editorial-revise.yml' as const,
+        displayTitle: 'Editorial continuation comment 1', status: 'completed' as const, conclusion: 'failure' as const } },
+  }
+  f.comment.id = 5
+  const comments = [
+    makeComment(encodeEditorial(oldRequest), 1, 'ojfbot', 42),
+    makeComment(`## Editorial execution claim\n${JSON.stringify(claim)}`, 2, 'github-actions[bot]', 42),
+    makeComment(`## Editorial execution receipt\n${JSON.stringify(receipt)}`, 3, 'github-actions[bot]', 42),
+    makeComment(encodeEditorial(resolution), 4, 'ojfbot', 42),
+    f.comment,
+  ]
+  f.state.prComments.set(42, comments)
+  const base = f.execution.github
+  const oldRun = { id: 100, run_attempt: 1, status: 'completed', conclusion: 'failure', event: 'issue_comment',
+    head_sha: oldRequest.policySha, head_branch: 'main', path: '.github/workflows/editorial-revise.yml',
+    display_title: 'Editorial continuation comment 1' }
+  f.execution.github = async (path, options) => {
+    if (path.startsWith(`${repo}/actions/workflows/editorial-revise.yml/runs?`)) return Response.json({ workflow_runs: [
+      oldRun,
+      { id: 101, run_attempt: 1, status: 'in_progress', conclusion: null, display_title: 'Editorial continuation comment 5' },
+    ] })
+    if (path === `${repo}/actions/runs/100/attempts/1`) return Response.json(oldRun)
+    if (path.startsWith(`${repo}/actions/runs/100/artifacts?`)) return Response.json({ total_count: 0, artifacts: [] })
+    return base(path, options)
+  }
+  f.state.login = 'github-actions[bot]'
+
+  const before = await createEditorialService(f.execution.github).load(today, 'ojfbot')
+  expect(before).toMatchObject({ status: 'existing', requestState: { kind: 'outstanding', request: { commentId: 5 } },
+    recovery: { kind: 'blocked' }, executionReadiness: { kind: 'ready' } })
+  expect((await admitEditorial(f.execution)).request.commentId).toBe(5)
+  const prepared = await prepareEditorial(f.execution)
+  expect(prepared).not.toBeNull()
+  expect(prepared?.request.requestId).toBe(current.requestId)
+  expect(comments.slice(0, 4).map(comment => comment.body)).toEqual([
+    encodeEditorial(oldRequest),
+    `## Editorial execution claim\n${JSON.stringify(claim)}`,
+    `## Editorial execution receipt\n${JSON.stringify(receipt)}`,
+    encodeEditorial(resolution),
+  ])
+  expect(comments.at(-1)?.body).toContain(`"requestDigest":"${editorialDigest(current)}"`)
+})
 it.each(['mode', 'intent', 'digest'] as const)('a clean continuation receipt cannot borrow the wrong %s', async kind => {
   const f = await setup(false, null, false, false, 'clean'); f.state.login = 'github-actions[bot]'
   const prepared = await prepareEditorial(f.execution); if (!prepared) throw new Error('Missing clean output')
