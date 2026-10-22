@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261021-a2368c203dde",
+  "article": {
+    "date": "2026-10-21",
+    "sourceCommitSha": "a2368c203ddebc52a74aaca9ce9472ffa6dd6d24",
+    "blobSha": "3044d413528382090e0ad2b71a84c98d7fe01bf7"
+  },
+  "reviewer": {
+    "name": "Codex — independent corrected-source review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-22T14:27:19Z",
+  "scope": "Corrected visible draft, deployed JSON, resolution of the original source-bound findings, primary links and chronology, and action-custody limits. Read-only review; no acceptance, action or scheduling authority.",
+  "fullRecordBlobSha": "d4022b01bde8839ba5217b6781312df572aa72ec",
+  "fullRecordPath": "reviews/articles/2026-10-21-a2368c203ddebc52a74aaca9ce9472ffa6dd6d24.md",
+  "result": "completed",
+  "findings": []
+}
