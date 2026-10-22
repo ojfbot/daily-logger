@@ -208,7 +208,7 @@ export async function runProbe(loaded: Loaded, apiKey: string, factory: ProbeCli
     // Never serialize SDK error messages/objects, provider text, headers, credentials or env.
     result.errorCode = error instanceof ProbeError ? error.message : result.calls.at(-1)?.failureCode ?? 'PROBE_STOPPED'
   }
-  result.compilerAcceptance = roles.filter(role => result.calls.some(call => call.role === role && call.endpoint === 'messages' && call.status === 200))
+  result.compilerAcceptance = roles.filter(role => result.calls.some(call => call.role === role && call.endpoint === 'messages' && call.status === 200 && call.failureCode === undefined))
   return result
 }
 async function main(): Promise<void> {

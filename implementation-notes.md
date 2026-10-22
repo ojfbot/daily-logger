@@ -1,6 +1,8 @@
 # Implementation notes
 
 ## Deviations
+- 2026-10-22 (probe rejected transport diagnosis): a fake redirected response with status 200 correctly stopped execution but still appeared in the status-only compiler summary. Compiler qualification now excludes any transport receipt carrying an internal failure; protocol success and HTTP observations remain separate.
+
 - 2026-10-22 (probe exact status): the first transport guard admitted any 2xx, permitting synthetic protocol success without the promised HTTP200 compiler observation. Both endpoints now require exactly 200 and stop otherwise; no retry or second-role continuation occurs.
 
 - 2026-10-22 (probe transport header boundary): exact constructor options alone did not prevent a supplied SDK header from crossing the injected transport. The probe now checks the full locked SDK0.36.3 header set, exact selected key, JSON/version/retry/platform values before consuming transport; no headers or key values are logged. A call receipt is a provenance reference, not authentication of human approval: the sole coordinator still validates a new approval and reserves one dispatch externally.
