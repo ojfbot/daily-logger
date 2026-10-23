@@ -4,6 +4,10 @@
 
 - The verifier headroom census assumed the saved complete source snapshot could stand in for the live envelope, but serialization cannot restore collector-only metadata-compaction authority and the actual hosted proposal was not retained. Kept all source duties and limits, preserved non-fitting replay controls, and report byte accounting plus bounded real-SDK fixtures without claiming live token fit.
 
+- Missing-receipt recovery initially treated different request pins as unrelated claims; independent review reproduced a second immutable claim for the same run, so same-run claim collisions now hold preview, write rechecks and historical readiness even when every request pin differs.
+
+- Owner recovery assumed the claimed failed run would retain an uncertain bot receipt; attempt39984220336 failed its final receipt append, so a separately acknowledged missing-terminal-receipt variant now requires exact failed-attempt, complete history, unchanged input and zero-output proof while preserving prior receipt records and blocking replay.
+
 - The original plan assumed a #416-only input refresh; October23 added a full-status-index entry and native admission requires refreshed classification metadata in trusted main, so a conservative data-only coordinator refresh was prepared locally while the model request remains unspent.
 
 - The native-tool preparation assumed the reused dependency links covered the accepted lockfile, but full type checks and two evidence suites could not resolve parse5. Repointed only the isolated checkout's untracked dependency link to an existing offline cache with identical package and lock bytes, preserving the primary checkout and retaining the failed checks.

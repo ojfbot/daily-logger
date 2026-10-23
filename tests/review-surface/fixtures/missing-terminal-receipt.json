@@ -1,0 +1,51 @@
+{
+  "source": "Saved completed attempt39984220336/1 and immutable native request/claim; no terminal receipt or provider payload is invented.",
+  "request": {
+    "schemaVersion": 1,
+    "requestId": "9717de06-3484-4984-9edc-cc5e697d2b08",
+    "date": "2026-10-21",
+    "pullRequest": 416,
+    "headSha": "577b58b2cd5b464e29ba58a14213440e740a4176",
+    "intent": "request_clean_acceptance",
+    "articleBlobSha": "28aecbbb20bde03a95571f648a84d2c93b93d09a",
+    "registryBlobSha": "b1588ce93e733b4a6557cf2b0259954f6dcf141c",
+    "policySha": "7907b40742c77f2ff21657c3a18dffe280a178bf",
+    "actor": "ojfbot"
+  },
+  "requestComment": {
+    "id": 6369257234,
+    "created_at": "2026-10-23T16:08:05Z",
+    "updated_at": "2026-10-23T16:08:05Z"
+  },
+  "claim": {
+    "requestDigest": "52d2415d687348154948974a9bcedab36d2d67a3da134eb5a3eaf3dffd302122",
+    "requestId": "9717de06-3484-4984-9edc-cc5e697d2b08",
+    "requestCommentId": 6369257234,
+    "intent": "request_clean_acceptance",
+    "actionReviewMode": "clean-acceptance",
+    "inputHead": "577b58b2cd5b464e29ba58a14213440e740a4176",
+    "inputBlob": "28aecbbb20bde03a95571f648a84d2c93b93d09a",
+    "inputRegistryBlob": "b1588ce93e733b4a6557cf2b0259954f6dcf141c",
+    "policySha": "7907b40742c77f2ff21657c3a18dffe280a178bf",
+    "runId": 39984220336,
+    "attempt": 1
+  },
+  "claimComment": {
+    "id": 6369277759,
+    "created_at": "2026-10-23T16:09:00Z",
+    "updated_at": "2026-10-23T16:09:00Z"
+  },
+  "attempt": {
+    "id": 39984220336,
+    "run_attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "issue_comment",
+    "head_sha": "7907b40742c77f2ff21657c3a18dffe280a178bf",
+    "head_branch": "main",
+    "path": ".github/workflows/editorial-revise.yml",
+    "display_title": "Editorial continuation comment 6369257234",
+    "created_at": "2026-10-23T16:08:07Z",
+    "updated_at": "2026-10-23T16:10:32Z"
+  }
+}

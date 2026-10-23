@@ -92,6 +92,13 @@ function botExecutionRecords(comments: readonly EditorialComment[]) {
   return { claims, receipts }
 }
 
+function missingReceiptCorrespondence(bot: ReturnType<typeof botExecutionRecords>, request: EditorialHistory, runId: number) {
+  return {
+    claims: bot.claims.filter(item => item.value.requestDigest === request.digest || item.value.requestCommentId === request.commentId || item.value.requestId === request.record.requestId || item.value.runId === runId),
+    receipts: bot.receipts.filter(item => item.value.requestDigest === request.digest || item.value.requestCommentId === request.commentId || item.value.runId === runId),
+  }
+}
+
 function canonicalPrefix(comments: readonly EditorialComment[], throughCommentId: number) {
   const entries: Array<{ commentId: number; kind: 'owner-record' | 'claim' | 'receipt'; semanticDigest: string }> = []
   const bot = botExecutionRecords(comments.filter(comment => comment.id <= throughCommentId))
@@ -107,7 +114,7 @@ function canonicalPrefix(comments: readonly EditorialComment[], throughCommentId
   return { throughCommentId, sha256: editorialDigest(entries), entries }
 }
 
-async function workflowRuns(github: GitHub, createdAt: string) {
+async function workflowRuns(github: GitHub, createdAt: string, { requireTotal = false } = {}) {
   const runs: z.infer<typeof listedRunSchema>[] = []
   let declaredTotal: number | undefined
   for (let page = 1; page <= 5; page++) {
@@ -115,6 +122,7 @@ async function workflowRuns(github: GitHub, createdAt: string) {
     const response = await github(`${repo}/actions/workflows/editorial-revise.yml/runs?${query}`)
     if (!response.ok) throw new ReviewError(503, 'Editorial execution history is unavailable.')
     const result = z.object({ total_count: z.number().int().nonnegative().optional(), workflow_runs: z.array(listedRunSchema) }).parse(await response.json())
+    if (requireTotal && result.total_count === undefined) throw new ReviewError(503, 'Complete execution history requires an explicit total before resolving a missing receipt.')
     if (result.total_count !== undefined) {
       if (declaredTotal !== undefined && declaredTotal !== result.total_count) throw new ReviewError(503, 'Editorial execution history count changed during pagination.')
       declaredTotal = result.total_count
@@ -153,7 +161,7 @@ async function failedAttempt(github: GitHub, runId: number) {
 
 function resolvedAttemptAssociationIssue(input: {
   request: Extract<EditorialRecord, { intent: 'request_clean_acceptance' }>; requestDigest: string; requestCommentId: number;
-  claim: z.infer<typeof claimSchema>; receipt: z.infer<typeof executionReceiptSchema>; attempt: z.infer<typeof failedAttemptSchema>;
+  claim: z.infer<typeof claimSchema>; receipt: z.infer<typeof executionReceiptSchema> | null; attempt: z.infer<typeof failedAttemptSchema>;
 }) {
   const { request, requestDigest, requestCommentId, claim, receipt, attempt } = input
   if (claim.requestDigest !== requestDigest || claim.requestCommentId !== requestCommentId || claim.requestId !== request.requestId ||
@@ -161,10 +169,10 @@ function resolvedAttemptAssociationIssue(input: {
       claim.inputBlob !== request.articleBlobSha || claim.inputRegistryBlob !== request.registryBlobSha || claim.policySha !== request.policySha) {
     return 'The execution claim and original clean request do not bind the same immutable input.'
   }
-  if (receipt.requestDigest !== requestDigest || receipt.requestCommentId !== requestCommentId || receipt.outcome !== 'uncertain' ||
+  if (receipt && (receipt.requestDigest !== requestDigest || receipt.requestCommentId !== requestCommentId || receipt.outcome !== 'uncertain' ||
       receipt.runId !== claim.runId || receipt.policySha !== claim.policySha ||
       (receipt.requestIntent !== undefined && receipt.requestIntent !== request.intent) ||
-      (receipt.actionReviewMode !== undefined && receipt.actionReviewMode !== 'clean-acceptance')) {
+      (receipt.actionReviewMode !== undefined && receipt.actionReviewMode !== 'clean-acceptance'))) {
     return 'The uncertain receipt and clean request do not bind the same immutable attempt.'
   }
   if (attempt.id !== claim.runId || attempt.head_sha !== claim.policySha || attempt.display_title !== `Editorial continuation comment ${requestCommentId}`) {
@@ -195,19 +203,24 @@ async function inspectRecovery(input: { github: GitHub; comments: readonly Edito
     const claims = bot.claims.filter(item => item.value.requestDigest === input.request.digest && item.value.requestCommentId === input.request.commentId)
     const receipts = bot.receipts.filter(item => item.value.requestDigest === input.request.digest && item.value.requestCommentId === input.request.commentId)
     if (claims.length !== 1) return blocked('Owner resolution requires one immutable execution claim for the outstanding clean request.')
-    if (receipts.length !== 1 || receipts[0]?.value.outcome !== 'uncertain') return blocked('Owner resolution requires one immutable uncertain receipt and no competing outcome.')
+    const missingReceipt = receipts.length === 0
+    if (!missingReceipt && (receipts.length !== 1 || receipts[0]?.value.outcome !== 'uncertain')) return blocked('Owner resolution requires one immutable uncertain receipt or a proven missing terminal receipt, and no competing outcome.')
     const claim = claims[0], receipt = receipts[0]
-    if (!claim || !receipt) return blocked('Owner resolution evidence is incomplete.')
+    if (!claim) return blocked('Owner resolution evidence is incomplete.')
+    if (missingReceipt) {
+      const related = missingReceiptCorrespondence(bot, input.request, claim.value.runId)
+      if (related.claims.length !== 1 || related.receipts.length) return blocked('Missing-receipt recovery has competing or mismatched execution correspondence.')
+    }
     const request = input.request.record
     if (input.headSha !== request.headSha || input.articleBlobSha !== request.articleBlobSha || input.registryBlobSha !== request.registryBlobSha) {
       return blocked('The current PR head, article, or action map no longer equals the claimed input. Resolve before integrating new branch data.')
     }
     const attempt = await failedAttempt(input.github, claim.value.runId)
     const associationIssue = resolvedAttemptAssociationIssue({ request, requestDigest: input.request.digest,
-      requestCommentId: input.request.commentId, claim: claim.value, receipt: receipt.value, attempt })
+      requestCommentId: input.request.commentId, claim: claim.value, receipt: receipt?.value ?? null, attempt })
     if (associationIssue) return blocked(associationIssue)
     const expectedTitle = `Editorial continuation comment ${input.request.commentId}`
-    const matchingRuns = (await workflowRuns(input.github, input.request.createdAt)).filter(run => run.display_title === expectedTitle)
+    const matchingRuns = (await workflowRuns(input.github, input.request.createdAt, { requireTotal: missingReceipt })).filter(run => run.display_title === expectedTitle)
     if (matchingRuns.length !== 1 || matchingRuns[0]?.id !== claim.value.runId || matchingRuns[0]?.run_attempt !== 1 ||
         matchingRuns[0]?.status !== 'completed' || matchingRuns[0]?.conclusion !== 'failure') {
       return blocked('A unique completed failure on attempt 1 is not established for this request.')
@@ -218,7 +231,8 @@ async function inspectRecovery(input: { github: GitHub; comments: readonly Edito
     if (!Number.isSafeInteger(throughCommentId)) return blocked('The canonical recovery prefix is empty.')
     const prefix = canonicalPrefix(input.comments, throughCommentId)
     const evidence = resolutionEvidenceSchema.parse({ requestCommentId: input.request.commentId, requestDigest: input.request.digest,
-      claim: { commentId: claim.comment.id, semanticDigest: claim.digest }, receipt: { commentId: receipt.comment.id, semanticDigest: receipt.digest },
+      claim: { commentId: claim.comment.id, semanticDigest: claim.digest }, receipt: receipt
+        ? { commentId: receipt.comment.id, semanticDigest: receipt.digest } : { kind: 'missing-terminal-receipt' },
       attempt: { runId: attempt.id, number: attempt.run_attempt, policySha: attempt.head_sha, event: attempt.event, branch: attempt.head_branch,
         path: attempt.path.replace(/@(?:main|refs\/heads\/main)$/, ''), displayTitle: attempt.display_title, status: attempt.status, conclusion: attempt.conclusion } })
     return { kind: 'available' as const, input: { schemaVersion: 1 as const, date: request.date, pullRequest: input.pullRequest,
@@ -244,9 +258,16 @@ async function validateHistoricalResolution(input: { github: GitHub; comments: r
   if (prefix.sha256 !== record.prefix.sha256) throw new ReviewError(409, 'Owner resolution canonical history prefix changed.')
   const bot = botExecutionRecords(input.comments)
   const claim = bot.claims.find(item => item.comment.id === record.evidence.claim.commentId)
-  const receipt = bot.receipts.find(item => item.comment.id === record.evidence.receipt.commentId)
-  if (!claim || !receipt || claim.digest !== record.evidence.claim.semanticDigest || receipt.digest !== record.evidence.receipt.semanticDigest) {
+  const receiptEvidence = record.evidence.receipt
+  const missingReceipt = 'kind' in receiptEvidence
+  const receipt = 'kind' in receiptEvidence ? undefined : bot.receipts.find(item => item.comment.id === receiptEvidence.commentId)
+  if (!claim || claim.digest !== record.evidence.claim.semanticDigest ||
+      (!('kind' in receiptEvidence) && (!receipt || receipt.digest !== receiptEvidence.semanticDigest))) {
     throw new ReviewError(409, 'Owner resolution claim or uncertain receipt changed.')
+  }
+  if (missingReceipt) {
+    const prior = missingReceiptCorrespondence(botExecutionRecords(input.comments.filter(comment => comment.id <= record.prefix.throughCommentId)), request, claim.value.runId)
+    if (prior.claims.length !== 1 || prior.receipts.length) throw new ReviewError(409, 'Owner resolution did not prove a missing terminal receipt in its canonical prefix.')
   }
   const attempt = await failedAttempt(input.github, record.evidence.attempt.runId)
   const observed = resolutionEvidenceSchema.parse({ requestCommentId: request.commentId, requestDigest: request.digest,
@@ -255,7 +276,7 @@ async function validateHistoricalResolution(input: { github: GitHub; comments: r
       path: attempt.path.replace(/@(?:main|refs\/heads\/main)$/, ''), displayTitle: attempt.display_title, status: attempt.status, conclusion: attempt.conclusion } })
   if (editorialDigest(observed) !== editorialDigest(record.evidence)) throw new ReviewError(409, 'Owner resolution immutable attempt facts changed.')
   const associationIssue = resolvedAttemptAssociationIssue({ request: request.record, requestDigest: request.digest,
-    requestCommentId: request.commentId, claim: claim.value, receipt: receipt.value, attempt })
+      requestCommentId: request.commentId, claim: claim.value, receipt: receipt?.value ?? null, attempt })
   const gap = canonicalPrefix(input.comments, input.resolution.commentId - 1).entries
     .some(entry => entry.commentId > record.prefix.throughCommentId)
   return { request, holdReason: associationIssue ?? (gap ? 'Material editorial correspondence appeared before the owner resolution was recorded.' : undefined) }
@@ -271,16 +292,23 @@ async function resolutionExecutionReadiness(github: GitHub, comments: readonly E
     const hold = holds.get(request.digest)
     if (hold) return { kind: 'blocked' as const, reason: hold }
     if (terminals.has(request.digest)) return { kind: 'blocked' as const, reason: 'A resolved request later acquired a successful output receipt and requires diagnosis.' }
-    const relatedClaims = bot.claims.filter(item => item.value.requestDigest === request.digest && item.value.requestCommentId === request.commentId)
-    const relatedReceipts = bot.receipts.filter(item => item.value.requestDigest === request.digest && item.value.requestCommentId === request.commentId)
+    const receiptEvidence = record.evidence.receipt
+    const missingReceipt = 'kind' in receiptEvidence
+    const related = missingReceipt ? missingReceiptCorrespondence(bot, request, record.evidence.attempt.runId) : {
+      claims: bot.claims.filter(item => item.value.requestDigest === request.digest && item.value.requestCommentId === request.commentId),
+      receipts: bot.receipts.filter(item => item.value.requestDigest === request.digest && item.value.requestCommentId === request.commentId),
+    }
+    const relatedClaims = related.claims, relatedReceipts = related.receipts
+    const receiptMatches = 'kind' in receiptEvidence ? relatedReceipts.length === 0 : relatedReceipts.length === 1 &&
+      relatedReceipts[0]?.comment.id === receiptEvidence.commentId && relatedReceipts[0]?.digest === receiptEvidence.semanticDigest
     if (relatedClaims.length !== 1 || relatedClaims[0]?.comment.id !== record.evidence.claim.commentId ||
-        relatedClaims[0]?.digest !== record.evidence.claim.semanticDigest || relatedReceipts.length !== 1 ||
-        relatedReceipts[0]?.comment.id !== record.evidence.receipt.commentId || relatedReceipts[0]?.digest !== record.evidence.receipt.semanticDigest) {
+        relatedClaims[0]?.digest !== record.evidence.claim.semanticDigest || !receiptMatches) {
       return { kind: 'blocked' as const, reason: 'A resolved request has additional or changed execution correspondence.' }
     }
     const title = `Editorial continuation comment ${request.commentId}`
-    const matching = (await workflowRuns(github, request.createdAt)).filter(run => run.display_title === title)
-    if (matching.length !== 1 || matching[0]?.id !== record.evidence.attempt.runId || matching[0]?.run_attempt !== 1) {
+    const matching = (await workflowRuns(github, request.createdAt, { requireTotal: missingReceipt })).filter(run => run.display_title === title)
+    if (matching.length !== 1 || matching[0]?.id !== record.evidence.attempt.runId || matching[0]?.run_attempt !== 1 ||
+        missingReceipt && (matching[0]?.status !== 'completed' || matching[0]?.conclusion !== 'failure')) {
       return { kind: 'blocked' as const, reason: 'A resolved request has an uncovered execution or incomplete execution history.' }
     }
     if ((await runArtifacts(github, record.evidence.attempt.runId)).length) return { kind: 'blocked' as const, reason: 'A resolved request later acquired an unexpected output artifact.' }

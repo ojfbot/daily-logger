@@ -126,3 +126,29 @@ The consumer pins the regular dated article and actions/registry.json blobs at i
 Before the first acceptance, saved checkbox choices can exist on accept/<date> without a PR. Discovery recognizes this branch only after a complete regular-file tree comparison, unchanged draft article, and an inclusion-only registry comparison against current main. Acceptance creates a commit with that exact parent and uses a non-force ref update, so a concurrent branch advance blocks publication.
 
 Subsequent input registry blobs must match canonical ancestor state or an exact immutable bot-issued output receipt from this editorial workflow; an own-article explicit inclusion change is the only human overlay. Receipt checks bind workflow provenance, PR/request identity, trusted policy ancestry, output ancestry, and the regular registry blob. A hand-authored verification snapshot does not establish either agent ran. The required PR check repeats this admission on every acceptance head without model execution, with a short bounded wait for the output receipt. Ordinary human-reviewed source/data PRs retain the normal trusted-main authority.
+
+Owner resolution of a failed clean request
+
+An explicit owner decision may retire a uniquely claimed, completed failure on
+attempt1 without starting another run. The original request, immutable claim,
+failed attempt and canonical history prefix remain bound in the owner record.
+The PR head and article/action-map blobs must still equal the claimed input;
+the resolution separately pins the currently observed trusted policy. Complete
+workflow history must establish no competing run and the failed run must have
+no output artifact. Provider execution, review success and billing remain unknown.
+
+The existing uncertain-receipt evidence and acknowledgment keep their original
+serialized shape. When the terminal receipt is absent, the evidence explicitly
+records receipt.kind=missing-terminal-receipt and the owner must acknowledge
+close_missing_receipt_attempt_without_review_or_billing_claim. This path requires
+an explicit complete run-history total as well as bounded pagination. A log line
+or ordinary comment saying fetchfailed is not recovery authority. No bot receipt
+is fabricated, and a present failed/successful/mismatched receipt cannot use this
+missing-receipt path.
+
+The service rechecks evidence before appending the non-executing owner record.
+Any later claim, receipt, competing/rerun attempt or artifact holds new execution;
+the owner decision and old attempt remain historical. Ordinary noncanonical
+correspondence does not change the recovery prefix. The resolved old request is
+never executable again. A new hosted request needs separate authority and a new
+identity; there is no automatic recovery, replay or retry and no new UI override.

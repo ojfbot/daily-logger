@@ -113,7 +113,7 @@ it('SEC3: an owner-shaped historical record cannot bypass wrong claim intent/mod
   const comments = f.state.prComments.get(42)!
   const resolutionComment = comments.at(-1)!
   const original = decodeEditorial(resolutionComment.body)
-  if (original?.intent !== 'resolve_editorial_request') throw new Error('Missing resolution')
+  if (original?.intent !== 'resolve_editorial_request' || 'kind' in original.evidence.receipt) throw new Error('Missing uncertain-receipt resolution')
   // Reconstruct a source-forged-from-creation fixture; no real comment is edited.
   // The historical read must enforce the same semantic provenance as initial eligibility.
   const wrongClaim = { ...f.claim, intent: 'request_editorial_revision', actionReviewMode: 'revision' }

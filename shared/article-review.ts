@@ -107,13 +107,16 @@ export const executableEditorialIntentSchema = z.enum(['request_editorial_revisi
 export const resolveEditorialRequestSchema = editorialTarget.extend({ intent: z.literal('resolve_editorial_request'),
   priorRequestDigest: digest, articleBlobSha: sha, registryBlobSha: sha, policySha: sha,
   prefix: z.object({ throughCommentId: z.number().int().positive(), sha256: digest }).strict(),
-  acknowledgment: z.literal('close_uncertain_attempt_without_review_or_billing_claim'),
+  acknowledgment: z.enum(['close_uncertain_attempt_without_review_or_billing_claim', 'close_missing_receipt_attempt_without_review_or_billing_claim']),
   reason: z.string().trim().min(1).max(4000),
 }).strict()
 export const resolutionEvidenceSchema = z.object({
   requestCommentId: z.number().int().positive(), requestDigest: digest,
   claim: z.object({ commentId: z.number().int().positive(), semanticDigest: digest }).strict(),
-  receipt: z.object({ commentId: z.number().int().positive(), semanticDigest: digest }).strict(),
+  receipt: z.union([
+    z.object({ commentId: z.number().int().positive(), semanticDigest: digest }).strict(),
+    z.object({ kind: z.literal('missing-terminal-receipt') }).strict(),
+  ]),
   attempt: z.object({ runId: z.number().int().positive(), number: z.literal(1), policySha: sha,
     event: z.literal('issue_comment'), branch: z.literal('main'), path: z.literal('.github/workflows/editorial-revise.yml'),
     displayTitle: z.string().min(1), status: z.literal('completed'), conclusion: z.literal('failure') }).strict(),
@@ -128,7 +131,12 @@ export const editorialRecordSchema = z.discriminatedUnion('intent', [
   appendEditorialSchema.extend({ actor: z.literal('ojfbot'), originalBody: z.string() }).strict(),
   runEditorialSchema.extend({ actor: z.literal('ojfbot') }).strict(),
   cleanAcceptanceSchema.extend({ actor: z.literal('ojfbot') }).strict(),
-  resolveEditorialRequestSchema.extend({ actor: z.literal('ojfbot'), evidence: resolutionEvidenceSchema }).strict(),
+  resolveEditorialRequestSchema.extend({ actor: z.literal('ojfbot'), evidence: resolutionEvidenceSchema }).strict().superRefine((record, ctx) => {
+    const expected = 'kind' in record.evidence.receipt
+      ? 'close_missing_receipt_attempt_without_review_or_billing_claim'
+      : 'close_uncertain_attempt_without_review_or_billing_claim'
+    if (record.acknowledgment !== expected) ctx.addIssue({ code: 'custom', path: ['acknowledgment'], message: 'Owner acknowledgment must match the observed terminal-receipt evidence.' })
+  }),
 ])
 export const editorialHistorySchema = z.object({ record: editorialRecordSchema, digest,
   commentId: z.number().int().positive(), url: githubUrl, createdAt: z.iso.datetime(), duplicateUrls: z.array(githubUrl) }).strict()
