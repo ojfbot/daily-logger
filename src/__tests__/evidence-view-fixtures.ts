@@ -31,7 +31,7 @@ export function applyVerifiedActionReview(input: Omit<Parameters<typeof native.a
   return native.applyVerifiedActionReview({ ...input, evidenceView, roundId: evidenceView.roundId, proposal: fixtureLineCitations(input.proposal, input.sources) as native.ActionProposal })
 }
 function agents(input: Parameters<typeof native.reviewArticleActions>[0]): native.ActionAgents {
-  return { ...input.agents, propose: async (prompt, view) => fixtureLineCitations(await input.agents.propose(prompt, view), [...view.rawSources(true), ...view.rawSources()]) }
+  return { ...input.agents, propose: async (prompt, view, context) => fixtureLineCitations(await input.agents.propose(prompt, view, context), [...view.rawSources(true), ...view.rawSources()]) }
 }
 export function reviewArticleActions(input: Parameters<typeof native.reviewArticleActions>[0]) { return native.reviewArticleActions({ ...input, agents: agents(input) }) }
 export function reviewDraftActions(input: Parameters<typeof native.reviewDraftActions>[0]) { return native.reviewDraftActions({ ...input, agents: agents(input) }) }

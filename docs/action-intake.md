@@ -57,6 +57,25 @@ Trusted main is the human-reviewed authority, including ordinary source/data PRs
 
 After a terminated local process, confirm that no generation or reconciliation process owns `actions/registry.json.lock` before removing that stale lock. Rerun reconciliation to repair any interrupted article write before publication. CI uses ephemeral checkouts. Ordinary write exceptions restore the prior article and registry; process termination between renames requires this recovery.
 
+## Captured candidate references
+
+The ordinary proposer tool returns each suggestion with an explicit `identity`: either
+`{kind: "captured", candidateId}` or `{kind: "new", command, repo, description}`. Captured
+references permit no identity overrides. The application validates the immutable same-article
+capture, requires a unique matching disposition and suggestion index, and derives its exact
+command, repository and description before the independent verifier sees the canonical proposal.
+New or amended work remains separate and must account for the original candidate independently.
+Native evidence, owner, admission, identity and application checks still apply after verification.
+The fresh v20 contract cannot reuse a v19 cache; historical v19 records remain readable.
+
+Ordinary canonical records still require bare skill commands. A captured argument-bearing
+invocation is refused before verification; it is never stripped, rewritten or converted into a
+protected reviewed receipt. The original capture remains intact. Other dispositions require
+their own independent support, and review must hold when none is supported. A successful
+controlled offline composition does not establish that the actual three October 21 originals
+should be rejected or that a live review will pass. Future argument-bearing admission remains
+a separate policy decision under the preserved contract below.
+
 ## Preserved October 15 contract
 
 - `src/action-intake.ts` recognizes the legacy source forms for the one-shot importer. Normal API builds verify recorded admissions but never extract membership from markdown.

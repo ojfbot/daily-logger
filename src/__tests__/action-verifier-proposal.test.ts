@@ -1,11 +1,12 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { Response as SdkResponse } from '@anthropic-ai/sdk/_shims/registry'
-import { ActionRegistrySchema, sha256 } from '../action-registry.js'
+import { ActionRegistrySchema, actionStateDigest, sha256 } from '../action-registry.js'
 import { PreparedActionEvidenceView, ActionSourceCollection, actionEvidenceRegistryDigest, captureGithubActionSource } from '../action-evidence-view.js'
+import { draftCandidateEvidenceBinding } from '../action-evidence-selection.js'
 import { generationActionCycle } from '../action-review-cycle.js'
 import { parseActionModelView } from '../action-model-view.js'
-import { createActionAgents, reviewArticleActions, resolveActionSourceLines, ActionProposalSchema, actionVerificationProposal, applyVerifiedActionReview } from '../review-actions.js'
+import { createActionAgents, reviewArticleActions, pendingActionReview, resolveActionSourceLines, ActionProposalSchema, actionVerificationProposal, applyVerifiedActionReview } from '../review-actions.js'
 
 type SdkOptions = NonNullable<ConstructorParameters<typeof import('@anthropic-ai/sdk').default>[0]>
 const transport = vi.hoisted(() => ({ fetch: vi.fn<NonNullable<SdkOptions['fetch']>>() }))
@@ -45,7 +46,7 @@ it('uses real SDK serialization for a bounded two-role round while retaining exa
       const fact = view.sources.find(source => source.locator === sources[0].locator), goal = view.sources.find(source => source.locator === sources[1].locator)
       if (!fact || !goal) throw new Error('Missing complete source view')
       const common = { factCitations: [{ sourceId: fact.id, startLine: 1, endLine: 1 }], goalCitations: [{ sourceId: goal.id, startLine: 1, endLine: 1 }] }
-      input = { changes: [{ actionKey: 'existing', state: 'open', description: 'Retain the owner gate.', reason: 'Owner approval is still mandatory.', citations: common.factCitations }], suggestions: [{ command: '/review', repo: 'core', target: 'offline-fixture', outcome: 'Record owner decision.', description: 'Review the bounded fixture.', goal: 'Retain independent review.', doneWhen: 'The owner records a decision.', gates: ['Owner approval remains mandatory.'], existingKey: null, ...common }], candidateDispositions: [], closingOptions: [{ kind: 'candidate', candidateIndex: 0, title: 'Review the owner gate', benefit: 'Preserve the decision boundary.', start: 'Read the complete evidence.', entryPoint: 'offline-owner-gate.md', context: 'The owner gate remains.', whyNow: 'Current fixture evidence requires a decision.', outcome: 'Record a decision.', nextCheck: 'Obtain owner approval.', replaces: [], ...common }] }
+      input = { changes: [{ actionKey: 'existing', state: 'open', description: 'Retain the owner gate.', reason: 'Owner approval is still mandatory.', citations: common.factCitations }], suggestions: [{ identity: { kind: 'new', command: '/review', repo: 'core', description: 'Review the bounded fixture.' }, target: 'offline-fixture', outcome: 'Record owner decision.', goal: 'Retain independent review.', doneWhen: 'The owner records a decision.', gates: ['Owner approval remains mandatory.'], existingKey: null, ...common }], candidateDispositions: [], closingOptions: [{ kind: 'candidate', candidateIndex: 0, title: 'Review the owner gate', benefit: 'Preserve the decision boundary.', start: 'Read the complete evidence.', entryPoint: 'offline-owner-gate.md', context: 'The owner gate remains.', whyNow: 'Current fixture evidence requires a decision.', outcome: 'Record a decision.', nextCheck: 'Obtain owner approval.', replaces: [], ...common }] }
     } else {
       const proposalText = prompt.slice(prompt.indexOf(marker) + marker.length).split('\n')[0]
       expect(proposalText).not.toContain('"quote":')
@@ -187,4 +188,37 @@ it('preserves legacy literal history while refusing current-view substring propo
   expect(() => applyVerifiedActionReview({ registry, articleDate: date, cycle: generationActionCycle(), markdown, sources: evidence, evidenceView: view, roundId: view.roundId, proposal, verification: { changes: [{ actionKey: 'existing', verdict: 'pass', reason: 'Fixture only.' }], suggestions: [] }, articleStatuses: new Map([[date, 'draft']]) })).toThrow(/original line endpoints/)
   expect(() => actionVerificationProposal(proposal, view)).toThrow(/original line endpoints/)
   expect(proposal).toEqual(original)
+})
+
+
+it('serializes a real SDK captured-reference round and verifies the exact canonical tuple applied natively', async () => {
+  const original = { command: '/validate', repo: 'core', description: 'Validate the bounded owner evidence.', sourceDate: date, status: 'open' as const }
+  const pending = pendingActionReview({ registry: seed(), articleDate: date, cycle: generationActionCycle(), markdown, articleStatuses: new Map([[date, 'draft']]), reason: 'Capture offline original.', draftCandidates: [original], draftContext: { kind: 'none' } })
+  const snapshot = pending.registry.articles[0], candidates = snapshot.draftCandidates
+  if (!candidates) throw new Error('Missing offline captured original')
+  snapshot.draftCandidateEvidence = { version: 'draft-candidate-evidence-v2', provenance: { kind: 'independent-reviewer', identity: 'offline-sdk-reference', decision: 'OFFLINE fixture-only associations.' }, ...draftCandidateEvidenceBinding({ registry: pending.registry, articleDate: date, cycle: generationActionCycle(), markdown: pending.markdown }), candidates: candidates.map(candidate => ({ candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references: [], actionRelations: [] })), unassignedReferences: [] }
+  snapshot.stateDigest = actionStateDigest(pending.registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: date, roundId: snapshot.roundId, includePriorArticleRounds: true, draftCandidates: candidates, draftCandidateEvidence: snapshot.draftCandidateEvidence })
+  const calls: Array<{ path: string; model: string }> = []
+  let verifiedProposal: unknown
+  transport.fetch.mockImplementation(async (url, init) => {
+    if (typeof init?.body !== 'string') throw new Error('Expected real SDK JSON bytes')
+    const request = requestSchema.parse(JSON.parse(init.body)), path = new URL(String(url)).pathname
+    calls.push({ path, model: request.model })
+    if (path.endsWith('/count_tokens')) return new SdkResponse(JSON.stringify({ input_tokens: 1000 }), { status: 200, headers: { 'content-type': 'application/json' } })
+    const citation = { sourceId: 'fact', startLine: 1, endLine: 1 }
+    let input: unknown
+    if (request.model === 'claude-sonnet-4-6') input = { changes: [{ actionKey: 'existing', state: 'open', description: 'Retain the owner gate.', reason: 'The gate remains mandatory.', citations: [citation] }], suggestions: [{ identity: { kind: 'captured', candidateId: candidates[0].candidateId }, target: 'separate bounded evidence', outcome: 'Independent owner review.', goal: 'Preserve the owner gate.', factCitations: [citation], goalCitations: [citation], doneWhen: 'Owner verdict recorded.', gates: ['Owner approval remains mandatory.'], existingKey: null }], candidateDispositions: [{ candidateId: candidates[0].candidateId, kind: 'promote', suggestionIndex: 0, reason: 'OFFLINE captured reference only.' }], closingOptions: [] }
+    else {
+      verifiedProposal = JSON.parse(request.messages[0].content.split(marker)[1].split('\n')[0])
+      input = { changes: [{ actionKey: 'existing', verdict: 'pass', reason: 'OFFLINE controlled gate check.' }], suggestions: [{ candidateIndex: 0, verdict: 'pass', reason: 'OFFLINE mechanical verifier.', existingKey: null }], candidateDispositions: [{ candidateId: candidates[0].candidateId, verdict: 'pass', reason: 'OFFLINE identity check.' }], closingOptions: [] }
+    }
+    return new SdkResponse(JSON.stringify({ id: 'offline-reference', type: 'message', role: 'assistant', model: request.model, stop_reason: 'tool_use', stop_sequence: null, content: [{ type: 'tool_use', id: 'offline-tool', name: 'review_actions', input }], usage: { input_tokens: 1000, output_tokens: 100 } }), { status: 200, headers: { 'content-type': 'application/json' } })
+  })
+  const result = await reviewArticleActions({ registry: pending.registry, articleDate: date, cycle: generationActionCycle(), markdown: pending.markdown, feedback: '', sources, articleStatuses: new Map([[date, 'draft']]), agents: createActionAgents() })
+  const canonical = ActionProposalSchema.parse(resolveActionSourceLines(verifiedProposal, PreparedActionEvidenceView.prepare(sources, sha256('roundtrip'), sha256('state'))))
+  expect(canonical.suggestions[0]).toMatchObject({ command: original.command, repo: original.repo, description: original.description })
+  expect(result.registry.records.find(record => record.origin === 'suggested')?.original).toMatchObject(original)
+  expect(result.registry.articles[0].verification.proposalSha256).toBe(sha256(JSON.stringify(canonical)))
+  expect(result.registry.articles[0].draftCandidates?.[0].review.state).toBe('promoted')
+  expect(calls).toEqual([{ path: '/v1/messages/count_tokens', model: 'claude-sonnet-4-6' }, { path: '/v1/messages', model: 'claude-sonnet-4-6' }, { path: '/v1/messages/count_tokens', model: 'claude-opus-4-6' }, { path: '/v1/messages', model: 'claude-opus-4-6' }])
 })
