@@ -139,4 +139,15 @@ describe('native-validated forced-tool response boundary', () => {
     await expect(reviewArticleActions(reviewInput())).rejects.toThrow(/did not finish/)
     expect(create).toHaveBeenCalledTimes(1)
   })
+  it.each([
+    { stop_reason: 'max_tokens', content: [], usage: { output_tokens: 12001 } },
+    { stop_reason: 'max_tokens', content: null, usage: { output_tokens: 'invalid' } },
+    { stop_reason: 'end_turn', content: 'not a tool block', usage: null },
+  ])('stops explicit $stop_reason before malformed content or usage can trigger a repair', async incomplete => {
+    create.mockResolvedValue(incomplete)
+    const error = await reviewArticleActions(reviewInput()).then(() => null, (caught: unknown) => caught)
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(countTokens).toHaveBeenCalledTimes(1)
+    expect(error).toMatchObject({ message: expect.stringContaining('did not finish') })
+  })
 })
