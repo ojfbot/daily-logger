@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-23",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-10-23",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action evidence request 099dfcec9392f116ce8bea20872e6e72e4bd014665d1b9609c8f5b7e732ac804 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
+    },
+    "articleDigest": "305c661acf489e402dd629bf9880b0bf5a604514a397264e9f853d01d9bb3ff2",
+    "roundId": "8085e6abdaee80a0c7700b15f4549bb6f52e8bec429288e1136655adf73bb637",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "9559ede4e6c9709956dcfef64ae793ad97a3d198f46e3c6e8ee365980e141342",
+        "payload": {
+          "command": "/editorial-resume --pr 416 --pin-request --verify-schema --dry-run",
+          "description": "Trigger a dry-run of the clean-acceptance resume path on #416 to confirm the repaired pipeline — schema compatibility (#426), evidence compaction (#427), and owner recovery (#425) — produces a valid request payload before spending a live provider call.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-23"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "9432c9fb31569ebcf0d6e6dca0c7ade4c828725029f95a0a152e3449c695f2c5",
+        "payload": {
+          "command": "/action-review-probe --synthetic --models proposer,verifier --report-token-count",
+          "description": "Run the manual synthetic probe (#428–430) and capture the post-compaction token count for the evidence view. This produces the missing measurement for the #427 decision record and confirms schema acceptance against the live provider before the full #416 run.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-23"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "2dd7601826e9f2f73bc26153a97a4c53c2e26763b73fa12c7cda8cb5e5a33fde",
+        "payload": {
+          "command": "/pr-triage --repo morning-cockpit --pr 60 --assess-merge-or-close",
+          "description": "morning-cockpit #60 has been open with no activity for two windows. Assess whether it is merge-ready, should be closed, or needs a milestone gate — and record the disposition so it stops appearing in the pulse as unresolved noise.",
+          "repo": "morning-cockpit",
+          "status": "open",
+          "sourceDate": "2026-10-23"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v5-candidate-requirements",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-10-23",
+      "articleDigest": "305c661acf489e402dd629bf9880b0bf5a604514a397264e9f853d01d9bb3ff2",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "d59414c238dfb261b2b133b5646f972c7beec5371fabcc3fd60dc3cc7832901c",
+      "candidatePayloadsSha256": "aff1f02c5b474503b190fcddbf6e09cc9912bb02438d748ffd1780ba13c12f55",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "ad6d10f2d8bb1c250ac9c6b8befc94d96aa0041a1ff5e9d0c97c164d117c1a27",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "9559ede4e6c9709956dcfef64ae793ad97a3d198f46e3c6e8ee365980e141342",
+          "payloadSha256": "7c8675bdb58ba7f14fa9f73faee0f53f0c9c76a4622d3280d8c3554db954391a",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "9432c9fb31569ebcf0d6e6dca0c7ade4c828725029f95a0a152e3449c695f2c5",
+          "payloadSha256": "fd2636f9384824086c724c951385307811e816224cf328ce80604ca1430a668c",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "2dd7601826e9f2f73bc26153a97a4c53c2e26763b73fa12c7cda8cb5e5a33fde",
+          "payloadSha256": "c9a0c913c76d7e966c843493b5040f8d43aa562771c7f8650911d714a5aaaf58",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "morning-cockpit#60",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "classic-space-venue#4",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "lego-village-pipeline#44",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "The October 21 acceptance cycle (#416) remains the single blocking item. All four technical blockers have merged fixes as of this window. The next action is a manual trigger of the live provider run against the repaired pipeline; the specific command surface is the acceptance resume workflow introduced in #424. If the provider run fails, the synthetic probe (#428–430) should be run first to isolate schema-side vs. article-fit-side failure before any further code changes are attempted.\n\nPost-token-count for the compacted evidence view (#427) is not yet in the record — it will be produced by the #416 run. The growth rate of evidence as articles accumulate is an open characterization question; #427 is a point fix, not a capacity model.\n\n#421 (October 22 review DRAFT) exits on acceptance of the October 22 action review output, or closes without merge if the pipeline marks it resolved with no material findings.\n\nmorning-cockpit #60 has no activity across two windows and no stated dependency. Its disposition — merge, close, or park — is an owner gate with no technical blocker.\n\nlego-village-pipeline #44, #45, #46 are analysis-only DRAFTs with no active blockers identified. Closing them vs. converting to issues is an owner decision; they are accumulating drift at 12+ days open.\n\nclassic-space-venue #4 is parallel work, not a dependency of the editorial pipeline. Its core issue dependencies (#544, #564–567) are wayfinder/world-building research; none are editorial-pipeline blockers.\n\nAPI spend per failed acceptance cycle (~193K input tokens) is not published in this record. That cost dimension would make the compaction fix legible to anyone outside the immediate codebase.\n\nThe `DRAFT_CONTINUATION_CONTEXT` HTML comment block in the raw draft source is machine-readable pipeline state metadata. It is not reader-facing content and should not appear in any published form. Whether it is suppressed at render time or stripped before publication is a pipeline hygiene question for the next hardening pass."
+    },
+    "stateDigest": "80998a34359a62b26053d9fe3cd8e154d786492afc4a0527ff1679b6f65f7746",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [
+      {
+        "version": "action-evidence-request-v1",
+        "id": "099dfcec9392f116ce8bea20872e6e72e4bd014665d1b9609c8f5b7e732ac804",
+        "kind": "source-view",
+        "caseDigest": "ce5307a2402601b0895d03c06e7d39293fb85e230f90aed3421ce2e9e196252b",
+        "articleDate": "2026-10-23",
+        "cycle": {
+          "phase": "generation"
+        },
+        "actionKeys": [
+          "article-feedback"
+        ],
+        "sourceKey": "github:daily-logger#357",
+        "sourceId": "github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe",
+        "sourceFullContentSha256": "6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe",
+        "obligations": [
+          "dbd87ed97a0c07e81a1689712d29fce78023beb160713d0060739969dd3596f0"
+        ],
+        "recipient": "source-producer",
+        "status": "open"
+      }
+    ],
+    "rejected": []
+  }
+}

@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 93
+    "count": 94
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 79
+    "count": 80
   },
   {
     "name": "core",
@@ -17,7 +17,7 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 62
+    "count": 63
   },
   {
     "name": "module-federation",
@@ -32,12 +32,12 @@
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 36
+    "count": 37
   },
   {
     "name": "hardening",
     "type": "practice",
-    "count": 33
+    "count": 34
   },
   {
     "name": "rest-day",
@@ -62,7 +62,7 @@
   {
     "name": "sprint",
     "type": "concept",
-    "count": 22
+    "count": 23
   },
   {
     "name": "morning-cockpit",
@@ -80,14 +80,14 @@
     "count": 18
   },
   {
-    "name": "cleanup",
+    "name": "security-as-emergent-ux",
     "type": "concept",
     "count": 17
   },
   {
-    "name": "security-as-emergent-ux",
+    "name": "cleanup",
     "type": "concept",
-    "count": 16
+    "count": 17
   },
   {
     "name": "asset-foundry",
@@ -115,6 +115,11 @@
     "count": 11
   },
   {
+    "name": "editorial-pipeline",
+    "type": "concept",
+    "count": 10
+  },
+  {
     "name": "wayfinder",
     "type": "concept",
     "count": 10
@@ -128,11 +133,6 @@
     "name": "landing",
     "type": "repo",
     "count": 10
-  },
-  {
-    "name": "editorial-pipeline",
-    "type": "concept",
-    "count": 9
   },
   {
     "name": "provenance",

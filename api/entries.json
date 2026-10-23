@@ -1,5 +1,234 @@
 [
   {
+    "date": "2026-10-23",
+    "title": "daily-logger's acceptance pipeline burns through twelve PRs closing four independent gaps in one window",
+    "summary": "Twenty-three commits across one repo merged twelve daily-logger PRs hardening action-review schema compatibility, evidence compaction, owner recovery, and diagnostic tooling.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 23,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Compact generated GitHub action evidence into model-only views before review (#427)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Convert unsupported oneOf discriminators to anyOf in the strict action-review tool schema (#426)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Add explicit owner recovery for failed editorial requests (#425)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Introduce a manual synthetic probe workflow for strict action-review schemas (#428, #429, #430)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "417",
+          "url": "https://github.com/ojfbot/daily-logger/pull/417"
+        },
+        "at": "2026-10-22T15:00:28.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "419",
+          "url": "https://github.com/ojfbot/daily-logger/pull/419"
+        },
+        "at": "2026-10-22T09:18:05.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "420",
+          "url": "https://github.com/ojfbot/daily-logger/pull/420"
+        },
+        "at": "2026-10-22T15:18:25.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "422",
+          "url": "https://github.com/ojfbot/daily-logger/pull/422"
+        },
+        "at": "2026-10-22T15:10:39.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "423",
+          "url": "https://github.com/ojfbot/daily-logger/pull/423"
+        },
+        "at": "2026-10-22T15:36:33.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "424",
+          "url": "https://github.com/ojfbot/daily-logger/pull/424"
+        },
+        "at": "2026-10-22T15:58:26.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "425",
+          "url": "https://github.com/ojfbot/daily-logger/pull/425"
+        },
+        "at": "2026-10-22T18:01:55.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "426",
+          "url": "https://github.com/ojfbot/daily-logger/pull/426"
+        },
+        "at": "2026-10-22T19:26:09.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "427",
+          "url": "https://github.com/ojfbot/daily-logger/pull/427"
+        },
+        "at": "2026-10-22T21:53:04.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "428",
+          "url": "https://github.com/ojfbot/daily-logger/pull/428"
+        },
+        "at": "2026-10-23T00:07:14.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "429",
+          "url": "https://github.com/ojfbot/daily-logger/pull/429"
+        },
+        "at": "2026-10-23T03:07:44.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "430",
+          "url": "https://github.com/ojfbot/daily-logger/pull/430"
+        },
+        "at": "2026-10-23T07:04:16.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-10-23T09:05:39.411Z",
+        "runId": "39929217141",
+        "runNumber": 265,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/39929217141",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "da5e104197ed5c41c9cab2d444197554ae8eba72",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-10-23T09:04:34.000Z",
+          "startedAt": "2026-10-23T09:04:34.000Z",
+          "expectedAt": "2026-10-23T08:30:00.000Z",
+          "dispatchDelaySeconds": 2074,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v5-2026-10-20-local-window-single-recommendation",
+          "promptSha256": "fc00cfb33750c4d3a34e3857d142fcf7cc20208f0bfdc657a848fa8163e023f4"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.21.0",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-22",
     "title": "Classic Space Venue lands its dev-host foundation while daily-logger hardens its acceptance pipeline",
     "summary": "Thirty-seven commits across two repos merged four Classic Space Venue PRs and nine daily-logger PRs hardening action-evidence binding and article acceptance.",
