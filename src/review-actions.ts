@@ -101,8 +101,9 @@ const ProviderVerificationSchema = ActionVerificationSchema.extend({
   candidateDispositions: ActionVerificationSchema.shape.candidateDispositions.unwrap(),
   closingOptions: ActionVerificationSchema.shape.closingOptions.unwrap(),
 })
-const ProviderResponseSchema = z.object({
-  stop_reason: z.string().nullable(), content: z.unknown(),
+const ProviderStopSchema = z.object({ stop_reason: z.string().nullable() }).passthrough()
+const ProviderResponseSchema = ProviderStopSchema.extend({
+  content: z.unknown(),
   usage: z.object({ output_tokens: z.number().int().nonnegative().safe().max(12000) }).passthrough().optional(),
 }).passthrough()
 const ProviderToolBlocksSchema = z.tuple([z.object({
@@ -297,9 +298,10 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
     if (totalTokens > tokenLimit) throw new ActionContextNeedError(`Complete action provider request exceeds token budget (${inputTokens} input + ${request.max_tokens} output reserve > ${tokenLimit}); review pending`)
     console.warn(`Action ${role} token budget: input=${inputTokens}; output_reserve=${request.max_tokens}; total=${totalTokens}; limit=${tokenLimit}`)
     const raw: unknown = await client.messages.create(request)
+    const completion = ProviderStopSchema.parse(raw)
+    if (completion.stop_reason !== 'tool_use') throw new Error(`Action ${role} did not finish its structured review (${completion.stop_reason})`)
     const response = ProviderResponseSchema.parse(raw)
     console.warn(`Action ${role}: stop=${response.stop_reason}; output_tokens=${response.usage?.output_tokens ?? 'unavailable'}`)
-    if (response.stop_reason !== 'tool_use') throw new Error(`Action ${role} did not finish its structured review (${response.stop_reason})`)
     const [result] = ProviderToolBlocksSchema.parse(response.content)
     return role === 'proposer' ? resolveActionSourceLines(ProviderLineProposalSchema.parse(result.input), view) : ProviderVerificationSchema.parse(result.input)
   }
