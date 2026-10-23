@@ -169,6 +169,7 @@ async function readProviderError(response: Response, signal: AbortSignal, byteLi
     for (;;) {
       const part = await Promise.race([reader.read(), aborted])
       if (part.done) break
+      if (part.value.byteLength === 0) return unknownDiagnostic
       size += part.value.byteLength
       if (size > byteLimit) return unknownDiagnostic
       chunks.push(part.value)

@@ -271,6 +271,16 @@ describe('provider error diagnostics — factory doubles only, no SDK constructi
       }
     } finally { await reader?.cancel() }
   })
+  it('stops on a nonprogressing empty diagnostic chunk before consuming later text', async () => {
+    const body = new ReadableStream({ start(controller) {
+      controller.enqueue(new Uint8Array())
+      controller.enqueue(new TextEncoder().encode(JSON.stringify(envelope(documented))))
+      controller.close()
+    } })
+    const result = await run([{ input_tokens: 1 }, new Response(body, { status: 400, headers: { 'content-type': 'application/json' } })])
+    expect(result.errorCode).toBe('PROVIDER_400'); expect(result.calls).toHaveLength(2)
+    expect(result.calls[1]).toMatchObject({ providerErrorType: 'unknown', providerErrorReason: 'unclassified' })
+  })
   it('the existing signal interrupts a hung error reader even when cancel never resolves', async () => {
     const controller = new AbortController(); let posts = 0; let canceled = false
     const localFactory: ProbeClientFactory = options => ({ post: async (path, request) => {
