@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fixtureEvidenceView } from './evidence-view-fixtures.js'
-import { ActionRegistrySchema } from '../action-registry.js'
+import { ActionRegistrySchema, captureDraftActionCandidates } from '../action-registry.js'
 import { generationActionCycle } from '../action-review-cycle.js'
 
 const { create, countTokens, constructed } = vi.hoisted(() => ({
@@ -16,12 +16,13 @@ const empty = { changes: [], suggestions: [], candidateDispositions: [], closing
 const response = (input: unknown) => ({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tool_offline', name: 'review_actions', input }], usage: { output_tokens: 100 } })
 const source = { id: 'facts', kind: 'repository' as const, locator: 'evidence.md', content: 'The owner must approve the preview.\nThe current gate remains open.' }
 const citation = { sourceId: 's1', startLine: 1, endLine: 1 }
+const captured = captureDraftActionCandidates([{ command: '/review', repo: 'daily-logger', description: 'Inspect the bounded preview.', status: 'open', sourceDate: '2026-10-21' }])
 const proposal = {
   changes: [{ actionKey: 'carried', state: 'open', description: 'Obtain owner approval.', reason: 'The explicit gate remains open.', citations: [citation] }],
   suggestions: [{ command: '/review', repo: 'daily-logger', description: 'Inspect the bounded preview.', target: 'preview', outcome: 'Owner records a decision.',
     goal: 'Preserve the owner gate.', doneWhen: 'Owner approval is recorded.', gates: ['Owner approval required.'], existingKey: null,
     factCitations: [citation], goalCitations: [citation] }],
-  candidateDispositions: [{ candidateId: 'a'.repeat(64), kind: 'promote', suggestionIndex: 0, reason: 'Review the exact captured candidate.' }],
+  candidateDispositions: [{ candidateId: captured[0].candidateId, kind: 'promote', suggestionIndex: 0, reason: 'Review the exact captured candidate.' }],
   closingOptions: [{ kind: 'candidate', candidateIndex: 0, title: 'Inspect the preview', entryPoint: 'Open the preview.', context: 'The owner gate remains open.',
     whyNow: 'Current evidence keeps the gate relevant.', outcome: 'Obtain owner approval.', nextCheck: 'Record the owner verdict.',
     benefit: 'Resolve the owner gate.', start: 'Read the evidence.', replaces: [], factCitations: [citation], goalCitations: [citation] }],
@@ -29,7 +30,7 @@ const proposal = {
 const verification = {
   changes: [{ actionKey: 'carried', verdict: 'pass', reason: 'Owner gate retained.' }],
   suggestions: [{ candidateIndex: 0, verdict: 'pass', reason: 'Current sources support review.', existingKey: null }],
-  candidateDispositions: [{ candidateId: 'a'.repeat(64), verdict: 'pass', reason: 'Exact captured identity checked.' }],
+  candidateDispositions: [{ candidateId: captured[0].candidateId, verdict: 'pass', reason: 'Exact captured identity checked.' }],
   closingOptions: [{ optionIndex: 0, verdict: 'hold', reason: 'Owner approval is still required.' }],
 }
 
@@ -48,9 +49,10 @@ function reviewInput() {
 
 describe('native-validated forced-tool response boundary', () => {
   it('preserves both nonempty native roles and full count/create parity without a provider strict flag', async () => {
-    create.mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response(verification))
+    const wire = { ...proposal, suggestions: proposal.suggestions.map(({ command: _command, repo: _repo, description: _description, ...fields }) => ({ ...fields, identity: { kind: 'captured', candidateId: captured[0].candidateId } })) }
+    create.mockResolvedValueOnce(response(wire)).mockResolvedValueOnce(response(verification))
     const agents = createActionAgents()
-    const result = await agents.propose('Complete unmodified evidence.', fixtureEvidenceView([source]))
+    const result = await agents.propose('Complete unmodified evidence.', fixtureEvidenceView([source]), { articleDate: '2026-10-21', draftCandidates: captured, actionKeys: ['carried'] })
     expect(result).toEqual({ ...proposal,
       changes: proposal.changes.map(change => ({ ...change, citations: [{ sourceId: 's1', quote: source.content.split('\n')[0], sourceLineStart: 1, sourceLineEnd: 1 }] })),
       suggestions: proposal.suggestions.map(candidate => ({ ...candidate, factCitations: [{ sourceId: 's1', quote: source.content.split('\n')[0], sourceLineStart: 1, sourceLineEnd: 1 }], goalCitations: [{ sourceId: 's1', quote: source.content.split('\n')[0], sourceLineStart: 1, sourceLineEnd: 1 }] })),
@@ -110,7 +112,7 @@ describe('native-validated forced-tool response boundary', () => {
     await expect(createActionAgents().verify('Full evidence.', fixtureEvidenceView([source]))).rejects.toThrow()
   })
   it('rejects unseen source ranges without synthesizing a quote', async () => {
-    create.mockResolvedValue(response({ ...proposal, changes: [{ ...proposal.changes[0], citations: [{ ...citation, endLine: 99 }] }] }))
+    create.mockResolvedValue(response({ ...proposal, candidateDispositions: [], suggestions: [], changes: [{ ...proposal.changes[0], citations: [{ ...citation, endLine: 99 }] }] }))
     await expect(createActionAgents().propose('Full evidence.', fixtureEvidenceView([source]))).rejects.toThrow(/citation range/)
   })
 

@@ -97,8 +97,7 @@ it.skipIf(!process.env.ACTION_EVIDENCE_CAPSULE)('measures the saved Oct19 corpus
         const number = index % 2 === 0 ? 385 : 386
         const fact = context.sources.find(source => source.locator.match(new RegExp(`/daily-logger/(pull|issues)/${number}$`)))
         if (!fact) throw new Error('No fresh factual source')
-        return { command: number === 385 ? '/pr-review' : '/implement', repo: 'daily-logger', target: `daily-logger#${number}/offline-boundary-condition-${index}`, outcome: `${number === 385 ? 'Human-reviewed preview acceptance' : 'Auditable bounded evidence review'} condition ${index}`,
-          description: number === 385 ? 'Review clustered clocks with human visual acceptance and explicit merge decision.' : 'Repair source selection while keeping token-window fit explicitly unknown.',
+        return { identity: { kind: 'new', command: number === 385 ? '/pr-review' : '/implement', repo: 'daily-logger', description: number === 385 ? 'Review clustered clocks with human visual acceptance and explicit merge decision.' : 'Repair source selection while keeping token-window fit explicitly unknown.' }, target: `daily-logger#${number}/offline-boundary-condition-${index}`, outcome: `${number === 385 ? 'Human-reviewed preview acceptance' : 'Auditable bounded evidence review'} condition ${index}`,
           goal: 'Reliable evidence-backed editorial review', doneWhen: 'Independent review and explicit owner acceptance of the bounded result.', gates: ['Human/owner approval remains required.', 'No automatic execution, publication, or settlement.'], existingKey: null,
           factCitations: [{ sourceId: fact.id, startLine: 1, endLine: 1 }], goalCitations: [{ sourceId: goal.id, startLine: goalLine + 1, endLine: goalLine + 1 }] }
       }) }

@@ -105,6 +105,7 @@ describe('action provider schema compatibility', () => {
     }).filter(union => union.kinds.length > 1)
 
     expect(unions).toEqual([
+      { path: '/tools/0/input_schema/properties/suggestions/items/properties/identity', kinds: ['captured', 'new'] },
       {
         path: '/tools/0/input_schema/properties/candidateDispositions/items',
         kinds: ['promote', 'map-existing', 'reject', 'verified-closure'],

@@ -129,7 +129,9 @@ describe('typed generated metadata view', () => {
     expect(CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v16-typed-evidence-view')
     expect(CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v18-native-validated-tool')
     expect(RANKED_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v16-typed-evidence-view')
-    expect(ACTION_REVIEW_PROMPT_VERSION).toBe('action-review-v19-compact-verifier-proposal')
+    expect(CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v19-compact-verifier-proposal')
+    expect(RANKED_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v19-compact-verifier-proposal')
+    expect(ACTION_REVIEW_PROMPT_VERSION).toBe('action-review-v20-captured-candidate-references')
   })
   it('retains primary context failure when Accepted pending persistence is forbidden', async () => {
     await expect(reviewProducedDraftActions({ registry: empty(), articleDate: date, cycle: generationActionCycle(), markdown: markdown.replace('draft', 'accepted'), feedback: '', articleStatuses: new Map([[date, 'accepted']]), collectSources: () => [], agents: { propose: async () => { throw new Error('PRIMARY CONTEXT FAILURE') }, verify: vi.fn() } })).rejects.toThrow(/PRIMARY CONTEXT FAILURE.*pending persistence refused/)
@@ -142,6 +144,20 @@ describe('typed generated metadata view', () => {
     const changed = structuredClone(first.registry); changed.baseline.heldSuggestions.push({ articlePath: 'articles/2026-10-16.md', sourceDate: '2026-10-16', line: 1, invocation: '/review', suggestionLineSha256: sha256('Held memory'), suggestion: 'Held memory' })
     expect(actionEvidenceRegistryDigest(changed, date)).not.toBe(actionEvidenceRegistryDigest(first.registry, date))
     expect((await reviewArticleActions({ ...input, registry: changed, markdown: first.markdown })).cached).toBe(false)
+  })
+  it('reads historical v19 output without reusing it under the fresh candidate-reference contract', async () => {
+    const registry = empty(), agents = { propose: vi.fn(async () => ({ changes: [], suggestions: [] })), verify: vi.fn(async () => ({ changes: [], suggestions: [] })) }
+    const input = { registry, articleDate: date, cycle: generationActionCycle(), markdown, feedback: '', sources: [] as ActionSource[], agents, articleStatuses: new Map([[date, 'draft']]) }
+    const first = await reviewArticleActions(input), historical = structuredClone(first.registry)
+    historical.articles[0].verification.promptVersion = 'action-review-v19-compact-verifier-proposal'
+    expect(ActionRegistrySchema.parse(historical)).toEqual(historical)
+    const before = JSON.stringify(historical)
+    const fresh = await reviewArticleActions({ ...input, registry: historical, markdown: first.markdown })
+    expect(fresh.cached).toBe(false)
+    expect(fresh.registry.articles[0].verification.promptVersion).toBe(ACTION_REVIEW_PROMPT_VERSION)
+    expect(agents.propose).toHaveBeenCalledTimes(2)
+    expect(agents.verify).toHaveBeenCalledTimes(2)
+    expect(JSON.stringify(historical)).toBe(before)
   })
   it('holds unvalidated retained excerpts without changing historical reads or native projections', () => {
     const { source } = fixture()

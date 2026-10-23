@@ -21,7 +21,7 @@ import {
 } from './action-evidence-retrieval.js'
 import { EXCLUDED_REPOS, KNOWN_REPOS, REPO_NOTES, classifyFleet } from './fleet.js'
 import {
-  ActionRegistrySchema, CitationSchema, ClosingActionSchema, ClosingCheckpointSchema, RankedClosingActionSchema, RankedClosingCheckpointSchema, RankedShortlistSchema, managedArticleDigest, normalizeWorkKey,
+  ActionRegistrySchema, DraftActionCandidateSchema, draftActionCandidateId, CitationSchema, ClosingActionSchema, ClosingCheckpointSchema, RankedClosingActionSchema, RankedClosingCheckpointSchema, RankedShortlistSchema, managedArticleDigest, normalizeWorkKey,
   renderArticleActions, sha256, stripManagedActions, actionStateDigest, assertActionSnapshotStateIntegrity, acceptedActionState,
   normalizeLegacyActionProse, articleActionFileBytes, splitActionRegistry, captureDraftActionCandidates, type ActionRegistry, type ActionSource, type ClosingCheckpoint, type ClosingOption, type DraftActionCandidate, type DraftCandidateEvidenceRequirements, type DraftRecommendationContext,
   type ActionEvidenceRequestReceipt, type RecommendationMaintenanceDescriptor,
@@ -91,7 +91,14 @@ const LineProposalSchema = ActionProposalSchema.extend({
     ClosingCheckpointProposalSchema.extend({ factCitations: lineCitations, goalCitations: lineCitations }),
   ])).max(5).default([]),
 })
+const ProviderSuggestionSchema = LineProposalSchema.shape.suggestions.element.omit({ command: true, repo: true, description: true }).extend({
+  identity: z.discriminatedUnion('kind', [
+    z.object({ kind: z.literal('captured'), candidateId: z.string().regex(/^[a-f0-9]{64}$/) }).strict(),
+    LineProposalSchema.shape.suggestions.element.pick({ command: true, repo: true, description: true }).extend({ kind: z.literal('new') }).strict(),
+  ]),
+}).strict()
 const ProviderLineProposalSchema = LineProposalSchema.extend({
+  suggestions: z.array(ProviderSuggestionSchema).max(5),
   candidateDispositions: LineProposalSchema.shape.candidateDispositions.unwrap(),
   closingOptions: LineProposalSchema.shape.closingOptions.unwrap(),
 })
@@ -130,9 +137,63 @@ export function actionVerificationProposal(proposal: ParsedActionProposal, view:
     closingOptions: proposal.closingOptions.map(option => ({ ...option, factCitations: option.factCitations.map(reference), goalCitations: option.goalCitations.map(reference) })),
   }
 }
+export interface ActionProposalContext {
+  readonly articleDate: string
+  readonly draftCandidates: readonly DraftActionCandidate[]
+  readonly actionKeys: readonly string[]
+}
+
+function actionProposalContext(articleDate: string, candidates: readonly DraftActionCandidate[], actionKeys: readonly string[]): ActionProposalContext {
+  const parsed = z.array(DraftActionCandidateSchema).max(5).parse(candidates)
+  if (new Set(parsed.map(candidate => candidate.candidateId)).size !== parsed.length
+    || parsed.some((candidate, ordinal) => candidate.payload.sourceDate !== articleDate || candidate.candidateId !== draftActionCandidateId(candidate.payload, ordinal))) throw new Error('Captured candidate context has stale, foreign or ambiguous identities')
+  if (new Set(actionKeys).size !== actionKeys.length) throw new Error('Captured candidate context has ambiguous action identities')
+  return Object.freeze({ articleDate, actionKeys: Object.freeze([...actionKeys]), draftCandidates: Object.freeze(parsed.map(candidate =>
+    Object.freeze({ ...candidate, payload: Object.freeze(candidate.payload), review: Object.freeze(candidate.review) }))) })
+}
+
+function assertCandidateAssociations(proposal: Pick<ParsedActionProposal, 'suggestions' | 'candidateDispositions'>, context: ActionProposalContext): void {
+  const awaiting = context.draftCandidates.filter(candidate => candidate.review.state === 'awaiting-review')
+  const ids = proposal.candidateDispositions.map(disposition => disposition.candidateId)
+  if (new Set(ids).size !== ids.length || ids.length !== awaiting.length || ids.some(id => !awaiting.some(candidate => candidate.candidateId === id))) throw new ActionOutputError('Every awaiting initial draft candidate requires exactly one disposition')
+  const indices = new Set<number>()
+  for (const disposition of proposal.candidateDispositions) {
+    if (disposition.kind === 'verified-closure' && disposition.actionKey !== null && !context.actionKeys.includes(disposition.actionKey)) throw new ActionOutputError('Candidate closure references an unknown action identity')
+    if (disposition.kind !== 'promote' && disposition.kind !== 'map-existing') continue
+    const suggestion = proposal.suggestions[disposition.suggestionIndex]
+    if (!suggestion || indices.has(disposition.suggestionIndex)) throw new ActionOutputError('Captured candidate requires its own valid suggestion index')
+    indices.add(disposition.suggestionIndex)
+    const candidate = awaiting.find(candidate => candidate.candidateId === disposition.candidateId)
+    if (!candidate || !matchesCapturedDraftCandidate(candidate, suggestion)) throw new ActionOutputError(`Suggestion does not match the captured candidate's exact command, repository and description: ${disposition.candidateId}`)
+    if (disposition.kind === 'map-existing' && (suggestion.existingKey !== disposition.actionKey || !context.actionKeys.includes(disposition.actionKey))) throw new ActionOutputError('Captured candidate existing-identity map has mismatched or unknown action keys')
+    if (disposition.kind === 'promote' && suggestion.existingKey !== null) throw new ActionOutputError('Captured candidate promotion must propose a new identity; use map-existing for an existing action')
+  }
+}
+
+function resolveProviderProposal(value: unknown, view: PreparedActionEvidenceView, context: ActionProposalContext): ActionProposal {
+  const wire = ProviderLineProposalSchema.parse(value)
+  const suggestions = wire.suggestions.map((suggestion, suggestionIndex) => {
+    const { identity, ...proposed } = suggestion
+    if (identity.kind === 'new') {
+      const { kind: _kind, ...tuple } = identity
+      if (wire.candidateDispositions.some(disposition => (disposition.kind === 'promote' || disposition.kind === 'map-existing') && disposition.suggestionIndex === suggestionIndex)) throw new ActionOutputError('Captured promotion or mapping requires an explicit captured reference, never a new suggestion tuple')
+      return { ...proposed, ...tuple }
+    }
+    const candidate = context.draftCandidates.find(candidate => candidate.candidateId === identity.candidateId && candidate.review.state === 'awaiting-review')
+    if (!candidate) throw new ActionOutputError('Captured suggestion references an unknown or no longer awaiting candidate')
+    if (!ActionProposalSchema.shape.suggestions.element.shape.command.safeParse(candidate.payload.command).success) throw new ActionOutputError(`Captured candidate is ineligible for promotion or mapping under the current bare-command admission policy; its original invocation remains unchanged: ${candidate.candidateId}`)
+    const dispositions = wire.candidateDispositions.filter(disposition => (disposition.kind === 'promote' || disposition.kind === 'map-existing') && disposition.suggestionIndex === suggestionIndex && disposition.candidateId === identity.candidateId)
+    if (dispositions.length !== 1 || wire.suggestions.filter(item => item.identity.kind === 'captured' && item.identity.candidateId === identity.candidateId).length !== 1) throw new ActionOutputError('Captured suggestion and disposition must reference each other exactly once')
+    return { ...proposed, command: candidate.payload.command, repo: candidate.payload.repo, description: candidate.payload.description }
+  })
+  const proposal = resolveActionSourceLines({ ...wire, suggestions }, view)
+  assertCandidateAssociations(ActionProposalSchema.parse(proposal), context)
+  return proposal
+}
+
 export interface ActionAgents {
   identity?: { proposer: string; verifier: string }
-  propose(prompt: string, view: PreparedActionEvidenceView): Promise<unknown>
+  propose(prompt: string, view: PreparedActionEvidenceView, context?: ActionProposalContext): Promise<unknown>
   verify(prompt: string, view: PreparedActionEvidenceView): Promise<unknown>
 }
 
@@ -274,7 +335,7 @@ export function actionProviderRequest(role: 'proposer' | 'verifier', prompt: str
     const tool = { name: 'review_actions', description: 'Return the structured action review and independently grounded closing options.', input_schema: { ...wireSchema, type: 'object' as const } }
     return {
       model: role === 'proposer' ? 'claude-sonnet-4-6' : 'claude-opus-4-6', max_tokens: 12000,
-      system: `${RULES}\nYou are the independent action ${role}. ${role === 'verifier' ? 'Check every proposed disposition and candidate against the actual sources. The proposer rationale is not evidence. Reject unsupported conclusions, duplicate work, mandatory architecture work presented without authority, omitted owner gates, and inappropriate commands. Return a verdict for every item. Do not invent replacements. Return all four verdict arrays, even when empty.' : 'Return all four ordered arrays changes, suggestions, candidateDispositions and closingOptions, even when empty. Use inclusive sourceId/startLine/endLine citations, never authored quotes. Existing work can remain open without a change record.'}`,
+      system: `${RULES}\nYou are the independent action ${role}. ${role === 'verifier' ? 'Check every proposed disposition and candidate against the actual sources. The proposer rationale is not evidence. Reject unsupported conclusions, duplicate work, mandatory architecture work presented without authority, omitted owner gates, and inappropriate commands. Return a verdict for every item. Do not invent replacements. Return all four verdict arrays, even when empty.' : 'Return all four ordered arrays changes, suggestions, candidateDispositions and closingOptions, even when empty. Each suggestion.identity is kind=captured with candidateId, or kind=new with explicit command/repo/description. Captured identities allow no tuple overrides and must match their own awaiting disposition/index. Argument-bearing captures are ineligible: never strip arguments or invent rejection/closure to pass review. The application derives the captured tuple before verification; amended work is new and separately accounts for its original. Use inclusive sourceId/startLine/endLine citations, never authored quotes. Existing work can remain open without a change record.'}`,
       tools: [tool],
       tool_choice: { type: 'tool' as const, name: 'review_actions' }, messages: [{ role: 'user' as const, content: prompt }],
     }
@@ -285,7 +346,8 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
   const configuredLimit = Number(process.env.ACTION_PROVIDER_TOKEN_LIMIT ?? '200000')
   const tokenLimit = options.tokenBudget?.limitTokens ?? configuredLimit
   if (!Number.isSafeInteger(tokenLimit) || tokenLimit <= 12000) throw new Error(`${options.tokenBudget ? 'Action token budget limitTokens' : 'ACTION_PROVIDER_TOKEN_LIMIT'} must be an integer greater than the 12000-token output reserve`)
-  async function call(role: 'proposer' | 'verifier', prompt: string, view: PreparedActionEvidenceView): Promise<unknown> {
+  async function call(role: 'proposer' | 'verifier', prompt: string, view: PreparedActionEvidenceView, context?: ActionProposalContext): Promise<unknown> {
+    const captured = role === 'proposer' ? actionProposalContext(context?.articleDate ?? '', context?.draftCandidates ?? [], context?.actionKeys ?? []) : undefined
     const request = actionProviderRequest(role, prompt)
     const requestBytes = Buffer.byteLength(JSON.stringify(request), 'utf8')
     if (requestBytes > 640 * 1024) throw new ActionContextNeedError(`Complete action provider request exceeds 640 KiB (${requestBytes} bytes); review pending`)
@@ -318,9 +380,10 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
     const response = ProviderResponseSchema.parse(raw)
     console.warn(`Action ${role}: stop=${response.stop_reason}; output_tokens=${response.usage?.output_tokens ?? 'unavailable'}`)
     const [result] = ProviderToolBlocksSchema.parse(response.content)
-    return role === 'proposer' ? resolveActionSourceLines(ProviderLineProposalSchema.parse(result.input), view) : ProviderVerificationSchema.parse(result.input)
+    if (captured) return resolveProviderProposal(result.input, view, captured)
+    return ProviderVerificationSchema.parse(result.input)
   }
-  return { identity: { proposer: 'claude-sonnet-4-6', verifier: 'claude-opus-4-6' }, propose: (prompt, sources) => call('proposer', prompt, sources), verify: (prompt, sources) => call('verifier', prompt, sources) }
+  return { identity: { proposer: 'claude-sonnet-4-6', verifier: 'claude-opus-4-6' }, propose: (prompt, sources, context) => call('proposer', prompt, sources, context), verify: (prompt, sources) => call('verifier', prompt, sources) }
 }
 
 type GithubReference = { repo: string; kind: string; number: string }
@@ -923,6 +986,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   const capturedDraftCandidates = input.draftCandidates === undefined ? undefined : captureDraftActionCandidates(input.draftCandidates)
   if (previous?.draftCandidates && capturedDraftCandidates && JSON.stringify(previous.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload }))) !== JSON.stringify(capturedDraftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))) throw new Error('Initial draft candidates changed after capture')
   const draftCandidates = previous?.draftCandidates ?? capturedDraftCandidates
+  const proposalContext = actionProposalContext(input.articleDate, draftCandidates ?? [], input.registry.records.map(record => record.key))
   const draftCandidateEvidence = input.draftCandidateEvidence ?? previous?.draftCandidateEvidence
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), previous?.draftContext)
   input = { ...input, markdown: prepared.markdown, draftCandidateEvidence }
@@ -1012,7 +1076,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   const currentActionKeys = previous?.actionKeys ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
   const reviewIndex = actionReviewIndex({ ...input, expandedActionKeys: selection.expandedActionKeys })
   const context = serializeActionModelView({ articleDate: input.articleDate, reviewCycle: input.cycle, newIdentityLimit: actionAdmissionLimit(input.cycle), remainingNewIdentitySlots: Math.max(0, actionAdmissionLimit(input.cycle) - countCycleAdmissions(input.registry.records.filter(record => record.origin === 'suggested' && record.introducedBy === input.articleDate), input.cycle)), articleStatuses: Object.fromEntries(input.articleStatuses),
-    initialDraftCandidates: draftCandidates ?? [], initialDraftCandidatePolicy: 'Exact same-article producer candidates. Awaiting candidates are unverified and not admitted, ranked, executable, or settled. Account for each awaiting candidate exactly once as promote, reject, map-existing, or verified-closure. Promote and map-existing require the selected suggestion to preserve the captured command, repository and description exactly; this is an identity guard, not proof of semantic equivalence. Put amended or unrelated work in a separate suggestion and reject or otherwise account for the original candidate. Prior-day recommendation maintenance is separate context.',
+    initialDraftCandidates: draftCandidates ?? [], initialDraftCandidatePolicy: 'Awaiting same-article captures are unverified and confer no admission, execution or settlement authority. Account for each exactly once. Promote/map-existing select identity={kind:captured,candidateId} at its own suggestionIndex; code derives command/repo/description without overrides. Only bare-command captures are eligible; argument-bearing originals remain unchanged under current admission policy. Other dispositions require independent evidence; hold when none is supported. Amended/new work is identity.kind=new, with the original separately accounted for. Never force a disposition to accept the article.',
     sources: evidenceView.promptSources(),
     evidenceView: evidenceView.receipt,
     citationPolicy: { rule: 'Only complete original L-numbered lines are citable. CONTEXT ONLY metadata rows are partially visible and cannot be cited or prove absence. Request full-row evidence if such a fact is necessary. Every quote must be exact. Completion, dismissal and supersession require every citation to be authoritative API/OWNER/MEMBER/COLLABORATOR text or repository evidence. Dismissal also permits explicit operator feedback. Article-only claims, metadata and third-party comments never establish terminal dispositions. Do not include source aliases or line labels in user-facing reasons.' },
@@ -1027,7 +1091,8 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   for (let attempt = 0; attempt < 2; attempt++) {
     let proposal: ParsedActionProposal, verification: ParsedActionVerification
     try {
-      proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every requiredActionKey. Preserve terminal currentActionKeys without creating a redundant decision unless they are explicitly listed in requiredActionKeys. An independently verified existingKey link also counts as reviewing a required identity. Return one candidateDisposition for every awaiting initialDraftCandidate; never reconstruct a missing candidate from draft context or prior-day maintenance. A promotion or existing-identity map must select a suggestion with the exact captured command, repository and description. If work is amended or unrelated, propose it separately and account for the original candidate with another supported disposition.\n${correction}`), evidenceView))
+      proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every requiredActionKey. Preserve other terminal currentActionKeys. An independently verified existingKey link also counts as reviewing a required identity. Account for every awaiting initialDraftCandidate under initialDraftCandidatePolicy; never reconstruct a missing original from draft context or prior-day maintenance.\n${correction}`), evidenceView, proposalContext))
+      assertCandidateAssociations(proposal, proposalContext)
       verification = ActionVerificationSchema.parse(await input.agents.verify(boundedPrompt(`${context}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(actionVerificationProposal(proposal, evidenceView))}\n${correction}\nReturn ONLY the tool schema: changes, suggestions, candidateDispositions and closingOptions are arrays of verdict objects. Proposal citations preserve validated sourceId/startLine/endLine references into the complete original-line source view above; read those lines independently. Verify every initial candidate disposition independently. Check each closing option for current disposition, usefulness, prior-context relevance, goal connection, entry point and next checkpoint. Keep reasons concise.`), evidenceView))
       const resolveCitation = (citation: z.infer<typeof CitationSchema>) => ({ ...citation, sourceId: sourceAliases.get(citation.sourceId) ?? citation.sourceId })
       for (const change of proposal.changes) change.citations = change.citations.map(resolveCitation)
