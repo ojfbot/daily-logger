@@ -990,14 +990,14 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   catch (error) { assertCurrentFrontier(); throw error }
   input = { ...input, sources: selection.sources }
   const registryStateSha256 = actionEvidenceRegistryDigest(input.registry, input.articleDate)
-  const evidenceView = PreparedActionEvidenceView.prepare(input.sources, rawCaseDigest, registryStateSha256, collectedSources)
+  const evidenceView = PreparedActionEvidenceView.prepare(input.sources, rawCaseDigest, registryStateSha256, collectedSources, selection.receipt.requiredReferences)
   // Reuse the immutable consumed coverage only for an exact-input cache check.
   // A fresh selection can mention this same round's own outputs; those must not
   // manufacture a new provider review. Every other source/view still must match.
   const priorView = previous?.verification.evidenceView
   const priorCoverage = previous?.sources.find(source => source.id.startsWith(`${COVERAGE_SOURCE}@`))
   const cacheView = priorView?.rawCaseDigest === rawCaseDigest && previous?.verification.evidenceViewOutputSha256 === registryStateSha256 && priorCoverage
-    ? PreparedActionEvidenceView.prepare(input.sources.map(source => source.id.startsWith(`${COVERAGE_SOURCE}@`) ? { id: priorCoverage.id, kind: priorCoverage.kind, locator: priorCoverage.locator, content: priorCoverage.content } : source), rawCaseDigest, priorView.inputStateSha256, collectedSources)
+    ? PreparedActionEvidenceView.prepare(input.sources.map(source => source.id.startsWith(`${COVERAGE_SOURCE}@`) ? { id: priorCoverage.id, kind: priorCoverage.kind, locator: priorCoverage.locator, content: priorCoverage.content } : source), rawCaseDigest, priorView.inputStateSha256, collectedSources, selection.receipt.requiredReferences)
     : evidenceView
   const inputHash = evidenceView.roundId
   if (previous?.verification.promptVersion === ACTION_REVIEW_PROMPT_VERSION && previous.roundId === cacheView.roundId && JSON.stringify(previous.draftContext) === JSON.stringify(prepared.context) && previous.stateDigest === actionStateDigest(input.registry, previous.actionKeys, previous.closing, previous.draftContext, { articleDate: previous.date, roundId: previous.roundId, draftCandidates: previous.draftCandidates, candidateReviewHistory: previous.candidateReviewHistory, draftCandidateEvidence: previous.draftCandidateEvidence, reviewOutput: previous.reviewOutput })) {

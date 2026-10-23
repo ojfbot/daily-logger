@@ -194,8 +194,8 @@ describe('typed generated metadata view', () => {
     const unrelated = { ...source, id: 'github:unrelated#999' }
     expect(decodeActionEvidenceViewSources(PreparedActionEvidenceView.prepare([unrelated], sha256('case'), sha256('state'), collection).receipt)[0].hiddenLines).toEqual([])
   })
-  it('persists canonical raw/view/range pins for a failed compact view without retaining source bodies', async () => {
-    const { source, collection } = fixture()
+  it('persists canonical raw/view/range pins when a complete required row exceeds the quote cap', async () => {
+    const { source, collection } = fixture([issue('A fully visible owner body.', 'x'.repeat(17000))])
     let consumedRound = '', policy = ''
     const result = await reviewProducedDraftActions({ registry: empty(), articleDate: date, cycle: generationActionCycle(), markdown, feedback: 'Inspect daily-logger #385 current owner gate.', articleStatuses: new Map([[date, 'draft']]), collectSources: () => collection,
       agents: { propose: async (_prompt, view) => { consumedRound = view.roundId; policy = view.receipt.policySha256; const alias = view.rawSources(true).find(source => source.kind === 'github')!; view.resolve(alias.id, 2, 2); throw new Error('Hidden line unexpectedly resolved') }, verify: vi.fn() } })
