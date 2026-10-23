@@ -77,7 +77,7 @@ const commonClosing = {
 }
 
 describe('action provider schema compatibility', () => {
-  it.each(['proposer', 'verifier'] as const)('%s request stays inside the documented strict schema subset', role => {
+  it.each(['proposer', 'verifier'] as const)('%s request keeps closed schema hints and one forced tool without provider strictness', role => {
     const census = strictSchemaCensus(role)
     expect(census.unsupported).toEqual([])
     expect(census.objectWithoutClosedProperties).toEqual([])
@@ -85,7 +85,9 @@ describe('action provider schema compatibility', () => {
     expect(census.optionalParameters).toBeLessThanOrEqual(24)
     expect(census.unionParameters).toBeLessThanOrEqual(16)
     expect(census.request.tools).toHaveLength(1)
-    expect(census.request.tools[0]).toMatchObject({ name: 'review_actions', strict: true })
+    expect(census.request.tools[0]).toMatchObject({ name: 'review_actions' })
+    expect(census.request.tools[0]).not.toHaveProperty('strict')
+    expect(census.request.tools[0].input_schema.required).toEqual(['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
     expect(census.request.tool_choice).toEqual({ type: 'tool', name: 'review_actions' })
   })
 

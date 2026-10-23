@@ -91,6 +91,23 @@ const LineProposalSchema = ActionProposalSchema.extend({
     ClosingCheckpointProposalSchema.extend({ factCitations: lineCitations, goalCitations: lineCitations }),
   ])).max(5).default([]),
 })
+const ProviderLineProposalSchema = LineProposalSchema.extend({
+  candidateDispositions: LineProposalSchema.shape.candidateDispositions.unwrap(),
+  closingOptions: LineProposalSchema.shape.closingOptions.unwrap(),
+})
+const ProviderVerificationSchema = ActionVerificationSchema.extend({
+  changes: ActionVerificationSchema.shape.changes.unwrap(),
+  suggestions: ActionVerificationSchema.shape.suggestions.unwrap(),
+  candidateDispositions: ActionVerificationSchema.shape.candidateDispositions.unwrap(),
+  closingOptions: ActionVerificationSchema.shape.closingOptions.unwrap(),
+})
+const ProviderResponseSchema = z.object({
+  stop_reason: z.string().nullable(), content: z.unknown(),
+  usage: z.object({ output_tokens: z.number().int().nonnegative().safe().max(12000) }).passthrough().optional(),
+}).passthrough()
+const ProviderToolBlocksSchema = z.tuple([z.object({
+  type: z.literal('tool_use'), id: z.string().min(1), name: z.literal('review_actions'), input: z.unknown(),
+}).passthrough()])
 export function resolveActionSourceLines(value: unknown, view: PreparedActionEvidenceView): ActionProposal {
   if (!(view instanceof PreparedActionEvidenceView)) throw new ActionEvidenceVisibilityError('A prepared consumed evidence view is required')
   const proposal = LineProposalSchema.parse(value)
@@ -232,16 +249,16 @@ export function providerToolSchema(value: unknown): unknown {
 }
 
 export function actionProviderRequest(role: 'proposer' | 'verifier', prompt: string) {
-    const schema = role === 'proposer' ? LineProposalSchema : ActionVerificationSchema
+    const schema = role === 'proposer' ? ProviderLineProposalSchema : ProviderVerificationSchema
     // The provider supports anyOf but not oneOf. Converting only required, disjoint const
     // discriminators preserves the native union while every other oneOf shape fails closed.
     // Keep every original Zod constraint in the application-side parse below.
     const jsonSchema: unknown = JSON.parse(JSON.stringify(z.toJSONSchema(schema)))
     const wireSchema = ProviderSchemaObject.parse(providerToolSchema(jsonSchema))
-    const tool = { name: 'review_actions', description: 'Return the structured action review and independently grounded closing options.', strict: true, input_schema: { ...wireSchema, type: 'object' as const } }
+    const tool = { name: 'review_actions', description: 'Return the structured action review and independently grounded closing options.', input_schema: { ...wireSchema, type: 'object' as const } }
     return {
       model: role === 'proposer' ? 'claude-sonnet-4-6' : 'claude-opus-4-6', max_tokens: 12000,
-      system: `${RULES}\nYou are the independent action ${role}. ${role === 'verifier' ? 'Check every proposed disposition and candidate against the actual sources. The proposer rationale is not evidence. Reject unsupported conclusions, duplicate work, mandatory architecture work presented without authority, omitted owner gates, and inappropriate commands. Return a verdict for every item. Do not invent replacements.' : 'Return structured dispositions and candidates with exact source quotes. Existing work can remain open without a change record.'}`,
+      system: `${RULES}\nYou are the independent action ${role}. ${role === 'verifier' ? 'Check every proposed disposition and candidate against the actual sources. The proposer rationale is not evidence. Reject unsupported conclusions, duplicate work, mandatory architecture work presented without authority, omitted owner gates, and inappropriate commands. Return a verdict for every item. Do not invent replacements. Return all four verdict arrays, even when empty.' : 'Return all four ordered arrays changes, suggestions, candidateDispositions and closingOptions, even when empty. Use inclusive sourceId/startLine/endLine citations, never authored quotes. Existing work can remain open without a change record.'}`,
       tools: [tool],
       tool_choice: { type: 'tool' as const, name: 'review_actions' }, messages: [{ role: 'user' as const, content: prompt }],
     }
@@ -279,12 +296,12 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
     const totalTokens = inputTokens + request.max_tokens
     if (totalTokens > tokenLimit) throw new ActionContextNeedError(`Complete action provider request exceeds token budget (${inputTokens} input + ${request.max_tokens} output reserve > ${tokenLimit}); review pending`)
     console.warn(`Action ${role} token budget: input=${inputTokens}; output_reserve=${request.max_tokens}; total=${totalTokens}; limit=${tokenLimit}`)
-    const response = await client.messages.create(request)
+    const raw: unknown = await client.messages.create(request)
+    const response = ProviderResponseSchema.parse(raw)
     console.warn(`Action ${role}: stop=${response.stop_reason}; output_tokens=${response.usage?.output_tokens ?? 'unavailable'}`)
     if (response.stop_reason !== 'tool_use') throw new Error(`Action ${role} did not finish its structured review (${response.stop_reason})`)
-    const result = response.content.find(block => block.type === 'tool_use')
-    if (!result || result.type !== 'tool_use') throw new Error(`${role} returned no structured action review`)
-    return role === 'proposer' ? resolveActionSourceLines(result.input, view) : result.input
+    const [result] = ProviderToolBlocksSchema.parse(response.content)
+    return role === 'proposer' ? resolveActionSourceLines(ProviderLineProposalSchema.parse(result.input), view) : ProviderVerificationSchema.parse(result.input)
   }
   return { identity: { proposer: 'claude-sonnet-4-6', verifier: 'claude-opus-4-6' }, propose: (prompt, sources) => call('proposer', prompt, sources), verify: (prompt, sources) => call('verifier', prompt, sources) }
 }
