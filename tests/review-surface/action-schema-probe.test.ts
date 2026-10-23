@@ -4,8 +4,11 @@ import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:f
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { ActionProposalSchema, ActionVerificationSchema } from '../../src/review-actions.js'
-import { assertEmptyOutput, assertSafeEnvironment, consume, createGuardedFetch, expectedSdkHeaders, FIXTURES, loadFixtures, MANIFEST_SHA, parseContext, prepare, runProbe, type ProbeClientFactory, type ProbeContext, type Wire } from '../../scripts/probe-action-schema.js'
+import { assertEmptyOutput, assertSafeEnvironment, CASE_IDS, PURPOSE, serializeSafeSummary, consume, createGuardedFetch, expectedSdkHeaders, FIXTURES, loadFixtures, MANIFEST_SHA, parseContext, prepare, runProbe, type CaseId, type ProbeClientFactory, type ProbeContext, type Wire } from '../../scripts/probe-action-schema.js'
 
+function childEnvironment(): NodeJS.ProcessEnv {
+  return Object.fromEntries(['PATH', 'TMPDIR', 'HOME', 'COREPACK_HOME', 'COREPACK_ENABLE_NETWORK', 'COREPACK_ENABLE_DOWNLOAD_PROMPT', 'NODE_OPTIONS', 'RESPONSE_FORM_NETWORK_AUDIT'].flatMap(key => process.env[key] === undefined ? [] : [[key, process.env[key]]]))
+}
 const root = process.cwd()
 const loaded = loadFixtures(root)
 const empty = { changes: [], suggestions: [], candidateDispositions: [], closingOptions: [] }
@@ -28,15 +31,15 @@ const run = (answers: unknown[], calls?: string[]) => runProbe(loaded, 'offline-
 
 describe('manual synthetic probe — no transport', () => {
   it('pins immutable public fixed-response data and proves the exact raw-empty validator against adopted native schemas', () => {
-    expect(loaded.manifest.candidateCommit).toBe('898143e26116dae54e029a8eabd27ec7ace844b3')
-    expect(loaded.data.size).toBe(6)
+    expect(loaded.manifest.runtimeSource).toBe('898143e26116dae54e029a8eabd27ec7ace844b3')
+    expect(loaded.data.size).toBe(18)
     expect(ActionProposalSchema.parse(empty)).toEqual(empty)
     expect(ActionVerificationSchema.parse(empty)).toEqual(empty)
     for (const bad of [{}, { ...empty, extra: [] }, { ...empty, changes: [{}] }, { ...empty, suggestions: null }]) expect(() => assertEmptyOutput(bad)).toThrow()
     expect(() => assertEmptyOutput(empty)).not.toThrow()
   })
   it('uses required fixed rows and the reviewed scalar-null cells rather than object alternatives', () => {
-    const proposer = loaded.data.get('proposer.tool-schema.json')
+    const proposer = loaded.data.get('full-fixed-form.tool-schema.json')
     expect(proposer).toHaveProperty('required', ['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
     expect(proposer).toHaveProperty('properties.candidateDispositions.items.required', ['candidateId', 'reason', 'kind', 'suggestionIndex', 'actionKey', 'citations'])
     expect(proposer).toHaveProperty('properties.candidateDispositions.items.properties.kind.enum', ['promote', 'map-existing', 'reject', 'verified-closure'])
@@ -45,21 +48,21 @@ describe('manual synthetic probe — no transport', () => {
     expect(proposer).toHaveProperty('properties.closingOptions.items.required', expect.arrayContaining(['replaces', 'kind', 'actionKey', 'candidateIndex', 'target']))
     expect(proposer).not.toHaveProperty('properties.candidateDispositions.items.anyOf')
     expect(proposer).not.toHaveProperty('properties.closingOptions.items.anyOf')
-    expect(loaded.data.get('verifier.tool-schema.json')).toHaveProperty('required', ['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
+    expect(loaded.data.get('changes-only.tool-schema.json')).toHaveProperty('required', ['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
   })
-  it('retains the first role success but refuses a nonempty verifier response', async () => {
+  it('retains the first case success but refuses a nonempty second case response', async () => {
     const badVerifier = { ...reply, content: [{ type: 'tool_use', name: 'review_actions', input: { ...empty, closingOptions: [{}] } }] }
     const result = await run([{ input_tokens: 1 }, reply, { input_tokens: 1 }, badVerifier])
     expect(result.calls).toHaveLength(4)
-    expect(result.protocolSuccess).toEqual(['proposer'])
-    expect(result.compilerAcceptance).toEqual(['proposer', 'verifier'])
+    expect(result.protocolSuccess).toEqual(['minimal-control'])
+    expect(result.messagesHttp200).toEqual(['minimal-control', 'changes-only'])
     expect(result.errorCode).toBeDefined()
   })
-  it('consumes exactly2counts+2messages sequentially and distinguishes SDK pretty bytes', async () => {
-    const calls: string[] = []; const result = await run([{ input_tokens: 199872 }, reply, { input_tokens: 0 }, reply], calls)
-    expect(result.errorCode).toBeUndefined(); expect(result.protocolSuccess).toEqual(['proposer', 'verifier'])
-    expect(calls.map(url => new URL(url).pathname)).toEqual(['/v1/messages/count_tokens', '/v1/messages', '/v1/messages/count_tokens', '/v1/messages'])
-    expect(result.calls.filter(call => call.endpoint === 'messages').map(call => call.wireBytes)).toEqual([20375, 11532])
+  it('consumes exactly six counts and six Messages sequentially and distinguishes SDK pretty bytes', async () => {
+    const calls: string[] = []; const result = await run(CASE_IDS.flatMap((_caseId, index) => [{ input_tokens: index === 0 ? 199872 : 0 }, reply]), calls)
+    expect(result.errorCode).toBeUndefined(); expect(result.protocolSuccess).toEqual([...CASE_IDS])
+    expect(calls.map(url => new URL(url).pathname)).toEqual(CASE_IDS.flatMap(() => ['/v1/messages/count_tokens', '/v1/messages']))
+    expect(result.calls.filter(call => call.endpoint === 'messages').map(call => call.wireBytes)).toEqual(CASE_IDS.map(caseId => Buffer.byteLength(JSON.stringify(loaded.data.get(`${caseId}.synthetic-messages-request.json`), null, 2))))
     expect(result.calls.every(call => call.canonicalBodySha256 !== call.wireSha256)).toBe(true)
   })
   it.each([199873, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, '10', null])('holds invalid or overflowing counter %s before any message', async input_tokens => {
@@ -72,12 +75,12 @@ describe('manual synthetic probe — no transport', () => {
     { ...reply, content: [{ type: 'tool_use', name: 'review_actions', input: {} }] },
     { ...reply, content: [{ type: 'tool_use', name: 'review_actions', input: { ...empty, suggestions: [{}] } }] },
   ])('stops all later calls on protocol failure', async bad => {
-    const result = await run([{ input_tokens: 1 }, bad]); expect(result.calls).toHaveLength(2); expect(result.compilerAcceptance).toEqual(['proposer']); expect(result.protocolSuccess).toEqual([]); expect(result.errorCode).toBeDefined()
+    const result = await run([{ input_tokens: 1 }, bad]); expect(result.calls).toHaveLength(2); expect(result.messagesHttp200).toEqual(['minimal-control']); expect(result.protocolSuccess).toEqual([]); expect(result.errorCode).toBeDefined()
   })
   it('does not retry, leak provider text/IDs, or confuse compiler400 with protocol success', async () => {
     const secret = 'UNTRUSTED_PROVIDER_ERROR_CONTAINING_PRIVATE_DATA'
     const result = await run([{ input_tokens: 1 }, response({ error: { message: secret } }, 400, { 'request-id': 'bad\tvalue' })])
-    expect(result.calls).toHaveLength(2); expect(result.compilerAcceptance).toEqual([]); expect(result.errorCode).toBe('PROVIDER_400')
+    expect(result.calls).toHaveLength(2); expect(result.messagesHttp200).toEqual([]); expect(result.errorCode).toBe('PROVIDER_400')
     expect(JSON.stringify(result)).not.toContain(secret); expect(result.calls[1].requestId).toBeNull()
     const unknown = await run([new Error(secret)]); expect(unknown.errorCode).toBe('TRANSPORT_FAILURE'); expect(JSON.stringify(unknown)).not.toContain(secret)
   })
@@ -86,48 +89,48 @@ describe('manual synthetic probe — no transport', () => {
   })
   it.each([201, 202])('does not call a non200 messages response protocol/compiler success (%s)', async status => {
     const result = await run([{ input_tokens: 1 }, response(reply, status)])
-    expect(result.calls).toHaveLength(2); expect(result.compilerAcceptance).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(result.errorCode).toBe('PROVIDER_HTTP_FAILURE')
+    expect(result.calls).toHaveLength(2); expect(result.messagesHttp200).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(result.errorCode).toBe('PROVIDER_HTTP_FAILURE')
   })
   it('does not qualify a rejected redirected200 response as compiler acceptance', async () => {
     const redirected = response(reply)
     Object.defineProperty(redirected, 'redirected', { value: true }) // Fake response only; no redirect/network is performed.
     const result = await run([{ input_tokens: 1 }, redirected])
     expect(result.calls).toHaveLength(2); expect(result.errorCode).toBe('PROVIDER_HTTP_FAILURE')
-    expect(result.compilerAcceptance).toEqual([]); expect(result.protocolSuccess).toEqual([])
+    expect(result.messagesHttp200).toEqual([]); expect(result.protocolSuccess).toEqual([])
   })
   it('bounds all response bytes before SDK parsing', async () => {
     const result = await run([new Response('x'.repeat(131073))]); expect(result.errorCode).toBe('RESPONSE_BYTE_LIMIT'); expect(result.calls).toHaveLength(1)
   })
-  it('marks a generic stream rejection on the current200 call without leaking its message or qualifying the compiler', async () => {
+  it('marks a generic stream rejection on the current200 call without leaking its message or claiming protocol success', async () => {
     const partial = new Response(new ReadableStream({ pull(controller) { controller.error(new Error('PRIVATE_STREAM_ERROR_MUST_NOT_ESCAPE')) } }))
     const result = await run([{ input_tokens: 1 }, partial])
     expect(result.calls).toHaveLength(2); expect(result.errorCode).toBe('TRANSPORT_FAILURE'); expect(result.calls[1].failureCode).toBe('TRANSPORT_FAILURE')
-    expect(result.compilerAcceptance).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(JSON.stringify(result)).not.toContain('PRIVATE_STREAM_ERROR')
+    expect(result.messagesHttp200).toEqual(['minimal-control']); expect(result.protocolSuccess).toEqual([]); expect(JSON.stringify(result)).not.toContain('PRIVATE_STREAM_ERROR')
   })
   it('does not reassign a later pre-network rejection to an earlier successful call', async () => {
     const receipts: Parameters<typeof createGuardedFetch>[2] = []
     const guarded = createGuardedFetch(loaded, async () => response({}), receipts, 'offline-not-a-real-key')
     for (const kind of ['count', 'messages'] as const) {
-      const body = JSON.stringify(loaded.data.get(`proposer.synthetic-${kind}-request.json`), null, 2)
+      const body = JSON.stringify(loaded.data.get(`minimal-control.synthetic-${kind}-request.json`), null, 2)
       await guarded(`https://api.anthropic.com/v1/messages${kind === 'count' ? '/count_tokens' : ''}`, { method: 'POST', body, signal: new AbortController().signal, headers: expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)) })
     }
     const prior = structuredClone(receipts)
     await expect(guarded('https://unapproved.test/v1/messages/count_tokens', { method: 'POST' })).rejects.toThrow()
     expect(receipts).toEqual(prior); expect(receipts[1].failureCode).toBeUndefined()
   })
-  it('consumes permission before an unknown transport result and denies a fifth call', async () => {
+  it('consumes permission before an unknown transport result and denies a thirteenth call', async () => {
     const receipts: Parameters<typeof createGuardedFetch>[2] = []
     const guarded = createGuardedFetch(loaded, async () => { expect(receipts).toHaveLength(1); throw new Error('unknown transport') }, receipts, 'offline-not-a-real-key')
-    const invoke = (fetch: typeof guarded, role: 'proposer' | 'verifier', kind: 'count' | 'messages') => {
-      const body = JSON.stringify(loaded.data.get(`${role}.synthetic-${kind}-request.json`), null, 2)
+    const invoke = (fetch: typeof guarded, caseId: CaseId, kind: 'count' | 'messages') => {
+      const body = JSON.stringify(loaded.data.get(`${caseId}.synthetic-${kind}-request.json`), null, 2)
       return fetch(`https://api.anthropic.com/v1/messages${kind === 'count' ? '/count_tokens' : ''}`, { method: 'POST', body, signal: new AbortController().signal, headers: expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)) })
     }
-    await expect(invoke(guarded, 'proposer', 'count')).rejects.toThrow('unknown transport')
-    await expect(invoke(guarded, 'proposer', 'count')).rejects.toThrow('TRANSPORT_ALREADY_STOPPED')
+    await expect(invoke(guarded, 'minimal-control', 'count')).rejects.toThrow('unknown transport')
+    await expect(invoke(guarded, 'minimal-control', 'count')).rejects.toThrow('TRANSPORT_ALREADY_STOPPED')
     let calls = 0
     const finite = createGuardedFetch(loaded, async () => { calls += 1; return response({}) }, [], 'offline-not-a-real-key')
-    for (const role of ['proposer', 'verifier'] as const) for (const kind of ['count', 'messages'] as const) await invoke(finite, role, kind)
-    await expect(invoke(finite, 'proposer', 'count')).rejects.toThrow(); expect(calls).toBe(4)
+    for (const caseId of CASE_IDS) for (const kind of ['count', 'messages'] as const) await invoke(finite, caseId, kind)
+    await expect(invoke(finite, 'minimal-control', 'count')).rejects.toThrow(); expect(calls).toBe(12)
   })
   it('cancels unread failure streams and never copies an exact secret into request-ID receipts', async () => {
     let canceled = false
@@ -135,7 +138,7 @@ describe('manual synthetic probe — no transport', () => {
     expect(canceled).toBe(true); expect(stopped.errorCode).toBe('PROVIDER_400')
     const receipts: Parameters<typeof createGuardedFetch>[2] = []
     const guarded = createGuardedFetch(loaded, async () => response({}, 200, { 'request-id': 'req_Secret123' }), receipts, 'Secret123')
-    const body = JSON.stringify(loaded.data.get('proposer.synthetic-count-request.json'), null, 2)
+    const body = JSON.stringify(loaded.data.get('minimal-control.synthetic-count-request.json'), null, 2)
     await guarded('https://api.anthropic.com/v1/messages/count_tokens', { method: 'POST', body, signal: new AbortController().signal, headers: expectedSdkHeaders('Secret123', Buffer.byteLength(body)) })
     expect(receipts[0].requestId).toBeNull(); expect(JSON.stringify(receipts)).not.toContain('Secret123')
   })
@@ -144,7 +147,7 @@ describe('manual synthetic probe — no transport', () => {
     for (const variant of ['origin', 'query', 'method', 'body', 'length']) {
       const receipts: Parameters<typeof createGuardedFetch>[2] = []
       const guarded = createGuardedFetch(loaded, async () => { transport += 1; return response({}) }, receipts, 'offline-not-a-real-key')
-      const body = JSON.stringify(loaded.data.get('proposer.synthetic-count-request.json'), null, 2)
+      const body = JSON.stringify(loaded.data.get('minimal-control.synthetic-count-request.json'), null, 2)
       const url = variant === 'origin' ? 'https://example.test/v1/messages/count_tokens' : `https://api.anthropic.com/v1/messages/count_tokens${variant === 'query' ? '?beta=true' : ''}`
       const options = { method: variant === 'method' ? 'GET' : 'POST', body: variant === 'body' ? '{}' : body, signal: new AbortController().signal, headers: { ...expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)), 'content-length': variant === 'length' ? '1' : String(Buffer.byteLength(body)) } }
       await expect(guarded(url, options)).rejects.toThrow()
@@ -158,7 +161,7 @@ describe('manual synthetic probe — no transport', () => {
   ])('closes actual key/SDK header drift before transport', async patch => {
     let calls = 0
     const guarded = createGuardedFetch(loaded, async () => { calls += 1; return response({}) }, [], 'offline-not-a-real-key')
-    const body = JSON.stringify(loaded.data.get('proposer.synthetic-count-request.json'), null, 2)
+    const body = JSON.stringify(loaded.data.get('minimal-control.synthetic-count-request.json'), null, 2)
     await expect(guarded('https://api.anthropic.com/v1/messages/count_tokens', { method: 'POST', body, signal: new AbortController().signal,
       headers: { ...expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)), ...patch } })).rejects.toThrow('WIRE_HEADERS_DENIED')
     expect(calls).toBe(0)
@@ -177,7 +180,7 @@ describe('native exclusive runner custody', () => {
     execFileSync('git', ['init', '-q', checkout]); execFileSync('git', ['-C', checkout, 'add', '.'])
     execFileSync('git', ['-C', checkout, '-c', 'user.name=Offline Test', '-c', 'user.email=offline@example.test', 'commit', '-qm', 'offline fixture'])
     const head = execFileSync('git', ['-C', checkout, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-    context = parseContext({ repository: 'ojfbot/daily-logger', actor: 'ojfbot', event: 'workflow_dispatch', ref: 'refs/heads/main', defaultBranch: 'main', capabilitySha: head, actualSha: head, workflowSha: head, workflowRef: 'ojfbot/daily-logger/.github/workflows/action-schema-probe.yml@refs/heads/main', manifestSha: MANIFEST_SHA, runId: '123', runAttempt: '1', probeId: '12345678-1234-4234-9234-123456789abc', approvalReceipt: 'call_FUTURETESTDOUBLEONLY' })
+    context = parseContext({ version: 2, purpose: PURPOSE, repository: 'ojfbot/daily-logger', actor: 'ojfbot', event: 'workflow_dispatch', ref: 'refs/heads/main', defaultBranch: 'main', capabilitySha: head, actualSha: head, workflowSha: head, workflowRef: 'ojfbot/daily-logger/.github/workflows/action-schema-probe.yml@refs/heads/main', manifestSha: MANIFEST_SHA, runId: '123', runAttempt: '1', probeId: '12345678-1234-4234-9234-123456789abc', approvalReceipt: 'call_FUTURETESTDOUBLEONLY' })
   })
   afterAll(() => rmSync(scratch, { recursive: true, force: true }))
   it('reserves before execution, denies prepare/consume reentry and process reentry after unknown completion', () => {
@@ -186,8 +189,19 @@ describe('native exclusive runner custody', () => {
     expect(JSON.parse(readFileSync(join(dir, 'consumed.json'), 'utf8')).permissionConsumed).toBe(true)
     expect(() => consume(checkout, dir, context)).toThrow()
     const code = `import {consume} from ${JSON.stringify(resolve('scripts/probe-action-schema.ts'))};consume(${JSON.stringify(checkout)},${JSON.stringify(dir)},${JSON.stringify(context)})`
-    const reentry = spawnSync(process.execPath, ['--import', 'tsx', '--input-type=module', '-e', code], { cwd: root, env: { PATH: process.env.PATH, HOME: tmpdir() }, encoding: 'utf8' })
+    const reentry = spawnSync(process.execPath, ['--import', 'tsx', '--input-type=module', '-e', code], { cwd: root, env: childEnvironment(), encoding: 'utf8', timeout: 20000 })
     expect(reentry.status).toBe(1); expect(reentry.stderr).toContain('EEXIST')
+  }, 20000)
+  it('rejects a v1 reservation or a changed diagnostic purpose before consuming v2', () => {
+    const dir = join(scratch, 'v1-reservation'); prepare(checkout, dir, context)
+    const path = join(dir, 'reservation.json'); const original = readFileSync(path)
+    const value = JSON.parse(original.toString())
+    for (const patch of [{ version: 1 }, { purpose: 'role-based-probe' }]) {
+      writeFileSync(path, JSON.stringify({ ...value, ...patch }))
+      expect(() => consume(checkout, dir, context)).toThrow()
+      expect(() => readFileSync(join(dir, 'consumed.json'))).toThrow()
+    }
+    writeFileSync(path, original); consume(checkout, dir, context)
   })
   it('holds context/source drift without consuming fresh execution', () => {
     const dir = join(scratch, 'drift'); prepare(checkout, dir, context)
@@ -198,7 +212,7 @@ describe('native exclusive runner custody', () => {
     const path = join(checkout, 'scripts/probe-action-schema.ts'); const prior = readFileSync(path)
     try { writeFileSync(path, '// drift\n'); expect(() => consume(checkout, dir, context)).toThrow('SOURCE_BLOB_DRIFT') } finally { writeFileSync(path, prior) }
     consume(checkout, dir, context)
-    const fixture = join(checkout, FIXTURES, 'proposer.synthetic-count-request.json'); const bytes = readFileSync(fixture)
+    const fixture = join(checkout, FIXTURES, 'minimal-control.synthetic-count-request.json'); const bytes = readFileSync(fixture)
     try { writeFileSync(fixture, '{}'); expect(() => prepare(checkout, join(scratch, 'bad-fixture'), context)).toThrow('FIXTURE_FILE_PIN') } finally { writeFileSync(fixture, bytes) }
   })
   it('rejects old prep authority, rerun/fork/branch/source mismatches', () => {
@@ -214,7 +228,7 @@ describe('provider error diagnostics — factory doubles only, no SDK constructi
   const diagnostic = async (value: unknown) => {
     const result = await run([{ input_tokens: 1 }, failed(value)])
     expect(result.calls).toHaveLength(2); expect(result.errorCode).toBe('PROVIDER_400')
-    expect(result.compilerAcceptance).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(result.usage).toEqual({})
+    expect(result.messagesHttp200).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(result.usage).toEqual({})
     expect(result.calls[0]).not.toHaveProperty('providerErrorType'); expect(result.calls[0]).not.toHaveProperty('providerErrorReason')
     return result.calls[1]
   }
@@ -242,7 +256,7 @@ describe('provider error diagnostics — factory doubles only, no SDK constructi
     const result = await run([response(envelope('arbitrary', 'rate_limit_error'), status, { 'content-type': 'application/json' })])
     expect(result.calls).toHaveLength(1); expect(result.errorCode).toBe('PROVIDER_HTTP_FAILURE')
     expect(result.calls[0]).toMatchObject({ status, failureCode: 'PROVIDER_HTTP_FAILURE', providerErrorType: 'rate_limit_error', providerErrorReason: 'unclassified' })
-    expect(result.compilerAcceptance).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(result.counts).toEqual({})
+    expect(result.messagesHttp200).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(result.counts).toEqual({})
   })
   it('does not classify an error body received through a rejected redirect', async () => {
     const redirected = failed(envelope(documented)); Object.defineProperty(redirected, 'redirected', { value: true })
@@ -334,9 +348,123 @@ describe('provider error diagnostics — factory doubles only, no SDK constructi
 
 it('runs the sole actual SDK observation only inside a network-trapped, credential-free child', () => {
   const child = spawnSync(process.execPath, ['--import', 'tsx', resolve('tests/review-surface/fixtures/action-schema-probe-sdk-child.ts')], {
-    cwd: root, env: { PATH: process.env.PATH, HOME: tmpdir() }, encoding: 'utf8', timeout: 20000,
+    cwd: root, env: childEnvironment(), encoding: 'utf8', timeout: 20000,
   })
   expect(child.stderr).toBe(''); expect(child.status).toBe(0)
   const proof = JSON.parse(child.stdout)
-  expect(proof).toMatchObject({ trappedNetworkAttempts: 0, clientFetchInjected: true, protocolSuccess: ['proposer', 'verifier'], messagesWireBytes: [20375, 11532], calls: 4 })
+  expect(proof).toMatchObject({ trappedNetworkAttempts: 0, clientFetchInjected: true, protocolSuccess: [...CASE_IDS], messagesWireBytes: CASE_IDS.map(caseId => Buffer.byteLength(JSON.stringify(loaded.data.get(`${caseId}.synthetic-messages-request.json`), null, 2))), calls: 12 })
+}, 20000)
+
+describe('v2 fixed compiler diagnostics only', () => {
+  const passAnswers = () => CASE_IDS.flatMap(() => [{ input_tokens: 10 }, reply])
+  const assertDiagnostic = (result: Awaited<ReturnType<typeof runProbe>>) => {
+    expect(result).toMatchObject({ version: 2, purpose: PURPOSE, syntheticOnly: true, runtimeAcceptance: 'not_evaluated', authorityGranted: { runtimeAdoption: false, articleAttempt: false, publication: false } })
+    expect(result).not.toHaveProperty('compilerAcceptance')
+    expect(result.cases.map(item => item.caseId)).toEqual([...CASE_IDS])
+    for (const item of result.cases) {
+      expect(item.countBodySha256).toBe(loaded.manifest.files[`${item.caseId}.synthetic-count-request.json`].bodySha256)
+      expect(item.messagesBodySha256).toBe(loaded.manifest.files[`${item.caseId}.synthetic-messages-request.json`].bodySha256)
+    }
+  }
+  it('completes exactly the closed ordered six-case prefix with no runtime authority', async () => {
+    const result = await run(passAnswers()); assertDiagnostic(result)
+    expect(result.outcome).toBe('completed_fixed_cases'); expect(result.calls).toHaveLength(12)
+    expect(result.cases.map(item => item.outcome)).toEqual(CASE_IDS.map(() => 'pass'))
+    expect(result.messagesHttp200).toEqual([...CASE_IDS]); expect(result.protocolSuccess).toEqual([...CASE_IDS])
+    expect(result.calls.map(item => [item.caseId, item.endpoint])).toEqual(CASE_IDS.flatMap(caseId => [[caseId, 'count'], [caseId, 'messages']]))
+    expect(Object.keys(result.counts)).toEqual([...CASE_IDS]); expect(Object.keys(result.usage)).toEqual([...CASE_IDS])
+  })
+  it.each(CASE_IDS.flatMap((caseId, index) => ['count', 'messages', 'protocol'].map(stage => ({ caseId, index, stage }))))('stops at $caseId $stage and leaves the later cases unattempted', async ({ index, stage }) => {
+    const answers: unknown[] = passAnswers()
+    const failedCall = index * 2 + (stage === 'count' ? 0 : 1)
+    answers[failedCall] = stage === 'protocol' ? { ...reply, content: [{ type: 'tool_use', name: 'review_actions', input: { ...empty, changes: ['forbidden'] } }] }
+      : response({ type: 'error', error: { type: 'invalid_request_error', message: 'Schema is too complex for compilation.' } }, 400, { 'content-type': 'application/json' })
+    const result = await run(answers); assertDiagnostic(result)
+    expect(result.outcome).toBe('stopped'); expect(result.calls).toHaveLength(failedCall + 1)
+    expect(result.protocolSuccess).toEqual(CASE_IDS.slice(0, index))
+    expect(result.messagesHttp200).toEqual(CASE_IDS.slice(0, stage === 'protocol' ? index + 1 : index))
+    expect(result.cases.map(item => item.outcome)).toEqual(CASE_IDS.map((_caseId, position) => position < index ? 'pass' : position === index ? 'stopped' : 'not_attempted'))
+    expect(result.cases[index]).toMatchObject({ outcome: 'stopped', stoppedAt: stage })
+    expect(result.calls.map(item => [item.caseId, item.endpoint])).toEqual(CASE_IDS.flatMap(caseId => [[caseId, 'count'], [caseId, 'messages']]).slice(0, failedCall + 1))
+  })
+  it.each(CASE_IDS.flatMap((caseId, index) => ['malformed', 'overflow', 'unknown'].map(failure => ({ caseId, index, failure }))))('preserves the exact prefix at $caseId on a $failure Messages outcome', async ({ index, failure }) => {
+    const answers: unknown[] = passAnswers()
+    answers[index * 2 + 1] = failure === 'malformed' ? new Response('{') : failure === 'overflow' ? new Response('x'.repeat(131073)) : new Error('PRIVATE_UNKNOWN_OUTCOME')
+    const result = await run(answers); assertDiagnostic(result)
+    expect(result.calls).toHaveLength(index * 2 + 2); expect(result.protocolSuccess).toEqual(CASE_IDS.slice(0, index))
+    expect(result.messagesHttp200).toEqual(CASE_IDS.slice(0, failure === 'unknown' ? index : index + 1))
+    expect(result.cases[index]).toMatchObject({ outcome: 'stopped', stoppedAt: 'messages' })
+    expect(JSON.stringify(result)).not.toContain('PRIVATE_UNKNOWN_OUTCOME')
+  })
+  it('pins closed schema relationships while only input_schema differs across the six cases', () => {
+    const full = JSON.parse(JSON.stringify(loaded.data.get('full-fixed-form.synthetic-messages-request.json')))
+    const properties = full.tools[0].input_schema.properties
+    expect(loaded.manifest).toMatchObject({ version: 2, purpose: PURPOSE, model: 'claude-sonnet-4-6', cases: [...CASE_IDS], maxCalls: 12, outputTokens: 128, contextLimit: 200000, requestByteLimit: 655360, responseByteLimit: 131072, timeoutMs: 120000, maxRetries: 0 })
+    for (const caseId of CASE_IDS) {
+      const message = JSON.parse(JSON.stringify(loaded.data.get(`${caseId}.synthetic-messages-request.json`)))
+      const schema = message.tools[0].input_schema
+      expect(schema.required).toEqual(Object.keys(properties)); expect(schema.additionalProperties).toBe(false)
+      for (const key of Object.keys(properties)) expect(schema.properties[key]).toEqual(caseId === 'full-fixed-form' || caseId === `${key}-only` ? properties[key] : { type: 'array', items: { type: 'string' } })
+      message.tools[0].input_schema = full.tools[0].input_schema
+      expect(message).toEqual(full)
+    }
+    expect(full.tools[0].strict).toBe(true); expect(full.tool_choice).toEqual({ type: 'tool', name: 'review_actions' })
+  })
+  it.each(['model', 'prompt', 'tool', 'schema', 'body'] as const)('closes altered %s before any transport and never reopens the guard', async change => {
+    let calls = 0
+    const guard = createGuardedFetch(loaded, async () => { calls += 1; return response({}) }, [], 'offline-not-a-real-key')
+    const request = JSON.parse(JSON.stringify(loaded.data.get('minimal-control.synthetic-count-request.json')))
+    if (change === 'model') request.model = 'claude-opus-4-6'
+    if (change === 'prompt') request.messages[0].content = 'different prompt'
+    if (change === 'tool') request.tools[0].strict = false
+    if (change === 'schema') request.tools[0].input_schema.properties.changes.items.type = 'integer'
+    const body = change === 'body' ? '{}' : JSON.stringify(request)
+    await expect(guard('https://api.anthropic.com/v1/messages/count_tokens', { method: 'POST', body, signal: new AbortController().signal, headers: expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)) })).rejects.toThrow('WIRE_FIXTURE_DRIFT')
+    expect(calls).toBe(0)
+  })
+  it('rejects the second case before its turn and rejects Messages before its count', async () => {
+    for (const [caseId, endpoint] of [['changes-only', 'count'], ['minimal-control', 'messages']] as const) {
+      let calls = 0
+      const guard = createGuardedFetch(loaded, async () => { calls += 1; return response({}) }, [], 'offline-not-a-real-key')
+      const body = JSON.stringify(loaded.data.get(`${caseId}.synthetic-${endpoint}-request.json`))
+      await expect(guard(`https://api.anthropic.com/v1/messages${endpoint === 'count' ? '/count_tokens' : ''}`, { method: 'POST', body, signal: new AbortController().signal, headers: expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)) })).rejects.toThrow()
+      expect(calls).toBe(0)
+    }
+  })
+  it('closes the fixture directory, rejects v1 manifest data and rejects modified model/prompt/schema bytes', () => {
+    const scratch = mkdtempSync(join(tmpdir(), 'diagnostic-fixture-'))
+    try {
+      cpSync(join(root, FIXTURES), join(scratch, FIXTURES), { recursive: true })
+      const extra = join(scratch, FIXTURES, 'unapproved.json'); writeFileSync(extra, '{}')
+      expect(() => loadFixtures(scratch)).toThrow('CLOSED_FIXTURE_DIRECTORY'); rmSync(extra)
+      const path = join(scratch, FIXTURES, 'manifest.json'); const original = readFileSync(path)
+      writeFileSync(path, JSON.stringify({ version: 1 })); expect(() => loadFixtures(scratch)).toThrow('MANIFEST_PIN'); writeFileSync(path, original)
+      for (const name of ['minimal-control.synthetic-count-request.json', 'changes-only.synthetic-messages-request.json', 'full-fixed-form.tool-schema.json']) {
+        const path = join(scratch, FIXTURES, name); const original = readFileSync(path)
+        writeFileSync(path, '{}'); expect(() => loadFixtures(scratch)).toThrow('FIXTURE_FILE_PIN'); writeFileSync(path, original)
+      }
+    } finally { rmSync(scratch, { recursive: true, force: true }) }
+  })
+  it('retains the single manual workflow and no runtime driver imports or execution alternatives', () => {
+    const workflow = readFileSync(join(root, '.github/workflows/action-schema-probe.yml'), 'utf8')
+    const driver = readFileSync(join(root, 'scripts/probe-action-schema.ts'), 'utf8')
+    expect(workflow).toContain('timeout-minutes: 12'); expect(workflow).toContain('github.run_attempt == 1')
+    expect(workflow).toContain('synthetic-action-schema-compiler-diagnostic-v2-safe'); expect(workflow).toContain('probe-safe-v2/summary.json')
+    for (const denied of ['matrix:', 'schedule:', 'case_id:', 'continue-on-error:', 'workflow_run:']) expect(workflow).not.toContain(denied)
+    expect(driver).not.toMatch(/from ['"][^'"]*(?:src|review-actions|editorial)[^'"]*['"]/)
+    expect(driver).toContain("'action-schema-compiler-diagnostic-v2'")
+  })
+  it('bounds a maximum-width result and rejects an over-cap summary', async () => {
+    const context = parseContext({ version: 2, purpose: PURPOSE, repository: 'ojfbot/daily-logger', actor: 'ojfbot', event: 'workflow_dispatch', ref: 'refs/heads/main', defaultBranch: 'main', capabilitySha: 'a'.repeat(40), actualSha: 'a'.repeat(40), workflowSha: 'a'.repeat(40), workflowRef: 'ojfbot/daily-logger/.github/workflows/action-schema-probe.yml@refs/heads/main', manifestSha: MANIFEST_SHA, runId: '1'.repeat(20), runAttempt: '1', probeId: '12345678-1234-4234-9234-123456789abc', approvalReceipt: `call_${'a'.repeat(128)}` })
+    const result = await run(passAnswers())
+    for (const call of result.calls) { call.requestId = `req_${'a'.repeat(96)}`; call.wireBytes = 655360 }
+    for (const caseId of CASE_IDS) { result.counts[caseId] = 199872; result.usage[caseId] = { inputTokens: Number.MAX_SAFE_INTEGER, outputTokens: 128 } }
+    const output = serializeSafeSummary(result, context); expect(Buffer.byteLength(output)).toBeLessThanOrEqual(32768)
+    expect(JSON.parse(output)).toMatchObject({ version: 2, runtimeAcceptance: 'not_evaluated', manifestSha256: MANIFEST_SHA, context })
+    expect(() => serializeSafeSummary({ ...result, errorCode: 'x'.repeat(32768) }, context)).toThrow('SAFE_ARTIFACT_LIMIT')
+    expect(() => parseContext({ ...context, version: 1 })).toThrow()
+    const { version: _version, purpose: _purpose, ...v1Context } = context
+    expect(() => parseContext(v1Context)).toThrow()
+    expect(() => parseContext({ ...context, approvalReceipt: `call_${'a'.repeat(129)}` })).toThrow()
+  })
 })

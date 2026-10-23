@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "properties": {
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "suggestions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "candidateDispositions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "closingOptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "changes",
+    "suggestions",
+    "candidateDispositions",
+    "closingOptions"
+  ],
+  "additionalProperties": false
+}

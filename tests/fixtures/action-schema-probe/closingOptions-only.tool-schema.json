@@ -1,0 +1,173 @@
+{
+  "type": "object",
+  "properties": {
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "suggestions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "candidateDispositions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "closingOptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "entryPoint": {
+            "type": "string"
+          },
+          "context": {
+            "type": "string"
+          },
+          "whyNow": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "nextCheck": {
+            "type": "string"
+          },
+          "factCitations": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sourceId": {
+                  "type": "string"
+                },
+                "startLine": {
+                  "type": "integer"
+                },
+                "endLine": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sourceId",
+                "startLine",
+                "endLine"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "goalCitations": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sourceId": {
+                  "type": "string"
+                },
+                "startLine": {
+                  "type": "integer"
+                },
+                "endLine": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sourceId",
+                "startLine",
+                "endLine"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "benefit": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string"
+          },
+          "replaces": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "action",
+              "candidate",
+              "checkpoint"
+            ]
+          },
+          "actionKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidateIndex": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "entryPoint",
+          "context",
+          "whyNow",
+          "outcome",
+          "nextCheck",
+          "factCitations",
+          "goalCitations",
+          "benefit",
+          "start",
+          "replaces",
+          "kind",
+          "actionKey",
+          "candidateIndex",
+          "target"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "changes",
+    "suggestions",
+    "candidateDispositions",
+    "closingOptions"
+  ],
+  "additionalProperties": false
+}
