@@ -1,7 +1,7 @@
-/** Manual synthetic schema probe. No editorial/runtime imports or import-time execution. */
+/** Manual fixed-public compiler diagnostic v2. No editorial/runtime imports or import-time execution. */
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
-import { closeSync, fsyncSync, mkdirSync, openSync, readFileSync, writeFileSync } from 'node:fs'
+import { closeSync, fsyncSync, mkdirSync, openSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { z } from 'zod'
@@ -9,13 +9,14 @@ import type Anthropic from '@anthropic-ai/sdk'
 import type { Fetch } from '@anthropic-ai/sdk/core'
 
 export const FIXTURES = 'tests/fixtures/action-schema-probe'
-export const MANIFEST_SHA = '6501a388903a6d0e735d5ff8b3a23a75cd4e2dead8b525129e5e1aa1ae339d91'
+export const MANIFEST_SHA = 'd9d70e4b81c6f0a6359144415978438f6d22b1932f5042992976db43370fc711'
 const WORKFLOW = '.github/workflows/action-schema-probe.yml'
 const DRIVER = 'scripts/probe-action-schema.ts'
 const ORIGIN = 'https://api.anthropic.com'
 const UNUSABLE_APPROVALS = ['call_7b31265ee4994084ad41ca97a6ae4a6d', 'call_7d9b3db53550499184fb6c002b86fcab', 'call_b2c40b1e97cb46eca57715621e133b4b', 'call_0dd2adeda1c64d6ab5994b0ae17d437b']
-const roles = ['proposer', 'verifier'] as const
-type Role = typeof roles[number]
+export const PURPOSE = 'fixed-public-schema-compiler-diagnostic'
+export const CASE_IDS = ['minimal-control', 'changes-only', 'suggestions-only', 'candidateDispositions-only', 'closingOptions-only', 'full-fixed-form'] as const
+export type CaseId = typeof CASE_IDS[number]
 type JsonObject = Record<string, unknown>
 type ClientOptions = ConstructorParameters<typeof Anthropic>[0]
 export type ProbeClientFactory = (options: ClientOptions) => { post(path: string, options: { body: JsonObject }): Promise<unknown> }
@@ -25,13 +26,15 @@ const hash = z.string().regex(/^[a-f0-9]{64}$/)
 const commit = z.string().regex(/^[a-f0-9]{40}$/)
 const positive = z.number().int().positive().safe()
 const filePin = z.strictObject({ sha256: hash, bytes: positive, bodySha256: hash, bodyBytes: positive })
-const names = roles.flatMap(role => ['tool-schema', 'synthetic-count-request', 'synthetic-messages-request'].map(suffix => `${role}.${suffix}.json`))
+const names = CASE_IDS.flatMap(caseId => ['tool-schema', 'synthetic-count-request', 'synthetic-messages-request'].map(suffix => `${caseId}.${suffix}.json`))
 const manifestSchema = z.strictObject({
-  version: z.literal(1), candidateCommit: z.literal('898143e26116dae54e029a8eabd27ec7ace844b3'),
-  candidateTree: z.literal('0e1a407d407b45915320b2c7b1583e2a633935d3'), syntheticOnly: z.literal(true),
-  models: z.strictObject({ proposer: z.literal('claude-sonnet-4-6'), verifier: z.literal('claude-opus-4-6') }),
+  version: z.literal(2), purpose: z.literal(PURPOSE),
+  diagnosticSource: z.literal('c6e434a67ac3ccd20ab3e62262b0f19597995bbe'),
+  runtimeSource: z.literal('898143e26116dae54e029a8eabd27ec7ace844b3'),
+  runtimeTree: z.literal('0e1a407d407b45915320b2c7b1583e2a633935d3'), syntheticOnly: z.literal(true),
+  model: z.literal('claude-sonnet-4-6'), cases: z.array(z.enum(CASE_IDS)).refine(value => value.join() === CASE_IDS.join(), 'closed ordered cases'),
   outputTokens: z.literal(128), contextLimit: z.literal(200000), requestByteLimit: z.literal(655360),
-  responseByteLimit: z.literal(131072), timeoutMs: z.literal(120000), maxRetries: z.literal(0),
+  responseByteLimit: z.literal(131072), timeoutMs: z.literal(120000), maxRetries: z.literal(0), maxCalls: z.literal(12),
   files: z.record(z.string(), filePin),
 }).refine(value => Object.keys(value.files).sort().join() === [...names].sort().join(), 'closed fixture list')
 type Manifest = z.infer<typeof manifestSchema>
@@ -43,8 +46,14 @@ const object = (value: unknown): JsonObject => {
 const canonical = (value: unknown) => JSON.stringify(value)
 class ProbeError extends Error {}
 function requireThat(condition: unknown, code: string): asserts condition { if (!condition) throw new ProbeError(code) }
+function singleTool(request: JsonObject): JsonObject {
+  const tools = request.tools
+  requireThat(Array.isArray(tools) && tools.length === 1, 'ONE_TOOL')
+  return object(tools[0])
+}
 
 export function loadFixtures(root: string): Loaded {
+  requireThat(readdirSync(join(root, FIXTURES)).sort().join() === ['manifest.json', ...names].sort().join(), 'CLOSED_FIXTURE_DIRECTORY')
   const raw = readFileSync(join(root, FIXTURES, 'manifest.json'))
   requireThat(sha(raw) === MANIFEST_SHA, 'MANIFEST_PIN')
   const manifest = manifestSchema.parse(JSON.parse(raw.toString()))
@@ -57,29 +66,39 @@ export function loadFixtures(root: string): Loaded {
     requireThat(Buffer.byteLength(body) <= manifest.requestByteLimit, 'REQUEST_BYTE_LIMIT')
     data.set(name, parsed)
   }
-  for (const role of roles) {
-    const count = fixture(data, role, 'count'); const messages = fixture(data, role, 'messages')
-    requireThat(messages.model === manifest.models[role] && messages.max_tokens === 128, 'MODEL_OR_RESERVE')
+  for (const caseId of CASE_IDS) {
+    const count = fixture(data, caseId, 'count'); const messages = fixture(data, caseId, 'messages')
+    requireThat(messages.model === manifest.model && messages.max_tokens === 128, 'MODEL_OR_RESERVE')
     const withoutReserve = Object.fromEntries(Object.entries(messages).filter(([key]) => key !== 'max_tokens'))
     requireThat(canonical(withoutReserve) === canonical(count), 'COUNT_REQUEST_DRIFT')
-    const tools = messages.tools; const choice = object(messages.tool_choice)
-    requireThat(Array.isArray(tools) && tools.length === 1, 'ONE_TOOL')
-    const tool = object(tools[0])
+    const choice = object(messages.tool_choice); const tool = singleTool(messages)
     requireThat(tool.name === 'review_actions' && tool.strict === true && choice.type === 'tool' && choice.name === 'review_actions', 'STRICT_FORCED_TOOL')
-    requireThat(canonical(tool.input_schema) === canonical(data.get(`${role}.tool-schema.json`)), 'SCHEMA_PIN')
+    requireThat(canonical(tool.input_schema) === canonical(data.get(`${caseId}.tool-schema.json`)), 'SCHEMA_PIN')
+  }
+  const full = fixture(data, 'full-fixed-form', 'messages')
+  const fullSchema = object(singleTool(full).input_schema)
+  const properties = object(fullSchema.properties)
+  requireThat(Object.keys(properties).join() === 'changes,suggestions,candidateDispositions,closingOptions', 'FOUR_ORDERED_ARRAYS')
+  for (const caseId of CASE_IDS) {
+    const request = fixture(data, caseId, 'messages'); const tool = singleTool(request)
+    const expectedProperties = Object.fromEntries(Object.entries(properties).map(([key, value]) => [key,
+      caseId === 'full-fixed-form' || caseId === `${key}-only` ? value : { type: 'array', items: { type: 'string' } }]))
+    requireThat(canonical(tool.input_schema) === canonical({ ...fullSchema, properties: expectedProperties }), 'CASE_SCHEMA_RELATIONSHIP')
+    requireThat(canonical({ ...request, tools: [{ ...tool, input_schema: fullSchema }] }) === canonical(full), 'CASE_NONSCHEMA_DRIFT')
   }
   return { manifest, data }
 }
-function fixture(data: ReadonlyMap<string, JsonObject>, role: Role, kind: 'count' | 'messages'): JsonObject {
-  const value = data.get(`${role}.synthetic-${kind}-request.json`); requireThat(value, 'MISSING_FIXTURE'); return value
+function fixture(data: ReadonlyMap<string, JsonObject>, caseId: CaseId, kind: 'count' | 'messages'): JsonObject {
+  const value = data.get(`${caseId}.synthetic-${kind}-request.json`); requireThat(value, 'MISSING_FIXTURE'); return value
 }
 
 const contextSchema = z.strictObject({
+  version: z.literal(2), purpose: z.literal(PURPOSE),
   repository: z.literal('ojfbot/daily-logger'), actor: z.literal('ojfbot'), event: z.literal('workflow_dispatch'),
   ref: z.literal('refs/heads/main'), defaultBranch: z.literal('main'), capabilitySha: commit, actualSha: commit, workflowSha: commit,
   workflowRef: z.literal('ojfbot/daily-logger/.github/workflows/action-schema-probe.yml@refs/heads/main'),
   manifestSha: z.literal(MANIFEST_SHA), runId: z.string().regex(/^[1-9][0-9]{0,19}$/), runAttempt: z.literal('1'),
-  probeId: z.string().uuid(), approvalReceipt: z.string().regex(/^call_[A-Za-z0-9]+$/),
+  probeId: z.string().uuid(), approvalReceipt: z.string().regex(/^call_[A-Za-z0-9]{1,128}$/),
 }).refine(value => value.actualSha === value.capabilitySha && value.workflowSha === value.capabilitySha, 'trusted source identity')
 export type ProbeContext = z.infer<typeof contextSchema>
 export function parseContext(value: unknown): ProbeContext {
@@ -89,7 +108,7 @@ export function parseContext(value: unknown): ProbeContext {
   return context
 }
 function envContext(env: NodeJS.ProcessEnv): ProbeContext {
-  return parseContext({ repository: env.GITHUB_REPOSITORY, actor: env.GITHUB_ACTOR, event: env.GITHUB_EVENT_NAME,
+  return parseContext({ version: 2, purpose: PURPOSE, repository: env.GITHUB_REPOSITORY, actor: env.GITHUB_ACTOR, event: env.GITHUB_EVENT_NAME,
     ref: env.GITHUB_REF, defaultBranch: env.PROBE_DEFAULT_BRANCH, capabilitySha: env.PROBE_CAPABILITY_SHA,
     actualSha: env.GITHUB_SHA, workflowSha: env.GITHUB_WORKFLOW_SHA, workflowRef: env.GITHUB_WORKFLOW_REF,
     manifestSha: env.PROBE_MANIFEST_SHA, runId: env.GITHUB_RUN_ID, runAttempt: env.GITHUB_RUN_ATTEMPT,
@@ -116,17 +135,17 @@ export function exclusiveJson(path: string, value: unknown): void {
   try { writeFileSync(fd, `${JSON.stringify(value)}\n`); fsyncSync(fd) } finally { closeSync(fd) }
   const dir = openSync(resolve(path, '..'), 'r'); try { fsyncSync(dir) } finally { closeSync(dir) }
 }
-const preparedSchema = z.strictObject({ version: z.literal(1), context: contextSchema, sourcePins: z.record(z.string(), hash), status: z.literal('reserved_not_executed') })
+const preparedSchema = z.strictObject({ version: z.literal(2), purpose: z.literal(PURPOSE), context: contextSchema, sourcePins: z.record(z.string(), hash), status: z.literal('reserved_not_executed') })
 export function prepare(root: string, directory: string, context: ProbeContext): void {
   loadFixtures(root); const pins = sourcePins(root, context)
   mkdirSync(directory, { recursive: true, mode: 0o700 })
-  exclusiveJson(join(directory, 'reservation.json'), { version: 1, context, sourcePins: pins, status: 'reserved_not_executed' })
+  exclusiveJson(join(directory, 'reservation.json'), { version: 2, purpose: PURPOSE, context, sourcePins: pins, status: 'reserved_not_executed' })
 }
 export function consume(root: string, directory: string, context: ProbeContext): void {
   const prepared = preparedSchema.parse(JSON.parse(readFileSync(join(directory, 'reservation.json'), 'utf8')))
   requireThat(canonical(prepared.context) === canonical(context), 'RESERVATION_CONTEXT_DRIFT')
   requireThat(canonical(prepared.sourcePins) === canonical(sourcePins(root, context)), 'RESERVATION_SOURCE_DRIFT')
-  exclusiveJson(join(directory, 'consumed.json'), { version: 1, context, permissionConsumed: true })
+  exclusiveJson(join(directory, 'consumed.json'), { version: 2, purpose: PURPOSE, context, permissionConsumed: true })
 }
 
 const safeId = (value: unknown, secret: string): string | null => typeof value === 'string' && /^req_[A-Za-z0-9]{1,96}$/.test(value) && (!secret || !value.includes(secret)) ? value : null
@@ -183,9 +202,15 @@ async function readProviderError(response: Response, signal: AbortSignal, byteLi
     try { void (reader ? reader.cancel() : response.body?.cancel())?.catch(() => undefined) } catch { /* No provider text escapes. */ }
   }
 }
-export type CallReceipt = { role: Role; endpoint: 'count' | 'messages'; canonicalBodySha256: string; wireSha256: string; wireBytes: number; status?: number; requestId?: string | null; failureCode?: string }
+export type CallReceipt = { caseId: CaseId; endpoint: 'count' | 'messages'; canonicalBodySha256: string; wireSha256: string; wireBytes: number; status?: number; transportHttp200?: boolean; requestId?: string | null; failureCode?: string }
   & (ProviderErrorDiagnostic | { providerErrorType?: never; providerErrorReason?: never })
-export type SafeResult = { version: 1; syntheticOnly: true; compilerAcceptance: Role[]; protocolSuccess: Role[]; calls: CallReceipt[]; counts: Partial<Record<Role, number>>; usage: Partial<Record<Role, { inputTokens: number; outputTokens: number }>>; errorCode?: string }
+type CaseIdentity = { caseId: CaseId; countBodySha256: string; messagesBodySha256: string }
+export type CaseOutcome = CaseIdentity & (
+  | { outcome: 'not_attempted' }
+  | { outcome: 'pass' }
+  | { outcome: 'stopped'; stoppedAt: 'count' | 'messages' | 'protocol'; errorCode: string }
+)
+export type SafeResult = { version: 2; purpose: typeof PURPOSE; syntheticOnly: true; runtimeAcceptance: 'not_evaluated'; authorityGranted: { runtimeAdoption: false; articleAttempt: false; publication: false }; outcome: 'completed_fixed_cases' | 'stopped'; cases: CaseOutcome[]; messagesHttp200: CaseId[]; protocolSuccess: CaseId[]; calls: CallReceipt[]; counts: Partial<Record<CaseId, number>>; usage: Partial<Record<CaseId, { inputTokens: number; outputTokens: number }>>; errorCode?: string }
 export function expectedSdkHeaders(secret: string, wireBytes: number): Record<string, string> {
   requireThat((process.platform === 'linux' || process.platform === 'darwin') && (process.arch === 'x64' || process.arch === 'arm64'), 'UNSUPPORTED_RUNNER_PLATFORM')
   return { accept: 'application/json', 'content-type': 'application/json', 'content-length': String(wireBytes),
@@ -200,11 +225,11 @@ export function createGuardedFetch(loaded: Loaded, wire: Wire, receipts: CallRec
     try {
       requireThat(!stopped, 'TRANSPORT_ALREADY_STOPPED')
       const url = typeof input === 'string' ? input : 'href' in input ? input.href : input.url
-      const expectedRole = roles[Math.floor(next / 2)]; const kind = next % 2 === 0 ? 'count' : 'messages'
+      const expectedCase = CASE_IDS[Math.floor(next / 2)]; const kind = next % 2 === 0 ? 'count' : 'messages'
       const endpoint = kind === 'count' ? '/v1/messages/count_tokens' : '/v1/messages'
-      requireThat(next < 4 && url === `${ORIGIN}${endpoint}` && init?.method === 'POST', 'TRANSPORT_ROUTE_OR_SEQUENCE')
+      requireThat(next < loaded.manifest.maxCalls && url === `${ORIGIN}${endpoint}` && init?.method === 'POST', 'TRANSPORT_ROUTE_OR_SEQUENCE')
       requireThat(typeof init.body === 'string' && init.signal, 'WIRE_BODY_OR_ABORT_SIGNAL')
-      const expected = fixture(loaded.data, expectedRole, kind); const body = init.body
+      const expected = fixture(loaded.data, expectedCase, kind); const body = init.body
       requireThat(canonical(JSON.parse(body)) === canonical(expected), 'WIRE_FIXTURE_DRIFT')
       const wireBytes = Buffer.byteLength(body)
       requireThat(wireBytes <= loaded.manifest.requestByteLimit, 'WIRE_BYTE_LIMIT')
@@ -212,10 +237,10 @@ export function createGuardedFetch(loaded: Loaded, wire: Wire, receipts: CallRec
       const expectedHeaders = expectedSdkHeaders(secret, wireBytes)
       requireThat([...headers.keys()].sort().join() === Object.keys(expectedHeaders).sort().join()
         && Object.entries(expectedHeaders).every(([name, value]) => headers.get(name) === value), 'WIRE_HEADERS_DENIED')
-      const receipt: CallReceipt = { role: expectedRole, endpoint: kind, canonicalBodySha256: sha(canonical(expected)), wireSha256: sha(body), wireBytes }
+      const receipt: CallReceipt = { caseId: expectedCase, endpoint: kind, canonicalBodySha256: sha(canonical(expected)), wireSha256: sha(body), wireBytes }
       currentReceipt = receipt; next += 1; receipts.push(receipt) // Consume before transport, including exceptions/unknown outcomes.
       const response = await wire(url, { method: 'POST', headers, body, signal: init.signal as AbortSignal, redirect: 'error' })
-      receipt.status = response.status; receipt.requestId = safeId(response.headers.get('request-id'), secret)
+      receipt.status = response.status; receipt.transportHttp200 = response.status === 200 && !response.redirected; receipt.requestId = safeId(response.headers.get('request-id'), secret)
       if (response.redirected || response.status !== 200) {
         if (!response.redirected && response.status >= 400 && response.status <= 599) {
           Object.assign(receipt, await readProviderError(response, init.signal as AbortSignal, loaded.manifest.responseByteLimit))
@@ -238,48 +263,65 @@ export function createGuardedFetch(loaded: Loaded, wire: Wire, receipts: CallRec
   }
 }
 export async function runProbe(loaded: Loaded, apiKey: string, factory: ProbeClientFactory, wire: Wire): Promise<SafeResult> {
-  const result: SafeResult = { version: 1, syntheticOnly: true, compilerAcceptance: [], protocolSuccess: [], calls: [], counts: {}, usage: {} }
+  const cases: CaseOutcome[] = CASE_IDS.map(caseId => ({ caseId,
+    countBodySha256: sha(canonical(fixture(loaded.data, caseId, 'count'))),
+    messagesBodySha256: sha(canonical(fixture(loaded.data, caseId, 'messages'))), outcome: 'not_attempted' }))
+  const result: SafeResult = { version: 2, purpose: PURPOSE, syntheticOnly: true, runtimeAcceptance: 'not_evaluated',
+    authorityGranted: { runtimeAdoption: false, articleAttempt: false, publication: false }, outcome: 'stopped',
+    cases, messagesHttp200: [], protocolSuccess: [], calls: [], counts: {}, usage: {} }
+  let current: CaseOutcome | undefined
+  let phase: 'count' | 'messages' | 'protocol' = 'count'
   try {
     const fetch = createGuardedFetch(loaded, wire, result.calls, apiKey)
     const client = factory({ apiKey, authToken: null, baseURL: ORIGIN, fetch, maxRetries: 0, timeout: loaded.manifest.timeoutMs })
-    for (const role of roles) {
-      const count = object(await client.post('/v1/messages/count_tokens', { body: fixture(loaded.data, role, 'count') }))
-      const inputTokens = tokens(count.input_tokens); result.counts[role] = inputTokens
+    for (const [index, caseId] of CASE_IDS.entries()) {
+      current = cases[index]; phase = 'count'
+      const count = object(await client.post('/v1/messages/count_tokens', { body: fixture(loaded.data, caseId, 'count') }))
+      const inputTokens = tokens(count.input_tokens); result.counts[caseId] = inputTokens
       requireThat(inputTokens + loaded.manifest.outputTokens <= loaded.manifest.contextLimit, 'TOKEN_ENVELOPE_HOLD')
-      const message = object(await client.post('/v1/messages', { body: fixture(loaded.data, role, 'messages') }))
+      phase = 'messages'
+      const message = object(await client.post('/v1/messages', { body: fixture(loaded.data, caseId, 'messages') }))
+      phase = 'protocol'
       const content = message.content
       requireThat(message.stop_reason === 'tool_use' && Array.isArray(content) && content.length === 1, 'PROTOCOL_STOP_OR_BLOCKS')
       const tool = object(content[0]); requireThat(tool.type === 'tool_use' && tool.name === 'review_actions', 'PROTOCOL_TOOL')
       assertEmptyOutput(tool.input)
       const usage = object(message.usage)
-      result.usage[role] = { inputTokens: tokens(usage.input_tokens), outputTokens: tokens(usage.output_tokens) }
-      requireThat(result.usage[role].outputTokens <= 128, 'OUTPUT_RESERVE_EXCEEDED')
-      result.protocolSuccess.push(role)
+      const safeUsage = { inputTokens: tokens(usage.input_tokens), outputTokens: tokens(usage.output_tokens) }
+      requireThat(safeUsage.outputTokens <= 128, 'OUTPUT_RESERVE_EXCEEDED')
+      result.usage[caseId] = safeUsage; result.protocolSuccess.push(caseId)
+      cases[index] = { ...current, outcome: 'pass' }
     }
+    result.outcome = 'completed_fixed_cases'
   } catch (error) {
     // Never serialize SDK error messages/objects, provider text, headers, credentials or env.
     result.errorCode = error instanceof ProbeError ? error.message : result.calls.at(-1)?.failureCode ?? 'PROBE_STOPPED'
+    if (current) cases[CASE_IDS.indexOf(current.caseId)] = { ...current, outcome: 'stopped', stoppedAt: phase, errorCode: result.errorCode }
   }
-  result.compilerAcceptance = roles.filter(role => result.calls.some(call => call.role === role && call.endpoint === 'messages' && call.status === 200 && call.failureCode === undefined))
+  result.messagesHttp200 = CASE_IDS.filter(caseId => result.calls.some(call => call.caseId === caseId && call.endpoint === 'messages' && call.transportHttp200 === true))
   return result
+}
+export function serializeSafeSummary(result: SafeResult, context: ProbeContext): string {
+  const safe = { ...result, context, manifestSha256: MANIFEST_SHA }
+  const output = `${JSON.stringify(safe, null, 2)}\n`; requireThat(Buffer.byteLength(output) <= 32768, 'SAFE_ARTIFACT_LIMIT')
+  return output
 }
 async function main(): Promise<void> {
   const mode = process.argv[2]; requireThat(process.argv.length === 3 && (mode === '--prepare' || mode === '--execute'), 'MODE_REQUIRED')
   assertSafeEnvironment(process.env, mode === '--prepare')
   const context = envContext(process.env); const root = process.cwd(); const loaded = loadFixtures(root)
   requireThat(process.env.RUNNER_TEMP && process.env.GITHUB_ACTIONS === 'true', 'HOSTED_RUNNER_REQUIRED')
-  const directory = join(process.env.RUNNER_TEMP, 'action-schema-probe', `${context.runId}-${context.probeId}`)
-  if (mode === '--prepare') { prepare(root, directory, context); console.log('PROBE_RESERVED_NOT_EXECUTED'); return }
+  const directory = join(process.env.RUNNER_TEMP, 'action-schema-compiler-diagnostic-v2', `${context.runId}-${context.probeId}`)
+  if (mode === '--prepare') { prepare(root, directory, context); console.log('DIAGNOSTIC_ONLY_V2_RESERVED_NOT_EXECUTED'); return }
   consume(root, directory, context) // Durable barrier precedes reading key or constructing SDK.
   const apiKey = process.env.ANTHROPIC_API_KEY; requireThat(apiKey && apiKey.length >= 12, 'MISSING_PROVIDER_KEY')
   const { default: SDK } = await import('@anthropic-ai/sdk')
   const result = await runProbe(loaded, apiKey, options => {
     const client = new SDK(options); return { post: (path, request) => client.post<JsonObject, unknown>(path, request) }
   }, (url, init) => globalThis.fetch(url, init))
-  const safe = { ...result, context, manifestSha256: MANIFEST_SHA }
-  const output = `${JSON.stringify(safe, null, 2)}\n`; requireThat(Buffer.byteLength(output) <= 32768, 'SAFE_ARTIFACT_LIMIT')
-  mkdirSync('probe-safe', { mode: 0o700 }); exclusiveJson(join(root, 'probe-safe', 'summary.json'), safe)
-  console.log(result.errorCode ? 'PROBE_STOPPED_SEE_SAFE_SUMMARY' : 'SYNTHETIC_SCHEMA_AND_PROTOCOL_PASS')
+  const safe = JSON.parse(serializeSafeSummary(result, context))
+  mkdirSync('probe-safe-v2', { mode: 0o700 }); exclusiveJson(join(root, 'probe-safe-v2', 'summary.json'), safe)
+  console.log(result.errorCode ? 'DIAGNOSTIC_ONLY_V2_STOPPED_SEE_SAFE_SUMMARY' : 'DIAGNOSTIC_ONLY_V2_COMPLETED_FIXED_CASES')
   if (result.errorCode) process.exitCode = 1
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

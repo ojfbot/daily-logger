@@ -13,7 +13,7 @@ globalThis.fetch = deny
 syncBuiltinESMExports()
 for (const key of ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'ANTHROPIC_BASE_URL', 'DEBUG', 'GH_TOKEN', 'GH_PAT', 'GITHUB_TOKEN']) assert.equal(process.env[key], undefined)
 const { default: SDK } = await import('@anthropic-ai/sdk')
-const { loadFixtures, runProbe } = await import('../../../scripts/probe-action-schema.js')
+const { CASE_IDS, loadFixtures, runProbe } = await import('../../../scripts/probe-action-schema.js')
 const loaded = loadFixtures(process.cwd())
 const empty = { changes: [], suggestions: [], candidateDispositions: [], closingOptions: [] }
 let calls = 0; let clientFetchInjected = false
@@ -32,6 +32,9 @@ const result = await runProbe(loaded, 'offline-not-a-real-key', options => {
   return new Response(JSON.stringify(body), { status: 200, headers: { 'request-id': 'req_offline' } })
 })
 assert.equal(result.errorCode, undefined); assert.equal(trappedNetworkAttempts, 0)
+assert.equal(calls, 12); assert.deepEqual(result.protocolSuccess, [...CASE_IDS])
+assert.equal(result.version, 2); assert.equal(result.runtimeAcceptance, 'not_evaluated')
+assert.deepEqual(result.authorityGranted, { runtimeAdoption: false, articleAttempt: false, publication: false })
 let failingCalls = 0
 const failure = await runProbe(loaded, 'offline-not-a-real-key', options => {
   const client = new SDK(options)
@@ -42,7 +45,7 @@ const failure = await runProbe(loaded, 'offline-not-a-real-key', options => {
     : new Response('{"error":{"message":"UNTRUSTED_PROVIDER_BODY_MUST_NOT_ESCAPE"}}', { status: 400 })
 })
 assert.equal(failure.errorCode, 'PROVIDER_400'); assert.equal(failingCalls, 2)
-assert.deepEqual(failure.compilerAcceptance, []); assert.deepEqual(failure.protocolSuccess, [])
+assert.deepEqual(failure.messagesHttp200, []); assert.deepEqual(failure.protocolSuccess, [])
 assert.ok(!JSON.stringify(failure).includes('UNTRUSTED_PROVIDER_BODY_MUST_NOT_ESCAPE'))
 assert.equal(trappedNetworkAttempts, 0)
 console.log(JSON.stringify({ trappedNetworkAttempts, clientFetchInjected, protocolSuccess: result.protocolSuccess, messagesWireBytes: result.calls.filter(call => call.endpoint === 'messages').map(call => call.wireBytes), calls, compiler400Calls: failingCalls }))

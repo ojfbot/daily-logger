@@ -1,15 +1,15 @@
-name: Action review schema probe
-run-name: Action review schema probe ${{ inputs.probe_id }} / ${{ inputs.capability_sha }}
+name: Action schema compiler diagnostic v2
+run-name: Action schema compiler diagnostic v2 ${{ inputs.probe_id }} / ${{ inputs.capability_sha }}
 
 on:
   workflow_dispatch:
     inputs:
       capability_sha:
-        description: Exact adopted probe capability commit approved for this ONE dispatch
+        description: Exact adopted v2 diagnostic capability commit approved for this ONE dispatch
         required: true
         type: string
       manifest_sha:
-        description: Reviewed public fixture manifest SHA256
+        description: Reviewed v2 six-case public fixture manifest SHA256
         required: true
         type: string
       probe_id:
@@ -17,7 +17,7 @@ on:
         required: true
         type: string
       approval_receipt:
-        description: NEW human execution approval receipt (preparation approval is invalid)
+        description: NEW consumed coordinator grant reference for ONE v2 dispatch (preparation/v1 authority invalid)
         required: true
         type: string
 
@@ -56,7 +56,7 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Validate source and reserve the runner-local permission without a provider key
         run: pnpm exec node --import tsx scripts/probe-action-schema.ts --prepare
-      - name: Execute the finite synthetic probe once
+      - name: Execute the fixed six-case diagnostic once, stop on first error
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: pnpm exec node --import tsx scripts/probe-action-schema.ts --execute
@@ -64,7 +64,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: synthetic-action-schema-probe-safe
-          path: probe-safe/summary.json
+          name: synthetic-action-schema-compiler-diagnostic-v2-safe
+          path: probe-safe-v2/summary.json
           if-no-files-found: ignore
           retention-days: 7
