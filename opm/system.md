@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `976473ce6acefaddc9a5ceab662cb83de356f3a4b88a322f4f14d9494ebf6773`.
+> Source SHA-256: `a6b60752f4b70c8aa8be1b8210fefd6e7770f9b5b80c7dffa5b22be29bc089f2`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -809,6 +809,7 @@ flowchart TD
   n158 -->|"yields"| n159
   n28 -->|"invokes"| n160
   n147 -->|"requires (instrument)"| n160
+  n148 -->|"requires (instrument)"| n160
   n161 -->|"condition: available"| n162
   n161 -->|"requires (instrument)"| n162
   n162 -->|"yields"| n163
@@ -937,6 +938,7 @@ Action Evidence Request Closing changes Action Evidence Request from open to res
 Action Evidence Request Closing yields Private Local Resolution Artifact. [src: src/action-evidence-retrieval.ts]
 Action Reconciling invokes Action Model View Serializing. [src: src/review-actions.ts]
 Action Model View Serializing requires Selected Source Evidence. [src: src/action-evidence-view.ts]
+Action Model View Serializing requires Evidence Coverage. [src: src/review-actions.ts]
 Collector Generated Metadata Provenance can be available or unavailable. [src: src/action-evidence-view.ts]
 Generated Metadata Compacting occurs if Collector Generated Metadata Provenance is available. [src: src/action-evidence-view.ts]
 Generated Metadata Compacting requires Collector Generated Metadata Provenance. [src: src/action-evidence-view.ts]

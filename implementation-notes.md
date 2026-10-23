@@ -474,3 +474,6 @@ When safe result bytes exist after an authorized run, preserve those exact immut
 ## Deviations — diagnostic v2 reference review
 
 - The v2 plan assumed known unusable authority references remained rejected; independent review showed the current preparation-only reference and consumed v1 probe reference still parsed after v2 stamping. Added those two references to the existing rejection checks. The coordinator still authenticates any fresh grant externally; parsing a reference does not prove human authority. No execution grant exists for this preparation.
+
+- October21 review assumed compacted collector metadata could be cited through the local full-row escape hatch; the real acceptance path stopped on core#561 before the verifier and did not compose that reply. Prepared complete metadata visibility for the already-required GitHub issue/PR references before either model reads one immutable view, retaining optional compaction and every budget/evidence guard. No hosted raw-source retention or automatic provider retry was added.
+- October21 failure reporting assumed posting an uncertain receipt would succeed before rethrowing the primary review error; a transport failure instead replaced it. Preserve the original error and emit only bounded allowlisted receipt diagnostics, keeping delivery uncertain and the request outstanding.

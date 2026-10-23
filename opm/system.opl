@@ -335,6 +335,8 @@ Action Evidence Request Closing changes Action Evidence Request from open to res
 Action Evidence Request Closing yields Private Local Resolution Artifact. [src: src/action-evidence-retrieval.ts]
 Action Reconciling invokes Action Model View Serializing. [src: src/review-actions.ts]
 Action Model View Serializing requires Selected Source Evidence. [src: src/action-evidence-view.ts]
+Action Model View Serializing requires Evidence Coverage. [src: src/review-actions.ts]
+# Required GitHub metadata is visible as complete original rows before proposing; optional collector metadata can remain Partial Metadata Context. [src: src/action-evidence-view.ts]
 Collector Generated Metadata Provenance can be available or unavailable. [src: src/action-evidence-view.ts]
 Generated Metadata Compacting occurs if Collector Generated Metadata Provenance is available. [src: src/action-evidence-view.ts]
 Generated Metadata Compacting requires Collector Generated Metadata Provenance. [src: src/action-evidence-view.ts]
