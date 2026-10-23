@@ -460,3 +460,7 @@ When safe result bytes exist after an authorized run, preserve those exact immut
 
 - The safe-summary design assumed bounded approval metadata, but the existing receipt-reference regex had no upper bound. Limit the alphanumeric suffix to 128 characters so accepted metadata cannot alone exhaust the 32-KiB result cap. This only bounds a reference and does not authenticate a grant.
 - The existing custody test had a five-second harness deadline for six source fixtures. The eighteen-fixture v2 source checks plus an isolated reentry process exceeded that deadline while assertions passed. The trapped SDK test also exceeded its five-second harness deadline on the next run. Bound those two offline tests and their children at twenty seconds, preserving every runtime request and workflow limit.
+
+## Deviations — diagnostic v2 reference review
+
+- The v2 plan assumed known unusable authority references remained rejected; independent review showed the current preparation-only reference and consumed v1 probe reference still parsed after v2 stamping. Added those two references to the existing rejection checks. The coordinator still authenticates any fresh grant externally; parsing a reference does not prove human authority. No execution grant exists for this preparation.

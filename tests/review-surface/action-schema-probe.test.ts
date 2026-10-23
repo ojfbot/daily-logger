@@ -216,7 +216,7 @@ describe('native exclusive runner custody', () => {
     try { writeFileSync(fixture, '{}'); expect(() => prepare(checkout, join(scratch, 'bad-fixture'), context)).toThrow('FIXTURE_FILE_PIN') } finally { writeFileSync(fixture, bytes) }
   })
   it('rejects old prep authority, rerun/fork/branch/source mismatches', () => {
-    for (const patch of [{ approvalReceipt: 'call_7b31265ee4994084ad41ca97a6ae4a6d' }, { approvalReceipt: 'call_7d9b3db53550499184fb6c002b86fcab' }, { approvalReceipt: 'call_b2c40b1e97cb46eca57715621e133b4b' }, { approvalReceipt: 'call_0dd2adeda1c64d6ab5994b0ae17d437b' }, { runAttempt: '2' }, { ref: 'refs/heads/test' }, { actor: 'unknown' }, { workflowSha: '0'.repeat(40) }]) expect(() => parseContext({ ...context, ...patch })).toThrow()
+    for (const patch of [{ approvalReceipt: 'call_7b31265ee4994084ad41ca97a6ae4a6d' }, { approvalReceipt: 'call_7d9b3db53550499184fb6c002b86fcab' }, { approvalReceipt: 'call_b2c40b1e97cb46eca57715621e133b4b' }, { approvalReceipt: 'call_0dd2adeda1c64d6ab5994b0ae17d437b' }, { approvalReceipt: 'call_3588e08b56544c2bb948a7205176d65a' }, { approvalReceipt: 'call_owner109f17d835e14f4d937e636c37542803' }, { runAttempt: '2' }, { ref: 'refs/heads/test' }, { actor: 'unknown' }, { workflowSha: '0'.repeat(40) }]) expect(() => parseContext({ ...context, ...patch })).toThrow()
   })
 })
 
