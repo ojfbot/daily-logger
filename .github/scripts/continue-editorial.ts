@@ -82,6 +82,29 @@ async function receipt(execution: Execution, requestDigest: string, outcome: str
   return createReviewSource(execution.github).postComment(eventSchema.parse(execution.event).issue.number,
     `## Editorial execution receipt\n${JSON.stringify({ requestDigest, requestCommentId: eventSchema.parse(execution.event).comment.id, outcome, runId: execution.runId, policySha: execution.policySha, ...extra })}`)
 }
+const transportCodeSchema = z.enum(['ECONNRESET', 'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'ETIMEDOUT', 'EPIPE',
+  'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT', 'UND_ERR_BODY_TIMEOUT', 'UND_ERR_SOCKET', 'ABORT_ERR',
+  'ERR_TLS_CERT_ALTNAME_INVALID', 'CERT_HAS_EXPIRED', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE'])
+function receiptTransportCodes(error: unknown) {
+  const codes: z.infer<typeof transportCodeSchema>[] = []
+  let current: unknown = error
+  for (let depth = 0; depth < 4 && current !== null && typeof current === 'object'; depth++) {
+    try {
+      const code = transportCodeSchema.safeParse(Object.getOwnPropertyDescriptor(current, 'code')?.value)
+      if (code.success && !codes.includes(code.data)) codes.push(code.data)
+      current = Object.getOwnPropertyDescriptor(current, 'cause')?.value
+    } catch { break }
+  }
+  return codes
+}
+async function receiptAfterFailure(execution: Execution, requestDigest: string, reason: string) {
+  try { await receipt(execution, requestDigest, 'uncertain', { reason }) }
+  catch (error) {
+    try { console.error(JSON.stringify({ event: 'editorial_receipt_delivery_uncertain', runId: execution.runId,
+      requestDigest, outcome: 'uncertain', transportCodes: receiptTransportCodes(error) })) }
+    catch { /* Diagnostic reporting must not replace the primary failure. */ }
+  }
+}
 async function prepare(execution: Execution): Promise<Prepared | null> {
   const admitted = await admitEditorial(execution)
   const { record, version, request, source } = admitted
@@ -169,7 +192,7 @@ async function prepare(execution: Execution): Promise<Prepared | null> {
     return preparedSchema.parse({ request: record, requestDigest: request.digest, policySha: execution.policySha, runId: execution.runId, worktree, inputRegistryBlob,
       outputCommit: git(worktree, 'rev-parse', 'HEAD'), outputBlob: regularBlob(worktree, 'HEAD', path), outputRegistryBlob: regularBlob(worktree, 'HEAD', registryPath(path)), changed: true })
   } catch (error) {
-    await receipt(execution, request.digest, 'uncertain', { reason: 'Invocation was claimed. Provider or output preparation failed; do not replay this request automatically.' })
+    await receiptAfterFailure(execution, request.digest, 'Invocation was claimed. Provider or output preparation failed; do not replay this request automatically.')
     throw error
   }
 }
@@ -215,7 +238,7 @@ export async function pushEditorial(execution: Execution, input: unknown) {
     git(prepared.worktree, 'push', 'origin', `${prepared.outputCommit}:refs/heads/accept/${request.date}`)
     await receipt(execution, prepared.requestDigest, 'changed', { inputHead: request.headSha, inputBlob: request.articleBlobSha, inputRegistryBlob: prepared.inputRegistryBlob, outputCommit: prepared.outputCommit, outputBlob: prepared.outputBlob, outputRegistryBlob: prepared.outputRegistryBlob })
   } catch (error) {
-    await receipt(execution, prepared.requestDigest, 'uncertain', { reason: 'Push or outcome receipt is uncertain. Inspect the actual branch before any new request.' }); throw error
+    await receiptAfterFailure(execution, prepared.requestDigest, 'Push or outcome receipt is uncertain. Inspect the actual branch before any new request.'); throw error
   }
 }
 export async function finalizeEditorial(execution: Execution, artifactId: number) {

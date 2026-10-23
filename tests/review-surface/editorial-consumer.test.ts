@@ -4,10 +4,11 @@ import { acceptanceActionCycle, generationActionCycle, revisionActionCycle } fro
 import { editorialInputSchema } from '../../shared/article-review.js'
 import { editorialProofName, editorialProofSchema } from '../../shared/editorial-action-proof.js'
 import { actionFile, emptyActionFile, writeActionStore } from '../../src/__tests__/action-store-fixture.js'
-import { execFileSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, symlinkSync, chmodSync } from 'node:fs'
+import { execFileSync, spawnSync } from 'node:child_process'
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, symlinkSync, chmodSync, realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { afterEach, expect, it, vi } from 'vitest'
 import { createFixture, makePullRequest, makeComment, today } from './fixture.js'
 import { createEditorialService, decodeEditorial, editorialDigest, encodeEditorial, repo } from '../../api/_lib/editorial-continuation.js'
@@ -15,10 +16,21 @@ import { mockActionAgents } from '../../src/review-actions.js'
 import { ActionRegistrySchema, ArticleActionFileSchema, stripManagedActions } from '../../src/action-registry.js'
 import { admitActionRegistry } from '../../.github/scripts/editorial-action-registry.js'
 import { admitEditorial, prepareEditorial, pushEditorial, finalizeEditorial, type Execution } from '../../.github/scripts/continue-editorial.js'
+const commandFailure = vi.hoisted(() => {
+  const state: { error: Error | undefined } = { error: undefined }
+  return state
+})
+vi.mock('node:child_process', async importOriginal => {
+  const actual = await importOriginal<typeof import('node:child_process')>()
+  return { ...actual, execFileSync: (...args: Parameters<typeof actual.execFileSync>) => {
+    if (args[0] === 'pnpm' && commandFailure.error) throw commandFailure.error
+    return actual.execFileSync(...args)
+  } }
+})
 // Native revision cases create Git worktrees and run the actual CLI.
 vi.setConfig({ testTimeout: 20_000 })
 const cleanups: string[] = []
-afterEach(() => { vi.unstubAllEnvs(); for (const path of cleanups.splice(0)) rmSync(path, { recursive: true, force: true }) })
+afterEach(() => { commandFailure.error = undefined; vi.unstubAllEnvs(); for (const path of cleanups.splice(0)) rmSync(path, { recursive: true, force: true }) })
 function git(cwd: string, ...args: string[]) { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim() }
 async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | 'missing-registry' | 'registry-symlink' | 'registry-executable' | 'cross-date-choice' | null = null, ambiguousAncestry = false, pendingInitial = false, requestKind: 'revision' | 'clean' = 'revision') {
   vi.stubEnv('MOCK_LLM', 'true')
@@ -375,6 +387,162 @@ it('actual workflow admits before PR concurrency and retains legacy author guard
   expect(workflow).toContain("startsWith(github.event.comment.body, '## Explicit clean acceptance request')")
   expect(workflow).not.toContain('workflow_dispatch:')
   expect(workflow).toContain('pnpm exec tsx .github/scripts/continue-editorial.ts admit')
+})
+it('preserves the exact preparation error when the uncertain receipt POST fails', async () => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const primary = new Error('Native preparation failed', { cause: new Error('Original review cause') })
+  commandFailure.error = primary
+  const original = f.execution.github
+  let receiptAttempts = 0
+  f.execution.github = (path, options) => {
+    if (options?.method === 'POST' && String(options.body).startsWith('{"body":"## Editorial execution receipt')) {
+      receiptAttempts++
+      throw Object.assign(new TypeError('DO_NOT_LOG_FIXTURE_SECRET'), { cause: { code: 'ECONNRESET', message: 'Bearer DO_NOT_LOG_FIXTURE_SECRET' } })
+    }
+    return original(path, options)
+  }
+  const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+  try {
+    const failure: unknown = await prepareEditorial(f.execution).catch((error: unknown) => error)
+    expect(failure).toBe(primary)
+    expect(primary.cause).toMatchObject({ message: 'Original review cause' })
+    expect(receiptAttempts).toBe(1)
+    expect(logged).toHaveBeenCalledWith(JSON.stringify({ event: 'editorial_receipt_delivery_uncertain', runId: 101,
+      requestDigest: editorialDigest(decodeEditorial(f.comment.body)), outcome: 'uncertain', transportCodes: ['ECONNRESET'] }))
+    expect(JSON.stringify(logged.mock.calls)).not.toContain('DO_NOT_LOG_FIXTURE_SECRET')
+    expect(f.state.prComments.get(42)?.filter(comment => comment.body.startsWith('## Editorial execution receipt'))).toEqual([])
+    expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
+    await expect(prepareEditorial(f.execution)).rejects.toThrow('invocation claim')
+    expect(receiptAttempts).toBe(1)
+  } finally { logged.mockRestore() }
+})
+const unsafeReceiptFailures: Array<{ kind: string; makeError: () => unknown; codes: string[] }> = [
+  { kind: 'primitive', makeError: () => 'DO_NOT_LOG_FIXTURE_SECRET\nAuthorization: Bearer private', codes: [] },
+  { kind: 'unrecognized code and sensitive fields', makeError: () => ({ code: 'ECONNRESET\nDO_NOT_LOG_FIXTURE_SECRET',
+    message: 'DO_NOT_LOG_FIXTURE_SECRET', stack: 'private stack', request: { headers: { Authorization: 'private' } },
+    response: { body: 'private source' }, cause: { code: 'ENOTFOUND', address: 'private host' } }), codes: ['ENOTFOUND'] },
+  { kind: 'throwing accessor', makeError: () => Object.defineProperty({}, 'code', { get() { throw new Error('DO_NOT_LOG_FIXTURE_SECRET') } }), codes: [] },
+  { kind: 'hostile proxy', makeError: () => new Proxy({}, { getOwnPropertyDescriptor() { throw new Error('DO_NOT_LOG_FIXTURE_SECRET') } }), codes: [] },
+  { kind: 'cyclic cause', makeError: () => { const error = new Error('DO_NOT_LOG_FIXTURE_SECRET'); return Object.assign(error, { code: 'UND_ERR_SOCKET', cause: error }) }, codes: ['UND_ERR_SOCKET'] },
+  { kind: 'deep cause', makeError: () => {
+    let error: unknown = { code: 'ENOTFOUND', message: 'DO_NOT_LOG_FIXTURE_SECRET' }
+    for (const code of ['ECONNRESET', 'ETIMEDOUT', 'EPIPE', 'UND_ERR_SOCKET']) error = { code, cause: error }
+    return error
+  }, codes: ['UND_ERR_SOCKET', 'EPIPE', 'ETIMEDOUT', 'ECONNRESET'] },
+]
+it.each(unsafeReceiptFailures)('bounds receipt diagnostics for $kind without replacing the primary error', async ({ makeError, codes }) => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const primary = new Error('Native preparation failed')
+  commandFailure.error = primary
+  const original = f.execution.github
+  let receiptAttempts = 0
+  f.execution.github = (path, options) => {
+    if (options?.method === 'POST' && String(options.body).startsWith('{"body":"## Editorial execution receipt')) {
+      receiptAttempts++; throw makeError()
+    }
+    return original(path, options)
+  }
+  const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+  try {
+    await expect(prepareEditorial(f.execution)).rejects.toBe(primary)
+    expect(receiptAttempts).toBe(1)
+    expect(logged).toHaveBeenCalledTimes(1)
+    const line = logged.mock.calls[0]?.[0]
+    if (typeof line !== 'string') throw new Error('Missing structured diagnostic')
+    expect(JSON.parse(line)).toEqual({ event: 'editorial_receipt_delivery_uncertain', runId: 101,
+      requestDigest: editorialDigest(decodeEditorial(f.comment.body)), outcome: 'uncertain', transportCodes: codes })
+    expect(Buffer.byteLength(line)).toBeLessThan(512)
+    expect(line).not.toContain('DO_NOT_LOG_FIXTURE_SECRET')
+    expect(line).not.toContain('private')
+    expect(line).not.toContain('\n')
+  } finally { logged.mockRestore() }
+})
+it('preserves the primary error even when secondary diagnostic reporting fails', async () => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const primary = new Error('Native preparation failed'); commandFailure.error = primary
+  const original = f.execution.github
+  let receiptAttempts = 0
+  f.execution.github = (path, options) => {
+    if (options?.method === 'POST' && String(options.body).startsWith('{"body":"## Editorial execution receipt')) {
+      receiptAttempts++; throw new Error('Secondary receipt error')
+    }
+    return original(path, options)
+  }
+  const logged = vi.spyOn(console, 'error').mockImplementation(() => { throw new Error('Diagnostic sink unavailable') })
+  try { await expect(prepareEditorial(f.execution)).rejects.toBe(primary); expect(receiptAttempts).toBe(1) }
+  finally { logged.mockRestore() }
+})
+it('keeps an acknowledged uncertain receipt unchanged while rethrowing the primary error', async () => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const primary = new Error('Native preparation failed'); commandFailure.error = primary
+  const original = f.execution.github
+  let receiptAttempts = 0
+  f.execution.github = (path, options) => {
+    if (options?.method === 'POST' && String(options.body).startsWith('{"body":"## Editorial execution receipt')) receiptAttempts++
+    return original(path, options)
+  }
+  const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+  try {
+    await expect(prepareEditorial(f.execution)).rejects.toBe(primary)
+    expect(receiptAttempts).toBe(1); expect(logged).not.toHaveBeenCalled()
+    const receipt = f.state.prComments.get(42)?.at(-1)
+    expect(receipt?.body).toBe(`## Editorial execution receipt\n${JSON.stringify({ requestDigest: editorialDigest(decodeEditorial(f.comment.body)),
+      requestCommentId: f.comment.id, outcome: 'uncertain', runId: 101, policySha: f.execution.policySha,
+      reason: 'Invocation was claimed. Provider or output preparation failed; do not replay this request automatically.' })}`)
+    expect(await createEditorialService(f.execution.github).load(today, 'ojfbot')).toMatchObject({ status: 'existing', outstanding: true })
+  } finally { logged.mockRestore() }
+})
+it('does not suppress a successful-output finalization receipt failure', async () => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const prepared = await prepareEditorial(f.execution); if (!prepared) throw new Error('Missing output')
+  await pushEditorial(f.execution, prepared)
+  const original = f.execution.github, transport = new TypeError('Final receipt response lost')
+  let receiptAttempts = 0
+  f.execution.github = (path, options) => {
+    if (options?.method === 'POST' && String(options.body).startsWith('{"body":"## Editorial execution receipt')) {
+      receiptAttempts++; throw transport
+    }
+    return original(path, options)
+  }
+  await expect(publishProof(f)).rejects.toBe(transport)
+  expect(receiptAttempts).toBe(1)
+  expect(f.state.prComments.get(42)?.some(comment => comment.body.includes('"outcome":"changed"'))).toBe(false)
+})
+it('the actual CLI preserves a push failure and emits only safe receipt transport diagnostics', async () => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const prepared = await prepareEditorial(f.execution); if (!prepared) throw new Error('Missing output')
+  const pr = f.state.pullRequests.get(42); if (!pr) throw new Error('Missing PR')
+  writeFileSync(resolve(f.execution.workspace, '.git/editorial-prepared.json'), JSON.stringify({ ...prepared, worktree: realpathSync(prepared.worktree) }))
+  const eventPath = resolve(f.execution.workspace, 'event.json'), preload = resolve(f.execution.workspace, 'offline-cli-fixture.mjs')
+  const attemptsPath = resolve(f.execution.workspace, 'receipt-attempts.jsonl')
+  writeFileSync(eventPath, JSON.stringify(f.execution.event))
+  writeFileSync(preload, `import {appendFileSync} from 'node:fs'
+const pull=${JSON.stringify(pr)}
+globalThis.fetch=async (url,options={})=>{
+ const path=new URL(url).pathname,method=options.method??'GET'
+ if(method==='GET'&&path==='/repos/ojfbot/daily-logger/pulls/42')return Response.json(pull)
+ if(method==='POST'&&path==='/repos/ojfbot/daily-logger/issues/42/comments'){
+  appendFileSync(${JSON.stringify(attemptsPath)},JSON.stringify({method,path})+'\\n')
+  throw Object.assign(new TypeError('DO_NOT_LOG_FIXTURE_SECRET'),{cause:{code:'ECONNRESET',message:'Bearer DO_NOT_LOG_FIXTURE_SECRET',response:{body:'private source'}}})
+ }
+ throw Error('Unexpected offline CLI route')
+}
+`)
+  git(f.execution.workspace, 'remote', 'set-url', 'origin', resolve(f.execution.workspace, 'missing-remote.git'))
+  const result = spawnSync('pnpm', ['exec', 'node', '--import', import.meta.resolve('tsx'), '--import', pathToFileURL(preload).href,
+    resolve(process.cwd(), '.github/scripts/continue-editorial.ts'), 'push'], { cwd: f.execution.workspace, encoding: 'utf8',
+    env: { ...process.env, GITHUB_TOKEN: 'offline-fixture-token', GITHUB_SHA: f.execution.policySha,
+      GITHUB_RUN_ID: '101', GITHUB_RUN_ATTEMPT: '1', GITHUB_EVENT_PATH: eventPath } })
+  expect(result.status).toBe(1)
+  expect(result.stderr).toContain('Command failed: git push')
+  expect(result.stderr).not.toContain('DO_NOT_LOG_FIXTURE_SECRET')
+  expect(result.stderr).not.toContain('private source')
+  const line = result.stderr.split('\n').find(value => value.startsWith('{"event":"editorial_receipt_delivery_uncertain"'))
+  if (!line) throw new Error('Missing CLI receipt diagnostic')
+  expect(JSON.parse(line)).toEqual({ event: 'editorial_receipt_delivery_uncertain', runId: 101,
+    requestDigest: prepared.requestDigest, outcome: 'uncertain', transportCodes: ['ECONNRESET'] })
+  expect(readFileSync(attemptsPath, 'utf8').trim().split('\n')).toHaveLength(1)
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
 })
 it('pre-invocation failure records failure without a claim or remote article write', async () => {
   const f = await setup(); f.state.login = 'github-actions[bot]'
