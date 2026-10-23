@@ -87,7 +87,7 @@ describe('action provider schema compatibility', () => {
     expect(census.request.tools).toHaveLength(1)
     expect(census.request.tools[0]).toMatchObject({ name: 'review_actions' })
     expect(census.request.tools[0]).not.toHaveProperty('strict')
-    expect(census.request.tools[0].input_schema.required).toEqual(['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
+    expect(JsonObjectSchema.parse(census.request.tools[0].input_schema).required).toEqual(['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
     expect(census.request.tool_choice).toEqual({ type: 'tool', name: 'review_actions' })
   })
 
