@@ -10,7 +10,7 @@ export const ACTION_EVIDENCE_VIEW_VERSION = 'action-evidence-view-v1'
 const ACCOUNT_LINKS = new Set(['avatar_url', 'gravatar_id', 'url', 'followers_url', 'following_url', 'gists_url', 'starred_url', 'subscriptions_url', 'organizations_url', 'repos_url', 'events_url', 'received_events_url'])
 const REPOSITORY_LINKS = new Set(['forks_url', 'keys_url', 'collaborators_url', 'teams_url', 'hooks_url', 'issue_events_url', 'events_url', 'assignees_url', 'branches_url', 'tags_url', 'blobs_url', 'git_tags_url', 'git_refs_url', 'trees_url', 'statuses_url', 'languages_url', 'stargazers_url', 'contributors_url', 'subscribers_url', 'subscription_url', 'commits_url', 'git_commits_url', 'comments_url', 'issue_comment_url', 'contents_url', 'compare_url', 'merges_url', 'archive_url', 'downloads_url', 'issues_url', 'pulls_url', 'milestones_url', 'notifications_url', 'labels_url', 'releases_url', 'deployments_url', 'git_url', 'ssh_url', 'clone_url', 'svn_url'])
 const ACCOUNT_FIELDS = new Set(['user', 'owner', 'assignee', 'assignees', 'requested_reviewers', 'merged_by'])
-const POLICY = sha256(JSON.stringify({ version: ACTION_EVIDENCE_VIEW_VERSION, account: [...ACCOUNT_LINKS], repository: [...REPOSITORY_LINKS] }))
+const POLICY = sha256(JSON.stringify({ version: ACTION_EVIDENCE_VIEW_VERSION, account: [...ACCOUNT_LINKS], repository: [...REPOSITORY_LINKS], requiredGithubMetadata: 'complete-original-rows-v1' }))
 type MetadataRow = { line: number; raw: string; context: string; omitted: readonly string[] }
 
 function compactMetadata(value: unknown): { context: string; omitted: string[] } {
@@ -111,15 +111,19 @@ export class PreparedActionEvidenceView {
   readonly #sources: readonly ActionSource[]
   readonly #hidden: ReadonlyMap<string, ReadonlySet<number>>
   readonly #rawIdentity: string
-  private constructor(sources: readonly ActionSource[], rawCaseDigest: string, inputStateSha256: string, collection?: ActionSourceCollection) {
+  private constructor(sources: readonly ActionSource[], rawCaseDigest: string, inputStateSha256: string, collection?: ActionSourceCollection, requiredGithubReferences: readonly string[] = []) {
     if (new Set(sources.map(source => source.id)).size !== sources.length) throw new ActionEvidenceVisibilityError('Duplicate source identity in prepared evidence view')
     for (const source of sources) if (source.fullContentSha256 && source.fullContentSha256 !== sha256(source.content) && !source.projection && !source.response) throw new ActionEvidenceVisibilityError(`Retained excerpt ${source.id} is not a complete raw source; recollect full evidence or use the explicit source-view protocol`)
     this.#sources = structuredClone(sources)
     this.#rawIdentity = sha256(JSON.stringify(sources))
     const hidden = new Map<string, ReadonlySet<number>>()
     const receipts: ActionEvidenceViewReceipt['sources'] = []
+    const required = new Set(requiredGithubReferences)
     this.#modelSources = sources.map((source, index) => {
-      const rows = collection?.rowsFor(source) ?? [], byLine = new Map(rows.map(row => [row.line, row]))
+      const capturedRows = collection?.rowsFor(source) ?? []
+      const reference = /^github:([\w-]+#\d+)(?:@[a-f0-9]{64})?$/.exec(source.id)?.[1]
+      const rows = reference && required.has(reference) ? [] : capturedRows
+      const byLine = new Map(rows.map(row => [row.line, row]))
       const hiddenLines = rows.map(row => row.line)
       hidden.set(source.id, new Set(hiddenLines))
       const { trustedContent, ...rest } = source
@@ -135,14 +139,14 @@ export class PreparedActionEvidenceView {
       return modelSource
     })
     this.#hidden = hidden
-    this.receipt = { version: ACTION_EVIDENCE_VIEW_VERSION, sourceEncoding: 'source-tuples-v1', policySha256: POLICY, rawCaseDigest, inputStateSha256, sources: receipts }
+    this.receipt = { version: ACTION_EVIDENCE_VIEW_VERSION, sourceEncoding: 'source-tuples-v1', policySha256: sha256(JSON.stringify({ policy: POLICY, requiredGithubReferences: [...required].sort() })), rawCaseDigest, inputStateSha256, sources: receipts }
     this.roundId = sha256(JSON.stringify({ rawCaseDigest, evidenceView: this.receipt }))
     for (const receipt of this.receipt.sources) { Object.freeze(receipt[3]); Object.freeze(receipt) }
     Object.freeze(this.receipt.sources)
     Object.freeze(this.receipt)
     Object.freeze(this)
   }
-  static prepare(sources: readonly ActionSource[], rawCaseDigest: string, inputStateSha256: string, collection?: ActionSourceCollection): PreparedActionEvidenceView { return new PreparedActionEvidenceView(sources, rawCaseDigest, inputStateSha256, collection) }
+  static prepare(sources: readonly ActionSource[], rawCaseDigest: string, inputStateSha256: string, collection?: ActionSourceCollection, requiredGithubReferences: readonly string[] = []): PreparedActionEvidenceView { return new PreparedActionEvidenceView(sources, rawCaseDigest, inputStateSha256, collection, requiredGithubReferences) }
   assertBinding(sources: readonly ActionSource[], roundId: string, inputStateSha256: string): void {
     if (inputStateSha256 !== this.receipt.inputStateSha256 || roundId !== this.roundId || sha256(JSON.stringify(sources)) !== this.#rawIdentity) throw new ActionEvidenceVisibilityError('Evidence view does not match the consumed review round and raw sources')
   }
