@@ -135,7 +135,55 @@ export function assertEmptyOutput(value: unknown): void {
   const output = object(value); const expected = ['changes', 'suggestions', 'candidateDispositions', 'closingOptions']
   requireThat(Object.keys(output).sort().join() === expected.sort().join() && Object.values(output).every(item => Array.isArray(item) && item.length === 0), 'NONEMPTY_OR_INVALID_SYNTHETIC_OUTPUT')
 }
+const providerErrorType = z.enum(['invalid_request_error', 'authentication_error', 'billing_error', 'permission_error', 'not_found_error', 'conflict_error', 'request_too_large', 'rate_limit_error', 'api_error', 'timeout_error', 'overloaded_error'])
+const providerErrorEnvelope = z.object({ type: z.literal('error'), error: z.object({ type: providerErrorType, message: z.string() }) })
+type ProviderErrorDiagnostic =
+  | { providerErrorType: 'invalid_request_error'; providerErrorReason: 'schema_complexity' | 'schema_feature_unsupported' | 'unclassified' }
+  | { providerErrorType: Exclude<z.infer<typeof providerErrorType>, 'invalid_request_error'> | 'unknown'; providerErrorReason: 'unclassified' }
+const unknownDiagnostic = { providerErrorType: 'unknown', providerErrorReason: 'unclassified' } satisfies ProviderErrorDiagnostic
+function classifyProviderError(value: unknown): ProviderErrorDiagnostic {
+  const parsed = providerErrorEnvelope.safeParse(value)
+  if (!parsed.success) return unknownDiagnostic
+  const { type, message } = parsed.data.error
+  if (type !== 'invalid_request_error') return { providerErrorType: type, providerErrorReason: 'unclassified' }
+  const normalized = message.trim().toLowerCase()
+  if (normalized === 'schema is too complex for compilation.'
+    || normalized === 'the compiled grammar is too large, which would cause performance issues. simplify your tool schemas or reduce the number of strict tools.') {
+    return { providerErrorType: type, providerErrorReason: 'schema_complexity' }
+  }
+  const unsupported = /^(?:tools\.\d{1,4}\.(?:custom|input_schema):\s*)?schema type '[a-z0-9_$-]{1,64}' is not supported\.?$/.test(normalized)
+  return { providerErrorType: type, providerErrorReason: unsupported ? 'schema_feature_unsupported' : 'unclassified' }
+}
+async function readProviderError(response: Response, signal: AbortSignal, byteLimit: number): Promise<ProviderErrorDiagnostic> {
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined
+  let onAbort: (() => void) | undefined
+  try {
+    if (signal.aborted || !/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '') || !response.body) return unknownDiagnostic
+    reader = response.body.getReader()
+    const aborted = new Promise<never>((_resolve, reject) => {
+      onAbort = () => reject(new ProbeError('DIAGNOSTIC_ABORTED'))
+      signal.addEventListener('abort', onAbort, { once: true })
+    })
+    if (signal.aborted) return unknownDiagnostic
+    const chunks: Uint8Array[] = []; let size = 0
+    for (;;) {
+      const part = await Promise.race([reader.read(), aborted])
+      if (part.done) break
+      size += part.value.byteLength
+      if (size > byteLimit) return unknownDiagnostic
+      chunks.push(part.value)
+    }
+    return classifyProviderError(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks))))
+  } catch {
+    return unknownDiagnostic
+  } finally {
+    if (onAbort) signal.removeEventListener('abort', onAbort)
+    // Diagnostic cleanup is best effort; it must never delay or replace the primary HTTP failure.
+    try { void (reader ? reader.cancel() : response.body?.cancel())?.catch(() => undefined) } catch { /* No provider text escapes. */ }
+  }
+}
 export type CallReceipt = { role: Role; endpoint: 'count' | 'messages'; canonicalBodySha256: string; wireSha256: string; wireBytes: number; status?: number; requestId?: string | null; failureCode?: string }
+  & (ProviderErrorDiagnostic | { providerErrorType?: never; providerErrorReason?: never })
 export type SafeResult = { version: 1; syntheticOnly: true; compilerAcceptance: Role[]; protocolSuccess: Role[]; calls: CallReceipt[]; counts: Partial<Record<Role, number>>; usage: Partial<Record<Role, { inputTokens: number; outputTokens: number }>>; errorCode?: string }
 export function expectedSdkHeaders(secret: string, wireBytes: number): Record<string, string> {
   requireThat((process.platform === 'linux' || process.platform === 'darwin') && (process.arch === 'x64' || process.arch === 'arm64'), 'UNSUPPORTED_RUNNER_PLATFORM')
@@ -168,7 +216,9 @@ export function createGuardedFetch(loaded: Loaded, wire: Wire, receipts: CallRec
       const response = await wire(url, { method: 'POST', headers, body, signal: init.signal as AbortSignal, redirect: 'error' })
       receipt.status = response.status; receipt.requestId = safeId(response.headers.get('request-id'), secret)
       if (response.redirected || response.status !== 200) {
-        await response.body?.cancel().catch(() => undefined)
+        if (!response.redirected && response.status >= 400 && response.status <= 599) {
+          Object.assign(receipt, await readProviderError(response, init.signal as AbortSignal, loaded.manifest.responseByteLimit))
+        } else await response.body?.cancel().catch(() => undefined)
         requireThat(false, response.status === 400 ? 'PROVIDER_400' : 'PROVIDER_HTTP_FAILURE')
       }
       const chunks: Uint8Array[] = []; let size = 0
