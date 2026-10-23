@@ -1,6 +1,8 @@
 # Implementation notes
 
 ## Deviations
+
+- 2026-10-23 fixed-form probe: the delegated author hit model capacity before edits; root prepared the probe-only repin with separate source/operation reviewers. Reuse the reviewed runtime builder at898143e without adopting it in this capability; keep the original public synthetic prompt, workflow, transport and limits unchanged. Direct human messages authorize the next checkpoint and conditional runtime adoption/one article attempt; a new call_owner correlation labels those messages rather than impersonating a tool-generated approval.
 - 2026-10-22 (probe failure ownership): a generic response-stream error did not mark its own HTTP200 receipt, and a later pre-network rejection could instead mark the preceding call. A per-invocation receipt now owns every transport failure, using a fixed code for unknown exceptions; successful prior observations remain intact and incomplete responses never qualify the compiler.
 
 - 2026-10-22 (probe rejected transport diagnosis): a fake redirected response with status 200 correctly stopped execution but still appeared in the status-only compiler summary. Compiler qualification now excludes any transport receipt carrying an internal failure; protocol success and HTTP observations remain separate.
