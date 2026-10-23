@@ -132,7 +132,7 @@ describe('manual synthetic probe — no transport', () => {
     }
     expect(transport).toBe(0)
   })
-  it.each([
+  it.each<Record<string, string>>([
     { 'x-api-key': 'wrong-key' }, { authorization: 'Bearer forbidden' }, { 'x-unapproved-header': 'forbidden' },
     { 'anthropic-version': 'future' }, { 'x-stainless-retry-count': '1' }, { 'content-type': 'text/plain' }, { 'x-stainless-package-version': 'future' },
   ])('closes actual key/SDK header drift before transport', async patch => {
@@ -183,6 +183,122 @@ describe('native exclusive runner custody', () => {
   })
   it('rejects old prep authority, rerun/fork/branch/source mismatches', () => {
     for (const patch of [{ approvalReceipt: 'call_7b31265ee4994084ad41ca97a6ae4a6d' }, { approvalReceipt: 'call_7d9b3db53550499184fb6c002b86fcab' }, { approvalReceipt: 'call_b2c40b1e97cb46eca57715621e133b4b' }, { approvalReceipt: 'call_0dd2adeda1c64d6ab5994b0ae17d437b' }, { runAttempt: '2' }, { ref: 'refs/heads/test' }, { actor: 'unknown' }, { workflowSha: '0'.repeat(40) }]) expect(() => parseContext({ ...context, ...patch })).toThrow()
+  })
+})
+
+describe('provider error diagnostics — factory doubles only, no SDK construction', () => {
+  const documented = 'Schema is too complex for compilation.'
+  const earlier = 'The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.'
+  const envelope = (message: unknown, type: unknown = 'invalid_request_error') => ({ type: 'error', error: { type, message } })
+  const failed = (value: unknown, headers = { 'content-type': 'application/json' }) => response(value, 400, headers)
+  const diagnostic = async (value: unknown) => {
+    const result = await run([{ input_tokens: 1 }, failed(value)])
+    expect(result.calls).toHaveLength(2); expect(result.errorCode).toBe('PROVIDER_400')
+    expect(result.compilerAcceptance).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(result.usage).toEqual({})
+    expect(result.calls[0]).not.toHaveProperty('providerErrorType'); expect(result.calls[0]).not.toHaveProperty('providerErrorReason')
+    return result.calls[1]
+  }
+  it.each([documented, earlier, `  ${documented.toUpperCase()}\n`, `\n${earlier.toUpperCase()}  `])('matches only either exact normalized known complexity sentence', async message => {
+    expect(await diagnostic(envelope(message))).toMatchObject({ providerErrorType: 'invalid_request_error', providerErrorReason: 'schema_complexity' })
+  })
+  it.each([`Prefix ${documented}`, `${documented} More text.`, `${earlier} ${documented}`, 'schema complex', documented.replace('too complex', 'not too complex'), earlier.replace('too large', 'not too large'), documented.replace(' is ', '  is ')])('keeps approximate, negated or extra text unclassified', async message => {
+    expect(await diagnostic(envelope(message))).toMatchObject({ providerErrorType: 'invalid_request_error', providerErrorReason: 'unclassified' })
+  })
+  it.each(["tools.0.custom: Schema type 'oneOf' is not supported", "tools.1.input_schema: Schema type '$ref' is not supported.", "Schema type '$defs' is not supported"])('matches the full bounded unsupported-feature template without retaining its identifier', async message => {
+    const receipt = await diagnostic(envelope(message))
+    expect(receipt).toMatchObject({ providerErrorType: 'invalid_request_error', providerErrorReason: 'schema_feature_unsupported' })
+    expect(JSON.stringify(receipt)).not.toContain(message)
+  })
+  it.each(["Prefix Schema type 'oneOf' is not supported", "Schema type 'oneOf' is not supported. secret", `Schema type '${'x'.repeat(65)}' is not supported`, "tools.12345.custom: Schema type 'oneOf' is not supported"])('rejects widened unsupported-template interpretations', async message => {
+    expect(await diagnostic(envelope(message))).toMatchObject({ providerErrorType: 'invalid_request_error', providerErrorReason: 'unclassified' })
+  })
+  it.each(['invalid_request_error', 'authentication_error', 'billing_error', 'permission_error', 'not_found_error', 'conflict_error', 'request_too_large', 'rate_limit_error', 'api_error', 'timeout_error', 'overloaded_error'])('retains an allowlisted provider type only', async type => {
+    expect(await diagnostic(envelope('arbitrary provider text', type))).toMatchObject({ providerErrorType: type, providerErrorReason: 'unclassified' })
+  })
+  it('never claims a schema reason for another known type', async () => {
+    expect(await diagnostic(envelope(documented, 'authentication_error'))).toMatchObject({ providerErrorType: 'authentication_error', providerErrorReason: 'unclassified' })
+  })
+  it.each([401, 429, 500, 529])('classifies a first counter HTTP%s failure without forwarding messages', async status => {
+    const result = await run([response(envelope('arbitrary', 'rate_limit_error'), status, { 'content-type': 'application/json' })])
+    expect(result.calls).toHaveLength(1); expect(result.errorCode).toBe('PROVIDER_HTTP_FAILURE')
+    expect(result.calls[0]).toMatchObject({ status, failureCode: 'PROVIDER_HTTP_FAILURE', providerErrorType: 'rate_limit_error', providerErrorReason: 'unclassified' })
+    expect(result.compilerAcceptance).toEqual([]); expect(result.protocolSuccess).toEqual([]); expect(result.counts).toEqual({})
+  })
+  it('does not classify an error body received through a rejected redirect', async () => {
+    const redirected = failed(envelope(documented)); Object.defineProperty(redirected, 'redirected', { value: true })
+    const result = await run([redirected])
+    expect(result.calls).toHaveLength(1); expect(result.errorCode).toBe('PROVIDER_400')
+    expect(result.calls[0]).not.toHaveProperty('providerErrorType'); expect(result.calls[0]).not.toHaveProperty('providerErrorReason')
+  })
+  it.each([{}, [], { error: { type: 'invalid_request_error', message: documented } }, { type: 'wrong', error: { type: 'invalid_request_error', message: documented } }, envelope(documented, 'PRIVATE_UNKNOWN_TYPE'), envelope(documented, ['invalid_request_error']), envelope(null), { type: 'error', error: [] }])('rejects malformed, unauthenticated or unknown envelopes without echo', async value => {
+    expect(await diagnostic(value)).toMatchObject({ providerErrorType: 'unknown', providerErrorReason: 'unclassified' })
+  })
+  it('retains no arbitrary field, error text or dummy selected key', async () => {
+    const canary = 'offline-not-a-real-key'
+    for (const value of [
+      { ...envelope(documented), request_id: canary, extra: canary, nested: { value: canary } },
+      { type: 'error', error: { type: 'invalid_request_error', message: documented, arbitrary: canary } },
+      envelope(canary), envelope(`${documented}${canary}`), envelope(documented, canary),
+    ]) expect(JSON.stringify(await diagnostic(value))).not.toContain(canary)
+  })
+  it.each(['text/plain', 'application/problem+json'])('ignores an unsupported media type without replacing HTTP400', async media => {
+    const result = await run([{ input_tokens: 1 }, failed(envelope(documented), { 'content-type': media })])
+    expect(result.errorCode).toBe('PROVIDER_400'); expect(result.calls[1]).toMatchObject({ providerErrorType: 'unknown', providerErrorReason: 'unclassified' })
+  })
+  it('accepts JSON charset media and exact UTF-8 cap, rejects cap+1 without replacing HTTP400', async () => {
+    for (const bytes of [131072, 131073]) {
+      const value = { ...envelope(documented), padding: '' }
+      value.padding = 'x'.repeat(bytes - Buffer.byteLength(JSON.stringify(value)))
+      const result = await run([{ input_tokens: 1 }, new Response(JSON.stringify(value), { status: 400, headers: { 'content-type': 'Application/JSON; charset=utf-8' } })])
+      expect(result.errorCode).toBe('PROVIDER_400'); expect(result.calls).toHaveLength(2)
+      expect(result.calls[1]).toMatchObject(bytes === 131072 ? { providerErrorType: 'invalid_request_error', providerErrorReason: 'schema_complexity' } : { providerErrorType: 'unknown', providerErrorReason: 'unclassified' })
+    }
+  })
+  it('malformed JSON, missing body and interrupted error-body read preserve HTTP400', async () => {
+    for (const body of [new Response('{', { status: 400, headers: { 'content-type': 'application/json' } }), new Response(null, { status: 400 }),
+      new Response(new ReadableStream({ pull(controller) { controller.error(new Error('PRIVATE_ERROR_BODY_STREAM_CANARY')) } }), { status: 400, headers: { 'content-type': 'application/json' } })]) {
+      const result = await run([{ input_tokens: 1 }, body])
+      expect(result.errorCode).toBe('PROVIDER_400'); expect(result.calls[1]).toMatchObject({ status: 400, failureCode: 'PROVIDER_400', providerErrorType: 'unknown', providerErrorReason: 'unclassified' })
+      expect(JSON.stringify(result)).not.toContain('PRIVATE_ERROR_BODY')
+    }
+  })
+  it('invalid UTF-8 and a locked diagnostic stream preserve the primary HTTP failure', async () => {
+    const locked = failed(envelope(documented)); const reader = locked.body?.getReader()
+    try {
+      for (const body of [new Response(new Uint8Array([0xff]), { status: 400, headers: { 'content-type': 'application/json' } }), locked]) {
+        const result = await run([{ input_tokens: 1 }, body])
+        expect(result.errorCode).toBe('PROVIDER_400'); expect(result.calls[1]).toMatchObject({ providerErrorType: 'unknown', providerErrorReason: 'unclassified' })
+      }
+    } finally { await reader?.cancel() }
+  })
+  it('the existing signal interrupts a hung error reader even when cancel never resolves', async () => {
+    const controller = new AbortController(); let posts = 0; let canceled = false
+    const localFactory: ProbeClientFactory = options => ({ post: async (path, request) => {
+      posts += 1; const body = JSON.stringify(request.body, null, 2)
+      const fetch = options?.fetch; if (!fetch) throw new Error('missing fake')
+      const result = await fetch(`https://api.anthropic.com${path}`, { method: 'POST', body, signal: controller.signal, headers: expectedSdkHeaders('offline-not-a-real-key', Buffer.byteLength(body)) })
+      return result.json()
+    } })
+    let wireCalls = 0
+    const operation = runProbe(loaded, 'offline-not-a-real-key', localFactory, async () => {
+      wireCalls += 1
+      if (wireCalls === 1) return response({ input_tokens: 1 })
+      setImmediate(() => controller.abort())
+      return new Response(new ReadableStream({ pull() { return new Promise(() => undefined) }, cancel() { canceled = true; return new Promise(() => undefined) } }), { status: 400, headers: { 'content-type': 'application/json' } })
+    })
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      const result = await Promise.race([operation, new Promise<never>((_resolve, reject) => { timer = setTimeout(() => reject(new Error('test-only hung reader deadline')), 1000) })])
+      expect(result.errorCode).toBe('PROVIDER_400'); expect(posts).toBe(2); expect(wireCalls).toBe(2); expect(canceled).toBe(true)
+      expect(result.calls[1]).toMatchObject({ providerErrorType: 'unknown', providerErrorReason: 'unclassified' })
+    } finally { if (timer) clearTimeout(timer) }
+  })
+  it('does not await a never-ending or throwing cancel on a skipped diagnostic', async () => {
+    for (const throws of [true, false]) {
+      const body = new ReadableStream({ cancel() { if (throws) throw new Error('PRIVATE_CANCEL_CANARY'); return new Promise(() => undefined) } }, { highWaterMark: 0 })
+      const result = await run([{ input_tokens: 1 }, new Response(body, { status: 400, headers: { 'content-type': 'text/plain' } })])
+      expect(result.errorCode).toBe('PROVIDER_400'); expect(result.calls[1]).toMatchObject({ providerErrorType: 'unknown', providerErrorReason: 'unclassified' })
+    }
   })
 })
 
