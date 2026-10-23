@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- The original plan assumed a #416-only input refresh; October23 added a full-status-index entry and native admission requires refreshed classification metadata in trusted main, so a conservative data-only coordinator refresh was prepared locally while the model request remains unspent.
+
 - The native-tool preparation assumed the reused dependency links covered the accepted lockfile, but full type checks and two evidence suites could not resolve parse5. Repointed only the isolated checkout's untracked dependency link to an existing offline cache with identical package and lock bytes, preserving the primary checkout and retaining the failed checks.
 
 - 2026-10-23 fixed-form probe: the delegated author hit model capacity before edits; root prepared the probe-only repin with separate source/operation reviewers. Reuse the reviewed runtime builder at898143e without adopting it in this capability; keep the original public synthetic prompt, workflow, transport and limits unchanged. Direct human messages authorize the next checkpoint and conditional runtime adoption/one article attempt; a new call_owner correlation labels those messages rather than impersonating a tool-generated approval.
