@@ -115,6 +115,21 @@ export function resolveActionSourceLines(value: unknown, view: PreparedActionEvi
   const resolve = (citation: z.infer<typeof lineCitations>[number]) => view.resolve(citation.sourceId, citation.startLine, citation.endLine)
   return ActionProposalSchema.parse({ ...proposal, changes: proposal.changes.map(change => ({ ...change, citations: change.citations.map(resolve) })), suggestions: proposal.suggestions.map(candidate => ({ ...candidate, factCitations: candidate.factCitations.map(resolve), goalCitations: candidate.goalCitations.map(resolve) })), candidateDispositions: proposal.candidateDispositions.map(disposition => disposition.kind === 'reject' || disposition.kind === 'verified-closure' ? { ...disposition, citations: disposition.citations.map(resolve) } : disposition), closingOptions: proposal.closingOptions.map(option => ({ ...option, factCitations: option.factCitations.map(resolve), goalCitations: option.goalCitations.map(resolve) })) })
 }
+export function actionVerificationProposal(proposal: ParsedActionProposal, view: PreparedActionEvidenceView): z.infer<typeof LineProposalSchema> {
+  if (!(view instanceof PreparedActionEvidenceView)) throw new ActionEvidenceVisibilityError('A prepared consumed evidence view is required')
+  const reference = (citation: z.infer<typeof CitationSchema>) => {
+    if (citation.sourceLineStart === undefined || citation.sourceLineEnd === undefined) throw new ActionEvidenceVisibilityError('A verifier proposal citation requires original line endpoints')
+    view.assertCitation(citation)
+    return { sourceId: citation.sourceId, startLine: citation.sourceLineStart, endLine: citation.sourceLineEnd }
+  }
+  return {
+    ...proposal,
+    changes: proposal.changes.map(change => ({ ...change, citations: change.citations.map(reference) })),
+    suggestions: proposal.suggestions.map(candidate => ({ ...candidate, factCitations: candidate.factCitations.map(reference), goalCitations: candidate.goalCitations.map(reference) })),
+    candidateDispositions: proposal.candidateDispositions.map(disposition => disposition.kind === 'reject' || disposition.kind === 'verified-closure' ? { ...disposition, citations: disposition.citations.map(reference) } : disposition),
+    closingOptions: proposal.closingOptions.map(option => ({ ...option, factCitations: option.factCitations.map(reference), goalCitations: option.goalCitations.map(reference) })),
+  }
+}
 export interface ActionAgents {
   identity?: { proposer: string; verifier: string }
   propose(prompt: string, view: PreparedActionEvidenceView): Promise<unknown>
@@ -1013,7 +1028,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
     let proposal: ParsedActionProposal, verification: ParsedActionVerification
     try {
       proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every requiredActionKey. Preserve terminal currentActionKeys without creating a redundant decision unless they are explicitly listed in requiredActionKeys. An independently verified existingKey link also counts as reviewing a required identity. Return one candidateDisposition for every awaiting initialDraftCandidate; never reconstruct a missing candidate from draft context or prior-day maintenance. A promotion or existing-identity map must select a suggestion with the exact captured command, repository and description. If work is amended or unrelated, propose it separately and account for the original candidate with another supported disposition.\n${correction}`), evidenceView))
-      verification = ActionVerificationSchema.parse(await input.agents.verify(boundedPrompt(`${context}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(proposal)}\n${correction}\nReturn ONLY the tool schema: changes, suggestions, candidateDispositions and closingOptions are arrays of verdict objects. Verify every initial candidate disposition independently. Check each closing option for current disposition, usefulness, prior-context relevance, goal connection, entry point and next checkpoint. Keep reasons concise.`), evidenceView))
+      verification = ActionVerificationSchema.parse(await input.agents.verify(boundedPrompt(`${context}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(actionVerificationProposal(proposal, evidenceView))}\n${correction}\nReturn ONLY the tool schema: changes, suggestions, candidateDispositions and closingOptions are arrays of verdict objects. Proposal citations preserve validated sourceId/startLine/endLine references into the complete original-line source view above; read those lines independently. Verify every initial candidate disposition independently. Check each closing option for current disposition, usefulness, prior-context relevance, goal connection, entry point and next checkpoint. Keep reasons concise.`), evidenceView))
       const resolveCitation = (citation: z.infer<typeof CitationSchema>) => ({ ...citation, sourceId: sourceAliases.get(citation.sourceId) ?? citation.sourceId })
       for (const change of proposal.changes) change.citations = change.citations.map(resolveCitation)
       for (const candidate of proposal.suggestions) { candidate.goalCitations = candidate.goalCitations.map(resolveCitation); candidate.factCitations = candidate.factCitations.map(resolveCitation) }

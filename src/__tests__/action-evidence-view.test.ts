@@ -127,8 +127,9 @@ describe('typed generated metadata view', () => {
     expect(CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v15-draft-candidate-linkage')
     expect(RANKED_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v15-draft-candidate-linkage')
     expect(CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v16-typed-evidence-view')
+    expect(CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v18-native-validated-tool')
     expect(RANKED_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v16-typed-evidence-view')
-    expect(ACTION_REVIEW_PROMPT_VERSION).toBe('action-review-v18-native-validated-tool')
+    expect(ACTION_REVIEW_PROMPT_VERSION).toBe('action-review-v19-compact-verifier-proposal')
   })
   it('retains primary context failure when Accepted pending persistence is forbidden', async () => {
     await expect(reviewProducedDraftActions({ registry: empty(), articleDate: date, cycle: generationActionCycle(), markdown: markdown.replace('draft', 'accepted'), feedback: '', articleStatuses: new Map([[date, 'accepted']]), collectSources: () => [], agents: { propose: async () => { throw new Error('PRIMARY CONTEXT FAILURE') }, verify: vi.fn() } })).rejects.toThrow(/PRIMARY CONTEXT FAILURE.*pending persistence refused/)
