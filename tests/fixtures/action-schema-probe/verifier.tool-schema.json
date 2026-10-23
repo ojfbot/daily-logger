@@ -1,1 +1,136 @@
-{"type":"object","properties":{"changes":{"default":[],"type":"array","items":{"type":"object","properties":{"actionKey":{"type":"string"},"verdict":{"type":"string","enum":["pass","reject","hold"]},"reason":{"type":"string"}},"required":["actionKey","verdict","reason"],"additionalProperties":false}},"suggestions":{"default":[],"type":"array","items":{"type":"object","properties":{"candidateIndex":{"type":"integer"},"verdict":{"type":"string","enum":["pass","reject","hold"]},"reason":{"type":"string"},"existingKey":{"anyOf":[{"type":"string"},{"type":"null"}]}},"required":["candidateIndex","verdict","reason","existingKey"],"additionalProperties":false}},"candidateDispositions":{"default":[],"type":"array","items":{"type":"object","properties":{"candidateId":{"type":"string","pattern":"^[a-f0-9]{64}$"},"verdict":{"type":"string","enum":["pass","reject","hold"]},"reason":{"type":"string"}},"required":["candidateId","verdict","reason"],"additionalProperties":false}},"closingOptions":{"default":[],"type":"array","items":{"type":"object","properties":{"optionIndex":{"type":"integer"},"verdict":{"type":"string","enum":["pass","reject","hold"]},"reason":{"type":"string"}},"required":["optionIndex","verdict","reason"],"additionalProperties":false}}},"required":["changes","suggestions","candidateDispositions","closingOptions"],"additionalProperties":false}
+{
+  "type": "object",
+  "properties": {
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "actionKey": {
+            "type": "string"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "reject",
+              "hold"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "actionKey",
+          "verdict",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "suggestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "candidateIndex": {
+            "type": "integer"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "reject",
+              "hold"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "existingKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "candidateIndex",
+          "verdict",
+          "reason",
+          "existingKey"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "candidateDispositions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "candidateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "reject",
+              "hold"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidateId",
+          "verdict",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "closingOptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "optionIndex": {
+            "type": "integer"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "reject",
+              "hold"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "optionIndex",
+          "verdict",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "changes",
+    "suggestions",
+    "candidateDispositions",
+    "closingOptions"
+  ],
+  "additionalProperties": false
+}

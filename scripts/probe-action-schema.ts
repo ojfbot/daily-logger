@@ -9,7 +9,7 @@ import type Anthropic from '@anthropic-ai/sdk'
 import type { Fetch } from '@anthropic-ai/sdk/core'
 
 export const FIXTURES = 'tests/fixtures/action-schema-probe'
-export const MANIFEST_SHA = 'ddfb016b14633ebc0487153576c634a2e986de99102f025cd7ffb38b325693f7'
+export const MANIFEST_SHA = '6501a388903a6d0e735d5ff8b3a23a75cd4e2dead8b525129e5e1aa1ae339d91'
 const WORKFLOW = '.github/workflows/action-schema-probe.yml'
 const DRIVER = 'scripts/probe-action-schema.ts'
 const ORIGIN = 'https://api.anthropic.com'
@@ -27,8 +27,8 @@ const positive = z.number().int().positive().safe()
 const filePin = z.strictObject({ sha256: hash, bytes: positive, bodySha256: hash, bodyBytes: positive })
 const names = roles.flatMap(role => ['tool-schema', 'synthetic-count-request', 'synthetic-messages-request'].map(suffix => `${role}.${suffix}.json`))
 const manifestSchema = z.strictObject({
-  version: z.literal(1), candidateCommit: z.literal('31c45e2331f2997be55fa8e261682d1368cc40df'),
-  candidateTree: z.literal('b1962d52b99b4c4dec309caaa4c3d17aa59c5a3c'), syntheticOnly: z.literal(true),
+  version: z.literal(1), candidateCommit: z.literal('898143e26116dae54e029a8eabd27ec7ace844b3'),
+  candidateTree: z.literal('0e1a407d407b45915320b2c7b1583e2a633935d3'), syntheticOnly: z.literal(true),
   models: z.strictObject({ proposer: z.literal('claude-sonnet-4-6'), verifier: z.literal('claude-opus-4-6') }),
   outputTokens: z.literal(128), contextLimit: z.literal(200000), requestByteLimit: z.literal(655360),
   responseByteLimit: z.literal(131072), timeoutMs: z.literal(120000), maxRetries: z.literal(0),

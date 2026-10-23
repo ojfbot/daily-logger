@@ -27,19 +27,39 @@ function fakeWire(answers: unknown[], calls: string[] = []): Wire {
 const run = (answers: unknown[], calls?: string[]) => runProbe(loaded, 'offline-not-a-real-key', factory, fakeWire(answers, calls))
 
 describe('manual synthetic probe — no transport', () => {
-  it('pins immutable public31c data and proves the exact raw-empty validator against adopted native schemas', () => {
-    expect(loaded.manifest.candidateCommit).toBe('31c45e2331f2997be55fa8e261682d1368cc40df')
+  it('pins immutable public fixed-response data and proves the exact raw-empty validator against adopted native schemas', () => {
+    expect(loaded.manifest.candidateCommit).toBe('898143e26116dae54e029a8eabd27ec7ace844b3')
     expect(loaded.data.size).toBe(6)
     expect(ActionProposalSchema.parse(empty)).toEqual(empty)
     expect(ActionVerificationSchema.parse(empty)).toEqual(empty)
     for (const bad of [{}, { ...empty, extra: [] }, { ...empty, changes: [{}] }, { ...empty, suggestions: null }]) expect(() => assertEmptyOutput(bad)).toThrow()
     expect(() => assertEmptyOutput(empty)).not.toThrow()
   })
+  it('uses required fixed rows and the reviewed scalar-null cells rather than object alternatives', () => {
+    const proposer = loaded.data.get('proposer.tool-schema.json')
+    expect(proposer).toHaveProperty('required', ['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
+    expect(proposer).toHaveProperty('properties.candidateDispositions.items.required', ['candidateId', 'reason', 'kind', 'suggestionIndex', 'actionKey', 'citations'])
+    expect(proposer).toHaveProperty('properties.candidateDispositions.items.properties.kind.enum', ['promote', 'map-existing', 'reject', 'verified-closure'])
+    expect(proposer).toHaveProperty('properties.candidateDispositions.items.properties.suggestionIndex.anyOf', [{ type: 'integer' }, { type: 'null' }])
+    expect(proposer).toHaveProperty('properties.closingOptions.items.properties.kind.enum', ['action', 'candidate', 'checkpoint'])
+    expect(proposer).toHaveProperty('properties.closingOptions.items.required', expect.arrayContaining(['replaces', 'kind', 'actionKey', 'candidateIndex', 'target']))
+    expect(proposer).not.toHaveProperty('properties.candidateDispositions.items.anyOf')
+    expect(proposer).not.toHaveProperty('properties.closingOptions.items.anyOf')
+    expect(loaded.data.get('verifier.tool-schema.json')).toHaveProperty('required', ['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
+  })
+  it('retains the first role success but refuses a nonempty verifier response', async () => {
+    const badVerifier = { ...reply, content: [{ type: 'tool_use', name: 'review_actions', input: { ...empty, closingOptions: [{}] } }] }
+    const result = await run([{ input_tokens: 1 }, reply, { input_tokens: 1 }, badVerifier])
+    expect(result.calls).toHaveLength(4)
+    expect(result.protocolSuccess).toEqual(['proposer'])
+    expect(result.compilerAcceptance).toEqual(['proposer', 'verifier'])
+    expect(result.errorCode).toBeDefined()
+  })
   it('consumes exactly2counts+2messages sequentially and distinguishes SDK pretty bytes', async () => {
     const calls: string[] = []; const result = await run([{ input_tokens: 199872 }, reply, { input_tokens: 0 }, reply], calls)
     expect(result.errorCode).toBeUndefined(); expect(result.protocolSuccess).toEqual(['proposer', 'verifier'])
     expect(calls.map(url => new URL(url).pathname)).toEqual(['/v1/messages/count_tokens', '/v1/messages', '/v1/messages/count_tokens', '/v1/messages'])
-    expect(result.calls.filter(call => call.endpoint === 'messages').map(call => call.wireBytes)).toEqual([22099, 11585])
+    expect(result.calls.filter(call => call.endpoint === 'messages').map(call => call.wireBytes)).toEqual([20375, 11532])
     expect(result.calls.every(call => call.canonicalBodySha256 !== call.wireSha256)).toBe(true)
   })
   it.each([199873, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, '10', null])('holds invalid or overflowing counter %s before any message', async input_tokens => {
@@ -318,5 +338,5 @@ it('runs the sole actual SDK observation only inside a network-trapped, credenti
   })
   expect(child.stderr).toBe(''); expect(child.status).toBe(0)
   const proof = JSON.parse(child.stdout)
-  expect(proof).toMatchObject({ trappedNetworkAttempts: 0, clientFetchInjected: true, protocolSuccess: ['proposer', 'verifier'], messagesWireBytes: [22099, 11585], calls: 4 })
+  expect(proof).toMatchObject({ trappedNetworkAttempts: 0, clientFetchInjected: true, protocolSuccess: ['proposer', 'verifier'], messagesWireBytes: [20375, 11532], calls: 4 })
 })

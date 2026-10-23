@@ -1,1 +1,399 @@
-{"type":"object","properties":{"changes":{"type":"array","items":{"type":"object","properties":{"actionKey":{"type":"string"},"state":{"type":"string","enum":["open","done","dismissed","superseded","deferred"]},"description":{"type":"string"},"reason":{"type":"string"},"citations":{"$ref":"#/$defs/lineCitations"}},"required":["actionKey","state","description","reason","citations"],"additionalProperties":false}},"suggestions":{"type":"array","items":{"type":"object","properties":{"command":{"type":"string","pattern":"^\\/\\w[\\w-]*$"},"description":{"type":"string"},"repo":{"type":"string","pattern":"^[\\w-]+$"},"target":{"type":"string"},"outcome":{"type":"string"},"goal":{"type":"string"},"goalCitations":{"$ref":"#/$defs/lineCitations"},"factCitations":{"$ref":"#/$defs/lineCitations"},"doneWhen":{"type":"string"},"gates":{"type":"array","items":{"type":"string"}},"existingKey":{"anyOf":[{"type":"string"},{"type":"null"}]}},"required":["command","description","repo","target","outcome","goal","goalCitations","factCitations","doneWhen","gates","existingKey"],"additionalProperties":false}},"candidateDispositions":{"default":[],"type":"array","items":{"anyOf":[{"type":"object","properties":{"candidateId":{"type":"string","pattern":"^[a-f0-9]{64}$"},"kind":{"type":"string","const":"promote"},"suggestionIndex":{"type":"integer"},"reason":{"type":"string"}},"required":["candidateId","kind","suggestionIndex","reason"],"additionalProperties":false},{"type":"object","properties":{"candidateId":{"type":"string","pattern":"^[a-f0-9]{64}$"},"kind":{"type":"string","const":"map-existing"},"suggestionIndex":{"type":"integer"},"actionKey":{"type":"string"},"reason":{"type":"string"}},"required":["candidateId","kind","suggestionIndex","actionKey","reason"],"additionalProperties":false},{"type":"object","properties":{"candidateId":{"type":"string","pattern":"^[a-f0-9]{64}$"},"kind":{"type":"string","const":"reject"},"reason":{"type":"string"},"citations":{"$ref":"#/$defs/lineCitations"}},"required":["candidateId","kind","reason","citations"],"additionalProperties":false},{"type":"object","properties":{"candidateId":{"type":"string","pattern":"^[a-f0-9]{64}$"},"kind":{"type":"string","const":"verified-closure"},"actionKey":{"anyOf":[{"type":"string"},{"type":"null"}]},"reason":{"type":"string"},"citations":{"$ref":"#/$defs/lineCitations"}},"required":["candidateId","kind","actionKey","reason","citations"],"additionalProperties":false}]}},"closingOptions":{"default":[],"type":"array","items":{"anyOf":[{"type":"object","properties":{"kind":{"type":"string","const":"action"},"actionKey":{"type":"string"},"title":{"type":"string"},"entryPoint":{"type":"string"},"context":{"type":"string"},"whyNow":{"type":"string"},"outcome":{"type":"string"},"nextCheck":{"type":"string"},"factCitations":{"$ref":"#/$defs/lineCitations"},"goalCitations":{"$ref":"#/$defs/lineCitations"},"benefit":{"type":"string"},"start":{"type":"string"},"replaces":{"default":[],"type":"array","items":{"type":"string"}}},"required":["kind","actionKey","title","entryPoint","context","whyNow","outcome","nextCheck","factCitations","goalCitations","benefit","start","replaces"],"additionalProperties":false},{"type":"object","properties":{"kind":{"type":"string","const":"candidate"},"title":{"type":"string"},"entryPoint":{"type":"string"},"context":{"type":"string"},"whyNow":{"type":"string"},"outcome":{"type":"string"},"nextCheck":{"type":"string"},"factCitations":{"$ref":"#/$defs/lineCitations"},"goalCitations":{"$ref":"#/$defs/lineCitations"},"candidateIndex":{"type":"integer"},"benefit":{"type":"string"},"start":{"type":"string"},"replaces":{"default":[],"type":"array","items":{"type":"string"}}},"required":["kind","title","entryPoint","context","whyNow","outcome","nextCheck","factCitations","goalCitations","candidateIndex","benefit","start","replaces"],"additionalProperties":false},{"type":"object","properties":{"kind":{"type":"string","const":"checkpoint"},"target":{"type":"string","format":"uri"},"title":{"type":"string"},"entryPoint":{"type":"string"},"context":{"type":"string"},"whyNow":{"type":"string"},"outcome":{"type":"string"},"nextCheck":{"type":"string"},"factCitations":{"$ref":"#/$defs/lineCitations"},"goalCitations":{"$ref":"#/$defs/lineCitations"},"benefit":{"type":"string"},"start":{"type":"string"},"replaces":{"default":[],"type":"array","items":{"type":"string"}}},"required":["kind","target","title","entryPoint","context","whyNow","outcome","nextCheck","factCitations","goalCitations","benefit","start","replaces"],"additionalProperties":false}]}}},"required":["changes","suggestions","candidateDispositions","closingOptions"],"additionalProperties":false,"$defs":{"lineCitations":{"minItems":1,"type":"array","items":{"type":"object","properties":{"sourceId":{"type":"string"},"startLine":{"type":"integer"},"endLine":{"type":"integer"}},"required":["sourceId","startLine","endLine"],"additionalProperties":false}}}}
+{
+  "type": "object",
+  "properties": {
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "actionKey": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "open",
+              "done",
+              "dismissed",
+              "superseded",
+              "deferred"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "citations": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sourceId": {
+                  "type": "string"
+                },
+                "startLine": {
+                  "type": "integer"
+                },
+                "endLine": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sourceId",
+                "startLine",
+                "endLine"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "actionKey",
+          "state",
+          "description",
+          "reason",
+          "citations"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "suggestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "pattern": "^\\/\\w[\\w-]*$"
+          },
+          "description": {
+            "type": "string"
+          },
+          "repo": {
+            "type": "string",
+            "pattern": "^[\\w-]+$"
+          },
+          "target": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "goal": {
+            "type": "string"
+          },
+          "goalCitations": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sourceId": {
+                  "type": "string"
+                },
+                "startLine": {
+                  "type": "integer"
+                },
+                "endLine": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sourceId",
+                "startLine",
+                "endLine"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "factCitations": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sourceId": {
+                  "type": "string"
+                },
+                "startLine": {
+                  "type": "integer"
+                },
+                "endLine": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sourceId",
+                "startLine",
+                "endLine"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "doneWhen": {
+            "type": "string"
+          },
+          "gates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "existingKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "command",
+          "description",
+          "repo",
+          "target",
+          "outcome",
+          "goal",
+          "goalCitations",
+          "factCitations",
+          "doneWhen",
+          "gates",
+          "existingKey"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "candidateDispositions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "candidateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "promote",
+              "map-existing",
+              "reject",
+              "verified-closure"
+            ]
+          },
+          "suggestionIndex": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actionKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "citations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sourceId": {
+                  "type": "string"
+                },
+                "startLine": {
+                  "type": "integer"
+                },
+                "endLine": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sourceId",
+                "startLine",
+                "endLine"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "candidateId",
+          "reason",
+          "kind",
+          "suggestionIndex",
+          "actionKey",
+          "citations"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "closingOptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "entryPoint": {
+            "type": "string"
+          },
+          "context": {
+            "type": "string"
+          },
+          "whyNow": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "nextCheck": {
+            "type": "string"
+          },
+          "factCitations": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sourceId": {
+                  "type": "string"
+                },
+                "startLine": {
+                  "type": "integer"
+                },
+                "endLine": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sourceId",
+                "startLine",
+                "endLine"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "goalCitations": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sourceId": {
+                  "type": "string"
+                },
+                "startLine": {
+                  "type": "integer"
+                },
+                "endLine": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sourceId",
+                "startLine",
+                "endLine"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "benefit": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string"
+          },
+          "replaces": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "action",
+              "candidate",
+              "checkpoint"
+            ]
+          },
+          "actionKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidateIndex": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "entryPoint",
+          "context",
+          "whyNow",
+          "outcome",
+          "nextCheck",
+          "factCitations",
+          "goalCitations",
+          "benefit",
+          "start",
+          "replaces",
+          "kind",
+          "actionKey",
+          "candidateIndex",
+          "target"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "changes",
+    "suggestions",
+    "candidateDispositions",
+    "closingOptions"
+  ],
+  "additionalProperties": false
+}
