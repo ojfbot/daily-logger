@@ -12,7 +12,7 @@ import { parseActionModelView } from '../action-model-view.js'
 import { createActionAgents} from '../review-actions.js'
 
 it('bounds the full provider envelope, including rules and tool schema, before each provider call', async () => {
-  create.mockResolvedValue({ stop_reason: 'tool_use', content: [{ type: 'tool_use', input: { changes: [], suggestions: [] } }], usage: { output_tokens: 0 } })
+  create.mockResolvedValue({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tool_offline', name: 'review_actions', input: { changes: [], suggestions: [], candidateDispositions: [], closingOptions: [] } }], usage: { output_tokens: 0 } })
   countTokens.mockResolvedValue({ input_tokens: 1000 })
   const agents = createActionAgents()
   for (const call of [agents.propose, agents.verify]) {
@@ -31,7 +31,7 @@ it('bounds the full provider envelope, including rules and tool schema, before e
 
 it('uses an injected full-request token count plus output reserve and stops on overflow or unknown qualification', async () => {
   create.mockReset()
-  create.mockResolvedValue({ stop_reason: 'tool_use', content: [{ type: 'tool_use', input: { changes: [], suggestions: [] } }], usage: { output_tokens: 0 } })
+  create.mockResolvedValue({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tool_offline', name: 'review_actions', input: { changes: [], suggestions: [], candidateDispositions: [], closingOptions: [] } }], usage: { output_tokens: 0 } })
   const countedRequests: unknown[] = []
   const qualified = createActionAgents({ tokenBudget: { limitTokens: 20_000, count: async request => {
     countedRequests.push(request)
@@ -93,7 +93,7 @@ it.skipIf(!process.env.ACTION_EVIDENCE_CAPSULE)('measures the saved Oct19 corpus
       const goal = context.sources.find(source => source.kind === 'goal')
       const goalLine = goal?.content.split('\n').findIndex(line => line.replace(/^L\d+: /, '').length > 20)
       if (!goal || goalLine === undefined || goalLine < 0) throw new Error('No exact goal source line')
-      output = { changes: [], suggestions: Array.from({ length: suggestionCount }, (_, index) => {
+      output = { changes: [], candidateDispositions: [], closingOptions: [], suggestions: Array.from({ length: suggestionCount }, (_, index) => {
         const number = index % 2 === 0 ? 385 : 386
         const fact = context.sources.find(source => source.locator.match(new RegExp(`/daily-logger/(pull|issues)/${number}$`)))
         if (!fact) throw new Error('No fresh factual source')
@@ -103,9 +103,9 @@ it.skipIf(!process.env.ACTION_EVIDENCE_CAPSULE)('measures the saved Oct19 corpus
           factCitations: [{ sourceId: fact.id, startLine: 1, endLine: 1 }], goalCitations: [{ sourceId: goal.id, startLine: goalLine + 1, endLine: goalLine + 1 }] }
       }) }
     } else {
-      output = { changes: [], suggestions: Array.from({ length: suggestionCount }, (_, candidateIndex) => ({ candidateIndex, verdict: 'hold', reason: 'Offline request-boundary probe; semantic acceptance remains unqualified.', existingKey: null })) }
+      output = { changes: [], candidateDispositions: [], closingOptions: [], suggestions: Array.from({ length: suggestionCount }, (_, candidateIndex) => ({ candidateIndex, verdict: 'hold', reason: 'Offline request-boundary probe; semantic acceptance remains unqualified.', existingKey: null })) }
     }
-    return { stop_reason: 'tool_use', content: [{ type: 'tool_use', input: output }], usage: { output_tokens: 0 } }
+    return { stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tool_offline', name: 'review_actions', input: output }], usage: { output_tokens: 0 } }
   })
   for (const run of [
     { scenario: 'revision-request-1', cycle: revisionActionCycle('offline-sdk-request-1'), count: 2 },
