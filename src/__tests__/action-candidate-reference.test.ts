@@ -352,22 +352,25 @@ describe('captured candidate references before independent verification', () => 
       proposal:{changes:[],suggestions:[{...fields,command:candidates[0].payload.command,repo:candidates[0].payload.repo,description:candidates[0].payload.description,factCitations:[{sourceId:'fact',quote:sources[0].content}],goalCitations:[{sourceId:'goal',quote:sources[1].content}]}],candidateDispositions:[{candidateId:candidates[0].candidateId,kind:'promote',suggestionIndex:0,reason:'Controlled source-bound admission.'},{candidateId:candidates[1].candidateId,kind:'reject',reason:'Controlled original accounting.',citations:[{sourceId:'fact',quote:sources[0].content}]}],closingOptions:[]},verification })).toThrow(/binding is stale or foreign/)
   })
 
-  it('retains command-only compact targets in later collection, selection and subject duties', async () => {
-    const { input, proposal, verification } = setup(false, '/review core#561')
+  it.each(['/review core#561', '/review #561'])('retains command-only target %s in later collection, selection and subject duties', async command => {
+    const { input, proposal, verification } = setup(false, command)
     const metadata = input.registry.articles[0].draftCandidateEvidence
     if (!metadata) throw Error('Fixture evidence missing')
-    metadata.candidates[0].references = [{classification:'required',reference:'core#561',role:'target',reason:'Explicit compact command target.'}]
     const snapshot = input.registry.articles[0]
+    snapshot.draftContext={kind:'retained',markdown:'Explicit target https://github.com/ojfbot/core/issues/561.'}
+    Object.assign(metadata,draftCandidateEvidenceBinding({...input,draftContext:snapshot.draftContext}))
+    metadata.candidates[0].references = [{classification:'required',reference:'core#561',role:'target',reason:'Explicit exact-command target.'}]
     snapshot.stateDigest=actionStateDigest(input.registry,snapshot.actionKeys,snapshot.closing,snapshot.draftContext,{articleDate:date,roundId:snapshot.roundId,includePriorArticleRounds:true,draftCandidates:snapshot.draftCandidates,draftCandidateEvidence:metadata})
     const primary = {id:'github:core#561',kind:'github' as const,locator:'https://github.com/ojfbot/core/issues/561',content:'CURRENT API STATE core#561: state=open; head=not-a-PR; merged_at=none.',trustedContent:['CURRENT API STATE core#561: state=open; head=not-a-PR; merged_at=none.']}
     create.mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response(verification))
     const result = await reviewArticleActions({...input,sources:[...sources,primary]})
-    const record = result.registry.records[0]
+    const split=splitActionRegistry(result.registry), cold=hydrateActionRegistry(split.baseline,split.files), record=cold.records[0]
+    expect(record.original.command).toBe(command)
     expect(record.history[0].citations.every(citation=>!citation.sourceId.startsWith('github:'))).toBe(true)
-    expect(actionRecordSourceReferences(record)).toContain('core#561')
-    expect([...actionCommandSourceReferences('/review core#561')]).toEqual(['core#561'])
+    expect(actionRecordSourceReferences(record,cold)).toContain('core#561')
+    expect([...actionCommandSourceReferences(command,new Set(['core#561']))]).toEqual(['core#561'])
     expect(()=>actionCommandSourceReferences('/review foreign#561 #561')).toThrow(/Unsupported qualified/)
-    const later = {registry:result.registry,articleDate:'2026-10-22',cycle:generationActionCycle(),markdown:'Synthetic later action review.',feedback:`Review ${record.key}`,articleStatuses:new Map([[date,'draft'],['2026-10-22','draft']])}
+    const later = {registry:cold,articleDate:'2026-10-22',cycle:generationActionCycle(),markdown:'Synthetic later action review.',feedback:`Review ${record.key}`,articleStatuses:new Map([[date,'draft'],['2026-10-22','draft']])}
     const scope = actionEvidenceScope(later)
     expect([...scope.refs]).toContain('core#561')
     expect(()=>selectActionEvidence({...later,sources})).toThrow(/required.*core#561|core#561.*required/i)
@@ -375,8 +378,8 @@ describe('captured candidate references before independent verification', () => 
     expect(()=>applyVerifiedActionReview({...later,sources:[...sources,primary,unrelated],roundId:sha256('unrelated command-only subject'),proposal:{changes:[{actionKey:record.key,state:'done',description:'Unrelated synthetic completion.',reason:'A fake pass cannot change subject.',citations:[{sourceId:unrelated.id,quote:unrelated.content}]}],suggestions:[],candidateDispositions:[],closingOptions:[]},verification:{changes:[{actionKey:record.key,verdict:'pass',reason:'Controlled fake pass.'}],suggestions:[],candidateDispositions:[],closingOptions:[]}})).toThrow(/unrelated GitHub subject/)
   })
 
-  it('does not admit a compact command target on unrelated required counterevidence despite fake verifier pass', async () => {
-    const { input, proposal, verification } = setup(false, '/review core#561')
+  it.each(['/review core#561', '/review #561'])('does not admit command target %s on unrelated required counterevidence despite fake verifier pass', async command => {
+    const { input, proposal, verification } = setup(false, command)
     const snapshot=input.registry.articles[0], metadata=snapshot.draftCandidateEvidence
     if (!metadata) throw Error('Fixture evidence missing')
     snapshot.draftContext={kind:'retained',markdown:'Target https://github.com/ojfbot/core/issues/561; counterevidence https://github.com/ojfbot/daily-logger/pull/407.'}
@@ -391,6 +394,11 @@ describe('captured candidate references before independent verification', () => 
     await expect(reviewArticleActions({...input,sources:[...sources,primary,other]})).rejects.toThrow(/promotion was not admitted/)
     expect(create.mock.calls.map(([raw])=>RequestSchema.parse(raw).model)).toEqual(['claude-sonnet-4-6','claude-opus-4-6'])
     expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it('requires an exact single approved target for command shorthand without changing the invocation', () => {
+    expect(()=>actionCommandSourceReferences('/review #561')).toThrow(/Ambiguous candidate target/)
+    expect(()=>actionCommandSourceReferences('/review #561',new Set(['core#561','daily-logger#561']))).toThrow(/Ambiguous candidate target/)
+    expect([...actionCommandSourceReferences('/review #561',new Set(['core#561']))]).toEqual(['core#561'])
   })
   it('carries the existing reviewed wayfinder alias only with its explicit captured target association', async () => {
     expect(()=>actionCommandSourceReferences('/session wayfinder#543')).toThrow(/Ambiguous candidate target/)
