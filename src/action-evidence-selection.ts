@@ -90,9 +90,15 @@ export function actionSourceReferences(text: string): Set<string> {
   ])
 }
 
-/** Only explicit known repository targets in an exact command; no shorthand or alias inference. */
+/** Exact command targets; shorthand and reviewed aliases require one explicit approved association. */
 export function actionCommandSourceReferences(command: string, approvedTargets: ReadonlySet<string> = new Set()): Set<string> {
-  return qualifiedActionReferences(command, approvedTargets, 'exact-command')
+  const references = qualifiedActionReferences(command, approvedTargets, 'exact-command')
+  for (const match of command.matchAll(/(?:^|\s)#(\d+)\b/g)) {
+    const matches = [...approvedTargets].filter(reference => reference.endsWith(`#${match[1]}`))
+    if (matches.length !== 1) throw new Error(`Ambiguous candidate target #${match[1]} for exact-command; explicit qualified evidence association required; review pending`)
+    references.add(matches[0])
+  }
+  return references
 }
 
 function capturedRecordTargets(record: ActionRegistry['records'][number], registry?: ActionRegistry): Set<string> {
@@ -236,11 +242,7 @@ function qualifiedActionReferences(payload: string, retainedRefs: ReadonlySet<st
 
 function candidateTargetReferences(candidate: DraftActionCandidate, retainedRefs: ReadonlySet<string>): Set<string> {
   const references = qualifiedActionReferences(JSON.stringify(candidate.payload), retainedRefs, candidate.candidateId)
-  for (const match of candidate.payload.command.matchAll(/(?:^|\s)#(\d+)\b/g)) {
-    const matches = [...retainedRefs].filter(reference => reference.endsWith(`#${match[1]}`))
-    if (matches.length !== 1) throw new Error(`Ambiguous candidate target #${match[1]} for ${candidate.candidateId}; explicit qualified evidence association required; review pending`)
-    references.add(matches[0])
-  }
+  for (const reference of actionCommandSourceReferences(candidate.payload.command, retainedRefs)) references.add(reference)
   return references
 }
 
