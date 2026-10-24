@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { editorialActionReviewOutcomeSchema } from '../src/action-registry-contract.js'
+export { editorialActionReviewOutcomeSchema } from '../src/action-registry-contract.js'
 
 export const sha = z.string().regex(/^[a-f0-9]{40}$/)
 export const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -144,7 +146,7 @@ const requestReferenceSchema = z.object({ digest, commentId: z.number().int().po
 export const editorialRequestStateSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('none') }).strict(),
   z.object({ kind: z.literal('outstanding'), request: requestReferenceSchema }).strict(),
-  z.object({ kind: z.literal('artifact_verified'), request: requestReferenceSchema, receiptCommentId: z.number().int().positive() }).strict(),
+  z.object({ kind: z.literal('artifact_verified'), request: requestReferenceSchema, receiptCommentId: z.number().int().positive(), actionReview: editorialActionReviewOutcomeSchema.optional() }).strict(),
   z.object({ kind: z.literal('owner_resolved'), request: requestReferenceSchema, resolutionCommentId: z.number().int().positive() }).strict(),
 ])
 const resolutionInputProjectionSchema = resolveEditorialRequestSchema.omit({ intent: true, requestId: true, acknowledgment: true, reason: true })

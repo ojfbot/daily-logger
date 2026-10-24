@@ -1224,6 +1224,7 @@ a:hover { border-bottom-color: var(--text); }
   border: 1px solid var(--border);
   padding: 1rem;
 }
+.actions-column-needs-review { grid-column: 1 / -1; min-width: 0; overflow-wrap: anywhere; }
 
 .actions-column-header {
   font-size: 0.65rem;

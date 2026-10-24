@@ -171,6 +171,7 @@ export function EditorialContinuation({ view, date, login, visibleBlobSha, refre
   const requestHelp = editingReason ? 'Revision requests are disabled. See the submission status below.' : executionHold ? `Revision requests are held: ${executionHold}` : (!latest ? 'Save a feedback version before requesting another revision.' : !draftMatchesSaved ? (!draftEdited && currentNotes.length === 0 ? 'Copy prior version to select the saved feedback before reviewing and requesting it.' : 'Save the edited full version before requesting it.') : !reviewed ? 'Review the pinned PR-head article before requesting its revision.' : 'Request uses the saved version and reviewed PR article shown here.')
   const base: Pick<EditorialInput, 'schemaVersion' | 'date' | 'pullRequest' | 'headSha'> = { schemaVersion: 1, date, pullRequest: view.pullRequest.number, headSha: view.pullRequest.headSha }
   return <section className="editorial-sidebar editorial-continuation" aria-label="Continue editorial feedback">
+    {view.requestState.kind === 'artifact_verified' && view.requestState.actionReview?.state === 'pending' && <p role="status">Article accepted. Its suggestions still need independent review.</p>}
     <div className="editorial-heading">EDITORIAL</div>
     <p><a href={view.pullRequest.url}>PR #{view.pullRequest.number}</a> · {view.pullRequest.merged ? 'merged' : view.pullRequest.state}</p>
     <p>{view.reason} Owner requests on GitHub are eligible independently of the web allowlist.</p>

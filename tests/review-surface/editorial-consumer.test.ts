@@ -13,8 +13,9 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { createFixture, makePullRequest, makeComment, today } from './fixture.js'
 import { createEditorialService, decodeEditorial, editorialDigest, encodeEditorial, repo } from '../../api/_lib/editorial-continuation.js'
-import { mockActionAgents } from '../../src/review-actions.js'
-import { ActionRegistrySchema, ArticleActionFileSchema, stripManagedActions } from '../../src/action-registry.js'
+import { mockActionAgents, pendingActionReview } from '../../src/review-actions.js'
+import { ActionRegistrySchema, ArticleActionFileSchema, stripManagedActions, actionStateDigest, sha256 } from '../../src/action-registry.js'
+import { draftCandidateEvidenceBinding } from '../../src/action-evidence-selection.js'
 import { admitActionRegistry } from '../../.github/scripts/editorial-action-registry.js'
 import { admitEditorial, prepareEditorial, pushEditorial, finalizeEditorial, type Execution } from '../../.github/scripts/continue-editorial.js'
 const commandFailure = vi.hoisted(() => {
@@ -69,7 +70,7 @@ vi.setConfig({ testTimeout: 20_000 })
 const cleanups: string[] = []
 afterEach(() => { commandFailure.error = undefined; commandFailure.childError = undefined; commandFailure.replacement = undefined; commandFailure.events.length = 0; commandFailure.options.length = 0; commandFailure.killRequests = 0; vi.unstubAllEnvs(); for (const path of cleanups.splice(0)) rmSync(path, { recursive: true, force: true }) })
 function git(cwd: string, ...args: string[]) { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim() }
-async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | 'missing-registry' | 'registry-symlink' | 'registry-executable' | 'cross-date-choice' | null = null, ambiguousAncestry = false, pendingInitial = false, requestKind: 'revision' | 'clean' = 'revision') {
+async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | 'missing-registry' | 'registry-symlink' | 'registry-executable' | 'cross-date-choice' | null = null, ambiguousAncestry = false, pendingInitial = false, requestKind: 'revision' | 'clean' = 'revision', heldOriginals = false) {
   vi.stubEnv('MOCK_LLM', 'true')
   vi.stubEnv('DRY_RUN', 'false')
   const root = mkdtempSync(resolve(tmpdir(), 'uik01-consumer-')); cleanups.push(root)
@@ -79,15 +80,23 @@ async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executa
   mkdirSync(resolve(workspace, 'actions/articles'), { recursive: true })
   let registry = JSON.stringify({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [{ key: 'old', original: { id: 'old', command: '/pr-review', description: 'Prior tracked work', repo: 'daily-logger', sourceDate: '2026-10-01', status: 'open' }, origin: 'imported', workKey: 'daily-logger|old|review', state: 'open', introducedBy: '2026-10-01', includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: '', gates: [], history: [] }], articles: [] })
   writeFileSync(resolve(workspace, 'actions/registry.json'), registry)
-  const initialFile = emptyActionFile(today)
+  let initialFile = emptyActionFile(today)
   if (pendingInitial) { initialFile.snapshot.status = 'draft'; initialFile.snapshot.review = { state: 'pending', reason: 'Initial action evidence unavailable' }; initialFile.snapshot.reviewCycle = generationActionCycle() }
+  const article = `---\ntitle: Fixture\ndate: ${today}\nstatus: accepted\n${heldOriginals ? 'outcome: accepted\n' : ''}tags: []\nsummary: ${noChange ? 'unchanged' : '"Original"'}\n---\nLiteral body 雪\n`
+  if (heldOriginals) {
+    const pending = pendingActionReview({ registry: ActionRegistrySchema.parse(JSON.parse(registry)), articleDate: today, cycle: generationActionCycle(), markdown: article.replace('status: accepted', 'status: draft'), reason: 'Original suggestions await review.', articleStatuses: new Map([[today, 'draft']]), draftContext: { kind: 'none' }, draftCandidates: ['review', 'validate', 'triage'].map(command => ({ command: `/${command}`, repo: 'core', description: `Separate original ${command} concern.`, sourceDate: today, status: 'open' })) })
+    const snapshot = pending.registry.articles[0]
+    if (!snapshot.draftCandidates) throw new Error('Missing original capture')
+    snapshot.draftCandidateEvidence = { version: 'draft-candidate-evidence-v2', provenance: { kind: 'independent-reviewer', identity: 'offline-consumer-control', decision: 'Controlled immutable originals only.' }, ...draftCandidateEvidenceBinding({ registry: pending.registry, articleDate: today, cycle: generationActionCycle(), markdown: pending.markdown }), candidates: snapshot.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references: [], actionRelations: [] })), unassignedReferences: [] }
+    snapshot.stateDigest = actionStateDigest(pending.registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: today, roundId: snapshot.roundId, includePriorArticleRounds: true, draftCandidates: snapshot.draftCandidates, draftCandidateEvidence: snapshot.draftCandidateEvidence })
+    initialFile = actionFile(pending.registry, today)
+  }
   writeFileSync(resolve(workspace, `actions/articles/${today}.json`), JSON.stringify(initialFile))
-  const article = `---\ntitle: Fixture\ndate: ${today}\nstatus: accepted\ntags: []\nsummary: ${noChange ? 'unchanged' : '"Original"'}\n---\nLiteral body 雪\n`
   const path = `_articles/${today}.md`
   writeFileSync(resolve(workspace, 'package.json'), '{}')
-  writeFileSync(resolve(workspace, path), article); git(workspace, 'add', '.'); git(workspace, 'commit', '-qm', 'policy')
+  writeFileSync(resolve(workspace, path), heldOriginals ? article.replace('status: accepted', 'status: draft') : article); git(workspace, 'add', '.'); git(workspace, 'commit', '-qm', 'policy')
   let policySha = git(workspace, 'rev-parse', 'HEAD')
-  writeFileSync(resolve(workspace, path), `${article}\nAccepted branch text\n`)
+  writeFileSync(resolve(workspace, path), heldOriginals ? article : `${article}\nAccepted branch text\n`)
   if (noChange) {
     const reviewed = await reviewArticleActions({ cycle: revisionActionCycle('fixture'), registry: ActionRegistrySchema.parse(JSON.parse(registry)), articleDate: today, articleStatuses: new Map([[today, 'accepted']]), markdown: readFileSync(resolve(workspace, path), 'utf8'), feedback: 'Earlier feedback', sources: [], agents: mockActionAgents })
     registry = JSON.stringify(reviewed.registry)
@@ -154,6 +163,9 @@ async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executa
 async function publishProof(f: Awaited<ReturnType<typeof setup>>, initial = false) {
   const path = resolve(f.execution.workspace, '.git/editorial-output.json')
   const manifest = JSON.parse(readFileSync(path, 'utf8'))
+  for (const ref of [manifest.inputHead, manifest.outputCommit]) {
+    f.state.refFiles.set(`${ref}:actions/articles/${today}.json`, execFileSync('git', ['show', `${ref}:actions/articles/${today}.json`], { cwd: f.execution.workspace, encoding: 'utf8' }))
+  }
   if (initial) { if (manifest.actionReviewMode !== 'revision') delete manifest.requestDigest; delete manifest.requestCommentId; writeFileSync(path, JSON.stringify(manifest)) }
   f.state.artifacts.set(101, { id: 101, name: editorialProofName(manifest), expired: false, workflow_run: { id: 101, head_sha: initial ? f.head : f.execution.policySha } })
   await finalizeEditorial(f.execution, 101)
@@ -303,6 +315,43 @@ it('runs one guarded clean acceptance on the existing PR without revising prose 
   expect(manifest).toMatchObject({ actionReviewMode: 'clean-acceptance', requestIntent: 'request_clean_acceptance', requestCommentId: f.comment.id, policySha: pinnedPolicy, inputHead: f.head, outputCommit: prepared.outputCommit })
   await expect(admitActionRegistry({ workspace: f.execution.workspace, base: f.execution.policySha, head: prepared.outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github })).resolves.toBeUndefined()
   expect(await createEditorialService(f.execution.github).load(today, 'ojfbot')).toMatchObject({ status: 'existing', policySha: 'f'.repeat(40), outstanding: false })
+})
+it('binds article-only completion to the actual native output while every original remains held', async () => {
+  const f = await setup(false, null, false, true, 'clean', true); f.state.login = 'github-actions[bot]'
+  const before = ArticleActionFileSchema.parse(JSON.parse(git(f.execution.workspace, 'show', `${f.head}:actions/articles/${today}.json`)))
+  const prepared = await prepareEditorial(f.execution)
+  if (!prepared) throw new Error('Missing article-only output')
+  expect(prepared.actionReview).toMatchObject({ state: 'pending', heldCandidateIds: before.snapshot.draftCandidates?.map(candidate => candidate.candidateId) })
+  const output = ArticleActionFileSchema.parse(JSON.parse(git(prepared.worktree, 'show', `${prepared.outputCommit}:actions/articles/${today}.json`)))
+  expect(output.snapshot).toMatchObject({ status: 'accepted', review: { state: 'pending', articleAcceptance: { kind: 'article-only' } } })
+  expect(output.suggestions).toEqual(before.suggestions); expect(output.decisions).toEqual(before.decisions)
+  expect(output.snapshot.draftCandidates).toEqual(before.snapshot.draftCandidates)
+  await pushEditorial(f.execution, prepared); await publishProof(f)
+  const view = await createEditorialService(f.execution.github).load(today, 'ojfbot')
+  expect(view).toMatchObject({ outstanding: false, requestState: { kind: 'artifact_verified', actionReview: { state: 'pending' } } })
+  await expect(admitActionRegistry({ workspace: f.execution.workspace, base: f.execution.policySha, head: prepared.outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github: f.execution.github })).resolves.toBeUndefined()
+})
+it('admits the legacy human-accept held proof only with complete legacy pins and the exact unchanged action input', async () => {
+  const f = await setup(false, null, false, true, 'clean', true); f.state.login = 'github-actions[bot]'
+  const prepared = await prepareEditorial(f.execution)
+  if (!prepared) throw new Error('Missing controlled held output')
+  git(f.execution.workspace, 'checkout', '--detach', prepared.outputCommit)
+  execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve('scripts/write-action-output.ts'), 'clean-acceptance'], { cwd: process.cwd(), env: { ...process.env, ACTION_REPO_ROOT: f.execution.workspace, ARTICLE_PATH: f.path, INPUT_HEAD: f.head, PR_NUMBER: '42', GITHUB_RUN_ID: '101', GITHUB_RUN_ATTEMPT: '1', GITHUB_SHA: f.execution.policySha }, stdio: ['ignore', 'pipe', 'pipe'] })
+  const manifest = editorialProofSchema.parse(JSON.parse(readFileSync(resolve(f.execution.workspace, '.git/editorial-output.json'), 'utf8')))
+  expect(manifest).toMatchObject({ articleCompletion: 'accepted', actionReview: { state: 'pending' } })
+  expect(manifest.requestCommentId).toBeUndefined(); expect(manifest.requestDigest).toBeUndefined(); expect(manifest.requestIntent).toBeUndefined()
+  const comment = makeComment(`## Article accepted; action review pending\n${JSON.stringify({ ...manifest, artifactId: 102 })}`, 500, 'github-actions[bot]', 42)
+  f.state.prComments.get(42)?.push(comment)
+  f.state.artifacts.set(102, { id: 102, name: editorialProofName(manifest), expired: false, workflow_run: { id: 101, head_sha: f.head } })
+  const original = f.execution.github
+  const repository = `https://api.github.com${repo}`
+  const github: Execution['github'] = (path, options) => path === `${repo}/actions/runs/101` ? Promise.resolve(Response.json({ id: 101, run_attempt: 1, event: 'pull_request_target', head_branch: `accept/${today}`, head_sha: f.head, display_title: 'Human accepted article', path: '.github/workflows/editorial-revise.yml', pull_requests: [{ number: 42, url: `${repository}/pulls/42`, base: { repo: { url: repository } }, head: { repo: { url: repository } } }] })) : original(path, options)
+  const admission = () => admitActionRegistry({ workspace: f.execution.workspace, base: f.execution.policySha, head: prepared.outputCommit, date: today, actor: 'ojfbot', pullRequest: 42, github })
+  await expect(admission()).resolves.toBeUndefined()
+  const mixed = { ...manifest, requestCommentId: 1 }
+  comment.body = `## Article accepted; action review pending\n${JSON.stringify({ ...mixed, artifactId: 102 })}`
+  f.state.artifacts.set(102, { id: 102, name: editorialProofName(mixed), expired: false, workflow_run: { id: 101, head_sha: f.head } })
+  await expect(admission()).rejects.toThrow('Registry changes require')
 })
 it('admits and prepares a distinct current request while the resolved old run stays permanently scoped to the old request', async () => {
   const f = await setup(false, null, false, false, 'clean')

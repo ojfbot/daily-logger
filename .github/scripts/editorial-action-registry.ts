@@ -1,10 +1,10 @@
 import { execFileSync } from 'node:child_process'
 import { z } from 'zod'
-import { ArticleActionFileSchema, isArticleFileInclusionChange, actionArticlePath } from '../../src/action-registry-schema.js'
+import { ArticleActionFileSchema, isArticleFileInclusionChange, actionArticlePath, articleCompletionOutcome } from '../../src/action-registry-schema.js'
 import { createReviewSource, ReviewError, type GitHub } from '../../api/_lib/article-review-sources.js'
 import { decodeEditorial, editorialDigest, repo } from '../../api/_lib/editorial-continuation.js'
 import { verifyEditorialProof } from '../../shared/editorial-action-proof.js'
-import { isExecutableEditorialRecord, sha } from '../../shared/article-review.js'
+import { isExecutableEditorialRecord, sha, editorialActionReviewOutcomeSchema } from '../../shared/article-review.js'
 import { ACTION_REVIEW_PROMPT_VERSION, acceptanceActionCycle, revisionActionCycle } from '../../src/action-review-cycle.js'
 
 export async function admitActionRegistry(input: { workspace: string; base: string; head: string; date: string; actor: string; pullRequest: number; github: GitHub }) {
@@ -24,11 +24,13 @@ export async function admitActionRegistry(input: { workspace: string; base: stri
   const source = createReviewSource(input.github), comments = await source.comments(input.pullRequest)
   for (const comment of [...comments].reverse()) {
     if (comment.user.login !== 'github-actions[bot]' || comment.created_at !== comment.updated_at) continue
-    const initial = comment.body.startsWith('## Verified action registry\n'), continuation = comment.body.startsWith('## Editorial execution receipt\n')
+    const initialHeld = comment.body.startsWith('## Article accepted; action review pending\n')
+    const initial = comment.body.startsWith('## Verified action registry\n') || initialHeld, continuation = comment.body.startsWith('## Editorial execution receipt\n')
     if (!initial && !continuation) continue
-    const value = z.object({ runId: z.number().int().positive(), policySha: sha, outputCommit: sha, outputRegistryBlob: sha, inputHead: sha.optional(), date: z.string().optional(), requestCommentId: z.number().optional(), requestDigest: z.string().regex(/^[a-f0-9]{64}$/).optional(), requestIntent: z.enum(['request_editorial_revision', 'request_clean_acceptance']).optional(), actionReviewMode: z.enum(['clean-acceptance', 'revision']).optional(), outcome: z.string().optional() }).passthrough().safeParse(JSON.parse(comment.body.slice(comment.body.indexOf('\n') + 1)))
+    const value = z.object({ runId: z.number().int().positive(), policySha: sha, outputCommit: sha, outputRegistryBlob: sha, inputHead: sha.optional(), date: z.string().optional(), requestCommentId: z.number().optional(), requestDigest: z.string().regex(/^[a-f0-9]{64}$/).optional(), requestIntent: z.enum(['request_editorial_revision', 'request_clean_acceptance']).optional(), actionReviewMode: z.enum(['clean-acceptance', 'revision']).optional(), outcome: z.string().optional(), articleCompletion: z.literal('accepted').optional(), actionReview: editorialActionReviewOutcomeSchema.optional() }).passthrough().safeParse(JSON.parse(comment.body.slice(comment.body.indexOf('\n') + 1)))
     if (!value.success) continue
     const receipt = value.data
+    if (initialHeld && receipt.actionReview?.state !== 'pending') continue
     if (!await verifyEditorialProof(input.github, receipt) || receipt.pullRequest !== input.pullRequest || receipt.date !== input.date) continue
     if (initial ? receipt.date !== input.date : receipt.outcome !== 'changed') continue
     let continuationIntent: 'request_editorial_revision' | 'request_clean_acceptance' | null = null
@@ -63,7 +65,11 @@ export async function admitActionRegistry(input: { workspace: string; base: stri
         const expectedCycle = receipt.actionReviewMode === 'clean-acceptance'
           ? acceptanceActionCycle(`pull-request:${input.pullRequest}:clean-acceptance`, before.snapshot)
           : revisionActionCycle(initial ? `pull-request:${input.pullRequest}:revision:${receipt.requestDigest}` : `comment:${receipt.requestCommentId}:${receipt.requestDigest}`)
-        if (output.snapshot.verification.promptVersion !== ACTION_REVIEW_PROMPT_VERSION || JSON.stringify(output.snapshot.reviewCycle) !== JSON.stringify(expectedCycle)) continue
+        if (JSON.stringify(output.snapshot.reviewCycle) !== JSON.stringify(expectedCycle)) continue
+        if (receipt.actionReview?.state === 'pending') {
+          if ((continuation ? continuationIntent !== 'request_clean_acceptance' : !initialHeld) || receipt.articleCompletion !== 'accepted'
+            || JSON.stringify(articleCompletionOutcome(before, output)) !== JSON.stringify(receipt.actionReview)) continue
+        } else if (output.snapshot.review.state !== 'verified' || output.snapshot.verification.promptVersion !== ACTION_REVIEW_PROMPT_VERSION) continue
         // The immutable artifact binds this entire dated file. Phase and births
         // must also match the trusted callsite's logical request, never v5 output.
         if (before.suggestions.some(prior => !output.suggestions.some(record => record.key === prior.key && JSON.stringify(record.original) === JSON.stringify(prior.original) && record.workKey === prior.workKey && JSON.stringify(record.admission) === JSON.stringify(prior.admission)))) continue

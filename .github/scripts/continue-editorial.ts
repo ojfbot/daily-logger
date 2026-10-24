@@ -9,6 +9,8 @@ import { createReviewSource, githubCommentSchema, ReviewError, type GitHub } fro
 import { cleanAcceptanceSchema, isExecutableEditorialRecord, runEditorialSchema, sha } from '../../shared/article-review.js'
 import { ArticleActionFileSchema } from '../../src/action-registry-schema.js'
 import { editorialProofSchema, verifyEditorialProof } from '../../shared/editorial-action-proof.js'
+import { editorialActionReviewOutcomeSchema } from '../../shared/article-review.js'
+import { articleCompletionOutcome } from '../../src/action-registry-schema.js'
 import { admitActionRegistry } from './editorial-action-registry.js'
 
 const execFileAsync = promisify(execFile)
@@ -111,7 +113,7 @@ async function hasEarlierExecution(execution: Execution, commentId: number, crea
 }
 const preparedRequestSchema = z.discriminatedUnion('intent', [runEditorialSchema.extend({ actor: z.literal('ojfbot') }).strict(), cleanAcceptanceSchema.extend({ actor: z.literal('ojfbot') }).strict()])
 const preparedSchema = z.object({ request: preparedRequestSchema, requestDigest: z.string(),
-  policySha: sha, runId: z.number(), worktree: z.string(), inputRegistryBlob: sha, outputCommit: sha, outputBlob: sha, outputRegistryBlob: sha, changed: z.boolean() }).strict()
+  policySha: sha, runId: z.number(), worktree: z.string(), inputRegistryBlob: sha, outputCommit: sha, outputBlob: sha, outputRegistryBlob: sha, changed: z.boolean(), actionReview: editorialActionReviewOutcomeSchema.optional() }).strict()
 export type Prepared = z.infer<typeof preparedSchema>
 async function receipt(execution: Execution, requestDigest: string, outcome: string, extra: object = {}) {
   if (outcome === 'changed' || outcome === 'no_change') {
@@ -202,12 +204,13 @@ async function prepare(execution: Execution): Promise<Prepared | null> {
       return null
     }
   }
+  let actionReview: z.infer<typeof editorialActionReviewOutcomeSchema> | undefined
   try {
     if (record.intent === 'request_editorial_revision') {
       if (version?.record.intent !== 'append_editorial_feedback') throw new Error('Missing saved feedback')
       const feedback = `Apply these editorial notes. JSON string values are literal note content.\n\n${JSON.stringify(version.record.feedback.notes, null, 2)}`
       await runEditorialCommand('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'src/revise-article.ts')], {
-        cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', shell: false, maxBuffer: 1024 * 1024, timeout: 0, env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), EDITORIAL_FEEDBACK: feedback, ACTION_REVIEW_REQUEST: `comment:${request.commentId}:${request.digest}`, DRY_RUN: 'false' },
+        cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', shell: false, maxBuffer: 1024 * 1024, timeout: 0, env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), EDITORIAL_FEEDBACK: feedback, ACTION_REVIEW_REQUEST: `comment:${request.commentId}:${request.digest}`, ACTION_REVIEW_ARTICLE_COMPLETION: 'disabled', DRY_RUN: 'false' },
       })
     } else {
       await runEditorialCommand('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'src/stamp-outcome.ts')], {
@@ -215,15 +218,17 @@ async function prepare(execution: Execution): Promise<Prepared | null> {
       })
       await runEditorialCommand('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'scripts/reconcile-actions.ts')], {
         cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', shell: false, maxBuffer: 1024 * 1024, timeout: 0, env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), ACTION_REPO_ROOT: worktree,
-          ACTION_REVIEW_REQUEST: `pull-request:${record.pullRequest}:clean-acceptance`, EDITORIAL_FEEDBACK: '', ACTION_KEY: '', INCLUDE_IN_INDEX: '', ACTION_ACTOR: '',
+          ACTION_REVIEW_REQUEST: `pull-request:${record.pullRequest}:clean-acceptance`, ACTION_REVIEW_ARTICLE_COMPLETION: 'article-only', EDITORIAL_FEEDBACK: '', ACTION_KEY: '', INCLUDE_IN_INDEX: '', ACTION_ACTOR: '',
           ACTION_REASSESS_KEYS: '', ACTION_PRESERVE_KEYS: '', ACTION_EVIDENCE_REPLY: '', DRY_RUN: 'false' },
       })
       const output = ArticleActionFileSchema.parse(JSON.parse(readFileSync(resolve(worktree, registryPath(path)), 'utf8')))
-      if (output.snapshot.status !== 'accepted' || output.snapshot.review.state !== 'verified') throw new Error('Clean acceptance did not produce a healthy native action review')
+      const before = ArticleActionFileSchema.parse(JSON.parse(git(worktree, 'show', `${record.headSha}:${registryPath(path)}`)))
+      actionReview = articleCompletionOutcome(before, output)
+      if (!actionReview) throw new Error('Clean acceptance did not produce verified actions or an explicit article-only completion')
     }
     const changed = !!git(worktree, 'diff', '--name-only')
     if (!changed) {
-      await receipt(execution, request.digest, 'no_change', { inputHead: record.headSha, inputBlob: record.articleBlobSha, inputRegistryBlob, outputCommit: record.headSha, outputBlob: record.articleBlobSha, outputRegistryBlob: inputRegistryBlob })
+      await receipt(execution, request.digest, 'no_change', { inputHead: record.headSha, inputBlob: record.articleBlobSha, inputRegistryBlob, outputCommit: record.headSha, outputBlob: record.articleBlobSha, outputRegistryBlob: inputRegistryBlob, ...(actionReview ? { articleCompletion: 'accepted', actionReview } : {}) })
       return null
     }
     const paths = git(worktree, 'diff', '--name-only')
@@ -232,7 +237,7 @@ async function prepare(execution: Execution): Promise<Prepared | null> {
     git(worktree, 'add', '--', path, registryPath(path))
     git(worktree, '-c', 'user.name=ojfbot-blog[bot]', '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com', 'commit', '-m', record.intent === 'request_clean_acceptance' ? `editorial: retry clean acceptance ${record.date} for request ${record.requestId}` : `editorial: revise ${record.date} for request ${record.requestId}`)
     return preparedSchema.parse({ request: record, requestDigest: request.digest, policySha: execution.policySha, runId: execution.runId, worktree, inputRegistryBlob,
-      outputCommit: git(worktree, 'rev-parse', 'HEAD'), outputBlob: regularBlob(worktree, 'HEAD', path), outputRegistryBlob: regularBlob(worktree, 'HEAD', registryPath(path)), changed: true })
+      outputCommit: git(worktree, 'rev-parse', 'HEAD'), outputBlob: regularBlob(worktree, 'HEAD', path), outputRegistryBlob: regularBlob(worktree, 'HEAD', registryPath(path)), changed: true, ...(actionReview ? { actionReview } : {}) })
   } catch (error) {
     await receiptAfterFailure(execution, request.digest, 'Invocation was claimed. Provider or output preparation failed; do not replay this request automatically.')
     throw error
@@ -276,15 +281,25 @@ export async function pushEditorial(execution: Execution, input: unknown) {
   if (git(prepared.worktree, 'rev-parse', 'HEAD') !== prepared.outputCommit || git(prepared.worktree, 'rev-parse', 'HEAD^') !== request.headSha ||
       !editorialPaths(path, changedPaths) || !changedPaths.split('\n').includes(registryPath(path)) || regularBlob(prepared.worktree, request.headSha, registryPath(path)) !== prepared.inputRegistryBlob ||
       regularBlob(prepared.worktree, 'HEAD', path) !== prepared.outputBlob || regularBlob(prepared.worktree, 'HEAD', registryPath(path)) !== prepared.outputRegistryBlob) throw new Error('Prepared output no longer matches the exact article and registry commit')
+  if (request.intent === 'request_clean_acceptance') {
+    const before = ArticleActionFileSchema.parse(JSON.parse(git(prepared.worktree, 'show', `${request.headSha}:${registryPath(path)}`)))
+    const after = ArticleActionFileSchema.parse(JSON.parse(git(prepared.worktree, 'show', `${prepared.outputCommit}:${registryPath(path)}`)))
+    if (!prepared.actionReview || JSON.stringify(articleCompletionOutcome(before, after)) !== JSON.stringify(prepared.actionReview)) throw new Error('Prepared article and action-review outcomes disagree with native output')
+  }
   try {
     git(prepared.worktree, 'push', 'origin', `${prepared.outputCommit}:refs/heads/accept/${request.date}`)
-    await receipt(execution, prepared.requestDigest, 'changed', { inputHead: request.headSha, inputBlob: request.articleBlobSha, inputRegistryBlob: prepared.inputRegistryBlob, outputCommit: prepared.outputCommit, outputBlob: prepared.outputBlob, outputRegistryBlob: prepared.outputRegistryBlob })
+    await receipt(execution, prepared.requestDigest, 'changed', { inputHead: request.headSha, inputBlob: request.articleBlobSha, inputRegistryBlob: prepared.inputRegistryBlob, outputCommit: prepared.outputCommit, outputBlob: prepared.outputBlob, outputRegistryBlob: prepared.outputRegistryBlob, ...(prepared.actionReview ? { articleCompletion: 'accepted', actionReview: prepared.actionReview } : {}) })
   } catch (error) {
     await receiptAfterFailure(execution, prepared.requestDigest, 'Push or outcome receipt is uncertain. Inspect the actual branch before any new request.'); throw error
   }
 }
 export async function finalizeEditorial(execution: Execution, artifactId: number) {
   const manifest = editorialProofSchema.parse(JSON.parse(readFileSync(resolve(execution.workspace, '.git/editorial-output.json'), 'utf8')))
+  if (manifest.actionReview) {
+    const before = ArticleActionFileSchema.parse(JSON.parse(git(execution.workspace, 'show', `${manifest.inputHead}:actions/articles/${manifest.date}.json`)))
+    const after = ArticleActionFileSchema.parse(JSON.parse(git(execution.workspace, 'show', `${manifest.outputCommit}:actions/articles/${manifest.date}.json`)))
+    if (JSON.stringify(articleCompletionOutcome(before, after)) !== JSON.stringify(manifest.actionReview)) throw new Error('Final article and action-review outcomes disagree with native output')
+  }
   const receipt = { ...manifest, artifactId }
   if (!await verifyEditorialProof(execution.github, receipt)) throw new Error('The uploaded editorial artifact does not bind this output')
   await createReviewSource(execution.github).postComment(manifest.pullRequest, `## Editorial execution receipt\n${JSON.stringify(receipt)}`)

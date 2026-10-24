@@ -133,6 +133,7 @@ jobs:
 
       - name: Reconcile actions before clean acceptance
         env:
+          ACTION_REVIEW_ARTICLE_COMPLETION: article-only
           ACTION_REVIEW_REQUEST: pull-request:${{ github.event.pull_request.number }}:clean-acceptance
           ARTICLE_PATH: ${{ steps.date.outputs.article_path }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -179,7 +180,8 @@ jobs:
         with:
           script: |
             const receipt = JSON.parse(require('fs').readFileSync('.git/editorial-output.json', 'utf8'));
-            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body: `## Verified action registry\n${JSON.stringify({ ...receipt, artifactId: Number(process.env.ARTIFACT_ID) })}` });
+            const title = receipt.actionReview?.state === 'pending' ? '## Article accepted; action review pending' : '## Verified action registry';
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body: `${title}\n${JSON.stringify({ ...receipt, artifactId: Number(process.env.ARTIFACT_ID) })}` });
 
 
   revise:

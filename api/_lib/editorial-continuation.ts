@@ -4,8 +4,8 @@ import { editorialInputSchema, editorialProjectionSchema, editorialRecordSchema,
   resolveEditorialRequestSchema, resolutionEvidenceSchema,
   type EditorialInput, type EditorialRecord, type EditorialHistory, type EditorialWriteFailureResponse } from '../../shared/article-review.js'
 import { createReviewSource, githubCommentSchema, ReviewError, trustedPullRequest, type GitHub } from './article-review-sources.js'
-import { ArticleActionFileSchema, isArticleFileInclusionChange, actionArticlePath } from '../../src/action-registry-schema.js'
-import { verifyEditorialProof } from '../../shared/editorial-action-proof.js'
+import { ArticleActionFileSchema, isArticleFileInclusionChange, actionArticlePath, articleCompletionOutcome } from '../../src/action-registry-schema.js'
+import { verifyEditorialProof, editorialProofSchema } from '../../shared/editorial-action-proof.js'
 import { sha } from '../../shared/article-review.js'
 
 export const revisionTitle = '## Explicit editorial revision request\n'
@@ -354,6 +354,7 @@ export function createEditorialService(github: GitHub) {
     const seen = new Map<string, EditorialHistory>()
     let originalBody = pr.body ?? ''
     const terminals = new Map<string, number>()
+    const terminalReviews = new Map<string, z.infer<typeof editorialProofSchema>['actionReview']>()
     for (const comment of comments.sort((a,b) => a.id - b.id)) {
       if (comment.body.startsWith(receiptTitle)) {
         // Claims are checked by the consumer; any claim leaves a request outstanding until a verified terminal receipt.
@@ -395,7 +396,14 @@ export function createEditorialService(github: GitHub) {
           || (canonical?.record.intent === 'request_clean_acceptance' && parsed.data.requestIntent !== 'request_clean_acceptance')
           || (parsed.data.requestIntent && parsed.data.requestIntent !== canonical?.record.intent)) continue
         if (parsed.data.requestCommentId !== canonical?.commentId || run.display_title !== `Editorial continuation comment ${canonical?.commentId}` || run.id !== parsed.data.runId || run.head_sha !== parsed.data.policySha) throw new ReviewError(409, 'Execution receipt disagrees with trusted workflow provenance.')
+        const proof = editorialProofSchema.parse(parsed.data)
+        if (proof.actionReview) {
+          const [beforeRegistry, outputRegistry] = await Promise.all([source.regularFile(actionArticlePath(articleDate), proof.inputHead), source.regularFile(actionArticlePath(articleDate), proof.outputCommit)])
+          const before = ArticleActionFileSchema.parse(JSON.parse(beforeRegistry.text)), after = ArticleActionFileSchema.parse(JSON.parse(outputRegistry.text))
+          if (outputRegistry.blobSha !== proof.outputRegistryBlob || JSON.stringify(articleCompletionOutcome(before, after)) !== JSON.stringify(proof.actionReview)) continue
+        }
         terminals.set(parsed.data.requestDigest, comment.id)
+        if (proof.actionReview) terminalReviews.set(parsed.data.requestDigest, proof.actionReview)
       }
     }
     const resolved = new Map<string, number>()
@@ -415,10 +423,11 @@ export function createEditorialService(github: GitHub) {
     const eligible = actor.toLowerCase() === 'ojfbot' && pr.user.login.toLowerCase() === 'ojfbot' && pr.state === 'open' && !pr.merged_at
     const latestRequest = requests.at(-1)
     const terminalCommentId = latestRequest ? terminals.get(latestRequest.digest) : undefined
+    const terminalReview = latestRequest ? terminalReviews.get(latestRequest.digest) : undefined
     const resolutionCommentId = latestRequest ? resolved.get(latestRequest.digest) : undefined
     const requestState = !latestRequest ? { kind: 'none' as const }
       : resolutionCommentId !== undefined ? { kind: 'owner_resolved' as const, request: { digest: latestRequest.digest, commentId: latestRequest.commentId }, resolutionCommentId }
-      : terminalCommentId !== undefined ? { kind: 'artifact_verified' as const, request: { digest: latestRequest.digest, commentId: latestRequest.commentId }, receiptCommentId: terminalCommentId }
+      : terminalCommentId !== undefined ? { kind: 'artifact_verified' as const, request: { digest: latestRequest.digest, commentId: latestRequest.commentId }, receiptCommentId: terminalCommentId, ...(terminalReview ? { actionReview: terminalReview } : {}) }
       : { kind: 'outstanding' as const, request: { digest: latestRequest.digest, commentId: latestRequest.commentId } }
     const recovery = requestState.kind === 'outstanding' && latestRequest
       ? await inspectRecovery({ github, comments, request: latestRequest, pullRequest: pr.number, headSha: pr.head.sha,
