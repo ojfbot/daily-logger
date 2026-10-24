@@ -9,7 +9,7 @@ import { z } from 'zod'
 import { ActionRegistrySchema, actionStateDigest, normalizeWorkKey, sha256, captureDraftActionCandidates, readActionRegistry, registryBytes, splitActionRegistry, hydrateActionRegistry, projectRegistry, assertExactInvocationAdmissions, renderArticleActions, type ActionRegistry } from '../action-registry.js'
 import { draftCandidateEvidenceBinding, actionCommandSourceReferences, actionRecordSourceReferences, actionEvidenceScope, selectActionEvidence } from '../action-evidence-selection.js'
 import { generationActionCycle } from '../action-review-cycle.js'
-import { createActionAgents, pendingActionReview, resolveActionSourceLines, reviewArticleActions } from '../review-actions.js'
+import { createActionAgents, pendingActionReview, resolveActionSourceLines, reviewArticleActions, classifyActionReviewFailure } from '../review-actions.js'
 
 const { create, countTokens } = vi.hoisted(() => ({ create: vi.fn(), countTokens: vi.fn() }))
 vi.mock('@anthropic-ai/sdk', () => ({ default: class { messages = { create, countTokens } } }))
@@ -197,6 +197,16 @@ describe('captured candidate references before independent verification', () => 
       expect(JSON.stringify(countTokens.mock.calls)).not.toContain(sentinel)
       expect(JSON.stringify(logs.mock.calls)).not.toContain(sentinel)
     } finally { logs.mockRestore() }
+  })
+  it('classifies a real native independent candidate hold without disclosing its reason or admitting actions', async () => {
+    const { input, proposal, verification } = setup(), before = JSON.stringify(input.registry)
+    create.mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response({ ...verification, candidateDispositions: [
+      { ...verification.candidateDispositions[0], verdict: 'hold', reason: 'PRIVATE_VERIFIER_REASON' }, verification.candidateDispositions[1],
+    ] }))
+    const failure = await reviewArticleActions(input).catch((error: unknown) => error)
+    expect(classifyActionReviewFailure(failure)).toEqual({ kind: 'evidence-required', reason: 'Actions need further evidence or independent review before they can be admitted.' })
+    expect(JSON.stringify(input.registry)).toBe(before)
+    expect(create).toHaveBeenCalledTimes(2)
   })
   it('derives the exact tuple from a captured ID before the real provider verifier boundary', async () => {
     const { input, candidates, proposal, verification } = setup()
