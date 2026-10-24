@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { fixtureEvidenceView } from './evidence-view-fixtures.js'
-import { ActionRegistrySchema, captureDraftActionCandidates } from '../action-registry.js'
+import { ActionRegistrySchema, captureDraftActionCandidates, renderArticleActions } from '../action-registry.js'
 import { generationActionCycle } from '../action-review-cycle.js'
 import { ActionEvidenceRequestError, createActionEvidenceRequest } from '../action-evidence-retrieval.js'
 
@@ -265,6 +265,33 @@ describe('native-validated forced-tool response boundary', () => {
     if (kind === 'context') accepted.agents.propose = async () => { throw new ActionContextNeedError(secret) }
     // A generic Zod error still follows the existing one-repair path, but is never a completion classifier.
     const failure = await reviewProducedDraftActions(accepted).catch((error: unknown) => error)
+    expect(classifyActionReviewFailure(failure)).toBeUndefined()
+  })
+  it('classifies only a native post-apply Accepted needs-evidence shortlist and preserves the pristine input', async () => {
+    const base = reviewInput()
+    const input = { ...base, markdown: base.markdown.replace('draft', 'accepted'), articleStatuses: new Map([[base.articleDate, 'accepted']]), sources: [source] }
+    const { command, repo, description, ...fields } = proposal.suggestions[0]
+    create.mockResolvedValueOnce(response({ ...empty, suggestions: [{ ...fields, identity: { kind: 'new', command, repo, description } }] }))
+      .mockResolvedValueOnce(response({ ...empty, suggestions: [verification.suggestions[0]] }))
+    const before = JSON.stringify(input.registry)
+    const failure = await reviewArticleActions(input).catch((error: unknown) => error)
+    expect(failure).toBeInstanceOf(Error)
+    if (!(failure instanceof Error)) throw new Error('Expected incomplete native shortlist')
+    expect(failure.message).toContain('Accepted article requires exactly three ranked suggestions')
+    expect(classifyActionReviewFailure(failure)).toEqual({ kind: 'evidence-required', reason: 'Actions need further evidence or independent review before they can be admitted.' })
+    expect(create.mock.calls.map(([request]) => request.model)).toEqual(['claude-sonnet-4-6', 'claude-opus-4-6'])
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it('keeps the historical pre-ranked Accepted behavior and unrelated render errors unchanged', async () => {
+    const base = reviewInput(), date = '2026-10-18'
+    const older = await reviewArticleActions({ ...base, articleDate: date, markdown: base.markdown.replace(base.articleDate, date).replace('draft', 'accepted'), articleStatuses: new Map([[date, 'accepted']]) })
+    expect(older.registry.articles[0].status).toBe('accepted')
+    expect(older.registry.articles[0].closing?.kind).toBe('needs-evidence')
+    const draft = await reviewArticleActions(reviewInput())
+    let failure: unknown
+    try { renderArticleActions(draft.markdown + '\nChanged unmanaged prose.\n', draft.registry, base.articleDate, base.articleStatuses) }
+    catch (error) { failure = error }
+    expect(failure).toBeInstanceOf(Error)
     expect(classifyActionReviewFailure(failure)).toBeUndefined()
   })
   it('does not negotiate past the one malformed-output repair', async () => {

@@ -6,7 +6,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { ActionCommandSchema, BareActionCommandSchema, isReviewedAction } from './action-model.js'
-import { ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, ActionReviewCycleSchema, actionAdmissionLimit, countCycleAdmissions, type ActionReviewCycle } from './action-review-cycle.js'
+import { ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, RANKED_ACTION_REVIEW_PROMPT_VERSIONS, ActionReviewCycleSchema, actionAdmissionLimit, countCycleAdmissions, type ActionReviewCycle } from './action-review-cycle.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, CONTINUITY_TARGETS_SOURCE, acceptedContinuityGithubReferences, actionEvidenceScope, actionRecordSourceReferences, actionReviewIndex, actionSourceReferences, canonicalActionSources, COVERAGE_SOURCE, deriveActionReviewOutput, prepareConservativeDraftCandidateEvidence, draftCandidateEvidenceScope, actionCommandSourceReferences, recommendationMaintenanceDescriptor, recommendationMaintenanceProjection, selectActionEvidence } from './action-evidence-selection.js'
 import {
   ActionEvidenceRequestError,
@@ -1362,6 +1362,12 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
     const request = applicationHoldRequest({ ...input, actionKeys: selection.receipt.reviewActionKeys, error })
     if (request) throw new ActionEvidenceRequestError(request, error instanceof Error ? error.message : 'Independent review requires more evidence')
     throw error
+  }
+  const snapshot = registry.articles.find(article => article.date === input.articleDate)
+  // Only the renderer's known incomplete ranked outcome is a typed hold.
+  if (input.articleDate >= '2026-10-19' && snapshot?.status === 'accepted' && snapshot.review.state === 'verified'
+    && new Set<string>(RANKED_ACTION_REVIEW_PROMPT_VERSIONS).has(snapshot.verification.promptVersion) && snapshot.closing?.kind === 'needs-evidence') {
+    throw new ActionVerificationHoldError(`Accepted article requires exactly three ranked suggestions for ${input.articleDate}; reconcile before publishing`)
   }
   return { registry, markdown: renderArticleActions(input.markdown, registry, input.articleDate, input.articleStatuses), cached: false,
     evidenceResolutions: selection.sources.filter(source => !!source.projection || !!source.response) }
