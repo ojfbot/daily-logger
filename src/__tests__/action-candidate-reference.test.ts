@@ -72,6 +72,55 @@ describe('captured candidate references before independent verification', () => 
     expect(result.registry.records[0].original).toMatchObject(candidates[0].payload)
     expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(['claude-sonnet-4-6', 'claude-opus-4-6'])
   })
+  it.each(['forbidden-index', 'missing-reason'] as const)('repairs the logged-equivalent %s shape with the exact captured row and unchanged evidence', async mode => {
+    const { input, candidates, proposal, verification } = setup(), before = JSON.stringify(input.registry)
+    const malformed = mode === 'forbidden-index'
+      ? { ...proposal, candidateDispositions: [proposal.candidateDispositions[0], { ...proposal.candidateDispositions[1], suggestionIndex: 0 }] }
+      : { ...proposal, candidateDispositions: [proposal.candidateDispositions[0], { candidateId: candidates[1].candidateId, kind: 'reject', citations: fields.factCitations }] }
+    create.mockResolvedValueOnce(response(malformed)).mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response(verification))
+    const result = await reviewArticleActions(input)
+    const first = RequestSchema.parse(create.mock.calls[0][0]).messages[0].content
+    const repair = RequestSchema.parse(create.mock.calls[1][0]).messages[0].content
+    const verifier = RequestSchema.parse(create.mock.calls[2][0]).messages[0].content
+    expect(repair.split('\nReturn a change for every requiredActionKey.')[0]).toBe(first.split('\nReturn a change for every requiredActionKey.')[0])
+    expect(repair).toContain(`candidateId=${candidates[1].candidateId}`)
+    expect(repair).toContain('kind=reject')
+    expect(repair).toContain(mode === 'forbidden-index' ? 'forbidden=suggestionIndex' : 'expected=string')
+    if (mode === 'missing-reason') expect(repair).toContain('received=missing')
+    expect(verifier).toContain(proposal.candidateDispositions[1].reason)
+    expect(verifier).not.toContain('Previous structured output was invalid')
+    expect(create.mock.calls.map(([raw]) => RequestSchema.parse(raw).model)).toEqual(['claude-sonnet-4-6', 'claude-sonnet-4-6', 'claude-opus-4-6'])
+    expect(result.registry.articles[0].draftCandidates?.map(candidate => candidate.review.state)).toEqual(['promoted', 'rejected'])
+    expect(result.registry.records[0].original).toMatchObject(candidates[0].payload)
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it('stops after the logged-equivalent forbidden index followed by missing reason without a verifier or partial writes', async () => {
+    const { input, candidates, proposal } = setup(), before = JSON.stringify(input.registry)
+    create.mockResolvedValueOnce(response({ ...proposal, candidateDispositions: [proposal.candidateDispositions[0], { ...proposal.candidateDispositions[1], suggestionIndex: 0 }] }))
+      .mockResolvedValueOnce(response({ ...proposal, candidateDispositions: [proposal.candidateDispositions[0], { candidateId: candidates[1].candidateId, kind: 'reject', citations: fields.factCitations }] }))
+    await expect(reviewArticleActions(input)).rejects.toThrow(/role=proposer.*reason.*received=missing/)
+    expect(create).toHaveBeenCalledTimes(2)
+    expect(countTokens).toHaveBeenCalledTimes(2)
+    expect(create.mock.calls.every(([raw]) => RequestSchema.parse(raw).model === 'claude-sonnet-4-6')).toBe(true)
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it('keeps a nonempty canonical proposal and its exact line evidence pinned across verifier-only repair', async () => {
+    const { input, proposal, verification } = setup(), before = JSON.stringify(input.registry), views: unknown[] = []
+    create.mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response({ ...verification, suggestions: null })).mockResolvedValueOnce(response(verification))
+    const verify = input.agents.verify
+    input.agents.verify = async (prompt, view, context) => { views.push(view); return verify(prompt, view, context) }
+    const result = await reviewArticleActions(input)
+    const prompts = create.mock.calls.slice(1).map(([raw]) => RequestSchema.parse(raw).messages[0].content)
+    const marker = '\nPROPOSAL (claims to verify, not evidence):\n'
+    expect(prompts[0].split(marker)[0]).toBe(prompts[1].split(marker)[0])
+    expect(prompts[0].split(marker)[1].split('\n')[0]).toBe(prompts[1].split(marker)[1].split('\n')[0])
+    expect(prompts[1]).toContain('role=verifier')
+    expect(views[0]).toBe(views[1])
+    expect(create.mock.calls.map(([raw]) => RequestSchema.parse(raw).model)).toEqual(['claude-sonnet-4-6', 'claude-opus-4-6', 'claude-opus-4-6'])
+    expect(JSON.stringify(input.registry)).toBe(before)
+    expect(result.registry.records[0].original.command).toBe(payloads[0].command)
+    expect(result.registry.records[0].history[0].citations[0]).toMatchObject({ quote: sources[0].content, sourceLineStart: 1, sourceLineEnd: 1 })
+  })
   it.each(['unknown', 'cross-reference', 'duplicate-reference', 'identity-override', 'outer-override', 'legacy-tuple', 'new-tuple-promotion', 'duplicate-disposition', 'out-of-range', 'negative-index', 'fractional-index', 'two-candidates-one-index', 'promote-existing', 'map-key-mismatch', 'map-unknown-key', 'map-cross-index'] as const)('rejects %s before verifier within one repair and preserves input', async mode => {
     const { input, candidates, proposal } = setup(), before = JSON.stringify(input.registry)
     const first = proposal.suggestions[0], promote = proposal.candidateDispositions[0]

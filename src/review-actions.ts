@@ -116,6 +116,61 @@ const ProviderResponseSchema = ProviderStopSchema.extend({
 const ProviderToolBlocksSchema = z.tuple([z.object({
   type: z.literal('tool_use'), id: z.string().min(1), name: z.literal('review_actions'), input: z.unknown(),
 }).passthrough()])
+type ActionRole = 'proposer' | 'verifier'
+type ProviderOutputPhase = 'envelope' | 'tool-block' | 'tool-input'
+class ProviderActionOutputError extends ActionOutputError {}
+const repairFields = new Set([
+  ...Object.keys(ProviderLineProposalSchema.shape), ...Object.keys(ProviderVerificationSchema.shape),
+  ...Object.keys(ProviderSuggestionSchema.shape), ...Object.keys(LineProposalSchema.shape.suggestions.element.shape),
+  ...Object.keys(ActionProposalSchema.shape.changes.element.shape),
+  ...DraftCandidateDispositionProposalSchema.options.flatMap(option => Object.keys(option.shape)),
+  ...ClosingOptionProposalSchema.options.flatMap(option => Object.keys(option.shape)),
+  ...Object.keys(ActionVerificationSchema.shape.suggestions.unwrap().element.shape),
+  ...Object.keys(ActionVerificationSchema.shape.closingOptions.unwrap().element.shape),
+  'identity', 'kind', 'sourceId', 'startLine', 'endLine', 'sourceLineStart', 'sourceLineEnd', 'quote',
+  'content', 'stop_reason', 'usage', 'output_tokens', 'type', 'id', 'name', 'input',
+])
+const repairObject = z.record(z.string(), z.unknown())
+function outputShapeDiagnostic(error: z.ZodError, role: ActionRole, phase: ProviderOutputPhase, value?: unknown, context?: ActionProposalContext): string {
+  // Closed-vocabulary shape facts only: never retain the malformed reply, values,
+  // arbitrary keys, Zod messages, or its raw error as a cause.
+  const parts = [`role=${role}; phase=${phase}`]
+  for (const issue of error.issues.slice(0, 4)) {
+    const path = issue.path.slice(0, 6).map(part => typeof part === 'number' && Number.isSafeInteger(part) && part >= 0 ? String(part) : typeof part === 'string' && repairFields.has(part) ? part : '<field>').join('.') || '<root>'
+    const details = [`path=${path}`, `code=${issue.code}`]
+    if (issue.code === 'invalid_type') details.push(`expected=${issue.expected}`)
+    if (issue.code === 'unrecognized_keys') details.push(`forbidden=${issue.keys.slice(0, 8).map(key => repairFields.has(key) ? key : '<unknown-key>').join(',')}; keyCount=${issue.keys.length}`)
+    if (phase === 'tool-input' && issue.path[0] === 'candidateDispositions' && typeof issue.path[1] === 'number') {
+      const root = repairObject.safeParse(value)
+      const rows = z.array(z.unknown()).safeParse(root.success ? root.data.candidateDispositions : undefined)
+      const row = repairObject.safeParse(rows.success ? rows.data[issue.path[1]] : undefined)
+      if (row.success) {
+        const candidate = context?.draftCandidates.find(candidate => candidate.candidateId === row.data.candidateId)
+        if (candidate) details.push(`candidateId=${candidate.candidateId}`)
+        if (role === 'proposer') {
+          const branch = DraftCandidateDispositionProposalSchema.options.find(option => option.shape.kind.value === row.data.kind)
+          if (branch) details.push(`kind=${branch.shape.kind.value}; required=${Object.keys(branch.shape).join(',')}`)
+        }
+        const field = issue.path[2]
+        if (typeof field === 'string' && repairFields.has(field)) {
+          const observed = row.data[field]
+          details.push(`received=${observed === undefined ? 'missing' : observed === null ? 'null' : Array.isArray(observed) ? 'array' : typeof observed}`)
+        }
+      }
+    }
+    const detail = details.join('; ')
+    if (parts.join(' | ').length + detail.length + 100 > 2048) break
+    parts.push(detail)
+  }
+  if (error.issues.length > parts.length - 1) parts.push(`additionalIssues=${error.issues.length - (parts.length - 1)}`)
+  return parts.join(' | ')
+}
+function parseProviderOutput<T>(role: ActionRole, phase: ProviderOutputPhase, value: unknown, parse: () => T, context?: ActionProposalContext): T {
+  try { return parse() } catch (error) {
+    if (!(error instanceof z.ZodError)) throw error
+    throw new ProviderActionOutputError(outputShapeDiagnostic(error, role, phase, value, context))
+  }
+}
 export function resolveActionSourceLines(value: unknown, view: PreparedActionEvidenceView): ActionProposal {
   if (!(view instanceof PreparedActionEvidenceView)) throw new ActionEvidenceVisibilityError('A prepared consumed evidence view is required')
   const proposal = LineProposalSchema.parse(value)
@@ -213,7 +268,7 @@ function resolveProviderProposal(value: unknown, view: PreparedActionEvidenceVie
 export interface ActionAgents {
   identity?: { proposer: string; verifier: string }
   propose(prompt: string, view: PreparedActionEvidenceView, context?: ActionProposalContext): Promise<unknown>
-  verify(prompt: string, view: PreparedActionEvidenceView): Promise<unknown>
+  verify(prompt: string, view: PreparedActionEvidenceView, context?: ActionProposalContext): Promise<unknown>
 }
 
 type ActionHoldContext = {
@@ -368,7 +423,7 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
   const tokenLimit = options.tokenBudget?.limitTokens ?? configuredLimit
   if (!Number.isSafeInteger(tokenLimit) || tokenLimit <= 12000) throw new Error(`${options.tokenBudget ? 'Action token budget limitTokens' : 'ACTION_PROVIDER_TOKEN_LIMIT'} must be an integer greater than the 12000-token output reserve`)
   async function call(role: 'proposer' | 'verifier', prompt: string, view: PreparedActionEvidenceView, context?: ActionProposalContext): Promise<unknown> {
-    const captured = role === 'proposer' ? actionProposalContext(context?.articleDate ?? '', context?.draftCandidates ?? [], context?.actionKeys ?? []) : undefined
+    const captured = actionProposalContext(context?.articleDate ?? '', context?.draftCandidates ?? [], context?.actionKeys ?? [])
     const request = actionProviderRequest(role, prompt)
     const requestBytes = Buffer.byteLength(JSON.stringify(request), 'utf8')
     if (requestBytes > 640 * 1024) throw new ActionContextNeedError(`Complete action provider request exceeds 640 KiB (${requestBytes} bytes); review pending`)
@@ -396,15 +451,14 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
     if (totalTokens > tokenLimit) throw new ActionContextNeedError(`Complete action provider request exceeds token budget (${inputTokens} input + ${request.max_tokens} output reserve > ${tokenLimit}); review pending`)
     console.warn(`Action ${role} token budget: input=${inputTokens}; output_reserve=${request.max_tokens}; total=${totalTokens}; limit=${tokenLimit}`)
     const raw: unknown = await client.messages.create(request)
-    const completion = ProviderStopSchema.parse(raw)
+    const completion = parseProviderOutput(role, 'envelope', raw, () => ProviderStopSchema.parse(raw))
     if (completion.stop_reason !== 'tool_use') throw new Error(`Action ${role} did not finish its structured review (${completion.stop_reason})`)
-    const response = ProviderResponseSchema.parse(raw)
+    const response = parseProviderOutput(role, 'envelope', raw, () => ProviderResponseSchema.parse(raw))
     console.warn(`Action ${role}: stop=${response.stop_reason}; output_tokens=${response.usage?.output_tokens ?? 'unavailable'}`)
-    const [result] = ProviderToolBlocksSchema.parse(response.content)
-    if (captured) return resolveProviderProposal(result.input, view, captured)
-    return ProviderVerificationSchema.parse(result.input)
+    const [result] = parseProviderOutput(role, 'tool-block', response.content, () => ProviderToolBlocksSchema.parse(response.content))
+    return parseProviderOutput(role, 'tool-input', result.input, () => role === 'proposer' ? resolveProviderProposal(result.input, view, captured) : ProviderVerificationSchema.parse(result.input), captured)
   }
-  return { identity: { proposer: 'claude-sonnet-4-6', verifier: 'claude-opus-4-6' }, propose: (prompt, sources, context) => call('proposer', prompt, sources, context), verify: (prompt, sources) => call('verifier', prompt, sources) }
+  return { identity: { proposer: 'claude-sonnet-4-6', verifier: 'claude-opus-4-6' }, propose: (prompt, sources, context) => call('proposer', prompt, sources, context), verify: (prompt, sources, context) => call('verifier', prompt, sources, context) }
 }
 
 type GithubReference = { repo: string; kind: string; number: string }
@@ -1152,39 +1206,48 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   const context = serializeActionModelView(modelContext)
   if (byteLength(context) > 640 * 1024) throw new ActionContextNeedError('Action prompt exceeds 640 KiB; review pending')
   const boundedPrompt = (prompt: string) => { if (byteLength(prompt) > 640 * 1024) throw new ActionContextNeedError('Action prompt exceeds 640 KiB; review pending'); return prompt }
-  let correction = ''
-  // One repair of malformed output, never a recursive proposer/verifier negotiation.
-  for (let attempt = 0; attempt < 2; attempt++) {
-    let proposal: ParsedActionProposal, verification: ParsedActionVerification
-    try {
-      proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every requiredActionKey. Preserve other terminal currentActionKeys. An independently verified existingKey link also counts as reviewing a required identity. Account for every awaiting initialDraftCandidate under initialDraftCandidatePolicy; never reconstruct a missing original from draft context or prior-day maintenance.\n${correction}`), evidenceView, proposalContext))
-      assertCandidateAssociations(proposal, proposalContext)
-      assertInvocationMappings(proposal, input.registry.records)
-      const verifierInput = actionVerificationInput({ proposal, view: evidenceView, context: proposalContext })
-      const verifierContext = serializeActionModelView({ ...modelContext, initialDraftCandidates: verifierInput.initialDraftCandidates, candidateDispositionEncoding: CANDIDATE_DISPOSITION_ENCODING })
-      verification = ActionVerificationSchema.parse(await input.agents.verify(boundedPrompt(`${verifierContext}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(verifierInput.proposal)}\n${correction}\nReturn ONLY the tool schema: changes, suggestions, candidateDispositions and closingOptions are arrays of verdict objects. Read the complete original-line sources independently. Each initialDraftCandidates row pairs its immutable original with its proposedDisposition; verify that row, not a neighboring rationale. Check closing usefulness, prior context, goal, entry point and checkpoint. Keep reasons concise.`), evidenceView))
-      const resolveCitation = (citation: z.infer<typeof CitationSchema>) => ({ ...citation, sourceId: sourceAliases.get(citation.sourceId) ?? citation.sourceId })
-      for (const change of proposal.changes) change.citations = change.citations.map(resolveCitation)
-      for (const candidate of proposal.suggestions) { candidate.goalCitations = candidate.goalCitations.map(resolveCitation); candidate.factCitations = candidate.factCitations.map(resolveCitation) }
-      for (const disposition of proposal.candidateDispositions) if (disposition.kind === 'reject' || disposition.kind === 'verified-closure') disposition.citations = disposition.citations.map(resolveCitation)
-      for (const option of proposal.closingOptions) { option.goalCitations = option.goalCitations.map(resolveCitation); option.factCitations = option.factCitations.map(resolveCitation) }
-    } catch (error) { if (attempt === 1 || !(error instanceof z.ZodError || error instanceof ActionOutputError)) throw error; correction = `Previous structured output was invalid: ${error.message}. Return the required schema.`; console.warn(`Action review needs its one repair: ${correction}`); continue }
-    const evidenceRequest = verifierHoldRequest({ ...input, actionKeys: selection.receipt.reviewActionKeys, verification })
-    if (evidenceRequest) throw new ActionEvidenceRequestError(evidenceRequest, `Independent verification requires ${evidenceRequest.kind} evidence for ${evidenceRequest.actionKeys.join(', ')}`)
-    let registry: ActionRegistry
-    try {
-      registry = applyVerifiedActionReview({ ...input, evidenceView, roundId: inputHash, proposal, verification, identity: input.agents.identity, draftCandidates, draftCandidateEvidence, draftContext: prepared.context, requiredActionKeys: selection.receipt.reviewActionKeys,
-        preserveActionKeys: input.preserveActionKeys,
-        resolvedEvidenceRequests: previous?.evidenceRequests?.filter(request => selection.receipt.resolvedRequests.includes(request.id)).map(request => ({ ...request, status: 'resolved' as const })) })
-    } catch (error) {
-      const request = applicationHoldRequest({ ...input, actionKeys: selection.receipt.reviewActionKeys, error })
-      if (request) throw new ActionEvidenceRequestError(request, error instanceof Error ? error.message : 'Independent review requires more evidence')
-      throw error
+  let repairUsed = false
+  // One shared repair, applied only to the failed role. A malformed verifier
+  // cannot replace the proposal it was independently checking.
+  async function withOutputRepair<T>(role: ActionRole, run: (correction: string) => Promise<T>): Promise<T> {
+    try { return await run('') } catch (error) {
+      if (repairUsed || !(error instanceof z.ZodError || error instanceof ActionOutputError)) throw error
+      repairUsed = true
+      const diagnostic = error instanceof z.ZodError
+        ? outputShapeDiagnostic(error, role, 'tool-input') : error instanceof ProviderActionOutputError ? error.message : `role=${role}; phase=identity; ${error.message}`
+      const correction = `Previous structured output was invalid: ${diagnostic}. Repair only this ${role} output. Return the complete required tool schema; all required fields must be authored from the unchanged evidence. Never invent a reason or silently discard a contradictory field.`
+      console.warn(`Action review needs its one repair: ${correction}`)
+      return run(correction)
     }
-    return { registry, markdown: renderArticleActions(input.markdown, registry, input.articleDate, input.articleStatuses), cached: false,
-      evidenceResolutions: selection.sources.filter(source => !!source.projection || !!source.response) }
   }
-  throw new Error('Action review returned no result')
+  const proposal = await withOutputRepair('proposer', async correction => {
+    const proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every requiredActionKey. Preserve other terminal currentActionKeys. An independently verified existingKey link also counts as reviewing a required identity. Account for every awaiting initialDraftCandidate under initialDraftCandidatePolicy; never reconstruct a missing original from draft context or prior-day maintenance.\n${correction}`), evidenceView, proposalContext))
+    assertCandidateAssociations(proposal, proposalContext)
+    assertInvocationMappings(proposal, input.registry.records)
+    return proposal
+  })
+  const verifierInput = actionVerificationInput({ proposal, view: evidenceView, context: proposalContext })
+  const verifierContext = serializeActionModelView({ ...modelContext, initialDraftCandidates: verifierInput.initialDraftCandidates, candidateDispositionEncoding: CANDIDATE_DISPOSITION_ENCODING })
+  const verification = await withOutputRepair('verifier', async correction => ActionVerificationSchema.parse(await input.agents.verify(boundedPrompt(`${verifierContext}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(verifierInput.proposal)}\n${correction}\nReturn ONLY the tool schema: changes, suggestions, candidateDispositions and closingOptions are arrays of verdict objects. Read the complete original-line sources independently. Each initialDraftCandidates row pairs its immutable original with its proposedDisposition; verify that row, not a neighboring rationale. Check closing usefulness, prior context, goal, entry point and checkpoint. Keep reasons concise.`), evidenceView, proposalContext)))
+  const resolveCitation = (citation: z.infer<typeof CitationSchema>) => ({ ...citation, sourceId: sourceAliases.get(citation.sourceId) ?? citation.sourceId })
+  for (const change of proposal.changes) change.citations = change.citations.map(resolveCitation)
+  for (const candidate of proposal.suggestions) { candidate.goalCitations = candidate.goalCitations.map(resolveCitation); candidate.factCitations = candidate.factCitations.map(resolveCitation) }
+  for (const disposition of proposal.candidateDispositions) if (disposition.kind === 'reject' || disposition.kind === 'verified-closure') disposition.citations = disposition.citations.map(resolveCitation)
+  for (const option of proposal.closingOptions) { option.goalCitations = option.goalCitations.map(resolveCitation); option.factCitations = option.factCitations.map(resolveCitation) }
+  const evidenceRequest = verifierHoldRequest({ ...input, actionKeys: selection.receipt.reviewActionKeys, verification })
+  if (evidenceRequest) throw new ActionEvidenceRequestError(evidenceRequest, `Independent verification requires ${evidenceRequest.kind} evidence for ${evidenceRequest.actionKeys.join(', ')}`)
+  let registry: ActionRegistry
+  try {
+    registry = applyVerifiedActionReview({ ...input, evidenceView, roundId: inputHash, proposal, verification, identity: input.agents.identity, draftCandidates, draftCandidateEvidence, draftContext: prepared.context, requiredActionKeys: selection.receipt.reviewActionKeys,
+      preserveActionKeys: input.preserveActionKeys,
+      resolvedEvidenceRequests: previous?.evidenceRequests?.filter(request => selection.receipt.resolvedRequests.includes(request.id)).map(request => ({ ...request, status: 'resolved' as const })) })
+  } catch (error) {
+    const request = applicationHoldRequest({ ...input, actionKeys: selection.receipt.reviewActionKeys, error })
+    if (request) throw new ActionEvidenceRequestError(request, error instanceof Error ? error.message : 'Independent review requires more evidence')
+    throw error
+  }
+  return { registry, markdown: renderArticleActions(input.markdown, registry, input.articleDate, input.articleStatuses), cached: false,
+    evidenceResolutions: selection.sources.filter(source => !!source.projection || !!source.response) }
 }
 
 export const mockActionAgents: ActionAgents = { identity: { proposer: 'mock-llm', verifier: 'mock-llm' }, propose: async () => ({ changes: [], suggestions: [], closingOptions: [] }), verify: async () => ({ changes: [], suggestions: [], closingOptions: [] }) }
