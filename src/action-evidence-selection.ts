@@ -90,8 +90,23 @@ export function actionSourceReferences(text: string): Set<string> {
   ])
 }
 
-export function actionRecordSourceReferences(record: ActionRegistry['records'][number]): string[] {
-  return [...actionSourceReferences(JSON.stringify({
+/** Only explicit known repository targets in an exact command; no shorthand or alias inference. */
+export function actionCommandSourceReferences(command: string, approvedTargets: ReadonlySet<string> = new Set()): Set<string> {
+  return qualifiedActionReferences(command, approvedTargets, 'exact-command')
+}
+
+function capturedRecordTargets(record: ActionRegistry['records'][number], registry?: ActionRegistry): Set<string> {
+  const snapshot = registry?.articles.find(article => article.date === record.introducedBy)
+  const candidates = (snapshot?.draftCandidates ?? []).filter(candidate => candidate.payload.command === record.original.command
+    && candidate.payload.repo === record.original.repo && candidate.payload.description === record.original.description)
+  const ids = new Set(candidates.map(candidate => candidate.candidateId))
+  const requirements = [snapshot?.draftCandidateEvidence, ...(snapshot?.candidateReviewHistory ?? []).map(receipt => receipt.draftCandidateEvidence)]
+  return new Set(requirements.flatMap(requirement => (requirement?.candidates ?? []).filter(candidate => ids.has(candidate.candidateId))
+    .flatMap(candidate => candidate.references.filter(reference => reference.classification === 'required' && reference.role === 'target').map(reference => reference.reference))))
+}
+
+export function actionRecordSourceReferences(record: ActionRegistry['records'][number], registry?: ActionRegistry): string[] {
+  return [...new Set([...actionSourceReferences(JSON.stringify({
     key: record.key,
     workKey: record.workKey,
     repo: record.original.repo,
@@ -100,7 +115,7 @@ export function actionRecordSourceReferences(record: ActionRegistry['records'][n
     goal: record.goal,
     doneWhen: record.doneWhen,
     gates: record.gates,
-  }))].sort()
+  })), ...(!BareActionCommandSchema.safeParse(record.original.command).success ? actionCommandSourceReferences(record.original.command, capturedRecordTargets(record, registry)) : [])])].sort()
 }
 
 type CandidateEvidenceScopeInput = {
@@ -198,12 +213,11 @@ function applicableReviewOutput(registry: ActionRegistry, snapshot: ActionRegist
   return output
 }
 
-function candidateTargetReferences(candidate: DraftActionCandidate, retainedRefs: ReadonlySet<string>): Set<string> {
-  const payload = JSON.stringify(candidate.payload)
+function qualifiedActionReferences(payload: string, retainedRefs: ReadonlySet<string>, identity: string): Set<string> {
   const references = actionSourceReferences(payload)
   for (const match of payload.matchAll(/https:\/\/([^/\s]+)\/([^/\s]+)\/([\w-]+)\/(?:pull|issues)\/(\d+)/g)) {
-    if (match[1] !== 'github.com' || match[2] !== 'ojfbot') throw new Error(`Foreign candidate reference ${match[0]} for ${candidate.candidateId}; review pending`)
-    if (!KNOWN_REPOS.has(match[3]) || EXCLUDED_REPOS.has(match[3])) throw new Error(`Unsupported qualified candidate reference ${match[3]}#${match[4]} for ${candidate.candidateId}; review pending`)
+    if (match[1] !== 'github.com' || match[2] !== 'ojfbot') throw new Error(`Foreign candidate reference ${match[0]} for ${identity}; review pending`)
+    if (!KNOWN_REPOS.has(match[3]) || EXCLUDED_REPOS.has(match[3])) throw new Error(`Unsupported qualified candidate reference ${match[3]}#${match[4]} for ${identity}; review pending`)
   }
   for (const match of payload.matchAll(/\b([\w-]+)#(\d+)\b/g)) {
     const qualified = `${match[1]}#${match[2]}`
@@ -212,11 +226,16 @@ function candidateTargetReferences(candidate: DraftActionCandidate, retainedRefs
       continue
     }
     const reviewed = REVIEWED_CANDIDATE_ALIASES.get(qualified)
-    if (!reviewed) throw new Error(`Unsupported qualified candidate reference ${qualified} for ${candidate.candidateId}; review pending`)
+    if (!reviewed) throw new Error(`Unsupported qualified candidate reference ${qualified} for ${identity}; review pending`)
     const matches = [...retainedRefs].filter(reference => reference.endsWith(`#${match[2]}`))
-    if (matches.length !== 1 || matches[0] !== reviewed) throw new Error(`Ambiguous candidate target ${qualified} for ${candidate.candidateId}; explicit qualified evidence association required; review pending`)
+    if (matches.length !== 1 || matches[0] !== reviewed) throw new Error(`Ambiguous candidate target ${qualified} for ${identity}; explicit qualified evidence association required; review pending`)
     references.add(reviewed)
   }
+  return references
+}
+
+function candidateTargetReferences(candidate: DraftActionCandidate, retainedRefs: ReadonlySet<string>): Set<string> {
+  const references = qualifiedActionReferences(JSON.stringify(candidate.payload), retainedRefs, candidate.candidateId)
   for (const match of candidate.payload.command.matchAll(/(?:^|\s)#(\d+)\b/g)) {
     const matches = [...retainedRefs].filter(reference => reference.endsWith(`#${match[1]}`))
     if (matches.length !== 1) throw new Error(`Ambiguous candidate target #${match[1]} for ${candidate.candidateId}; explicit qualified evidence association required; review pending`)
@@ -501,7 +520,8 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
   const carried = input.registry.records.filter(record => reviewActionKeys.includes(record.key))
   const text = [input.feedback, closing, ...(candidateEvidence.hasAssociations ? [] : [nextSection]), ...carried.map(record => JSON.stringify({ key: record.key, workKey: record.workKey,
     originalDescription: record.original.description, description: record.history.at(-1)?.description ?? record.original.description, goal: record.goal, doneWhen: record.doneWhen, gates: record.gates }))].join('\n')
-  const refs = new Set([...actionSourceReferences(text), ...candidateEvidence.requiredRefs])
+  const refs = new Set([...actionSourceReferences(text), ...candidateEvidence.requiredRefs,
+    ...carried.flatMap(record => !BareActionCommandSchema.safeParse(record.original.command).success ? actionRecordSourceReferences(record, input.registry) : [])])
   const contextRefs = new Set(candidateEvidence.contextRefs)
   // Citation identities are also dependencies when the prose uses a short #N.
   for (const record of carried) for (const decision of record.history) for (const citation of decision.citations) {
