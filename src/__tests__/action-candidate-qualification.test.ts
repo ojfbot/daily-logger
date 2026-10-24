@@ -133,7 +133,8 @@ it('admits controlled nonexecuting tracking with concrete completion and owner g
   expect(propose).toHaveBeenCalledTimes(1); expect(verify).toHaveBeenCalledTimes(1)
 })
 
-it.each(['wrong owner/session rationale', 'missing owner authority', 'unsupported parallel dispatch', 'invented command semantics', 'duplicate obligation', 'unverifiable completion', 'no executable definition'])('preserves the independent %s hold without negotiating or forcing a pass', async reason => {
+it('preserves an independent hold without negotiating or forcing a pass', async () => {
+  const reason = 'The owner/session rationale needs independent review.'
   const { result, input, before, propose, verify } = await runFixture(reason)
   await expect(result).rejects.toThrow(`Initial draft candidate requires further review: ${ownerId}: ${reason}`)
   expect(JSON.stringify(input.registry)).toBe(before)

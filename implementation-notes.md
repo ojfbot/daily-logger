@@ -489,3 +489,8 @@ When safe result bytes exist after an authorized run, preserve those exact immut
 - Later evidence projection recognized spaced repository references but missed compact targets inside exact commands. Reuse the captured-target grammar for initial and later subject/selection duties, carrying only the existing narrowly reviewed alias through its explicit source-bound target association; unknown and ambiguous targets remain held.
 - Independent successor review found that approved unqualified `#N` targets were collected but omitted from command subject and later-record duties. Share the existing exact-one approved association rule across those paths; preserve ambiguous/unbound holds and the original invocation bytes.
 - Actual queue inspection showed a full invocation squeezing its description into an unreadable narrow column. Let ordinary rows wrap with a usable description basis and break long command tokens without changing invocation text; retain the native proof and use desktop/phone browser checks for layout.
+
+
+## Deviations — October 21 review and receipt repair (2026-10-23)
+
+- Reusing the synchronous runner’s option values did not preserve its behavior: the asynchronous API applies `maxBuffer` per stream, leaves stdin open and does not forward captured stderr automatically. Keep the original combined byte bound, stdin EOF and diagnostic output while making only the long child calls awaitable. The local socket reproduction supports this repair but does not prove the historical hosted `EPIPE` cause.
