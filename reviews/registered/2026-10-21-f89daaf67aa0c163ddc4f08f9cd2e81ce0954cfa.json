@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-final-20261021-f89daaf67aa0",
+  "article": {
+    "date": "2026-10-21",
+    "sourceCommitSha": "f89daaf67aa0c163ddc4f08f9cd2e81ce0954cfa",
+    "blobSha": "4284a0cd952fcf22aa0861692dbd8d0b4d21e63e"
+  },
+  "reviewer": {
+    "name": "Codex - final editorial and partial-outcome review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-24T17:40:40Z",
+  "scope": "Accepted October 21 source: retained editorial corrections, exact accepted article/action blobs and native partial outcome. Article Accepted; all three original suggestions remain Needs review, without admission, closure or independent semantic verification. Original findings/correspondence preserved; publisher-attributed delivery evidence. No extra model attempt or action authority.",
+  "fullRecordBlobSha": "bbb28db3552cedcb73743ea80c423300c79028a1",
+  "fullRecordPath": "reviews/articles/2026-10-21-f89daaf67aa0c163ddc4f08f9cd2e81ce0954cfa.md",
+  "result": "completed",
+  "findings": []
+}
