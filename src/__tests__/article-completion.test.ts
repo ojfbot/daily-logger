@@ -1,19 +1,27 @@
+import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { ActionRegistrySchema, articleActionCard, articleCompletionOutcome, completeArticleWithPendingActions, isArticleOnlyAcceptanceOutput, projectRegistry, readActionRegistry, readArticleStatuses, registryRevision, renderArticleActions, splitActionRegistry, writeActionRegistry } from '../action-registry.js'
 import { prepareConservativeDraftCandidateEvidence } from '../action-evidence-selection.js'
 import { acceptanceActionCycle } from '../action-review-cycle.js'
 import { writeActionStore } from './action-store-fixture.js'
 
 const date = '2026-10-21'
+const fixtureRoot = mkdtempSync(resolve(tmpdir(), 'article-completion-original-draft-'))
+beforeAll(() => {
+  const archive = execFileSync('git', ['archive', '9ca54f6a197be4cc992a8044e5fa9119f1de3df0', 'actions', '_articles'], { cwd: new URL('../..', import.meta.url), maxBuffer: 32 * 1024 * 1024 })
+  execFileSync('tar', ['-x', '-C', fixtureRoot], { input: archive })
+})
+afterAll(() => rmSync(fixtureRoot, { recursive: true, force: true }))
+
 function fixture() {
-  const registry = readActionRegistry(process.cwd())
+  const registry = readActionRegistry(fixtureRoot)
   const prior = registry.articles.find(article => article.date === date)
   if (!prior || prior.review.state !== 'pending') throw new Error('Expected original pending October21 fixture')
-  const markdown = readFileSync(resolve('_articles', `${date}.md`), 'utf8').replace(/^status:.*$/m, 'status: "accepted"\noutcome: accepted')
-  const statuses = readArticleStatuses(process.cwd()).set(date, 'accepted')
+  const markdown = readFileSync(resolve(fixtureRoot, '_articles', `${date}.md`), 'utf8').replace(/^status:.*$/m, 'status: "accepted"\noutcome: accepted')
+  const statuses = readArticleStatuses(fixtureRoot).set(date, 'accepted')
   const cycle = acceptanceActionCycle('fixture-clean-acceptance', prior)
   const evidence = prepareConservativeDraftCandidateEvidence({ registry, articleDate: date, markdown, articleStatuses: statuses, cycle, draftCandidates: prior.draftCandidates ?? [] })
   const result = completeArticleWithPendingActions({ registry, articleDate: date, markdown, articleStatuses: statuses, cycle, failureKind: 'invalid-output', sources: [], draftCandidateEvidence: evidence })
@@ -51,7 +59,7 @@ describe('article completion with unresolved actions', () => {
 
   it('retains original candidate identities in a non-dispatchable index without changing healthy work', () => {
     const { mixed, statuses, registry, prior } = fixture()
-    const before = projectRegistry(registry, readArticleStatuses(process.cwd()))
+    const before = projectRegistry(registry, readArticleStatuses(fixtureRoot))
     const after = projectRegistry(ActionRegistrySchema.parse(mixed), statuses)
     expect(after.open).toEqual(before.open)
     expect(after.done).toEqual(before.done)
@@ -67,7 +75,7 @@ describe('article completion with unresolved actions', () => {
     const root = mkdtempSync(resolve(tmpdir(), 'article-completion-'))
     try {
       mkdirSync(resolve(root, '_articles'))
-      const path = resolve(root, '_articles', `${date}.md`), original = readFileSync(resolve('_articles', `${date}.md`), 'utf8')
+      const path = resolve(root, '_articles', `${date}.md`), original = readFileSync(resolve(fixtureRoot, '_articles', `${date}.md`), 'utf8')
       writeFileSync(path, original); writeActionStore(root, registry)
       writeActionRegistry(root, mixed, registryRevision(registry), { path, expected: original, next: markdown, publish: () => writeFileSync(path, markdown) })
       const reloaded = readActionRegistry(root), snapshot = reloaded.articles.find(article => article.date === date)
