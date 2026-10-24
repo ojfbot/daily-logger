@@ -1217,7 +1217,7 @@ a:hover { border-bottom-color: var(--text); }
 .action-reviewed-deferred { border-left: 3px solid var(--text-secondary); padding-left: 0.65rem; }
 
 @media (max-width: 768px) {
-  .actions-columns { grid-template-columns: 1fr; }
+  .actions-columns { grid-template-columns: minmax(0, 1fr); overflow-wrap: anywhere; }
 }
 
 .actions-column {

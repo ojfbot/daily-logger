@@ -191,7 +191,7 @@ it('persists and reuses the accepted review through the real stamper, outcome st
   vi.stubEnv('ACTION_KEY', '')
   vi.spyOn(console, 'log').mockImplementation(() => {})
 
-  await import('../../scripts/reconcile-actions.js')
+  await (await import('../../scripts/reconcile-actions.js')).reconcileActions()
   const first = readActionRegistry(fixture.root)
   const firstSnapshot = first.articles.find(article => article.date === date)!
   const firstMarkdown = readFileSync(join(fixture.root, `_articles/${date}.md`), 'utf8')
@@ -208,7 +208,7 @@ it('persists and reuses the accepted review through the real stamper, outcome st
   expect([control.proposeCalls, control.verifyCalls]).toEqual([1, 1])
 
   vi.resetModules()
-  await import('../../scripts/reconcile-actions.js')
+  await (await import('../../scripts/reconcile-actions.js')).reconcileActions()
   const second = readActionRegistry(fixture.root)
   expect(registryRevision(second)).toBe(registryRevision(first))
   expect(readFileSync(join(fixture.root, `_articles/${date}.md`), 'utf8')).toBe(firstMarkdown)
