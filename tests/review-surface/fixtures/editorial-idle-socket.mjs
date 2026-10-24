@@ -15,12 +15,12 @@ const commentPath = '/repos/ojfbot/daily-logger/issues/416/comments'
 const marker = name => join(state, name)
 
 if (mode === 'peer') {
-  let warmSocket, closed = false, nextSocket = 0
+  let warmSocket, postedComment, closed = false, nextSocket = 0, posts = 0
   const sockets = new Map()
   const server = http.createServer(async (request, response) => {
     assert.equal(request.socket.remoteAddress, '127.0.0.1')
     assert.equal(request.headers.authorization, `Bearer ${credential}`)
-    console.log(JSON.stringify({ event: 'request', method: request.method, socket: sockets.get(request.socket) }))
+    console.log(JSON.stringify({ event: 'request', method: request.method, path: request.url, socket: sockets.get(request.socket) }))
     response.setHeader('content-type', 'application/json')
     response.setHeader('connection', 'keep-alive')
     response.setHeader('keep-alive', 'timeout=60')
@@ -29,17 +29,23 @@ if (mode === 'peer') {
       response.end(JSON.stringify({ login: 'ojfbot' }))
       return
     }
+    if (request.method === 'GET' && request.url === commentPath) {
+      response.end(JSON.stringify(postedComment ? [postedComment] : []))
+      return
+    }
     assert.equal(request.method, 'POST')
     assert.equal(request.url, commentPath)
+    assert.equal(++posts, 1)
     let body = ''
     for await (const chunk of request) { body += chunk; assert(body.length <= 4096) }
     const parsed = JSON.parse(body)
     assert(parsed.body.startsWith('## Editorial execution receipt'))
-    response.statusCode = 201
-    response.end(JSON.stringify({ id: 42, body: parsed.body,
+    postedComment = { id: 42, body: parsed.body,
       html_url: 'https://github.com/ojfbot/daily-logger/pull/416#issuecomment-42',
       user: { login: 'github-actions[bot]' }, author_association: 'MEMBER',
-      created_at: '2030-01-01T00:00:00Z', updated_at: '2030-01-01T00:00:00Z' }))
+      created_at: '2030-01-01T00:00:00Z', updated_at: '2030-01-01T00:00:00Z' }
+    response.statusCode = 201
+    response.end(JSON.stringify(postedComment))
   })
   server.keepAliveTimeout = 60000
   server.keepAliveTimeoutBuffer = 0
@@ -69,7 +75,8 @@ if (mode === 'peer') {
   assert(mode === 'sync' || mode === 'async')
   const peer = spawn(process.execPath, [self, 'peer', state], { env: {}, stdio: ['ignore', 'pipe', 'pipe'] })
   const events = [], sockets = new WeakSet(), emit = Socket.prototype.emit
-  let pending = '', peerStderr = '', heartbeats = 0, attempts = 0, delivered = false, errorCode = null, child
+  let pending = '', peerStderr = '', heartbeats = 0, attempts = 0, delivered = false, errorCode = null, child, result
+  const peerClosed = new Promise(resolve => peer.once('close', resolve))
   peer.stderr.on('data', chunk => { peerStderr += chunk; assert(peerStderr.length <= 4096) })
   const ready = new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(Error('Peer startup deadline')), 2000)
@@ -118,15 +125,23 @@ if (mode === 'peer') {
         child = JSON.parse((await run).stdout)
       }
     } finally { clearInterval(heartbeat) }
+    const reviewSource = createReviewSource(github)
+    const body = '## Editorial execution receipt\n{"outcome":"uncertain","reason":"OFFLINE fixture only"}'
     try {
-      await createReviewSource(github).postComment(416, '## Editorial execution receipt\n{"outcome":"uncertain","reason":"OFFLINE fixture only"}')
+      const comment = await reviewSource.postComment(416, body)
+      assert.equal(comment.id, 42); assert.equal(comment.body, body)
       delivered = true
     } catch (error) { errorCode = error.cause?.code ?? error.code ?? error.name }
-    console.log(JSON.stringify({ mode, node: process.version, adapterSha256: createHash('sha256').update(adapter).digest('hex'),
-      child, heartbeats, attempts, delivered, errorCode, events, peerStderr, externalCalls: 0, providerCalls: 0 }))
+    const comments = await reviewSource.comments(416)
+    assert(comments.length <= 1)
+    const receiptReadback = comments.length === 1 && comments[0].id === 42 && comments[0].body === body
+    result = { mode, node: process.version, adapterSha256: createHash('sha256').update(adapter).digest('hex'),
+      child, heartbeats, attempts, delivered, errorCode, receiptReadback, storedReceipts: comments.length,
+      events, peerStderr, externalCalls: 0, providerCalls: 0 }
   } finally {
     Socket.prototype.emit = emit
     peer.kill('SIGTERM')
-    if (peer.exitCode === null && peer.signalCode === null) await new Promise(resolve => peer.once('exit', resolve))
+    await peerClosed
   }
+  console.log(JSON.stringify(result))
 }
