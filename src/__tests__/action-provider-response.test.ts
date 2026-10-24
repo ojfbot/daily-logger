@@ -12,7 +12,7 @@ vi.mock('@anthropic-ai/sdk', () => ({ default: class {
   constructor(options: unknown) { constructed(options) }
   messages = { create, countTokens }
 } }))
-import { actionProviderRequest, createActionAgents, reviewArticleActions, reviewProducedDraftActions, classifyActionReviewFailure, ActionContextNeedError } from '../review-actions.js'
+import { actionProviderRequest, createActionAgents, reviewArticleActions, reviewProducedDraftActions, pendingActionReview, classifyActionReviewFailure, ActionContextNeedError } from '../review-actions.js'
 
 const empty = { changes: [], suggestions: [], candidateDispositions: [], closingOptions: [] }
 const response = (input: unknown) => ({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tool_offline', name: 'review_actions', input }], usage: { output_tokens: 100 } })
@@ -237,6 +237,23 @@ describe('native-validated forced-tool response boundary', () => {
     if (!(first instanceof Error)) throw new Error('Expected native persistence wrapper')
     Object.defineProperty(first, 'cause', { value: first })
     expect(classifyActionReviewFailure(first)).toBeUndefined()
+  })
+  it('does not launder an unexpected native pending-persistence integrity failure around invalid output', async () => {
+    const input = reviewInput()
+    const pending = pendingActionReview({ ...input, reason: 'Initial fixture review.' })
+    input.registry = pending.registry
+    input.markdown = pending.markdown
+    create.mockImplementation(async () => {
+      // Simulate a concurrent integrity change after initial native admission and before fallback persistence.
+      input.registry.articles[0].stateDigest = 'f'.repeat(64)
+      return response({ ...empty, suggestions: null })
+    })
+    const failure = await reviewProducedDraftActions({ ...input, collectSources: () => [] }).catch((error: unknown) => error)
+    expect(failure).toBeInstanceOf(Error)
+    if (!(failure instanceof Error)) throw new Error('Expected native pending persistence failure')
+    expect(failure.message).toMatch(/pending persistence refused/)
+    expect(classifyActionReviewFailure(failure)).toBeUndefined()
+    expect(create).toHaveBeenCalledTimes(2)
   })
   it.each(['provider', 'counter-unavailable', 'generic', 'zod', 'context'] as const)('does not classify %s failure as permission to finish an article', async kind => {
     const input = reviewInput(), secret = 'PRIVATE_FAILURE_VALUE'
