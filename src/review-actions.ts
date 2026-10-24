@@ -419,7 +419,7 @@ export function actionProviderRequest(role: 'proposer' | 'verifier', prompt: str
 
 export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } = {}): ActionAgents {
   const client = new Anthropic({ timeout: 120000, maxRetries: 0 })
-  const configuredLimit = Number(process.env.ACTION_PROVIDER_TOKEN_LIMIT ?? '200000')
+  const configuredLimit = Number(process.env.ACTION_PROVIDER_TOKEN_LIMIT ?? '256000')
   const tokenLimit = options.tokenBudget?.limitTokens ?? configuredLimit
   if (!Number.isSafeInteger(tokenLimit) || tokenLimit <= 12000) throw new Error(`${options.tokenBudget ? 'Action token budget limitTokens' : 'ACTION_PROVIDER_TOKEN_LIMIT'} must be an integer greater than the 12000-token output reserve`)
   async function call(role: 'proposer' | 'verifier', prompt: string, view: PreparedActionEvidenceView, context?: ActionProposalContext): Promise<unknown> {
