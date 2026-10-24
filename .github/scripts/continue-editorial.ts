@@ -24,7 +24,7 @@ async function runEditorialCommand(file: string, args: string[], options: ExecFi
     bytes += chunk.length
     if (bytes > options.maxBuffer) {
       overflow = true
-      pending.child.kill('SIGTERM')
+      if (!pending.child.killed && pending.child.exitCode === null && pending.child.signalCode === null) pending.child.kill('SIGTERM')
       pending.child.stdout?.destroy()
       pending.child.stderr?.destroy()
     }
@@ -48,7 +48,7 @@ async function runEditorialCommand(file: string, args: string[], options: ExecFi
     catch (error) { if (!failed && !overflow) throw error }
   }
   if (overflow) throw Object.assign(new Error('Editorial command stdout and stderr exceeded maxBuffer'), {
-    code: 'ENOBUFS', signal: 'SIGTERM', stdout: Buffer.concat(stdout).toString('utf8'), stderr: Buffer.concat(stderr).toString('utf8'),
+    code: 'ENOBUFS', signal: pending.child.signalCode, stdout: Buffer.concat(stdout).toString('utf8'), stderr: Buffer.concat(stderr).toString('utf8'),
   })
 }
 

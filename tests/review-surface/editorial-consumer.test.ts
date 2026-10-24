@@ -18,10 +18,10 @@ import { ActionRegistrySchema, ArticleActionFileSchema, stripManagedActions } fr
 import { admitActionRegistry } from '../../.github/scripts/editorial-action-registry.js'
 import { admitEditorial, prepareEditorial, pushEditorial, finalizeEditorial, type Execution } from '../../.github/scripts/continue-editorial.js'
 const commandFailure = vi.hoisted(() => {
-  const state: { error: Error | undefined; childError: Error | undefined; events: string[];
+  const state: { error: Error | undefined; childError: Error | undefined; events: string[]; killRequests: number;
     options: Array<{ shell: unknown; maxBuffer: unknown; timeout: unknown; cwd: unknown }>;
     replacement: { file: string; args: string[]; timeout?: number } | undefined } = {
-    error: undefined, childError: undefined, events: [], options: [], replacement: undefined,
+    error: undefined, childError: undefined, events: [], options: [], replacement: undefined, killRequests: 0,
   }
   return state
 })
@@ -40,6 +40,10 @@ vi.mock('node:child_process', async importOriginal => {
     const pending = replacement
       ? run(replacement.file, replacement.args, { ...args[2], ...(replacement.timeout === undefined ? {} : { timeout: replacement.timeout }) })
       : run(...args)
+    if (args[0] === 'pnpm') {
+      const kill = pending.child.kill.bind(pending.child)
+      pending.child.kill = signal => { commandFailure.killRequests++; return kill(signal) }
+    }
     return Object.assign(pending.then(result => {
       if (args[0] === 'pnpm') commandFailure.events.push(`end:${label}`)
       return result
@@ -63,7 +67,7 @@ vi.mock('node:child_process', async importOriginal => {
 // Native revision cases create Git worktrees and run the actual CLI.
 vi.setConfig({ testTimeout: 20_000 })
 const cleanups: string[] = []
-afterEach(() => { commandFailure.error = undefined; commandFailure.childError = undefined; commandFailure.replacement = undefined; commandFailure.events.length = 0; commandFailure.options.length = 0; vi.unstubAllEnvs(); for (const path of cleanups.splice(0)) rmSync(path, { recursive: true, force: true }) })
+afterEach(() => { commandFailure.error = undefined; commandFailure.childError = undefined; commandFailure.replacement = undefined; commandFailure.events.length = 0; commandFailure.options.length = 0; commandFailure.killRequests = 0; vi.unstubAllEnvs(); for (const path of cleanups.splice(0)) rmSync(path, { recursive: true, force: true }) })
 function git(cwd: string, ...args: string[]) { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim() }
 async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | 'missing-registry' | 'registry-symlink' | 'registry-executable' | 'cross-date-choice' | null = null, ambiguousAncestry = false, pendingInitial = false, requestKind: 'revision' | 'clean' = 'revision') {
   vi.stubEnv('MOCK_LLM', 'true')
@@ -981,11 +985,16 @@ it.each(['nonzero', 'signal', 'spawn', 'overflow', 'combined-overflow', 'overflo
   if (kind === 'utf8') expect(failure).toMatchObject({ code: 7, stdout: '雪', stderr: '雪' })
   if (kind === 'raw-under' || kind === 'raw-boundary') expect(failure).toMatchObject({ code: 7 })
   if (kind === 'overflow' || kind === 'combined-overflow' || kind === 'overflow-delayed-exit') {
-    expect(failure).toMatchObject({ code: 'ENOBUFS', signal: 'SIGTERM' })
+    expect(failure).toMatchObject({ code: 'ENOBUFS' })
+    expect(commandFailure.killRequests).toBeLessThanOrEqual(1)
     const bounded = z.object({ stdout: z.string(), stderr: z.string() }).parse(failure)
     expect(Buffer.byteLength(bounded.stdout) + Buffer.byteLength(bounded.stderr)).toBeLessThanOrEqual(1024 * 1024)
   }
-  if (kind === 'overflow-delayed-exit') expect(readFileSync(resolve(f.execution.workspace, 'child-signals'), 'utf8')).toBe('SIGTERM\nEXIT\n')
+  if (kind === 'overflow-delayed-exit') {
+    expect(commandFailure.killRequests).toBe(1)
+    expect(failure).toMatchObject({ signal: null })
+    expect(readFileSync(resolve(f.execution.workspace, 'child-signals'), 'utf8')).toBe('SIGTERM\nEXIT\n')
+  }
   expect(commandFailure.events.map(event => basename(event))).toEqual(['revise-article.ts'])
   const receipts = f.state.prComments.get(42)?.filter(comment => comment.body.startsWith('## Editorial execution receipt'))
   expect(receipts).toHaveLength(1)
