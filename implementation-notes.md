@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- The historical missing-receipt fixture still borrowed the live October 21 article and action map; the real Accepted/pending output changed both, so the fixture now reads their immutable accepted `6880255` capture and checks both blob hashes against the original request without changing recovery assertions or expiry guards.
+
 - The immutable missing-receipt replay assumed its request would stay within the live 24-hour execution window; hosted CI crossed that boundary, so the test now pins the historical owner-resolution clock and separately asserts expiry still refuses execution.
 
 - The article-completion tests assumed the live October 21 registry would remain Draft; a controlled Accepted/pending result correctly failed the first-acceptance guard, so their original registry, article and status corpus now come from the immutable accepted `9ca54f6` Git capture while native code and all assertions stay current.
