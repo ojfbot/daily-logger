@@ -180,7 +180,7 @@ describe('native-validated forced-tool response boundary', () => {
   })
   it.each(['token-overflow', 'count-unavailable', 'provider-error'] as const)('never repairs %s as malformed output', async kind => {
     const failure = new Error('Offline provider transport failure')
-    if (kind === 'token-overflow') countTokens.mockResolvedValue({ input_tokens: 188001 })
+    if (kind === 'token-overflow') countTokens.mockResolvedValue({ input_tokens: 244001 })
     if (kind === 'count-unavailable') countTokens.mockRejectedValue(failure)
     if (kind === 'provider-error') create.mockRejectedValue(failure)
     const input = reviewInput(), before = structuredClone(input.registry)
@@ -193,7 +193,7 @@ describe('native-validated forced-tool response boundary', () => {
   })
   it('requalifies the complete repair request and stops before another generation if its count cannot fit', async () => {
     create.mockResolvedValueOnce(response({ ...empty, closingOptions: null }))
-    countTokens.mockResolvedValueOnce({ input_tokens: 1000 }).mockResolvedValueOnce({ input_tokens: 188001 })
+    countTokens.mockResolvedValueOnce({ input_tokens: 1000 }).mockResolvedValueOnce({ input_tokens: 244001 })
     const input = reviewInput(), before = structuredClone(input.registry)
     await expect(reviewArticleActions(input)).rejects.toThrow(/exceeds token budget/)
     expect(countTokens).toHaveBeenCalledTimes(2)

@@ -1,6 +1,6 @@
 import { fixtureEvidenceView } from './evidence-view-fixtures.js'
 import { reviewArticleActions } from './evidence-view-fixtures.js'
-import { expect, it, vi } from 'vitest'
+import { afterEach, expect, it, vi } from 'vitest'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { z } from 'zod'
@@ -10,6 +10,63 @@ const { create, countTokens } = vi.hoisted(() => ({ create: vi.fn(), countTokens
 vi.mock('@anthropic-ai/sdk', () => ({ default: class { messages = { create, countTokens } } }))
 import { parseActionModelView } from '../action-model-view.js'
 import { createActionAgents} from '../review-actions.js'
+
+afterEach(() => { vi.unstubAllEnvs() })
+const emptyProviderResponse = { stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tool_offline', name: 'review_actions', input: { changes: [], suggestions: [], candidateDispositions: [], closingOptions: [] } }], usage: { output_tokens: 0 } }
+const roles = ['propose', 'verify'] as const
+it.each(roles)('qualifies the exact 256000 default boundary before %s generation', async role => {
+  vi.stubEnv('ACTION_PROVIDER_TOKEN_LIMIT', undefined)
+  create.mockReset().mockResolvedValue(emptyProviderResponse)
+  countTokens.mockReset().mockResolvedValue({ input_tokens: 244000 })
+  const agents = createActionAgents(), view = fixtureEvidenceView([])
+  await agents[role]('Complete envelope at the default capacity boundary.', view)
+  expect(create).toHaveBeenCalledTimes(1)
+  expect(countTokens).toHaveBeenCalledTimes(1)
+  const { max_tokens, ...countRequest } = create.mock.calls[0][0]
+  expect(max_tokens).toBe(12000)
+  expect(countTokens.mock.calls[0][0]).toEqual(countRequest)
+  expect(countTokens.mock.invocationCallOrder[0]).toBeLessThan(create.mock.invocationCallOrder[0])
+  expect(create.mock.calls[0][0].model).toBe(role === 'propose' ? 'claude-sonnet-4-6' : 'claude-opus-4-6')
+
+  create.mockClear(); countTokens.mockClear().mockResolvedValue({ input_tokens: 244001 })
+  await expect(agents[role]('The same complete envelope exceeds the default capacity by one token.', view)).rejects.toThrow(/244001 input \+ 12000 output reserve > 256000/)
+  expect(countTokens).toHaveBeenCalledTimes(1)
+  expect(create).not.toHaveBeenCalled()
+})
+it.each(roles)('admits %s beyond the old default while preserving explicit 200000 environment and injected overrides', async role => {
+  vi.stubEnv('ACTION_PROVIDER_TOKEN_LIMIT', undefined)
+  create.mockReset().mockResolvedValue(emptyProviderResponse)
+  countTokens.mockReset().mockResolvedValue({ input_tokens: 188001 })
+  const view = fixtureEvidenceView([])
+  await createActionAgents()[role]('An input one token beyond the old 188000 maximum.', view)
+  expect(create).toHaveBeenCalledTimes(1)
+
+  create.mockClear(); countTokens.mockClear()
+  vi.stubEnv('ACTION_PROVIDER_TOKEN_LIMIT', '200000')
+  const explicit = createActionAgents()
+  await expect(explicit[role]('An explicit old limit remains authoritative.', view)).rejects.toThrow(/188001 input \+ 12000 output reserve > 200000/)
+  expect(create).not.toHaveBeenCalled()
+  countTokens.mockResolvedValue({ input_tokens: 188000 })
+  await explicit[role]('The explicit old boundary still passes.', view)
+  expect(create).toHaveBeenCalledTimes(1)
+
+  create.mockClear(); countTokens.mockClear()
+  vi.stubEnv('ACTION_PROVIDER_TOKEN_LIMIT', '256000')
+  const count = vi.fn(async () => ({ kind: 'counted' as const, inputTokens: 188001 }))
+  const injected = createActionAgents({ tokenBudget: { limitTokens: 200000, count } })
+  await expect(injected[role]('An injected old limit overrides the larger environment limit.', view)).rejects.toThrow(/188001 input \+ 12000 output reserve > 200000/)
+  expect(count).toHaveBeenCalledTimes(1)
+  expect(countTokens).not.toHaveBeenCalled()
+  expect(create).not.toHaveBeenCalled()
+})
+it.each(roles)('holds %s before generation if its native count is unavailable', async role => {
+  vi.stubEnv('ACTION_PROVIDER_TOKEN_LIMIT', undefined)
+  create.mockReset().mockResolvedValue(emptyProviderResponse)
+  countTokens.mockReset().mockRejectedValue(new Error('Offline counter unavailable'))
+  await expect(createActionAgents()[role]('Unqualified input.', fixtureEvidenceView([]))).rejects.toThrow(/token qualification unavailable/)
+  expect(countTokens).toHaveBeenCalledTimes(1)
+  expect(create).not.toHaveBeenCalled()
+})
 
 it('bounds the full provider envelope, including rules and tool schema, before each provider call', async () => {
   create.mockResolvedValue({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tool_offline', name: 'review_actions', input: { changes: [], suggestions: [], candidateDispositions: [], closingOptions: [] } }], usage: { output_tokens: 0 } })
@@ -65,7 +122,7 @@ it.each([
   countTokens.mockReset()
   countTokens.mockResolvedValue(result)
   const agents = createActionAgents()
-  await expect(agents.verify('Bounded local trial.', fixtureEvidenceView([]))).rejects.toThrow(/token qualification unavailable/i)
+  for (const role of roles) await expect(agents[role]('Bounded local trial.', fixtureEvidenceView([]))).rejects.toThrow(/token qualification unavailable/i)
   expect(create).not.toHaveBeenCalled()
 })
 
