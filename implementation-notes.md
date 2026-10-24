@@ -494,3 +494,4 @@ When safe result bytes exist after an authorized run, preserve those exact immut
 ## Deviations — October 21 review and receipt repair (2026-10-23)
 
 - Reusing the synchronous runner’s option values did not preserve its behavior: the asynchronous API applies `maxBuffer` per stream, leaves stdin open and does not forward captured stderr automatically. Keep the original combined byte bound, stdin EOF and diagnostic output while making only the long child calls awaitable. The local socket reproduction supports this repair but does not prove the historical hosted `EPIPE` cause.
+- The controls assumed signal handling preceded natural child exit and synchronous receipt failure was portable; hosted Linux disproved both. Give the signal fixture a bounded lifetime and verify observable receipt outcomes, exact readback and parent liveness without requiring every runtime to fail the synchronous POST.
