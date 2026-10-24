@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { ActionCommandSchema, BareActionCommandSchema, isReviewedAction } from './action-model.js'
 import { ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, ActionReviewCycleSchema, actionAdmissionLimit, countCycleAdmissions, type ActionReviewCycle } from './action-review-cycle.js'
-import { ACTION_EVIDENCE_SELECTION_VERSION, CONTINUITY_TARGETS_SOURCE, acceptedContinuityGithubReferences, actionEvidenceScope, actionRecordSourceReferences, actionReviewIndex, actionSourceReferences, canonicalActionSources, COVERAGE_SOURCE, deriveActionReviewOutput, prepareConservativeDraftCandidateEvidence, recommendationMaintenanceDescriptor, recommendationMaintenanceProjection, selectActionEvidence } from './action-evidence-selection.js'
+import { ACTION_EVIDENCE_SELECTION_VERSION, CONTINUITY_TARGETS_SOURCE, acceptedContinuityGithubReferences, actionEvidenceScope, actionRecordSourceReferences, actionReviewIndex, actionSourceReferences, canonicalActionSources, COVERAGE_SOURCE, deriveActionReviewOutput, prepareConservativeDraftCandidateEvidence, draftCandidateEvidenceScope, actionCommandSourceReferences, recommendationMaintenanceDescriptor, recommendationMaintenanceProjection, selectActionEvidence } from './action-evidence-selection.js'
 import {
   ActionEvidenceRequestError,
   ActionEvidenceLifecycleError,
@@ -594,13 +594,14 @@ function assertActionCitationSubjects(actionKey: string, citations: z.infer<type
   if (unrelated.length) throw new Error(`Disposition ${actionKey} cites unrelated GitHub subject(s): ${[...new Set(unrelated)].join(', ')}; expected ${[...allowed].join(', ')}`)
 }
 
-function suggestionSourceReferences(candidate: z.infer<typeof ActionProposalSchema>['suggestions'][number]): string[] {
+function suggestionSourceReferences(candidate: z.infer<typeof ActionProposalSchema>['suggestions'][number], approvedTargets: ReadonlySet<string>): string[] {
   const text = JSON.stringify({ target: candidate.target, outcome: candidate.outcome, description: candidate.description, goal: candidate.goal, doneWhen: candidate.doneWhen, gates: candidate.gates })
   const bareText = text
     .replace(/https:\/\/github\.com\/ojfbot\/[\w-]+\/(?:pull|issues)\/\d+/g, '')
     .replace(/\b([\w-]+)\s+#\d+/g, (value, repo: string) => KNOWN_REPOS.has(repo) ? '' : value)
   return [...new Set([
     ...actionSourceReferences(text),
+    ...(!BareActionCommandSchema.safeParse(candidate.command).success ? actionCommandSourceReferences(candidate.command, approvedTargets) : []),
     ...[...bareText.matchAll(/#(\d+)/g)].map(match => `${candidate.repo}#${match[1]}`),
   ])].sort()
 }
@@ -741,7 +742,7 @@ function archiveCandidateReview(previous: ActionRegistry['articles'][number] | u
     && receipt.verification.proposalSha256 === priorReceipt.verification.proposalSha256 && receipt.stateDigest === priorReceipt.stateDigest) ? [priorReceipt] : [])]
 }
 
-export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; sources: ActionSource[]; evidenceView: PreparedActionEvidenceView; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string }; draftCandidates?: readonly DraftActionCandidate[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftContext?: DraftRecommendationContext; requiredActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; resolvedEvidenceRequests?: ActionRegistry['articles'][number]['evidenceRequests'] }): ActionRegistry {
+export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; feedback?: string; sources: ActionSource[]; evidenceView: PreparedActionEvidenceView; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string }; draftCandidates?: readonly DraftActionCandidate[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftContext?: DraftRecommendationContext; requiredActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; resolvedEvidenceRequests?: ActionRegistry['articles'][number]['evidenceRequests'] }): ActionRegistry {
   assertExactInvocationAdmissions(input.registry)
   const cycle = ActionReviewCycleSchema.parse(input.cycle)
   const proposal = ActionProposalSchema.parse(input.proposal)
@@ -757,6 +758,8 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   const awaitingDraftCandidates = draftCandidates?.filter(candidate => candidate.review.state === 'awaiting-review') ?? []
   assertCandidateAssociations(proposal, actionProposalContext(input.articleDate, draftCandidates ?? [], next.records.map(record => record.key)))
   if (proposal.suggestions.some(candidate => !BareActionCommandSchema.safeParse(candidate.command).success) && !input.draftCandidateEvidence) throw new Error('Argument-bearing admission requires source-bound captured evidence and native output provenance')
+  const invocationTargets = proposal.suggestions.some(candidate => !BareActionCommandSchema.safeParse(candidate.command).success)
+    ? draftCandidateEvidenceScope({ ...input, draftCandidates, feedback: input.feedback ?? '' }).requiredRefs : new Set<string>()
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? previous?.draftContext)
   input = { ...input, markdown: prepared.markdown, draftContext: prepared.context }
   const keys = new Set(previous?.actionKeys ?? next.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key))
@@ -782,7 +785,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
       rejected.push({ description: change.description, reason: verdict.reason }); continue
     }
     const kinds: ActionSource['kind'][] = ['repository', 'github', ...(['open', 'deferred', 'dismissed'].includes(change.state) ? ['instruction' as const] : [])]
-    assertActionCitationSubjects(record.key, change.citations, input.sources, actionRecordSourceReferences(record))
+    assertActionCitationSubjects(record.key, change.citations, input.sources, actionRecordSourceReferences(record, input.registry))
     if (!checkedCitations(change.citations, input.sources, kinds, ['done', 'dismissed', 'superseded'].includes(change.state))) {
       if (keys.has(change.actionKey)) throw new Error(`Disposition ${change.actionKey} needs exact quotes from authoritative sources. Terminal dispositions require repository, current API-state, or OWNER/MEMBER/COLLABORATOR evidence; dismissal also permits explicit operator feedback.`)
       rejected.push({ description: change.description, reason: 'Optional disposition lacks authoritative exact evidence' }); continue
@@ -806,7 +809,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     if (verdict.verdict !== 'pass') { rejectCandidate(verdict.reason); continue }
     if (!checkedCitations(candidate.factCitations, input.sources, ['repository', 'github'])) { rejectCandidate(`Missing exact primary factual evidence. ${verdict.reason}`); continue }
     if (!checkedCitations([...candidate.factCitations, ...candidate.goalCitations], input.sources, ['repository', 'github'])) { rejectCandidate('A contextual citation is missing or does not match its exact source'); continue }
-    try { assertActionCitationSubjects(`candidate:${candidateIndex}`, [...candidate.factCitations, ...candidate.goalCitations], input.sources, suggestionSourceReferences(candidate)) }
+    try { assertActionCitationSubjects(`candidate:${candidateIndex}`, [...candidate.factCitations, ...candidate.goalCitations], input.sources, suggestionSourceReferences(candidate, invocationTargets)) }
     catch (error) { rejectCandidate(error instanceof Error ? error.message : 'Candidate cites an unrelated GitHub subject'); continue }
     const matchingRejections = input.registry.articles.flatMap(article => article.rejected).filter(item => item.workKey === workKey && item.evidenceDigest === evidenceDigest)
     const priorRejection = matchingRejections.find(item => !item.quotaHold) ?? matchingRejections.find(item => item.quotaHold?.articleDate === input.articleDate && JSON.stringify(item.quotaHold.cycle) === JSON.stringify(cycle))
@@ -825,7 +828,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
       const equivalent = existing.workKey === workKey
       if (!equivalent) { rejectCandidate(`Identity ${existingKey} lacks a matching target and outcome; retain existing work unchanged`); continue }
       if (isReviewedAction(existing.original)) { rejectCandidate('Restricted reviewed context is not dispatchable work'); continue }
-      assertActionCitationSubjects(existing.key, [...candidate.factCitations, ...candidate.goalCitations], input.sources, actionRecordSourceReferences(existing))
+      assertActionCitationSubjects(existing.key, [...candidate.factCitations, ...candidate.goalCitations], input.sources, actionRecordSourceReferences(existing, input.registry))
       const state = acceptedActionState(existing, input.articleStatuses, input.registry)
       if (['open', 'proposed', 'deferred'].includes(state)) {
         keys.add(existingKey)

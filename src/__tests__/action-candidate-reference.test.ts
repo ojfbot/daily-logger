@@ -7,7 +7,7 @@ import { applyVerifiedActionReview } from './evidence-view-fixtures.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { ActionRegistrySchema, actionStateDigest, normalizeWorkKey, sha256, captureDraftActionCandidates, readActionRegistry, registryBytes, splitActionRegistry, hydrateActionRegistry, projectRegistry, assertExactInvocationAdmissions, renderArticleActions, type ActionRegistry } from '../action-registry.js'
-import { draftCandidateEvidenceBinding } from '../action-evidence-selection.js'
+import { draftCandidateEvidenceBinding, actionCommandSourceReferences, actionRecordSourceReferences, actionEvidenceScope, selectActionEvidence } from '../action-evidence-selection.js'
 import { generationActionCycle } from '../action-review-cycle.js'
 import { createActionAgents, pendingActionReview, resolveActionSourceLines, reviewArticleActions } from '../review-actions.js'
 
@@ -24,8 +24,8 @@ const fields = { target: 'bounded decision', outcome: 'Record the independent re
   factCitations: [{ sourceId: 'fact', startLine: 1, endLine: 1 }], goalCitations: [{ sourceId: 'goal', startLine: 1, endLine: 1 }] }
 const response = (input: unknown) => ({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'offline', name: 'review_actions', input }], usage: { output_tokens: 100 } })
 const RequestSchema = z.object({ model: z.string(), messages: z.tuple([z.object({ content: z.string() }).passthrough()]) }).passthrough()
-function setup(existing = false, command = payloads[0].command) {
-  const capturedPayloads = payloads.map((payload, index) => index === 0 ? { ...payload, command } : payload)
+function setup(existing = false, command = payloads[0].command, repo = payloads[0].repo) {
+  const capturedPayloads = payloads.map((payload, index) => index === 0 ? { ...payload, command, repo } : payload)
   const registry = ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
   if (existing) registry.records.push({ key: 'existing', original: { ...capturedPayloads[0], id: 'existing' }, origin: 'imported', workKey: normalizeWorkKey('core', fields.target, fields.outcome), state: 'open', introducedBy: '2026-10-20', includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: '', gates: [], history: [] })
   const pending = pendingActionReview({ registry, articleDate: date, cycle: generationActionCycle(), markdown: `---\ndate: ${date}\nstatus: draft\n---\nOffline identity fixture.\n`, reason: 'Capture original candidates.', draftCandidates: capturedPayloads, draftContext: { kind: 'none' }, articleStatuses: new Map([[date, 'draft']]) })
@@ -326,15 +326,91 @@ describe('captured candidate references before independent verification', () => 
     const registry = hydrateActionRegistry(split.baseline, split.files), key = registry.records[0].key, nextDate = '2026-10-22'
     const payload = { ...payloads[0], command: registry.records[0].original.command, sourceDate: nextDate }
     const captured = captureDraftActionCandidates([payload])
-    const next = applyVerifiedActionReview({ registry, articleDate: nextDate, cycle: generationActionCycle(), markdown: 'Synthetic exact existing mapping.', sources,
+    const markdown = 'Synthetic exact existing mapping.'
+    const priorEvidence = registry.articles[0].draftCandidateEvidence
+    if (!priorEvidence) throw Error('Source-bound fixture missing')
+    const evidence = { ...priorEvidence, ...draftCandidateEvidenceBinding({registry,articleDate:nextDate,cycle:generationActionCycle(),markdown,feedback:'',articleStatuses:new Map([[date,'draft'],[nextDate,'draft']]),draftCandidates:captured}), candidates:captured.map(candidate=>({candidateId:candidate.candidateId,payloadSha256:sha256(JSON.stringify(candidate.payload)),references:[],actionRelations:[]})), unassignedReferences:[] }
+    const next = applyVerifiedActionReview({ registry, articleDate: nextDate, cycle: generationActionCycle(), markdown, sources,
       roundId: sha256('exact cold map'), articleStatuses: new Map([[date,'draft'],[nextDate,'draft']]), draftCandidates: captured,
       proposal: { changes: [], suggestions: [{...fields,command:payload.command,repo:payload.repo,description:payload.description,existingKey:key,factCitations:[{sourceId:'fact',quote:sources[0].content}],goalCitations:[{sourceId:'goal',quote:sources[1].content}]}], candidateDispositions:[{candidateId:captured[0].candidateId,kind:'map-existing',suggestionIndex:0,actionKey:key,reason:'OFFLINE exact identity map.'}], closingOptions:[]},
-      draftCandidateEvidence: registry.articles[0].draftCandidateEvidence,
+      draftCandidateEvidence: evidence,
       verification:{changes:[],suggestions:[{candidateIndex:0,existingKey:key,verdict:'pass',reason:'OFFLINE controlled exact match.'}],candidateDispositions:[{candidateId:captured[0].candidateId,verdict:'pass',reason:'Controlled fixture.'}],closingOptions:[]} })
     expect(next.records).toHaveLength(1)
     expect(next.records[0].original).toEqual(registry.records[0].original)
     expect(next.articles.find(article=>article.date===nextDate)?.draftCandidates?.[0].review).toMatchObject({state:'mapped-existing',actionKey:key})
     expect(() => assertExactInvocationAdmissions(next)).not.toThrow()
+  })
+
+  it.each(['articleDate','canonicalIndexSha256','reviewCycle'] as const)('refuses foreign direct-apply full-invocation evidence %s', field => {
+    const { input, candidates, verification } = setup(false, '/review exact bound invocation')
+    const evidence = structuredClone(input.registry.articles[0].draftCandidateEvidence)
+    if (!evidence) throw Error('Fixture source binding missing')
+    if (field === 'articleDate') evidence.articleDate = '2020-01-01'
+    if (field === 'canonicalIndexSha256') evidence.canonicalIndexSha256 = 'f'.repeat(64)
+    if (field === 'reviewCycle') evidence.reviewCycle = {phase:'revision',id:'foreign'}
+    expect(() => applyVerifiedActionReview({ ...input, roundId: sha256('foreign apply '+field), draftCandidateEvidence:evidence,
+      proposal:{changes:[],suggestions:[{...fields,command:candidates[0].payload.command,repo:candidates[0].payload.repo,description:candidates[0].payload.description,factCitations:[{sourceId:'fact',quote:sources[0].content}],goalCitations:[{sourceId:'goal',quote:sources[1].content}]}],candidateDispositions:[{candidateId:candidates[0].candidateId,kind:'promote',suggestionIndex:0,reason:'Controlled source-bound admission.'},{candidateId:candidates[1].candidateId,kind:'reject',reason:'Controlled original accounting.',citations:[{sourceId:'fact',quote:sources[0].content}]}],closingOptions:[]},verification })).toThrow(/binding is stale or foreign/)
+  })
+
+  it('retains command-only compact targets in later collection, selection and subject duties', async () => {
+    const { input, proposal, verification } = setup(false, '/review core#561')
+    const metadata = input.registry.articles[0].draftCandidateEvidence
+    if (!metadata) throw Error('Fixture evidence missing')
+    metadata.candidates[0].references = [{classification:'required',reference:'core#561',role:'target',reason:'Explicit compact command target.'}]
+    const snapshot = input.registry.articles[0]
+    snapshot.stateDigest=actionStateDigest(input.registry,snapshot.actionKeys,snapshot.closing,snapshot.draftContext,{articleDate:date,roundId:snapshot.roundId,includePriorArticleRounds:true,draftCandidates:snapshot.draftCandidates,draftCandidateEvidence:metadata})
+    const primary = {id:'github:core#561',kind:'github' as const,locator:'https://github.com/ojfbot/core/issues/561',content:'CURRENT API STATE core#561: state=open; head=not-a-PR; merged_at=none.',trustedContent:['CURRENT API STATE core#561: state=open; head=not-a-PR; merged_at=none.']}
+    create.mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response(verification))
+    const result = await reviewArticleActions({...input,sources:[...sources,primary]})
+    const record = result.registry.records[0]
+    expect(record.history[0].citations.every(citation=>!citation.sourceId.startsWith('github:'))).toBe(true)
+    expect(actionRecordSourceReferences(record)).toContain('core#561')
+    expect([...actionCommandSourceReferences('/review core#561')]).toEqual(['core#561'])
+    expect(()=>actionCommandSourceReferences('/review foreign#561 #561')).toThrow(/Unsupported qualified/)
+    const later = {registry:result.registry,articleDate:'2026-10-22',cycle:generationActionCycle(),markdown:'Synthetic later action review.',feedback:`Review ${record.key}`,articleStatuses:new Map([[date,'draft'],['2026-10-22','draft']])}
+    const scope = actionEvidenceScope(later)
+    expect([...scope.refs]).toContain('core#561')
+    expect(()=>selectActionEvidence({...later,sources})).toThrow(/required.*core#561|core#561.*required/i)
+    const unrelated = { ...primary, id:'github:core#562', locator:'https://github.com/ojfbot/core/issues/562',content:'CURRENT API STATE core#562: state=closed; head=not-a-PR; merged_at=none.',trustedContent:['CURRENT API STATE core#562: state=closed; head=not-a-PR; merged_at=none.'] }
+    expect(()=>applyVerifiedActionReview({...later,sources:[...sources,primary,unrelated],roundId:sha256('unrelated command-only subject'),proposal:{changes:[{actionKey:record.key,state:'done',description:'Unrelated synthetic completion.',reason:'A fake pass cannot change subject.',citations:[{sourceId:unrelated.id,quote:unrelated.content}]}],suggestions:[],candidateDispositions:[],closingOptions:[]},verification:{changes:[{actionKey:record.key,verdict:'pass',reason:'Controlled fake pass.'}],suggestions:[],candidateDispositions:[],closingOptions:[]}})).toThrow(/unrelated GitHub subject/)
+  })
+
+  it('does not admit a compact command target on unrelated required counterevidence despite fake verifier pass', async () => {
+    const { input, proposal, verification } = setup(false, '/review core#561')
+    const snapshot=input.registry.articles[0], metadata=snapshot.draftCandidateEvidence
+    if (!metadata) throw Error('Fixture evidence missing')
+    snapshot.draftContext={kind:'retained',markdown:'Target https://github.com/ojfbot/core/issues/561; counterevidence https://github.com/ojfbot/daily-logger/pull/407.'}
+    Object.assign(metadata,draftCandidateEvidenceBinding({...input,draftContext:snapshot.draftContext}))
+    metadata.candidates[0].references=[{classification:'required',reference:'core#561',role:'target',reason:'Exact command target.'}]
+    metadata.unassignedReferences=[{classification:'required',reference:'daily-logger#407',role:'counterevidence',reason:'Required counterevidence is not the command subject.'}]
+    snapshot.stateDigest=actionStateDigest(input.registry,snapshot.actionKeys,snapshot.closing,snapshot.draftContext,{articleDate:date,roundId:snapshot.roundId,includePriorArticleRounds:true,draftCandidates:snapshot.draftCandidates,draftCandidateEvidence:metadata})
+    const primary={id:'github:core#561',kind:'github' as const,locator:'https://github.com/ojfbot/core/issues/561',content:'CURRENT API STATE core#561: state=open; head=not-a-PR; merged_at=none.',trustedContent:['CURRENT API STATE core#561: state=open; head=not-a-PR; merged_at=none.']}
+    const other={id:'github:daily-logger#407',kind:'github' as const,locator:'https://github.com/ojfbot/daily-logger/pull/407',content:'CURRENT API STATE daily-logger#407: state=open; head=abc; merged_at=none.',trustedContent:['CURRENT API STATE daily-logger#407: state=open; head=abc; merged_at=none.']}
+    create.mockResolvedValueOnce(response({...proposal,suggestions:[{...proposal.suggestions[0],factCitations:[{sourceId:other.id,startLine:1,endLine:1}]}]})).mockResolvedValueOnce(response(verification))
+    const before=JSON.stringify(input.registry)
+    await expect(reviewArticleActions({...input,sources:[...sources,primary,other]})).rejects.toThrow(/promotion was not admitted/)
+    expect(create.mock.calls.map(([raw])=>RequestSchema.parse(raw).model)).toEqual(['claude-sonnet-4-6','claude-opus-4-6'])
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it('carries the existing reviewed wayfinder alias only with its explicit captured target association', async () => {
+    expect(()=>actionCommandSourceReferences('/session wayfinder#543')).toThrow(/Ambiguous candidate target/)
+    expect(()=>actionCommandSourceReferences('/session wayfinder#543',new Set(['core#543','daily-logger#543']))).toThrow(/Ambiguous candidate target/)
+    expect([...actionCommandSourceReferences('/session wayfinder#543',new Set(['core#543']))]).toEqual(['core#543'])
+    const { input, proposal, verification } = setup(false, '/session wayfinder#543', 'wayfinder')
+    const snapshot=input.registry.articles[0], metadata=snapshot.draftCandidateEvidence
+    if (!metadata) throw Error('Fixture evidence missing')
+    snapshot.draftContext={kind:'retained',markdown:'Explicit reviewed target https://github.com/ojfbot/core/issues/543.'}
+    Object.assign(metadata,draftCandidateEvidenceBinding({...input,draftContext:snapshot.draftContext}))
+    metadata.candidates[0].references=[{classification:'required',reference:'core#543',role:'target',reason:'Existing narrowly reviewed association; no inferred new alias.'}]
+    snapshot.stateDigest=actionStateDigest(input.registry,snapshot.actionKeys,snapshot.closing,snapshot.draftContext,{articleDate:date,roundId:snapshot.roundId,includePriorArticleRounds:true,draftCandidates:snapshot.draftCandidates,draftCandidateEvidence:metadata})
+    const primary={id:'github:core#543',kind:'github' as const,locator:'https://github.com/ojfbot/core/issues/543',content:'CURRENT API STATE core#543: state=open; head=not-a-PR; merged_at=none.',trustedContent:['CURRENT API STATE core#543: state=open; head=not-a-PR; merged_at=none.']}
+    create.mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response(verification))
+    const result=await reviewArticleActions({...input,sources:[...sources,primary]})
+    const split=splitActionRegistry(result.registry),cold=hydrateActionRegistry(split.baseline,split.files),record=cold.records[0]
+    expect(record.original.command).toBe('/session wayfinder#543')
+    expect(record.original.repo).toBe('wayfinder')
+    expect(actionRecordSourceReferences(record,cold)).toContain('core#543')
+    expect([...actionEvidenceScope({registry:cold,articleDate:'2026-10-22',markdown:'Synthetic next review.',feedback:record.key,articleStatuses:new Map([[date,'draft']])}).refs]).toContain('core#543')
   })
 
 })

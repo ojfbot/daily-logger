@@ -73,7 +73,10 @@ all arguments, in `original.command`. It never strips arguments or converts the 
 restricted historical `review` variant. Explicit `identity.kind=new` suggestions remain bare-command
 only; new argument-bearing work first needs a source-bound immutable capture. Promotion and mapping
 must uniquely match that capture before verification and again in native application. Mapping to an
-ordinary existing identity also requires its exact command, arguments and repository.
+ordinary existing identity also requires its exact command, arguments and repository. Direct native
+admission validates the same current evidence binding as the orchestrator, including article, cycle,
+feedback, status and canonical input. Compact command targets remain mandatory source and subject
+duties in later rounds; the existing reviewed alias requires its explicit captured target association.
 
 The current native output binds the created record and consumed input. Save and cold reload require
 its matching promoted capture, independent verdict, source-bound evidence and native created-record

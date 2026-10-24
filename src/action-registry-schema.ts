@@ -52,6 +52,8 @@ export function assertExactInvocationAdmissions(registry: ActionRegistry): void 
       if (!new Set<string>(EXACT_INVOCATION_ACTION_REVIEW_PROMPT_VERSIONS).has(receipt.verification.promptVersion)
         || receipt.roundId !== first.roundId || receipt.reviewOutput.roundId !== first.roundId
         || receipt.reviewOutput.articleDate !== record.introducedBy || first.articleDate !== record.introducedBy
+        || receipt.draftCandidateEvidence.articleDate !== record.introducedBy
+        || JSON.stringify(receipt.draftCandidateEvidence.reviewCycle) !== JSON.stringify(receipt.reviewOutput.reviewCycle)
         || JSON.stringify(receipt.reviewOutput.reviewCycle) !== JSON.stringify(record.admission)
         || receipt.reviewOutput.proposalSha256 !== receipt.verification.proposalSha256
         || receipt.reviewOutput.consumedInputSha256 !== receipt.draftCandidateEvidence.canonicalIndexSha256
