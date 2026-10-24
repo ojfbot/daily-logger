@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { createEditorialService, decodeEditorial, encodeEditorial, editorialDigest, repo } from '../../api/_lib/editorial-continuation.js'
 import { editorialRecordSchema } from '../../shared/article-review.js'
@@ -82,7 +82,12 @@ it('offers explicit missing-outcome evidence for actual attempt39984220336 witho
   const execution: Execution = { github: f.github, workspace: process.cwd(), policySha: request.policySha, runId, attempt: 1,
     event: { action: 'created', repository: { full_name: 'ojfbot/daily-logger' }, sender: { login: 'ojfbot' }, issue: { number: 416,
       pull_request: { url: `https://api.github.com${repo}/pulls/416` } }, comment: f.requestComment } }
-  await expect(admitEditorial(execution)).rejects.toThrow(/owner-resolved|no longer executable/i)
+  const replayClock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-23T17:00:00Z'))
+  try {
+    await expect(admitEditorial(execution)).rejects.toThrow(/owner-resolved|no longer executable/i)
+    replayClock.mockReturnValue(Date.parse(captured.requestComment.created_at) + 86_400_001)
+    await expect(admitEditorial(execution)).rejects.toThrow('Request is outside the supported execution-history window.')
+  } finally { replayClock.mockRestore() }
   expect(f.state.calls.filter(c => c.startsWith('POST '))).toEqual(['POST /repos/ojfbot/daily-logger/issues/416/comments'])
 })
 
