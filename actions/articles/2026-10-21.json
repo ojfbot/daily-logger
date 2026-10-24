@@ -5,13 +5,152 @@
   "decisions": [],
   "snapshot": {
     "date": "2026-10-21",
-    "status": "draft",
+    "status": "accepted",
     "review": {
       "state": "pending",
-      "reason": "Awaiting fresh independent action review of the revised article and retained context. Original candidates remain unverified; no suggestion is admitted or settled."
+      "reason": "The agent returned an incomplete response; these suggestions still need review.",
+      "articleAcceptance": {
+        "kind": "article-only",
+        "inputRoundId": "49533cf3949d54438faca8ba88eb9a5394b91af009beced62bcd8e85a66e4479",
+        "inputRegistrySha256": "d6e3fcc1e70dd010a9091c521d6592cbba1ae7cbfc38742fcd1afa7f0962c314",
+        "failureKind": "invalid-output",
+        "sources": [
+          {
+            "id": "article@9089eab659d5bf7307d0ea9b861123f177d9e8666c9f9c0d20e4f386f2b1bf55",
+            "locator": "current revised article",
+            "sha256": "9089eab659d5bf7307d0ea9b861123f177d9e8666c9f9c0d20e4f386f2b1bf55"
+          },
+          {
+            "id": "operator@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "locator": "editorial feedback",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "id": "repo:ROADMAP.md@8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30",
+            "locator": "ROADMAP.md",
+            "sha256": "8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30"
+          },
+          {
+            "id": "repo:AGENTS.md@fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618",
+            "locator": "AGENTS.md",
+            "sha256": "fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618"
+          },
+          {
+            "id": "repo:CLAUDE.md@a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2",
+            "locator": "CLAUDE.md",
+            "sha256": "a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2"
+          },
+          {
+            "id": "repo:opm/system.opl@c4db5a13d669098856b47f6f3c34ca312c6c389efeb0a1fd43b7d07b751003e2",
+            "locator": "opm/system.opl",
+            "sha256": "c4db5a13d669098856b47f6f3c34ca312c6c389efeb0a1fd43b7d07b751003e2"
+          },
+          {
+            "id": "review:reviews/articles/2026-10-21-60f4e551b913fce642a53e1ff0abcecc8f513a3b.md@7ac4034551e4743b9df50d61250591c89b45992501f195bf94e73d51898e3d75",
+            "locator": "reviews/articles/2026-10-21-60f4e551b913fce642a53e1ff0abcecc8f513a3b.md",
+            "sha256": "7ac4034551e4743b9df50d61250591c89b45992501f195bf94e73d51898e3d75"
+          },
+          {
+            "id": "review:reviews/articles/2026-10-21-a2368c203ddebc52a74aaca9ce9472ffa6dd6d24.md@b3c5c997b6bb228e37dc51185b51124a9539ef0c028993284b3bd8277fa91e29",
+            "locator": "reviews/articles/2026-10-21-a2368c203ddebc52a74aaca9ce9472ffa6dd6d24.md",
+            "sha256": "b3c5c997b6bb228e37dc51185b51124a9539ef0c028993284b3bd8277fa91e29"
+          },
+          {
+            "id": "review:reviews/registered/2026-10-21-60f4e551b913fce642a53e1ff0abcecc8f513a3b.json@917ee8063cb23b72d6d962f7c777959a5244a42bf663c42042890e72dce55837",
+            "locator": "reviews/registered/2026-10-21-60f4e551b913fce642a53e1ff0abcecc8f513a3b.json",
+            "sha256": "917ee8063cb23b72d6d962f7c777959a5244a42bf663c42042890e72dce55837"
+          },
+          {
+            "id": "review:reviews/registered/2026-10-21-a2368c203ddebc52a74aaca9ce9472ffa6dd6d24.json@12cbba28ec9e408d6f0acbb437ecdaedd06c810f865a5b73ad6671055fe88ebf",
+            "locator": "reviews/registered/2026-10-21-a2368c203ddebc52a74aaca9ce9472ffa6dd6d24.json",
+            "sha256": "12cbba28ec9e408d6f0acbb437ecdaedd06c810f865a5b73ad6671055fe88ebf"
+          },
+          {
+            "id": "github:classic-space-venue#4@e5f5bb9b74c08d6b77af32b60e098f789ac4c4513cae32296f0887b88b44499d",
+            "locator": "https://github.com/ojfbot/classic-space-venue/pull/4",
+            "sha256": "e5f5bb9b74c08d6b77af32b60e098f789ac4c4513cae32296f0887b88b44499d"
+          },
+          {
+            "id": "github:core#307@55a215fc3ff7b5b974957517f5b81b5c802819b67b9fc868e381aaf67d0e1897",
+            "locator": "https://github.com/ojfbot/core/issues/307",
+            "sha256": "55a215fc3ff7b5b974957517f5b81b5c802819b67b9fc868e381aaf67d0e1897"
+          },
+          {
+            "id": "github:core#543@a934f41198c9a49709fbf151e7171435e5913a1340441fec020711df8f050c0e",
+            "locator": "https://github.com/ojfbot/core/issues/543",
+            "sha256": "a934f41198c9a49709fbf151e7171435e5913a1340441fec020711df8f050c0e"
+          },
+          {
+            "id": "github:core#544@6365c87efb85c54496d2832c9f81ff12aa2f85aa2987596c85114b2b731f44dd",
+            "locator": "https://github.com/ojfbot/core/issues/544",
+            "sha256": "6365c87efb85c54496d2832c9f81ff12aa2f85aa2987596c85114b2b731f44dd"
+          },
+          {
+            "id": "github:core#551@865361a20e40bbda199f134a344c888aa01ef3e5ace4e1459fa2b9e81daa5c5f",
+            "locator": "https://github.com/ojfbot/core/issues/551",
+            "sha256": "865361a20e40bbda199f134a344c888aa01ef3e5ace4e1459fa2b9e81daa5c5f"
+          },
+          {
+            "id": "github:core#560@a0c9107a40bb68fdc2147316c3286bc9be7edee2fdc5345c240a9ea822d71eb2",
+            "locator": "https://github.com/ojfbot/core/issues/560",
+            "sha256": "a0c9107a40bb68fdc2147316c3286bc9be7edee2fdc5345c240a9ea822d71eb2"
+          },
+          {
+            "id": "github:core#561@ec66c0bc006e2ba4b45e7f66aebbd502bf8861fe4f507f12d486f1cfd992dcc2",
+            "locator": "https://github.com/ojfbot/core/issues/561",
+            "sha256": "ec66c0bc006e2ba4b45e7f66aebbd502bf8861fe4f507f12d486f1cfd992dcc2"
+          },
+          {
+            "id": "github:core#563@851a39d5d6c57cc626251a16d629c2809b0c7771233ab752cb7ffb5eacfd5ffa",
+            "locator": "https://github.com/ojfbot/core/issues/563",
+            "sha256": "851a39d5d6c57cc626251a16d629c2809b0c7771233ab752cb7ffb5eacfd5ffa"
+          },
+          {
+            "id": "github:core#564@c5c431b67b25a2d4a1ec767a2604cd7c1ccf38406d26019b1d0119e1e12edad5",
+            "locator": "https://github.com/ojfbot/core/issues/564",
+            "sha256": "c5c431b67b25a2d4a1ec767a2604cd7c1ccf38406d26019b1d0119e1e12edad5"
+          },
+          {
+            "id": "github:core#567@f8add487778ddd953b5499098ad56a7d9344a9bc7ae288324050499401bc38ff",
+            "locator": "https://github.com/ojfbot/core/issues/567",
+            "sha256": "f8add487778ddd953b5499098ad56a7d9344a9bc7ae288324050499401bc38ff"
+          },
+          {
+            "id": "github:daily-logger#407@c48ada6b6f1b20eb8d17c7a9f4025b67d964a6ce88b9b15444e9ea98710c90e3",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/407",
+            "sha256": "c48ada6b6f1b20eb8d17c7a9f4025b67d964a6ce88b9b15444e9ea98710c90e3"
+          },
+          {
+            "id": "github:core#556@74ab84469100396206dc91b9ae304339d0f84b36dea5f2d95b5b2379c4fd3028",
+            "locator": "https://github.com/ojfbot/core/issues/556",
+            "sha256": "74ab84469100396206dc91b9ae304339d0f84b36dea5f2d95b5b2379c4fd3028"
+          },
+          {
+            "id": "goal:core:decisions/northstar/l2-ojfbot.md@2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/4ca14bc3bda4a661201078e1aca18b4f75bbc8d1",
+            "sha256": "2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb"
+          },
+          {
+            "id": "goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82",
+            "sha256": "33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d"
+          },
+          {
+            "id": "goal:core:decisions/wayfinder/control-plane-conductor.md@1af36157d63c1f3d3184d383fe71adfad0732698b3fb1efe1a276b5c2c35ce72",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/57c3e069074f03bc99533f112d014cfb26ceb2cd",
+            "sha256": "1af36157d63c1f3d3184d383fe71adfad0732698b3fb1efe1a276b5c2c35ce72"
+          },
+          {
+            "id": "goal:core:decisions/wayfinder/classic-space-agent-world.md@c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/eccbddc808757ffb2c8137e0130d269c6dcf11d3",
+            "sha256": "c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22"
+          }
+        ],
+        "rawContentRetained": false
+      }
     },
     "articleDigest": "0ccbd399c651e747250bc147004549c9e0c663e1dd14b6cb0f44a82928659b86",
-    "roundId": "49533cf3949d54438faca8ba88eb9a5394b91af009beced62bcd8e85a66e4479",
+    "roundId": "8772ad7a1c096d4a8ffad5ba714c3cf79a9b8249eaca953c9a0a0609e00d337b",
     "reviewCycle": {
       "phase": "revision",
       "id": "pull-request:416:clean-acceptance"
@@ -61,9 +200,19 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "coordinator",
+        "kind": "derived-refresh",
         "identity": "flywheel-coordinator:01a135fd-dad7-7691-b64c-c81a899337b9/oct21_accuracy/current-status-20261023",
-        "decision": "Local preparation for separately approved trusted-main metadata adoption. Association relevance rechecked against immutable candidates, retained context, unchanged canonical input/action state and empty feedback: all 11 required/9 context associations retained. Full current 141-date Draft input binding includes October23. No current GitHub lifecycle observation, provider verdict, action acceptance, admission, settlement, dispatch or publication authority is asserted."
+        "decision": "Acceptance-status refresh preserves the prior evidence classification after proving the exact Draft input view; it grants no new review authority.",
+        "lineage": {
+          "kind": "acceptance-status-refresh",
+          "priorArticleStatus": "draft",
+          "articleStatus": "accepted",
+          "priorReviewCycle": {
+            "phase": "revision",
+            "id": "pull-request:416:clean-acceptance"
+          },
+          "priorRequirementsSha256": "270e173b464e9a7e0ef257605dbb76e0051eb2457ed96b7584be50148fd51504"
+        }
       },
       "articleDate": "2026-10-21",
       "articleDigest": "0ccbd399c651e747250bc147004549c9e0c663e1dd14b6cb0f44a82928659b86",
@@ -74,7 +223,7 @@
       "draftContextSha256": "cda93b4e8e7db1982215075487c7266a698dcbbf80fd5bd91940cd23f95d5c3d",
       "candidatePayloadsSha256": "1923fd2821d3d67b6073c85409af9b26b15a1b9ca6079d255e9dc4be162ba7cb",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "ad6d10f2d8bb1c250ac9c6b8befc94d96aa0041a1ff5e9d0c97c164d117c1a27",
+      "articleStatusesSha256": "5b081868b6c4ab01db43aa0a4ad237b724b8726857859d25455068828734c14a",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [
         "act-2026-04-12-validate-c53d7a"
@@ -221,7 +370,7 @@
       "kind": "retained",
       "markdown": "The original candidate commands and descriptions above are immutable producer history. All three awaited independent review when this correction was prepared; the retained account below records no later verdict. At that stage, they were not ranked, admitted, executable or settled. The corrections below are proposed editorial context, not reviewer verdicts or merge instructions.\n\nCandidate `b89074a9d7629cec0b4962d0255a956f76dee0cd735aec550b365e7e70ef4681` retains original command `/merge daily-logger#407` and its exact original payload as unverified producer history. At the reporting cutoff, [#407](https://github.com/ojfbot/daily-logger/pull/407) remained open at `ef7c02ab`; the earlier `cba0042b` review and owner chat `01a15c0b-ee0d-7990-89b8-e75c9211f7c1` are prior-work evidence. Post-cutoff review update: the PR merged on October 21 at 2026-10-21T16:25:52Z, from head `214e9e12fe3e7b3c12a59891697445704fbbf29b` into main at [fc31c9e5](https://github.com/ojfbot/daily-logger/commit/fc31c9e5bc9c12987fb0a8da3d9e9a5a1c304a48). The useful fleet-onboard checkpoint is delivered, including substantive planned-feed context, labelled mock-dev-host status and private collection opt-in. Do not redispatch implementation, review or merge. This evidence does not admit or settle the original candidate, and it does not add the private repository's earlier foundation commit to the historical 31-commit count.\n\nCandidate `a83670de3a4c36d23cd2016404b6825f86de689eb0a95ee47b7b98d8bd031ae3` retains `/owner-gate core#561`. The recorded initiative owner is fleet-runner under [core #307](https://github.com/ojfbot/core/issues/307), as [#560's ruling](https://github.com/ojfbot/core/issues/560#issuecomment-6304270768) states. Present the [#561 proposal and consumer review](https://github.com/ojfbot/core/issues/561#issuecomment-6305227157) for accept, reshape or park. An individual assignee, accepted commitment and checkpoint are still absent. Keep neutral parseable snapshot, freshness, stable cross-snapshot identity, and real second-client acceptance questions open. Live arrival needs the served versioned contract with live producers; fixture proof does not count. This is an owner decision, not an implementation order.\n\nCandidate `ccc62b6ac1492f339cf45d848d54bee639e5a633f7e5b3de7649a003cd3e1a2e` retains `/session wayfinder#543`. Its parallel-dispatch premise is unsupported. [#567's existing Tier 0 report in Classic Space Venue PR #4](https://github.com/ojfbot/classic-space-venue/pull/4) remains open and unmerged. The next pickup should account for that report and preserve the recorded order; no new allocation or dispatch is inferred here. The recorded order is [#567](https://github.com/ojfbot/core/issues/567), then [#543](https://github.com/ojfbot/core/issues/543), then [#563](https://github.com/ojfbot/core/issues/563), one cycle at a time. No harness allocation or dispatch is inferred. The report resolves no ticket, chooses no tool and does not adopt a stack. Blender's world-hub role is ruled, while [#544](https://github.com/ojfbot/core/issues/544) authored scope/export, [#551](https://github.com/ojfbot/core/issues/551) authoritative spatial source and [#564](https://github.com/ojfbot/core/issues/564) image/layout decisions remain open.\n\nPrior-day checkpoint `checkpoint:edd972afb47f74ef416a` is delivered. [#385](https://github.com/ojfbot/daily-logger/pull/385) merged at `d741aa8`; retained verification records seven October 17 and thirteen October 20 clock controls. Preserve that delivery evidence and do not redispatch the old visual-verdict task.\n\nTiming checkpoint `checkpoint:d8e801b487140ebe8fd3` remains distinct from [#357](https://github.com/ojfbot/daily-logger/issues/357), the article-page review/correspondence issue. [#408](https://github.com/ojfbot/daily-logger/pull/408) merged the Chicago-cutoff collection and fallback guards at `510149c`. The existing Daily blog fallback check remains active at 04:00 local. Its prepared time/prompt amendment still needs separate human adoption; first public availability is unknown. Run [#261](https://github.com/ojfbot/daily-logger/actions/runs/39573841916)'s 04:02:17 Chicago start is a different event. No installed schedule changed.\n\nEvidence-recovery checkpoint `checkpoint:a2c05cce92f08451469c` retains its existing owner and prior local-candidate lineage `a6e857c` / tree `ecfcb00`. Retained earlier evidence reports 1,068 tests, ten offline cases and independent review; this editorial revision did not rerun that earlier candidate. Post-cutoff source update: [#411](https://github.com/ojfbot/daily-logger/pull/411) merged on October 21 at 2026-10-21T16:40:52Z, adopting the reviewed source at [656e0a29](https://github.com/ojfbot/daily-logger/commit/656e0a295fcacecc50def71a35f34499774fa371). PR [#413](https://github.com/ojfbot/daily-logger/pull/413) subsequently adopted explicit per-suggestion requirements at [a4caa8fb](https://github.com/ojfbot/daily-logger/commit/a4caa8fb3914702dd0f56b8ebd6de8f3bfae435c). The earlier [#357](https://github.com/ojfbot/daily-logger/issues/357) overflow remains historical evidence; the recorded empty-feedback requirements classify it as context. These source merges did not by themselves establish provider qualification, a completed action review or canonical settlement, and did not authorize a real SDK trial or clear the hosted-retention hold. Current outcomes require their own native receipts.\n\nLEGO drafts [#44](https://github.com/ojfbot/lego-village-pipeline/pull/44) and [#46](https://github.com/ojfbot/lego-village-pipeline/pull/46) retain close-or-supersede overlay exits and complete-cut/preflight requirements for later operative import. [#45](https://github.com/ojfbot/lego-village-pipeline/pull/45) retains HOUSE-WORLD R0, the second-steward register check and James's merge decision. Existing [#46](https://github.com/ojfbot/lego-village-pipeline/pull/46) role assignments do not prove dispatch. The Classic Space map places the venue in parallel with LEGO Village Pipeline; no new dependency follows.\n\nThe [immutable telemetry branch source](https://github.com/ojfbot/core/blob/fe264bd89298639518e401d60572bc2a0959c512/skill-telemetry.jsonl) contradicts a May 12 freeze: the invocation series contains October 20 events and the dispositions ledger contains October 21 events. The exact selected generation-time payload is unavailable. A later [native replay](https://github.com/ojfbot/daily-logger/pull/410#issuecomment-6320752943) reproduces 0% quality-gate coverage and one of fourteen suggestion conversions, or 7%. The replay is separate from the unavailable exact generation payload; the ratios do not establish actual invocation coverage. Do not resurrect completed `act-2026-04-12-validate-c53d7a` from those readings.\n\nThe initial action review stopped when the required [#357](https://github.com/ojfbot/daily-logger/issues/357) discussion exceeded the existing 128 KiB per-source limit. That failure remains in the audit trail. The map adopted with #413 recorded eleven required references and eight context references, with #357 contextual; a valid current-case binding and any additional canonical or explicit-feedback duties still govern selection. These historical notes supply no model verdict and waive no evidence, byte, provider or acceptance guard. Current review and admission state is shown in the native card."
     },
-    "stateDigest": "697c260f59618726dabc7411b086f419154618a860d2b6c9274d400a8d5d1385",
+    "stateDigest": "c40c618f57d4471781dc329d561ba07a7fc1dc49ade487fd55948e386907ee65",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
