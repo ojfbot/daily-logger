@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { acceptedClosingContinuity, acceptedClosingContinuityTargets, getPreviousArticles } from '../collect-context.js'
 import { buildUserPrompt } from '../generate-article.js'
@@ -25,8 +27,33 @@ const context = (previousArticles: BlogContext['previousArticles']): BlogContext
 })
 
 describe('accepted prior closing continuity', () => {
+  it('keeps the newest five articles before the report date when later articles arrive', () => {
+    const root = mkdtempSync(join(tmpdir(), 'previous-article-continuity-'))
+    try {
+      const articles = join(root, '_articles')
+      mkdirSync(articles)
+      for (const day of [14, 15, 16, 17, 18, 19]) {
+        writeFileSync(join(articles, `2026-10-${day}.md`), `Article for October ${day}.`)
+      }
+      const previous = getPreviousArticles(root, '2026-10-20')
+      expect(previous.map(article => article.date)).toEqual([
+        '2026-10-19', '2026-10-18', '2026-10-17', '2026-10-16', '2026-10-15',
+      ])
+
+      for (const day of [20, 21, 22, 23, 24]) {
+        writeFileSync(join(articles, `2026-10-${day}.md`), `Article for October ${day}.`)
+      }
+      expect(getPreviousArticles(root, '2026-10-20')).toEqual(previous)
+      expect(getPreviousArticles(root).map(article => article.date)).toEqual([
+        '2026-10-24', '2026-10-23', '2026-10-22', '2026-10-21', '2026-10-20',
+      ])
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
   it('projects the actual accepted October 19 closing into a synthetic October 20 prompt', () => {
-    const previous = getPreviousArticles(repoRoot).find(article => article.date === '2026-10-19')
+    const previous = getPreviousArticles(repoRoot, '2026-10-20').find(article => article.date === '2026-10-19')
     const snapshot = readActionRegistry(repoRoot).articles.find(article => article.date === '2026-10-19')
     if (snapshot?.closing?.kind !== 'shortlist') throw new Error('Missing current October 19 shortlist')
     expect(previous?.closingContinuity).toMatchObject({ status: 'available', optionCount: 3, omittedOptionCount: 0 })
@@ -113,7 +140,7 @@ describe('accepted prior closing continuity', () => {
   })
 
   it('reserves the existing evidence-reference budget for accepted continuity targets', () => {
-    const previous = getPreviousArticles(repoRoot).find(article => article.date === '2026-10-19')
+    const previous = getPreviousArticles(repoRoot, '2026-10-20').find(article => article.date === '2026-10-19')
     if (!previous) throw new Error('October 19 continuity fixture is missing')
     const prompt = buildUserPrompt(context([previous]))
     const crowdedMarkdown = Array.from(
