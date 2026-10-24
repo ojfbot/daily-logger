@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { ActionSourceSchema, readActionRegistry, readArticleStatuses } from '../action-registry.js'
 import { generationActionCycle, revisionActionCycle } from '../action-review-cycle.js'
-const { create, countTokens } = vi.hoisted(() => ({ create: vi.fn(), countTokens: vi.fn(async (): Promise<unknown> => ({ input_tokens: 1000 })) }))
+const { create, countTokens } = vi.hoisted(() => ({ create: vi.fn(), countTokens: vi.fn(async (_request: unknown): Promise<unknown> => ({ input_tokens: 1000 })) }))
 vi.mock('@anthropic-ai/sdk', () => ({ default: class { messages = { create, countTokens } } }))
 import { parseActionModelView } from '../action-model-view.js'
 import { createActionAgents} from '../review-actions.js'
