@@ -66,15 +66,28 @@ capture, requires a unique matching disposition and suggestion index, and derive
 command, repository and description before the independent verifier sees the canonical proposal.
 New or amended work remains separate and must account for the original candidate independently.
 Native evidence, owner, admission, identity and application checks still apply after verification.
-The fresh v20 contract cannot reuse a v19 cache; historical v19 records remain readable.
+The fresh v21 exact-invocation contract cannot reuse a v20 cache; historical v20 and earlier records remain readable.
 
-Ordinary canonical records still require bare skill commands. A captured argument-bearing
-invocation is refused before verification; it is never stripped, rewritten or converted into a
-protected reviewed receipt. The original capture remains intact. Other dispositions require
-their own independent support, and review must hold when none is supported. A successful
-controlled offline composition does not establish that the actual three October 21 originals
-should be rejected or that a live review will pass. Future argument-bearing admission remains
-a separate policy decision under the preserved contract below.
+Ordinary current-review admission accepts an exact single-line captured invocation, including
+all arguments, in `original.command`. It never strips arguments or converts the record into the
+restricted historical `review` variant. Explicit `identity.kind=new` suggestions remain bare-command
+only; new argument-bearing work first needs a source-bound immutable capture. Promotion and mapping
+must uniquely match that capture before verification and again in native application. Mapping to an
+ordinary existing identity also requires its exact command, arguments and repository.
+
+The current native output binds the created record and consumed input. Save and cold reload require
+its matching promoted capture, independent verdict, source-bound evidence and native created-record
+hash. Later same-date rounds retain the original birth decision and archive its receipt in append-only
+candidate review history; pending transitions preserve this proof whether or not candidate review
+states reset. Ordinary later dispositions, inclusion choices, projections and settlement retain the
+exact command and stable action ID. Queue admission grants no execution or owner-decision authority.
+The existing 213 ordinary records, three restricted October 15 records and 138 historical holds keep
+their original identities and policies. Ambiguous historical equivalence still holds by repository,
+bare verb and original description; changing arguments alone cannot prove different work.
+
+The native source, semantic, counterevidence, owner, cycle and budget checks remain necessary. A
+controlled offline fixture proves pipeline mechanics, not a verdict on the three October 21 originals,
+live token fit, successful receipt delivery or article acceptance.
 
 ## Preserved October 15 contract
 

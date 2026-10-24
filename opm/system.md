@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `e8cdc30e02b91810dd2ed24edb0c0ed353c0bd28787794eeb5f1770981c99776`.
+> Source SHA-256: `0c4a2aafc09df3096fc4d106da036a7c13dea7de04affe56ff473844f568401a`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -64,18 +64,18 @@ flowchart TD
   n39["Canonical Action Proposal"]
   n40["Draft Action Candidate — states: awaiting-review, promoted, mapped-existing, rejected, verified-closure"]
   n140["Candidate Review History"]
-  n179["Candidate Review Transition"]
-  n180["Historical Source Metadata"]
+  n182["Candidate Review Transition"]
+  n183["Historical Source Metadata"]
   n41["Source Identity, Source Kind, Source Locator, and Full Content Digest"]
   n42["Draft Candidate Evidence Association — states: required, context"]
-  n181["Background Evidence Reference"]
-  n182["Candidate Action Relation"]
-  n183["Candidate Input View"]
+  n184["Background Evidence Reference"]
+  n185["Candidate Action Relation"]
+  n186["Candidate Input View"]
   n43["Action Registry, Draft Action Candidates, Action Review Cycle, Operator Feedback, and Article Status"]
   n44("Candidate Evidence Preparing")
-  n184["Canonical Action Index"]
-  n185["Held Suggestion Memory"]
-  n186["Rejection Memory"]
+  n187["Canonical Action Index"]
+  n188["Held Suggestion Memory"]
+  n189["Rejection Memory"]
   n45["Action Review Snapshot"]
   n46("Candidate Evidence Refreshing")
   n47["unchanged Draft Candidate Evidence Association"]
@@ -84,8 +84,8 @@ flowchart TD
   n50["Action Review Snapshot and Accepted Outcome Stamp"]
   n51("Acceptance Status Evidence Refreshing")
   n52["current-binding Draft Candidate Evidence Requirements"]
-  n187["Ranked Recommendations"]
-  n188["Handled Suggestions"]
+  n190["Ranked Recommendations"]
+  n191["Handled Suggestions"]
   n53("Editorial Revising")
   n54["Editorial Revision Request"]
   n55["Draft Suggestion — states: proposed, open, done, dismissed, superseded, deferred"]
@@ -93,7 +93,7 @@ flowchart TD
   n105["Article Action Files — states: pending, verified"]
   n56("Inclusion Choosing")
   n57["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
-  n189["Canonical Actions"]
+  n192["Canonical Actions"]
   n58["JSON API"]
   n59("Frontend Rendering")
   n60["Rendered Site"]
@@ -104,8 +104,8 @@ flowchart TD
   n65["Revision Request"]
   n66("Conversation Saving")
   n67["Saved Message"]
-  n190["Review Records"]
-  n191["Correspondence"]
+  n193["Review Records"]
+  n194["Correspondence"]
   n68["Time Record Pointer"]
   n69("Time Recording")
   n70["Commit Context"]
@@ -189,18 +189,18 @@ flowchart TD
   n28 -->|"yields"| n31
   n28 -->|"changes: transient to retained"| n27
   n40 -->|"part of"| n18
-  n179 -->|"part of"| n140
-  n180 -->|"part of"| n140
-  n180 -->|"exhibits"| n41
+  n182 -->|"part of"| n140
+  n183 -->|"part of"| n140
+  n183 -->|"exhibits"| n41
   n42 -->|"part of"| n32
-  n181 -->|"part of"| n32
-  n182 -->|"part of"| n32
-  n183 -->|"part of"| n32
+  n184 -->|"part of"| n32
+  n185 -->|"part of"| n32
+  n186 -->|"part of"| n32
   n43 -->|"requires (instrument)"| n44
   n44 -->|"yields"| n32
-  n184 -->|"part of"| n183
-  n185 -->|"part of"| n183
-  n186 -->|"part of"| n183
+  n187 -->|"part of"| n186
+  n188 -->|"part of"| n186
+  n189 -->|"part of"| n186
   n45 -->|"requires (instrument)"| n46
   n47 -->|"requires (instrument)"| n46
   n48 -->|"requires (instrument)"| n46
@@ -209,10 +209,10 @@ flowchart TD
   n50 -->|"requires (instrument)"| n51
   n0 -->|"condition: accepted"| n51
   n51 -->|"yields"| n52
-  n187 -->|"part of"| n26
+  n190 -->|"part of"| n26
   n18 -->|"part of"| n26
   n27 -->|"part of"| n26
-  n188 -->|"part of"| n26
+  n191 -->|"part of"| n26
   n7 -->|"yields"| n29
   n7 -->|"invokes"| n28
   n53 -->|"yields"| n29
@@ -228,7 +228,7 @@ flowchart TD
   n4 -->|"requires (instrument)"| n56
   n56 <-->|"affects"| n23
   n19 -->|"handles (human)"| n56
-  n189 -->|"part of"| n13
+  n192 -->|"part of"| n13
   n57 -->|"part of"| n13
   n21 -->|"invokes"| n22
   n13 -->|"requires (instrument)"| n21
@@ -250,8 +250,8 @@ flowchart TD
   n63 -->|"requires (instrument)"| n66
   n66 -->|"yields"| n67
   n66 <-->|"affects"| n4
-  n190 -->|"part of"| n63
-  n191 -->|"part of"| n63
+  n193 -->|"part of"| n63
+  n194 -->|"part of"| n63
   n0 -->|"exhibits"| n68
   n0 -->|"requires (instrument)"| n69
   n13 -->|"requires (instrument)"| n69
@@ -724,9 +724,9 @@ flowchart TD
   n169["Lossless Action Model View"]
   n170["Evidence Resolution Intent"]
   n171["Action Review Output Provenance"]
-  n192["Created Action Record Binding"]
-  n193["Updated Action Record Binding"]
-  n194["Rejection Memory Binding"]
+  n195["Created Action Record Binding"]
+  n196["Updated Action Record Binding"]
+  n197["Rejection Memory Binding"]
   n172("Evidence Resolution Recording")
   n7("Article Generating")
   n53("Editorial Revising")
@@ -839,9 +839,9 @@ flowchart TD
   n151 -->|"requires (instrument)"| n35
   n28 -->|"yields"| n170
   n28 -->|"yields"| n171
-  n192 -->|"part of"| n171
-  n193 -->|"part of"| n171
-  n194 -->|"part of"| n171
+  n195 -->|"part of"| n171
+  n196 -->|"part of"| n171
+  n197 -->|"part of"| n171
   n171 -->|"part of"| n105
   n170 -->|"requires (instrument)"| n172
   n105 -->|"requires (instrument)"| n172
@@ -1024,4 +1024,45 @@ Start Target Waiting requires Clock. [src: .github/scripts/daily_blog_schedule.p
 Start Target Waiting yields Due Start Target. [src: .github/scripts/daily_blog_schedule.py]
 Fallback Checking invokes Start Target Waiting. [src: .github/scripts/daily_blog_schedule.py]
 Fallback Dispatching requires Due Start Target. [src: .github/scripts/daily_blog_schedule.py]
+```
+
+## SD1.4 — Exact captured invocation admission
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD1.4 — Exact captured invocation admission"
+---
+flowchart TD
+  accTitle: SD1.4 — Exact captured invocation admission
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n179["Exact Captured Invocation"]
+  n39["Canonical Action Proposal"]
+  n28("Action Reconciling")
+  n180["Captured Invocation Birth Output"]
+  n195["Created Action Record Binding"]
+  n182["Candidate Review Transition"]
+  n105["Article Action Files — states: pending, verified"]
+  n181["valid Captured Invocation Birth Output"]
+  n143("Action Registry Writing")
+  n39 -->|"exhibits"| n179
+  n28 -->|"yields"| n180
+  n195 -->|"part of"| n180
+  n182 -->|"part of"| n180
+  n180 -->|"part of"| n105
+  n181 -->|"requires (instrument)"| n143
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Canonical Action Proposal exhibits Exact Captured Invocation. [src: src/review-actions.ts]
+Action Reconciling yields Captured Invocation Birth Output. [src: src/review-actions.ts]
+Captured Invocation Birth Output consists of Created Action Record Binding and Candidate Review Transition. [src: src/action-registry-schema.ts]
+Article Action Files consists of Captured Invocation Birth Output. [src: src/action-registry-schema.ts]
+Action Registry Writing requires valid Captured Invocation Birth Output. [src: src/action-registry-schema.ts]
 ```

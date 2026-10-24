@@ -479,3 +479,9 @@ When safe result bytes exist after an authorized run, preserve those exact immut
 - October21 review assumed compacted collector metadata could be cited through the local full-row escape hatch; the real acceptance path stopped on core#561 before the verifier and did not compose that reply. Prepared complete metadata visibility for the already-required GitHub issue/PR references before either model reads one immutable view, retaining optional compaction and every budget/evidence guard. No hosted raw-source retention or automatic provider retry was added.
 - October21 failure reporting assumed posting an uncertain receipt would succeed before rethrowing the primary review error; a transport failure instead replaced it. Preserve the original error and emit only bounded allowlisted receipt diagnostics, keeping delivery uncertain and the request outstanding.
 - Offline integration assumed a local no-hardlinks clone carried a self-contained object store; its inherited alternates exceeded Git’s nesting limit when three tests created shared clones. Materialized the isolated object store, retained the original failures, and reran only those files without changing runtime source or test limits.
+
+
+## Deviations — exact-invocation admission (2026-10-23)
+
+- The admission plan could reuse current native birth output, but same-date review pruning removed the original decision and pending transitions archived receipts only when candidate states reset. Retain the first decision and native birth receipt for new ordinary exact invocations across both successful and pending rounds, with unchanged history/state/output and storage guards.
+- Historical held suggestions sometimes lack dependable argument identity, so changing arguments cannot prove distinct work. Preserve the conservative repository/verb/original-description hold, including ambiguous changed-argument and spacing cases, while retaining the exact original invocation and candidate ID.

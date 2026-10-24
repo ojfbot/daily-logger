@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { isReviewedAction } from './action-model.js'
+import { ActionCommandSchema, BareActionCommandSchema, isReviewedAction } from './action-model.js'
 import { ACTION_REVIEW_PROMPT_VERSION, PENDING_ACTION_REVIEW_PROMPT_VERSION, ActionReviewCycleSchema, actionAdmissionLimit, countCycleAdmissions, type ActionReviewCycle } from './action-review-cycle.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, CONTINUITY_TARGETS_SOURCE, acceptedContinuityGithubReferences, actionEvidenceScope, actionRecordSourceReferences, actionReviewIndex, actionSourceReferences, canonicalActionSources, COVERAGE_SOURCE, deriveActionReviewOutput, prepareConservativeDraftCandidateEvidence, recommendationMaintenanceDescriptor, recommendationMaintenanceProjection, selectActionEvidence } from './action-evidence-selection.js'
 import {
@@ -24,7 +24,7 @@ import {
   ActionRegistrySchema, DraftActionCandidateSchema, draftActionCandidateId, CitationSchema, ClosingActionSchema, ClosingCheckpointSchema, RankedClosingActionSchema, RankedClosingCheckpointSchema, RankedShortlistSchema, managedArticleDigest, normalizeWorkKey,
   renderArticleActions, sha256, stripManagedActions, actionStateDigest, assertActionSnapshotStateIntegrity, acceptedActionState,
   normalizeLegacyActionProse, articleActionFileBytes, splitActionRegistry, captureDraftActionCandidates, type ActionRegistry, type ActionSource, type ClosingCheckpoint, type ClosingOption, type DraftActionCandidate, type DraftCandidateEvidenceRequirements, type DraftRecommendationContext,
-  type ActionEvidenceRequestReceipt, type RecommendationMaintenanceDescriptor,
+  type ActionEvidenceRequestReceipt, type RecommendationMaintenanceDescriptor, assertExactInvocationAdmissions,
 } from './action-registry.js'
 import { extractDraftRecommendationContext } from './recommendation-prose.js'
 import { ACTION_INDEX_ENCODING, packActionIndex, serializeActionModelView } from './action-model-view.js'
@@ -51,7 +51,7 @@ export const ActionProposalSchema = z.object({
     description: z.string().min(1), reason: z.string().min(1), citations,
   }).strict()),
   suggestions: z.array(z.object({
-    command: z.string().regex(/^\/\w[\w-]*$/), description: z.string().min(1), repo: z.string().regex(/^[\w-]+$/),
+    command: ActionCommandSchema, description: z.string().min(1), repo: z.string().regex(/^[\w-]+$/),
     target: z.string().min(1), outcome: z.string().min(1), goal: z.string().min(1),
     goalCitations: citations, factCitations: citations, doneWhen: z.string().min(1), gates: z.array(z.string()), existingKey: z.string().nullable(),
   }).strict()).max(5),
@@ -94,7 +94,7 @@ const LineProposalSchema = ActionProposalSchema.extend({
 const ProviderSuggestionSchema = LineProposalSchema.shape.suggestions.element.omit({ command: true, repo: true, description: true }).extend({
   identity: z.discriminatedUnion('kind', [
     z.object({ kind: z.literal('captured'), candidateId: z.string().regex(/^[a-f0-9]{64}$/) }).strict(),
-    LineProposalSchema.shape.suggestions.element.pick({ command: true, repo: true, description: true }).extend({ kind: z.literal('new') }).strict(),
+    LineProposalSchema.shape.suggestions.element.pick({ command: true, repo: true, description: true }).extend({ kind: z.literal('new'), command: BareActionCommandSchema }).strict(),
   ]),
 }).strict()
 const ProviderLineProposalSchema = LineProposalSchema.extend({
@@ -168,6 +168,10 @@ function assertCandidateAssociations(proposal: Pick<ParsedActionProposal, 'sugge
     if (disposition.kind === 'map-existing' && (suggestion.existingKey !== disposition.actionKey || !context.actionKeys.includes(disposition.actionKey))) throw new ActionOutputError('Captured candidate existing-identity map has mismatched or unknown action keys')
     if (disposition.kind === 'promote' && suggestion.existingKey !== null) throw new ActionOutputError('Captured candidate promotion must propose a new identity; use map-existing for an existing action')
   }
+  for (const [index, suggestion] of proposal.suggestions.entries()) {
+    if (BareActionCommandSchema.safeParse(suggestion.command).success) continue
+    if (!indices.has(index)) throw new ActionOutputError('Argument-bearing suggestions require their own exact captured promotion or mapping')
+  }
 }
 
 function resolveProviderProposal(value: unknown, view: PreparedActionEvidenceView, context: ActionProposalContext): ActionProposal {
@@ -181,7 +185,6 @@ function resolveProviderProposal(value: unknown, view: PreparedActionEvidenceVie
     }
     const candidate = context.draftCandidates.find(candidate => candidate.candidateId === identity.candidateId && candidate.review.state === 'awaiting-review')
     if (!candidate) throw new ActionOutputError('Captured suggestion references an unknown or no longer awaiting candidate')
-    if (!ActionProposalSchema.shape.suggestions.element.shape.command.safeParse(candidate.payload.command).success) throw new ActionOutputError(`Captured candidate is ineligible for promotion or mapping under the current bare-command admission policy; its original invocation remains unchanged: ${candidate.candidateId}`)
     const dispositions = wire.candidateDispositions.filter(disposition => (disposition.kind === 'promote' || disposition.kind === 'map-existing') && disposition.suggestionIndex === suggestionIndex && disposition.candidateId === identity.candidateId)
     if (dispositions.length !== 1 || wire.suggestions.filter(item => item.identity.kind === 'captured' && item.identity.candidateId === identity.candidateId).length !== 1) throw new ActionOutputError('Captured suggestion and disposition must reference each other exactly once')
     return { ...proposed, command: candidate.payload.command, repo: candidate.payload.repo, description: candidate.payload.description }
@@ -335,7 +338,7 @@ export function actionProviderRequest(role: 'proposer' | 'verifier', prompt: str
     const tool = { name: 'review_actions', description: 'Return the structured action review and independently grounded closing options.', input_schema: { ...wireSchema, type: 'object' as const } }
     return {
       model: role === 'proposer' ? 'claude-sonnet-4-6' : 'claude-opus-4-6', max_tokens: 12000,
-      system: `${RULES}\nYou are the independent action ${role}. ${role === 'verifier' ? 'Check every proposed disposition and candidate against the actual sources. The proposer rationale is not evidence. Reject unsupported conclusions, duplicate work, mandatory architecture work presented without authority, omitted owner gates, and inappropriate commands. Return a verdict for every item. Do not invent replacements. Return all four verdict arrays, even when empty.' : 'Return all four ordered arrays changes, suggestions, candidateDispositions and closingOptions, even when empty. Each suggestion.identity is kind=captured with candidateId, or kind=new with explicit command/repo/description. Captured identities allow no tuple overrides and must match their own awaiting disposition/index. Argument-bearing captures are ineligible: never strip arguments or invent rejection/closure to pass review. The application derives the captured tuple before verification; amended work is new and separately accounts for its original. Use inclusive sourceId/startLine/endLine citations, never authored quotes. Existing work can remain open without a change record.'}`,
+      system: `${RULES}\nYou are the independent action ${role}. ${role === 'verifier' ? 'Check every proposed disposition and candidate against the actual sources. The proposer rationale is not evidence. Reject unsupported conclusions, duplicate work, mandatory architecture work presented without authority, omitted owner gates, and inappropriate commands. Return a verdict for every item. Do not invent replacements. Return all four verdict arrays, even when empty.' : 'Return all four ordered arrays changes, suggestions, candidateDispositions and closingOptions, even when empty. Each suggestion.identity is kind=captured with candidateId, or kind=new with explicit command/repo/description. Captured identities allow no tuple overrides and must match their own awaiting disposition/index. Exact single-line captured invocations preserve every argument and require native source/output admission proof; never strip arguments or invent rejection/closure. New argument-bearing work first requires an immutable source-bound capture. Queue admission is not execution or owner-decision authority. The application derives the captured tuple before verification; amended work is new and separately accounts for its original. Use inclusive sourceId/startLine/endLine citations, never authored quotes. Existing work can remain open without a change record.'}`,
       tools: [tool],
       tool_choice: { type: 'tool' as const, name: 'review_actions' }, messages: [{ role: 'user' as const, content: prompt }],
     }
@@ -704,9 +707,45 @@ function recommendationIdentity(option: ProposedClosingOption, candidateActionKe
   return `checkpoint:${sha256(workKey).slice(0, 20)}`
 }
 
+function hasInvocationBirthOutput(registry: ActionRegistry, snapshot: ActionRegistry['articles'][number] | undefined): boolean {
+  return snapshot?.reviewOutput?.createdRecords.some(created => registry.records.some(record => record.key === created.actionKey
+    && !BareActionCommandSchema.safeParse(record.original.command).success)) ?? false
+}
+
+function assertInvocationMappings(proposal: Pick<ParsedActionProposal, 'suggestions'>, records: ActionRegistry['records']): void {
+  for (const suggestion of proposal.suggestions) {
+    const existing = records.find(record => record.key === suggestion.existingKey)
+    if (!existing || BareActionCommandSchema.safeParse(suggestion.command).success && BareActionCommandSchema.safeParse(existing.original.command).success) continue
+    if (suggestion.command !== existing.original.command || suggestion.repo !== existing.original.repo) throw new ActionOutputError('Exact invocation mapping requires the same original command, arguments and repository')
+  }
+}
+
+function archiveCandidateReview(previous: ActionRegistry['articles'][number] | undefined, preservePrevious: boolean) {
+  const priorTransitions = preservePrevious && previous?.review.state === 'verified' && previous.reviewCycle
+    ? (previous.draftCandidates ?? []).flatMap(candidate => candidate.review.state === 'awaiting-review' ? [] : [{ candidateId: candidate.candidateId, review: candidate.review }])
+    : []
+  const priorReceipt = priorTransitions.length && previous?.draftCandidateEvidence && previous.reviewOutput ? {
+    articleDigest: previous.articleDigest, reviewCycle: previous.reviewCycle!, roundId: previous.roundId, stateDigest: previous.stateDigest,
+    verification: previous.verification, draftCandidateEvidence: previous.draftCandidateEvidence, reviewOutput: previous.reviewOutput,
+    transitions: priorTransitions,
+    sources: previous.sources.map(source => ({ id: source.id, kind: source.kind, locator: source.locator, fullContentSha256: source.fullContentSha256 ?? sha256(source.content) })),
+    evidenceRequests: previous.evidenceRequests ?? [],
+  } : undefined
+  const existingHistory = previous?.candidateReviewHistory ?? []
+  if (priorReceipt) {
+    const key = (receipt: NonNullable<typeof priorReceipt>) => `${receipt.roundId}:${receipt.verification.proposalSha256}:${receipt.stateDigest}`
+    const existing = existingHistory.find(receipt => key(receipt) === key(priorReceipt))
+    if (existing && JSON.stringify(existing) !== JSON.stringify(priorReceipt)) throw new Error('Historical candidate review receipt changed; review pending')
+  }
+  return [...existingHistory, ...(priorReceipt && !existingHistory.some(receipt => receipt.roundId === priorReceipt.roundId
+    && receipt.verification.proposalSha256 === priorReceipt.verification.proposalSha256 && receipt.stateDigest === priorReceipt.stateDigest) ? [priorReceipt] : [])]
+}
+
 export function applyVerifiedActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; sources: ActionSource[]; evidenceView: PreparedActionEvidenceView; roundId: string; proposal: ActionProposal; verification: ActionVerification; articleStatuses: ReadonlyMap<string, string>; identity?: { proposer: string; verifier: string }; draftCandidates?: readonly DraftActionCandidate[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftContext?: DraftRecommendationContext; requiredActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; resolvedEvidenceRequests?: ActionRegistry['articles'][number]['evidenceRequests'] }): ActionRegistry {
+  assertExactInvocationAdmissions(input.registry)
   const cycle = ActionReviewCycleSchema.parse(input.cycle)
   const proposal = ActionProposalSchema.parse(input.proposal)
+  assertInvocationMappings(proposal, input.registry.records)
   const verification = ActionVerificationSchema.parse(input.verification)
   if (!(input.evidenceView instanceof PreparedActionEvidenceView)) throw new ActionEvidenceVisibilityError('A prepared consumed evidence view is required for a current review')
   input.evidenceView.assertBinding(input.sources, input.roundId, actionEvidenceRegistryDigest(input.registry, input.articleDate))
@@ -716,6 +755,8 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   const previous = next.articles.find(article => article.date === input.articleDate)
   const draftCandidates = structuredClone(input.draftCandidates ?? previous?.draftCandidates)
   const awaitingDraftCandidates = draftCandidates?.filter(candidate => candidate.review.state === 'awaiting-review') ?? []
+  assertCandidateAssociations(proposal, actionProposalContext(input.articleDate, draftCandidates ?? [], next.records.map(record => record.key)))
+  if (proposal.suggestions.some(candidate => !BareActionCommandSchema.safeParse(candidate.command).success) && !input.draftCandidateEvidence) throw new Error('Argument-bearing admission requires source-bound captured evidence and native output provenance')
   const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), input.draftContext ?? previous?.draftContext)
   input = { ...input, markdown: prepared.markdown, draftContext: prepared.context }
   const keys = new Set(previous?.actionKeys ?? next.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key))
@@ -771,7 +812,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     const priorRejection = matchingRejections.find(item => !item.quotaHold) ?? matchingRejections.find(item => item.quotaHold?.articleDate === input.articleDate && JSON.stringify(item.quotaHold.cycle) === JSON.stringify(cycle))
     const heldRepeat = input.registry.baseline.heldSuggestions.some(held => {
       const match = /^>\s*-\s*`([^`]+)`\s*[—–-]\s*(.*?)\s*\(([^()]*)\)\s*$/.exec(held.suggestion)
-      return match && normalizeWorkKey(match[3], match[1].split(/\s+/)[0], match[2]) === normalizeWorkKey(candidate.repo, candidate.command, candidate.description)
+      return match && normalizeWorkKey(match[3], match[1].split(/\s+/)[0], match[2]) === normalizeWorkKey(candidate.repo, candidate.command.split(/\s+/)[0], candidate.description)
     })
     if (priorRejection || heldRepeat) { rejectCandidate(heldRepeat ? 'Equivalent historical suggestion remains held; no automatic admission' : 'Previously rejected work has unchanged source evidence; no repeat admission', heldRepeat ? undefined : priorRejection?.quotaHold); continue }
     if (candidate.existingKey && !verdict.existingKey) { rejectCandidate('Proposer and verifier disagree about an existing identity; no new admission'); continue }
@@ -780,6 +821,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
       if (preserveActionKeys.has(existingKey)) { rejectCandidate(`Preserved action cannot receive a new disposition or history entry: ${existingKey}`); continue }
       const existing = next.records.find(record => record.key === existingKey)
       if (!existing || existing.original.repo !== candidate.repo) { rejectCandidate('Verifier linked to an unknown action or a different repository'); continue }
+      if ((!BareActionCommandSchema.safeParse(candidate.command).success || !BareActionCommandSchema.safeParse(existing.original.command).success) && existing.original.command !== candidate.command) { rejectCandidate('Existing invocation differs from the exact captured command and arguments'); continue }
       const equivalent = existing.workKey === workKey
       if (!equivalent) { rejectCandidate(`Identity ${existingKey} lacks a matching target and outcome; retain existing work unchanged`); continue }
       if (isReviewedAction(existing.original)) { rejectCandidate('Restricted reviewed context is not dispatchable work'); continue }
@@ -949,7 +991,8 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
         && ['done', 'dismissed', 'superseded'].includes(decision.state))
       : undefined
     if (acceptedSameDate) record.history.push({ ...acceptedSameDate, roundId: input.roundId })
-    record.history = record.history.filter(decision => decision.articleDate !== input.articleDate || decision.roundId === input.roundId)
+    record.history = record.history.filter((decision, index) => decision.articleDate !== input.articleDate || decision.roundId === input.roundId
+      || index === 0 && !BareActionCommandSchema.safeParse(record.original.command).success)
   }
   const closingOptions = closing.kind === 'shortlist' ? closing.options : closing.recommendations
   const draftCandidateCitations = reviewedDraftCandidates?.flatMap(candidate => candidate.review.state === 'awaiting-review' ? [] : candidate.review.citations) ?? []
@@ -961,7 +1004,8 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     return { id: source.id, kind: source.kind, locator: source.locator, content: source.id.startsWith(`${COVERAGE_SOURCE}@`) ? source.content : quotes.join('\n\n'), ...(trustedContent?.length ? { trustedContent } : {}), fullContentSha256: source.fullContentSha256 ?? sha256(source.content), ...(source.projection ? { projection: source.projection } : {}), ...(source.response ? { response: source.response } : {}) }
   })
   const proposalSha256 = sha256(JSON.stringify(proposal))
-  const candidateReviewHistory = previous?.candidateReviewHistory
+  const candidateReviewHistory = hasInvocationBirthOutput(input.registry, previous)
+    ? archiveCandidateReview(previous, true) : previous?.candidateReviewHistory
   const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], ...(reviewedDraftCandidates === undefined ? {} : { draftCandidates: reviewedDraftCandidates }), ...(candidateReviewHistory === undefined ? {} : { candidateReviewHistory }), ...(input.draftCandidateEvidence === undefined ? {} : { draftCandidateEvidence: input.draftCandidateEvidence }), draftContext: prepared.context, closing, stateDigest: sha256('native-review-output-pending'), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256, evidenceView: input.evidenceView.receipt, evidenceViewOutputSha256: sha256('native-view-output-pending'), verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...verification.candidateDispositions.map(verdict => ({ item: `draft-candidate:${verdict.candidateId}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, evidenceRequests: input.resolvedEvidenceRequests ?? [], rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
   next.articles = [...next.articles.filter(article => article.date !== input.articleDate), snapshot]
   const normalizedNext = ActionRegistrySchema.parse(next)
@@ -1076,7 +1120,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   const currentActionKeys = previous?.actionKeys ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
   const reviewIndex = actionReviewIndex({ ...input, expandedActionKeys: selection.expandedActionKeys })
   const context = serializeActionModelView({ articleDate: input.articleDate, reviewCycle: input.cycle, newIdentityLimit: actionAdmissionLimit(input.cycle), remainingNewIdentitySlots: Math.max(0, actionAdmissionLimit(input.cycle) - countCycleAdmissions(input.registry.records.filter(record => record.origin === 'suggested' && record.introducedBy === input.articleDate), input.cycle)), articleStatuses: Object.fromEntries(input.articleStatuses),
-    initialDraftCandidates: draftCandidates ?? [], initialDraftCandidatePolicy: 'Awaiting same-article captures are unverified and confer no admission, execution or settlement authority. Account for each exactly once. Promote/map-existing select identity={kind:captured,candidateId} at its own suggestionIndex; code derives command/repo/description without overrides. Only bare-command captures are eligible; argument-bearing originals remain unchanged under current admission policy. Other dispositions require independent evidence; hold when none is supported. Amended/new work is identity.kind=new, with the original separately accounted for. Never force a disposition to accept the article.',
+    initialDraftCandidates: draftCandidates ?? [], initialDraftCandidatePolicy: 'Awaiting same-article captures are unverified and confer no admission, execution or settlement authority. Account for each exactly once. Promote/map-existing select identity={kind:captured,candidateId} at its own suggestionIndex; code derives command/repo/description without overrides. Exact single-line argument-bearing captures are eligible only through their unique captured reference and current native source/output proof; preserve every argument. Queue admission grants no execution or owner-decision authority. Other dispositions require independent evidence; hold when none is supported. Amended/new work is identity.kind=new with a bare command; new argument-bearing work must first have a source-bound immutable capture, with the original separately accounted for. Never force a disposition to accept the article.',
     sources: evidenceView.promptSources(),
     evidenceView: evidenceView.receipt,
     citationPolicy: { rule: 'Only complete original L-numbered lines are citable. CONTEXT ONLY metadata rows are partially visible and cannot be cited or prove absence. Request full-row evidence if such a fact is necessary. Every quote must be exact. Completion, dismissal and supersession require every citation to be authoritative API/OWNER/MEMBER/COLLABORATOR text or repository evidence. Dismissal also permits explicit operator feedback. Article-only claims, metadata and third-party comments never establish terminal dispositions. Do not include source aliases or line labels in user-facing reasons.' },
@@ -1093,6 +1137,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
     try {
       proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every requiredActionKey. Preserve other terminal currentActionKeys. An independently verified existingKey link also counts as reviewing a required identity. Account for every awaiting initialDraftCandidate under initialDraftCandidatePolicy; never reconstruct a missing original from draft context or prior-day maintenance.\n${correction}`), evidenceView, proposalContext))
       assertCandidateAssociations(proposal, proposalContext)
+      assertInvocationMappings(proposal, input.registry.records)
       verification = ActionVerificationSchema.parse(await input.agents.verify(boundedPrompt(`${context}\nPROPOSAL (claims to verify, not evidence):\n${JSON.stringify(actionVerificationProposal(proposal, evidenceView))}\n${correction}\nReturn ONLY the tool schema: changes, suggestions, candidateDispositions and closingOptions are arrays of verdict objects. Proposal citations preserve validated sourceId/startLine/endLine references into the complete original-line source view above; read those lines independently. Verify every initial candidate disposition independently. Check each closing option for current disposition, usefulness, prior-context relevance, goal connection, entry point and next checkpoint. Keep reasons concise.`), evidenceView))
       const resolveCitation = (citation: z.infer<typeof CitationSchema>) => ({ ...citation, sourceId: sourceAliases.get(citation.sourceId) ?? citation.sourceId })
       for (const change of proposal.changes) change.citations = change.citations.map(resolveCitation)
@@ -1127,24 +1172,7 @@ export function pendingActionReview(input: { registry: ActionRegistry; articleDa
   const capturedDraftCandidates = input.draftCandidates === undefined ? undefined : captureDraftActionCandidates(input.draftCandidates)
   if (previous?.draftCandidates && capturedDraftCandidates && JSON.stringify(previous.draftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload }))) !== JSON.stringify(capturedDraftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload })))) throw new Error('Initial draft candidates changed after capture')
   const retainedDraftCandidates = previous?.draftCandidates ?? capturedDraftCandidates
-  const priorTransitions = input.resetDraftCandidateReviews && previous?.review.state === 'verified' && previous.reviewCycle
-    ? (previous.draftCandidates ?? []).flatMap(candidate => candidate.review.state === 'awaiting-review' ? [] : [{ candidateId: candidate.candidateId, review: candidate.review }])
-    : []
-  const priorReceipt = priorTransitions.length && previous?.draftCandidateEvidence && previous.reviewOutput ? {
-    articleDigest: previous.articleDigest, reviewCycle: previous.reviewCycle!, roundId: previous.roundId, stateDigest: previous.stateDigest,
-    verification: previous.verification, draftCandidateEvidence: previous.draftCandidateEvidence, reviewOutput: previous.reviewOutput,
-    transitions: priorTransitions,
-    sources: previous.sources.map(source => ({ id: source.id, kind: source.kind, locator: source.locator, fullContentSha256: source.fullContentSha256 ?? sha256(source.content) })),
-    evidenceRequests: previous.evidenceRequests ?? [],
-  } : undefined
-  const existingHistory = previous?.candidateReviewHistory ?? []
-  if (priorReceipt) {
-    const key = (receipt: NonNullable<typeof priorReceipt>) => `${receipt.roundId}:${receipt.verification.proposalSha256}:${receipt.stateDigest}`
-    const existing = existingHistory.find(receipt => key(receipt) === key(priorReceipt))
-    if (existing && JSON.stringify(existing) !== JSON.stringify(priorReceipt)) throw new Error('Historical candidate review receipt changed; review pending')
-  }
-  const candidateReviewHistory = [...existingHistory, ...(priorReceipt && !existingHistory.some(receipt => receipt.roundId === priorReceipt.roundId
-    && receipt.verification.proposalSha256 === priorReceipt.verification.proposalSha256 && receipt.stateDigest === priorReceipt.stateDigest) ? [priorReceipt] : [])]
+  const candidateReviewHistory = archiveCandidateReview(previous, !!input.resetDraftCandidateReviews || hasInvocationBirthOutput(registry, previous))
   const draftCandidates = input.resetDraftCandidateReviews && retainedDraftCandidates
     ? retainedDraftCandidates.map(candidate => ({ candidateId: candidate.candidateId, payload: candidate.payload, review: { state: 'awaiting-review' as const } }))
     : retainedDraftCandidates

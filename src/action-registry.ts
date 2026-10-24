@@ -12,10 +12,10 @@ export const REGISTRY_PATH = 'actions/registry.json'
 export const ACTIONS_START = '<!-- ACTIONS_START -->'
 export const ACTIONS_END = '<!-- ACTIONS_END -->'
 export * from './action-registry-schema.js'
-import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hydrateActionRegistry, articleActionFileBytes, actionArticlePath, type ActionRegistry, type ClosingPrompt, type RankedClosingOption } from './action-registry-schema.js'
+import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hydrateActionRegistry, articleActionFileBytes, actionArticlePath, type ActionRegistry, type ClosingPrompt, type RankedClosingOption, assertExactInvocationAdmissions } from './action-registry-schema.js'
 
 export function sha256(value: string): string { return createHash('sha256').update(value).digest('hex') }
-export function registryBytes(registry: ActionRegistry): string { return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
+export function registryBytes(registry: ActionRegistry): string { assertExactInvocationAdmissions(registry); return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
 export function registryRevision(registry: ActionRegistry): string { return sha256(registryBytes(registry)) }
 export function actionStateDigest(registry: ActionRegistry, keys: readonly string[], closing?: ClosingPrompt, draftContext?: ActionRegistry['articles'][number]['draftContext'], boundary?: { articleDate: string; roundId: string; includePriorArticleRounds?: boolean; draftCandidates?: ActionRegistry['articles'][number]['draftCandidates']; candidateReviewHistory?: ActionRegistry['articles'][number]['candidateReviewHistory']; draftCandidateEvidence?: ActionRegistry['articles'][number]['draftCandidateEvidence']; reviewOutput?: ActionRegistry['articles'][number]['reviewOutput'] }): string {
   const verification = boundary ? registry.articles.find(article => article.date === boundary.articleDate && article.roundId === boundary.roundId)?.verification : undefined

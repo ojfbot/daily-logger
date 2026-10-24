@@ -1,6 +1,12 @@
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { ActionCommandSchema, CanonicalActionArraySchema, assertCanonicalActionHistoryConserved } from '../action-model.js'
+import { writeActionStore } from './action-store-fixture.js'
+import { applyVerifiedActionReview } from './evidence-view-fixtures.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import { ActionRegistrySchema, actionStateDigest, normalizeWorkKey, sha256, captureDraftActionCandidates, readActionRegistry } from '../action-registry.js'
+import { ActionRegistrySchema, actionStateDigest, normalizeWorkKey, sha256, captureDraftActionCandidates, readActionRegistry, registryBytes, splitActionRegistry, hydrateActionRegistry, projectRegistry, assertExactInvocationAdmissions, renderArticleActions, type ActionRegistry } from '../action-registry.js'
 import { draftCandidateEvidenceBinding } from '../action-evidence-selection.js'
 import { generationActionCycle } from '../action-review-cycle.js'
 import { createActionAgents, pendingActionReview, resolveActionSourceLines, reviewArticleActions } from '../review-actions.js'
@@ -18,10 +24,11 @@ const fields = { target: 'bounded decision', outcome: 'Record the independent re
   factCitations: [{ sourceId: 'fact', startLine: 1, endLine: 1 }], goalCitations: [{ sourceId: 'goal', startLine: 1, endLine: 1 }] }
 const response = (input: unknown) => ({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'offline', name: 'review_actions', input }], usage: { output_tokens: 100 } })
 const RequestSchema = z.object({ model: z.string(), messages: z.tuple([z.object({ content: z.string() }).passthrough()]) }).passthrough()
-function setup(existing = false) {
+function setup(existing = false, command = payloads[0].command) {
+  const capturedPayloads = payloads.map((payload, index) => index === 0 ? { ...payload, command } : payload)
   const registry = ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
-  if (existing) registry.records.push({ key: 'existing', original: { ...payloads[0], id: 'existing' }, origin: 'imported', workKey: normalizeWorkKey('core', fields.target, fields.outcome), state: 'open', introducedBy: '2026-10-20', includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: '', gates: [], history: [] })
-  const pending = pendingActionReview({ registry, articleDate: date, cycle: generationActionCycle(), markdown: `---\ndate: ${date}\nstatus: draft\n---\nOffline identity fixture.\n`, reason: 'Capture original candidates.', draftCandidates: payloads, draftContext: { kind: 'none' }, articleStatuses: new Map([[date, 'draft']]) })
+  if (existing) registry.records.push({ key: 'existing', original: { ...capturedPayloads[0], id: 'existing' }, origin: 'imported', workKey: normalizeWorkKey('core', fields.target, fields.outcome), state: 'open', introducedBy: '2026-10-20', includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: '', gates: [], history: [] })
+  const pending = pendingActionReview({ registry, articleDate: date, cycle: generationActionCycle(), markdown: `---\ndate: ${date}\nstatus: draft\n---\nOffline identity fixture.\n`, reason: 'Capture original candidates.', draftCandidates: capturedPayloads, draftContext: { kind: 'none' }, articleStatuses: new Map([[date, 'draft']]) })
   const snapshot = pending.registry.articles[0]
   if (!snapshot.draftCandidates) throw new Error('Fixture candidates missing')
   snapshot.draftCandidateEvidence = { version: 'draft-candidate-evidence-v2', provenance: { kind: 'independent-reviewer', identity: 'offline-reference-test', decision: 'Fixture-only associations.' },
@@ -142,18 +149,27 @@ describe('captured candidate references before independent verification', () => 
     expect(JSON.stringify(input.registry)).toBe(before)
   })
 
-  it.each(['/merge daily-logger#407', '/owner-gate core#561', '/session wayfinder#543'])('holds argument-bearing capture %s before verifier without changing its custody', async command => {
-    const { fixtureEvidenceView } = await import('./evidence-view-fixtures.js')
-    const { proposal } = setup(), captured = captureDraftActionCandidates([{ ...payloads[0], command }])
-    const original = structuredClone(captured)
-    const wire = { ...proposal, suggestions: [{ ...proposal.suggestions[0], identity: { kind: 'captured', candidateId: captured[0].candidateId } }], candidateDispositions: [{ ...proposal.candidateDispositions[0], candidateId: captured[0].candidateId }] }
-    create.mockResolvedValue(response(wire))
-    await expect(createActionAgents().propose('Do not force a disposition or strip arguments.', fixtureEvidenceView(sources), { articleDate: date, draftCandidates: captured, actionKeys: [] })).rejects.toThrow(/ineligible.*bare-command admission policy/)
-    expect(captured).toEqual(original)
-    expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(['claude-sonnet-4-6'])
+  it.each(['/review exact first argument', '/review second preserved argument'])('admits exact captured invocation %s through verifier and native output', async command => {
+    const { input, candidates, proposal, verification } = setup(false, command)
+    const before = JSON.stringify(input.registry)
+    let seen: unknown
+    create.mockImplementation(async (raw: unknown) => {
+      const request = RequestSchema.parse(raw)
+      if (request.model === 'claude-sonnet-4-6') return response(proposal)
+      seen = JSON.parse(request.messages[0].content.split('\nPROPOSAL (claims to verify, not evidence):\n')[1].split('\n')[0])
+      return response(verification)
+    })
+    const result = await reviewArticleActions(input)
+    expect(seen).toMatchObject({ suggestions: [{ command, repo: candidates[0].payload.repo, description: candidates[0].payload.description }] })
+    expect(result.registry.records[0].original).toMatchObject({ ...candidates[0].payload, id: result.registry.records[0].key })
+    expect(result.registry.records[0].original).not.toHaveProperty('review')
+    expect(result.registry.articles[0].draftCandidates?.[0]).toEqual({ ...candidates[0], review: expect.objectContaining({ state: 'promoted', actionKey: result.registry.records[0].key }) })
+    expect(result.registry.articles[0].reviewOutput?.createdRecords).toEqual([expect.objectContaining({ actionKey: result.registry.records[0].key, afterRecordSha256: sha256(JSON.stringify(result.registry.records[0])) })])
+    expect(JSON.stringify(input.registry)).toBe(before)
+    expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(['claude-sonnet-4-6', 'claude-opus-4-6'])
   })
 
-  it('preserves all three actual October 21 captures and explicitly holds each ineligible promotion', async () => {
+  it('resolves all three actual October 21 captured invocations without changing their payloads', async () => {
     const stored = readActionRegistry(process.cwd()).articles.find(article => article.date === date)?.draftCandidates
     if (!stored) throw new Error('Missing immutable October 21 custody fixture')
     const captured = captureDraftActionCandidates(stored.map(candidate => candidate.payload)), before = JSON.stringify(captured)
@@ -162,10 +178,163 @@ describe('captured candidate references before independent verification', () => 
     const { fixtureEvidenceView } = await import('./evidence-view-fixtures.js')
     for (const candidate of captured) {
       create.mockResolvedValue(response({ changes: [], suggestions: [{ ...fields, identity: { kind: 'captured', candidateId: candidate.candidateId } }], candidateDispositions: captured.map(other => other.candidateId === candidate.candidateId ? { candidateId: other.candidateId, kind: 'promote', suggestionIndex: 0, reason: 'OFFLINE eligibility control, no semantic verdict.' } : { candidateId: other.candidateId, kind: 'reject', reason: 'OFFLINE placeholder never applied.', citations: fields.factCitations }), closingOptions: [] }))
-      await expect(createActionAgents().propose('No argument stripping or unsupported disposition.', fixtureEvidenceView(sources), { articleDate: date, draftCandidates: captured, actionKeys: [] })).rejects.toThrow(/ineligible.*bare-command admission policy/)
+      const proposal = await createActionAgents().propose('Exact invocation custody; synthetic parser control only.', fixtureEvidenceView(sources), { articleDate: date, draftCandidates: captured, actionKeys: [] })
+      expect(proposal).toMatchObject({ suggestions: [{ command: candidate.payload.command, repo: candidate.payload.repo, description: candidate.payload.description }] })
     }
     expect(JSON.stringify(captured)).toBe(before)
     expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(Array(3).fill('claude-sonnet-4-6'))
+  })
+
+  async function admitInvocation(command = '/review exact preserved arguments') {
+    const fixture = setup(false, command)
+    create.mockResolvedValueOnce(response(fixture.proposal)).mockResolvedValueOnce(response(fixture.verification))
+    const result = await reviewArticleActions(fixture.input)
+    return { ...fixture, result }
+  }
+
+  it.each(['/review\nother', '/review\rother', '/review\tother', '/review a\u0000b', '/review a\u001bb', '/review a\u2028b', ' /review arg', '/review '])('refuses malformed invocation without normalization: %j', command => {
+    expect(ActionCommandSchema.safeParse(command).success).toBe(false)
+  })
+  it('preserves permitted spacing instead of normalizing command identity', () => {
+    const command = '/review  exact argument  '
+    expect(ActionCommandSchema.parse(command)).toBe(command)
+  })
+  it('refuses an uncaptured full command from direct canonical agents before verifier', async () => {
+    const { input, candidates } = setup(), verify = vi.fn()
+    await expect(reviewArticleActions({ ...input, agents: { propose: async (_prompt, view) => resolveActionSourceLines({ changes: [], suggestions: [{ ...fields, command: '/review uncaptured', repo: 'core', description: 'No capture backs this work.' }], candidateDispositions: candidates.map(candidate => ({ candidateId: candidate.candidateId, kind: 'reject', reason: 'Synthetic original accounting.', citations: fields.factCitations })), closingOptions: [] }, view), verify } })).rejects.toThrow(/own exact captured/)
+    expect(verify).not.toHaveBeenCalled()
+  })
+  it('keeps new wire tuples bare-only even when an independent original is rejected', async () => {
+    const { input, candidates } = setup()
+    create.mockResolvedValue(response({ changes: [], suggestions: [{ ...fields, identity: { kind: 'new', command: '/review uncaptured', repo: 'core', description: 'Cannot bypass captured identity.' } }], candidateDispositions: candidates.map(candidate => ({ candidateId: candidate.candidateId, kind: 'reject', reason: 'Synthetic accounting.', citations: fields.factCitations })), closingOptions: [] }))
+    await expect(reviewArticleActions(input)).rejects.toThrow()
+    expect(create.mock.calls.map(([raw]) => RequestSchema.parse(raw).model)).toEqual(['claude-sonnet-4-6','claude-sonnet-4-6'])
+  })
+  it('round-trips ordinary invocation birth proof and rejects missing, stale, foreign or imported proof', async () => {
+    const { result } = await admitInvocation(), root = mkdtempSync(join(tmpdir(), 'exact-invocation-store-'))
+    try {
+      writeActionStore(root, result.registry)
+      expect(registryBytes(readActionRegistry(root))).toBe(registryBytes(result.registry))
+      const path = join(root, `actions/articles/${date}.json`), bytes = readFileSync(path, 'utf8')
+      const corruptions = [
+        (registry: ActionRegistry) => { delete registry.articles[0].reviewOutput },
+        (registry: ActionRegistry) => { registry.articles[0].reviewOutput!.createdRecords[0].afterRecordSha256 = 'f'.repeat(64) },
+        (registry: ActionRegistry) => { registry.articles[0].draftCandidateEvidence!.candidates[0].payloadSha256 = 'f'.repeat(64) },
+        (registry: ActionRegistry) => { registry.articles[0].verification.promptVersion = 'action-review-v20-captured-candidate-references' },
+        (registry: ActionRegistry) => { registry.articles[0].draftCandidates![0].review = { state: 'rejected', reason: 'No birth association.', citations: [] } },
+        (registry: ActionRegistry) => { registry.records[0].original.command += ' altered' },
+        (registry: ActionRegistry) => { registry.records[0].goal += ' altered' },
+        (registry: ActionRegistry) => { registry.records[0].origin = 'imported' },
+      ]
+      for (const change of corruptions) {
+        const registry = structuredClone(result.registry); change(registry)
+        expect(() => assertExactInvocationAdmissions(registry)).toThrow(/invocation lacks/)
+      }
+      const file = JSON.parse(bytes); delete file.snapshot.reviewOutput
+      writeFileSync(path, JSON.stringify(file))
+      expect(() => readActionRegistry(root)).toThrow(/invocation lacks/)
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+  it('keeps native birth proof through later same-article lifecycle, projections and reload', async () => {
+    const { result } = await admitInvocation(), key = result.registry.records[0].key
+    const command = result.registry.records[0].original.command, root = mkdtempSync(join(tmpdir(), 'exact-invocation-lifecycle-'))
+    let registry = result.registry
+    const original = structuredClone(registry.records[0].original)
+    expect(projectRegistry(registry, new Map([[date,'draft']])).proposed[0].command).toBe(command)
+    const cite = { sourceId: 'fact', quote: sources[0].content }
+    try {
+      for (const state of ['open', 'deferred', 'open', 'done'] as const) {
+        const markdown = `---\ndate: ${date}\nstatus: accepted\n---\nSynthetic native lifecycle.`
+        const priorEvidence = registry.articles[0].draftCandidateEvidence
+        if (!priorEvidence) throw Error('Source-bound fixture evidence absent')
+        const evidence = { ...priorEvidence, ...draftCandidateEvidenceBinding({ registry, articleDate: date, cycle: generationActionCycle(), markdown }) }
+        registry = applyVerifiedActionReview({ registry, articleDate: date, cycle: generationActionCycle(), markdown, sources,
+          roundId: sha256(`controlled ${state} ${registry.records[0].history.length}`), articleStatuses: new Map([[date,'accepted']]),
+          draftCandidateEvidence: evidence,
+          proposal: { changes: [{ actionKey: key, state, description: 'Current synthetic disposition.', reason: 'Controlled lifecycle mechanics, not actual October21 semantics.', citations: [cite] }], suggestions: [], candidateDispositions: [], closingOptions: [] },
+          verification: { changes: [{ actionKey: key, verdict: 'pass', reason: 'Controlled offline verdict.' }], suggestions: [], candidateDispositions: [], closingOptions: [] } })
+        expect(registry.records[0].original).toEqual(original)
+        expect(registry.articles[0].candidateReviewHistory?.[0].reviewOutput.createdRecords[0].actionKey).toBe(key)
+        writeActionStore(root, registry); registry = readActionRegistry(root)
+        expect(registry.records[0].original.command).toBe(command)
+        const view = projectRegistry(registry, new Map([[date,'accepted']]))
+        const exportRoot = process.env.EXACT_INVOCATION_FIXTURE_OUT
+        if (exportRoot && (state === 'open' || state === 'done')) {
+          const directory = join(exportRoot, `${state}-${registry.records[0].history.length}`)
+          mkdirSync(directory, { recursive: true })
+          writeActionStore(directory, registry)
+          writeFileSync(join(directory, 'article-input.md'), markdown)
+          writeFileSync(join(directory, 'birth-draft-article.md'), result.markdown)
+          expect(() => renderArticleActions(markdown, registry, date, new Map([[date,'accepted']]))).toThrow(/exactly three ranked/)
+          writeFileSync(join(directory, 'render-hold.txt'), 'Accepted rendering refuses this one-action mechanical fixture: exactly three ranked suggestions are still required.\n')
+          writeFileSync(join(directory, 'projection.json'), JSON.stringify(view, null, 2) + '\n')
+          writeFileSync(join(directory, 'record.json'), JSON.stringify(registry.records[0], null, 2) + '\n')
+          writeFileSync(join(directory, 'qualification.txt'), 'SYNTHETIC OFFLINE native lifecycle fixture, not actual October21 approval or provider verdict.\n')
+        }
+
+        if (state === 'open') expect(view.open[0].command).toBe(command)
+        if (state === 'deferred') expect(view.dispositions[0]).toMatchObject({ id: key, state: 'deferred' })
+        if (state === 'done') {
+          expect(CanonicalActionArraySchema.parse(view.done)[0]).toMatchObject({ id: key, command, status: 'done' })
+          expect(() => assertCanonicalActionHistoryConserved({ baselineOpen: [original], baselineDone: [], currentOpen: [], currentDone: view.done })).not.toThrow()
+        }
+      }
+      const split = splitActionRegistry(registry)
+      expect(hydrateActionRegistry(split.baseline, split.files).records[0].original).toEqual(original)
+      const broken = structuredClone(split.files); broken[0].snapshot.candidateReviewHistory = []
+      expect(() => hydrateActionRegistry(split.baseline, broken)).toThrow(/invocation lacks/)
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+  it.each(['/review changed arguments', '/review'])('refuses map-existing across invocation mismatch %s despite passing verifier', async incoming => {
+    const { result } = await admitInvocation(), before = registryBytes(result.registry), key = result.registry.records[0].key, nextDate = '2026-10-22'
+    const captured = captureDraftActionCandidates([{ ...payloads[0], command: incoming, sourceDate: nextDate }])
+    expect(() => applyVerifiedActionReview({ registry: result.registry, articleDate: nextDate, cycle: generationActionCycle(), markdown: 'Synthetic mapping control.', sources,
+      roundId: sha256(incoming), articleStatuses: new Map([[date,'draft'],[nextDate,'draft']]), draftCandidates: captured,
+      draftCandidateEvidence: result.registry.articles[0].draftCandidateEvidence,
+      proposal: { changes: [], suggestions: [{ ...fields, command: incoming, repo: 'core', description: captured[0].payload.description, existingKey: key, factCitations: [{sourceId:'fact',quote:sources[0].content}], goalCitations: [{sourceId:'goal',quote:sources[1].content}] }], candidateDispositions: [{candidateId:captured[0].candidateId,kind:'map-existing',suggestionIndex:0,actionKey:key,reason:'Synthetic mapping.'}], closingOptions: [] },
+      verification: { changes: [], suggestions: [{candidateIndex:0,existingKey:key,verdict:'pass',reason:'Controlled pass cannot waive exact identity.'}], candidateDispositions: [{candidateId:captured[0].candidateId,verdict:'pass',reason:'Controlled pass.'}], closingOptions: [] } })).toThrow(/Exact invocation mapping/)
+    expect(registryBytes(result.registry)).toBe(before)
+  })
+  it('rejects a direct native full suggestion without its capture even with a passing verifier', () => {
+    const { input, candidates } = setup()
+    expect(() => applyVerifiedActionReview({ ...input, roundId: sha256('uncaptured native'), proposal: { changes: [], suggestions: [{...fields,command:'/review uncaptured',repo:'core',description:'No captured source.',factCitations:[{sourceId:'fact',quote:sources[0].content}],goalCitations:[{sourceId:'goal',quote:sources[1].content}]}],candidateDispositions:candidates.map(candidate=>({candidateId:candidate.candidateId,kind:'reject',reason:'Synthetic accounting.',citations:[{sourceId:'fact',quote:sources[0].content}]})),closingOptions:[]}, verification:{changes:[],suggestions:[{candidateIndex:0,verdict:'pass',reason:'Cannot grant missing custody.',existingKey:null}],candidateDispositions:candidates.map(candidate=>({candidateId:candidate.candidateId,verdict:'pass',reason:'Controlled.'})),closingOptions:[]} })).toThrow(/own exact captured/)
+  })
+
+  it.each([false, true])('preserves birth when a later review is pending with reset=%s', async resetDraftCandidateReviews => {
+    const { result } = await admitInvocation()
+    const pending = pendingActionReview({ registry: result.registry, articleDate: date, cycle: generationActionCycle(), markdown: result.markdown,
+      reason: 'Controlled later provider failure.', articleStatuses: new Map([[date,'draft']]), resetDraftCandidateReviews })
+    const split = splitActionRegistry(pending.registry)
+    expect(hydrateActionRegistry(split.baseline, split.files).records[0].original.command).toBe(result.registry.records[0].original.command)
+    expect(pending.registry.articles[0].candidateReviewHistory).toHaveLength(1)
+  })
+  it.each(['/review historical argument', '/review changed argument', '/review  changed argument'])('retains an ambiguous historical hold for %s', async command => {
+    const { input, proposal, verification } = setup(false, command)
+    input.registry.baseline.heldSuggestions.push({articlePath:'_articles/2026-10-01.md',sourceDate:'2026-10-01',line:1,invocation:'/review historical argument',suggestionLineSha256:'a'.repeat(64),suggestion:'> - `/review historical argument` — Review the bounded owner decision. (core)'})
+    // Explicitly rebind the synthetic independent input after adding held memory.
+    const snapshot=input.registry.articles[0]
+    if (!snapshot.draftCandidateEvidence) throw Error('Fixture metadata absent')
+    Object.assign(snapshot.draftCandidateEvidence,draftCandidateEvidenceBinding({registry:input.registry,articleDate:date,cycle:generationActionCycle(),markdown:input.markdown}))
+    snapshot.stateDigest=actionStateDigest(input.registry,snapshot.actionKeys,snapshot.closing,snapshot.draftContext,{articleDate:date,roundId:snapshot.roundId,includePriorArticleRounds:true,draftCandidates:snapshot.draftCandidates,draftCandidateEvidence:snapshot.draftCandidateEvidence})
+    create.mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response(verification))
+    await expect(reviewArticleActions(input)).rejects.toThrow(/promotion was not admitted/)
+    expect(input.registry.records).toHaveLength(0)
+  })
+
+  it('maps an exact captured invocation to its cold-reloaded ordinary identity', async () => {
+    const { result } = await admitInvocation(), split = splitActionRegistry(result.registry)
+    const registry = hydrateActionRegistry(split.baseline, split.files), key = registry.records[0].key, nextDate = '2026-10-22'
+    const payload = { ...payloads[0], command: registry.records[0].original.command, sourceDate: nextDate }
+    const captured = captureDraftActionCandidates([payload])
+    const next = applyVerifiedActionReview({ registry, articleDate: nextDate, cycle: generationActionCycle(), markdown: 'Synthetic exact existing mapping.', sources,
+      roundId: sha256('exact cold map'), articleStatuses: new Map([[date,'draft'],[nextDate,'draft']]), draftCandidates: captured,
+      proposal: { changes: [], suggestions: [{...fields,command:payload.command,repo:payload.repo,description:payload.description,existingKey:key,factCitations:[{sourceId:'fact',quote:sources[0].content}],goalCitations:[{sourceId:'goal',quote:sources[1].content}]}], candidateDispositions:[{candidateId:captured[0].candidateId,kind:'map-existing',suggestionIndex:0,actionKey:key,reason:'OFFLINE exact identity map.'}], closingOptions:[]},
+      draftCandidateEvidence: registry.articles[0].draftCandidateEvidence,
+      verification:{changes:[],suggestions:[{candidateIndex:0,existingKey:key,verdict:'pass',reason:'OFFLINE controlled exact match.'}],candidateDispositions:[{candidateId:captured[0].candidateId,verdict:'pass',reason:'Controlled fixture.'}],closingOptions:[]} })
+    expect(next.records).toHaveLength(1)
+    expect(next.records[0].original).toEqual(registry.records[0].original)
+    expect(next.articles.find(article=>article.date===nextDate)?.draftCandidates?.[0].review).toMatchObject({state:'mapped-existing',actionKey:key})
+    expect(() => assertExactInvocationAdmissions(next)).not.toThrow()
   })
 
 })
