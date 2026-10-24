@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-24",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-10-24",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action evidence request f188ba06514558516bfb5d9a5566287bc285a892d83c83fe9e8243ac67417975 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
+    },
+    "articleDigest": "b07a7b11120bef43f09d1a2a334ada2ed3ff7b05b78ea1b6fdde00b591394163",
+    "roundId": "c49fe653113b2e11505595122e6a27eaaf04c82724ad03910070d758a667cfa6",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "f3f00b51be0318f49e7469f60f82f4aabe54094a10829ef909365c27598a5a2a",
+        "payload": {
+          "command": "/coordinator-authorize daily-logger#416 hosted-run",
+          "description": "Clear the process gate blocking the first live hosted attempt against October 21 acceptance. This is the only action that produces new signal on token fit, reviewer semantics, and receipt delivery.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-24"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "9275a546daedf479f014fb844c3646e94a53c7bcd21e7cf80f76f085cc87e75d",
+        "payload": {
+          "command": "/disposition daily-logger#421 daily-logger#433",
+          "description": "Assign an explicit disposition to the October 22 and October 23 independent review drafts — either a merge target, a dependency on #416, or a close with rationale. Open draft PRs with no disposition accumulate merge-conflict risk.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-24"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "73f8bcbc77ec53ce99692eb7ed778cad01b001de52ff7f613573092afc9e12a6",
+        "payload": {
+          "command": "/merge morning-cockpit#60",
+          "description": "morning-cockpit #60 is validated and unblocked. Confirm no drift since validation and merge, or record an explicit hold reason.",
+          "repo": "morning-cockpit",
+          "status": "open",
+          "sourceDate": "2026-10-24"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v5-candidate-requirements",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-10-24",
+      "articleDigest": "b07a7b11120bef43f09d1a2a334ada2ed3ff7b05b78ea1b6fdde00b591394163",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "74a15c5025873750fc43429b4e16bf9e61df6b1c0eb1a5f0072b85505d0081a5",
+      "candidatePayloadsSha256": "6381cec136299cb1309527aae083ddf4cbdd0282918389db5f1a8c8d4bad1f4b",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "2c3ff479765a93af0a2a6d589eb2095009b820c8742bc3c238b57eea83133a23",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "f3f00b51be0318f49e7469f60f82f4aabe54094a10829ef909365c27598a5a2a",
+          "payloadSha256": "bf1b018964fd5fb21e990fd6eb6e2e6db8a7fea33a88fb53b4023f7bb2124999",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#416",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "9275a546daedf479f014fb844c3646e94a53c7bcd21e7cf80f76f085cc87e75d",
+          "payloadSha256": "e90a3dcf99a9d95a34fa3b1695d98e95603091a5bded07616db6a9c74c4055da",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#421",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#433",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "73f8bcbc77ec53ce99692eb7ed778cad01b001de52ff7f613573092afc9e12a6",
+          "payloadSha256": "c18978d8e44bc0683e434279db8117ae1739ac4a305bbce79c8ac9e5e4268fe2",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "morning-cockpit#60",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "lego-village-pipeline#46",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Critical path: #416 requires coordinator authorization before a hosted run can be triggered. That gate has not been cleared. Once authorized, the run will surface whether token budget (#386) is the next blocker or whether the eight merged fixes are sufficient. No further code work is unblocked until that signal is observed.\n\nmorning-cockpit #60 has no recorded blocker; its open state is unresolved. Owner gate required for merge decision.\n\n#421 and #433 (independent review drafts, Oct 22 and Oct 23) can proceed independently but have no owner or timeline on record.\n\nThe commit-to-PR mapping for this window's 24 SHAs is not reconstructable from the article alone; several PRs contain multiple fixup commits with no annotation. This is an audit traceability gap — not a blocker, but worth noting for future windows.\n\nlego-village-pipeline #46 DO NOT MERGE label means read-only reference artifact in this workflow; #45 depends on it informationally, not as a merge prerequisite."
+    },
+    "stateDigest": "22f7ad7eab313776afcc13661204470e24d66448a79161e0444b543d04955d13",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [
+      {
+        "version": "action-evidence-request-v1",
+        "id": "f188ba06514558516bfb5d9a5566287bc285a892d83c83fe9e8243ac67417975",
+        "kind": "source-view",
+        "caseDigest": "8a796ecc76e8675a873693fb4ed0a66fecdb487f3376ceec3678972e68b172c5",
+        "articleDate": "2026-10-24",
+        "cycle": {
+          "phase": "generation"
+        },
+        "actionKeys": [
+          "article-feedback"
+        ],
+        "sourceKey": "github:daily-logger#357",
+        "sourceId": "github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe",
+        "sourceFullContentSha256": "6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe",
+        "obligations": [
+          "dbd87ed97a0c07e81a1689712d29fce78023beb160713d0060739969dd3596f0"
+        ],
+        "recipient": "source-producer",
+        "status": "open"
+      }
+    ],
+    "rejected": []
+  }
+}
