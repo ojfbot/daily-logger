@@ -56,6 +56,148 @@ describe('captured candidate references before independent verification', () => 
     expect(JSON.stringify(input.registry)).toBe(before)
     expect(candidates[0].payload).toEqual(payloads[0])
   })
+  it('repairs only the malformed closure, preserving the other original promote row through native verification', async () => {
+    const { input, candidates, proposal, verification } = setup(), before = JSON.stringify(input.registry)
+    const closure = { candidateId: candidates[0].candidateId, kind: 'verified-closure', actionKey: null,
+      reason: 'The first fixture obligation is complete.', citations: fields.factCitations }
+    const promote = { candidateId: candidates[1].candidateId, kind: 'promote', suggestionIndex: 0,
+      reason: 'Preserve this independently authored second-row reason exactly.' }
+    const original = { ...proposal, suggestions: [{ ...proposal.suggestions[0], identity: { kind: 'captured', candidateId: candidates[1].candidateId } }],
+      candidateDispositions: [{ ...closure, suggestionIndex: 0 }, promote] }
+    const wholeRegeneration = { ...original, candidateDispositions: [closure,
+      { candidateId: candidates[1].candidateId, kind: 'promote', suggestionIndex: 0 }] }
+    const seen: unknown[] = []
+    create.mockImplementation(async (raw: unknown) => {
+      const request = RequestSchema.parse(raw)
+      seen.push(request)
+      if (request.model === 'claude-opus-4-6') return response(verification)
+      if (seen.length === 1) return response(original)
+      const tool = z.object({ tools: z.tuple([z.object({ input_schema: z.object({ required: z.array(z.string()) }).passthrough() }).passthrough()]) }).parse(raw)
+      // Equivalent old failure: whole-proposal regeneration loses a valid neighboring reason.
+      return response(tool.tools[0].input_schema.required.includes('candidateId') ? closure : wholeRegeneration)
+    })
+    const result = await reviewArticleActions(input)
+    expect(result.registry.articles[0].draftCandidates?.map(candidate => candidate.review.state)).toEqual(['verified-closure', 'promoted'])
+    expect(result.registry.articles[0].draftCandidates?.[1].review).toMatchObject({ state: 'promoted', reason: promote.reason })
+    const verifier = RequestSchema.parse(create.mock.calls[2][0]).messages[0].content
+    expect(verifier).toContain(promote.reason)
+    expect(verifier).toContain(payloads[1].description)
+    expect(verifier).not.toContain('Previous structured output was invalid')
+    expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(['claude-sonnet-4-6', 'claude-sonnet-4-6', 'claude-opus-4-6'])
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it('pins the actual reordered suggestion index instead of either candidate or response ordinal', async () => {
+    const { input, candidates, proposal, verification } = setup()
+    const suggestions = [
+      { ...proposal.suggestions[0], identity: { kind: 'captured', candidateId: candidates[1].candidateId }, target: 'second decision', outcome: 'Review the separate evidence path.' },
+      proposal.suggestions[0],
+    ]
+    const target = { candidateId: candidates[0].candidateId, kind: 'promote', suggestionIndex: 1, reason: 'Review the first immutable original at its actual suggestion index.' }
+    const original = { ...proposal, suggestions, candidateDispositions: [
+      { candidateId: candidates[0].candidateId, kind: 'promote', suggestionIndex: 1 },
+      { candidateId: candidates[1].candidateId, kind: 'promote', suggestionIndex: 0, reason: 'Keep this second reason unchanged.' },
+    ] }
+    create.mockResolvedValueOnce(response(original)).mockResolvedValueOnce(response(target))
+      .mockResolvedValueOnce(response({ ...verification, suggestions: [verification.suggestions[0], { ...verification.suggestions[0], candidateIndex: 1 }] }))
+    const result = await reviewArticleActions(input)
+    expect(create.mock.calls[1][0].tools[0].input_schema.properties.suggestionIndex.const).toBe(1)
+    expect(create.mock.calls[1][0].tools[0].input_schema.properties.candidateId.const).toBe(candidates[0].candidateId)
+    expect(result.registry.articles[0].draftCandidates?.map(candidate => candidate.review.state)).toEqual(['promoted', 'promoted'])
+    expect(result.registry.records.find(record => record.original.repo === payloads[0].repo)?.original.description).toBe(payloads[0].description)
+  })
+  it.each(['foreign-id', 'changed-kind', 'crosslinked-index', 'missing-reason', 'full-proposal', 'unrelated-array', 'unknown-key'] as const)('refuses a %s replacement without another repair, verifier or input writes', async mode => {
+    const { input, candidates, proposal } = setup(), before = JSON.stringify(input.registry)
+    const target = proposal.candidateDispositions[0]
+    const invalid = (() => {
+      switch (mode) {
+        case 'foreign-id': return { ...target, candidateId: candidates[1].candidateId }
+        case 'changed-kind': return { ...target, kind: 'reject', citations: fields.factCitations }
+        case 'crosslinked-index': return { ...target, suggestionIndex: 1 }
+        case 'missing-reason': return { candidateId: target.candidateId, kind: target.kind, suggestionIndex: 0 }
+        case 'full-proposal': return proposal
+        case 'unrelated-array': return { ...target, changes: [] }
+        case 'unknown-key': return { ...target, PRIVATE_CONTRADICTION: 'PRIVATE_VALUE' }
+      }
+    })()
+    create.mockResolvedValueOnce(response({ ...proposal, candidateDispositions: [{ candidateId: target.candidateId, kind: target.kind, suggestionIndex: 0 }, proposal.candidateDispositions[1]] }))
+      .mockResolvedValueOnce(response(invalid))
+    await expect(reviewArticleActions(input)).rejects.toThrow(/role=proposer/)
+    expect(create).toHaveBeenCalledTimes(2)
+    expect(countTokens).toHaveBeenCalledTimes(2)
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it.each(['missing', 'foreign', 'duplicate', 'unknown-kind', 'multiple-invalid', 'mixed-envelope', 'oversized'] as const)('holds a nonisolatable %s original without regenerating any proposal', async mode => {
+    const { input, candidates, proposal } = setup(), before = JSON.stringify(input.registry)
+    const malformed = { candidateId: candidates[0].candidateId, kind: 'promote', suggestionIndex: 0 }
+    const original = (() => {
+      switch (mode) {
+        case 'missing': return { ...proposal, candidateDispositions: [malformed] }
+        case 'foreign': return { ...proposal, candidateDispositions: [{ ...malformed, candidateId: 'f'.repeat(64) }, proposal.candidateDispositions[1]] }
+        case 'duplicate': return { ...proposal, candidateDispositions: [malformed, { ...proposal.candidateDispositions[1], candidateId: candidates[0].candidateId }] }
+        case 'unknown-kind': return { ...proposal, candidateDispositions: [{ ...malformed, kind: 'PRIVATE_KIND' }, proposal.candidateDispositions[1]] }
+        case 'multiple-invalid': return { ...proposal, candidateDispositions: [malformed, { candidateId: candidates[1].candidateId, kind: 'reject' }] }
+        case 'mixed-envelope': return { ...proposal, changes: null, candidateDispositions: [malformed, proposal.candidateDispositions[1]] }
+        case 'oversized': return { ...proposal, candidateDispositions: [{ ...proposal.candidateDispositions[0], reason: 'x'.repeat(640 * 1024), PRIVATE_KEY: 'PRIVATE_VALUE' }, proposal.candidateDispositions[1]] }
+      }
+    })()
+    create.mockResolvedValueOnce(response(original))
+    await expect(reviewArticleActions(input)).rejects.toThrow(/cannot isolate/)
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(countTokens).toHaveBeenCalledTimes(1)
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it('pins the exact existing action key for a map record repair', async () => {
+    const { input, proposal } = setup(true), before = JSON.stringify(input.registry)
+    const target = { ...proposal.candidateDispositions[0], kind: 'map-existing', actionKey: 'existing' }
+    create.mockResolvedValueOnce(response({ ...proposal, suggestions: [{ ...proposal.suggestions[0], existingKey: 'existing' }],
+      candidateDispositions: [{ candidateId: target.candidateId, kind: target.kind, suggestionIndex: 0, actionKey: 'existing' }, proposal.candidateDispositions[1]] }))
+      .mockResolvedValueOnce(response({ ...target, actionKey: 'foreign-existing' }))
+    await expect(reviewArticleActions(input)).rejects.toThrow(/role=proposer/)
+    expect(create.mock.calls[1][0].tools[0].input_schema.properties.actionKey.const).toBe('existing')
+    expect(create).toHaveBeenCalledTimes(2)
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it('keeps the single shared repair spent when the subsequent verifier is malformed', async () => {
+    const { input, proposal, verification } = setup(), before = JSON.stringify(input.registry)
+    create.mockResolvedValueOnce(response({ ...proposal, candidateDispositions: [proposal.candidateDispositions[0], { ...proposal.candidateDispositions[1], suggestionIndex: 0 }] }))
+      .mockResolvedValueOnce(response(proposal.candidateDispositions[1]))
+      .mockResolvedValueOnce(response({ ...verification, suggestions: null }))
+    await expect(reviewArticleActions(input)).rejects.toThrow(/role=verifier/)
+    expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(['claude-sonnet-4-6', 'claude-sonnet-4-6', 'claude-opus-4-6'])
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it('requalifies the complete targeted request before generation and never repairs a failed token count', async () => {
+    const { input, proposal } = setup(), before = JSON.stringify(input.registry)
+    create.mockResolvedValueOnce(response({ ...proposal, candidateDispositions: [proposal.candidateDispositions[0], { ...proposal.candidateDispositions[1], suggestionIndex: 0 }] }))
+    countTokens.mockResolvedValueOnce({ input_tokens: 1000 }).mockResolvedValueOnce({ input_tokens: 244001 })
+    await expect(reviewArticleActions(input)).rejects.toThrow(/exceeds token budget/)
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(countTokens).toHaveBeenCalledTimes(2)
+    expect(countTokens.mock.calls[1][0].tools[0].input_schema.required).toContain('candidateId')
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it('keeps the private untrusted record out of error inspection, logs and repair requests', async () => {
+    const { input, candidates, proposal, verification } = setup()
+    const sentinel = 'PRIVATE_RAW_CANDIDATE_SECRET'
+    const malformed = { ...proposal, candidateDispositions: [proposal.candidateDispositions[0], { ...proposal.candidateDispositions[1], reason: sentinel, [sentinel]: sentinel }] }
+    create.mockResolvedValueOnce(response(malformed))
+    const { fixtureEvidenceView } = await import('./evidence-view-fixtures.js')
+    const { inspect } = await import('node:util')
+    const failure = await input.agents.propose('Unchanged primary evidence.', fixtureEvidenceView(sources), { articleDate: date, draftCandidates: candidates, actionKeys: [] }).catch((error: unknown) => error)
+    expect(failure).toBeInstanceOf(Error)
+    expect(inspect(failure, { showHidden: true, depth: 10 })).not.toContain(sentinel)
+    expect(JSON.stringify(failure)).not.toContain(sentinel)
+    expect(failure).not.toHaveProperty('cause')
+    expect(failure).not.toHaveProperty('issues')
+    const logs = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      create.mockReset().mockResolvedValueOnce(response(malformed)).mockResolvedValueOnce(response(proposal.candidateDispositions[1])).mockResolvedValueOnce(response(verification))
+      await reviewArticleActions(input)
+      expect(JSON.stringify(create.mock.calls)).not.toContain(sentinel)
+      expect(JSON.stringify(countTokens.mock.calls)).not.toContain(sentinel)
+      expect(JSON.stringify(logs.mock.calls)).not.toContain(sentinel)
+    } finally { logs.mockRestore() }
+  })
   it('derives the exact tuple from a captured ID before the real provider verifier boundary', async () => {
     const { input, candidates, proposal, verification } = setup()
     let seen: unknown
@@ -77,7 +219,7 @@ describe('captured candidate references before independent verification', () => 
     const malformed = mode === 'forbidden-index'
       ? { ...proposal, candidateDispositions: [proposal.candidateDispositions[0], { ...proposal.candidateDispositions[1], suggestionIndex: 0 }] }
       : { ...proposal, candidateDispositions: [proposal.candidateDispositions[0], { candidateId: candidates[1].candidateId, kind: 'reject', citations: fields.factCitations }] }
-    create.mockResolvedValueOnce(response(malformed)).mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response(verification))
+    create.mockResolvedValueOnce(response(malformed)).mockResolvedValueOnce(response(proposal.candidateDispositions[1])).mockResolvedValueOnce(response(verification))
     const result = await reviewArticleActions(input)
     const first = RequestSchema.parse(create.mock.calls[0][0]).messages[0].content
     const repair = RequestSchema.parse(create.mock.calls[1][0]).messages[0].content
@@ -97,8 +239,8 @@ describe('captured candidate references before independent verification', () => 
   it('stops after the logged-equivalent forbidden index followed by missing reason without a verifier or partial writes', async () => {
     const { input, candidates, proposal } = setup(), before = JSON.stringify(input.registry)
     create.mockResolvedValueOnce(response({ ...proposal, candidateDispositions: [proposal.candidateDispositions[0], { ...proposal.candidateDispositions[1], suggestionIndex: 0 }] }))
-      .mockResolvedValueOnce(response({ ...proposal, candidateDispositions: [proposal.candidateDispositions[0], { candidateId: candidates[1].candidateId, kind: 'reject', citations: fields.factCitations }] }))
-    await expect(reviewArticleActions(input)).rejects.toThrow(/role=proposer.*reason.*received=missing/)
+      .mockResolvedValueOnce(response({ candidateId: candidates[1].candidateId, kind: 'reject', citations: fields.factCitations }))
+    await expect(reviewArticleActions(input)).rejects.toThrow(/role=proposer.*path=reason.*expected=string/)
     expect(create).toHaveBeenCalledTimes(2)
     expect(countTokens).toHaveBeenCalledTimes(2)
     expect(create.mock.calls.every(([raw]) => RequestSchema.parse(raw).model === 'claude-sonnet-4-6')).toBe(true)
@@ -146,7 +288,7 @@ describe('captured candidate references before independent verification', () => 
     })()
     create.mockResolvedValue(response(invalid))
     await expect(reviewArticleActions(input)).rejects.toThrow()
-    expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(['claude-sonnet-4-6', 'claude-sonnet-4-6'])
+    expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(mode === 'negative-index' || mode === 'fractional-index' ? ['claude-sonnet-4-6'] : ['claude-sonnet-4-6', 'claude-sonnet-4-6'])
     expect(JSON.stringify(input.registry)).toBe(before)
   })
   it('uses the single malformed repair to obtain a valid reference before one verifier', async () => {
