@@ -1,7 +1,12 @@
 # Implementation notes
 
 ## Deviations
+- The sandbox blocked the `tsx` CLI's IPC socket before API generation started; used the same locked loader through `pnpm exec node --import tsx src/build-api.ts`, then built the frontend against that generated output.
 
+- 2026-10-24: Article acceptance had implicitly granted action authority in several readers; the user approved first acceptance with visibly unresolved suggestions, so those readers now require a verified action round and incomplete acceptance cannot create, dispatch or settle actions.
+- 2026-10-24: Whole-proposal repair introduced a missing reason on a different record; replace only one isolated record, pin its actual response index and captured references, and hold ambiguous or multiple-invalid records without guessing.
+- 2026-10-24: Native error wrappers alone did not establish a safe incomplete-review outcome; preserve context-error origin and require the exact typed Accepted-pending refusal before unwrapping, leaving unknown transport, integrity and persistence failures fatal.
+- 2026-10-24: Fresh incomplete-review evidence exceeds the dated registry limit, while hosted raw retention remains blocked by the user; preserve existing sources and bounded fresh source identities/digests, explicitly record that fresh raw content was not retained, and add no raw upload.
 - 2026-10-24: Malformed-output repair assumed a generic schema error could restart both roles; the delivered attempt exposed successive forbidden-index/missing-reason errors, and an offline control showed verifier errors reran the proposer. Keep one shared repair, repeat only the failed role with bounded shape-only feedback, preserve its evidence/proposal, and retain every native acceptance and budget guard.
 - 2026-10-23: Candidate-ID promotion preparation assumed captured commands fit the existing canonical contract; the actual October 21 captures contain full invocations, while ordinary records admit only bare commands and argument-bearing admission requires separate policy. Preserve exact custody and that policy, reject ineligible references before verification, and qualify controlled acceptance as mechanics only.
 
