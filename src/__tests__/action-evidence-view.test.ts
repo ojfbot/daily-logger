@@ -133,7 +133,7 @@ describe('typed generated metadata view', () => {
     expect(RANKED_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v19-compact-verifier-proposal')
     expect(CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v20-captured-candidate-references')
     expect(RANKED_ACTION_REVIEW_PROMPT_VERSIONS).toContain('action-review-v20-captured-candidate-references')
-    expect(ACTION_REVIEW_PROMPT_VERSION).toBe('action-review-v22-role-local-output-repair')
+    expect(ACTION_REVIEW_PROMPT_VERSION).toBe('action-review-v23-targeted-candidate-record-repair')
   })
   it('retains primary context failure when Accepted pending persistence is forbidden', async () => {
     await expect(reviewProducedDraftActions({ registry: empty(), articleDate: date, cycle: generationActionCycle(), markdown: markdown.replace('draft', 'accepted'), feedback: '', articleStatuses: new Map([[date, 'accepted']]), collectSources: () => [], agents: { propose: async () => { throw new Error('PRIMARY CONTEXT FAILURE') }, verify: vi.fn() } })).rejects.toThrow(/PRIMARY CONTEXT FAILURE.*pending persistence refused/)
@@ -147,7 +147,7 @@ describe('typed generated metadata view', () => {
     expect(actionEvidenceRegistryDigest(changed, date)).not.toBe(actionEvidenceRegistryDigest(first.registry, date))
     expect((await reviewArticleActions({ ...input, registry: changed, markdown: first.markdown })).cached).toBe(false)
   })
-  it.each(['action-review-v19-compact-verifier-proposal', 'action-review-v21-exact-invocation-admission'])('reads historical %s output without reusing it under role-local repair', async version => {
+  it.each(['action-review-v19-compact-verifier-proposal', 'action-review-v21-exact-invocation-admission', 'action-review-v22-role-local-output-repair'])('reads historical %s output without reusing it under role-local repair', async version => {
     const registry = empty(), agents = { propose: vi.fn(async () => ({ changes: [], suggestions: [] })), verify: vi.fn(async () => ({ changes: [], suggestions: [] })) }
     const input = { registry, articleDate: date, cycle: generationActionCycle(), markdown, feedback: '', sources: [] as ActionSource[], agents, articleStatuses: new Map([[date, 'draft']]) }
     const first = await reviewArticleActions(input), historical = structuredClone(first.registry)

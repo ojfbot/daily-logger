@@ -119,6 +119,20 @@ const ProviderToolBlocksSchema = z.tuple([z.object({
 type ActionRole = 'proposer' | 'verifier'
 type ProviderOutputPhase = 'envelope' | 'tool-block' | 'tool-input'
 class ProviderActionOutputError extends ActionOutputError {}
+class CandidateRecordIsolationError extends Error {}
+class ProviderCandidateRecordError extends ProviderActionOutputError {
+  #repair: ((correction: string) => Promise<ActionProposal>) | undefined
+  constructor(diagnostic: string, repair: (correction: string) => Promise<ActionProposal>) {
+    super(diagnostic)
+    this.#repair = repair
+  }
+  repair(correction: string): Promise<ActionProposal> {
+    const repair = this.#repair
+    this.#repair = undefined
+    if (!repair) throw new Error('Candidate disposition repair was already consumed')
+    return repair(correction)
+  }
+}
 const repairFields = new Set([
   ...Object.keys(ProviderLineProposalSchema.shape), ...Object.keys(ProviderVerificationSchema.shape),
   ...Object.keys(ProviderSuggestionSchema.shape), ...Object.keys(LineProposalSchema.shape.suggestions.element.shape),
@@ -401,6 +415,51 @@ export function providerToolSchema(value: unknown): unknown {
   return output
 }
 
+function isolateCandidateRecord(value: unknown, context: ActionProposalContext) {
+  const unavailable = () => new CandidateRecordIsolationError('Candidate disposition repair cannot isolate one known invalid record; review pending')
+  const envelope = ProviderLineProposalSchema.extend({ candidateDispositions: z.array(z.unknown()).max(5) }).safeParse(value)
+  if (!envelope.success) throw unavailable()
+  const rows = z.array(z.object({ candidateId: z.string(), kind: z.string() }).passthrough()).safeParse(envelope.data.candidateDispositions)
+  if (!rows.success) throw unavailable()
+  const awaiting = context.draftCandidates.filter(candidate => candidate.review.state === 'awaiting-review')
+  const ids = rows.data.map(row => row.candidateId)
+  if (ids.length !== awaiting.length || new Set(ids).size !== ids.length || ids.some(id => !awaiting.some(candidate => candidate.candidateId === id))) throw unavailable()
+  const schema = ProviderLineProposalSchema.shape.candidateDispositions.element
+  const invalid = rows.data.flatMap((row, index) => schema.safeParse(row).success ? [] : [index])
+  const index = invalid[0]
+  if (invalid.length !== 1 || index === undefined) throw unavailable()
+  const row = rows.data[index]
+  const branch = schema.options.find(option => option.shape.kind.value === row.kind)
+  if (!branch) throw unavailable()
+  const references = (() => {
+    if (row.kind === 'promote' || row.kind === 'map-existing') {
+      const suggestions = envelope.data.suggestions.flatMap((suggestion, index) => suggestion.identity.kind === 'captured' && suggestion.identity.candidateId === row.candidateId ? [{ suggestion, index }] : [])
+      const match = suggestions[0]
+      if (suggestions.length !== 1 || !match || row.suggestionIndex !== match.index) throw unavailable()
+      if (row.kind === 'promote') {
+        if (match.suggestion.existingKey !== null) throw unavailable()
+        return { suggestionIndex: z.literal(match.index) }
+      }
+      if (typeof row.actionKey !== 'string' || !context.actionKeys.includes(row.actionKey) || match.suggestion.existingKey !== row.actionKey) throw unavailable()
+      return { suggestionIndex: z.literal(match.index), actionKey: z.literal(row.actionKey) }
+    }
+    if (row.kind === 'verified-closure') {
+      if (row.actionKey !== null && (typeof row.actionKey !== 'string' || !context.actionKeys.includes(row.actionKey))) throw unavailable()
+      return { actionKey: z.literal(row.actionKey) }
+    }
+    return {}
+  })()
+  // Bound custody before cloning. Keep the original wire values, not Zod defaults.
+  let original: Record<string, unknown>
+  try {
+    if (Buffer.byteLength(JSON.stringify(value), 'utf8') > 640 * 1024) throw unavailable()
+    original = repairObject.parse(structuredClone(value))
+  } catch { throw unavailable() }
+  const dispositions = z.array(z.unknown()).parse(original.candidateDispositions)
+  return { original, dispositions, index, candidateId: row.candidateId, kind: row.kind,
+    schema: branch.extend({ ...references, candidateId: z.literal(row.candidateId) }) }
+}
+
 export function actionProviderRequest(role: 'proposer' | 'verifier', prompt: string) {
     const schema = role === 'proposer' ? ProviderLineProposalSchema : ProviderVerificationSchema
     // The provider supports anyOf but not oneOf. Converting only required, disjoint const
@@ -422,9 +481,7 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
   const configuredLimit = Number(process.env.ACTION_PROVIDER_TOKEN_LIMIT ?? '256000')
   const tokenLimit = options.tokenBudget?.limitTokens ?? configuredLimit
   if (!Number.isSafeInteger(tokenLimit) || tokenLimit <= 12000) throw new Error(`${options.tokenBudget ? 'Action token budget limitTokens' : 'ACTION_PROVIDER_TOKEN_LIMIT'} must be an integer greater than the 12000-token output reserve`)
-  async function call(role: 'proposer' | 'verifier', prompt: string, view: PreparedActionEvidenceView, context?: ActionProposalContext): Promise<unknown> {
-    const captured = actionProposalContext(context?.articleDate ?? '', context?.draftCandidates ?? [], context?.actionKeys ?? [])
-    const request = actionProviderRequest(role, prompt)
+  async function toolInput(role: 'proposer' | 'verifier', request: ReturnType<typeof actionProviderRequest>): Promise<unknown> {
     const requestBytes = Buffer.byteLength(JSON.stringify(request), 'utf8')
     if (requestBytes > 640 * 1024) throw new ActionContextNeedError(`Complete action provider request exceeds 640 KiB (${requestBytes} bytes); review pending`)
     const count = options.tokenBudget
@@ -456,7 +513,32 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
     const response = parseProviderOutput(role, 'envelope', raw, () => ProviderResponseSchema.parse(raw))
     console.warn(`Action ${role}: stop=${response.stop_reason}; output_tokens=${response.usage?.output_tokens ?? 'unavailable'}`)
     const [result] = parseProviderOutput(role, 'tool-block', response.content, () => ProviderToolBlocksSchema.parse(response.content))
-    return parseProviderOutput(role, 'tool-input', result.input, () => role === 'proposer' ? resolveProviderProposal(result.input, view, captured) : ProviderVerificationSchema.parse(result.input), captured)
+    return result.input
+  }
+  async function call(role: 'proposer' | 'verifier', prompt: string, view: PreparedActionEvidenceView, context?: ActionProposalContext): Promise<unknown> {
+    const captured = actionProposalContext(context?.articleDate ?? '', context?.draftCandidates ?? [], context?.actionKeys ?? [])
+    const value = await toolInput(role, actionProviderRequest(role, prompt))
+    if (role === 'proposer') {
+      const parsed = ProviderLineProposalSchema.safeParse(value)
+      if (!parsed.success && parsed.error.issues.some(issue => issue.path[0] === 'candidateDispositions')) {
+        const target = isolateCandidateRecord(value, captured)
+        const diagnostic = outputShapeDiagnostic(parsed.error, role, 'tool-input', value, captured)
+        throw new ProviderCandidateRecordError(diagnostic, async correction => {
+          const base = actionProviderRequest('proposer', `${prompt}\n${correction}\nRepair only response record ${target.index}: candidateId=${target.candidateId}; kind=${target.kind}. Return only this disposition record, not the complete proposal. All other original records and arrays remain unchanged and untrusted until full validation.`)
+          const schema: unknown = JSON.parse(JSON.stringify(z.toJSONSchema(target.schema)))
+          const wireSchema = ProviderSchemaObject.parse(providerToolSchema(schema))
+          const request = { ...base,
+            system: `${RULES}\nYou are the action proposer repairing exactly one candidate disposition. Return ONLY the named replacement record under the tool schema, with its unchanged candidateId and kind. Author all required fields from the same evidence. Never invent a reason or silently discard a contradictory field. Do not return or change any other record or proposal array.`,
+            tools: [{ ...base.tools[0], description: 'Return only the named replacement candidate disposition.', input_schema: { ...wireSchema, type: 'object' as const } }],
+          }
+          const replacement = await toolInput('proposer', request)
+          const record = parseProviderOutput('proposer', 'tool-input', replacement, () => target.schema.parse(replacement), captured)
+          const merged = { ...target.original, candidateDispositions: target.dispositions.map((row, index) => index === target.index ? record : row) }
+          return parseProviderOutput('proposer', 'tool-input', merged, () => resolveProviderProposal(merged, view, captured), captured)
+        })
+      }
+    }
+    return parseProviderOutput(role, 'tool-input', value, () => role === 'proposer' ? resolveProviderProposal(value, view, captured) : ProviderVerificationSchema.parse(value), captured)
   }
   return { identity: { proposer: 'claude-sonnet-4-6', verifier: 'claude-opus-4-6' }, propose: (prompt, sources, context) => call('proposer', prompt, sources, context), verify: (prompt, sources, context) => call('verifier', prompt, sources, context) }
 }
@@ -1209,19 +1291,20 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   let repairUsed = false
   // One shared repair, applied only to the failed role. A malformed verifier
   // cannot replace the proposal it was independently checking.
-  async function withOutputRepair<T>(role: ActionRole, run: (correction: string) => Promise<T>): Promise<T> {
+  async function withOutputRepair<T>(role: ActionRole, run: (correction: string, recordRepair?: ProviderCandidateRecordError) => Promise<T>): Promise<T> {
     try { return await run('') } catch (error) {
       if (repairUsed || !(error instanceof z.ZodError || error instanceof ActionOutputError)) throw error
       repairUsed = true
       const diagnostic = error instanceof z.ZodError
         ? outputShapeDiagnostic(error, role, 'tool-input') : error instanceof ProviderActionOutputError ? error.message : `role=${role}; phase=identity; ${error.message}`
-      const correction = `Previous structured output was invalid: ${diagnostic}. Repair only this ${role} output. Return the complete required tool schema; all required fields must be authored from the unchanged evidence. Never invent a reason or silently discard a contradictory field.`
+      const output = error instanceof ProviderCandidateRecordError ? 'Return only the named candidate disposition record; every other original record and array stays pinned.' : 'Return the complete required tool schema.'
+      const correction = `Previous structured output was invalid: ${diagnostic}. Repair only this ${role} output. ${output} All required fields must be authored from the unchanged evidence. Never invent a reason or silently discard a contradictory field.`
       console.warn(`Action review needs its one repair: ${correction}`)
-      return run(correction)
+      return run(correction, error instanceof ProviderCandidateRecordError ? error : undefined)
     }
   }
-  const proposal = await withOutputRepair('proposer', async correction => {
-    const proposal = ActionProposalSchema.parse(await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every requiredActionKey. Preserve other terminal currentActionKeys. An independently verified existingKey link also counts as reviewing a required identity. Account for every awaiting initialDraftCandidate under initialDraftCandidatePolicy; never reconstruct a missing original from draft context or prior-day maintenance.\n${correction}`), evidenceView, proposalContext))
+  const proposal = await withOutputRepair('proposer', async (correction, recordRepair) => {
+    const proposal = ActionProposalSchema.parse(recordRepair ? await recordRepair.repair(correction) : await input.agents.propose(boundedPrompt(`${context}\nReturn a change for every requiredActionKey. Preserve other terminal currentActionKeys. An independently verified existingKey link also counts as reviewing a required identity. Account for every awaiting initialDraftCandidate under initialDraftCandidatePolicy; never reconstruct a missing original from draft context or prior-day maintenance.\n${correction}`), evidenceView, proposalContext))
     assertCandidateAssociations(proposal, proposalContext)
     assertInvocationMappings(proposal, input.registry.records)
     return proposal

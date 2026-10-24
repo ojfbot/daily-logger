@@ -142,7 +142,8 @@ describe('native-validated forced-tool response boundary', () => {
     ['forbidden suggestionIndex', { candidateId: captured[0].candidateId, kind: 'reject', suggestionIndex: 0, reason: 'PRIVATE REASON', citations: [citation] }, 'suggestionIndex', 'reason,citations'],
     ['missing reason', { candidateId: captured[0].candidateId, kind: 'promote', suggestionIndex: 0 }, 'reason', 'suggestionIndex,reason'],
   ])('retains bounded trusted shape context for the logged-equivalent %s failure', async (_name, disposition, field, fields) => {
-    create.mockResolvedValueOnce(response({ ...empty, candidateDispositions: [disposition] }))
+    const suggestions = disposition.kind === 'promote' ? proposal.suggestions.map(({ command: _command, repo: _repo, description: _description, ...fields }) => ({ ...fields, identity: { kind: 'captured', candidateId: captured[0].candidateId } })) : []
+    create.mockResolvedValueOnce(response({ ...empty, suggestions, candidateDispositions: [disposition] }))
     const error = await createActionAgents().propose('Full evidence.', fixtureEvidenceView([source]), { articleDate: '2026-10-21', draftCandidates: captured, actionKeys: [] }).catch((caught: unknown) => caught)
     expect(error).toBeInstanceOf(Error)
     if (!(error instanceof Error)) throw new Error('Missing validation failure')
@@ -167,15 +168,15 @@ describe('native-validated forced-tool response boundary', () => {
     const log = vi.spyOn(console, 'warn').mockImplementation(() => {})
     try {
       create.mockResolvedValueOnce(response({ ...empty, candidateDispositions: [{ candidateId: 'UNTRUSTED_ID', kind: 'PRIVATE_KIND', reason: 'PRIVATE_REASON', PRIVATE_KEY: 'PRIVATE_VALUE' }], PRIVATE_ROOT: 'PRIVATE_SOURCE' }))
-      await reviewArticleActions(reviewInput())
-      const repair = create.mock.calls[1][0].messages[0].content
+      await expect(reviewArticleActions(reviewInput())).rejects.toThrow(/cannot isolate/)
+      const repair = JSON.stringify(create.mock.calls)
       const logs = JSON.stringify(log.mock.calls)
       for (const secret of ['UNTRUSTED_ID', 'PRIVATE_KIND', 'PRIVATE_REASON', 'PRIVATE_KEY', 'PRIVATE_VALUE', 'PRIVATE_ROOT', 'PRIVATE_SOURCE']) {
         expect(repair).not.toContain(secret)
         expect(logs).not.toContain(secret)
       }
-      expect(repair).toContain('role=proposer')
-      expect(countTokens).toHaveBeenCalledTimes(3)
+      expect(create).toHaveBeenCalledTimes(1)
+      expect(countTokens).toHaveBeenCalledTimes(1)
     } finally { log.mockRestore() }
   })
   it.each(['token-overflow', 'count-unavailable', 'provider-error'] as const)('never repairs %s as malformed output', async kind => {
@@ -205,7 +206,7 @@ describe('native-validated forced-tool response boundary', () => {
     const error = await createActionAgents().propose('Full evidence.', fixtureEvidenceView([source]), { articleDate: '2026-10-21', draftCandidates: captured, actionKeys: [] }).catch((caught: unknown) => caught)
     if (!(error instanceof Error)) throw new Error('Missing shape failure')
     expect(Buffer.byteLength(error.message)).toBeLessThanOrEqual(2048)
-    expect(error.message).toContain('additionalIssues=')
+    expect(error.message).toContain('cannot isolate')
     expect(error.message).not.toContain('PRIVATE')
     expect(error).not.toHaveProperty('cause')
     expect(error).not.toHaveProperty('issues')

@@ -1,10 +1,11 @@
 import { z } from 'zod'
 
-export const ACTION_REVIEW_PROMPT_VERSION = 'action-review-v22-role-local-output-repair'
-export const EXACT_INVOCATION_ACTION_REVIEW_PROMPT_VERSIONS = [ACTION_REVIEW_PROMPT_VERSION, 'action-review-v21-exact-invocation-admission'] as const
+export const ACTION_REVIEW_PROMPT_VERSION = 'action-review-v23-targeted-candidate-record-repair'
+export const EXACT_INVOCATION_ACTION_REVIEW_PROMPT_VERSIONS = [ACTION_REVIEW_PROMPT_VERSION, 'action-review-v22-role-local-output-repair', 'action-review-v21-exact-invocation-admission'] as const
 export const PENDING_ACTION_REVIEW_PROMPT_VERSION = 'action-review-pending-v5-draft-candidate-custody'
 export const CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS = [
   ACTION_REVIEW_PROMPT_VERSION,
+  'action-review-v22-role-local-output-repair',
   'action-review-v21-exact-invocation-admission',
   'action-review-v20-captured-candidate-references',
   'action-review-v19-compact-verifier-proposal',
@@ -18,7 +19,7 @@ export const CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS = [
   'action-review-v12-single-recommendation-surface',
   'action-review-pending-v3-single-recommendation-surface',
 ] as const
-export const RANKED_ACTION_REVIEW_PROMPT_VERSIONS = [ACTION_REVIEW_PROMPT_VERSION, 'action-review-v21-exact-invocation-admission', 'action-review-v20-captured-candidate-references', 'action-review-v19-compact-verifier-proposal', 'action-review-v18-native-validated-tool', 'action-review-v16-typed-evidence-view', 'action-review-v15-draft-candidate-linkage', 'action-review-v14-draft-candidate-custody', 'action-review-v13-maintained-recommendation-continuity', 'action-review-v12-single-recommendation-surface'] as const
+export const RANKED_ACTION_REVIEW_PROMPT_VERSIONS = [ACTION_REVIEW_PROMPT_VERSION, 'action-review-v22-role-local-output-repair', 'action-review-v21-exact-invocation-admission', 'action-review-v20-captured-candidate-references', 'action-review-v19-compact-verifier-proposal', 'action-review-v18-native-validated-tool', 'action-review-v16-typed-evidence-view', 'action-review-v15-draft-candidate-linkage', 'action-review-v14-draft-candidate-custody', 'action-review-v13-maintained-recommendation-continuity', 'action-review-v12-single-recommendation-surface'] as const
 export const ActionReviewCycleSchema = z.discriminatedUnion('phase', [
   z.object({ phase: z.literal('generation') }).strict(),
   z.object({ phase: z.literal('revision'), id: z.string().min(1).max(256) }).strict(),
