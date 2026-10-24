@@ -1,6 +1,8 @@
 # Implementation notes
 
 ## Deviations
+
+- 2026-10-24: Malformed-output repair assumed a generic schema error could restart both roles; the delivered attempt exposed successive forbidden-index/missing-reason errors, and an offline control showed verifier errors reran the proposer. Keep one shared repair, repeat only the failed role with bounded shape-only feedback, preserve its evidence/proposal, and retain every native acceptance and budget guard.
 - 2026-10-23: Candidate-ID promotion preparation assumed captured commands fit the existing canonical contract; the actual October 21 captures contain full invocations, while ordinary records admit only bare commands and argument-bearing admission requires separate policy. Preserve exact custody and that policy, reject ineligible references before verification, and qualify controlled acceptance as mechanics only.
 
 - The verifier headroom census assumed the saved complete source snapshot could stand in for the live envelope, but serialization cannot restore collector-only metadata-compaction authority and the actual hosted proposal was not retained. Kept all source duties and limits, preserved non-fitting replay controls, and report byte accounting plus bounded real-SDK fixtures without claiming live token fit.
