@@ -7,9 +7,10 @@ import { actionFile, emptyActionFile, writeActionStore } from '../../src/__tests
 import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, symlinkSync, chmodSync, realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterEach, expect, it, vi } from 'vitest'
+import { z } from 'zod'
 import { createFixture, makePullRequest, makeComment, today } from './fixture.js'
 import { createEditorialService, decodeEditorial, editorialDigest, encodeEditorial, repo } from '../../api/_lib/editorial-continuation.js'
 import { mockActionAgents } from '../../src/review-actions.js'
@@ -17,20 +18,52 @@ import { ActionRegistrySchema, ArticleActionFileSchema, stripManagedActions } fr
 import { admitActionRegistry } from '../../.github/scripts/editorial-action-registry.js'
 import { admitEditorial, prepareEditorial, pushEditorial, finalizeEditorial, type Execution } from '../../.github/scripts/continue-editorial.js'
 const commandFailure = vi.hoisted(() => {
-  const state: { error: Error | undefined } = { error: undefined }
+  const state: { error: Error | undefined; childError: Error | undefined; events: string[];
+    options: Array<{ shell: unknown; maxBuffer: unknown; timeout: unknown; cwd: unknown }>;
+    replacement: { file: string; args: string[]; timeout?: number } | undefined } = {
+    error: undefined, childError: undefined, events: [], options: [], replacement: undefined,
+  }
   return state
 })
 vi.mock('node:child_process', async importOriginal => {
   const actual = await importOriginal<typeof import('node:child_process')>()
-  return { ...actual, execFileSync: (...args: Parameters<typeof actual.execFileSync>) => {
-    if (args[0] === 'pnpm' && commandFailure.error) throw commandFailure.error
-    return actual.execFileSync(...args)
+  const { promisify } = await import('node:util')
+  const run = promisify(actual.execFile)
+  const tracked = async (...args: Parameters<typeof run>) => {
+    const label = Array.isArray(args[1]) ? args[1].at(-1) ?? '' : ''
+    if (args[0] === 'pnpm') {
+      commandFailure.events.push(`start:${label}`)
+      commandFailure.options.push({ shell: args[2]?.shell, maxBuffer: args[2]?.maxBuffer, timeout: args[2]?.timeout, cwd: args[2]?.cwd })
+      if (commandFailure.error) throw commandFailure.error
+    }
+    try {
+      const replacement = args[0] === 'pnpm' ? commandFailure.replacement : undefined
+      const result = replacement
+        ? await run(replacement.file, replacement.args, { ...args[2], ...(replacement.timeout === undefined ? {} : { timeout: replacement.timeout }) })
+        : await run(...args)
+      if (args[0] === 'pnpm') commandFailure.events.push(`end:${label}`)
+      return result
+    } catch (error) {
+      if (error instanceof Error) commandFailure.childError = error
+      throw error
+    }
+  }
+  const execFile = Object.assign((...args: Parameters<typeof actual.execFile>) => actual.execFile(...args), { [promisify.custom]: tracked })
+  return { ...actual, execFile, execFileSync: (...args: Parameters<typeof actual.execFileSync>) => {
+    const label = Array.isArray(args[1]) ? args[1].at(-1) ?? '' : ''
+    if (args[0] === 'pnpm') {
+      commandFailure.events.push(`start:${label}`)
+      if (commandFailure.error) throw commandFailure.error
+    }
+    const result = actual.execFileSync(...args)
+    if (args[0] === 'pnpm') commandFailure.events.push(`end:${label}`)
+    return result
   } }
 })
 // Native revision cases create Git worktrees and run the actual CLI.
 vi.setConfig({ testTimeout: 20_000 })
 const cleanups: string[] = []
-afterEach(() => { commandFailure.error = undefined; vi.unstubAllEnvs(); for (const path of cleanups.splice(0)) rmSync(path, { recursive: true, force: true }) })
+afterEach(() => { commandFailure.error = undefined; commandFailure.childError = undefined; commandFailure.replacement = undefined; commandFailure.events.length = 0; commandFailure.options.length = 0; vi.unstubAllEnvs(); for (const path of cleanups.splice(0)) rmSync(path, { recursive: true, force: true }) })
 function git(cwd: string, ...args: string[]) { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim() }
 async function setup(noChange = false, corruption: 'code' | 'symlink' | 'executable' | 'blob' | 'missing-registry' | 'registry-symlink' | 'registry-executable' | 'cross-date-choice' | null = null, ambiguousAncestry = false, pendingInitial = false, requestKind: 'revision' | 'clean' = 'revision') {
   vi.stubEnv('MOCK_LLM', 'true')
@@ -901,4 +934,48 @@ it.each(['failed', 'stale', 'uncertain'])('an unbound %s bot comment cannot clea
   const digest = request.requests[0]!.digest
   f.state.prComments.get(42)!.push(makeComment(`## Editorial execution receipt\n${JSON.stringify({ requestDigest: digest, requestCommentId: f.comment.id, runId: 101, policySha: f.execution.policySha, outcome })}`, 99, 'github-actions[bot]', 42))
   expect(await createEditorialService(f.execution.github).load(today, 'ojfbot')).toMatchObject({ status: 'existing', outstanding: true })
+})
+
+it('keeps the parent loop responsive while native clean commands finish serially', async () => {
+  const f = await setup(false, null, false, false, 'clean'); f.state.login = 'github-actions[bot]'
+  let heartbeats = 0
+  const interval = setInterval(() => { if (commandFailure.events.at(-1)?.startsWith('start:')) heartbeats++ }, 5)
+  try { expect(await prepareEditorial(f.execution)).not.toBeNull() }
+  finally { clearInterval(interval) }
+  expect(heartbeats).toBeGreaterThan(0)
+  expect(commandFailure.events.map(event => event.slice(0, event.indexOf(':') + 1) + basename(event.slice(event.indexOf(':') + 1)))).toEqual([
+    'start:stamp-outcome.ts', 'end:stamp-outcome.ts', 'start:reconcile-actions.ts', 'end:reconcile-actions.ts',
+  ])
+  expect(commandFailure.options).toEqual([0, 1].map(() => ({ shell: false, maxBuffer: 1024 * 1024, timeout: 0, cwd: f.execution.policyDirectory })))
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
+})
+it.each(['nonzero', 'signal', 'spawn', 'overflow', 'timeout'] as const)('preserves a real %s child failure and stops before any later output step', async kind => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  const scripts = {
+    nonzero: "process.stdout.write('bounded stdout');process.stderr.write('bounded stderr');process.exitCode=7",
+    signal: "process.kill(process.pid,'SIGTERM')",
+    spawn: '',
+    overflow: 'process.stdout.write(Buffer.alloc(1024*1024+1,120))',
+    timeout: 'setInterval(()=>{},1000)',
+  }
+  commandFailure.replacement = { file: kind === 'spawn' ? resolve(f.execution.workspace, 'missing-command') : process.execPath,
+    args: ['-e', scripts[kind]], ...(kind === 'timeout' ? { timeout: 100 } : {}) }
+  const failure: unknown = await prepareEditorial(f.execution).catch((error: unknown) => error)
+  expect(failure).toBe(commandFailure.childError)
+  expect(failure).toBeInstanceOf(Error)
+  if (kind === 'nonzero') expect(failure).toMatchObject({ code: 7, stdout: 'bounded stdout', stderr: 'bounded stderr' })
+  if (kind === 'signal') expect(failure).toMatchObject({ signal: 'SIGTERM' })
+  if (kind === 'spawn') expect(failure).toMatchObject({ code: 'ENOENT' })
+  if (kind === 'timeout') expect(failure).toMatchObject({ killed: true, signal: 'SIGTERM' })
+  if (kind === 'overflow') {
+    expect(failure).toMatchObject({ code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER' })
+    const bounded = z.object({ stdout: z.string(), stderr: z.string() }).parse(failure)
+    expect(Buffer.byteLength(bounded.stdout)).toBeLessThanOrEqual(1024 * 1024)
+    expect(bounded.stderr).toBe('')
+  }
+  expect(commandFailure.events.map(event => basename(event))).toEqual(['revise-article.ts'])
+  const receipts = f.state.prComments.get(42)?.filter(comment => comment.body.startsWith('## Editorial execution receipt'))
+  expect(receipts).toHaveLength(1)
+  expect(receipts?.[0]?.body).toContain('"outcome":"uncertain"')
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
 })
