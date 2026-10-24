@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+export const BareActionCommandSchema = z.string().regex(/^\/\w[\w-]*$/)
+export const ActionCommandSchema = z.string().regex(/^\/\w[\w-]*(?: +\S[^\r\n]*)?$/)
+  .refine(command => !/[\x00-\x1f\x7f\u2028\u2029]/.test(command), 'Action command must be a single line without control characters')
+
 const gitSha = z.string().regex(/^[a-f0-9]{40}$/)
 const sha256 = z.string().regex(/^[a-f0-9]{64}$/)
 
@@ -63,7 +67,7 @@ export const ReviewedActionSourceSchema = z.object({
 }).strict()
 
 export const LegacyCanonicalActionSchema = z.object({
-  command: z.string().regex(/^\/\w[\w-]*$/),
+  command: ActionCommandSchema,
   description: z.string().min(1),
   repo: z.string().min(1),
   status: z.enum(['open', 'done']),
@@ -84,7 +88,7 @@ const NewlySettledCanonicalActionSchema = LegacyCanonicalActionSchema.extend({
 
 export const ReviewedCanonicalActionSchema = z.object({
   id: z.string().min(1),
-  command: z.string().regex(/^\/\w[\w-]*$/),
+  command: BareActionCommandSchema,
   invocation: z.string().regex(/^\/\w[\w-]*\s+.+$/),
   description: z.string().min(1),
   repo: z.string().min(1),

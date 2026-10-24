@@ -1,3 +1,4 @@
+import { BareActionCommandSchema } from './action-model.js'
 import { ActionReviewOutputSchema, DraftCandidateEvidenceRequirementsSchema, acceptedActionState, actionStateDigest, assertActionSnapshotStateIntegrity, managedArticleDigest, normalizeWorkKey, sha256, stripManagedActions, type ActionRegistry, type ActionReviewOutput, type ActionSource, type DraftActionCandidate, type DraftCandidateEvidenceRequirements, type DraftRecommendationContext, type RankedClosingOption, type RecommendationMaintenanceDescriptor } from './action-registry.js'
 import type { ActionReviewCycle } from './action-review-cycle.js'
 import {
@@ -94,6 +95,7 @@ export function actionRecordSourceReferences(record: ActionRegistry['records'][n
     key: record.key,
     workKey: record.workKey,
     repo: record.original.repo,
+    ...(!BareActionCommandSchema.safeParse(record.original.command).success ? { command: record.original.command } : {}),
     originalDescription: record.original.description,
     goal: record.goal,
     doneWhen: record.doneWhen,
@@ -722,7 +724,7 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
 export function actionReviewIndex(input: { registry: ActionRegistry; articleDate: string; articleStatuses: ReadonlyMap<string, string>; expandedActionKeys: readonly string[] }) {
   const actions = input.registry.records.map(record => {
     const state = acceptedActionState(record, input.articleStatuses, input.registry)
-    const identity = { key: record.key, workKey: record.workKey, repo: record.original.repo, state, includeInIndex: record.includeInIndex,
+    const identity = { key: record.key, workKey: record.workKey, repo: record.original.repo, ...(!BareActionCommandSchema.safeParse(record.original.command).success ? { command: record.original.command } : {}), state, includeInIndex: record.includeInIndex,
       protected: !!record.original.review, inclusionOverride: record.inclusionOverride }
     if (!input.expandedActionKeys.includes(record.key) && !record.history.length && !record.gates.length && !record.original.review) return identity
     const description = record.history.filter(decision => input.articleStatuses.get(decision.articleDate) === 'accepted'

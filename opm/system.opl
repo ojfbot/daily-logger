@@ -378,3 +378,10 @@ Start Target Waiting requires Clock. [src: .github/scripts/daily_blog_schedule.p
 Start Target Waiting yields Due Start Target. [src: .github/scripts/daily_blog_schedule.py]
 Fallback Checking invokes Start Target Waiting. [src: .github/scripts/daily_blog_schedule.py]
 Fallback Dispatching requires Due Start Target. [src: .github/scripts/daily_blog_schedule.py]
+
+## SD1.4 — Exact captured invocation admission
+Canonical Action Proposal exhibits Exact Captured Invocation. [src: src/review-actions.ts]
+Action Reconciling yields Captured Invocation Birth Output. [src: src/review-actions.ts]
+Captured Invocation Birth Output consists of Created Action Record Binding and Candidate Review Transition. [src: src/action-registry-schema.ts]
+Article Action Files consists of Captured Invocation Birth Output. [src: src/action-registry-schema.ts]
+Action Registry Writing requires valid Captured Invocation Birth Output. [src: src/action-registry-schema.ts]

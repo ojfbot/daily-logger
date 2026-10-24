@@ -32,7 +32,8 @@ The October 15 repair admits only its three reviewed argument-bearing suggestion
 The registry cutover preserves 88 open and 125 completed rows, while 138 earlier
 omissions remain held pending a separate admission decision. Protected reviewed
 dispositions are context, not execution or settlement authority. Verified article
-receipts govern new admission and ordinary dispositions. Static APIs project those
+receipts govern new admission and ordinary dispositions, including source-bound exact-invocation
+captures under the current ordinary review contract; this does not backfill historical holds. Static APIs project those
 records; prose does not admit or close work. See [Action intake](action-intake.md).
 
 The October 10 source snapshot fetches 30 recently updated open issue/PR records
