@@ -36,6 +36,28 @@ receipts govern new admission and ordinary dispositions, including source-bound 
 captures under the current ordinary review contract; this does not backfill historical holds. Static APIs project those
 records; prose does not admit or close work. See [Action intake](action-intake.md).
 
+### Article acceptance with unresolved actions
+
+First clean acceptance can complete an article while its captured suggestions
+still need independent review. The article is Accepted; the action review stays
+pending. Both the initial human Accept route and the guarded clean-continuation
+route record these outcomes separately. This fallback does not apply to later
+revisions of an already Accepted article or replace a verified action round.
+
+The article card and Actions index show the original candidate IDs as **Needs
+review**. These held suggestions cannot dispatch, admit new queue entries, or
+close existing work. Existing queue records and history remain intact. A later
+native action review can resolve the same candidates after full validation and
+independent verification; accepting the article supplies no action verdict.
+
+An incomplete review retains existing source custody and fresh source locators
+and digests, with an explicit indication that fresh raw content was not retained.
+It does not upload raw evidence. Unknown provider, transport, storage, integrity,
+or concurrent-write failures still stop acceptance. See `scripts/reconcile-actions.ts`,
+`src/action-registry.ts`, and `shared/editorial-action-proof.ts` for the completion
+boundary and its proof. Surfacing held work is not a claim that unattended
+next-day recovery or queue execution has been implemented.
+
 The October 10 source snapshot fetches 30 recently updated open issue/PR records
 per repo before excluding PRs. It prioritizes active issues and retains at most
 40 across the fleet. Active body previews contain at most 800 characters, stale
