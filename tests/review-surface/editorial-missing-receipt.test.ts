@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { expect, it, vi } from 'vitest'
 import { z } from 'zod'
@@ -14,6 +16,11 @@ const captured = z.object({ request: editorialRecordSchema, requestComment: z.ob
 if (captured.request.intent !== 'request_clean_acceptance') throw new Error('Fixture must pin the actual clean request')
 const request = captured.request, date = request.date, runId = captured.attempt.id
 const missingAck = 'close_missing_receipt_attempt_without_review_or_billing_claim' as const
+const frozen = (path: string) => execFileSync('git', ['show', `68802550ab1c0adf2324c0ff1e5005e564e6766f:${path}`], { cwd: new URL('../..', import.meta.url), encoding: 'utf8' })
+const originalArticle = frozen(`_articles/${date}.md`).replace('status: "draft"', 'status: "accepted"')
+const originalRegistry = frozen(`actions/articles/${date}.json`)
+const blob = (content: string) => createHash('sha1').update(`blob ${Buffer.byteLength(content)}\0`).update(content).digest('hex')
+if (blob(originalArticle) !== request.articleBlobSha || blob(originalRegistry) !== request.registryBlobSha) throw new Error('Frozen missing-receipt input disagrees with its captured request')
 
 function fixture() {
   const { state, github: raw } = createFixture()
@@ -22,9 +29,8 @@ function fixture() {
   state.acceptPullNumbers.push(416)
   state.pullRequests.set(416, { ...pr, head: { ...pr.head, sha: request.headSha, ref: `accept/${date}` } })
   state.pullFiles.set(416, [{ filename: `_articles/${date}.md`, status: 'modified' }])
-  const article = readFileSync(`_articles/${date}.md`, 'utf8').replace('status: "draft"', 'status: "accepted"')
-  state.refFiles.set(`${request.headSha}:_articles/${date}.md`, article)
-  state.refFiles.set(`${request.headSha}:actions/articles/${date}.json`, readFileSync(`actions/articles/${date}.json`, 'utf8'))
+  state.refFiles.set(`${request.headSha}:_articles/${date}.md`, originalArticle)
+  state.refFiles.set(`${request.headSha}:actions/articles/${date}.json`, originalRegistry)
   const requestComment = Object.assign(makeComment(encodeEditorial(request), captured.requestComment.id, 'ojfbot', 416), captured.requestComment)
   const claim = Object.assign(makeComment('## Editorial execution claim\n' + JSON.stringify(captured.claim), captured.claimComment.id, 'github-actions[bot]', 416), captured.claimComment)
   state.prComments.set(416, [requestComment, claim])
