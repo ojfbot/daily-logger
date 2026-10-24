@@ -1,6 +1,8 @@
 # Implementation notes
 
 ## Deviations
+
+- The article-completion tests assumed the live October 21 registry would remain Draft; a controlled Accepted/pending result correctly failed the first-acceptance guard, so their original registry, article and status corpus now come from the immutable accepted `9ca54f6` Git capture while native code and all assertions stay current.
 - Hosted feedback tests began importing a TypeScript contract graph with `.js` source specifiers; bare Node could not resolve it, so the same assertions now run through the existing locked `tsx` loader.
 - Browser verification found the existing mobile Actions grid expanded to 451 px at a 390 px viewport with or without the new held group; constrained its mobile track and wrapping, and migrated the older import-side-effect test to call the same explicit reconcile entry point without dropping assertions.
 - The sandbox blocked the `tsx` CLI's IPC socket before API generation started; used the same locked loader through `pnpm exec node --import tsx src/build-api.ts`, then built the frontend against that generated output.
