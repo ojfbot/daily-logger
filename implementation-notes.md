@@ -1,6 +1,7 @@
 # Implementation notes
 
 ## Deviations
+- Browser verification found the existing mobile Actions grid expanded to 451 px at a 390 px viewport with or without the new held group; constrained its mobile track and wrapping, and migrated the older import-side-effect test to call the same explicit reconcile entry point without dropping assertions.
 - The sandbox blocked the `tsx` CLI's IPC socket before API generation started; used the same locked loader through `pnpm exec node --import tsx src/build-api.ts`, then built the frontend against that generated output.
 
 - 2026-10-24: Article acceptance had implicitly granted action authority in several readers; the user approved first acceptance with visibly unresolved suggestions, so those readers now require a verified action round and incomplete acceptance cannot create, dispatch or settle actions.
