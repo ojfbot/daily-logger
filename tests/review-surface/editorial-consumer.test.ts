@@ -29,24 +29,24 @@ vi.mock('node:child_process', async importOriginal => {
   const actual = await importOriginal<typeof import('node:child_process')>()
   const { promisify } = await import('node:util')
   const run = promisify(actual.execFile)
-  const tracked = async (...args: Parameters<typeof run>) => {
+  const tracked = (...args: Parameters<typeof run>) => {
     const label = Array.isArray(args[1]) ? args[1].at(-1) ?? '' : ''
     if (args[0] === 'pnpm') {
       commandFailure.events.push(`start:${label}`)
       commandFailure.options.push({ shell: args[2]?.shell, maxBuffer: args[2]?.maxBuffer, timeout: args[2]?.timeout, cwd: args[2]?.cwd })
       if (commandFailure.error) throw commandFailure.error
     }
-    try {
-      const replacement = args[0] === 'pnpm' ? commandFailure.replacement : undefined
-      const result = replacement
-        ? await run(replacement.file, replacement.args, { ...args[2], ...(replacement.timeout === undefined ? {} : { timeout: replacement.timeout }) })
-        : await run(...args)
+    const replacement = args[0] === 'pnpm' ? commandFailure.replacement : undefined
+    const pending = replacement
+      ? run(replacement.file, replacement.args, { ...args[2], ...(replacement.timeout === undefined ? {} : { timeout: replacement.timeout }) })
+      : run(...args)
+    return Object.assign(pending.then(result => {
       if (args[0] === 'pnpm') commandFailure.events.push(`end:${label}`)
       return result
-    } catch (error) {
+    }, error => {
       if (error instanceof Error) commandFailure.childError = error
       throw error
-    }
+    }), { child: pending.child })
   }
   const execFile = Object.assign((...args: Parameters<typeof actual.execFile>) => actual.execFile(...args), { [promisify.custom]: tracked })
   return { ...actual, execFile, execFileSync: (...args: Parameters<typeof actual.execFileSync>) => {
@@ -949,33 +949,61 @@ it('keeps the parent loop responsive while native clean commands finish serially
   expect(commandFailure.options).toEqual([0, 1].map(() => ({ shell: false, maxBuffer: 1024 * 1024, timeout: 0, cwd: f.execution.policyDirectory })))
   expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
 })
-it.each(['nonzero', 'signal', 'spawn', 'overflow', 'timeout'] as const)('preserves a real %s child failure and stops before any later output step', async kind => {
+it.each(['nonzero', 'signal', 'spawn', 'overflow', 'combined-overflow', 'overflow-delayed-exit', 'timeout', 'stdin', 'raw-under', 'raw-boundary', 'utf8'] as const)('preserves a real %s child result and stops before any later output step', async kind => {
   const f = await setup(); f.state.login = 'github-actions[bot]'
+  const stderrWrite = vi.spyOn(process.stderr, 'write').mockReturnValue(true)
   const scripts = {
     nonzero: "process.stdout.write('bounded stdout');process.stderr.write('bounded stderr');process.exitCode=7",
     signal: "process.kill(process.pid,'SIGTERM')",
     spawn: '',
     overflow: 'process.stdout.write(Buffer.alloc(1024*1024+1,120))',
+    'combined-overflow': 'process.stdout.write(Buffer.alloc(600000,120));process.stderr.write(Buffer.alloc(600000,121))',
+    'overflow-delayed-exit': `const {appendFileSync}=require('node:fs');const marker=${JSON.stringify(resolve(f.execution.workspace, 'child-signals'))};process.stdout.on('error',()=>{});process.stderr.on('error',()=>{});process.on('SIGTERM',()=>{appendFileSync(marker,'SIGTERM\\n');setTimeout(()=>process.exit(9),100)});process.on('exit',()=>appendFileSync(marker,'EXIT\\n'));process.stdout.write(Buffer.alloc(600000,120));process.stderr.write(Buffer.alloc(600000,121))`,
     timeout: 'setInterval(()=>{},1000)',
+    stdin: "process.stdin.resume();process.stdin.on('end',()=>{process.stdout.write('EOF');process.exitCode=7})",
+    'raw-under': 'process.stdout.write(Buffer.alloc(524288,255));process.stderr.write(Buffer.alloc(524287,255));process.exitCode=7',
+    'raw-boundary': 'process.stdout.write(Buffer.alloc(524288,255));process.stderr.write(Buffer.alloc(524288,255));process.exitCode=7',
+    utf8: "process.stdout.write(Buffer.from([0xe9]));setTimeout(()=>{process.stdout.write(Buffer.from([0x9b,0xaa]));process.stderr.write('雪');process.exitCode=7},20)",
   }
   commandFailure.replacement = { file: kind === 'spawn' ? resolve(f.execution.workspace, 'missing-command') : process.execPath,
     args: ['-e', scripts[kind]], ...(kind === 'timeout' ? { timeout: 100 } : {}) }
-  const failure: unknown = await prepareEditorial(f.execution).catch((error: unknown) => error)
-  expect(failure).toBe(commandFailure.childError)
+  let failure: unknown, forwarded: unknown[] = []
+  try { failure = await prepareEditorial(f.execution).catch((error: unknown) => error); forwarded = stderrWrite.mock.calls.map(call => call[0]) }
+  finally { stderrWrite.mockRestore() }
+  if (!['overflow', 'combined-overflow', 'overflow-delayed-exit'].includes(kind)) expect(failure).toBe(commandFailure.childError)
   expect(failure).toBeInstanceOf(Error)
   if (kind === 'nonzero') expect(failure).toMatchObject({ code: 7, stdout: 'bounded stdout', stderr: 'bounded stderr' })
+  if (kind === 'nonzero') expect(forwarded.filter(Buffer.isBuffer)).toEqual([Buffer.from('bounded stderr')])
   if (kind === 'signal') expect(failure).toMatchObject({ signal: 'SIGTERM' })
   if (kind === 'spawn') expect(failure).toMatchObject({ code: 'ENOENT' })
   if (kind === 'timeout') expect(failure).toMatchObject({ killed: true, signal: 'SIGTERM' })
-  if (kind === 'overflow') {
-    expect(failure).toMatchObject({ code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER' })
+  if (kind === 'stdin') expect(failure).toMatchObject({ code: 7, stdout: 'EOF', stderr: '' })
+  if (kind === 'utf8') expect(failure).toMatchObject({ code: 7, stdout: '雪', stderr: '雪' })
+  if (kind === 'raw-under' || kind === 'raw-boundary') expect(failure).toMatchObject({ code: 7 })
+  if (kind === 'overflow' || kind === 'combined-overflow' || kind === 'overflow-delayed-exit') {
+    expect(failure).toMatchObject({ code: 'ENOBUFS', signal: 'SIGTERM' })
     const bounded = z.object({ stdout: z.string(), stderr: z.string() }).parse(failure)
-    expect(Buffer.byteLength(bounded.stdout)).toBeLessThanOrEqual(1024 * 1024)
-    expect(bounded.stderr).toBe('')
+    expect(Buffer.byteLength(bounded.stdout) + Buffer.byteLength(bounded.stderr)).toBeLessThanOrEqual(1024 * 1024)
   }
+  if (kind === 'overflow-delayed-exit') expect(readFileSync(resolve(f.execution.workspace, 'child-signals'), 'utf8')).toBe('SIGTERM\nEXIT\n')
   expect(commandFailure.events.map(event => basename(event))).toEqual(['revise-article.ts'])
   const receipts = f.state.prComments.get(42)?.filter(comment => comment.body.startsWith('## Editorial execution receipt'))
   expect(receipts).toHaveLength(1)
   expect(receipts?.[0]?.body).toContain('"outcome":"uncertain"')
+  expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
+})
+
+it('forwards successful child stderr before the unchanged native output gates', async () => {
+  const f = await setup(); f.state.login = 'github-actions[bot]'
+  commandFailure.replacement = { file: process.execPath, args: ['-e', "process.stderr.write('success sentinel')"] }
+  const stderrWrite = vi.spyOn(process.stderr, 'write').mockReturnValue(true)
+  let forwarded: unknown[] = []
+  try { await prepareEditorial(f.execution).catch(() => {}); forwarded = stderrWrite.mock.calls.map(call => call[0]) }
+  finally { stderrWrite.mockRestore() }
+  expect(commandFailure.childError).toBeUndefined()
+  expect(commandFailure.events.map(event => event.slice(0, event.indexOf(':') + 1) + basename(event.slice(event.indexOf(':') + 1)))).toEqual([
+    'start:revise-article.ts', 'end:revise-article.ts',
+  ])
+  expect(forwarded.filter(Buffer.isBuffer)).toEqual([Buffer.from('success sentinel')])
   expect(git(f.execution.workspace, '--git-dir', f.remote, 'rev-parse', `refs/heads/accept/${today}`)).toBe(f.head)
 })

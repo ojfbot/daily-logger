@@ -1,4 +1,4 @@
-import { execFile, execFileSync } from 'node:child_process'
+import { execFile, execFileSync, type ExecFileOptionsWithStringEncoding } from 'node:child_process'
 import { promisify } from 'node:util'
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -11,7 +11,46 @@ import { ArticleActionFileSchema } from '../../src/action-registry-schema.js'
 import { editorialProofSchema, verifyEditorialProof } from '../../shared/editorial-action-proof.js'
 import { admitActionRegistry } from './editorial-action-registry.js'
 
-const runEditorialCommand = promisify(execFile)
+const execFileAsync = promisify(execFile)
+// Preserve execFileSync's stdin EOF and shared raw-byte output budget.
+async function runEditorialCommand(file: string, args: string[], options: ExecFileOptionsWithStringEncoding & { maxBuffer: number }) {
+  const pending = execFileAsync(file, args, { ...options, encoding: 'buffer' })
+  const stdout: Buffer[] = [], stderr: Buffer[] = []
+  let bytes = 0, overflow = false, failed = false
+  const capture = (chunks: Buffer[]) => (chunk: Buffer) => {
+    if (overflow) return
+    const remaining = options.maxBuffer - bytes
+    chunks.push(Buffer.from(chunk.subarray(0, remaining)))
+    bytes += chunk.length
+    if (bytes > options.maxBuffer) {
+      overflow = true
+      pending.child.kill('SIGTERM')
+      pending.child.stdout?.destroy()
+      pending.child.stderr?.destroy()
+    }
+  }
+  pending.child.stdout?.on('data', capture(stdout))
+  pending.child.stderr?.on('data', capture(stderr))
+  pending.child.stdin?.end()
+  try { await pending }
+  catch (error) {
+    failed = true
+    if (!overflow) {
+      if (error instanceof Error) {
+        if ('stdout' in error && Buffer.isBuffer(error.stdout)) error.stdout = error.stdout.toString('utf8')
+        if ('stderr' in error && Buffer.isBuffer(error.stderr)) error.stderr = error.stderr.toString('utf8')
+      }
+      throw error
+    }
+  }
+  finally {
+    try { if (stderr.length) process.stderr.write(Buffer.concat(stderr)) }
+    catch (error) { if (!failed && !overflow) throw error }
+  }
+  if (overflow) throw Object.assign(new Error('Editorial command stdout and stderr exceeded maxBuffer'), {
+    code: 'ENOBUFS', signal: 'SIGTERM', stdout: Buffer.concat(stdout).toString('utf8'), stderr: Buffer.concat(stderr).toString('utf8'),
+  })
+}
 
 const registryPath = (articlePath: string) => `actions/articles/${articlePath.match(/([0-9-]+)\.md$/)?.[1]}.json`
 function editorialPaths(articlePath: string, changed: string) { return changed.split('\n').filter(Boolean).every(path => [articlePath, registryPath(articlePath)].includes(path)) }
