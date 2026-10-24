@@ -76,10 +76,14 @@ class ActionOutputError extends Error {}
 class ActionInputFrontierError extends Error {}
 class ActionVerificationHoldError extends Error {}
 class ActionContextEvidenceRequestError extends ActionEvidenceRequestError {}
+class AcceptedArticlePendingReviewError extends Error {}
 class ActionReviewPersistenceError extends Error {
+  #acceptedArticleRefusal: boolean
   constructor(input: { reason: string; persistenceError: unknown; cause: unknown }) {
     super(`${input.reason}; pending persistence refused: ${input.persistenceError instanceof Error ? input.persistenceError.message : String(input.persistenceError)}`, { cause: input.cause })
+    this.#acceptedArticleRefusal = input.persistenceError instanceof AcceptedArticlePendingReviewError
   }
+  get acceptedArticleRefusal() { return this.#acceptedArticleRefusal }
 }
 export class ActionContextNeedError extends Error {}
 const lineCitations = z.array(z.object({ sourceId: z.string(), startLine: z.number().int().positive(), endLine: z.number().int().positive() }).strict()).min(1)
@@ -133,6 +137,7 @@ export function classifyActionReviewFailure(error: unknown): { kind: 'invalid-ou
     if (!(error instanceof Error) || seen.has(error)) return undefined
     seen.add(error)
     if (error instanceof ActionReviewPersistenceError) {
+      if (!error.acceptedArticleRefusal) return undefined
       const cause = Object.getOwnPropertyDescriptor(error, 'cause')
       if (!cause || !('value' in cause)) return undefined
       error = cause.value
@@ -1365,7 +1370,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
 export const mockActionAgents: ActionAgents = { identity: { proposer: 'mock-llm', verifier: 'mock-llm' }, propose: async () => ({ changes: [], suggestions: [], closingOptions: [] }), verify: async () => ({ changes: [], suggestions: [], closingOptions: [] }) }
 
 export function pendingActionReview(input: { registry: ActionRegistry; articleDate: string; cycle: ActionReviewCycle; markdown: string; reason: string; articleStatuses: ReadonlyMap<string, string>; draftCandidates?: readonly unknown[]; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftContext?: DraftRecommendationContext; evidenceRequests?: ActionRegistry['articles'][number]['evidenceRequests']; resetDraftCandidateReviews?: boolean }) {
-  if (/^status:\s*"?accepted/m.test(input.markdown) || input.registry.articles.some(article => article.date === input.articleDate && article.status === 'accepted')) throw new Error('A pending action review cannot replace an accepted article')
+  if (/^status:\s*"?accepted/m.test(input.markdown) || input.registry.articles.some(article => article.date === input.articleDate && article.status === 'accepted')) throw new AcceptedArticlePendingReviewError('A pending action review cannot replace an accepted article')
   const registry = structuredClone(input.registry), previous = registry.articles.find(article => article.date === input.articleDate)
   if (previous) assertActionSnapshotStateIntegrity(registry, previous)
   const capturedDraftCandidates = input.draftCandidates === undefined ? undefined : captureDraftActionCandidates(input.draftCandidates)
