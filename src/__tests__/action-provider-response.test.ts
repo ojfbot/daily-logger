@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { z } from 'zod'
 import { fixtureEvidenceView } from './evidence-view-fixtures.js'
 import { ActionRegistrySchema, captureDraftActionCandidates } from '../action-registry.js'
 import { generationActionCycle } from '../action-review-cycle.js'
+import { ActionEvidenceRequestError, createActionEvidenceRequest } from '../action-evidence-retrieval.js'
 
 const { create, countTokens, constructed } = vi.hoisted(() => ({
   create: vi.fn(), countTokens: vi.fn(), constructed: vi.fn(),
@@ -10,7 +12,7 @@ vi.mock('@anthropic-ai/sdk', () => ({ default: class {
   constructor(options: unknown) { constructed(options) }
   messages = { create, countTokens }
 } }))
-import { actionProviderRequest, createActionAgents, reviewArticleActions } from '../review-actions.js'
+import { actionProviderRequest, createActionAgents, reviewArticleActions, reviewProducedDraftActions, classifyActionReviewFailure, ActionContextNeedError } from '../review-actions.js'
 
 const empty = { changes: [], suggestions: [], candidateDispositions: [], closingOptions: [] }
 const response = (input: unknown) => ({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tool_offline', name: 'review_actions', input }], usage: { output_tokens: 100 } })
@@ -210,6 +212,43 @@ describe('native-validated forced-tool response boundary', () => {
     expect(error.message).not.toContain('PRIVATE')
     expect(error).not.toHaveProperty('cause')
     expect(error).not.toHaveProperty('issues')
+  })
+  it('classifies an explicit native evidence request without publishing its question or error message', () => {
+    const request = createActionEvidenceRequest({ kind: 'clarification', caseDigest: 'a'.repeat(64), articleDate: '2026-10-21', cycle: generationActionCycle(),
+      actionKeys: ['fixture'], sourceKey: 'model-context', question: 'PRIVATE_QUESTION', obligations: ['b'.repeat(64)] })
+    expect(classifyActionReviewFailure(new ActionEvidenceRequestError(request, 'PRIVATE_ERROR'))).toEqual({
+      kind: 'evidence-required', reason: 'Actions need further evidence or independent review before they can be admitted.',
+    })
+  })
+  it('classifies only native bounded Accepted persistence wrappers with a static safe reason', async () => {
+    const input = reviewInput()
+    const accepted = { ...input, markdown: input.markdown.replace('draft', 'accepted'), articleStatuses: new Map([[input.articleDate, 'accepted']]), collectSources: () => [] }
+    create.mockResolvedValue(response({ ...empty, suggestions: null }))
+    let failure: unknown = await reviewProducedDraftActions(accepted).catch((error: unknown) => error)
+    expect(classifyActionReviewFailure(failure)).toEqual({ kind: 'invalid-output', reason: 'Actions need a valid structured review before they can be admitted.' })
+    expect(create).toHaveBeenCalledTimes(2)
+    expect(classifyActionReviewFailure(new Error('Arbitrary wrapper', { cause: failure }))).toBeUndefined()
+    const first = failure
+    failure = await reviewProducedDraftActions({ ...accepted, agents: { propose: async () => { throw first }, verify: vi.fn() } }).catch((error: unknown) => error)
+    expect(classifyActionReviewFailure(failure)?.kind).toBe('invalid-output')
+    const second = failure
+    failure = await reviewProducedDraftActions({ ...accepted, agents: { propose: async () => { throw second }, verify: vi.fn() } }).catch((error: unknown) => error)
+    expect(classifyActionReviewFailure(failure)).toBeUndefined()
+    if (!(first instanceof Error)) throw new Error('Expected native persistence wrapper')
+    Object.defineProperty(first, 'cause', { value: first })
+    expect(classifyActionReviewFailure(first)).toBeUndefined()
+  })
+  it.each(['provider', 'counter-unavailable', 'generic', 'zod', 'context'] as const)('does not classify %s failure as permission to finish an article', async kind => {
+    const input = reviewInput(), secret = 'PRIVATE_FAILURE_VALUE'
+    const accepted = { ...input, markdown: input.markdown.replace('draft', 'accepted'), articleStatuses: new Map([[input.articleDate, 'accepted']]), collectSources: () => [] }
+    if (kind === 'provider') create.mockRejectedValue(new Error(secret))
+    if (kind === 'counter-unavailable') countTokens.mockRejectedValue(new Error(secret))
+    if (kind === 'generic') accepted.agents.propose = async () => { throw new Error(secret) }
+    if (kind === 'zod') accepted.agents.propose = async () => { throw new z.ZodError([]) }
+    if (kind === 'context') accepted.agents.propose = async () => { throw new ActionContextNeedError(secret) }
+    // A generic Zod error still follows the existing one-repair path, but is never a completion classifier.
+    const failure = await reviewProducedDraftActions(accepted).catch((error: unknown) => error)
+    expect(classifyActionReviewFailure(failure)).toBeUndefined()
   })
   it('does not negotiate past the one malformed-output repair', async () => {
     create.mockResolvedValue({ ...response(empty), content: [] })

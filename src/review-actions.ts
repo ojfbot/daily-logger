@@ -74,6 +74,13 @@ export type ActionVerification = Omit<ParsedActionVerification, 'candidateDispos
 }
 class ActionOutputError extends Error {}
 class ActionInputFrontierError extends Error {}
+class ActionVerificationHoldError extends Error {}
+class ActionContextEvidenceRequestError extends ActionEvidenceRequestError {}
+class ActionReviewPersistenceError extends Error {
+  constructor(input: { reason: string; persistenceError: unknown; cause: unknown }) {
+    super(`${input.reason}; pending persistence refused: ${input.persistenceError instanceof Error ? input.persistenceError.message : String(input.persistenceError)}`, { cause: input.cause })
+  }
+}
 export class ActionContextNeedError extends Error {}
 const lineCitations = z.array(z.object({ sourceId: z.string(), startLine: z.number().int().positive(), endLine: z.number().int().positive() }).strict()).min(1)
 const LineProposalSchema = ActionProposalSchema.extend({
@@ -120,6 +127,28 @@ type ActionRole = 'proposer' | 'verifier'
 type ProviderOutputPhase = 'envelope' | 'tool-block' | 'tool-input'
 class ProviderActionOutputError extends ActionOutputError {}
 class CandidateRecordIsolationError extends Error {}
+export function classifyActionReviewFailure(error: unknown): { kind: 'invalid-output' | 'evidence-required'; reason: string } | undefined {
+  const seen = new Set<Error>()
+  for (let depth = 0; depth <= 4; depth++) {
+    if (!(error instanceof Error) || seen.has(error)) return undefined
+    seen.add(error)
+    if (error instanceof ActionReviewPersistenceError) {
+      const cause = Object.getOwnPropertyDescriptor(error, 'cause')
+      if (!cause || !('value' in cause)) return undefined
+      error = cause.value
+      continue
+    }
+    if (error instanceof ActionOutputError || error instanceof CandidateRecordIsolationError) return {
+      kind: 'invalid-output', reason: 'Actions need a valid structured review before they can be admitted.',
+    }
+    if (error instanceof ActionContextEvidenceRequestError) return undefined
+    if (error instanceof ActionEvidenceRequestError || error instanceof ActionVerificationHoldError) return {
+      kind: 'evidence-required', reason: 'Actions need further evidence or independent review before they can be admitted.',
+    }
+    return undefined
+  }
+  return undefined
+}
 class ProviderCandidateRecordError extends ProviderActionOutputError {
   #repair: ((correction: string) => Promise<ActionProposal>) | undefined
   constructor(diagnostic: string, repair: (correction: string) => Promise<ActionProposal>) {
@@ -935,7 +964,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     const verdict = verification.changes.find(verdict => verdict.actionKey === change.actionKey)
     if (!record || !verdict) { rejected.push({ description: change.description, reason: `Unknown action or missing verdict: ${change.actionKey}` }); continue }
     if (verdict.verdict !== 'pass') {
-      if (keys.has(change.actionKey)) throw new Error(`Existing suggestion requires further review: ${change.actionKey}: ${verdict.reason}`)
+      if (keys.has(change.actionKey)) throw new ActionVerificationHoldError(`Existing suggestion requires further review: ${change.actionKey}: ${verdict.reason}`)
       rejected.push({ description: change.description, reason: verdict.reason }); continue
     }
     const kinds: ActionSource['kind'][] = ['repository', 'github', ...(['open', 'deferred', 'dismissed'].includes(change.state) ? ['instruction' as const] : [])]
@@ -1013,7 +1042,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
     if (candidate.review.state !== 'awaiting-review') return candidate
     const disposition = proposal.candidateDispositions.find(item => item.candidateId === candidate.candidateId)
     const verdict = verification.candidateDispositions.find(item => item.candidateId === candidate.candidateId)
-    if (!disposition || !verdict || verdict.verdict !== 'pass') throw new Error(`Initial draft candidate requires further review: ${candidate.candidateId}: ${verdict?.reason ?? 'missing disposition'}`)
+    if (!disposition || !verdict || verdict.verdict !== 'pass') throw new ActionVerificationHoldError(`Initial draft candidate requires further review: ${candidate.candidateId}: ${verdict?.reason ?? 'missing disposition'}`)
     if (disposition.kind === 'promote') {
       const actionKey = newCandidateActionKeys.get(disposition.suggestionIndex)
       const suggestion = proposal.suggestions[disposition.suggestionIndex]
@@ -1372,7 +1401,9 @@ export async function reviewDraftActions(input: Parameters<typeof reviewArticleA
       const locationQuestion = location ? `View round ${location.viewRoundId}; policy ${location.policySha256}; collected SHA256 ${location.collectedSha256}; original lines ${location.startLine}-${location.endLine}. ` : ''
       const request = createActionEvidenceRequest({ kind: location ? 'source-view' : 'clarification', caseDigest: actionEvidenceCaseDigest({ ...input, draftCandidates, actionKeys }), articleDate: input.articleDate, cycle: input.cycle, actionKeys,
         sourceKey: 'model-context', ...(location ? { sourceIdentity: { id: location.sourceId, locator: location.sourceLocator, fullContentSha256: location.fullContentSha256 } } : {}), question: `${locationQuestion}Prepare a fully visible bounded evidence context without weakening source duties or limits: ${error.message}`.slice(0, 512), obligations: [sha256('All required sources, owner/counterevidence, full identity/history and fixed provider limits remain required.')], recipient: 'coordinator-owner' })
-      error = new ActionEvidenceRequestError(request, error.message)
+      error = error instanceof ActionContextNeedError
+        ? new ActionContextEvidenceRequestError(request, error.message)
+        : new ActionEvidenceRequestError(request, error.message)
     }
     const reason = error instanceof ActionEvidenceRequestError
       ? `Action evidence request ${error.request.id} remains pending: ${error.message}`
@@ -1389,7 +1420,7 @@ export async function reviewDraftActions(input: Parameters<typeof reviewArticleA
     if (error instanceof ActionEvidenceRequestError) requests.set(error.request.id, actionEvidenceRequestReceipt(error.request))
     if (error instanceof ActionEvidenceLifecycleError) requests.set(error.receipt.id, error.receipt)
     try { return pendingActionReview({ ...input, reason, evidenceRequests: [...requests.values()], resetDraftCandidateReviews: error instanceof ActionInputFrontierError }) }
-    catch (persistenceError) { throw new Error(`${reason}; pending persistence refused: ${persistenceError instanceof Error ? persistenceError.message : String(persistenceError)}`, { cause: error }) }
+    catch (persistenceError) { throw new ActionReviewPersistenceError({ reason, persistenceError, cause: error }) }
   }
 }
 
@@ -1414,6 +1445,6 @@ export async function reviewProducedDraftActions(input: Omit<Parameters<typeof r
     const reason = error instanceof Error ? error.message : 'Action evidence preparation unavailable'
     console.warn(`::warning::Action review pending for ${input.articleDate}: ${reason}`)
     try { return pendingActionReview({ ...input, reason, draftCandidateEvidence }) }
-    catch (persistenceError) { throw new Error(`${reason}; pending persistence refused: ${persistenceError instanceof Error ? persistenceError.message : String(persistenceError)}`, { cause: error }) }
+    catch (persistenceError) { throw new ActionReviewPersistenceError({ reason, persistenceError, cause: error }) }
   }
 }
