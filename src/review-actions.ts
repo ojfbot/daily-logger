@@ -120,6 +120,7 @@ const ProviderVerificationSchema = ActionVerificationSchema.extend({
   closingOptions: ActionVerificationSchema.shape.closingOptions.unwrap(),
 })
 const ProviderStopSchema = z.object({ stop_reason: z.string().nullable() }).passthrough()
+const IncompleteProviderStopSchema = z.enum(['end_turn', 'max_tokens', 'stop_sequence'])
 const ProviderResponseSchema = ProviderStopSchema.extend({
   content: z.unknown(),
   usage: z.object({ output_tokens: z.number().int().nonnegative().safe().max(12000) }).passthrough().optional(),
@@ -131,6 +132,7 @@ type ActionRole = 'proposer' | 'verifier'
 type ProviderOutputPhase = 'envelope' | 'tool-block' | 'tool-input'
 class ProviderActionOutputError extends ActionOutputError {}
 class CandidateRecordIsolationError extends Error {}
+class IncompleteProviderResponseError extends Error {}
 export function classifyActionReviewFailure(error: unknown): { kind: 'invalid-output' | 'evidence-required'; reason: string } | undefined {
   const seen = new Set<Error>()
   for (let depth = 0; depth <= 4; depth++) {
@@ -143,7 +145,7 @@ export function classifyActionReviewFailure(error: unknown): { kind: 'invalid-ou
       error = cause.value
       continue
     }
-    if (error instanceof ActionOutputError || error instanceof CandidateRecordIsolationError) return {
+    if (error instanceof ActionOutputError || error instanceof CandidateRecordIsolationError || error instanceof IncompleteProviderResponseError) return {
       kind: 'invalid-output', reason: 'Actions need a valid structured review before they can be admitted.',
     }
     if (error instanceof ActionContextEvidenceRequestError) return undefined
@@ -543,7 +545,11 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
     console.warn(`Action ${role} token budget: input=${inputTokens}; output_reserve=${request.max_tokens}; total=${totalTokens}; limit=${tokenLimit}`)
     const raw: unknown = await client.messages.create(request)
     const completion = parseProviderOutput(role, 'envelope', raw, () => ProviderStopSchema.parse(raw))
-    if (completion.stop_reason !== 'tool_use') throw new Error(`Action ${role} did not finish its structured review (${completion.stop_reason})`)
+    if (completion.stop_reason !== 'tool_use') {
+      const stop = IncompleteProviderStopSchema.safeParse(completion.stop_reason)
+      if (stop.success) throw new IncompleteProviderResponseError(`Action ${role} did not finish its structured review (${stop.data})`)
+      throw new Error(`Action ${role} did not finish its structured review (unrecognized stop reason)`)
+    }
     const response = parseProviderOutput(role, 'envelope', raw, () => ProviderResponseSchema.parse(raw))
     console.warn(`Action ${role}: stop=${response.stop_reason}; output_tokens=${response.usage?.output_tokens ?? 'unavailable'}`)
     const [result] = parseProviderOutput(role, 'tool-block', response.content, () => ProviderToolBlocksSchema.parse(response.content))
