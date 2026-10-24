@@ -962,6 +962,7 @@ a:hover { border-bottom-color: var(--text); }
 
 .action-item {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   align-items: flex-start;
   padding: 0.5rem 0;
@@ -971,9 +972,17 @@ a:hover { border-bottom-color: var(--text); }
 .action-item:last-child { border-bottom: none; }
 
 .action-command {
+  max-width: 100%;
   font-weight: 700;
   color: var(--green);
-  white-space: nowrap;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.action-item:not(.action-archived) > .action-command + span {
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .action-stale { opacity: 0.6; }
