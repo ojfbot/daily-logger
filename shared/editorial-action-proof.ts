@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
-import { sha } from './article-review.js'
+import { sha, editorialActionReviewOutcomeSchema } from './article-review.js'
 import type { GitHub } from '../api/_lib/article-review-sources.js'
 
 // The immutable artifact name binds these canonical bytes to a trusted run.
@@ -12,6 +12,7 @@ export const editorialProofSchema = z.object({
   outcome: z.enum(['changed', 'no_change']), requestDigest: z.string().regex(/^[a-f0-9]{64}$/).optional(), requestCommentId: z.number().int().positive().optional(),
   actionReviewMode: z.enum(['clean-acceptance', 'revision']).optional(),
   requestIntent: z.enum(['request_editorial_revision', 'request_clean_acceptance']).optional(),
+  articleCompletion: z.literal('accepted').optional(), actionReview: editorialActionReviewOutcomeSchema.optional(),
 })
 export function editorialProofName(value: unknown): string {
   return `editorial-action-receipt-v1-${createHash('sha256').update(JSON.stringify(editorialProofSchema.parse(value))).digest('hex')}`
@@ -19,6 +20,11 @@ export function editorialProofName(value: unknown): string {
 export async function verifyEditorialProof(github: GitHub, value: unknown): Promise<boolean> {
   const parsed = editorialProofSchema.extend({ artifactId: z.number().int().positive() }).safeParse(value)
   if (!parsed.success) return false
+  if (parsed.data.actionReview) {
+    if (parsed.data.articleCompletion !== 'accepted' || parsed.data.actionReviewMode !== 'clean-acceptance') return false
+    const requestPins = [parsed.data.requestDigest, parsed.data.requestCommentId, parsed.data.requestIntent]
+    if (requestPins.some(value => value !== undefined) && (requestPins.some(value => value === undefined) || parsed.data.requestIntent !== 'request_clean_acceptance')) return false
+  }
   const response = await github(`/repos/ojfbot/daily-logger/actions/artifacts/${parsed.data.artifactId}`)
   if (response.status === 404 || response.status === 410) return false
   if (!response.ok) throw new Error('Editorial output artifact is unavailable; no admission or safe retry is established')

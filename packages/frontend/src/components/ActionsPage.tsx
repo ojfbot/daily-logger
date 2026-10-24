@@ -108,7 +108,8 @@ export function ActionsPage() {
     for (const a of proposedActions) s.add(a.command)
     return Array.from(s).sort()
   }, [actions, doneActions, proposedActions])
-  const proposed = proposedActions.filter(action => !filter || action.command === filter)
+  const proposed = proposedActions.filter(action => action.status === 'proposed' && (!filter || action.command === filter))
+  const needsReview = proposedActions.filter(action => action.status === 'needs-review' && (!filter || action.command === filter))
 
   const { open, stale, reviewed } = useMemo(() => {
     const open: ActionItem[] = []
@@ -202,6 +203,10 @@ export function ActionsPage() {
       {error && <p role="alert">{error}</p>}
       {proposedError && <p role="alert">{proposedError}</p>}
       <div className="actions-columns">
+        {needsReview.length > 0 && <div className="actions-column actions-column-needs-review">
+          <div className="actions-column-header">Needs review ({needsReview.length})</div>
+          {needsReview.map(action => <article className="action-item" data-draft-candidate-id={action.id} key={action.id}><div><code>{action.command}</code><p>{action.description}</p><p className="entry-stat">Accepted article {action.sourceDate} · Needs review · Review needed before use</p><p className="entry-stat">{action.status === 'needs-review' ? action.reason : ''}</p><a href={`/articles/${action.sourceDate}`}>Read the original suggestion</a></div></article>)}
+        </div>}
         <div className="actions-column">
           <div className="actions-column-header">Proposed ({proposed.length})</div>
           {proposed.length === 0 ? <p className="entry-stat">No draft proposals.</p> : proposed.map(action => <article className="action-item" key={action.id}><div><code>{action.command}</code><p>{action.description}</p><p className="entry-stat">Draft {action.sourceDate} · {action.includeInIndex ? 'Included on acceptance' : 'Article only on acceptance'}</p></div></article>)}

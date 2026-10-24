@@ -386,11 +386,23 @@ export const DraftRecommendationContextSchema = z.discriminatedUnion('kind', [
 export type DraftRecommendationContext = z.infer<typeof DraftRecommendationContextSchema>
 export type DraftCandidateIdentity = (payload: DraftActionCandidatePayload, ordinal: number) => string
 
+export const ArticleOnlyAcceptanceSchema = z.object({
+  kind: z.literal('article-only'), inputRoundId: digest, inputRegistrySha256: digest,
+  failureKind: z.enum(['invalid-output', 'evidence-required']),
+  sources: z.array(z.object({ id: z.string().min(1).max(512), locator: z.string().max(2048), sha256: digest }).strict()).max(64),
+  rawContentRetained: z.literal(false),
+}).strict()
+export type ArticleOnlyAcceptance = z.infer<typeof ArticleOnlyAcceptanceSchema>
+export const editorialActionReviewOutcomeSchema = z.discriminatedUnion('state', [
+  z.object({ state: z.literal('verified') }).strict(),
+  z.object({ state: z.literal('pending'), failureKind: z.enum(['invalid-output', 'evidence-required']), inputRegistrySha256: digest, heldCandidateIds: z.array(digest).max(5) }).strict(),
+])
+
 function createArticleActionSchema(candidateIdentity?: DraftCandidateIdentity) {
   return z.object({
     date,
     status: z.enum(['draft', 'accepted', 'rejected']),
-    review: z.discriminatedUnion('state', [z.object({ state: z.literal('verified') }).strict(), z.object({ state: z.literal('pending'), reason: z.string().min(1) }).strict()]).default({ state: 'verified' }),
+    review: z.discriminatedUnion('state', [z.object({ state: z.literal('verified') }).strict(), z.object({ state: z.literal('pending'), reason: z.string().min(1), articleAcceptance: ArticleOnlyAcceptanceSchema.optional() }).strict()]).default({ state: 'verified' }),
     articleDigest: digest,
     roundId: digest,
     reviewCycle: ActionReviewCycleSchema.optional(),
@@ -442,7 +454,8 @@ function createActionRegistrySchema(ArticleActionSchema: ReturnType<typeof creat
   const days = registry.articles.map(article => article.date)
   if (new Set(days).size !== days.length) context.addIssue({ code: 'custom', message: 'Duplicate article action snapshot' })
   for (const article of registry.articles) {
-    if (article.review.state === 'pending' && article.status !== 'draft') context.addIssue({ code: 'custom', message: `Pending action review cannot publish: ${article.date}` })
+    if (article.review.state === 'pending' && (article.status === 'rejected' || (article.status === 'accepted') !== !!article.review.articleAcceptance)) context.addIssue({ code: 'custom', message: `Pending action review cannot publish without explicit article-only acceptance: ${article.date}` })
+    if (article.review.state === 'pending' && article.review.articleAcceptance && (article.reviewOutput || !article.draftCandidates?.length || article.draftCandidates.some(candidate => candidate.review.state !== 'awaiting-review') || article.verification.proposer !== 'not-verified' || article.verification.verifier !== 'not-verified')) context.addIssue({ code: 'custom', message: `Article-only acceptance requires original held candidates and cannot assert verified action output: ${article.date}` })
     if (new Set(article.actionKeys).size !== article.actionKeys.length || article.actionKeys.some(key => !keys.includes(key))) context.addIssue({ code: 'custom', message: `Invalid action references for ${article.date}` })
     if (article.reviewOutput && (article.review.state !== 'verified' || article.reviewOutput.articleDate !== article.date || article.reviewOutput.roundId !== article.roundId
       || JSON.stringify(article.reviewOutput.reviewCycle) !== JSON.stringify(article.reviewCycle) || article.reviewOutput.proposalSha256 !== article.verification.proposalSha256)) {
@@ -479,7 +492,10 @@ function createActionRegistrySchema(ArticleActionSchema: ReturnType<typeof creat
 }
 
 function explicitInclusionInstruction(instruction: string) { return instruction === 'Explicit editorial inclusion checkbox' || /^Explicit editorial inclusion instruction: \S[\s\S]*$/.test(instruction) }
-export const ProposedActionSchema = z.object({ id: z.string(), command: z.string(), description: z.string(), repo: z.string(), sourceDate: date, status: z.literal('proposed'), includeInIndex: z.boolean() }).strict()
+export const ProposedActionSchema = z.discriminatedUnion('status', [
+  z.object({ id: z.string(), command: z.string(), description: z.string(), repo: z.string(), sourceDate: date, status: z.literal('proposed'), includeInIndex: z.boolean() }).strict(),
+  z.object({ id: digest, command: z.string(), description: z.string(), repo: z.string(), sourceDate: date, status: z.literal('needs-review'), includeInIndex: z.literal(false), dispatchable: z.literal(false), reason: z.string().min(1).max(1000) }).strict(),
+])
 export type ProposedAction = z.infer<typeof ProposedActionSchema>
 
 // One logical registry: immutable imported identities plus one bounded file per

@@ -7,11 +7,13 @@ import {
   DraftActionCandidatePayloadSchema,
   DraftActionCandidateSchema,
   createActionRegistrySchemas,
+  editorialActionReviewOutcomeSchema,
   type ActionRecord,
   type ActionRegistry,
   type ArticleActionFile,
   type DraftActionCandidate,
   type DraftActionCandidatePayload,
+  type DraftCandidateEvidenceRequirements,
 } from './action-registry-contract.js'
 
 export * from './action-registry-contract.js'
@@ -78,6 +80,40 @@ export function splitActionRegistry(registry: ActionRegistry): { baseline: Actio
   return { baseline: ActionRegistrySchema.parse(baseline), files: registry.articles.map(snapshot => ArticleActionFileSchema.parse({ schemaVersion: 1, date: snapshot.date,
     suggestions: registry.records.filter(record => record.origin === 'suggested' && record.introducedBy === snapshot.date).map(({ history: _history, state: _state, ...record }) => record),
     decisions: registry.records.flatMap(record => record.history.filter(decision => decision.articleDate === snapshot.date).map(decision => ({ key: record.key, decision }))), snapshot })) }
+}
+
+export function isArticleOnlyAcceptanceOutput(before: ArticleActionFile, after: ArticleActionFile): boolean {
+  const original = before.snapshot, completed = after.snapshot
+  if (original.status !== 'draft' || original.review.state !== 'pending' || original.reviewOutput || original.candidateReviewHistory?.length || before.suggestions.length || !original.draftCandidates?.length || original.draftCandidates.some(candidate => candidate.review.state !== 'awaiting-review')) return false
+  if (before.date !== after.date || completed.status !== 'accepted' || completed.review.state !== 'pending' || !completed.review.articleAcceptance) return false
+  const binding = completed.review.articleAcceptance
+  const digest = createHash('sha256').update(articleActionFileBytes(before)).digest('hex')
+  if (binding.inputRoundId !== original.roundId || binding.inputRegistrySha256 !== digest) return false
+  if (JSON.stringify(before.suggestions) !== JSON.stringify(after.suggestions) || JSON.stringify(before.decisions) !== JSON.stringify(after.decisions)) return false
+  if (!isArticleOnlyEvidenceRefresh(original.draftCandidateEvidence, completed.draftCandidateEvidence)) return false
+  return ['actionKeys', 'draftCandidates', 'candidateReviewHistory', 'draftContext', 'sources', 'evidenceRequests', 'rejected', 'closing'].every(key => {
+    const prior = Object.entries(original).find(([name]) => name === key)?.[1]
+    const next = Object.entries(completed).find(([name]) => name === key)?.[1]
+    return JSON.stringify(prior) === JSON.stringify(next)
+  }) && completed.articleDigest === original.articleDigest
+}
+
+export function isArticleOnlyEvidenceRefresh(before: DraftCandidateEvidenceRequirements | undefined, after: DraftCandidateEvidenceRequirements | undefined): boolean {
+  if (!before || !after || after.provenance.kind !== 'derived-refresh' || after.provenance.lineage?.kind !== 'acceptance-status-refresh'
+    || after.provenance.lineage.priorRequirementsSha256 !== createHash('sha256').update(JSON.stringify(before)).digest('hex')
+    || JSON.stringify(after.provenance.lineage.priorReviewCycle) !== JSON.stringify(before.reviewCycle)) return false
+  const { provenance: _beforeProvenance, reviewCycle: _beforeCycle, articleStatusesSha256: _beforeStatuses, ...original } = before
+  const { provenance: _afterProvenance, reviewCycle: _afterCycle, articleStatusesSha256: _afterStatuses, ...refreshed } = after
+  return JSON.stringify(original) === JSON.stringify(refreshed)
+}
+
+export function articleCompletionOutcome(before: ArticleActionFile, after: ArticleActionFile) {
+  if (after.snapshot.status !== 'accepted') return undefined
+  if (after.snapshot.review.state === 'verified') return editorialActionReviewOutcomeSchema.parse({ state: 'verified' })
+  if (!isArticleOnlyAcceptanceOutput(before, after) || !after.snapshot.review.articleAcceptance) return undefined
+  return editorialActionReviewOutcomeSchema.parse({ state: 'pending', failureKind: after.snapshot.review.articleAcceptance.failureKind,
+    inputRegistrySha256: after.snapshot.review.articleAcceptance.inputRegistrySha256,
+    heldCandidateIds: (after.snapshot.draftCandidates ?? []).map(candidate => candidate.candidateId) })
 }
 
 export function hydrateActionRegistry(baseline: ActionRegistry, files: ArticleActionFile[]): ActionRegistry {

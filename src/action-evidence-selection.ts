@@ -750,7 +750,7 @@ export function actionReviewIndex(input: { registry: ActionRegistry; articleDate
       protected: !!record.original.review, inclusionOverride: record.inclusionOverride }
     if (!input.expandedActionKeys.includes(record.key) && !record.history.length && !record.gates.length && !record.original.review) return identity
     const description = record.history.filter(decision => input.articleStatuses.get(decision.articleDate) === 'accepted'
-      && input.registry.articles.some(article => article.date === decision.articleDate && article.status === 'accepted' && article.roundId === decision.roundId)).at(-1)?.description ?? record.original.description
+      && input.registry.articles.some(article => article.date === decision.articleDate && article.status === 'accepted' && article.review.state === 'verified' && article.roundId === decision.roundId)).at(-1)?.description ?? record.original.description
     return { ...identity, originalDescription: record.original.description, description, doneWhen: record.doneWhen, gates: record.gates,
       goal: record.goal, history: record.history }
   })

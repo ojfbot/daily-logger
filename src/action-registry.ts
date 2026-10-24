@@ -5,19 +5,19 @@ import { readdirSync } from 'node:fs'
 import { detachArticleTime } from './article-time-frontmatter.js'
 import { isReviewedAction, legacyActionKey, type CanonicalAction } from './action-model.js'
 import { renderArticle } from './render-article.js'
-import { CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS, RANKED_ACTION_REVIEW_PROMPT_VERSIONS } from './action-review-cycle.js'
+import { CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS, RANKED_ACTION_REVIEW_PROMPT_VERSIONS, type ActionReviewCycle } from './action-review-cycle.js'
 import { extractDraftRecommendationContext } from './recommendation-prose.js'
 
 export const REGISTRY_PATH = 'actions/registry.json'
 export const ACTIONS_START = '<!-- ACTIONS_START -->'
 export const ACTIONS_END = '<!-- ACTIONS_END -->'
 export * from './action-registry-schema.js'
-import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hydrateActionRegistry, articleActionFileBytes, actionArticlePath, type ActionRegistry, type ClosingPrompt, type RankedClosingOption, assertExactInvocationAdmissions } from './action-registry-schema.js'
+import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hydrateActionRegistry, articleActionFileBytes, actionArticlePath, isArticleOnlyEvidenceRefresh, type ActionRegistry, type ClosingPrompt, type RankedClosingOption, type ArticleOnlyAcceptance, type ProposedAction, type ActionSource, type DraftCandidateEvidenceRequirements, assertExactInvocationAdmissions } from './action-registry-schema.js'
 
 export function sha256(value: string): string { return createHash('sha256').update(value).digest('hex') }
 export function registryBytes(registry: ActionRegistry): string { assertExactInvocationAdmissions(registry); return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
 export function registryRevision(registry: ActionRegistry): string { return sha256(registryBytes(registry)) }
-export function actionStateDigest(registry: ActionRegistry, keys: readonly string[], closing?: ClosingPrompt, draftContext?: ActionRegistry['articles'][number]['draftContext'], boundary?: { articleDate: string; roundId: string; includePriorArticleRounds?: boolean; draftCandidates?: ActionRegistry['articles'][number]['draftCandidates']; candidateReviewHistory?: ActionRegistry['articles'][number]['candidateReviewHistory']; draftCandidateEvidence?: ActionRegistry['articles'][number]['draftCandidateEvidence']; reviewOutput?: ActionRegistry['articles'][number]['reviewOutput'] }): string {
+export function actionStateDigest(registry: ActionRegistry, keys: readonly string[], closing?: ClosingPrompt, draftContext?: ActionRegistry['articles'][number]['draftContext'], boundary?: { articleDate: string; roundId: string; includePriorArticleRounds?: boolean; draftCandidates?: ActionRegistry['articles'][number]['draftCandidates']; candidateReviewHistory?: ActionRegistry['articles'][number]['candidateReviewHistory']; draftCandidateEvidence?: ActionRegistry['articles'][number]['draftCandidateEvidence']; reviewOutput?: ActionRegistry['articles'][number]['reviewOutput']; articleAcceptance?: ArticleOnlyAcceptance }): string {
   const verification = boundary ? registry.articles.find(article => article.date === boundary.articleDate && article.roundId === boundary.roundId)?.verification : undefined
   const viewBinding = verification?.evidenceView === undefined ? {} : { evidenceView: verification.evidenceView, evidenceViewOutputSha256: verification.evidenceViewOutputSha256 }
   const records = registry.records.filter(record => keys.includes(record.key)).map(record => {
@@ -27,7 +27,7 @@ export function actionStateDigest(registry: ActionRegistry, keys: readonly strin
     const state = history.at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed')
     return { key: record.key, state, history, admission: record.admission }
   })
-  if (boundary?.draftCandidateEvidence !== undefined || boundary?.reviewOutput !== undefined || boundary?.candidateReviewHistory !== undefined) return sha256(JSON.stringify({ ...viewBinding, records, closing: closing ?? null, draftContext: draftContext ?? null, draftCandidates: boundary?.draftCandidates ?? null, draftCandidateEvidence: boundary?.draftCandidateEvidence ?? null, reviewOutput: boundary?.reviewOutput ?? null, ...(boundary?.candidateReviewHistory === undefined ? {} : { candidateReviewHistory: boundary.candidateReviewHistory }) }))
+  if (boundary?.draftCandidateEvidence !== undefined || boundary?.reviewOutput !== undefined || boundary?.candidateReviewHistory !== undefined || boundary?.articleAcceptance !== undefined) return sha256(JSON.stringify({ ...viewBinding, records, closing: closing ?? null, draftContext: draftContext ?? null, draftCandidates: boundary?.draftCandidates ?? null, draftCandidateEvidence: boundary?.draftCandidateEvidence ?? null, reviewOutput: boundary?.reviewOutput ?? null, ...(boundary?.candidateReviewHistory === undefined ? {} : { candidateReviewHistory: boundary.candidateReviewHistory }), ...(boundary?.articleAcceptance === undefined ? {} : { articleAcceptance: boundary.articleAcceptance }) }))
   if (boundary?.draftCandidates !== undefined) return sha256(JSON.stringify({ ...viewBinding, records, closing: closing ?? null, draftContext: draftContext ?? null, draftCandidates: boundary.draftCandidates }))
   if (draftContext !== undefined) return sha256(JSON.stringify({ ...viewBinding, records, closing: closing ?? null, draftContext }))
   return sha256(JSON.stringify(closing === undefined ? records : { records, closing }))
@@ -43,6 +43,7 @@ export function assertActionSnapshotStateIntegrity(registry: ActionRegistry, sna
     candidateReviewHistory: snapshot.candidateReviewHistory,
     draftCandidateEvidence: snapshot.draftCandidateEvidence,
     reviewOutput: snapshot.reviewOutput,
+    articleAcceptance: snapshot.review.state === 'pending' ? snapshot.review.articleAcceptance : undefined,
   })
   const legacyPending = snapshot.review.state === 'pending' && snapshot.closing === undefined
     ? actionStateDigest(registry, snapshot.actionKeys, undefined, snapshot.draftContext, { articleDate: snapshot.date, roundId: snapshot.roundId })
@@ -123,7 +124,7 @@ export function readArticleStatuses(repoRoot: string): Map<string, string> {
 }
 
 export function acceptedActionState(record: ActionRegistry['records'][number], statuses: ReadonlyMap<string, string>, registry: ActionRegistry) {
-  return record.history.filter(item => statuses.get(item.articleDate) === 'accepted' && registry.articles.some(article => article.date === item.articleDate && article.status === 'accepted' && article.roundId === item.roundId)).at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed')
+  return record.history.filter(item => statuses.get(item.articleDate) === 'accepted' && registry.articles.some(article => article.date === item.articleDate && article.status === 'accepted' && article.review.state === 'verified' && article.roundId === item.roundId)).at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed')
 }
 
 export function stripManagedActions(markdown: string): string {
@@ -151,11 +152,11 @@ export function setActionInclusion(registry: ActionRegistry, key: string, includ
 
 export function projectRegistry(registry: ActionRegistry, articleStatuses: ReadonlyMap<string, string>) {
   const open: CanonicalAction[] = [], done: CanonicalAction[] = []
-  const proposed: Array<{ id: string; command: string; description: string; repo: string; sourceDate: string; status: 'proposed'; includeInIndex: boolean }> = []
+  const proposed: ProposedAction[] = []
   const dispositions: Array<{ id: string; description: string; repo: string; sourceDate: string; state: string; reason: string }> = []
   for (const record of registry.records) {
     const original = record.original
-    const decision = record.history.filter(item => articleStatuses.get(item.articleDate) === 'accepted' && registry.articles.some(article => article.date === item.articleDate && article.status === 'accepted' && article.roundId === item.roundId)).at(-1)
+    const decision = record.history.filter(item => articleStatuses.get(item.articleDate) === 'accepted' && registry.articles.some(article => article.date === item.articleDate && article.status === 'accepted' && article.review.state === 'verified' && article.roundId === item.roundId)).at(-1)
     const state = decision?.state ?? (record.origin === 'imported' ? original.status : 'proposed')
     if (record.origin === 'suggested' && !record.includeInIndex && decision) continue
     if (state === 'done') {
@@ -170,7 +171,7 @@ export function projectRegistry(registry: ActionRegistry, articleStatuses: Reado
     const description = [decision?.description ?? original.description, record.doneWhen ? `Done when: ${record.doneWhen}` : '', record.gates.length ? `Conditions: ${record.gates.join(' ')}` : ''].filter(Boolean).join(' ')
     const active = description !== original.description ? { ...original, currentDescription: description } : original
     if (record.origin === 'imported') { open.push(active); continue }
-    const accepted = registry.articles.some(article => article.status === 'accepted' && articleStatuses.get(article.date) === 'accepted' && article.actionKeys.includes(record.key) && record.history.some(decision => decision.roundId === article.roundId && decision.articleDate === article.date))
+    const accepted = registry.articles.some(article => article.status === 'accepted' && article.review.state === 'verified' && articleStatuses.get(article.date) === 'accepted' && article.actionKeys.includes(record.key) && record.history.some(decision => decision.roundId === article.roundId && decision.articleDate === article.date))
     const status = articleStatuses.get(record.introducedBy)
     if (accepted && record.includeInIndex) open.push(active)
     else if (status === 'draft') {
@@ -179,7 +180,44 @@ export function projectRegistry(registry: ActionRegistry, articleStatuses: Reado
       if (ownState === 'open' || ownState === 'proposed') proposed.push({ id: record.key, command: original.command, description: original.description, repo: original.repo, sourceDate: original.sourceDate, status: 'proposed', includeInIndex: record.includeInIndex })
     }
   }
+  for (const article of registry.articles) {
+    if (article.status !== 'accepted' || articleStatuses.get(article.date) !== 'accepted' || article.review.state !== 'pending' || !article.review.articleAcceptance) continue
+    for (const candidate of article.draftCandidates ?? []) {
+      if (candidate.review.state !== 'awaiting-review') continue
+      proposed.push({ id: candidate.candidateId, command: candidate.payload.command, description: candidate.payload.description, repo: candidate.payload.repo, sourceDate: article.date, status: 'needs-review', includeInIndex: false, dispatchable: false, reason: articleOnlyReviewReason(article.review.articleAcceptance.failureKind) })
+    }
+  }
   return { open, done, proposed, dispositions }
+}
+
+function articleOnlyReviewReason(kind: ArticleOnlyAcceptance['failureKind']): string {
+  return kind === 'invalid-output' ? 'The agent returned an incomplete response; these suggestions still need review.' : 'The available evidence did not confirm these suggestions.'
+}
+
+export function assertFirstArticleAcceptance(registry: ActionRegistry, articleDate: string): void {
+  const prior = registry.articles.find(article => article.date === articleDate)
+  if (!prior || prior.status !== 'draft' || prior.review.state !== 'pending' || prior.reviewOutput || prior.candidateReviewHistory?.length || !prior.draftCandidates?.length || !prior.draftCandidateEvidence || prior.draftCandidates.some(candidate => candidate.review.state !== 'awaiting-review') || registry.records.some(record => record.origin === 'suggested' && record.introducedBy === articleDate)) throw new Error('Article-only acceptance requires an original Draft with unresolved candidates and no prior healthy action output')
+  assertActionSnapshotStateIntegrity(registry, prior)
+}
+
+export function completeArticleWithPendingActions(input: { registry: ActionRegistry; articleDate: string; markdown: string; articleStatuses: ReadonlyMap<string, string>; cycle: ActionReviewCycle; failureKind: ArticleOnlyAcceptance['failureKind']; sources: readonly ActionSource[]; draftCandidateEvidence: DraftCandidateEvidenceRequirements }) {
+  assertFirstArticleAcceptance(input.registry, input.articleDate)
+  if (!/^status:\s*"?accepted"?\s*$/m.test(input.markdown)) throw new Error('Article-only completion requires the explicit Accepted article intent')
+  const registry = structuredClone(input.registry)
+  const prior = registry.articles.find(article => article.date === input.articleDate)
+  const file = splitActionRegistry(input.registry).files.find(file => file.date === input.articleDate)
+  if (!prior || !file) throw new Error('Original article action custody is missing')
+  if (!isArticleOnlyEvidenceRefresh(prior.draftCandidateEvidence, input.draftCandidateEvidence) || JSON.stringify(input.draftCandidateEvidence.reviewCycle) !== JSON.stringify(input.cycle)) throw new Error('Article-only acceptance requires the exact native Accepted-status evidence refresh')
+  const articleAcceptance: ArticleOnlyAcceptance = { kind: 'article-only', inputRoundId: prior.roundId, inputRegistrySha256: sha256(articleActionFileBytes(file)), failureKind: input.failureKind,
+    sources: input.sources.map(source => ({ id: source.id, locator: source.locator, sha256: sha256(source.content) })), rawContentRetained: false }
+  const reason = articleOnlyReviewReason(input.failureKind)
+  const roundId = sha256(JSON.stringify({ articleAcceptance, articleDate: input.articleDate, cycle: input.cycle }))
+  const snapshot = { ...prior, status: 'accepted' as const, review: { state: 'pending' as const, reason, articleAcceptance }, reviewCycle: input.cycle, roundId, articleDigest: articleActionDigest(input.markdown), draftCandidateEvidence: input.draftCandidateEvidence,
+    verification: { proposer: 'not-verified', verifier: 'not-verified', promptVersion: prior.verification.promptVersion, proposalSha256: sha256('pending'), verdicts: [] } }
+  snapshot.stateDigest = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: snapshot.date, roundId, includePriorArticleRounds: true, draftCandidates: snapshot.draftCandidates, candidateReviewHistory: snapshot.candidateReviewHistory, draftCandidateEvidence: snapshot.draftCandidateEvidence, articleAcceptance })
+  registry.articles = [...registry.articles.filter(article => article.date !== input.articleDate), snapshot]
+  const parsed = ActionRegistrySchema.parse(registry)
+  return { registry: parsed, markdown: renderArticleActions(input.markdown, parsed, input.articleDate, new Map(input.articleStatuses).set(input.articleDate, 'accepted')), cached: false, evidenceResolutions: [] }
 }
 
 function escaped(value: string): string { return value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char] ?? char)) }
@@ -195,15 +233,15 @@ function draftContextHtml(context: ActionRegistry['articles'][number]['draftCont
   const state = pending ? 'No current follow-ups have been ranked yet.' : 'Current follow-ups are ranked above.'
   return [`<details class="suggested-actions-draft-context"><summary>Article draft context</summary><div><p class="suggested-actions-draft-context-note">These notes are retained from this article’s draft and review. They are separate from prior-day maintenance context. ${state}</p>${renderArticle(context.markdown)}</div></details>`]
 }
-function draftCandidatesHtml(candidates: ActionRegistry['articles'][number]['draftCandidates'], pending: boolean): string[] {
+function draftCandidatesHtml(candidates: ActionRegistry['articles'][number]['draftCandidates'], pending: boolean, articleAccepted = false): string[] {
   if (candidates === undefined) return pending ? ['<div class="draft-candidates-unknown"><p>The original draft suggestions were not captured. Their contents are unknown, and none have been reconstructed.</p></div>'] : []
   if (pending && candidates.length === 0) return ['<div class="draft-candidates-awaiting draft-candidates-empty"><p>This draft contains no suggestions. Nothing is awaiting review, and no missing suggestion has been invented.</p><p class="draft-candidate-quality">The initial target is 3–5 suggestions.</p></div>']
   if (pending && candidates.length < 3) {
-    const items = candidates.map(candidate => `<li data-draft-candidate-id="${escaped(candidate.candidateId)}"><article><strong>${oneLine(candidate.payload.command)} · ${oneLine(candidate.payload.repo)}</strong><p>${oneLine(candidate.payload.description)}</p><p class="draft-candidate-status">Awaiting review</p></article></li>`).join('')
+    const items = candidates.map(candidate => `<li data-draft-candidate-id="${escaped(candidate.candidateId)}"><article><strong>${oneLine(candidate.payload.command)} · ${oneLine(candidate.payload.repo)}</strong><p>${oneLine(candidate.payload.description)}</p><p class="draft-candidate-status">${articleAccepted ? 'Needs review' : 'Awaiting review'}</p></article></li>`).join('')
     return [`<div class="draft-candidates-awaiting draft-candidates-incomplete"><p>These suggestions are awaiting review.</p><p class="draft-candidate-quality">This draft contains ${candidates.length} suggestion${candidates.length === 1 ? '' : 's'}; the initial target is 3–5. Review remains pending, and no missing suggestion has been invented.</p>${items ? `<ol>${items}</ol>` : ''}</div>`]
   }
   const label = (candidate: NonNullable<typeof candidates>[number]) => {
-    if (candidate.review.state === 'awaiting-review') return 'Awaiting review'
+    if (candidate.review.state === 'awaiting-review') return articleAccepted ? 'Needs review' : 'Awaiting review'
     if (candidate.review.state === 'promoted') return 'Promoted to verified action'
     if (candidate.review.state === 'mapped-existing') return 'Mapped to existing action'
     if (candidate.review.state === 'rejected') return 'Rejected during independent review'
@@ -219,7 +257,7 @@ export function articleActionRecords(registry: ActionRegistry, articleDate: stri
   return (snapshot?.actionKeys ?? []).map(key => {
     const record = registry.records.find(item => item.key === key)
     if (!record || !snapshot) throw new Error(`Missing action ${key}`)
-    const history = record.history.filter(item => (item.articleDate === articleDate && item.roundId === snapshot.roundId) || (statuses.get(item.articleDate) === 'accepted' && registry.articles.some(article => article.date === item.articleDate && article.status === 'accepted' && article.roundId === item.roundId)))
+    const history = record.history.filter(item => (snapshot.review.state === 'verified' && item.articleDate === articleDate && item.roundId === snapshot.roundId) || (statuses.get(item.articleDate) === 'accepted' && registry.articles.some(article => article.date === item.articleDate && article.status === 'accepted' && article.review.state === 'verified' && article.roundId === item.roundId)))
     return { ...record, history, state: history.at(-1)?.state ?? (record.origin === 'imported' ? record.original.status : 'proposed' as const) }
   })
 }
@@ -242,7 +280,8 @@ export function articleActionCard(registry: ActionRegistry, articleDate: string,
   const sources = snapshot.sources
     .filter(source => citedSourceIds.has(source.id) && source.kind !== 'report')
     .map(({ id, kind, locator }) => ({ id, kind, locator }))
-  return { review: snapshot.review, closing: snapshot.closing ?? null, draftCandidates: snapshot.draftCandidates ?? null, candidateReviewHistory: snapshot.candidateReviewHistory ?? [], draftContext: snapshot.draftContext ?? null, handled, sources }
+  const review = snapshot.review.state === 'pending' && snapshot.review.articleAcceptance ? { ...snapshot.review, reason: articleOnlyReviewReason(snapshot.review.articleAcceptance.failureKind) } : snapshot.review
+  return { review, closing: snapshot.closing ?? null, draftCandidates: snapshot.draftCandidates ?? null, candidateReviewHistory: snapshot.candidateReviewHistory ?? [], draftContext: snapshot.draftContext ?? null, handled, sources }
 }
 export function renderArticleActions(markdown: string, registry: ActionRegistry, articleDate: string, statuses: ReadonlyMap<string, string>): string {
   const snapshot = registry.articles.find(article => article.date === articleDate)
@@ -260,13 +299,17 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
   if (managedArticleDigest(markdown) !== snapshot.articleDigest) throw new Error(`Action review is stale for ${articleDate}; reconcile before publishing`)
   if (snapshot.status !== statuses.get(articleDate)) throw new Error(`Action review status is stale for ${articleDate}; reconcile before publishing`)
   if (snapshot.review.state === 'pending') {
-    if (snapshot.status !== 'draft') throw new Error(`Action review is pending for ${articleDate}; acceptance is blocked`)
-    const candidates = draftCandidatesHtml(snapshot.draftCandidates, true)
+    const articleAccepted = snapshot.status === 'accepted' && !!snapshot.review.articleAcceptance
+    if (snapshot.status !== 'draft' && !articleAccepted) throw new Error(`Action review is pending for ${articleDate}; explicit article-only acceptance is missing`)
+    const candidates = draftCandidatesHtml(snapshot.draftCandidates, true, articleAccepted)
     const context = draftContextHtml(snapshot.draftContext, true)
-    const reason = `<p class="action-review-pending-reason"><strong>Why review paused:</strong> ${oneLine(snapshot.review.reason)}</p>`
+    const publicReason = snapshot.review.articleAcceptance ? articleOnlyReviewReason(snapshot.review.articleAcceptance.failureKind) : snapshot.review.reason
+    const reason = `<p class="action-review-pending-reason"><strong>Why review paused:</strong> ${oneLine(publicReason)}</p>`
     const requests = snapshot.evidenceRequests?.filter(request => request.status === 'open').map(request =>
       `<p class="action-evidence-request"><strong>Evidence request pending:</strong> <code>${escaped(request.id)}</code> · Recipient: ${escaped(request.recipient)} · Private artifact: <code>.action-evidence/${escaped(request.id)}/request.json</code>.</p>`) ?? []
-    return `${unmanagedArticleProse(markdown).trimEnd()}\n\n${ACTIONS_START}\n<section class="suggested-actions-card suggested-actions-card-needs-review" aria-labelledby="suggested-actions-${escaped(articleDate)}">\n<header class="suggested-actions-header"><h3 id="suggested-actions-${escaped(articleDate)}">Suggested actions</h3><p>Action review pending. Acceptance remains blocked until the review is complete.</p></header>\n${[reason, ...requests, ...candidates, ...context].join('\n')}\n</section>\n${ACTIONS_END}\n`
+    const completion = articleAccepted ? 'Article accepted. These suggestions still need independent review.' : 'Action review pending. Acceptance remains blocked until the review is complete.'
+    const retention = articleAccepted ? '<details class="suggested-actions-draft-context"><summary>Review details</summary><div><p>No action was added or closed. Original suggestions and previously saved sources are retained. Only identities and digests of fresh sources were recorded; their raw content was not retained.</p></div></details>' : ''
+    return `${unmanagedArticleProse(markdown).trimEnd()}\n\n${ACTIONS_START}\n<section class="suggested-actions-card suggested-actions-card-needs-review" aria-labelledby="suggested-actions-${escaped(articleDate)}">\n<header class="suggested-actions-header"><h3 id="suggested-actions-${escaped(articleDate)}">Suggested actions</h3><p>${completion}</p></header>\n${[reason, retention, ...requests, ...candidates, ...context].filter(Boolean).join('\n')}\n</section>\n${ACTIONS_END}\n`
   }
   if (articleDate >= '2026-10-19' && !snapshot.closing) {
     throw new Error(`Verified action review is missing its required closing for ${articleDate}; reconcile before publishing`)

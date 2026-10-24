@@ -81,7 +81,7 @@ export function actionEvidenceCaseDigest(input: {
       const history = record.history.filter(decision => decision.articleDate !== input.articleDate
         && articleStatuses.get(decision.articleDate) === 'accepted'
         && input.registry?.articles.some(article => article.date === decision.articleDate
-          && article.status === 'accepted' && article.roundId === decision.roundId))
+          && article.status === 'accepted' && article.review.state === 'verified' && article.roundId === decision.roundId))
       const state = input.registry ? acceptedActionState(record, articleStatuses, input.registry) : record.origin === 'imported' ? record.original.status : 'proposed'
       return { key: record.key, workKey: record.workKey, state, goal: record.goal,
         doneWhen: record.doneWhen, gates: record.gates, history }
