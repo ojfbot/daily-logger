@@ -111,7 +111,7 @@ jobs:
         run: python3 -m unittest discover -s .github/scripts -p 'test_editorial_pr_boundary.py' -v
 
       - name: Editorial feedback extraction tests
-        run: node --test .github/scripts/test_extract_editorial_feedback.mjs .github/scripts/test_editorial_revision_admission.mjs
+        run: pnpm exec node --import tsx --test .github/scripts/test_extract_editorial_feedback.mjs .github/scripts/test_editorial_revision_admission.mjs
 
       - name: Unit tests
         run: pnpm test
