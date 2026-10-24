@@ -209,7 +209,14 @@ it('serializes a real SDK captured-reference round and verifies the exact canoni
     let input: unknown
     if (request.model === 'claude-sonnet-4-6') input = { changes: [{ actionKey: 'existing', state: 'open', description: 'Retain the owner gate.', reason: 'The gate remains mandatory.', citations: [citation] }], suggestions: [{ identity: { kind: 'captured', candidateId: candidates[0].candidateId }, target: 'separate bounded evidence', outcome: 'Independent owner review.', goal: 'Preserve the owner gate.', factCitations: [citation], goalCitations: [citation], doneWhen: 'Owner verdict recorded.', gates: ['Owner approval remains mandatory.'], existingKey: null }], candidateDispositions: [{ candidateId: candidates[0].candidateId, kind: 'promote', suggestionIndex: 0, reason: 'OFFLINE captured reference only.' }], closingOptions: [] }
     else {
-      verifiedProposal = JSON.parse(request.messages[0].content.split(marker)[1].split('\n')[0])
+      const context = parseActionModelView(request.messages[0].content.slice(0, request.messages[0].content.indexOf(marker)))
+      const paired = z.array(z.object({ candidateId: z.string(), proposedDisposition: z.object({ proposalIndex: z.number().int().nonnegative() }).passthrough().nullable() }).passthrough()).parse(context.initialDraftCandidates)
+      const candidateDispositions = paired.flatMap(candidate => {
+        if (!candidate.proposedDisposition) return []
+        const { proposalIndex, ...disposition } = candidate.proposedDisposition
+        return [{ proposalIndex, disposition: { candidateId: candidate.candidateId, ...disposition } }]
+      }).sort((a, b) => a.proposalIndex - b.proposalIndex).map(row => row.disposition)
+      verifiedProposal = { ...z.record(z.string(), z.unknown()).parse(JSON.parse(request.messages[0].content.split(marker)[1].split('\n')[0])), candidateDispositions }
       input = { changes: [{ actionKey: 'existing', verdict: 'pass', reason: 'OFFLINE controlled gate check.' }], suggestions: [{ candidateIndex: 0, verdict: 'pass', reason: 'OFFLINE mechanical verifier.', existingKey: null }], candidateDispositions: [{ candidateId: candidates[0].candidateId, verdict: 'pass', reason: 'OFFLINE identity check.' }], closingOptions: [] }
     }
     return new SdkResponse(JSON.stringify({ id: 'offline-reference', type: 'message', role: 'assistant', model: request.model, stop_reason: 'tool_use', stop_sequence: null, content: [{ type: 'tool_use', id: 'offline-tool', name: 'review_actions', input }], usage: { input_tokens: 1000, output_tokens: 100 } }), { status: 200, headers: { 'content-type': 'application/json' } })
