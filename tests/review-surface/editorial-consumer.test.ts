@@ -962,7 +962,7 @@ it.each(['nonzero', 'signal', 'spawn', 'overflow', 'combined-overflow', 'overflo
     spawn: '',
     overflow: 'process.stdout.write(Buffer.alloc(1024*1024+1,120))',
     'combined-overflow': 'process.stdout.write(Buffer.alloc(600000,120));process.stderr.write(Buffer.alloc(600000,121))',
-    'overflow-delayed-exit': `const {appendFileSync}=require('node:fs');const marker=${JSON.stringify(resolve(f.execution.workspace, 'child-signals'))};process.stdout.on('error',()=>{});process.stderr.on('error',()=>{});process.on('SIGTERM',()=>{appendFileSync(marker,'SIGTERM\\n');setTimeout(()=>process.exit(9),100)});process.on('exit',()=>appendFileSync(marker,'EXIT\\n'));process.stdout.write(Buffer.alloc(600000,120));process.stderr.write(Buffer.alloc(600000,121))`,
+    'overflow-delayed-exit': `const {appendFileSync}=require('node:fs');const marker=${JSON.stringify(resolve(f.execution.workspace, 'child-signals'))};const keepalive=setTimeout(()=>process.exit(91),2000);process.stdout.on('error',()=>{});process.stderr.on('error',()=>{});process.on('SIGTERM',()=>{clearTimeout(keepalive);appendFileSync(marker,'SIGTERM\\n');setTimeout(()=>process.exit(9),100)});process.on('exit',()=>appendFileSync(marker,'EXIT\\n'));process.stdout.write(Buffer.alloc(600000,120));process.stderr.write(Buffer.alloc(600000,121))`,
     timeout: 'setInterval(()=>{},1000)',
     stdin: "process.stdin.resume();process.stdin.on('end',()=>{process.stdout.write('EOF');process.exitCode=7})",
     'raw-under': 'process.stdout.write(Buffer.alloc(524288,255));process.stderr.write(Buffer.alloc(524287,255));process.exitCode=7',
