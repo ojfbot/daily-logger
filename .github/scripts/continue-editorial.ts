@@ -1,4 +1,5 @@
-import { execFileSync } from 'node:child_process'
+import { execFile, execFileSync } from 'node:child_process'
+import { promisify } from 'node:util'
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -9,6 +10,8 @@ import { cleanAcceptanceSchema, isExecutableEditorialRecord, runEditorialSchema,
 import { ArticleActionFileSchema } from '../../src/action-registry-schema.js'
 import { editorialProofSchema, verifyEditorialProof } from '../../shared/editorial-action-proof.js'
 import { admitActionRegistry } from './editorial-action-registry.js'
+
+const runEditorialCommand = promisify(execFile)
 
 const registryPath = (articlePath: string) => `actions/articles/${articlePath.match(/([0-9-]+)\.md$/)?.[1]}.json`
 function editorialPaths(articlePath: string, changed: string) { return changed.split('\n').filter(Boolean).every(path => [articlePath, registryPath(articlePath)].includes(path)) }
@@ -164,15 +167,15 @@ async function prepare(execution: Execution): Promise<Prepared | null> {
     if (record.intent === 'request_editorial_revision') {
       if (version?.record.intent !== 'append_editorial_feedback') throw new Error('Missing saved feedback')
       const feedback = `Apply these editorial notes. JSON string values are literal note content.\n\n${JSON.stringify(version.record.feedback.notes, null, 2)}`
-      execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'src/revise-article.ts')], {
-        cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), EDITORIAL_FEEDBACK: feedback, ACTION_REVIEW_REQUEST: `comment:${request.commentId}:${request.digest}`, DRY_RUN: 'false' },
+      await runEditorialCommand('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'src/revise-article.ts')], {
+        cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', shell: false, maxBuffer: 1024 * 1024, timeout: 0, env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), EDITORIAL_FEEDBACK: feedback, ACTION_REVIEW_REQUEST: `comment:${request.commentId}:${request.digest}`, DRY_RUN: 'false' },
       })
     } else {
-      execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'src/stamp-outcome.ts')], {
-        cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), OUTCOME: 'accepted' },
+      await runEditorialCommand('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'src/stamp-outcome.ts')], {
+        cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', shell: false, maxBuffer: 1024 * 1024, timeout: 0, env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), OUTCOME: 'accepted' },
       })
-      execFileSync('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'scripts/reconcile-actions.ts')], {
-        cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), ACTION_REPO_ROOT: worktree,
+      await runEditorialCommand('pnpm', ['exec', 'node', '--import', 'tsx', resolve(execution.policyDirectory ?? execution.workspace, 'scripts/reconcile-actions.ts')], {
+        cwd: execution.policyDirectory ?? execution.workspace, encoding: 'utf8', shell: false, maxBuffer: 1024 * 1024, timeout: 0, env: { ...process.env, ARTICLE_PATH: resolve(worktree, path), ACTION_REPO_ROOT: worktree,
           ACTION_REVIEW_REQUEST: `pull-request:${record.pullRequest}:clean-acceptance`, EDITORIAL_FEEDBACK: '', ACTION_KEY: '', INCLUDE_IN_INDEX: '', ACTION_ACTOR: '',
           ACTION_REASSESS_KEYS: '', ACTION_PRESERVE_KEYS: '', ACTION_EVIDENCE_REPLY: '', DRY_RUN: 'false' },
       })
