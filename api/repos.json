@@ -1,17 +1,18 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 141,
-    "totalCommits": 1777,
+    "articleCount": 142,
+    "totalCommits": 1795,
     "relatedTags": [
       "daily-logger",
       "editorial-pipeline",
       "model-behavior-as-design",
       "assistant-centric",
-      "security-as-emergent-ux",
       "hardening",
       "ci-cd",
+      "test-isolation",
       "sprint",
+      "security-as-emergent-ux",
       "classic-space-venue",
       "module-federation",
       "core",
