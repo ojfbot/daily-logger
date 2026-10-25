@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-25",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-10-25",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action evidence request ecad3a5b58773504a2c29c3e0194a7a2d790f04155571c7671ceb334291977a9 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
+    },
+    "articleDigest": "1aafbdedcdc54d027714f018b899688f5248e94b16521298eb8f35857aa506cf",
+    "roundId": "ed15b985e005d0e40c56eacefdebf5058d2e2ae1341bf4106770b013c0358497",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "91d37fd33b251756518b80e3b3c57d7324f3cf157f6ac6e25f1e1a0bef54db62",
+        "payload": {
+          "command": "/pipeline run --action-review --date 2026-10-22 --pr 421",
+          "description": "Trigger the October 22 independent review pipeline run against PR #421. This PR is unblocked by the 256k token default (#443) and Accepted/action-review-pending state (#444) shipped this window.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-25"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "206b4b0924b33870f46e8a7974c5eeccb5f44f2a8f879cc7063b4eeece5a1a5b",
+        "payload": {
+          "command": "/pipeline run --action-review --date 2026-10-21 --suggestions-only",
+          "description": "Run the separately authorized action-review pass for the three October 21 suggestions currently sitting in Needs review. These are not yet in the 83-item open registry and will not be until this pass completes.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-25"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "f5a4a235ff34beed764280ce825ee358c72b19994423ee70684cd4026863d349",
+        "payload": {
+          "command": "/issue comment 386 --note 'progressive-retrieval blocker: integration test coverage for retrieval path at 907e490 — scope test additions before next token ceiling is hit'",
+          "description": "Record the specific blocker for the unadopted progressive-retrieval trial so issue #386 has an actionable next step rather than an open-ended 'remaining scope' label.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-25"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v5-candidate-requirements",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-10-25",
+      "articleDigest": "1aafbdedcdc54d027714f018b899688f5248e94b16521298eb8f35857aa506cf",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "cb1079b4ec78ca06bd476d67f8cef4801db7833f664b6676cf118a8b6bee0448",
+      "candidatePayloadsSha256": "f4bfed21743c203b5342c6c31464cf7db7e4d2286432af602abfa86bee3cd237",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "874c6cd05a7e6393a5919059d1c10031a8b85fb7393ee1d5bb0673b75c8bf5cf",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "91d37fd33b251756518b80e3b3c57d7324f3cf157f6ac6e25f1e1a0bef54db62",
+          "payloadSha256": "ef0355b41306638b44aaabf085afff03f4f0d9eb8d3a288479ff6aef62553010",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "206b4b0924b33870f46e8a7974c5eeccb5f44f2a8f879cc7063b4eeece5a1a5b",
+          "payloadSha256": "f08695d00468618b79bcdcfd4274a64c2a57f676faaa52e2a4dde3430fa6e08d",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "f5a4a235ff34beed764280ce825ee358c72b19994423ee70684cd4026863d349",
+          "payloadSha256": "9d56f8ca5fd19a2bdfb1572fb2fd48a9887a86236c2d8cc9bfaf1605260940f5",
+          "references": [],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "classic-space-venue#4",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "lego-village-pipeline#44",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "morning-cockpit#60",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Blocking context for independent action review: (1) PRs #421 and #433 are the immediate upstream gate for October 22 and October 23 acceptance cycles. Both are unblocked by the #443/#444 fixes shipped this window; next action is a pipeline run against each. (2) The three October 21 suggestions in Needs review require a separately authorized action-review run before they enter the 83-item open registry. No scheduled trigger is confirmed in the available evidence. (3) Progressive-retrieval work for issue #386: local trial at commit 907e490 exists; blocker is integration test coverage for the retrieval path, not a design objection. Owner gate required to scope the test additions and set a merge target. (4) lego-village-pipeline #44, #45, #46: no named owner gate or phase assignment recorded. DO NOT MERGE labels prevent accidental merge but do not constitute a disposition. An explicit close, park-until decision, or phase assignment is needed. (5) classic-space-venue #4 (open since 2026-10-21) and morning-cockpit #60 (open since 2026-10-21) have no in-window progress recorded. (6) Skill telemetry freeze since 2026-05-12 renders quality coverage metrics unreliable; no unfreeze timeline available. (7) Action registry backlog drain rate versus accumulation rate is not tracked in available evidence — this is an acknowledged gap, not a confirmed risk."
+    },
+    "stateDigest": "7d7067c39d23592dfc41407ed5c82f1f00cb7c92721d704fd68761c91a79d74b",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [
+      {
+        "version": "action-evidence-request-v1",
+        "id": "ecad3a5b58773504a2c29c3e0194a7a2d790f04155571c7671ceb334291977a9",
+        "kind": "source-view",
+        "caseDigest": "c2684115fd9ecdac6c40714dea48288a45e13935e0b1fc55eb85a3323a22e135",
+        "articleDate": "2026-10-25",
+        "cycle": {
+          "phase": "generation"
+        },
+        "actionKeys": [
+          "article-feedback"
+        ],
+        "sourceKey": "github:daily-logger#357",
+        "sourceId": "github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe",
+        "sourceFullContentSha256": "6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe",
+        "obligations": [
+          "dbd87ed97a0c07e81a1689712d29fce78023beb160713d0060739969dd3596f0"
+        ],
+        "recipient": "source-producer",
+        "status": "open"
+      }
+    ],
+    "rejected": []
+  }
+}

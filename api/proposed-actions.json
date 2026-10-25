@@ -1,1 +1,35 @@
-[]
+[
+  {
+    "id": "b89074a9d7629cec0b4962d0255a956f76dee0cd735aec550b365e7e70ef4681",
+    "command": "/merge daily-logger#407",
+    "description": "Merge the classic-space-venue fleet onboard PR — the last of three sibling surface registrations, both siblings already merged. No design work required.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-21",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
+  },
+  {
+    "id": "a83670de3a4c36d23cd2016404b6825f86de689eb0a95ee47b7b98d8bd031ae3",
+    "command": "/owner-gate core#561",
+    "description": "Surface core #561 (fleet-runner read-projection v0) to the fleet-runner owner for disposition. This is the venue's hard gate: no real feed, no arrival. There is no documented fallback. Requires a named owner commitment or an explicit decision to park.",
+    "repo": "core",
+    "sourceDate": "2026-10-21",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
+  },
+  {
+    "id": "ccc62b6ac1492f339cf45d848d54bee639e5a633f7e5b3de7649a003cd3e1a2e",
+    "command": "/session wayfinder#543",
+    "description": "Begin AFK/serialized-deep-research on ticket #543 (fleet-runner object model) — no technical blocker, can proceed in parallel with #563 and #567 while the #561 owner gate resolves.",
+    "repo": "core",
+    "sourceDate": "2026-10-21",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
+  }
+]
