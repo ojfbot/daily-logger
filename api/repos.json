@@ -1,15 +1,16 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 142,
-    "totalCommits": 1795,
+    "articleCount": 143,
+    "totalCommits": 1796,
     "relatedTags": [
       "daily-logger",
       "editorial-pipeline",
       "model-behavior-as-design",
       "assistant-centric",
-      "hardening",
+      "rest-day",
       "ci-cd",
+      "hardening",
       "test-isolation",
       "sprint",
       "security-as-emergent-ux",
@@ -31,7 +32,6 @@
       "security-scanning",
       "workstation-yuri",
       "pipeline-reliability",
-      "rest-day",
       "editorial-workflow",
       "audit",
       "tooling-for-iteration",

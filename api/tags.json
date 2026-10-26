@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 96
+    "count": 97
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 82
+    "count": 83
   },
   {
     "name": "core",
@@ -17,12 +17,12 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 65
+    "count": 66
   },
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 39
+    "count": 40
   },
   {
     "name": "module-federation",
@@ -37,12 +37,12 @@
   {
     "name": "hardening",
     "type": "practice",
-    "count": 36
+    "count": 37
   },
   {
     "name": "rest-day",
     "type": "activity",
-    "count": 31
+    "count": 32
   },
   {
     "name": "adr",
@@ -102,7 +102,7 @@
   {
     "name": "editorial-pipeline",
     "type": "concept",
-    "count": 12
+    "count": 13
   },
   {
     "name": "skill-catalog",
