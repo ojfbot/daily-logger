@@ -1,5 +1,160 @@
 [
   {
+    "date": "2026-10-26",
+    "title": "One commit, two draft reviews: what the editorial pipeline looks like at steady state",
+    "summary": "A single daily-logger commit published the October 25 article as the editorial pipeline opened two new independent review drafts, settling into its intended steady-state rhythm.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Independent review drafts open immediately after publication, not before",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Article blob and source commit hash are co-pinned at review-draft creation time",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Five-day acceptance campaign on October 21 is complete; action backlog is not settled",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "09:08 UTC",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-25T09:08:08.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "448",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/448"
+        }
+      },
+      {
+        "text": "2026-10-25T10:43Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-25T10:43:00.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-10-25T10:43Z"
+        }
+      },
+      {
+        "text": "2026-10-25T10:40Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-25T10:40:00.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-10-25T10:40Z"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "448",
+          "url": "https://github.com/ojfbot/daily-logger/pull/448"
+        },
+        "at": "2026-10-25T09:08:08.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-10-26T10:00:33.220Z",
+        "runId": "40303807727",
+        "runNumber": 271,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/40303807727",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "ef6248d57575f7bf6f6cdae087682767101506fb",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-10-26T09:59:07.000Z",
+          "startedAt": "2026-10-26T09:59:07.000Z",
+          "expectedAt": "2026-10-26T08:30:00.000Z",
+          "dispatchDelaySeconds": 5347,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v5-2026-10-20-local-window-single-recommendation",
+          "promptSha256": "fc00cfb33750c4d3a34e3857d142fcf7cc20208f0bfdc657a848fa8163e023f4"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.21.0",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-25",
     "title": "October 21 acceptance finally lands — and the test suite learns to stay out of live state",
     "summary": "Eighteen daily-logger commits across seven merged PRs closed the October 21 acceptance campaign and hardened test fixtures against live article state mutations.",
