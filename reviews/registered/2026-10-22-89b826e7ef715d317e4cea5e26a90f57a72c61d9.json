@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261022-89b826e7ef71",
+  "article": {
+    "date": "2026-10-22",
+    "sourceCommitSha": "89b826e7ef715d317e4cea5e26a90f57a72c61d9",
+    "blobSha": "3dd0992eef79ef44409e15f7e0888df8b524e849"
+  },
+  "reviewer": {
+    "name": "Codex — independent October 22 factual review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-22T14:27:19Z",
+  "scope": "Visible draft, deployed JSON, October 22 activity window and PR chronology, acceptance/action-evidence claims, Classic Space owner and display gates, LEGO exits, telemetry and draft action candidates. Read-only review; no acceptance, action or scheduling authority.",
+  "fullRecordBlobSha": "27a4c08f8b1c1ed80fe454ba9bfbd9e58a365047",
+  "fullRecordPath": "reviews/articles/2026-10-22-89b826e7ef715d317e4cea5e26a90f57a72c61d9.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Deployed API reports 12 commits for a 37-commit window",
+      "location": "Frontmatter summary: “Thirty-seven commits across two repos”; deployed JSON: `commitCount: 12`.",
+      "explanation": "The collector's author-date rule yields 20 daily-logger and 17 classic-space-venue commits for the consecutive Chicago cutoff interval. Twelve is the number of explicitly listed short SHAs, not the activity total; the source omits explicit commitCount frontmatter.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/89b826e7ef715d317e4cea5e26a90f57a72c61d9/_articles/2026-10-22.md#L1-L35",
+        "https://log.jim.software/api/articles/2026-10-22.json",
+        "https://api.github.com/repos/ojfbot/daily-logger/commits?since=2026-10-21T08%3A30%3A00Z&until=2026-10-22T08%3A30%3A00Z&per_page=100",
+        "https://api.github.com/repos/ojfbot/classic-space-venue/commits?since=2026-10-21T08%3A30%3A00Z&until=2026-10-22T08%3A30%3A00Z&per_page=100",
+        "https://github.com/ojfbot/daily-logger/blob/89b826e7ef715d317e4cea5e26a90f57a72c61d9/src/collect-context.ts#L128-L155"
+      ],
+      "correction": "Keep 37 as the sourced collector count and set explicit commitCount: 37, or rename the 12-value projection as listed commit references.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "PR #408 is outside the reporting window",
+      "location": "Daily-logger shipment heading and paragraph, lines 26–28.",
+      "explanation": "The heading lists ten PRs while the prose says nine. #408 merged at 2026-10-21T01:34:40Z, before the 08:30Z reporting-window start; the remaining nine listed PRs merged inside the interval.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/89b826e7ef715d317e4cea5e26a90f57a72c61d9/_articles/2026-10-22.md#L26-L28",
+        "https://github.com/ojfbot/daily-logger/pull/408",
+        "https://log.jim.software/api/articles/2026-10-22.json"
+      ],
+      "correction": "Remove #408 from the in-window shipment heading/time controls or label it explicitly as prior-window context while retaining nine as the in-window count.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Fleet-runner ownership is recorded under core #307",
+      "location": "Decision and roadmap pulse, lines 39–41 and 79.",
+      "explanation": "The #560 resolution explicitly assigns ownership to fleet-runner under core #307, and #561 asks that owner to accept or reshape the proposal. Individual assignment, acceptance and timing remain open, but initiative ownership is not unknown.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/89b826e7ef715d317e4cea5e26a90f57a72c61d9/_articles/2026-10-22.md#L39-L41",
+        "https://github.com/ojfbot/core/issues/560#issuecomment-6304270768",
+        "https://github.com/ojfbot/core/issues/561",
+        "https://github.com/ojfbot/core/issues/307"
+      ],
+      "correction": "Name fleet-runner under core #307 as owner while separately stating that individual assignment, owner acceptance, a checkpoint and delivery timing remain open.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "Display composition can proceed through recorded simulation",
+      "location": "Roadmap pulse, line 79.",
+      "explanation": "Issue #5 explicitly authorizes MBP simulation until the physical 32-inch monitor is available, then requires a later hardware repeat. Issue #6 defines split-pane and phone-sized remote-browser work. Physical validation is a later gate, not a wholesale blocker on composition work.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/89b826e7ef715d317e4cea5e26a90f57a72c61d9/_articles/2026-10-22.md#L79-L79",
+        "https://github.com/ojfbot/classic-space-venue/issues/5",
+        "https://github.com/ojfbot/classic-space-venue/issues/6"
+      ],
+      "correction": "Separate immediately available MBP/narrow-viewport simulation work from later physical-monitor and real-remote-device verification.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "LEGO drafts have distinct documented exit gates",
+      "location": "Roadmap pulse, line 81.",
+      "explanation": "#44 and #46 are non-operative overlays with close-or-supersede exits and complete-cut/preflight requirements. #45 is the HOUSE-WORLD R0 study and instead requires a second-steward register check followed by James's merge decision; it is not titled DO NOT MERGE.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/89b826e7ef715d317e4cea5e26a90f57a72c61d9/_articles/2026-10-22.md#L81-L81",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/46"
+      ],
+      "correction": "Preserve close/supersede plus complete-cut/preflight exits for #44/#46 and the separate second-steward plus James decision gate for #45.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Current events contradict the frozen telemetry premise",
+      "location": "Roadmap telemetry paragraph and `/resolve skill-telemetry-stream` draft candidate, lines 85 and 96–102.",
+      "explanation": "Immutable sources contain October 20 invocation/follow-through events and October 21 disposition events. A later native replay reports one of fourteen suggestions followed, while qualifying the unavailable exact generation payload. The new candidate is awaiting review, not admitted, and rests on a false blanket-freeze premise; older telemetry validation act-2026-04-12-validate-c53d7a is already closed as superseded.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/89b826e7ef715d317e4cea5e26a90f57a72c61d9/_articles/2026-10-22.md#L85-L96",
+        "https://github.com/ojfbot/core/blob/fe264bd89298639518e401d60572bc2a0959c512/skill-telemetry.jsonl",
+        "https://github.com/ojfbot/core/blob/fe264bd89298639518e401d60572bc2a0959c512/skill-dispositions.jsonl",
+        "https://github.com/ojfbot/daily-logger/pull/410#issuecomment-6320752943",
+        "https://github.com/ojfbot/daily-logger/blob/89b826e7ef715d317e4cea5e26a90f57a72c61d9/actions/articles/2026-10-22.json",
+        "https://github.com/ojfbot/daily-logger/blob/89b826e7ef715d317e4cea5e26a90f57a72c61d9/actions/registry.json"
+      ],
+      "correction": "Remove the blanket freeze claim, retain source/freshness limits and actual replay ratios, and reject or rewrite the awaiting-review candidate around a specific unresolved telemetry problem without reopening completed work.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The Chicago-over-UTC rationale is unsupported",
+      "location": "Daily-logger shipment paragraph, line 28.",
+      "explanation": "#408 establishes the consecutive Chicago cutoff, DST behavior, guard and unchanged schedules, but does not record the article's historical rationale that UTC was rejected to preserve the operator's morning boundary.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/89b826e7ef715d317e4cea5e26a90f57a72c61d9/_articles/2026-10-22.md#L28-L28",
+        "https://github.com/ojfbot/daily-logger/pull/408",
+        "https://github.com/ojfbot/daily-logger/actions/runs/39753052782",
+        "https://log.jim.software/api/articles/2026-10-22.json"
+      ],
+      "correction": "Keep the adopted interval and actual run receipt; attribute the rationale only to a primary operator decision and keep trigger, start, completion, merge and public availability separate.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "The claimed prior Codex scope incident lacks a primary record",
+      "location": "Root AGENTS decision, lines 45–47.",
+      "explanation": "PR #3 proves the instruction relocation and current boundary, but does not identify the asserted earlier incident, generated code, receipt or correction in which Codex allegedly treated scene instructions as fleet governance.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/89b826e7ef715d317e4cea5e26a90f57a72c61d9/_articles/2026-10-22.md#L45-L47",
+        "https://github.com/ojfbot/classic-space-venue/pull/3"
+      ],
+      "correction": "Keep the source-backed instruction-boundary change, but remove the incident claim or link the exact primary failure and correction record.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
