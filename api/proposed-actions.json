@@ -31,5 +31,104 @@
     "includeInIndex": false,
     "dispatchable": false,
     "reason": "The agent returned an incomplete response; these suggestions still need review."
+  },
+  {
+    "id": "52668da40c1ff0e702606fd68d12b33ec1721e69ccde9589476f90324d317d40",
+    "command": "/review daily-logger#417",
+    "description": "Confirm size-complete action evidence coverage for October 21 — this is the immediate gate before #416 (acceptance) can proceed. The evidence-size recovery mechanism from #411 is the operative path.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-22",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
+  },
+  {
+    "id": "3f6e9b8f203ddd48f63122a5006c03e40ed8d1bafc646dc44f878caf48277ca9",
+    "command": "/review classic-space-venue#4",
+    "description": "Unblock RFI-0002 multiagent orchestration research harness review. PR has been open and awaiting review; it feeds core #567 and the wayfinder grilling cluster (#564–#566, #544).",
+    "repo": "classic-space-venue",
+    "sourceDate": "2026-10-22",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
+  },
+  {
+    "id": "19a1b1796df501c66824636b00a37a2c47480e5471d8542bcd9330b4d61b85dc",
+    "command": "/resolve skill-telemetry-stream",
+    "description": "Make a formal decision on the frozen skill telemetry stream (frozen since 2026-05-12): unfreeze, replace, or explicitly park as NEVER. Five reporting cycles of known-bad metrics with no stated owner or remediation date is a liability, not a caveat.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-22",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
+  },
+  {
+    "id": "9559ede4e6c9709956dcfef64ae793ad97a3d198f46e3c6e8ee365980e141342",
+    "command": "/editorial-resume --pr 416 --pin-request --verify-schema --dry-run",
+    "description": "Trigger a dry-run of the clean-acceptance resume path on #416 to confirm the repaired pipeline — schema compatibility (#426), evidence compaction (#427), and owner recovery (#425) — produces a valid request payload before spending a live provider call.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-23",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "9432c9fb31569ebcf0d6e6dca0c7ade4c828725029f95a0a152e3449c695f2c5",
+    "command": "/action-review-probe --synthetic --models proposer,verifier --report-token-count",
+    "description": "Run the manual synthetic probe (#428–430) and capture the post-compaction token count for the evidence view. This produces the missing measurement for the #427 decision record and confirms schema acceptance against the live provider before the full #416 run.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-23",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "2dd7601826e9f2f73bc26153a97a4c53c2e26763b73fa12c7cda8cb5e5a33fde",
+    "command": "/pr-triage --repo morning-cockpit --pr 60 --assess-merge-or-close",
+    "description": "morning-cockpit #60 has been open with no activity for two windows. Assess whether it is merge-ready, should be closed, or needs a milestone gate — and record the disposition so it stops appearing in the pulse as unresolved noise.",
+    "repo": "morning-cockpit",
+    "sourceDate": "2026-10-23",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "f3f00b51be0318f49e7469f60f82f4aabe54094a10829ef909365c27598a5a2a",
+    "command": "/coordinator-authorize daily-logger#416 hosted-run",
+    "description": "Clear the process gate blocking the first live hosted attempt against October 21 acceptance. This is the only action that produces new signal on token fit, reviewer semantics, and receipt delivery.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-24",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "9275a546daedf479f014fb844c3646e94a53c7bcd21e7cf80f76f085cc87e75d",
+    "command": "/disposition daily-logger#421 daily-logger#433",
+    "description": "Assign an explicit disposition to the October 22 and October 23 independent review drafts — either a merge target, a dependency on #416, or a close with rationale. Open draft PRs with no disposition accumulate merge-conflict risk.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-24",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "73f8bcbc77ec53ce99692eb7ed778cad01b001de52ff7f613573092afc9e12a6",
+    "command": "/merge morning-cockpit#60",
+    "description": "morning-cockpit #60 is validated and unblocked. Confirm no drift since validation and merge, or record an explicit hold reason.",
+    "repo": "morning-cockpit",
+    "sourceDate": "2026-10-24",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
   }
 ]

@@ -2,27 +2,32 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 97
+    "count": 98
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 83
+    "count": 84
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 73
+    "count": 74
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 66
+    "count": 67
   },
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 40
+    "count": 41
+  },
+  {
+    "name": "hardening",
+    "type": "practice",
+    "count": 38
   },
   {
     "name": "module-federation",
@@ -33,11 +38,6 @@
     "name": "shell",
     "type": "repo",
     "count": 38
-  },
-  {
-    "name": "hardening",
-    "type": "practice",
-    "count": 37
   },
   {
     "name": "rest-day",
@@ -52,7 +52,7 @@
   {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 28
+    "count": 29
   },
   {
     "name": "sprint",
@@ -77,7 +77,7 @@
   {
     "name": "security-as-emergent-ux",
     "type": "concept",
-    "count": 18
+    "count": 19
   },
   {
     "name": "verification-flagged",
@@ -95,14 +95,14 @@
     "count": 15
   },
   {
-    "name": "purefoy",
-    "type": "repo",
+    "name": "editorial-pipeline",
+    "type": "concept",
     "count": 14
   },
   {
-    "name": "editorial-pipeline",
-    "type": "concept",
-    "count": 13
+    "name": "purefoy",
+    "type": "repo",
+    "count": 14
   },
   {
     "name": "skill-catalog",
@@ -240,6 +240,11 @@
     "count": 5
   },
   {
+    "name": "workstation-yuri",
+    "type": "repo",
+    "count": 4
+  },
+  {
     "name": "seh-study",
     "type": "repo",
     "count": 4
@@ -297,11 +302,6 @@
   {
     "name": "fleet-onboard",
     "type": "concept",
-    "count": 3
-  },
-  {
-    "name": "workstation-yuri",
-    "type": "repo",
     "count": 3
   },
   {
