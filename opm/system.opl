@@ -437,3 +437,6 @@ Held Action Reviewing requires Operation Reservation. [src: scripts/review-held-
 Held Action Reviewing yields Unmerged Dated Proposal. [src: scripts/review-held-actions.ts]
 Held Action Reviewing yields Bounded Operation Receipt. [src: scripts/review-held-actions.ts]
 Unmerged Dated Proposal consists of Proposed Article Card and Proposed Article Action File. [src: scripts/review-held-actions.ts]
+
+# Closed shape diagnostics retain known fields/types, never provider values or arbitrary keys. [src: src/review-actions.ts]
+# Current evidence-request diagnostics require native current-case validation; unbound requests retain identity only. [src: scripts/review-held-actions.ts]
