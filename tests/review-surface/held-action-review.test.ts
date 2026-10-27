@@ -11,6 +11,7 @@ import { ActionRegistrySchema, actionStateDigest, completeArticleWithPendingActi
 import { prepareConservativeDraftCandidateEvidence } from '../../src/action-evidence-selection.js'
 import { generationActionCycle } from '../../src/action-review-cycle.js'
 import { createActionAgents, pendingActionReview } from '../../src/review-actions.js'
+import { ActionEvidenceRequestError, actionEvidenceCaseDigest, createActionEvidenceRequest } from '../../src/action-evidence-retrieval.js'
 import { writeActionStore } from '../../src/__tests__/action-store-fixture.js'
 import { verifyEditorialProof } from '../../shared/editorial-action-proof.js'
 import type { GitHub } from '../../api/_lib/article-review-sources.js'
@@ -171,7 +172,8 @@ it('a count/HTTP failure consumes authority without claiming generation or billi
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
   countTokens.mockRejectedValueOnce(Object.assign(new Error('PRIVATE_COUNT_SENTINEL'), { status: 503 }))
   const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
-  expect(result.receipt.state).toBe('uncertain-after-entry'); expect(result.receipt.observations).toEqual({ billing: 'not-inferred', budgets: [], responses: [] })
+  expect(result.receipt.state).toBe('uncertain-after-entry'); expect(result.receipt.observations).toEqual({ billing: 'not-inferred', budgets: [], responses: [], evidenceRequestIdentity: { id: expect.stringMatching(/^[a-f0-9]{64}$/), kind: 'clarification' }, failurePhase: 'context-or-budget' })
+  expect(result.receipt.observations.evidenceRequest).toBeUndefined()
   expect(create).not.toHaveBeenCalled(); expect(countTokens).toHaveBeenCalledTimes(1); expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
   await expect(reserveHeldAction(binding, t.github)).rejects.toThrow()
 }, 15000)
@@ -241,6 +243,100 @@ it('keeps legacy response measurements readable and rejects out-of-range numeric
     expect(() => heldActionReceiptSchema.parse({ ...legacy, observations: { ...legacy.observations, responses: [{ role: 'proposer', stop: 'tool_use', inputTokens: input, outputTokens: 100 }] } })).toThrow()
   }
   expect(() => heldActionReceiptSchema.parse({ ...legacy, observations: { ...legacy.observations, responses: [{ role: 'proposer', stop: 'tool_use', inputTokens: 1000, outputTokens: 12001 }] } })).toThrow()
+}, 15000)
+
+it('retains closed schema diagnostics for the failed proposal and its one repair without raw canaries', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal } = healthy(f), [row, ...rest] = proposal.candidateDispositions
+  const invalid = { candidateId: row.candidateId, kind: row.kind, citations: row.citations, PRIVATE_UNKNOWN_KEY_CANARY: 'PRIVATE_RAW_REPLY_CANARY' }
+  create.mockReset().mockResolvedValueOnce(response({ ...proposal, candidateDispositions: [invalid, ...rest] })).mockResolvedValueOnce(response(invalid))
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  const shapes = result.receipt.observations.outputShapes
+  expect(shapes).toHaveLength(2)
+  expect(shapes?.every(shape => shape.role === 'proposer' && shape.phase === 'tool-input' && shape.issues.length <= 4)).toBe(true)
+  expect(shapes?.[0].issues).toContainEqual(expect.objectContaining({ path: ['candidateDispositions', 0, 'reason'], code: 'invalid_type', received: 'missing', candidateId: row.candidateId }))
+  expect(shapes?.some(shape => shape.issues.some(issue => issue.forbidden?.includes('<unknown-key>')))).toBe(true)
+  expect(result.receipt.state).toBe('held-invalid-output'); expect(result.files).toEqual([])
+  expect(create).toHaveBeenCalledTimes(2); expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
+  const first = shapes?.[0]
+  if (!first) throw new Error('Expected a native shape observation')
+  for (const outputShapes of [Array(4).fill(first), [{ ...first, issues: Array(5).fill(first.issues[0]) }], [{ ...first, phase: 'PRIVATE_PHASE' }], [{ ...first, issues: [{ path: ['PRIVATE_KEY'], code: 'custom' }] }]]) {
+    expect(() => heldActionReceiptSchema.parse({ ...result.receipt, observations: { ...result.receipt.observations, outputShapes } })).toThrow()
+  }
+}, 15000)
+
+it('does not retain a foreign candidate ID or arbitrary field names from malformed output', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal } = healthy(f), [row, ...rest] = proposal.candidateDispositions
+  create.mockReset().mockResolvedValueOnce(response({ ...proposal, candidateDispositions: [{ candidateId: '9'.repeat(64), kind: row.kind, citations: row.citations, PRIVATE_UNKNOWN_KEY: 'PRIVATE_REPLY' }, ...rest] }))
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.observations.outputShapes).toHaveLength(1)
+  expect(JSON.stringify(result.receipt.observations.outputShapes)).not.toContain('9'.repeat(64))
+  expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_'); expect(result.files).toEqual([])
+  expect(create).toHaveBeenCalledTimes(1)
+}, 15000)
+
+it('retains only the actual native current-case request receipt with no question or raw source locator', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const content = 'PRIVATE_RAW_SOURCE_CANARY\n' + 'x'.repeat(140000), source = { id: `fact@${sha256(content)}`, kind: 'repository' as const, locator: 'PRIVATE_SOURCE_LOCATOR_CANARY', content }
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: options => reconcileActions({ ...options, agents: createActionAgents(), collectSources: () => new ActionSourceCollection([source]) }) })
+  const request = result.receipt.observations.evidenceRequest
+  expect(request).toMatchObject({ kind: 'source-view', articleDate: date, cycle: { phase: 'generation' }, sourceKey: 'fact', sourceId: source.id, sourceFullContentSha256: sha256(content), status: 'open' })
+  expect(request).not.toHaveProperty('question'); expect(request).not.toHaveProperty('sourceLocator')
+  expect(result.receipt.state).toBe('held-evidence'); expect(result.files).toEqual([])
+  expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
+  expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
+  expect(readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')).toBe(f.original.action)
+  for (const change of [{ articleDate: '2030-01-01' }, { cycle: { phase: 'revision', requestId: 'foreign' } }, { status: 'resolved' }, { sourceFullContentSha256: 'f'.repeat(64) }, { question: 'PRIVATE_QUESTION' }, { sourceLocator: 'PRIVATE_LOCATOR' }]) {
+    expect(() => heldActionReceiptSchema.parse({ ...result.receipt, observations: { ...result.receipt.observations, evidenceRequest: { ...request, ...change } } })).toThrow()
+  }
+}, 15000)
+
+it('does not label a self-consistent request current when its source pin differs from actual native inputs', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const registry = readActionRegistry(f.root), statuses = readArticleStatuses(f.root), cycle = generationActionCycle()
+  const actualContent = 'Actual complete fixture source.', source = { id: `fact@${sha256(actualContent)}`, kind: 'repository' as const, locator: 'fixture.md', content: actualContent }
+  let prepared: ReturnType<typeof prepareConservativeDraftCandidateEvidence> | undefined, requestId: string | undefined
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: options => reconcileActions({ ...options,
+    collectSources: (_candidates, evidence) => { prepared = evidence; return new ActionSourceCollection([source]) },
+    agents: { propose: async () => {
+      if (!prepared) throw new Error('Expected native prepared evidence')
+      const wrongContent = 'PRIVATE_FOREIGN_SOURCE_CANARY', wrong = { ...source, id: `fact@${sha256(wrongContent)}`, content: wrongContent }
+      const request = createActionEvidenceRequest({ kind: 'source-view', caseDigest: actionEvidenceCaseDigest({ registry, articleDate: date, cycle, markdown: f.original.article, feedback: '', actionKeys: ['article-feedback'], articleStatuses: statuses, draftCandidateEvidence: prepared }), articleDate: date, cycle, actionKeys: ['article-feedback'], sourceKey: 'fact', source: wrong, question: 'PRIVATE_QUESTION_CANARY', obligations: [sha256('source mismatch')] })
+      requestId = request.id
+      throw new ActionEvidenceRequestError(request, 'PRIVATE_NATIVE_EXCEPTION')
+    }, verify: async () => { throw new Error('Unexpected verifier entry') } },
+  }) })
+  expect(result.receipt.observations.evidenceRequest).toBeUndefined()
+  expect(result.receipt.observations.evidenceRequestIdentity).toEqual({ id: requestId, kind: 'source-view' })
+  expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_'); expect(result.files).toEqual([])
+  expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
+}, 15000)
+
+it('retains only request identity when a caught request lacks actual current inputs and sources', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const request = createActionEvidenceRequest({ kind: 'clarification', caseDigest: sha256('foreign'), articleDate: '2030-01-01', cycle: generationActionCycle(), actionKeys: ['article-feedback'], sourceKey: 'model-context', question: 'PRIVATE_QUESTION_CANARY', obligations: [sha256('unknown obligation')] })
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: async () => { throw new ActionEvidenceRequestError(request, 'PRIVATE_NATIVE_MESSAGE_CANARY') } })
+  expect(result.receipt.observations.evidenceRequest).toBeUndefined()
+  expect(result.receipt.observations.evidenceRequestIdentity).toEqual({ id: request.id, kind: 'clarification' })
+  expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_'); expect(result.files).toEqual([])
+  expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
+}, 15000)
+
+it('distinguishes a native incomplete ranked shortlist without retaining model reasons or emitting a proposal', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal, verification } = healthy(f)
+  create.mockReset().mockResolvedValueOnce(response({ ...proposal, closingOptions: proposal.closingOptions.slice(0, 2) }))
+    .mockResolvedValueOnce(response({ ...verification, closingOptions: verification.closingOptions.slice(0, 2).map(row => ({ ...row, reason: 'PRIVATE_VERIFIER_REASON_CANARY' })) }))
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.state).toBe('held-evidence'); expect(result.receipt.stop.reason).toBe('native-evidence-required')
+  expect(result.receipt.observations.failurePhase).toBe('ranked-shortlist-incomplete')
+  expect(result.receipt.observations.evidenceRequest).toBeUndefined()
+  expect(result.receipt.observations.evidenceRequestIdentity).toBeUndefined()
+  expect(result.files).toEqual([]); expect(create).toHaveBeenCalledTimes(2)
+  expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
+  expect(readFileSync(join(f.root, `_articles/${date}.md`), 'utf8')).toBe(f.original.article)
+  expect(readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')).toBe(f.original.action)
 }, 15000)
 
 it('cannot reuse consumed authorization with another operation or reuse an operation under another grant', async () => {

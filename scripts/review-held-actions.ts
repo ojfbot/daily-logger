@@ -6,9 +6,9 @@ import { z } from 'zod'
 import { reconcileActions } from './reconcile-actions.js'
 import { acceptanceActionCycle } from '../src/action-review-cycle.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, COVERAGE_SOURCE, prepareConservativeDraftCandidateEvidence } from '../src/action-evidence-selection.js'
-import { ActionContextNeedError, ActionProviderBudgetObservationSchema, ActionProviderResponseObservationSchema, classifyActionReviewFailure } from '../src/review-actions.js'
+import { ActionContextNeedError, ActionProviderBudgetObservationSchema, ActionProviderResponseObservationSchema, ActionProviderOutputShapeObservationSchema, ActionReviewFailurePhaseSchema, actionReviewEvidenceRequestIdentity, actionReviewFailurePhase, classifyActionReviewFailure } from '../src/review-actions.js'
 import { ActionEvidenceRequestError } from '../src/action-evidence-retrieval.js'
-import { ArticleActionFileSchema, ActionSourceSchema, actionArticlePath, articleActionFileBytes, assertActionSnapshotStateIntegrity, readActionRegistry, readArticleStatuses, registryRevision, sha256, splitActionRegistry, stripManagedActions } from '../src/action-registry.js'
+import { ArticleActionFileSchema, ActionSourceSchema, ActionEvidenceRequestSchema, ActionEvidenceRequestReceiptSchema, actionArticlePath, articleActionFileBytes, assertActionSnapshotStateIntegrity, readActionRegistry, readArticleStatuses, registryRevision, sha256, splitActionRegistry, stripManagedActions } from '../src/action-registry.js'
 import type { GitHub } from '../api/_lib/article-review-sources.js'
 
 const sha = z.string().regex(/^[a-f0-9]{40}$/), digest = z.string().regex(/^[a-f0-9]{64}$/)
@@ -44,11 +44,20 @@ export const heldActionReceiptSchema = z.object({
   state: resultStateSchema, files: z.array(z.object({ name: z.enum(['article.md', 'actions.json']), repositoryPath: z.string(), bytes: z.number().int().positive().max(786432), sha256: digest }).strict()).max(2),
   authorization: z.literal('consumed'), nativeEntry: z.enum(['not-entered', 'native-function-entered']),
   stop: z.object({ stage: z.enum(['input', 'reservation', 'native', 'proposal', 'outcome', 'completed']), reason: reasonSchema, httpStatus: z.number().int().min(100).max(599).optional() }).strict(),
-  observations: z.object({ billing: z.literal('not-inferred'), budgets: z.array(ActionProviderBudgetObservationSchema).max(3), responses: z.array(ActionProviderResponseObservationSchema).max(3) }).strict(),
+  observations: z.object({ billing: z.literal('not-inferred'), budgets: z.array(ActionProviderBudgetObservationSchema).max(3), responses: z.array(ActionProviderResponseObservationSchema).max(3),
+    outputShapes: z.array(ActionProviderOutputShapeObservationSchema).max(3).optional(), evidenceRequest: ActionEvidenceRequestReceiptSchema.optional(),
+    evidenceRequestIdentity: z.object({ id: digest, kind: ActionEvidenceRequestSchema.shape.kind }).strict().optional(),
+    failurePhase: ActionReviewFailurePhaseSchema.optional(),
+  }).strict(),
 }).strict().superRefine((receipt, ctx) => {
   const expected = new Map([['article.md', `_articles/${receipt.binding.inputs.date}.md`], ['actions.json', actionArticlePath(receipt.binding.inputs.date)]])
   if (receipt.state === 'native-review-completed-unmerged' ? receipt.files.length !== 2 : receipt.files.length !== 0) ctx.addIssue({ code: 'custom', message: 'Only completed native review has the two dated proposal files' })
   if (new Set(receipt.files.map(file => file.name)).size !== receipt.files.length || receipt.files.some(file => expected.get(file.name) !== file.repositoryPath)) ctx.addIssue({ code: 'custom', message: 'Proposal paths must be the exact two dated files' })
+  const request = receipt.observations.evidenceRequest
+  const sourcePin = request?.sourceId?.match(/@([a-f0-9]{64})$/)?.[1]
+  if (request && (request.question !== undefined || request.sourceLocator !== undefined || request.articleDate !== receipt.binding.inputs.date || JSON.stringify(request.cycle) !== JSON.stringify(receipt.binding.grant.reviewCycle) || request.status !== 'open'
+    || sourcePin !== undefined && sourcePin !== request.sourceFullContentSha256)) ctx.addIssue({ code: 'custom', message: 'Current evidence diagnostic must match the bound article/cycle and source pin' })
+  if (request && receipt.observations.evidenceRequestIdentity) ctx.addIssue({ code: 'custom', message: 'Evidence diagnostic is either a validated current receipt or identity-only' })
 })
 type Receipt = z.infer<typeof heldActionReceiptSchema>
 const claimSchema = z.object({ kind: z.literal('held-action-reservation-v1'), binding: bindingSchema, stage: z.enum(['reserved', 'model-entered', 'finished']), result: resultStateSchema.optional(), receiptSha256: digest.optional() }).strict()
@@ -218,6 +227,18 @@ export async function executeHeldAction(options: { root: string; binding: Bindin
         const observation = ActionProviderResponseObservationSchema.safeParse({ role: response[1], stop: response[2], outputTokens: response[3] === 'unavailable' ? null : Number(response[3]), ...(response[4] === undefined ? {} : { inputTokens: response[4] === 'unavailable' ? null : Number(response[4]) }) })
         if (observation.success) receipt.observations.responses.push(observation.data)
       }
+      if (values[0].startsWith('Action output shape: ') && Buffer.byteLength(values[0]) <= 8256 && (receipt.observations.outputShapes?.length ?? 0) < 3) {
+        try {
+          const shape = ActionProviderOutputShapeObservationSchema.safeParse(JSON.parse(values[0].slice('Action output shape: '.length)))
+          if (shape.success) (receipt.observations.outputShapes ??= []).push(shape.data)
+        } catch { /* Retain no unparsed diagnostic text. */ }
+      }
+      if (values[0].startsWith('Action evidence request receipt: ') && Buffer.byteLength(values[0]) <= 8192) {
+        try {
+          const request = ActionEvidenceRequestReceiptSchema.safeParse(JSON.parse(values[0].slice('Action evidence request receipt: '.length)))
+          if (request.success && request.data.question === undefined && request.data.sourceLocator === undefined && request.data.articleDate === binding.inputs.date && same(request.data.cycle, binding.grant.reviewCycle) && request.data.status === 'open') receipt.observations.evidenceRequest = request.data
+        } catch { /* A request diagnostic must arrive as the closed native receipt. */ }
+      }
     }
     for (const key of Object.keys(consoleMethods)) Reflect.set(console, key, capture)
     try {
@@ -236,6 +257,10 @@ export async function executeHeldAction(options: { root: string; binding: Bindin
     }
   } catch (error) {
     const failure = classifyActionReviewFailure(error)
+    const failurePhase = actionReviewFailurePhase(error)
+    if (failurePhase) receipt.observations.failurePhase = failurePhase
+    const requestIdentity = actionReviewEvidenceRequestIdentity(error)
+    if (!receipt.observations.evidenceRequest && requestIdentity) receipt.observations.evidenceRequestIdentity = requestIdentity
     receipt.state = !entered ? 'rejected-before-model' : failure?.kind === 'invalid-output' ? 'held-invalid-output' : failure?.kind === 'evidence-required' ? 'held-evidence' : 'uncertain-after-entry'
     receipt.stop.reason = error instanceof HeldActionGateError ? error.reason : failure?.kind === 'invalid-output' ? 'native-invalid-output' : failure?.kind === 'evidence-required' ? 'native-evidence-required' : receipt.stop.stage === 'proposal' ? 'proposal-boundary' : 'provider-or-unknown'
     let cause: unknown = error
