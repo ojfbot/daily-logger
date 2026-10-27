@@ -8,10 +8,10 @@
     "status": "draft",
     "review": {
       "state": "pending",
-      "reason": "Action evidence request 099dfcec9392f116ce8bea20872e6e72e4bd014665d1b9609c8f5b7e732ac804 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
+      "reason": "Awaiting the authorized October23 native action review after supervised source/data correction. Historical initial hold retained: Action evidence request 099dfcec9392f116ce8bea20872e6e72e4bd014665d1b9609c8f5b7e732ac804 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
     },
-    "articleDigest": "305c661acf489e402dd629bf9880b0bf5a604514a397264e9f853d01d9bb3ff2",
-    "roundId": "8085e6abdaee80a0c7700b15f4549bb6f52e8bec429288e1136655adf73bb637",
+    "articleDigest": "0d4ada9af3121405da0fed1a4da5cad4f8bc8955bea0f88536e4ff6e3b062bf6",
+    "roundId": "0703cdc8d82eb955c5db7e7320db7ed44d82d02142ead91ab0dbe041fbbab2fd",
     "reviewCycle": {
       "phase": "generation"
     },
@@ -60,19 +60,19 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "deterministic-default",
-        "identity": "progressive-action-evidence-v5-candidate-requirements",
-        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+        "kind": "coordinator",
+        "identity": "oct23-full-cycle:supervised-corrected-draft-data",
+        "decision": "Bind corrected Draft/current full status index and explicit per-candidate primary sources under the authorized October23 article cycle. Preserve original candidate custody/history and owner/counterevidence gates; grant no action disposition, execution, settlement, approval or retry authority."
       },
       "articleDate": "2026-10-23",
-      "articleDigest": "305c661acf489e402dd629bf9880b0bf5a604514a397264e9f853d01d9bb3ff2",
+      "articleDigest": "0d4ada9af3121405da0fed1a4da5cad4f8bc8955bea0f88536e4ff6e3b062bf6",
       "reviewCycle": {
         "phase": "generation"
       },
-      "draftContextSha256": "d59414c238dfb261b2b133b5646f972c7beec5371fabcc3fd60dc3cc7832901c",
+      "draftContextSha256": "70b6b253897899c7525e7bac82f41f722b50879d105fd239870a258924fa6985",
       "candidatePayloadsSha256": "aff1f02c5b474503b190fcddbf6e09cc9912bb02438d748ffd1780ba13c12f55",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "ad6d10f2d8bb1c250ac9c6b8befc94d96aa0041a1ff5e9d0c97c164d117c1a27",
+      "articleStatusesSha256": "3072ce3f7882e0a847801f92d490b739522e9c2ff501d59fb74ad49521f6c5e8",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -80,13 +80,27 @@
         {
           "candidateId": "9559ede4e6c9709956dcfef64ae793ad97a3d198f46e3c6e8ee365980e141342",
           "payloadSha256": "7c8675bdb58ba7f14fa9f73faee0f53f0c9c76a4622d3280d8c3554db954391a",
-          "references": [],
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#416",
+              "role": "lifecycle",
+              "reason": "Current merged acceptance receipt and held-action outcome are lifecycle counterevidence to resuming this original PR; no replay or native action success is implied."
+            }
+          ],
           "actionRelations": []
         },
         {
           "candidateId": "9432c9fb31569ebcf0d6e6dca0c7ade4c828725029f95a0a152e3449c695f2c5",
           "payloadSha256": "fd2636f9384824086c724c951385307811e816224cf328ce80604ca1430a668c",
-          "references": [],
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#431",
+              "role": "counterevidence",
+              "reason": "Actual synthetic diagnostic results contradict the original full-form probe premise and establish consumed diagnostic authority, not article/verifier success."
+            }
+          ],
           "actionRelations": []
         },
         {
@@ -97,7 +111,13 @@
               "classification": "required",
               "reference": "morning-cockpit#60",
               "role": "target",
-              "reason": "Direct immutable candidate target requires current primary evidence."
+              "reason": "Current complete primary PR evidence is required for the immutable triage target; open/mergeable does not confer owner approval."
+            },
+            {
+              "classification": "required",
+              "reference": "morning-cockpit#57",
+              "role": "owner",
+              "reason": "The proposed documentation references this unresolved identity/provenance contract; preserve all owner acceptance, scope and REST/GraphQL parity gates."
             }
           ],
           "actionRelations": []
@@ -105,24 +125,22 @@
       ],
       "unassignedReferences": [
         {
-          "classification": "required",
+          "classification": "context",
           "reference": "classic-space-venue#4",
-          "role": "retained-context",
-          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+          "reason": "Retained parallel research/draft background, not evidence for any of these three candidate dispositions. Its separate original owner/research gates remain unchanged."
         },
         {
-          "classification": "required",
+          "classification": "context",
           "reference": "lego-village-pipeline#44",
-          "role": "retained-context",
-          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+          "reason": "Retained parallel research/draft background, not evidence for any of these three candidate dispositions. Its separate original owner/research gates remain unchanged."
         }
       ]
     },
     "draftContext": {
       "kind": "retained",
-      "markdown": "The October 21 acceptance cycle (#416) remains the single blocking item. All four technical blockers have merged fixes as of this window. The next action is a manual trigger of the live provider run against the repaired pipeline; the specific command surface is the acceptance resume workflow introduced in #424. If the provider run fails, the synthetic probe (#428–430) should be run first to isolate schema-side vs. article-fit-side failure before any further code changes are attempted.\n\nPost-token-count for the compacted evidence view (#427) is not yet in the record — it will be produced by the #416 run. The growth rate of evidence as articles accumulate is an open characterization question; #427 is a point fix, not a capacity model.\n\n#421 (October 22 review DRAFT) exits on acceptance of the October 22 action review output, or closes without merge if the pipeline marks it resolved with no material findings.\n\nmorning-cockpit #60 has no activity across two windows and no stated dependency. Its disposition — merge, close, or park — is an owner gate with no technical blocker.\n\nlego-village-pipeline #44, #45, #46 are analysis-only DRAFTs with no active blockers identified. Closing them vs. converting to issues is an owner decision; they are accumulating drift at 12+ days open.\n\nclassic-space-venue #4 is parallel work, not a dependency of the editorial pipeline. Its core issue dependencies (#544, #564–567) are wayfinder/world-building research; none are editorial-pipeline blockers.\n\nAPI spend per failed acceptance cycle (~193K input tokens) is not published in this record. That cost dimension would make the compaction fix legible to anyone outside the immediate codebase.\n\nThe `DRAFT_CONTINUATION_CONTEXT` HTML comment block in the raw draft source is machine-readable pipeline state metadata. It is not reader-facing content and should not appear in any published form. Whether it is suppressed at render time or stripped before publication is a pipeline hygiene question for the next hardening pass."
+      "markdown": "The October 21 acceptance cycle (#416) remains the single blocking item. All four technical blockers have merged fixes as of this window. The next action is a manual trigger of the live provider run against the repaired pipeline; the specific command surface is the acceptance resume workflow introduced in #424. If the provider run fails, the synthetic probe (#428–430) should be run first to isolate schema-side vs. article-fit-side failure before any further code changes are attempted.\n\nPost-token-count for the compacted evidence view (#427) is not yet in the record — it will be produced by the #416 run. The growth rate of evidence as articles accumulate is an open characterization question; #427 is a point fix, not a capacity model.\n\n#421 (October 22 review DRAFT) exits on acceptance of the October 22 action review output, or closes without merge if the pipeline marks it resolved with no material findings.\n\nmorning-cockpit #60 has no activity across two windows and no stated dependency. Its disposition — merge, close, or park — is an owner gate with no technical blocker.\n\nlego-village-pipeline #44, #45, #46 are analysis-only DRAFTs with no active blockers identified. Closing them vs. converting to issues is an owner decision; they are accumulating drift at 12+ days open.\n\nclassic-space-venue #4 is parallel work, not a dependency of the editorial pipeline. Its core issue dependencies (#544, #564–567) are wayfinder/world-building research; none are editorial-pipeline blockers.\n\nAPI spend per failed acceptance cycle (~193K input tokens) is not published in this record. That cost dimension would make the compaction fix legible to anyone outside the immediate codebase.\n\nThe `DRAFT_CONTINUATION_CONTEXT` HTML comment block in the raw draft source is machine-readable pipeline state metadata. It is not reader-facing content and should not appear in any published form. Whether it is suppressed at render time or stripped before publication is a pipeline hygiene question for the next hardening pass.\n\n### Coordinator qualification — 2026-10-27\n\nThe preceding draft context is retained verbatim as historical generated material, not as current instructions or verified action dispositions. Current primary sources are https://github.com/ojfbot/daily-logger/pull/416, https://github.com/ojfbot/daily-logger/pull/431, https://github.com/ojfbot/morning-cockpit/pull/60 and https://github.com/ojfbot/morning-cockpit/issues/57.\n\nOctober21 acceptance PR daily-logger#416 merged on October24 with article Accepted and all three actions still held; this was not a healthy independent action verdict. A merged PR is not an available resume target. daily-logger#431 recorded five isolated empty-output diagnostic passes and the combined-form schema_complexity failure before this article was generated. That diagnostic did not qualify a native article review or verifier and grants no retry authority. The original candidate command strings remain audit custody; no executable capability is inferred from them.\n\nmorning-cockpit#60 remains an open documentation PR, created within the prior reporting window. Its disposition belongs to its owner. morning-cockpit#57 remains an open contract/identity decision with provenance, owner-acceptance and REST/GraphQL parity gates. No merge, closure, readiness, execution or settlement authority follows from this editorial preparation. classic-space-venue#4 and lego-village-pipeline#44 are retained parallel research/draft background for these three candidates; this classification neither resolves their work nor changes their owner gates.\n\nThis supervised source/data refresh prepares one separately authorized native action-review attempt. It does not predict its outcome, dispose of any original candidate, or authorize a probe, extra paid retry or hosted raw-evidence retention."
     },
-    "stateDigest": "80998a34359a62b26053d9fe3cd8e154d786492afc4a0527ff1679b6f65f7746",
+    "stateDigest": "16fc38c01d7f23598ae63b9ac1cbdbf20729db66cff13aea7eacea51638ed8c7",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
