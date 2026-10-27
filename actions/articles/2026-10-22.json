@@ -5,13 +5,142 @@
   "decisions": [],
   "snapshot": {
     "date": "2026-10-22",
-    "status": "draft",
+    "status": "accepted",
     "review": {
       "state": "pending",
-      "reason": "Action evidence request c90a4e15543ddcacdfb2c5044c14125b93423ce00ac51052bb0185575051b532 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
+      "reason": "The agent returned an incomplete response; these suggestions still need review.",
+      "articleAcceptance": {
+        "kind": "article-only",
+        "inputRoundId": "9fbac15d2ffa6c223e8af40e5e788fc2d2005fbedd0e11f0d62cd9dced9dc5ab",
+        "inputRegistrySha256": "c53e27202107135ec44f8bdc88c85eb35ce58b5573fa933c2f7d581ec0c481b4",
+        "failureKind": "invalid-output",
+        "sources": [
+          {
+            "id": "article@bf888572b1f261487ebe7c001c0fd55620f873d6983fb3be4261200aab5cacef",
+            "locator": "current revised article",
+            "sha256": "bf888572b1f261487ebe7c001c0fd55620f873d6983fb3be4261200aab5cacef"
+          },
+          {
+            "id": "operator@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "locator": "editorial feedback",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "id": "repo:ROADMAP.md@8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30",
+            "locator": "ROADMAP.md",
+            "sha256": "8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30"
+          },
+          {
+            "id": "repo:AGENTS.md@fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618",
+            "locator": "AGENTS.md",
+            "sha256": "fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618"
+          },
+          {
+            "id": "repo:CLAUDE.md@a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2",
+            "locator": "CLAUDE.md",
+            "sha256": "a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2"
+          },
+          {
+            "id": "repo:opm/system.opl@c4db5a13d669098856b47f6f3c34ca312c6c389efeb0a1fd43b7d07b751003e2",
+            "locator": "opm/system.opl",
+            "sha256": "c4db5a13d669098856b47f6f3c34ca312c6c389efeb0a1fd43b7d07b751003e2"
+          },
+          {
+            "id": "review:reviews/articles/2026-10-22-89b826e7ef715d317e4cea5e26a90f57a72c61d9.md@dbbe91509c66a7996d39488e73fee7f9b702db61597c70c41e66e80cc175d196",
+            "locator": "reviews/articles/2026-10-22-89b826e7ef715d317e4cea5e26a90f57a72c61d9.md",
+            "sha256": "dbbe91509c66a7996d39488e73fee7f9b702db61597c70c41e66e80cc175d196"
+          },
+          {
+            "id": "review:reviews/registered/2026-10-22-89b826e7ef715d317e4cea5e26a90f57a72c61d9.json@86f3a4e4684ea14feb5c744c6426bf44b375a128c12834be0cbc0507cbc3002f",
+            "locator": "reviews/registered/2026-10-22-89b826e7ef715d317e4cea5e26a90f57a72c61d9.json",
+            "sha256": "86f3a4e4684ea14feb5c744c6426bf44b375a128c12834be0cbc0507cbc3002f"
+          },
+          {
+            "id": "github:classic-space-venue#4@e5f5bb9b74c08d6b77af32b60e098f789ac4c4513cae32296f0887b88b44499d",
+            "locator": "https://github.com/ojfbot/classic-space-venue/pull/4",
+            "sha256": "e5f5bb9b74c08d6b77af32b60e098f789ac4c4513cae32296f0887b88b44499d"
+          },
+          {
+            "id": "github:core#567@f8add487778ddd953b5499098ad56a7d9344a9bc7ae288324050499401bc38ff",
+            "locator": "https://github.com/ojfbot/core/issues/567",
+            "sha256": "f8add487778ddd953b5499098ad56a7d9344a9bc7ae288324050499401bc38ff"
+          },
+          {
+            "id": "github:daily-logger#417@fd06cdbf4be0ab349b23b441e8409f9df8b684d9fc0ebf35b964990bcb84b27c",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/417",
+            "sha256": "fd06cdbf4be0ab349b23b441e8409f9df8b684d9fc0ebf35b964990bcb84b27c"
+          },
+          {
+            "id": "github:core#307@55a215fc3ff7b5b974957517f5b81b5c802819b67b9fc868e381aaf67d0e1897",
+            "locator": "https://github.com/ojfbot/core/issues/307",
+            "sha256": "55a215fc3ff7b5b974957517f5b81b5c802819b67b9fc868e381aaf67d0e1897"
+          },
+          {
+            "id": "github:core#560@a0c9107a40bb68fdc2147316c3286bc9be7edee2fdc5345c240a9ea822d71eb2",
+            "locator": "https://github.com/ojfbot/core/issues/560",
+            "sha256": "a0c9107a40bb68fdc2147316c3286bc9be7edee2fdc5345c240a9ea822d71eb2"
+          },
+          {
+            "id": "github:daily-logger#416@75756cebbf8f5f37a3569da5337bdcd351b5acae764183df2e1bc45f19b2f94d",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/416",
+            "sha256": "75756cebbf8f5f37a3569da5337bdcd351b5acae764183df2e1bc45f19b2f94d"
+          },
+          {
+            "id": "github:daily-logger#410@df46d2c80b4f6f8feaded8308efffc8864a7ba1452b718da5c6be53b12c42440",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/410",
+            "sha256": "df46d2c80b4f6f8feaded8308efffc8864a7ba1452b718da5c6be53b12c42440"
+          },
+          {
+            "id": "github:morning-cockpit#60@c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff",
+            "locator": "https://github.com/ojfbot/morning-cockpit/pull/60",
+            "sha256": "c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff"
+          },
+          {
+            "id": "github:lego-village-pipeline#45@4a8b2d18ac1908e76a5ce3447b8f94b84548d38c68cb1d3f10fb716bd5d4abc5",
+            "locator": "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+            "sha256": "4a8b2d18ac1908e76a5ce3447b8f94b84548d38c68cb1d3f10fb716bd5d4abc5"
+          },
+          {
+            "id": "github:lego-village-pipeline#46@c1c9db5e3b2e5a04b8bf67b5dbed6650a68938df72f680f2a46802b97a6990be",
+            "locator": "https://github.com/ojfbot/lego-village-pipeline/pull/46",
+            "sha256": "c1c9db5e3b2e5a04b8bf67b5dbed6650a68938df72f680f2a46802b97a6990be"
+          },
+          {
+            "id": "github:lego-village-pipeline#44@ef1aebf2bb1e3947a8632273be71653cfcf40a40e39285f4603540120bcd03d3",
+            "locator": "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+            "sha256": "ef1aebf2bb1e3947a8632273be71653cfcf40a40e39285f4603540120bcd03d3"
+          },
+          {
+            "id": "github:core#563@851a39d5d6c57cc626251a16d629c2809b0c7771233ab752cb7ffb5eacfd5ffa",
+            "locator": "https://github.com/ojfbot/core/issues/563",
+            "sha256": "851a39d5d6c57cc626251a16d629c2809b0c7771233ab752cb7ffb5eacfd5ffa"
+          },
+          {
+            "id": "goal:core:decisions/northstar/l2-ojfbot.md@2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/4ca14bc3bda4a661201078e1aca18b4f75bbc8d1",
+            "sha256": "2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb"
+          },
+          {
+            "id": "goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82",
+            "sha256": "33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d"
+          },
+          {
+            "id": "goal:core:decisions/wayfinder/classic-space-agent-world.md@c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/eccbddc808757ffb2c8137e0130d269c6dcf11d3",
+            "sha256": "c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22"
+          },
+          {
+            "id": "goal:core:decisions/wayfinder/control-plane-conductor.md@1af36157d63c1f3d3184d383fe71adfad0732698b3fb1efe1a276b5c2c35ce72",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/57c3e069074f03bc99533f112d014cfb26ceb2cd",
+            "sha256": "1af36157d63c1f3d3184d383fe71adfad0732698b3fb1efe1a276b5c2c35ce72"
+          }
+        ],
+        "rawContentRetained": false
+      }
     },
     "articleDigest": "f95008190ad33b29904f8dd9316ab432e1ac55ed9521077231c74e9efda6ab93",
-    "roundId": "9fbac15d2ffa6c223e8af40e5e788fc2d2005fbedd0e11f0d62cd9dced9dc5ab",
+    "roundId": "0e81d9a1c9aeb9bf143affe959baf74cacafc2ee67c8cecff30dfe5178077f45",
     "reviewCycle": {
       "phase": "generation"
     },
@@ -60,9 +189,18 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "coordinator",
+        "kind": "derived-refresh",
         "identity": "oct22-full-cycle:corrected-draft-preview",
-        "decision": "Supervised preview binds corrected October22 Draft/current article-status index while retaining all original candidate payloads, context and evidence duties. Source freshness, new owner/counterevidence coverage and factual classifications require independent review. No model verdict, acceptance, admission, settlement or execution authority is granted."
+        "decision": "Acceptance-status refresh preserves the prior evidence classification after proving the exact Draft input view; it grants no new review authority.",
+        "lineage": {
+          "kind": "acceptance-status-refresh",
+          "priorArticleStatus": "draft",
+          "articleStatus": "accepted",
+          "priorReviewCycle": {
+            "phase": "generation"
+          },
+          "priorRequirementsSha256": "0886c5db710f91c2b109cb2bd765363b8a85525a14621c805cd77aa221e289f8"
+        }
       },
       "articleDate": "2026-10-22",
       "articleDigest": "f95008190ad33b29904f8dd9316ab432e1ac55ed9521077231c74e9efda6ab93",
@@ -72,7 +210,7 @@
       "draftContextSha256": "227c5766ac6fef1d1efdb9a11449ad56cca7e92a18b3d1fceae14793fd48c6ce",
       "candidatePayloadsSha256": "b338ed576e8515c19968dd88f261a27e63e25f5a1bea34fbf997e4038bf30f1a",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "ec6f0ab93b3645a7030b03e638fe3beb45f41c97bbac6869f7c0540b5f32d013",
+      "articleStatusesSha256": "3072ce3f7882e0a847801f92d490b739522e9c2ff501d59fb74ad49521f6c5e8",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -122,7 +260,7 @@
       "kind": "retained",
       "markdown": "October 21 article acceptance is gated on two open PRs: daily-logger #417 (fix: size complete action evidence coverage) and #416 (editorial: review and accept October 21 draft). Both were opened before the 2026-10-22 03:30 America/Chicago cutoff but are not yet merged; their current state is unknown beyond creation timestamps. Issue #386 (token-aware action review budget) is the structural concern backing both PRs.\n\nClassic Space Venue dev-host is a local development environment — no public URL is attested. The provenance fixture path inside the walkway-pass strand is not explicitly attested beyond PR descriptions. No live adapter is active, no minifig is bound to a fleet-runner work item, and no idle/auto-degrade timer exists. Display composition issues #5 (32-inch desk-monitor) and #6 (narrow remote-browser) are owner-gated on operator hardware access. Core #561 (fleet-runner read-projection v0) is the architectural prerequisite for live data; owner and delivery timeline are unattested.\n\nClassic-space-venue #4 (RFI-0002 research harness) is open and awaiting review; it is not confirmed how long it has been open or who is reviewing it. Whether the core wayfinder grilling cluster (#564–#567, #544) can progress independently of that harness merging is not established.\n\nLego-village-pipeline DRAFT PRs #44, #45, #46 carry no in-window activity. Their named merge prerequisite conditions are not attested in current evidence; they are not confirmed candidates to close.\n\nMorning-cockpit #60 is open with no stated blocker or owner gate.\n\nSkill telemetry stream frozen since 2026-05-12. No owner, remediation date, or formal park decision attested in evidence. The 100% quality coverage metric and 0% conversion rate are both artifacts of the frozen legacy stream, not live measurements."
     },
-    "stateDigest": "b9f68e62c1394d8f006e37c6344bc5b70dd4b2e2229febe89eb75ea63fc354e2",
+    "stateDigest": "a58aca8140cb57d07170dde60e2dd86445e7127889f3174695e962ef88b04f79",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
