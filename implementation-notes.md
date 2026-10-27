@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- October 22 article cycle: the plan assumed inherited hosted prose revision could consume the saved Draft. Native preflight found a stale status-index binding and proved changed prose/feedback would be rejected after the rewrite call; used the existing supervised source/data correction route, preserving original candidate custody and refreshing the pending binding before normal clean acceptance. Automated rewriting remains unqualified.
+
 - The historical missing-receipt fixture still borrowed the live October 21 article and action map; the real Accepted/pending output changed both, so the fixture now reads their immutable accepted `6880255` capture and checks both blob hashes against the original request without changing recovery assertions or expiry guards.
 
 - The immutable missing-receipt replay assumed its request would stay within the live 24-hour execution window; hosted CI crossed that boundary, so the test now pins the historical owner-resolution clock and separately asserts expiry still refuses execution.
