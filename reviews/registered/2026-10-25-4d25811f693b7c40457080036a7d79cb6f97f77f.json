@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-post-revision-20261025-4d25811f693b",
+  "article": {
+    "date": "2026-10-25",
+    "sourceCommitSha": "4d25811f693b7c40457080036a7d79cb6f97f77f",
+    "blobSha": "cbb0d4905cefeb95616769ce8535145d97b7af29"
+  },
+  "reviewer": {
+    "name": "Codex \u2014 October 25 accepted-source editorial and held-action verification",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-27T17:12:03Z",
+  "scope": "Source-pinned editorial verification of the corrected Accepted October 25 article and actual native article-only outcome. Original #450 C1-C10/U1 dispositions remain open historical records. Original three unsupported command payloads remain unverified, held and non-dispatchable. No healthy semantic action verdict, source-recovery success, extra retry, provider/billing certification, owner approval or unattended process is claimed. Shared account transport is not a distinct authenticated reviewer identity.",
+  "fullRecordBlobSha": "50ed87823c68686dc155657614fd167aa19e6083",
+  "fullRecordPath": "reviews/articles/2026-10-25-4d25811f693b7c40457080036a7d79cb6f97f77f.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "H1",
+      "classification": "unverified_claim",
+      "title": "Three original suggestions still lack independent source-bound semantic review",
+      "location": "Suggested actions \u2014 current #416 evidence request and earlier #357 history",
+      "explanation": "The actual acceptance run held before either action agent on required #416 source overflow. Current request 5b9d5c985989135d4ccd13182dc6bf62960b5b815e36c3f17a89ff0ae14b4346 and unchanged historical #357 request are retained while all three original candidate IDs remain Needs review and non-dispatchable. Unsupported original commands are historical payloads, not verified recommendations. Article acceptance supplies no action admission, closure or owner decision.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/468#issuecomment-6448272248",
+        "https://github.com/ojfbot/daily-logger/actions/runs/40546699586",
+        "https://github.com/ojfbot/daily-logger/issues/386"
+      ],
+      "correction": "Keep original identities, unsupported payloads, counterevidence and owner gates intact. Recover source-bound evidence before a separately authorized native action review. Distinguish current #416 from earlier #357 history; do not infer execution, retries, action settlement or historical-finding disposition from article acceptance.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
