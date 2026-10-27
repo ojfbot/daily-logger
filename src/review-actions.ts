@@ -75,7 +75,9 @@ export type ActionVerification = Omit<ParsedActionVerification, 'candidateDispos
 }
 class ActionOutputError extends Error {}
 class ActionInputFrontierError extends Error {}
-class ActionVerificationHoldError extends Error {}
+class ActionVerificationHoldError extends Error {
+  constructor(message: string, readonly phase: 'verification-hold' | 'ranked-shortlist-incomplete' = 'verification-hold') { super(message) }
+}
 class ActionContextEvidenceRequestError extends ActionEvidenceRequestError {}
 class AcceptedArticlePendingReviewError extends Error {}
 class ActionReviewPersistenceError extends Error {
@@ -153,6 +155,7 @@ export const ActionProviderResponseObservationSchema = z.object({
   inputTokens: ActionTokenCountValueSchema.nullable().optional(),
   outputTokens: ActionTokenCountValueSchema.max(12000).nullable(),
 }).strict()
+export const ActionReviewFailurePhaseSchema = z.enum(['structured-output', 'evidence-request', 'context-or-budget', 'verification-hold', 'ranked-shortlist-incomplete'])
 type ProviderOutputPhase = 'envelope' | 'tool-block' | 'tool-input'
 class ProviderActionOutputError extends ActionOutputError {}
 class ProviderCandidateAssociationError extends ActionOutputError {}
@@ -183,6 +186,24 @@ export function classifyActionReviewFailure(error: unknown): { kind: 'invalid-ou
   if (cause instanceof ActionEvidenceRequestError || cause instanceof ActionVerificationHoldError) return {
     kind: 'evidence-required', reason: 'Actions need further evidence or independent review before they can be admitted.',
   }
+  return undefined
+}
+
+export function actionReviewEvidenceRequestIdentity(error: unknown) {
+  const cause = actionReviewFailureCause(error)
+  if (!(cause instanceof ActionEvidenceRequestError)) return undefined
+  try {
+    const request = validateActionEvidenceRequest(cause.request)
+    return { id: request.id, kind: request.kind }
+  } catch { return undefined }
+}
+
+export function actionReviewFailurePhase(error: unknown): z.infer<typeof ActionReviewFailurePhaseSchema> | undefined {
+  const cause = actionReviewFailureCause(error)
+  if (cause instanceof ActionVerificationHoldError) return cause.phase
+  if (cause instanceof ActionContextNeedError || cause instanceof ActionEvidenceVisibilityError || cause instanceof ActionContextEvidenceRequestError) return 'context-or-budget'
+  if (cause instanceof ActionEvidenceRequestError) return cause.request?.sourceKey === 'model-context' ? 'context-or-budget' : 'evidence-request'
+  if (cause instanceof ActionOutputError || cause instanceof CandidateRecordIsolationError || cause instanceof IncompleteProviderResponseError) return 'structured-output'
   return undefined
 }
 
@@ -237,26 +258,65 @@ const repairFields = new Set([
   'identity', 'kind', 'sourceId', 'startLine', 'endLine', 'sourceLineStart', 'sourceLineEnd', 'quote',
   'content', 'stop_reason', 'usage', 'output_tokens', 'type', 'id', 'name', 'input',
 ])
+const DiagnosticFieldSchema = z.enum([...repairFields, '<field>', '<index>', '<unknown-key>'])
+const DiagnosticTypeSchema = z.enum(['string', 'number', 'int', 'boolean', 'bigint', 'symbol', 'undefined', 'null', 'array', 'object', 'function', 'date', 'map', 'set', 'record', 'promise', 'void', 'never', 'unknown', 'file', 'nan'])
+const OutputShapeIssueSchema = z.object({
+  path: z.array(z.union([DiagnosticFieldSchema, ActionTokenCountValueSchema])).max(6),
+  code: z.enum(['invalid_type', 'too_big', 'too_small', 'invalid_format', 'not_multiple_of', 'unrecognized_keys', 'invalid_union', 'invalid_key', 'invalid_element', 'invalid_value', 'custom']),
+  expected: DiagnosticTypeSchema.optional(),
+  received: z.enum(['missing', 'null', 'array', 'string', 'number', 'boolean', 'object', 'function', 'symbol', 'bigint', 'undefined', 'unknown']).optional(),
+  forbidden: z.array(DiagnosticFieldSchema).max(8).optional(), forbiddenCount: ActionTokenCountValueSchema.optional(),
+  candidateId: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  kind: z.enum(['promote', 'map-existing', 'reject', 'verified-closure']).optional(),
+  required: z.array(DiagnosticFieldSchema).max(64).optional(),
+}).strict()
+export const ActionProviderOutputShapeObservationSchema = z.object({
+  role: z.enum(['proposer', 'verifier']), phase: z.enum(['envelope', 'tool-block', 'tool-input']),
+  issues: z.array(OutputShapeIssueSchema).max(4), additionalIssues: ActionTokenCountValueSchema,
+}).strict().refine(value => Buffer.byteLength(JSON.stringify(value)) <= 8192, 'Output shape diagnostic exceeds its bounded receipt size')
 const repairObject = z.record(z.string(), z.unknown())
 function outputShapeDiagnostic(error: z.ZodError, role: ActionRole, phase: ProviderOutputPhase, value?: unknown, context?: ActionProposalContext): string {
   // Closed-vocabulary shape facts only: never retain the malformed reply, values,
   // arbitrary keys, Zod messages, or its raw error as a cause.
   const parts = [`role=${role}; phase=${phase}`]
+  const issues: Array<z.infer<typeof OutputShapeIssueSchema>> = []
   for (const issue of error.issues.slice(0, 4)) {
-    const path = issue.path.slice(0, 6).map(part => typeof part === 'number' && Number.isSafeInteger(part) && part >= 0 ? String(part) : typeof part === 'string' && repairFields.has(part) ? part : '<field>').join('.') || '<root>'
+    const pathParts = issue.path.slice(0, 6).map(part => typeof part === 'number' && Number.isSafeInteger(part) && part >= 0 && part <= 999999999 ? part : typeof part === 'string' && repairFields.has(part) ? part : typeof part === 'number' ? '<index>' : '<field>')
+    const path = pathParts.join('.') || '<root>'
+    const shape: z.infer<typeof OutputShapeIssueSchema> = { path: pathParts, code: issue.code }
     const details = [`path=${path}`, `code=${issue.code}`]
-    if (issue.code === 'invalid_type') details.push(`expected=${issue.expected}`)
-    if (issue.code === 'unrecognized_keys') details.push(`forbidden=${issue.keys.slice(0, 8).map(key => repairFields.has(key) ? key : '<unknown-key>').join(',')}; keyCount=${issue.keys.length}`)
+    let observed: unknown = value
+    let visible = value !== undefined && issue.path.length <= 6
+    for (const part of issue.path.slice(0, 6)) {
+      if (!(typeof part === 'string' && repairFields.has(part) || typeof part === 'number' && Number.isSafeInteger(part) && part >= 0 && part <= 999999999)) { visible = false; break }
+      if (observed === null || typeof observed !== 'object') { observed = undefined; break }
+      const field = Object.getOwnPropertyDescriptor(observed, part)
+      observed = field && 'value' in field ? field.value : undefined
+    }
+    shape.received = !visible ? 'unknown' : observed === undefined ? 'missing' : observed === null ? 'null' : Array.isArray(observed) ? 'array' : typeof observed
+    if (issue.code === 'invalid_type') {
+      details.push(`expected=${issue.expected}`)
+      const expected = DiagnosticTypeSchema.safeParse(issue.expected)
+      shape.expected = expected.success ? expected.data : 'unknown'
+    }
+    if (issue.code === 'unrecognized_keys') {
+      shape.forbidden = issue.keys.slice(0, 8).map(key => repairFields.has(key) ? key : '<unknown-key>')
+      shape.forbiddenCount = Math.min(issue.keys.length, 999999999)
+      details.push(`forbidden=${shape.forbidden.join(',')}; keyCount=${issue.keys.length}`)
+    }
     if (phase === 'tool-input' && issue.path[0] === 'candidateDispositions' && typeof issue.path[1] === 'number') {
       const root = repairObject.safeParse(value)
       const rows = z.array(z.unknown()).safeParse(root.success ? root.data.candidateDispositions : undefined)
       const row = repairObject.safeParse(rows.success ? rows.data[issue.path[1]] : undefined)
       if (row.success) {
         const candidate = context?.draftCandidates.find(candidate => candidate.candidateId === row.data.candidateId)
-        if (candidate) details.push(`candidateId=${candidate.candidateId}`)
+        if (candidate) { details.push(`candidateId=${candidate.candidateId}`); shape.candidateId = candidate.candidateId }
         if (role === 'proposer') {
           const branch = ProviderCandidateDispositionSchema.options.find(option => option.shape.kind.value === row.data.kind)
-          if (branch) details.push(`kind=${branch.shape.kind.value}; required=${Object.keys(branch.shape).join(',')}`)
+          if (branch) {
+            details.push(`kind=${branch.shape.kind.value}; required=${Object.keys(branch.shape).join(',')}`)
+            shape.kind = branch.shape.kind.value; shape.required = Object.keys(branch.shape)
+          }
         }
         const field = issue.path[2]
         if (typeof field === 'string' && repairFields.has(field)) {
@@ -265,11 +325,14 @@ function outputShapeDiagnostic(error: z.ZodError, role: ActionRole, phase: Provi
         }
       }
     }
+    issues.push(shape)
     const detail = details.join('; ')
     if (parts.join(' | ').length + detail.length + 100 > 2048) break
     parts.push(detail)
   }
   if (error.issues.length > parts.length - 1) parts.push(`additionalIssues=${error.issues.length - (parts.length - 1)}`)
+  const observation = ActionProviderOutputShapeObservationSchema.safeParse({ role, phase, issues, additionalIssues: Math.min(error.issues.length - issues.length, 999999999) })
+  if (observation.success) console.warn(`Action output shape: ${JSON.stringify(observation.data)}`)
   return parts.join(' | ')
 }
 function parseProviderOutput<T>(role: ActionRole, phase: ProviderOutputPhase, value: unknown, parse: () => T, context?: ActionProposalContext): T {
@@ -1485,7 +1548,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   // Only the renderer's known incomplete ranked outcome is a typed hold.
   if (input.articleDate >= '2026-10-19' && snapshot?.status === 'accepted' && snapshot.review.state === 'verified'
     && new Set<string>(RANKED_ACTION_REVIEW_PROMPT_VERSIONS).has(snapshot.verification.promptVersion) && snapshot.closing?.kind === 'needs-evidence') {
-    throw new ActionVerificationHoldError(`Accepted article requires exactly three ranked suggestions for ${input.articleDate}; reconcile before publishing`)
+    throw new ActionVerificationHoldError(`Accepted article requires exactly three ranked suggestions for ${input.articleDate}; reconcile before publishing`, 'ranked-shortlist-incomplete')
   }
   return { registry, markdown: renderArticleActions(input.markdown, registry, input.articleDate, input.articleStatuses), cached: false,
     evidenceResolutions: selection.sources.filter(source => !!source.projection || !!source.response) }
@@ -1538,6 +1601,12 @@ export async function reviewDraftActions(input: Parameters<typeof reviewArticleA
       ? `Action evidence request ${error.request.id} remains pending: ${error.message}`
       : error instanceof ActionEvidenceLifecycleError ? error.message
       : error instanceof Error ? error.message : 'Action reviewer unavailable'
+    // Only the native producer with its actual current inputs/raw sources may
+    // emit a validated current-case request. The receipt omits question/locator.
+    try {
+      const request = actionReviewEvidenceRequest(error, input)
+      if (request) console.warn(`Action evidence request receipt: ${JSON.stringify(request)}`)
+    } catch { /* A diagnostic cannot weaken validation or replace the original failure. */ }
     console.warn(`::warning::Action review pending for ${input.articleDate}: ${reason}`)
     if (error instanceof ActionEvidenceRequestError && input.repoRoot) {
       const source = !contextNeed && error.request.sourceId ? input.sources.find(candidate => candidate.id === error.request.sourceId) : undefined
