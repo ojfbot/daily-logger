@@ -116,6 +116,14 @@ describe('action provider schema compatibility', () => {
       },
     ])
   })
+  it('keeps derived suggestionIndex out of every provider disposition branch', () => {
+    const branches = strictSchemaCensus('proposer').visits.filter(({ path }) => /^\/tools\/0\/input_schema\/properties\/candidateDispositions\/items\/anyOf\/\d+$/.test(path))
+    expect(branches).toHaveLength(4)
+    for (const { schema } of branches) {
+      expect(schema.properties).not.toHaveProperty('suggestionIndex')
+      expect(schema.required).not.toContain('suggestionIndex')
+    }
+  })
 
   it.each([
     ['type-less', undefined],

@@ -51,7 +51,7 @@ function reviewInput() {
 
 describe('native-validated forced-tool response boundary', () => {
   it('preserves both nonempty native roles and full count/create parity without a provider strict flag', async () => {
-    const wire = { ...proposal, suggestions: proposal.suggestions.map(({ command: _command, repo: _repo, description: _description, ...fields }) => ({ ...fields, identity: { kind: 'captured', candidateId: captured[0].candidateId } })) }
+    const wire = { ...proposal, candidateDispositions: proposal.candidateDispositions.map(({ suggestionIndex: _index, ...row }) => row), suggestions: proposal.suggestions.map(({ command: _command, repo: _repo, description: _description, ...fields }) => ({ ...fields, identity: { kind: 'captured', candidateId: captured[0].candidateId } })) }
     create.mockResolvedValueOnce(response(wire)).mockResolvedValueOnce(response(verification))
     const agents = createActionAgents()
     const result = await agents.propose('Complete unmodified evidence.', fixtureEvidenceView([source]), { articleDate: '2026-10-21', draftCandidates: captured, actionKeys: ['carried'] })
@@ -142,7 +142,7 @@ describe('native-validated forced-tool response boundary', () => {
   })
   it.each([
     ['forbidden suggestionIndex', { candidateId: captured[0].candidateId, kind: 'reject', suggestionIndex: 0, reason: 'PRIVATE REASON', citations: [citation] }, 'suggestionIndex', 'reason,citations'],
-    ['missing reason', { candidateId: captured[0].candidateId, kind: 'promote', suggestionIndex: 0 }, 'reason', 'suggestionIndex,reason'],
+    ['missing reason', { candidateId: captured[0].candidateId, kind: 'promote' }, 'reason', 'candidateId,kind,reason'],
   ])('retains bounded trusted shape context for the logged-equivalent %s failure', async (_name, disposition, field, fields) => {
     const suggestions = disposition.kind === 'promote' ? proposal.suggestions.map(({ command: _command, repo: _repo, description: _description, ...fields }) => ({ ...fields, identity: { kind: 'captured', candidateId: captured[0].candidateId } })) : []
     create.mockResolvedValueOnce(response({ ...empty, suggestions, candidateDispositions: [disposition] }))
