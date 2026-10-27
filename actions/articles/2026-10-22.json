@@ -10,8 +10,8 @@
       "state": "pending",
       "reason": "Action evidence request c90a4e15543ddcacdfb2c5044c14125b93423ce00ac51052bb0185575051b532 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
     },
-    "articleDigest": "0f9c24197aea81633b19292ae759b20d0fa33698d437dd4b253c3280012ae832",
-    "roundId": "b42084fa7b06f9525adc8d7d2ec933390d5ef3678df9e27e0eea7cb8515ba906",
+    "articleDigest": "f95008190ad33b29904f8dd9316ab432e1ac55ed9521077231c74e9efda6ab93",
+    "roundId": "9fbac15d2ffa6c223e8af40e5e788fc2d2005fbedd0e11f0d62cd9dced9dc5ab",
     "reviewCycle": {
       "phase": "generation"
     },
@@ -65,7 +65,7 @@
         "decision": "Supervised preview binds corrected October22 Draft/current article-status index while retaining all original candidate payloads, context and evidence duties. Source freshness, new owner/counterevidence coverage and factual classifications require independent review. No model verdict, acceptance, admission, settlement or execution authority is granted."
       },
       "articleDate": "2026-10-22",
-      "articleDigest": "0f9c24197aea81633b19292ae759b20d0fa33698d437dd4b253c3280012ae832",
+      "articleDigest": "f95008190ad33b29904f8dd9316ab432e1ac55ed9521077231c74e9efda6ab93",
       "reviewCycle": {
         "phase": "generation"
       },
@@ -122,7 +122,7 @@
       "kind": "retained",
       "markdown": "October 21 article acceptance is gated on two open PRs: daily-logger #417 (fix: size complete action evidence coverage) and #416 (editorial: review and accept October 21 draft). Both were opened before the 2026-10-22 03:30 America/Chicago cutoff but are not yet merged; their current state is unknown beyond creation timestamps. Issue #386 (token-aware action review budget) is the structural concern backing both PRs.\n\nClassic Space Venue dev-host is a local development environment — no public URL is attested. The provenance fixture path inside the walkway-pass strand is not explicitly attested beyond PR descriptions. No live adapter is active, no minifig is bound to a fleet-runner work item, and no idle/auto-degrade timer exists. Display composition issues #5 (32-inch desk-monitor) and #6 (narrow remote-browser) are owner-gated on operator hardware access. Core #561 (fleet-runner read-projection v0) is the architectural prerequisite for live data; owner and delivery timeline are unattested.\n\nClassic-space-venue #4 (RFI-0002 research harness) is open and awaiting review; it is not confirmed how long it has been open or who is reviewing it. Whether the core wayfinder grilling cluster (#564–#567, #544) can progress independently of that harness merging is not established.\n\nLego-village-pipeline DRAFT PRs #44, #45, #46 carry no in-window activity. Their named merge prerequisite conditions are not attested in current evidence; they are not confirmed candidates to close.\n\nMorning-cockpit #60 is open with no stated blocker or owner gate.\n\nSkill telemetry stream frozen since 2026-05-12. No owner, remediation date, or formal park decision attested in evidence. The 100% quality coverage metric and 0% conversion rate are both artifacts of the frozen legacy stream, not live measurements."
     },
-    "stateDigest": "035c037b3cb9cfac7425996ab53ebe4e7e4219ff0d770fe7560dc211dc786019",
+    "stateDigest": "b9f68e62c1394d8f006e37c6344bc5b70dd4b2e2229febe89eb75ea63fc354e2",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
