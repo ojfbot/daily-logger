@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261025-ef6248d57575",
+  "article": {
+    "date": "2026-10-25",
+    "sourceCommitSha": "ef6248d57575f7bf6f6cdae087682767101506fb",
+    "blobSha": "9e4fa525ed1b6853a9302c18f34b09a74ad37824"
+  },
+  "reviewer": {
+    "name": "Codex — independent October 25 factual review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-27T16:50:24Z",
+  "scope": "Final visible draft, deployed JSON, exact article/action blobs, acceptance and action-review chronology, executable command surfaces, action counts, progressive retrieval, LEGO disposition gates, telemetry currency, and supervised next-step boundaries. Read-only review; no acceptance, action, workflow, runtime, or scheduling authority. October 27 amendment revalidates the original eight open findings, narrows source-limited claims, preserves held payload custody, and adds Saturday chronology, Git blob rationale, and campaign-precision findings. Historical source binding and original review event are retained.",
+  "fullRecordBlobSha": "d86f96278f1482102f1bffb0f5080ef998aac9fb",
+  "fullRecordPath": "reviews/articles/2026-10-25-ef6248d57575f7bf6f6cdae087682767101506fb.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Token failure history misstates the observed review sequence",
+      "location": "Introduction, What shipped, and token-limit decision, lines 11, 17 and 54.",
+      "explanation": "The final authorized run used two Sonnet inputs below the raised 256k limit, did not reach Opus, and was held on candidate/disposition identity and then a forbidden suggestionIndex. The source does not support two near-200k model failures producing incomplete artifacts.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6387611936",
+        "https://github.com/ojfbot/daily-logger/pull/443"
+      ],
+      "correction": "Report the actual identity/schema failure sequence and leave hosted provider fit unproved rather than attributing failure to two near-limit calls or truncation.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Pending action review is not automatically retried",
+      "location": "Accepted/action-review-pending decision, lines 46–48.",
+      "explanation": "PR #444 preserves a truthful pending state that a later native review can resolve. It does not schedule a retry, and the authorized run receipt says no automatic rerun was launched.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/444",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6387611936"
+      ],
+      "correction": "Say that later action review remains separately authorized; remove the automatic-retry and no-manual-trigger claims.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Independent review PRs are not queued action-review runs",
+      "location": "Roadmap pulse and draft context, lines 66 and 84.",
+      "explanation": "At the historical cutoff, PRs #421 and #433 were draft review-data publications with open findings requiring supervised disposition. They were not action-review jobs, and the token/pending-state changes did not remove their human gate. Both later merged on October 27; that later lifecycle is follow-up context, not Saturday delivery.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/421",
+        "https://github.com/ojfbot/daily-logger/pull/433"
+      ],
+      "correction": "Describe their historical supervised review role and label later October 27 merges as subsequent context. Review publication, article acceptance and action review remain distinct.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "Proposed pipeline commands do not exist",
+      "location": "Suggested actions and draft context, lines 83–84.",
+      "explanation": "Pinned scripts, workflows and source expose no /pipeline command or --action-review, --pr, or --suggestions-only interface. Native action review occurs inside an authorized editorial cycle through repository request/receipt surfaces.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/ef6248d57575f7bf6f6cdae087682767101506fb/package.json",
+        "https://github.com/ojfbot/daily-logger/tree/ef6248d57575f7bf6f6cdae087682767101506fb/.github/workflows",
+        "https://github.com/ojfbot/daily-logger/tree/ef6248d57575f7bf6f6cdae087682767101506fb/src"
+      ],
+      "correction": "Correct reader-facing executable claims while preserving all three original candidate IDs and payloads verbatim as held audit custody. Do not delete, execute, admit, close or silently rewrite them. Name only the real supervised route and separately checked authority boundary.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Open action count is not 83",
+      "location": "Roadmap pulse, suggested actions and draft context, lines 68, 83 and 84.",
+      "explanation": "At the pinned source the registry has 91 open and 125 done records, while the built public projection has 86 open, 127 completed and 3 proposed. The final October 21 run receipt also reports 86 open and 127 completed.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6387611936",
+        "https://log.jim.software/api/actions.json",
+        "https://github.com/ojfbot/daily-logger/blob/ef6248d57575f7bf6f6cdae087682767101506fb/actions/registry.json"
+      ],
+      "correction": "Name the counted surface and use its pinned total; the visible public projection has 86 open entries, not 83.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Progressive-retrieval trial SHA and sole blocker are unsupported",
+      "location": "Token-limit decision, suggested action and draft context, lines 54, 83 and 84.",
+      "explanation": "907e490 cannot be resolved in the verified repository/GitHub source. That does not prove no private or local trial ever existed, but no supplied primary evidence supports this specific SHA or a sole integration-test blocker. Progressive evidence retrieval shipped at a715fead, already in main, while issue #386 retains multiple qualification criteria.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/commit/a715fead1ddd9b8b631443cec4de4f3d96fb39b2",
+        "https://github.com/ojfbot/daily-logger/issues/386"
+      ],
+      "correction": "Name the verified shipped commit and remaining #386 criteria. Mark the claimed 907e490 trial unsupported/unresolvable in the inspected source; do not claim global nonexistence or invent a sole blocker.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "LEGO review records already contain disposition and owner gates",
+      "location": "Roadmap pulse and draft context, lines 70 and 84.",
+      "explanation": "PRs #44 and #46 encode close-or-supersede decisions with reconstruction/preflight exit criteria. PR #45 requires a second-steward check and identifies James as controlling merge. They are not ungated parked work.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/46"
+      ],
+      "correction": "Preserve the recorded close/supersede exits, second-steward check and named merge control.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "Core skill telemetry is not frozen since May",
+      "location": "Roadmap pulse and draft context, lines 72 and 84.",
+      "explanation": "Pinned core telemetry contains October 20 invocation/follow-through events and October 20/21 dispositions, disproving a blanket May freeze. The retained streams have no rows in the article window; that is not proof of zero actual use, zero conversion or 100% trustworthy coverage.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/blob/fe264bd89298639518e401d60572bc2a0959c512/skill-telemetry.jsonl",
+        "https://github.com/ojfbot/core/blob/fe264bd89298639518e401d60572bc2a0959c512/skill-dispositions.jsonl"
+      ],
+      "correction": "Report the retained source and window row counts separately from actual use, which remains unknown here. Keep use-funnel and disposition streams distinct; claim neither zero actual activity nor complete collection.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C9",
+      "classification": "confirmed_error",
+      "title": "Saturday delivery is described as Sunday",
+      "location": "Introduction line 11 and roadmap pulse line 66.",
+      "explanation": "All seven cited merge events occurred Saturday October 24 inside the 2026-10-24T08:30:00Z to 2026-10-25T08:30:00Z interval. Sunday October 25 is the article date. The eighteen authored commit identities and seven merge count are supported and should remain unchanged.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/443",
+        "https://github.com/ojfbot/daily-logger/pull/444",
+        "https://github.com/ojfbot/daily-logger/pull/445",
+        "https://github.com/ojfbot/daily-logger/pull/446",
+        "https://github.com/ojfbot/daily-logger/pull/416",
+        "https://github.com/ojfbot/daily-logger/pull/447",
+        "https://github.com/ojfbot/daily-logger/pull/442"
+      ],
+      "correction": "Use Saturday October 24 for the delivery events while preserving the October 25 publication date, eighteen authored commits and seven merges.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C10",
+      "classification": "confirmed_error",
+      "title": "Sibling review files do not become part of the article blob hash",
+      "location": "Separate-review registration rationale, lines 17 and 60.",
+      "explanation": "A Git blob hashes only that file. Adding sibling review files to a tree does not alter unchanged article bytes. PR #447 preserved an existing accepted source snapshot and the native three-file review publication contract; its 43-test record does not establish the article-blob rationale claimed by the prose.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/447",
+        "https://github.com/ojfbot/daily-logger/blob/ef6248d57575f7bf6f6cdae087682767101506fb/api/_lib/article-review-service.ts#L67-L70",
+        "https://github.com/ojfbot/daily-logger/blob/ef6248d57575f7bf6f6cdae087682767101506fb/tests/review-surface/registered-records.test.ts#L18-L30"
+      ],
+      "correction": "Explain source-snapshot preservation and the three-file discovery contract. Remove the assertion that outcome data enters the article blob or that the cited test count proves this necessity.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Exact campaign duration and exhaustive fix/root-cause counts are unestablished",
+      "location": "Introduction line 11 and acceptance account line 17.",
+      "explanation": "The five-day, eight-fix, exactly-two-root-cause narrative is not established by the cited primary records. PR #416 was created October 22 and merged October 24; the article date alone does not date all earlier work. The recorded identity/schema/context/fixture failures and Accepted-but-held outcome do not establish an exhaustive two-cause account or complete action-review campaign.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/416",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6387611936"
+      ],
+      "correction": "Use the verified dated events and observed failures. Qualify or omit exact campaign duration and exhaustive fix/root-cause counts unless separately demonstrated; distinguish article completion from still-held action review.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
