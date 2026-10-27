@@ -8,10 +8,10 @@
     "status": "draft",
     "review": {
       "state": "pending",
-      "reason": "Action evidence request f188ba06514558516bfb5d9a5566287bc285a892d83c83fe9e8243ac67417975 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
+      "reason": "Awaiting the authorized October24 native action review after supervised source/data correction. Historical initial hold retained: Action evidence request f188ba06514558516bfb5d9a5566287bc285a892d83c83fe9e8243ac67417975 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
     },
-    "articleDigest": "b07a7b11120bef43f09d1a2a334ada2ed3ff7b05b78ea1b6fdde00b591394163",
-    "roundId": "c49fe653113b2e11505595122e6a27eaaf04c82724ad03910070d758a667cfa6",
+    "articleDigest": "121ca0e06ea5a6497b392dcc6165e76cb6b5f045310e80af02316ec085f86c91",
+    "roundId": "41bf95e9f020f0ba9fc74b209b62c3718769953e3093ad4d59c84c66f381f244",
     "reviewCycle": {
       "phase": "generation"
     },
@@ -60,19 +60,19 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "deterministic-default",
-        "identity": "progressive-action-evidence-v5-candidate-requirements",
-        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+        "kind": "coordinator",
+        "identity": "oct24-full-cycle:supervised-corrected-draft-data",
+        "decision": "Bind corrected Draft and full current status index to explicit per-candidate primary lifecycle/owner/counterevidence sources. Preserve immutable candidates, history and owner gates; grant no review verdict, action admission, execution, settlement, approval or retry authority."
       },
       "articleDate": "2026-10-24",
-      "articleDigest": "b07a7b11120bef43f09d1a2a334ada2ed3ff7b05b78ea1b6fdde00b591394163",
+      "articleDigest": "121ca0e06ea5a6497b392dcc6165e76cb6b5f045310e80af02316ec085f86c91",
       "reviewCycle": {
         "phase": "generation"
       },
-      "draftContextSha256": "74a15c5025873750fc43429b4e16bf9e61df6b1c0eb1a5f0072b85505d0081a5",
+      "draftContextSha256": "8be610abdafe5016ccd7394094ac88d677c86cd6be92ed2c44af9762daa1114c",
       "candidatePayloadsSha256": "6381cec136299cb1309527aae083ddf4cbdd0282918389db5f1a8c8d4bad1f4b",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "2c3ff479765a93af0a2a6d589eb2095009b820c8742bc3c238b57eea83133a23",
+      "articleStatusesSha256": "a1b0602d64a294021c03001a31fade73c5eec5331e40720af4a3719189b34cca",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -84,8 +84,8 @@
             {
               "classification": "required",
               "reference": "daily-logger#416",
-              "role": "target",
-              "reason": "Direct immutable candidate target requires current primary evidence."
+              "role": "lifecycle",
+              "reason": "The original first-hosted-attempt/authorization premise requires current merged acceptance and held-action receipts as lifecycle counterevidence. A merged PR and consumed past authority do not authorize replay or prove healthy native action review."
             }
           ],
           "actionRelations": []
@@ -97,14 +97,14 @@
             {
               "classification": "required",
               "reference": "daily-logger#421",
-              "role": "target",
-              "reason": "Direct immutable candidate target requires current primary evidence."
+              "role": "lifecycle",
+              "reason": "Current merged independent-review publication is lifecycle counterevidence to the original unresolved/ownerless-draft premise. It does not by itself settle findings or actions."
             },
             {
               "classification": "required",
               "reference": "daily-logger#433",
-              "role": "target",
-              "reason": "Direct immutable candidate target requires current primary evidence."
+              "role": "lifecycle",
+              "reason": "Use the source-pinned review and actual correction/acceptance follow-through to assess the original requested disposition. Review publication, article acceptance and native action verdicts retain separate authority and evidence."
             }
           ],
           "actionRelations": []
@@ -116,8 +116,14 @@
             {
               "classification": "required",
               "reference": "morning-cockpit#60",
-              "role": "target",
-              "reason": "Direct immutable candidate target requires current primary evidence."
+              "role": "counterevidence",
+              "reason": "This immutable merge target needs complete current primary PR evidence, including proposed documentation changes and counterevidence to the original validated/unblocked premise. Open status or model confidence grants no merge readiness or owner approval."
+            },
+            {
+              "classification": "required",
+              "reference": "morning-cockpit#57",
+              "role": "owner",
+              "reason": "The documentation references this contract/identity decision. Preserve its provenance, owner-acceptance, scope and REST/GraphQL parity gates as required owner evidence; no editorial approval can remove them."
             }
           ],
           "actionRelations": []
@@ -125,18 +131,22 @@
       ],
       "unassignedReferences": [
         {
-          "classification": "required",
+          "classification": "context",
+          "reference": "lego-village-pipeline#45",
+          "reason": "Separate design/research background for these three candidate dispositions only; its own owner, second-steward, do-not-merge and operative-import gates remain unchanged."
+        },
+        {
+          "classification": "context",
           "reference": "lego-village-pipeline#46",
-          "role": "retained-context",
-          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+          "reason": "Separate design/research background for these three candidate dispositions only; its own owner, second-steward, do-not-merge and operative-import gates remain unchanged."
         }
       ]
     },
     "draftContext": {
       "kind": "retained",
-      "markdown": "Critical path: #416 requires coordinator authorization before a hosted run can be triggered. That gate has not been cleared. Once authorized, the run will surface whether token budget (#386) is the next blocker or whether the eight merged fixes are sufficient. No further code work is unblocked until that signal is observed.\n\nmorning-cockpit #60 has no recorded blocker; its open state is unresolved. Owner gate required for merge decision.\n\n#421 and #433 (independent review drafts, Oct 22 and Oct 23) can proceed independently but have no owner or timeline on record.\n\nThe commit-to-PR mapping for this window's 24 SHAs is not reconstructable from the article alone; several PRs contain multiple fixup commits with no annotation. This is an audit traceability gap — not a blocker, but worth noting for future windows.\n\nlego-village-pipeline #46 DO NOT MERGE label means read-only reference artifact in this workflow; #45 depends on it informationally, not as a merge prerequisite."
+      "markdown": "Critical path: #416 requires coordinator authorization before a hosted run can be triggered. That gate has not been cleared. Once authorized, the run will surface whether token budget (#386) is the next blocker or whether the eight merged fixes are sufficient. No further code work is unblocked until that signal is observed.\n\nmorning-cockpit #60 has no recorded blocker; its open state is unresolved. Owner gate required for merge decision.\n\n#421 and #433 (independent review drafts, Oct 22 and Oct 23) can proceed independently but have no owner or timeline on record.\n\nThe commit-to-PR mapping for this window's 24 SHAs is not reconstructable from the article alone; several PRs contain multiple fixup commits with no annotation. This is an audit traceability gap — not a blocker, but worth noting for future windows.\n\nlego-village-pipeline #46 DO NOT MERGE label means read-only reference artifact in this workflow; #45 depends on it informationally, not as a merge prerequisite.\n\n### Coordinator qualification — 2026-10-27\n\nThe preceding draft context and the original suggested command strings are retained verbatim as historical generated material, not as current instructions, executable capabilities, owner decisions or verified action dispositions. The corrected article describes the reporting cutoff; current lifecycle evidence below must be checked separately before any later review.\n\nOctober21 acceptance PR https://github.com/ojfbot/daily-logger/pull/416 merged on October24 with the article Accepted and all three original suggestions still held as Needs review and non-dispatchable. Its failed proposer output and absent independent verifier result did not establish a healthy action verdict. The historical claim that another authorization would launch the first hosted attempt is false; previous attempts and consumed authority remain part of the primary record. The merged PR is not an available resume target and supplies no new execution, replay or retry authority.\n\nThe October22 independent review https://github.com/ojfbot/daily-logger/pull/421 merged as review data. The source-pinned October23 review https://github.com/ojfbot/daily-logger/pull/433 and its correction/acceptance follow-through are recorded on main. Those review-publication and article decisions are separate from native action verdicts. Their lifecycle contradicts treating both records as ownerless unresolved drafts or inventing a dependency on October21 acceptance. This preparation does not close findings, settle actions or grant a new disposition.\n\nThe documentation proposal https://github.com/ojfbot/morning-cockpit/pull/60 remains open. Generated confidence or prior model validation is not owner approval, proof of merge readiness, or permission to merge. Its linked contract and identity decision https://github.com/ojfbot/morning-cockpit/issues/57 retains provenance, owner-acceptance and REST/GraphQL parity gates. Current complete primary evidence is required before any review of the immutable merge suggestion; neither this prose correction nor its preserved command grants execution or settlement authority.\n\nThe separate research/design records https://github.com/ojfbot/lego-village-pipeline/pull/46 and https://github.com/ojfbot/lego-village-pipeline/pull/45 remain contextual background for these three candidates. The received overlay's do-not-merge and non-operative boundaries remain, and the separate HOUSE-WORLD study retains its second-steward check and James's merge control. Context classification does not remove any of those owner or import gates.\n\nThis local source/data refresh leaves October24 Draft, the original three candidates awaiting native review, and historical evidence requests unchanged. The initial source hold remains recorded history rather than a universal current dependency. No provider result, new hosted request, probe, extra paid retry or raw-evidence retention is created or authorized by this preparation."
     },
-    "stateDigest": "22f7ad7eab313776afcc13661204470e24d66448a79161e0444b543d04955d13",
+    "stateDigest": "378a237687c35843ee5b958fc0eb7c7c2efe4b7d3b5561490549e758afe46973",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
