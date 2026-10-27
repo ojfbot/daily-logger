@@ -5,13 +5,163 @@
   "decisions": [],
   "snapshot": {
     "date": "2026-10-25",
-    "status": "draft",
+    "status": "accepted",
     "review": {
       "state": "pending",
-      "reason": "Awaiting the authorized October25 native action review after supervised source/data correction. Historical initial hold retained: Action evidence request ecad3a5b58773504a2c29c3e0194a7a2d790f04155571c7671ceb334291977a9 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
+      "reason": "The available evidence did not confirm these suggestions.",
+      "articleAcceptance": {
+        "kind": "article-only",
+        "inputRoundId": "76cdb98ebc6bdd293fa757c35a880d5b31f0c2f29ce2e064dd0811cdd2c4e347",
+        "inputRegistrySha256": "c02dba1edc255a7c089d0ee9eab6149bdd741936730d9a4a771f2323d5ade0ea",
+        "failureKind": "evidence-required",
+        "evidenceRequest": {
+          "version": "action-evidence-request-v1",
+          "id": "5b9d5c985989135d4ccd13182dc6bf62960b5b815e36c3f17a89ff0ae14b4346",
+          "kind": "source-view",
+          "caseDigest": "a52db02b313961f4b79d923b24eb83ffe4d53e0405252f9d2f35dd64023fd34a",
+          "articleDate": "2026-10-25",
+          "cycle": {
+            "phase": "generation"
+          },
+          "actionKeys": [
+            "article-feedback"
+          ],
+          "sourceKey": "github:daily-logger#416",
+          "sourceId": "github:daily-logger#416@a93639d1a4e27e21c50f93113c44c6a3308dd1e805a0b02c3803a79b6c0b3db3",
+          "sourceFullContentSha256": "a93639d1a4e27e21c50f93113c44c6a3308dd1e805a0b02c3803a79b6c0b3db3",
+          "obligations": [
+            "4d11455b4a775609586d52a7ea53abc66373e42ca8a12d44bcf743cadf61b759"
+          ],
+          "recipient": "source-producer",
+          "status": "open"
+        },
+        "sources": [
+          {
+            "id": "article@472db8c78729f01c47c368f5e2bd3ff03274da97c329b8383142238e011f8960",
+            "locator": "current revised article",
+            "sha256": "472db8c78729f01c47c368f5e2bd3ff03274da97c329b8383142238e011f8960"
+          },
+          {
+            "id": "operator@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "locator": "editorial feedback",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "id": "repo:ROADMAP.md@8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30",
+            "locator": "ROADMAP.md",
+            "sha256": "8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30"
+          },
+          {
+            "id": "repo:AGENTS.md@fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618",
+            "locator": "AGENTS.md",
+            "sha256": "fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618"
+          },
+          {
+            "id": "repo:CLAUDE.md@a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2",
+            "locator": "CLAUDE.md",
+            "sha256": "a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2"
+          },
+          {
+            "id": "repo:opm/system.opl@e4bf1f27e0e3055de74be4f33eb4e4d76d99670ec4005c6fa5c3ecc09f49d769",
+            "locator": "opm/system.opl",
+            "sha256": "e4bf1f27e0e3055de74be4f33eb4e4d76d99670ec4005c6fa5c3ecc09f49d769"
+          },
+          {
+            "id": "review:reviews/articles/2026-10-25-ef6248d57575f7bf6f6cdae087682767101506fb.md@32f162ce98b747dce2644865c5abfd9bb5022955e327aa5a3d120131c00abb1c",
+            "locator": "reviews/articles/2026-10-25-ef6248d57575f7bf6f6cdae087682767101506fb.md",
+            "sha256": "32f162ce98b747dce2644865c5abfd9bb5022955e327aa5a3d120131c00abb1c"
+          },
+          {
+            "id": "review:reviews/registered/2026-10-25-ef6248d57575f7bf6f6cdae087682767101506fb.json@7360ce7085c24bb54ae7a41f2f05e9699f30bd02aff4077c4960d32a182897d1",
+            "locator": "reviews/registered/2026-10-25-ef6248d57575f7bf6f6cdae087682767101506fb.json",
+            "sha256": "7360ce7085c24bb54ae7a41f2f05e9699f30bd02aff4077c4960d32a182897d1"
+          },
+          {
+            "id": "github:daily-logger#386@432bbc0bdf4b5106d4188e19005b267339894758c9c437c8211011620520037f",
+            "locator": "https://github.com/ojfbot/daily-logger/issues/386",
+            "sha256": "432bbc0bdf4b5106d4188e19005b267339894758c9c437c8211011620520037f"
+          },
+          {
+            "id": "github:daily-logger#416@a93639d1a4e27e21c50f93113c44c6a3308dd1e805a0b02c3803a79b6c0b3db3",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/416",
+            "sha256": "a93639d1a4e27e21c50f93113c44c6a3308dd1e805a0b02c3803a79b6c0b3db3"
+          },
+          {
+            "id": "github:daily-logger#421@62c81deb864aee2bd206953b80ea5321a10f194fbe8700cc1c6aba37e718fa0f",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/421",
+            "sha256": "62c81deb864aee2bd206953b80ea5321a10f194fbe8700cc1c6aba37e718fa0f"
+          },
+          {
+            "id": "github:daily-logger#443@8292d9dba41dbab3b794e431af7d1864b60d3c19d9d3d6359f0b746ef8daa5f0",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/443",
+            "sha256": "8292d9dba41dbab3b794e431af7d1864b60d3c19d9d3d6359f0b746ef8daa5f0"
+          },
+          {
+            "id": "github:daily-logger#444@c4aa0bc671357eadaf9e9833889ddb93326504c61128fd462aa72b24831a7ba9",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/444",
+            "sha256": "c4aa0bc671357eadaf9e9833889ddb93326504c61128fd462aa72b24831a7ba9"
+          },
+          {
+            "id": "github:daily-logger#450@4ce3fa270cc1abc395793bf0abb8fd74d708551482707c70eb0a5b16bae2fd91",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/450",
+            "sha256": "4ce3fa270cc1abc395793bf0abb8fd74d708551482707c70eb0a5b16bae2fd91"
+          },
+          {
+            "id": "github:morning-cockpit#57@5ead91592b53af5b8f330715639ab0faa3955584b5f1653e12e79b8cd66c1d2f",
+            "locator": "https://github.com/ojfbot/morning-cockpit/issues/57",
+            "sha256": "5ead91592b53af5b8f330715639ab0faa3955584b5f1653e12e79b8cd66c1d2f"
+          },
+          {
+            "id": "github:classic-space-venue#8@b9c78780f2b258cae27ed9f2cdf93d6954ce8b47e219d38128939392240dae94",
+            "locator": "https://github.com/ojfbot/classic-space-venue/pull/8",
+            "sha256": "b9c78780f2b258cae27ed9f2cdf93d6954ce8b47e219d38128939392240dae94"
+          },
+          {
+            "id": "github:daily-logger#447@077f31b90d19b76bf473d21ae704e2a531495f508eda86a4ce770f938af7d38d",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/447",
+            "sha256": "077f31b90d19b76bf473d21ae704e2a531495f508eda86a4ce770f938af7d38d"
+          },
+          {
+            "id": "github:daily-logger#446@8a706f9b75711c784a9a3fcf5fbdb728b81fff2bbde74d9cf228d44d70f0a7a9",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/446",
+            "sha256": "8a706f9b75711c784a9a3fcf5fbdb728b81fff2bbde74d9cf228d44d70f0a7a9"
+          },
+          {
+            "id": "github:daily-logger#445@5072586cbfc16627303e054cb6a2f8347515126925a081d82ad1a6a4068545b7",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/445",
+            "sha256": "5072586cbfc16627303e054cb6a2f8347515126925a081d82ad1a6a4068545b7"
+          },
+          {
+            "id": "github:daily-logger#442@8f2e1a2e33835ab59e605bbbc757c0bb68fdeb4c1344aef8865532b7fb526bbe",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/442",
+            "sha256": "8f2e1a2e33835ab59e605bbbc757c0bb68fdeb4c1344aef8865532b7fb526bbe"
+          },
+          {
+            "id": "goal:core:decisions/northstar/l2-ojfbot.md@2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/4ca14bc3bda4a661201078e1aca18b4f75bbc8d1",
+            "sha256": "2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb"
+          },
+          {
+            "id": "goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82",
+            "sha256": "33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d"
+          },
+          {
+            "id": "goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82",
+            "sha256": "33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d"
+          },
+          {
+            "id": "goal:core:decisions/wayfinder/classic-space-agent-world.md@c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/eccbddc808757ffb2c8137e0130d269c6dcf11d3",
+            "sha256": "c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22"
+          }
+        ],
+        "rawContentRetained": false
+      }
     },
     "articleDigest": "36c4682d90aba9b22e211d84f0ac00c7afdef76582d1d4674892ce45b0036f01",
-    "roundId": "76cdb98ebc6bdd293fa757c35a880d5b31f0c2f29ce2e064dd0811cdd2c4e347",
+    "roundId": "193c7659a5529559a7cc33413b68188a5fa4030a9d49f52064105dd0b1e18b2b",
     "reviewCycle": {
       "phase": "generation"
     },
@@ -60,9 +210,18 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "coordinator",
+        "kind": "derived-refresh",
         "identity": "oct25-full-cycle:supervised-corrected-draft-data",
-        "decision": "Bind corrected Draft and full current status index to explicit per-candidate primary lifecycle/owner/counterevidence sources. Preserve immutable candidates, history and owner gates; grant no review verdict, action admission, execution, settlement, approval or retry authority."
+        "decision": "Acceptance-status refresh preserves the prior evidence classification after proving the exact Draft input view; it grants no new review authority.",
+        "lineage": {
+          "kind": "acceptance-status-refresh",
+          "priorArticleStatus": "draft",
+          "articleStatus": "accepted",
+          "priorReviewCycle": {
+            "phase": "generation"
+          },
+          "priorRequirementsSha256": "1ca704bf44009e2f69a368c4645d13c83232e471d0a7b47100430268a57f8157"
+        }
       },
       "articleDate": "2026-10-25",
       "articleDigest": "36c4682d90aba9b22e211d84f0ac00c7afdef76582d1d4674892ce45b0036f01",
@@ -72,7 +231,7 @@
       "draftContextSha256": "20bf9c990734d212e2e70c643bc8f8b80906130bc79e70f7f8e3a2d57df5d1ab",
       "candidatePayloadsSha256": "f4bfed21743c203b5342c6c31464cf7db7e4d2286432af602abfa86bee3cd237",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "c353eed3dad153eac5945ff3f2f14f055661ea741bcd7406619d9ab3db813146",
+      "articleStatusesSha256": "9bafd43eb964d468c5799eec49ca7ce194552cc1dd18a0cb8bf2f554f90ec437",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -166,7 +325,7 @@
       "kind": "retained",
       "markdown": "Blocking context for independent action review: (1) PRs #421 and #433 are the immediate upstream gate for October 22 and October 23 acceptance cycles. Both are unblocked by the #443/#444 fixes shipped this window; next action is a pipeline run against each. (2) The three October 21 suggestions in Needs review require a separately authorized action-review run before they enter the 83-item open registry. No scheduled trigger is confirmed in the available evidence. (3) Progressive-retrieval work for issue #386: local trial at commit 907e490 exists; blocker is integration test coverage for the retrieval path, not a design objection. Owner gate required to scope the test additions and set a merge target. (4) lego-village-pipeline #44, #45, #46: no named owner gate or phase assignment recorded. DO NOT MERGE labels prevent accidental merge but do not constitute a disposition. An explicit close, park-until decision, or phase assignment is needed. (5) classic-space-venue #4 (open since 2026-10-21) and morning-cockpit #60 (open since 2026-10-21) have no in-window progress recorded. (6) Skill telemetry freeze since 2026-05-12 renders quality coverage metrics unreliable; no unfreeze timeline available. (7) Action registry backlog drain rate versus accumulation rate is not tracked in available evidence — this is an acknowledged gap, not a confirmed risk.\n\n### Coordinator qualification — October 27\n\nThe preceding generated draft context and the three original command strings are retained verbatim as historical material. They are not current instructions, executable capabilities, owner decisions, verified action dispositions or grants to rerun models.\n\nThe first original candidate refers to https://github.com/ojfbot/daily-logger/pull/421. That PR published an independent review; it was not an action-review job. It has since merged, and October 22 has been accepted with its uncertain actions still held. The original `/pipeline run --action-review` interface is absent from the pinned runtime. The token default change https://github.com/ojfbot/daily-logger/pull/443 and article-only completion https://github.com/ojfbot/daily-logger/pull/444 do not schedule automatic retries or remove independent review, source, owner or execution gates.\n\nThe second original candidate refers to the three held suggestions of https://github.com/ojfbot/daily-logger/pull/416. That article was accepted without a healthy action verdict: two Sonnet responses were recorded, Opus was not reached, and no actions were admitted or closed. The merged PR is not an available replay target. Previous paid grants remain consumed. An accepted article and a valid later manual route do not make its fabricated original `--suggestions-only` command executable or authorize a new attempt.\n\nThe third original candidate concerns https://github.com/ojfbot/daily-logger/issues/386. Its named commit `907e490` is unresolved, and integration tests are not the sole remaining blocker. Progressive evidence retrieval shipped at a715fead1ddd9b8b631443cec4de4f3d96fb39b2. The current primary issue retains relevance, owner and counterevidence, clarification, token/provider fit and recoverable evidence requirements. The October 23 local projection established exact-source byte fit for one controlled obligation; it did not establish hosted connection, token fit or independent semantic success. Hosted raw-evidence retention remains blocked. Preserve those boundaries before judging this immutable command; this correction grants no issue mutation or new provider call.\n\nSeparate contextual records remain recoverable: https://github.com/ojfbot/daily-logger/pull/433 published the October 23 independent review and is now merged; its article acceptance is distinct from held-action verification. https://github.com/ojfbot/lego-village-pipeline/pull/44 and https://github.com/ojfbot/lego-village-pipeline/pull/46 retain explicit do-not-merge and close-or-supersede/reconstruction/preflight boundaries. https://github.com/ojfbot/lego-village-pipeline/pull/45 retains the second-steward check and James's merge control. https://github.com/ojfbot/classic-space-venue/pull/4 and https://github.com/ojfbot/morning-cockpit/pull/60 are separate research/documentation background; this classification removes none of their own owner or integration gates. They are not necessary dispositions for these three original command suggestions.\n\nThe corrected article describes the original reporting interval. Current lifecycle evidence is explicitly later context. The false83-count and May-telemetry-freeze statements in the retained prefix are not facts: the original public projection had 86 open and 127 completed; the committed telemetry contains October 20/21 events and does not prove actual use or coverage within the article window.\n\nThis local data refresh preserves all three candidate IDs, payloads, history and earlier evidence requests, leaving October 25 Draft and action review pending. It does not establish a provider verdict, admit, dispatch, replace or close any action, settle historical findings, replay a failed request or authorize a model retry."
     },
-    "stateDigest": "3622cd7ce03bc6573d888581ead07ce6be3fc9ac58e62b5f7b55f14be843515c",
+    "stateDigest": "6282f77fe555abab45ec28ef95beaaa6c90577c8929d5fb6db4efaec761a2dca",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
