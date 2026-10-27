@@ -128,3 +128,52 @@ it('requires the explicit clean-completion mode before allowing an Accepted/pend
   await expect(f.run()).rejects.toThrow('pending persistence refused')
   expect(readActionRegistry(f.root).articles[0].status).toBe('draft')
 })
+
+it('retains the current source request through actual acceptance while preserving older request history', async () => {
+  const { createActionEvidenceRequest, actionEvidenceRequestReceipt } = await import('../../src/action-evidence-retrieval.js')
+  const { splitActionRegistry, articleCompletionOutcome } = await import('../../src/action-registry.js')
+  const f = setup()
+  const draftContext = { kind: 'retained' as const, markdown: 'Current lifecycle target: https://github.com/ojfbot/daily-logger/pull/416.' }
+  const draft = f.markdown.replace(/^status:.*$/m, 'status: draft')
+  const requirements = {
+    ...f.snapshot.draftCandidateEvidence,
+    version: 'draft-candidate-evidence-v2' as const,
+    provenance: { kind: 'independent-reviewer' as const, identity: 'offline-request-retention-control', decision: 'Fixture source association; no real action authority.' },
+    ...draftCandidateEvidenceBinding({ registry: f.registry, articleDate: date, cycle: generationActionCycle(), markdown: draft, draftContext }),
+    candidates: (f.snapshot.draftCandidates ?? []).map((candidate, index) => ({ candidateId: candidate.candidateId, payloadSha256: sha256(JSON.stringify(candidate.payload)), references: index ? [] : [{ classification: 'required' as const, reference: 'daily-logger#416', role: 'lifecycle' as const, reason: 'The target lifecycle is required.' }], actionRelations: [] })),
+    unassignedReferences: [],
+  }
+  const old = actionEvidenceRequestReceipt(createActionEvidenceRequest({ kind: 'missing-source', caseDigest: 'a'.repeat(64), articleDate: date, cycle: generationActionCycle(), actionKeys: ['article-feedback'], sourceKey: 'github:daily-logger#357', question: 'Historical fixture request.', obligations: ['b'.repeat(64)] }))
+  const pending = pendingActionReview({ registry: f.registry, articleDate: date, cycle: generationActionCycle(), markdown: draft, reason: 'Fixture review pending.', articleStatuses: new Map([[date, 'draft']]), draftContext, draftCandidateEvidence: requirements, evidenceRequests: [old] })
+  writeActionStore(f.root, pending.registry)
+  writeFileSync(f.path, pending.markdown.replace(/^status:.*$/m, 'status: accepted'))
+  const content = 'CURRENT API STATE daily-logger#416: merged.\n' + 'x'.repeat(131072)
+  const source = { id: `github:daily-logger#416@${sha256(content)}`, kind: 'github' as const, locator: 'https://github.com/ojfbot/daily-logger/pull/416', content }
+  const result = await reconcileActions({ repoRoot: f.root, articlePath: `_articles/${date}.md`, agents: createActionAgents(), collectSources: () => new ActionSourceCollection([source]) })
+  const snapshot = readActionRegistry(f.root).articles[0]
+  expect(result).toMatchObject({ articleCompletion: 'accepted', actionReview: 'pending' })
+  expect(snapshot.review).toMatchObject({ state: 'pending', articleAcceptance: { failureKind: 'evidence-required', evidenceRequest: { status: 'open', sourceKey: 'github:daily-logger#416', actionKeys: ['article-feedback'] }, rawContentRetained: false } })
+  expect(snapshot.evidenceRequests).toEqual([old])
+  const { ArticleOnlyAcceptanceSchema } = await import('../../src/action-registry-contract.js')
+  if (snapshot.review.state !== 'pending' || !snapshot.review.articleAcceptance?.evidenceRequest) throw new Error('Current request missing')
+  const acceptance = snapshot.review.articleAcceptance
+  const current = acceptance.evidenceRequest
+  for (const altered of [
+    { ...acceptance, failureKind: 'invalid-output' },
+    { ...acceptance, evidenceRequest: { ...current, status: 'resolved' } },
+    { ...acceptance, evidenceRequest: { ...current, sourceFullContentSha256: '0'.repeat(64) } },
+  ]) expect(ArticleOnlyAcceptanceSchema.safeParse(altered).success).toBe(false)
+  const foreignDate = structuredClone(result.registry)
+  const review = foreignDate.articles[0].review
+  if (review.state !== 'pending' || !review.articleAcceptance?.evidenceRequest) throw new Error('Current request missing')
+  review.articleAcceptance.evidenceRequest.articleDate = '2026-10-22'
+  expect(ActionRegistrySchema.safeParse(foreignDate).success).toBe(false)
+  expect(snapshot.draftCandidates).toEqual(f.snapshot.draftCandidates)
+  expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
+  const html = readFileSync(f.path, 'utf8')
+  expect(html).toContain('<strong>Current evidence request:</strong>')
+  expect(html).toContain('github:daily-logger#416')
+  expect(html).toContain('<summary>Earlier evidence requests')
+  expect(html).not.toContain('Private artifact:')
+  expect(articleCompletionOutcome(splitActionRegistry(pending.registry).files[0], splitActionRegistry(result.registry).files[0])).toMatchObject({ state: 'pending', failureKind: 'evidence-required' })
+})

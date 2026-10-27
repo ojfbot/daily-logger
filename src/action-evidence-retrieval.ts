@@ -54,7 +54,7 @@ function actionEvidenceRequestId(request: Omit<ActionEvidenceRequest, 'id'>): st
   return sha256(JSON.stringify(canonical))
 }
 
-function validateActionEvidenceRequest(value: unknown): ActionEvidenceRequest {
+export function validateActionEvidenceRequest(value: unknown): ActionEvidenceRequest {
   const request = ActionEvidenceRequestSchema.parse(value)
   const { id, ...body } = request
   if (actionEvidenceRequestId(body) !== id) throw new Error(`Action evidence request ID does not match its immutable body: ${id}`)

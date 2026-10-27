@@ -12,7 +12,7 @@ export const REGISTRY_PATH = 'actions/registry.json'
 export const ACTIONS_START = '<!-- ACTIONS_START -->'
 export const ACTIONS_END = '<!-- ACTIONS_END -->'
 export * from './action-registry-schema.js'
-import { ActionRegistrySchema, ArticleActionFileSchema, splitActionRegistry, hydrateActionRegistry, articleActionFileBytes, actionArticlePath, isArticleOnlyEvidenceRefresh, type ActionRegistry, type ClosingPrompt, type RankedClosingOption, type ArticleOnlyAcceptance, type ProposedAction, type ActionSource, type DraftCandidateEvidenceRequirements, assertExactInvocationAdmissions } from './action-registry-schema.js'
+import { ActionRegistrySchema, ArticleActionFileSchema, ArticleOnlyAcceptanceSchema, splitActionRegistry, hydrateActionRegistry, articleActionFileBytes, actionArticlePath, isArticleOnlyEvidenceRefresh, type ActionRegistry, type ClosingPrompt, type RankedClosingOption, type ArticleOnlyAcceptance, type ProposedAction, type ActionSource, type DraftCandidateEvidenceRequirements, assertExactInvocationAdmissions } from './action-registry-schema.js'
 
 export function sha256(value: string): string { return createHash('sha256').update(value).digest('hex') }
 export function registryBytes(registry: ActionRegistry): string { assertExactInvocationAdmissions(registry); return JSON.stringify(ActionRegistrySchema.parse(registry), null, 2) + '\n' }
@@ -200,7 +200,7 @@ export function assertFirstArticleAcceptance(registry: ActionRegistry, articleDa
   assertActionSnapshotStateIntegrity(registry, prior)
 }
 
-export function completeArticleWithPendingActions(input: { registry: ActionRegistry; articleDate: string; markdown: string; articleStatuses: ReadonlyMap<string, string>; cycle: ActionReviewCycle; failureKind: ArticleOnlyAcceptance['failureKind']; sources: readonly ActionSource[]; draftCandidateEvidence: DraftCandidateEvidenceRequirements }) {
+export function completeArticleWithPendingActions(input: { registry: ActionRegistry; articleDate: string; markdown: string; articleStatuses: ReadonlyMap<string, string>; cycle: ActionReviewCycle; failureKind: ArticleOnlyAcceptance['failureKind']; sources: readonly ActionSource[]; draftCandidateEvidence: DraftCandidateEvidenceRequirements; evidenceRequest?: ArticleOnlyAcceptance['evidenceRequest'] }) {
   assertFirstArticleAcceptance(input.registry, input.articleDate)
   if (!/^status:\s*"?accepted"?\s*$/m.test(input.markdown)) throw new Error('Article-only completion requires the explicit Accepted article intent')
   const registry = structuredClone(input.registry)
@@ -208,8 +208,9 @@ export function completeArticleWithPendingActions(input: { registry: ActionRegis
   const file = splitActionRegistry(input.registry).files.find(file => file.date === input.articleDate)
   if (!prior || !file) throw new Error('Original article action custody is missing')
   if (!isArticleOnlyEvidenceRefresh(prior.draftCandidateEvidence, input.draftCandidateEvidence) || JSON.stringify(input.draftCandidateEvidence.reviewCycle) !== JSON.stringify(input.cycle)) throw new Error('Article-only acceptance requires the exact native Accepted-status evidence refresh')
-  const articleAcceptance: ArticleOnlyAcceptance = { kind: 'article-only', inputRoundId: prior.roundId, inputRegistrySha256: sha256(articleActionFileBytes(file)), failureKind: input.failureKind,
-    sources: input.sources.map(source => ({ id: source.id, locator: source.locator, sha256: sha256(source.content) })), rawContentRetained: false }
+  const articleAcceptance = ArticleOnlyAcceptanceSchema.parse({ kind: 'article-only', inputRoundId: prior.roundId, inputRegistrySha256: sha256(articleActionFileBytes(file)), failureKind: input.failureKind,
+    sources: input.sources.map(source => ({ id: source.id, locator: source.locator, sha256: sha256(source.content) })), rawContentRetained: false,
+    ...(input.evidenceRequest ? { evidenceRequest: input.evidenceRequest } : {}) })
   const reason = articleOnlyReviewReason(input.failureKind)
   const roundId = sha256(JSON.stringify({ articleAcceptance, articleDate: input.articleDate, cycle: input.cycle }))
   const snapshot = { ...prior, status: 'accepted' as const, review: { state: 'pending' as const, reason, articleAcceptance }, reviewCycle: input.cycle, roundId, articleDigest: articleActionDigest(input.markdown), draftCandidateEvidence: input.draftCandidateEvidence,
@@ -305,8 +306,15 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
     const context = draftContextHtml(snapshot.draftContext, true)
     const publicReason = snapshot.review.articleAcceptance ? articleOnlyReviewReason(snapshot.review.articleAcceptance.failureKind) : snapshot.review.reason
     const reason = `<p class="action-review-pending-reason"><strong>Why review paused:</strong> ${oneLine(publicReason)}</p>`
-    const requests = snapshot.evidenceRequests?.filter(request => request.status === 'open').map(request =>
-      `<p class="action-evidence-request"><strong>Evidence request pending:</strong> <code>${escaped(request.id)}</code> · Recipient: ${escaped(request.recipient)} · Private artifact: <code>.action-evidence/${escaped(request.id)}/request.json</code>.</p>`) ?? []
+    const currentRequest = snapshot.review.articleAcceptance?.evidenceRequest
+    const earlierRequests = snapshot.evidenceRequests?.filter(request => request.id !== currentRequest?.id) ?? []
+    const requests = articleAccepted
+      ? [currentRequest
+        ? `<p class="action-evidence-request"><strong>Current evidence request:</strong> <code>${escaped(currentRequest.sourceKey)}</code> · Request: <code>${escaped(currentRequest.id)}</code> · Recipient: ${escaped(currentRequest.recipient)}.</p>`
+        : '<p class="action-evidence-request">The current review did not record a specific evidence request. Earlier requests are historical records and do not establish the current blocker.</p>',
+        ...(earlierRequests.length ? [`<details class="suggested-actions-draft-context"><summary>Earlier evidence requests</summary><div>${earlierRequests.map(request => `<p><code>${escaped(request.sourceKey)}</code> · Request: <code>${escaped(request.id)}</code> · Recorded status: ${escaped(request.status)} · Recipient: ${escaped(request.recipient)}.</p>`).join('')}</div></details>`] : [])]
+      : snapshot.evidenceRequests?.filter(request => request.status === 'open').map(request =>
+        `<p class="action-evidence-request"><strong>Evidence request pending:</strong> <code>${escaped(request.id)}</code> · Recipient: ${escaped(request.recipient)} · Private artifact: <code>.action-evidence/${escaped(request.id)}/request.json</code>.</p>`) ?? []
     const completion = articleAccepted ? 'Article accepted. These suggestions still need independent review.' : 'Action review pending. Acceptance remains blocked until the review is complete.'
     const retention = articleAccepted ? '<details class="suggested-actions-draft-context"><summary>Review details</summary><div><p>No action was added or closed. Original suggestions and previously saved sources are retained. Only identities and digests of fresh sources were recorded; their raw content was not retained.</p></div></details>' : ''
     return `${unmanagedArticleProse(markdown).trimEnd()}\n\n${ACTIONS_START}\n<section class="suggested-actions-card suggested-actions-card-needs-review" aria-labelledby="suggested-actions-${escaped(articleDate)}">\n<header class="suggested-actions-header"><h3 id="suggested-actions-${escaped(articleDate)}">Suggested actions</h3><p>${completion}</p></header>\n${[reason, retention, ...requests, ...candidates, ...context].filter(Boolean).join('\n')}\n</section>\n${ACTIONS_END}\n`

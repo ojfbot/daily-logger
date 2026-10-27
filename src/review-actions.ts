@@ -13,6 +13,7 @@ import {
   ActionEvidenceLifecycleError,
   actionEvidenceCaseDigest,
   actionEvidenceRequestReceipt,
+  validateActionEvidenceRequest,
   createActionEvidenceRequest,
   persistActionEvidenceRequest,
   persistValidatedActionEvidenceReply,
@@ -146,7 +147,7 @@ class ProviderActionOutputError extends ActionOutputError {}
 class ProviderCandidateAssociationError extends ActionOutputError {}
 class CandidateRecordIsolationError extends Error {}
 class IncompleteProviderResponseError extends Error {}
-export function classifyActionReviewFailure(error: unknown): { kind: 'invalid-output' | 'evidence-required'; reason: string } | undefined {
+function actionReviewFailureCause(error: unknown): Error | undefined {
   const seen = new Set<Error>()
   for (let depth = 0; depth <= 4; depth++) {
     if (!(error instanceof Error) || seen.has(error)) return undefined
@@ -158,16 +159,48 @@ export function classifyActionReviewFailure(error: unknown): { kind: 'invalid-ou
       error = cause.value
       continue
     }
-    if (error instanceof ActionOutputError || error instanceof CandidateRecordIsolationError || error instanceof IncompleteProviderResponseError) return {
-      kind: 'invalid-output', reason: 'Actions need a valid structured review before they can be admitted.',
-    }
-    if (error instanceof ActionContextEvidenceRequestError) return undefined
-    if (error instanceof ActionEvidenceRequestError || error instanceof ActionVerificationHoldError) return {
-      kind: 'evidence-required', reason: 'Actions need further evidence or independent review before they can be admitted.',
-    }
-    return undefined
+    return error
   }
   return undefined
+}
+export function classifyActionReviewFailure(error: unknown): { kind: 'invalid-output' | 'evidence-required'; reason: string } | undefined {
+  const cause = actionReviewFailureCause(error)
+  if (cause instanceof ActionOutputError || cause instanceof CandidateRecordIsolationError || cause instanceof IncompleteProviderResponseError) return {
+    kind: 'invalid-output', reason: 'Actions need a valid structured review before they can be admitted.',
+  }
+  if (cause instanceof ActionContextEvidenceRequestError) return undefined
+  if (cause instanceof ActionEvidenceRequestError || cause instanceof ActionVerificationHoldError) return {
+    kind: 'evidence-required', reason: 'Actions need further evidence or independent review before they can be admitted.',
+  }
+  return undefined
+}
+
+export function actionReviewEvidenceRequest(error: unknown, input: Omit<Parameters<typeof reviewArticleActions>[0], 'agents' | 'repoRoot'>): ActionEvidenceRequestReceipt | undefined {
+  const cause = actionReviewFailureCause(error)
+  if (!(cause instanceof ActionEvidenceRequestError) || cause instanceof ActionContextEvidenceRequestError) return undefined
+  const request = validateActionEvidenceRequest(cause.request)
+  const prior = input.registry.articles.find(article => article.date === input.articleDate)
+  const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), prior?.draftContext)
+  const normalized = { ...input, markdown: prepared.markdown, draftContext: prepared.context,
+    draftCandidates: prior?.draftCandidates ?? (input.draftCandidates === undefined ? undefined : captureDraftActionCandidates(input.draftCandidates)),
+    articleStatuses: new Map(input.articleStatuses).set(input.articleDate, prepared.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft') }
+  const scope = actionEvidenceScope(normalized)
+  const actionKeys = scope.reviewActionKeys.length ? scope.reviewActionKeys : scope.ambiguousTerminalActionKeys.length ? scope.ambiguousTerminalActionKeys : ['article-feedback']
+  if (request.articleDate !== input.articleDate || JSON.stringify(request.cycle) !== JSON.stringify(input.cycle)
+    || JSON.stringify(request.actionKeys) !== JSON.stringify([...actionKeys].sort())
+    || request.caseDigest !== actionEvidenceCaseDigest({ ...normalized, actionKeys })) throw new Error('Current evidence request is outside the exact article review case')
+  const sources = canonicalActionSources(input.sources)
+  if (request.sourceKey.startsWith('github:') && !scope.refs.has(request.sourceKey.slice('github:'.length))) throw new Error('Current evidence request is outside required source scope')
+  if (request.sourceKey.startsWith('action:') && !actionKeys.includes(request.sourceKey.slice('action:'.length))) throw new Error('Current evidence request names an action outside the review scope')
+  if (request.sourceKey.startsWith('terminal-intent:') && request.sourceKey !== `terminal-intent:${scope.ambiguousTerminalActionKeys.join(',')}`) throw new Error('Current evidence request does not match ambiguous terminal intent')
+  if (request.sourceId || request.sourceFullContentSha256 || request.kind === 'source-view') {
+    const source = sources.find(source => source.id === request.sourceId)
+    if (!source || request.sourceFullContentSha256 !== sha256(source.content)
+      || request.sourceFullContentSha256 !== (source.fullContentSha256 ?? sha256(source.content))
+      || request.sourceKey !== 'model-context' && request.sourceKey !== source.id.replace(/@[a-f0-9]{64}$/, '')) throw new Error('Current evidence request does not match the collected source')
+  }
+  if (request.kind === 'missing-source' && sources.some(source => source.id.replace(/@[a-f0-9]{64}$/, '') === request.sourceKey)) throw new Error('Current missing-source request names a collected source')
+  return actionEvidenceRequestReceipt(request)
 }
 class ProviderCandidateRecordError extends ProviderActionOutputError {
   #repair: ((correction: string) => Promise<ActionProposal>) | undefined
