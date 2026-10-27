@@ -46,7 +46,7 @@ function fixture() {
 }
 function transport(source: string) {
   const refs = new Map<string, string>(), blobs = new Map<string, string>(), trees = new Map<string, string>(), commits = new Map<string, { parent?: string; content: string }>()
-  const state = { main: source, loseClaim: false, mutations: 0, requests: 0 }
+  const state = { main: source, loseClaim: false, ignorePatch: false, wrongPatchResponse: false, advanceMainOnEntry: false, runPath: '.github/workflows/review-held-actions.yml', mutations: 0, requests: 0 }
   let sequence = 0
   const next = () => (++sequence).toString(16).padStart(40, '0')
   const github: GitHub = async (path, options = {}) => {
@@ -54,6 +54,7 @@ function transport(source: string) {
     const method = options.method ?? 'GET', endpoint = path.slice('/repos/ojfbot/daily-logger'.length), body: unknown = options.body ? JSON.parse(String(options.body)) : null
     const reply = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status })
     if (endpoint === '/git/ref/heads/main') return reply({ object: { sha: state.main } })
+    if (endpoint === '/actions/runs/900/attempts/1') return reply({ id: 900, run_attempt: 1, event: 'workflow_dispatch', head_branch: 'main', head_sha: source, path: state.runPath, actor: { login: 'ojfbot' } })
     if (method !== 'GET') state.mutations++
     if (endpoint === '/git/blobs') { const value = z.object({ content: z.string() }).parse(body), sha = next(); blobs.set(sha, value.content); return reply({ sha }) }
     if (endpoint === '/git/trees') { const value = z.object({ tree: z.array(z.object({ sha: z.string() })) }).parse(body), sha = next(); trees.set(sha, value.tree[0].sha); return reply({ sha }) }
@@ -69,7 +70,9 @@ function transport(source: string) {
     if (method === 'GET') return refs.has(ref) ? reply({ object: { sha: refs.get(ref) } }) : reply({}, 404)
     const value = z.object({ sha: z.string(), force: z.literal(false) }).parse(body)
     if (commits.get(value.sha)?.parent !== refs.get(ref)) return reply({}, 422)
-    refs.set(ref, value.sha); return reply({ object: { sha: value.sha } })
+    if (!state.ignorePatch) refs.set(ref, value.sha)
+    if (state.advanceMainOnEntry && ref.startsWith('action-review-claims/operation-') && JSON.parse(commits.get(value.sha)?.content ?? '{}').stage === 'model-entered') state.main = 'e'.repeat(40)
+    return reply({ object: { sha: state.wrongPatchResponse ? 'f'.repeat(40) : value.sha } })
   }
   return { github, state, refs, commits }
 }
@@ -191,4 +194,28 @@ it('rejects a hydrated-index change that the dated artifact could not represent'
   } })
   expect(result.files).toEqual([]); expect(result.receipt.stop.reason).toBe('proposal-boundary'); expect(result.receipt.state).toBe('uncertain-after-entry')
   expect(readActionRegistry(f.root).records[0].goal).toBe('')
+})
+
+it('rejects another workflow run before reservation or model APIs', async () => {
+  const f = fixture(), t = transport(f.source)
+  t.state.runPath = '.github/workflows/editorial-revise.yml'
+  await expect(admitHeldAction(f.root, f.inputs, f.context, t.github)).rejects.toThrow()
+  expect(t.state.mutations).toBe(0); expect(countTokens).not.toHaveBeenCalled()
+})
+
+it.each(['ignorePatch', 'wrongPatchResponse'] as const)('requires acknowledged and read-back entry marker: %s', async failure => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  t.state[failure] = true
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.state).toBe('uncertain-after-entry'); expect(result.files).toEqual([])
+  expect(result.receipt.nativeEntry).toBe('not-entered')
+  expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
+})
+
+it('rejects main moving during entered-marker writes before native count or generation', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  t.state.advanceMainOnEntry = true
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.state).toBe('rejected-before-model'); expect(result.receipt.nativeEntry).toBe('not-entered'); expect(result.receipt.authorization).toBe('consumed')
+  expect(result.receipt.stop.reason).toBe('stale-source'); expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
 })

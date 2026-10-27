@@ -23,13 +23,15 @@ export const heldActionGrantSchema = z.object({
   }).strict(), output: z.literal('unmerged-dated-proposal-with-selected-citations'),
 }).strict()
 const contextSchema = z.object({ repository: z.literal('ojfbot/daily-logger'), actor: z.literal('ojfbot'), event: z.literal('workflow_dispatch'), ref: z.literal('refs/heads/main'), defaultBranch: z.literal('main'), workflowSha: sha, runId: z.number().int().positive(), attempt: z.literal(1) }).strict()
-const bindingSchema = z.object({ schemaVersion: z.literal(1), inputs: heldActionInputSchema, grant: heldActionGrantSchema, source: z.object({ commit: sha, articleBlob: sha, actionBlob: sha, registryRevision: digest, policyFingerprint: digest }).strict(), runId: z.number().int().positive(), workflow: z.literal('.github/workflows/review-held-actions.yml') }).strict()
+const runSchema = z.object({ id: z.number().int().positive(), run_attempt: z.literal(1), event: z.literal('workflow_dispatch'), head_branch: z.literal('main'), head_sha: sha, path: z.string().regex(/^\.github\/workflows\/review-held-actions\.yml(?:@(?:main|refs\/heads\/main))?$/), actor: z.object({ login: z.literal('ojfbot') }).strip() }).strip()
+const bindingSchema = z.object({ schemaVersion: z.literal(1), inputs: heldActionInputSchema, grant: heldActionGrantSchema, source: z.object({ commit: sha, articleBlob: sha, actionBlob: sha, registryRevision: digest, policyFingerprint: digest }).strict(), runId: z.number().int().positive(), workflow: z.literal('.github/workflows/review-held-actions.yml'), observedRun: runSchema }).strict()
 type Binding = z.infer<typeof bindingSchema>
 const resultStateSchema = z.enum(['rejected-before-model', 'held-invalid-output', 'held-evidence', 'uncertain-after-entry', 'native-review-completed-unmerged'])
 const reasonSchema = z.enum(['none', 'input-mismatch', 'stale-source', 'grant-mismatch', 'review-disabled', 'source-unavailable', 'claim-uncertain', 'native-invalid-output', 'native-evidence-required', 'native-context-or-budget', 'proposal-boundary', 'provider-or-unknown', 'outcome-uncertain'])
 export const heldActionReceiptSchema = z.object({
   kind: z.literal('unmerged-held-action-proposal-v1'), applied: z.literal(false), approval: z.literal('not-requested-or-implied'), binding: bindingSchema,
   state: resultStateSchema, files: z.array(z.object({ name: z.enum(['article.md', 'actions.json']), repositoryPath: z.string(), bytes: z.number().int().positive().max(786432), sha256: digest }).strict()).max(2),
+  authorization: z.literal('consumed'), nativeEntry: z.enum(['not-entered', 'native-function-entered']),
   stop: z.object({ stage: z.enum(['input', 'reservation', 'native', 'proposal', 'outcome', 'completed']), reason: reasonSchema, httpStatus: z.number().int().min(100).max(599).optional() }).strict(),
   observations: z.object({ billing: z.literal('not-inferred'), budgets: z.array(z.object({ role: z.enum(['proposer', 'verifier']), input: z.number().int().nonnegative(), outputReserve: z.number().int().nonnegative(), total: z.number().int().nonnegative(), limit: z.number().int().positive() }).strict()).max(3), responses: z.array(z.object({ role: z.enum(['proposer', 'verifier']), stop: z.enum(['tool_use', 'end_turn', 'max_tokens', 'stop_sequence', 'null']), outputTokens: z.number().int().nonnegative() }).strict()).max(3) }).strict(),
 }).strict().superRefine((receipt, ctx) => {
@@ -64,6 +66,8 @@ export async function admitHeldAction(root: string, inputs: unknown, context: un
   requireGate(git(root, 'diff', '--name-only', 'HEAD') === '')
   const live = refSchema.parse(await json(github, '/git/ref/heads/main'))
   requireGate(live.object.sha === request.source_sha, 'stale-source')
+  const observedRun = runSchema.parse(await json(github, `/actions/runs/${execution.runId}/attempts/1`))
+  requireGate(observedRun.id === execution.runId && observedRun.head_sha === request.source_sha)
   const articlePath = `_articles/${request.date}.md`, actionPath = actionArticlePath(request.date), grantPath = `action-review-grants/${request.grant_id}.json`
   const paths = [articlePath, actionPath, grantPath]
   for (const path of paths) requireGate(git(root, 'ls-tree', 'HEAD', '--', path).startsWith('100644 '))
@@ -80,7 +84,7 @@ export async function admitHeldAction(root: string, inputs: unknown, context: un
   prepareConservativeDraftCandidateEvidence({ registry, articleDate: request.date, markdown, articleStatuses: statuses, cycle, feedback: '', draftCandidates: snapshot.draftCandidates })
   const source = { commit: request.source_sha, articleBlob: git(root, 'rev-parse', `HEAD:${paths[0]}`), actionBlob: git(root, 'rev-parse', `HEAD:${paths[1]}`), registryRevision: registryRevision(registry), policyFingerprint: heldActionPolicyFingerprint(root) }
   requireGate(source.articleBlob === grant.articleBlob && source.actionBlob === grant.actionBlob && source.registryRevision === grant.registryRevision && source.policyFingerprint === grant.policyFingerprint, 'grant-mismatch')
-  return bindingSchema.parse({ schemaVersion: 1, inputs: request, grant, source, runId: execution.runId, workflow: '.github/workflows/review-held-actions.yml' })
+  return bindingSchema.parse({ schemaVersion: 1, inputs: request, grant, source, runId: execution.runId, workflow: '.github/workflows/review-held-actions.yml', observedRun })
 }
 
 function claimRefs(binding: Binding) { return [`action-review-claims/grant-${binding.grant.authorizationId}`, `action-review-claims/operation-${binding.inputs.operation_id}`] }
@@ -92,13 +96,19 @@ async function claimCommit(github: GitHub, value: z.infer<typeof claimSchema>, p
 export async function reserveHeldAction(binding: Binding, github: GitHub) {
   const commit = await claimCommit(github, { kind: 'held-action-reservation-v1', binding, stage: 'reserved' })
   // Atomic create fails if either grant or operation is consumed. Never undo a partial claim.
-  for (const ref of claimRefs(binding)) await json(github, '/git/refs', { method: 'POST', body: JSON.stringify({ ref: `refs/heads/${ref}`, sha: commit }) })
+  for (const ref of claimRefs(binding)) {
+    requireGate(refSchema.parse(await json(github, '/git/refs', { method: 'POST', body: JSON.stringify({ ref: `refs/heads/${ref}`, sha: commit }) })).object.sha === commit, 'claim-uncertain')
+    requireGate(refSchema.parse(await json(github, `/git/ref/heads/${ref}`)).object.sha === commit, 'claim-uncertain')
+  }
   return commit
 }
 export async function moveHeldActionClaim(binding: Binding, previous: string, stage: 'model-entered' | 'finished', github: GitHub, result?: Receipt['state'], receiptSha256?: string) {
   for (const ref of claimRefs(binding)) requireGate(refSchema.parse(await json(github, `/git/ref/heads/${ref}`)).object.sha === previous)
   const commit = await claimCommit(github, { kind: 'held-action-reservation-v1', binding, stage, ...(result ? { result } : {}), ...(receiptSha256 ? { receiptSha256 } : {}) }, previous)
-  for (const ref of claimRefs(binding)) await json(github, `/git/refs/heads/${ref}`, { method: 'PATCH', body: JSON.stringify({ sha: commit, force: false }) })
+  for (const ref of claimRefs(binding)) {
+    requireGate(refSchema.parse(await json(github, `/git/refs/heads/${ref}`, { method: 'PATCH', body: JSON.stringify({ sha: commit, force: false }) })).object.sha === commit, 'claim-uncertain')
+    requireGate(refSchema.parse(await json(github, `/git/ref/heads/${ref}`)).object.sha === commit, 'claim-uncertain')
+  }
   return commit
 }
 
@@ -167,7 +177,7 @@ export function validateHeldActionArtifact(value: unknown, files: Readonly<Recor
 export async function executeHeldAction(options: { root: string; binding: Binding; reserved: string; github: GitHub; native?: typeof reconcileActions }) {
   const { root, binding, github } = options
   let claim = options.reserved, entered = false
-  const receipt: Receipt = { kind: 'unmerged-held-action-proposal-v1', applied: false, approval: 'not-requested-or-implied', binding, state: 'rejected-before-model', files: [], stop: { stage: 'input', reason: 'none' }, observations: { billing: 'not-inferred', budgets: [], responses: [] } }
+  const receipt: Receipt = { kind: 'unmerged-held-action-proposal-v1', applied: false, approval: 'not-requested-or-implied', binding, state: 'rejected-before-model', files: [], authorization: 'consumed', nativeEntry: 'not-entered', stop: { stage: 'input', reason: 'none' }, observations: { billing: 'not-inferred', budgets: [], responses: [] } }
   const original = readFileSync(join(root, `_articles/${binding.inputs.date}.md`), 'utf8'), action = readFileSync(join(root, actionArticlePath(binding.inputs.date)), 'utf8')
   let files: ReturnType<typeof proposalFiles> = []
   const consoleMethods = { log: console.log, warn: console.warn, error: console.error, info: console.info, debug: console.debug }
@@ -176,6 +186,8 @@ export async function executeHeldAction(options: { root: string; binding: Bindin
     requireGate(same(fresh, binding))
     receipt.stop.stage = 'reservation'
     claim = await moveHeldActionClaim(binding, claim, 'model-entered', github)
+    // Remote claim writes can queue behind a main update; recheck after their readbacks.
+    requireGate(same(await admitHeldAction(root, binding.inputs, { repository: 'ojfbot/daily-logger', actor: 'ojfbot', event: 'workflow_dispatch', ref: 'refs/heads/main', defaultBranch: 'main', workflowSha: binding.source.commit, runId: binding.runId, attempt: 1 }, github), binding))
     entered = true // Before createActionAgents/countTokens/create. A lost claim response never reaches here.
     const env = { DRY_RUN: 'true', ACTION_REVIEW_ARTICLE_COMPLETION: 'disabled', ACTION_REVIEW_REQUEST: binding.inputs.operation_id, ACTION_PROVIDER_TOKEN_LIMIT: '256000', EDITORIAL_FEEDBACK: '', ACTION_KEY: '', ACTION_REASSESS_KEYS: '', ACTION_PRESERVE_KEYS: '', ACTION_EVIDENCE_REPLY: '', MOCK_LLM: '' }
     const prior = Object.fromEntries(Object.keys(env).map(key => [key, process.env[key]]))
@@ -190,6 +202,7 @@ export async function executeHeldAction(options: { root: string; binding: Bindin
     for (const key of Object.keys(consoleMethods)) Reflect.set(console, key, capture)
     try {
       receipt.stop.stage = 'native'
+      receipt.nativeEntry = 'native-function-entered'
       const reviewed = await (options.native ?? reconcileActions)({ repoRoot: root, articlePath: `_articles/${binding.inputs.date}.md` })
       requireGate(same(await admitHeldAction(root, binding.inputs, { repository: 'ojfbot/daily-logger', actor: 'ojfbot', event: 'workflow_dispatch', ref: 'refs/heads/main', defaultBranch: 'main', workflowSha: binding.source.commit, runId: binding.runId, attempt: 1 }, github), binding))
       receipt.stop.stage = 'proposal'
@@ -242,7 +255,7 @@ async function main() {
   } else if (process.argv[2] === 'execute') {
     contextSchema.parse(context)
     const prepared = z.object({ binding: bindingSchema, reserved: sha }).strict().parse(JSON.parse(readFileSync(join(directory, 'prepared.json'), 'utf8')))
-    requireGate(prepared.binding.runId === context.runId && same(prepared.binding.inputs, heldActionInputSchema.parse(event.inputs)))
+    requireGate(prepared.binding.runId === context.runId && prepared.binding.source.commit === context.workflowSha && same(prepared.binding.inputs, heldActionInputSchema.parse(event.inputs)))
     const result = await executeHeldAction({ root, ...prepared, github })
     for (const file of result.files) writeFileSync(join(directory, file.name), file.content, { flag: 'wx', mode: 0o600 })
     writeFileSync(join(directory, 'receipt.json'), JSON.stringify(result.receipt, null, 2) + '\n', { flag: 'wx', mode: 0o600 })
