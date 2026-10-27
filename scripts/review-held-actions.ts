@@ -5,10 +5,10 @@ import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
 import { reconcileActions } from './reconcile-actions.js'
 import { acceptanceActionCycle } from '../src/action-review-cycle.js'
-import { prepareConservativeDraftCandidateEvidence } from '../src/action-evidence-selection.js'
+import { ACTION_EVIDENCE_SELECTION_VERSION, COVERAGE_SOURCE, prepareConservativeDraftCandidateEvidence } from '../src/action-evidence-selection.js'
 import { ActionContextNeedError, classifyActionReviewFailure } from '../src/review-actions.js'
 import { ActionEvidenceRequestError } from '../src/action-evidence-retrieval.js'
-import { ArticleActionFileSchema, actionArticlePath, articleActionFileBytes, assertActionSnapshotStateIntegrity, readActionRegistry, readArticleStatuses, registryRevision, sha256, splitActionRegistry, stripManagedActions } from '../src/action-registry.js'
+import { ArticleActionFileSchema, ActionSourceSchema, actionArticlePath, articleActionFileBytes, assertActionSnapshotStateIntegrity, readActionRegistry, readArticleStatuses, registryRevision, sha256, splitActionRegistry, stripManagedActions } from '../src/action-registry.js'
 import type { GitHub } from '../api/_lib/article-review-sources.js'
 
 const sha = z.string().regex(/^[a-f0-9]{40}$/), digest = z.string().regex(/^[a-f0-9]{64}$/)
@@ -21,6 +21,17 @@ export const heldActionGrantSchema = z.object({
   reviewCycle: z.object({ phase: z.literal('generation') }).strict(), trains: z.literal(1), limits: z.object({
     proposer: z.literal('claude-sonnet-4-6'), verifier: z.literal('claude-opus-4-6'), tokenLimit: z.literal(256000), outputReserve: z.literal(12000), envelopeBytes: z.literal(655360), sharedRepairs: z.literal(1), sdkRetries: z.literal(0),
   }).strict(), output: z.literal('unmerged-dated-proposal-with-selected-citations'),
+}).strict()
+// Only the native content-addressed coverage metadata may bypass selected quotes.
+const coverageSchema = z.object({
+  version: z.literal(ACTION_EVIDENCE_SELECTION_VERSION), unit: z.literal('UTF-8 bytes'),
+  collection: z.literal('Bounded collector output, not an exhaustive repository/discussion census. Missing or omitted content is unknown, never evidence of absence or approval.'),
+  selection: z.literal('Whole sources only; no chronological comment window or excerpt. Only current carried actions, explicit feedback and retained draft continuation context require GitHub discussions. Shipment prose does not.'),
+  authority: z.literal('This coverage index is context only. Hashes, identities, omission reasons and missing evidence cannot justify completion, supersession, dismissal or human approval.'),
+  requiredReferences: z.array(z.string().regex(/^[\w-]+#\d+$/)), contextReferences: z.array(z.string().regex(/^[\w-]+#\d+$/)),
+  referenceRequirements: z.array(z.object({ reference: z.string().regex(/^[\w-]+#\d+$/), classification: z.enum(['required', 'context']), source: z.string(), reason: z.string().max(512), role: z.enum(['target', 'lifecycle', 'owner', 'gate', 'counterevidence', 'retained-context']).optional() }).strict()),
+  reviewActionKeys: z.array(z.string()), preservedTerminalActionKeys: z.array(z.string()), expandedActionKeys: z.array(z.string()), resolvedRequests: z.array(digest),
+  sources: z.array(z.object({ id: z.string(), kind: ActionSourceSchema.shape.kind, locator: z.string(), fullContentSha256: digest, collectedContentSha256: digest, bytes: z.number().int().nonnegative(), lines: z.number().int().positive(), required: z.boolean(), included: z.boolean(), reason: z.enum(['outside current action/feedback scope', 'source bytes do not match their full-content identity (excerpt or corruption)', 'exceeds 128 KiB source limit', 'whole source does not fit total budget', 'complete artifact retained; bounded question view selected', 'exact ranges pinned to immutable complete artifact for one open question', 'complete current-action/feedback dependency', 'complete goal or contextual source', 'complete optional whole source omitted so selected sources and complete coverage receipt fit total budget']) }).strict()),
 }).strict()
 const contextSchema = z.object({ repository: z.literal('ojfbot/daily-logger'), actor: z.literal('ojfbot'), event: z.literal('workflow_dispatch'), ref: z.literal('refs/heads/main'), defaultBranch: z.literal('main'), workflowSha: sha, runId: z.number().int().positive(), attempt: z.literal(1) }).strict()
 const runSchema = z.object({ id: z.number().int().positive(), run_attempt: z.literal(1), event: z.literal('workflow_dispatch'), head_branch: z.literal('main'), head_sha: sha, path: z.string().regex(/^\.github\/workflows\/review-held-actions\.yml(?:@(?:main|refs\/heads\/main))?$/), actor: z.object({ login: z.literal('ojfbot') }).strip() }).strip()
@@ -148,7 +159,10 @@ export function proposalFiles(root: string, binding: Binding, reviewed: Awaited<
   visit(file)
   for (const source of file.snapshot.sources) {
     requireGate(Buffer.byteLength(source.content) <= 131072)
-    if (!source.id.startsWith('action-evidence-coverage@')) {
+    if (source.id.startsWith(`${COVERAGE_SOURCE}@`)) {
+      requireGate(source.id === `${COVERAGE_SOURCE}@${sha256(source.content)}` && source.kind === 'report' && source.locator === ACTION_EVIDENCE_SELECTION_VERSION && !source.trustedContent && !source.projection && !source.response && (!source.fullContentSha256 || source.fullContentSha256 === sha256(source.content)), 'proposal-boundary')
+      coverageSchema.parse(JSON.parse(source.content))
+    } else {
       const allowed = [...(quotes.get(source.id) ?? [])].sort((a, b) => b.length - a.length)
       let remaining = source.content
       while (remaining) {

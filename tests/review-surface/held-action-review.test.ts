@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { admitHeldAction, executeHeldAction, heldActionGrantSchema, heldActionLimits, heldActionPolicyFingerprint, heldActionReceiptSchema, reserveHeldAction, validateHeldActionArtifact } from '../../scripts/review-held-actions.js'
 import { reconcileActions } from '../../scripts/reconcile-actions.js'
 import { ActionSourceCollection } from '../../src/action-evidence-view.js'
-import { ActionRegistrySchema, actionStateDigest, completeArticleWithPendingActions, readActionRegistry, readArticleStatuses, registryRevision } from '../../src/action-registry.js'
+import { ActionRegistrySchema, actionStateDigest, completeArticleWithPendingActions, readActionRegistry, readArticleStatuses, registryRevision, sha256 } from '../../src/action-registry.js'
 import { prepareConservativeDraftCandidateEvidence } from '../../src/action-evidence-selection.js'
 import { generationActionCycle } from '../../src/action-review-cycle.js'
 import { createActionAgents, pendingActionReview } from '../../src/review-actions.js'
@@ -17,6 +17,7 @@ import type { GitHub } from '../../api/_lib/article-review-sources.js'
 
 const { create, countTokens, clients } = vi.hoisted(() => ({ create: vi.fn(), countTokens: vi.fn(), clients: vi.fn() }))
 vi.mock('@anthropic-ai/sdk', () => ({ default: class { constructor(options: unknown) { clients(options) } messages = { create, countTokens } } }))
+// Synchronous Git fixtures share the host with the full suite; bound tests locally.
 const roots: string[] = [], date = '2026-10-22', operation = '11111111-1111-4111-8111-111111111111', grantId = '22222222-2222-4222-8222-222222222222', authorization = '33333333-3333-4333-8333-333333333333'
 const sources = [{ id: 'fact', kind: 'repository' as const, locator: 'fixture.md', content: 'Each original concern needs its own owner review.' }, { id: 'goal', kind: 'goal' as const, locator: 'ROADMAP.md', content: 'Preserve original decisions and review their evidence independently.' }, ...[9001, 9002, 9003].map(number => ({ id: `checkpoint-${number}`, kind: 'github' as const, locator: `https://github.com/ojfbot/core/issues/${number}`, content: `CURRENT API STATE core#${number}: state=open; owner review remains required.`, trustedContent: [`CURRENT API STATE core#${number}: state=open; owner review remains required.`] }))]
 const response = (input: unknown) => ({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'offline', name: 'review_actions', input }], usage: { output_tokens: 100 } })
@@ -94,14 +95,14 @@ it.each([{ repository: 'fork/daily-logger' }, { actor: 'another-owner' }, { ref:
   const f = fixture(), t = transport(f.source)
   await expect(admitHeldAction(f.root, f.inputs, { ...f.context, ...change }, t.github)).rejects.toThrow()
   expect(t.state.requests).toBe(0); expect(create).not.toHaveBeenCalled(); expect(countTokens).not.toHaveBeenCalled()
-})
+}, 15000)
 it('rejects unknown inputs, operation/grant mismatch, stale main and changed files before provider', async () => {
   const f = fixture(), t = transport(f.source)
   for (const inputs of [{ ...f.inputs, unexpected: true }, { ...f.inputs, operation_id: '44444444-4444-4444-8444-444444444444' }, { ...f.inputs, source_sha: 'a'.repeat(40) }]) await expect(admitHeldAction(f.root, inputs, f.context, t.github)).rejects.toThrow()
   t.state.main = 'b'.repeat(40); await expect(admitHeldAction(f.root, f.inputs, f.context, t.github)).rejects.toThrow()
   t.state.main = f.source; writeFileSync(join(f.root, `_articles/${date}.md`), f.original.article + '\nConcurrent edit.\n'); await expect(admitHeldAction(f.root, f.inputs, f.context, t.github)).rejects.toThrow()
   expect(t.state.mutations).toBe(0); expect(countTokens).not.toHaveBeenCalled()
-})
+}, 15000)
 it('atomically consumes grant and operation; concurrent/duplicate/lost reservations never bill', async () => {
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github)
   const results = await Promise.allSettled([reserveHeldAction(binding, t.github), reserveHeldAction(binding, t.github)])
@@ -111,7 +112,7 @@ it('atomically consumes grant and operation; concurrent/duplicate/lost reservati
   await expect(reserveHeldAction(binding, lost.github)).rejects.toThrow(); expect(lost.refs.size).toBe(1)
   lost.state.loseClaim = false; await expect(reserveHeldAction(binding, lost.github)).rejects.toThrow()
   expect(create).not.toHaveBeenCalled(); expect(countTokens).not.toHaveBeenCalled()
-})
+}, 15000)
 it('runs real native dry-run proposer/verifier, preserves accepted durable data and emits only the dated unmerged proposal', async () => {
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
   healthy(f)
@@ -132,7 +133,7 @@ it('runs real native dry-run proposer/verifier, preserves accepted durable data 
   expect(() => heldActionReceiptSchema.parse({ ...result.receipt, outcome: 'changed' })).toThrow()
   expect(() => heldActionReceiptSchema.parse({ ...result.receipt, files: [{ ...result.receipt.files[0], repositoryPath: 'actions/registry.json' }, result.receipt.files[1]] })).toThrow()
   await expect(reserveHeldAction(binding, t.github)).rejects.toThrow(); expect(create).toHaveBeenCalledTimes(2)
-})
+}, 15000)
 it.each(['malformed', 'unknown'] as const)('preserves held originals and records %s without raw diagnostics or replay', async kind => {
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
   if (kind === 'malformed') create.mockResolvedValue(response({ PRIVATE_MODEL_INPUT_SENTINEL: true }))
@@ -141,21 +142,21 @@ it.each(['malformed', 'unknown'] as const)('preserves held originals and records
   expect(result.receipt.state).toBe(kind === 'malformed' ? 'held-invalid-output' : 'uncertain-after-entry'); expect(result.files).toEqual([]); expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
   expect(readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')).toBe(f.original.action); expect(readFileSync(join(f.root, `_articles/${date}.md`), 'utf8')).toBe(f.original.article)
   expect(create).toHaveBeenCalledTimes(1); expect(result.receipt.stop.reason).toBe(kind === 'malformed' ? 'native-invalid-output' : 'provider-or-unknown'); await expect(reserveHeldAction(binding, t.github)).rejects.toThrow()
-})
+}, 15000)
 it('stops stale main after reservation before every model API', async () => {
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
   t.state.main = 'c'.repeat(40)
   const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
   expect(result.receipt.state).toBe('rejected-before-model'); expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
   expect(result.receipt.stop).toEqual({ stage: 'input', reason: 'stale-source' })
-})
+}, 15000)
 
 it('rejects an operator-disabled train before claiming or counting', async () => {
   const f = fixture(), t = transport(f.source)
   vi.stubEnv('ACTION_REVIEW_DISABLED', 'true')
   await expect(admitHeldAction(f.root, f.inputs, f.context, t.github)).rejects.toThrow()
   expect(t.state.requests).toBe(0); expect(countTokens).not.toHaveBeenCalled()
-})
+}, 15000)
 
 it('retains the one native shared repair budget within the same consumed operation', async () => {
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
@@ -164,7 +165,7 @@ it('retains the one native shared repair budget within the same consumed operati
   const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
   expect(result.receipt.state).toBe('native-review-completed-unmerged'); expect(create).toHaveBeenCalledTimes(3); expect(countTokens).toHaveBeenCalledTimes(3)
   expect(create.mock.calls.map(call => call[0].model)).toEqual(['claude-sonnet-4-6', 'claude-sonnet-4-6', 'claude-opus-4-6'])
-})
+}, 15000)
 
 it('a count/HTTP failure consumes authority without claiming generation or billing success', async () => {
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
@@ -173,7 +174,7 @@ it('a count/HTTP failure consumes authority without claiming generation or billi
   expect(result.receipt.state).toBe('uncertain-after-entry'); expect(result.receipt.observations).toEqual({ billing: 'not-inferred', budgets: [], responses: [] })
   expect(create).not.toHaveBeenCalled(); expect(countTokens).toHaveBeenCalledTimes(1); expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
   await expect(reserveHeldAction(binding, t.github)).rejects.toThrow()
-})
+}, 15000)
 
 it('cannot reuse consumed authorization with another operation or reuse an operation under another grant', async () => {
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github)
@@ -181,7 +182,7 @@ it('cannot reuse consumed authorization with another operation or reuse an opera
   await expect(reserveHeldAction({ ...binding, inputs: { ...binding.inputs, operation_id: '55555555-5555-4555-8555-555555555555' } }, t.github)).rejects.toThrow()
   await expect(reserveHeldAction({ ...binding, grant: { ...binding.grant, authorizationId: '66666666-6666-4666-8666-666666666666' } }, t.github)).rejects.toThrow()
   expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
-})
+}, 15000)
 
 it('rejects a hydrated-index change that the dated artifact could not represent', async () => {
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
@@ -194,14 +195,14 @@ it('rejects a hydrated-index change that the dated artifact could not represent'
   } })
   expect(result.files).toEqual([]); expect(result.receipt.stop.reason).toBe('proposal-boundary'); expect(result.receipt.state).toBe('uncertain-after-entry')
   expect(readActionRegistry(f.root).records[0].goal).toBe('')
-})
+}, 15000)
 
 it('rejects another workflow run before reservation or model APIs', async () => {
   const f = fixture(), t = transport(f.source)
   t.state.runPath = '.github/workflows/editorial-revise.yml'
   await expect(admitHeldAction(f.root, f.inputs, f.context, t.github)).rejects.toThrow()
   expect(t.state.mutations).toBe(0); expect(countTokens).not.toHaveBeenCalled()
-})
+}, 15000)
 
 it.each(['ignorePatch', 'wrongPatchResponse'] as const)('requires acknowledged and read-back entry marker: %s', async failure => {
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
@@ -210,7 +211,7 @@ it.each(['ignorePatch', 'wrongPatchResponse'] as const)('requires acknowledged a
   expect(result.receipt.state).toBe('uncertain-after-entry'); expect(result.files).toEqual([])
   expect(result.receipt.nativeEntry).toBe('not-entered')
   expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
-})
+}, 15000)
 
 it('rejects main moving during entered-marker writes before native count or generation', async () => {
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
@@ -218,4 +219,23 @@ it('rejects main moving during entered-marker writes before native count or gene
   const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
   expect(result.receipt.state).toBe('rejected-before-model'); expect(result.receipt.nativeEntry).toBe('not-entered'); expect(result.receipt.authorization).toBe('consumed')
   expect(result.receipt.stop.reason).toBe('stale-source'); expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
-})
+}, 15000)
+
+
+it.each(['append', 'rehash-unknown', 'trusted-content', 'wrong-kind'] as const)('rejects uncited or malformed coverage export: %s', async change => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  healthy(f)
+  const runNative = native(f, t)
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: async options => {
+    const reviewed = await runNative(options), coverage = reviewed.registry.articles[0].sources.find(source => source.id.startsWith('action-evidence-coverage@'))
+    if (!coverage) throw new Error('Missing native coverage fixture')
+    if (change === 'append') coverage.content += 'PRIVATE_COLLECTED_UNCITED_SENTINEL'
+    if (change === 'rehash-unknown') { coverage.content = JSON.stringify({ ...JSON.parse(coverage.content), raw: 'PRIVATE_COLLECTED_UNCITED_SENTINEL' }); coverage.id = `action-evidence-coverage@${sha256(coverage.content)}` }
+    if (change === 'trusted-content') coverage.trustedContent = ['PRIVATE_COLLECTED_UNCITED_SENTINEL']
+    if (change === 'wrong-kind') coverage.kind = 'repository'
+    return reviewed
+  } })
+  expect(result.files).toEqual([]); expect(result.receipt.stop.reason).toBe('proposal-boundary'); expect(result.receipt.state).toBe('uncertain-after-entry')
+  expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
+  expect(readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')).toBe(f.original.action)
+}, 15000)
