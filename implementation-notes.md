@@ -514,3 +514,9 @@ When safe result bytes exist after an authorized run, preserve those exact immut
 
 - Reusing the synchronous runner’s option values did not preserve its behavior: the asynchronous API applies `maxBuffer` per stream, leaves stdin open and does not forward captured stderr automatically. Keep the original combined byte bound, stdin EOF and diagnostic output while making only the long child calls awaitable. The local socket reproduction supports this repair but does not prove the historical hosted `EPIPE` cause.
 - The controls assumed signal handling preceded natural child exit and synchronous receipt failure was portable; hosted Linux disproved both. Give the signal fixture a bounded lifetime and verify observable receipt outcomes, exact readback and parent liveness without requiring every runtime to fail the synchronous POST.
+
+
+## Deviations — October 25 bounded hosted source view (2026-10-27)
+
+- The existing generated-link compaction was expected to make PR #416 fit, but the fresh 250,399-byte source still needed 191,201 bytes. Prepare a collector-proved lossless representation of repeated metadata; retain all fields/authored text, original source identity, unchanged limits and blocked hosted raw storage. Automatic semantic range selection remains outside this repair because opaque obligation IDs cannot prove that selected text answers a question.
+- A later verified round replaced the pending snapshot and discarded both ordinary unresolved receipts and its nested article-only-acceptance request. Preserve those receipts as history; success against a fresh source does not resolve an older request by implication.

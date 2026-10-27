@@ -11,10 +11,11 @@ import {
 } from './action-evidence-retrieval.js'
 import { EXCLUDED_REPOS, KNOWN_REPOS } from './fleet.js'
 import { extractDraftRecommendationContext } from './recommendation-prose.js'
+import { ActionSourceCollection, PreparedActionEvidenceView } from './action-evidence-view.js'
 
 const SOURCE_LIMIT = ACTION_EVIDENCE_PER_SOURCE_LIMIT
 const TOTAL_LIMIT = ACTION_EVIDENCE_TOTAL_LIMIT
-export const ACTION_EVIDENCE_SELECTION_VERSION = 'progressive-action-evidence-v5-candidate-requirements'
+export const ACTION_EVIDENCE_SELECTION_VERSION = 'progressive-action-evidence-v6-lossless-source-views'
 export const COVERAGE_SOURCE = 'action-evidence-coverage'
 export const CONTINUITY_TARGETS_SOURCE = 'accepted-closing-continuity-targets'
 const sourceKey = (id: string) => id.replace(/@[a-f0-9]{64}$/, '')
@@ -542,7 +543,7 @@ export function actionEvidenceScope(input: { registry: ActionRegistry; articleDa
 }
 
 /** Select complete sources, never first/last-N comments or inferred summaries. */
-export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; cycle?: ActionReviewCycle; markdown: string; feedback: string; sources: readonly ActionSource[]; articleStatuses?: ReadonlyMap<string, string>; draftContext?: DraftRecommendationContext; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftCandidates?: readonly DraftActionCandidate[]; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; selectedEvidenceProjectionIds?: readonly string[] }) {
+export function selectActionEvidence(input: { registry: ActionRegistry; articleDate: string; cycle?: ActionReviewCycle; markdown: string; feedback: string; sources: readonly ActionSource[]; articleStatuses?: ReadonlyMap<string, string>; draftContext?: DraftRecommendationContext; draftCandidateEvidence?: DraftCandidateEvidenceRequirements; draftCandidates?: readonly DraftActionCandidate[]; reassessActionKeys?: readonly string[]; preserveActionKeys?: readonly string[]; selectedEvidenceProjectionIds?: readonly string[]; collectedSources?: ActionSourceCollection }) {
   const cycle: ActionReviewCycle = input.cycle ?? { phase: 'generation' }
   const scope = actionEvidenceScope(input)
   const sources = canonicalActionSources(input.sources)
@@ -569,9 +570,16 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     || source.kind === 'repository'
     || source.kind === 'github' && !/^github:[\w-]+#\d+$/.test(sourceKey(source.id))
     || requiredRefs.has(sourceKey(source.id).replace(/^github:/, ''))
+  // Selection charges the exact labeled model content, including any complete
+  // collector-proved dictionary. Raw identities and byte sizes remain explicit.
+  const modelView = (source: ActionSource) => {
+    const view = PreparedActionEvidenceView.prepare([source], sha256('source-budget'), sha256('source-budget'), input.collectedSources, [...requiredRefs])
+    const content = view.promptSources()[0].content
+    return { modelBytes: Buffer.byteLength(content), modelContentSha256: sha256(content), modelPolicySha256: view.receipt.policySha256 }
+  }
   const coverage = sources.map(source => ({ id: source.id, kind: source.kind, locator: source.locator,
     fullContentSha256: source.fullContentSha256 ?? sha256(source.content), collectedContentSha256: sha256(source.content),
-    bytes: Buffer.byteLength(source.content), lines: source.content.split('\n').length,
+    bytes: Buffer.byteLength(source.content), lines: source.content.split('\n').length, ...modelView(source),
     required: required(source), included: false, reason: 'outside current action/feedback scope' }))
   const missing = [...requiredRefs].filter(ref => !available.has(`github:${ref}`)).sort()
   const selected: ActionSource[] = []
@@ -652,8 +660,8 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     const wanted = required(source) || source.kind !== 'github' && (!goalPath
       || goalPath === 'decisions/northstar/l2-ojfbot.md' || dependencies.includes(goalPath))
     if (!wanted) continue
-    if (!complete || entry.bytes > SOURCE_LIMIT || bytes + entry.bytes > TOTAL_LIMIT - 16 * 1024) {
-      entry.reason = !complete ? 'source bytes do not match their full-content identity (excerpt or corruption)' : entry.bytes > SOURCE_LIMIT ? 'exceeds 128 KiB source limit' : 'whole source does not fit total budget'
+    if (!complete || entry.modelBytes > SOURCE_LIMIT || bytes + entry.modelBytes > TOTAL_LIMIT - 16 * 1024) {
+      entry.reason = !complete ? 'source bytes do not match their full-content identity (excerpt or corruption)' : entry.modelBytes > SOURCE_LIMIT ? 'exceeds 128 KiB source limit' : 'whole source does not fit total budget'
       if (entry.required && complete) {
         const request = requestFor('source-view', sourceKey(source.id), source)
         const candidates = projections
@@ -675,13 +683,14 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
         if (projection) {
           const projectionEntry = coverage.find(item => item.id === projection.id)
           if (!projectionEntry) throw new Error('Missing bounded evidence coverage entry')
-          if (bytes + projectionEntry.bytes > TOTAL_LIMIT - 16 * 1024) throw new ActionEvidenceRequestError(request, `Required action evidence ${source.id}: bounded question view does not fit total budget; review pending`)
+          if (projectionEntry.modelBytes > SOURCE_LIMIT) throw new ActionEvidenceRequestError(request, `Required action evidence ${source.id}: labeled bounded question view exceeds 128 KiB source limit; review pending`)
+          if (bytes + projectionEntry.modelBytes > TOTAL_LIMIT - 16 * 1024) throw new ActionEvidenceRequestError(request, `Required action evidence ${source.id}: bounded question view does not fit total budget; review pending`)
           entry.reason = 'complete artifact retained; bounded question view selected'
           projectionEntry.required = true
           projectionEntry.included = true
           projectionEntry.reason = 'exact ranges pinned to immutable complete artifact for one open question'
           selected.push(projection)
-          bytes += projectionEntry.bytes
+          bytes += projectionEntry.modelBytes
           resolvedRequests.push(request.id)
           continue
         }
@@ -697,7 +706,7 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     entry.included = true
     entry.reason = entry.required ? 'complete current-action/feedback dependency' : 'complete goal or contextual source'
     selected.push(source)
-    bytes += entry.bytes
+    bytes += entry.modelBytes
   }
   if (missing.length) {
     const request = requestFor('missing-source', `github:${missing[0]}`)
@@ -705,15 +714,15 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
   }
   const buildReceipt = () => ({ version: ACTION_EVIDENCE_SELECTION_VERSION, unit: 'UTF-8 bytes' as const,
     collection: 'Bounded collector output, not an exhaustive repository/discussion census. Missing or omitted content is unknown, never evidence of absence or approval.',
-    selection: 'Whole sources only; no chronological comment window or excerpt. Only current carried actions, explicit feedback and retained draft continuation context require GitHub discussions. Shipment prose does not.',
+    selection: 'Whole-source model views; collector-proved lossless metadata factoring is allowed, with raw identity retained. No chronological comment window or excerpt. Only current carried actions, explicit feedback and retained draft continuation context require GitHub discussions. Shipment prose does not.',
     authority: 'This coverage index is context only. Hashes, identities, omission reasons and missing evidence cannot justify completion, supersession, dismissal or human approval.',
     requiredReferences: [...requiredRefs].sort(), contextReferences: [...scope.contextRefs].sort(), referenceRequirements: scope.referenceRequirements,
     reviewActionKeys: scope.reviewActionKeys, preservedTerminalActionKeys: scope.preservedTerminalActionKeys,
     expandedActionKeys: scope.expanded.sort(), resolvedRequests: resolvedRequests.sort(), sources: coverage })
   let receipt = buildReceipt()
   let content = JSON.stringify(receipt)
-  if (Buffer.byteLength(content) > SOURCE_LIMIT) throw new Error('Action evidence coverage exceeds its per-source budget; review pending')
-  while (bytes + Buffer.byteLength(content) > TOTAL_LIMIT) {
+  if (Buffer.byteLength(`L1: ${content}`) > SOURCE_LIMIT) throw new Error('Action evidence coverage exceeds its per-source budget; review pending')
+  while (bytes + Buffer.byteLength(`L1: ${content}`) > TOTAL_LIMIT) {
     let removableIndex = -1
     for (let index = selected.length - 1; index >= 0; index--) {
       const entry = coverage.find(item => item.id === selected[index]?.id)
@@ -731,12 +740,12 @@ export function selectActionEvidence(input: { registry: ActionRegistry; articleD
     const [omitted] = selected.splice(removableIndex, 1)
     const entry = omitted && coverage.find(item => item.id === omitted.id)
     if (!omitted || !entry) throw new Error('Missing optional action coverage entry')
-    bytes -= entry.bytes
+    bytes -= entry.modelBytes
     entry.included = false
     entry.reason = 'complete optional whole source omitted so selected sources and complete coverage receipt fit total budget'
     receipt = buildReceipt()
     content = JSON.stringify(receipt)
-    if (Buffer.byteLength(content) > SOURCE_LIMIT) throw new Error('Action evidence coverage exceeds its per-source budget; review pending')
+    if (Buffer.byteLength(`L1: ${content}`) > SOURCE_LIMIT) throw new Error('Action evidence coverage exceeds its per-source budget; review pending')
   }
   const report: ActionSource = { id: `${COVERAGE_SOURCE}@${sha256(content)}`, kind: 'report', locator: ACTION_EVIDENCE_SELECTION_VERSION, content }
   return { sources: [...selected, report].sort((a, b) => a.id.localeCompare(b.id)), receipt, expandedActionKeys: scope.expanded }

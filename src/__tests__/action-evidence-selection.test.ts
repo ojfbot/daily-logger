@@ -12,6 +12,7 @@ import { ActionEvidenceRequestError, actionEvidenceCaseDigest } from '../action-
 import { generationActionCycle, revisionActionCycle } from '../action-review-cycle.js'
 import { collectActionSources, type ActionVerification } from '../review-actions.js'
 import { stampOutcome } from '../stamp-outcome.js'
+import { ActionSourceCollection, PreparedActionEvidenceView, captureGithubActionSource } from '../action-evidence-view.js'
 
 const date = '2030-01-01'
 const empty = () => ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
@@ -730,7 +731,7 @@ it('backs off optional whole-source context when the complete coverage receipt e
   expect(selection.receipt.sources.filter(source => source.required).every(source => source.included)).toBe(true)
   expect(omitted.length).toBeGreaterThan(0)
   expect(omitted.every(source => source.reason.includes('complete coverage receipt'))).toBe(true)
-  expect(omitted.map(source => source.id)).toEqual([...omitted.map(source => source.id)].sort().reverse())
+  expect(omitted.map(source => source.id)).toEqual(sources.slice(-omitted.length).map(source => source.id))
   expect(selection.receipt.sources).toHaveLength(sources.length)
 })
 
@@ -891,4 +892,39 @@ it('refuses a terminal disposition supported only by the coverage index, even if
   } })
   expect(result.registry.articles[0].review.state).toBe('pending')
   expect(result.registry.records[0]).toEqual(registry.records[0])
+})
+
+
+it('charges a collector-proved complete view while raw copies stay held and authored owner gates stay citable', () => {
+  const ownerGate = 'OWNER GATE: do not close until the named owner accepts the delivery.'
+  const capture = captureGithubActionSource({ id: 'github:daily-logger#416', locator: 'https://github.com/ojfbot/daily-logger/pull/416',
+    observation: 'CURRENT API STATE daily-logger#416: state=closed; merged_at=2026-10-24T12:00:00Z.', trustedContent: [ownerGate],
+    responses: [JSON.stringify(Array.from({ length: 60 }, (_, index) => ({ id: index + 1,
+      html_url: `https://github.com/ojfbot/daily-logger/pull/416#issuecomment-${index + 1}`, author_association: 'OWNER',
+      user: { id: 1, login: 'ojfbot', avatar_url: 'https://example.invalid/avatar' },
+      unknown_contract: { permission: 'owner confirmation remains required', payload: 'u'.repeat(3000) },
+      body: index === 0 ? ownerGate : `Authored statement ${index}: unknown constraints remain visible.`,
+    })))],
+  })
+  const source = capture.source
+  source.id += `@${sha256(source.content)}`
+  const collection = new ActionSourceCollection([source], [capture])
+  const select = (collectedSources?: ActionSourceCollection) => selectActionEvidence({ registry: empty(), articleDate: date,
+    cycle: generationActionCycle(), markdown: 'A source-view fixture.', feedback: 'Review daily-logger #416.', sources: [source], collectedSources })
+  expect(Buffer.byteLength(source.content)).toBeGreaterThan(128 * 1024)
+  expect(() => select()).toThrow(ActionEvidenceRequestError)
+  expect(() => select(new ActionSourceCollection([source]))).toThrow(ActionEvidenceRequestError)
+  const selection = select(collection)
+  const entry = selection.receipt.sources.find(item => item.id === source.id)!
+  const prepared = PreparedActionEvidenceView.prepare(selection.sources, sha256('case'), sha256('state'), collection, selection.receipt.requiredReferences)
+  const promptSource = prepared.promptSources().find(item => item.locator === source.locator)!
+  expect(entry).toMatchObject({ required: true, included: true, bytes: Buffer.byteLength(source.content), modelBytes: Buffer.byteLength(promptSource.content), modelContentSha256: sha256(promptSource.content) })
+  expect(entry.modelBytes).toBeLessThan(128 * 1024)
+  expect(selection.sources.find(item => item.id === source.id)).toEqual(source)
+  expect(prepared.rawSources().find(item => item.id === source.id)).toEqual(source)
+  expect(promptSource.content).toContain(ownerGate)
+  const gateLine = source.content.split('\n').indexOf(ownerGate) + 1
+  expect(prepared.resolve(source.id, gateLine, gateLine).quote).toBe(ownerGate)
+  const copy = structuredClone(source); copy.trustedContent = ['different owner claim']
+  expect(() => PreparedActionEvidenceView.prepare([copy], sha256('case'), sha256('state'), collection, ['daily-logger#416'])).toThrow(/provenance/i)
 })

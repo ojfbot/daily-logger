@@ -1302,7 +1302,13 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   const proposalSha256 = sha256(JSON.stringify(proposal))
   const candidateReviewHistory = hasInvocationBirthOutput(input.registry, previous)
     ? archiveCandidateReview(previous, true) : previous?.candidateReviewHistory
-  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], ...(reviewedDraftCandidates === undefined ? {} : { draftCandidates: reviewedDraftCandidates }), ...(candidateReviewHistory === undefined ? {} : { candidateReviewHistory }), ...(input.draftCandidateEvidence === undefined ? {} : { draftCandidateEvidence: input.draftCandidateEvidence }), draftContext: prepared.context, closing, stateDigest: sha256('native-review-output-pending'), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256, evidenceView: input.evidenceView.receipt, evidenceViewOutputSha256: sha256('native-view-output-pending'), verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...verification.candidateDispositions.map(verdict => ({ item: `draft-candidate:${verdict.candidateId}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, evidenceRequests: input.resolvedEvidenceRequests ?? [], rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
+  const evidenceRequests = new Map((previous?.evidenceRequests ?? []).map(request => [request.id, request]))
+  const acceptedRequest = previous?.review.state === 'pending' ? previous.review.articleAcceptance?.evidenceRequest : undefined
+  if (acceptedRequest && !evidenceRequests.has(acceptedRequest.id)) evidenceRequests.set(acceptedRequest.id, acceptedRequest)
+  // A new successful review archives the prior hold; only an explicit native
+  // resolution can change that request's lifecycle state.
+  for (const request of input.resolvedEvidenceRequests ?? []) evidenceRequests.set(request.id, request)
+  const snapshot = { date: input.articleDate, reviewCycle: cycle, status: z.enum(['draft', 'accepted', 'rejected']).parse(input.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft'), review: { state: 'verified' as const }, articleDigest: managedArticleDigest(input.markdown), roundId: input.roundId, actionKeys: [...keys], ...(reviewedDraftCandidates === undefined ? {} : { draftCandidates: reviewedDraftCandidates }), ...(candidateReviewHistory === undefined ? {} : { candidateReviewHistory }), ...(input.draftCandidateEvidence === undefined ? {} : { draftCandidateEvidence: input.draftCandidateEvidence }), draftContext: prepared.context, closing, stateDigest: sha256('native-review-output-pending'), verification: { proposer: input.identity?.proposer ?? 'injected-test-agent', verifier: input.identity?.verifier ?? 'injected-test-agent', promptVersion: ACTION_REVIEW_PROMPT_VERSION, proposalSha256, evidenceView: input.evidenceView.receipt, evidenceViewOutputSha256: sha256('native-view-output-pending'), verdicts: [...verification.changes.map(verdict => ({ item: verdict.actionKey, verdict: verdict.verdict, reason: verdict.reason })), ...verification.suggestions.map(verdict => ({ item: `candidate:${verdict.candidateIndex}`, verdict: verdict.verdict, reason: verdict.reason })), ...verification.candidateDispositions.map(verdict => ({ item: `draft-candidate:${verdict.candidateId}`, verdict: verdict.verdict, reason: verdict.reason })), ...closingVerdicts] }, sources: retainedSources, evidenceRequests: [...evidenceRequests.values()], rejected: [...new Map(rejected.map(item => [JSON.stringify(item), item])).values()] }
   next.articles = [...next.articles.filter(article => article.date !== input.articleDate), snapshot]
   const normalizedNext = ActionRegistrySchema.parse(next)
   const reviewOutput = input.draftCandidateEvidence ? deriveActionReviewOutput({ before: input.registry, after: normalizedNext, articleStatuses: input.articleStatuses,
@@ -1390,7 +1396,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
     }
   }
   let selection: ReturnType<typeof selectActionEvidence>
-  try { selection = selectActionEvidence({ ...input, draftCandidates, draftContext: prepared.context }) }
+  try { selection = selectActionEvidence({ ...input, draftCandidates, draftContext: prepared.context, collectedSources }) }
   catch (error) { assertCurrentFrontier(); throw error }
   input = { ...input, sources: selection.sources }
   const registryStateSha256 = actionEvidenceRegistryDigest(input.registry, input.articleDate)
@@ -1411,13 +1417,20 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   }
   assertCurrentFrontier()
   const byteLength = (value: string) => Buffer.byteLength(value, 'utf8')
-  if (input.sources.some(source => byteLength(source.content) > 128 * 1024) || input.sources.reduce((total, source) => total + byteLength(source.content), 0) > 384 * 1024) throw new Error('Action evidence exceeds its source budget (128 KiB each / 384 KiB total); review pending')
+  const promptSources = evidenceView.promptSources()
+  for (const [index, source] of input.sources.entries()) {
+    const selected = selection.receipt.sources.find(entry => entry.id === source.id)
+    const content = promptSources[index].content
+    if (selected && (selected.modelBytes !== byteLength(content) || selected.modelContentSha256 !== sha256(content)
+      || selected.modelPolicySha256 !== evidenceView.receipt.policySha256)) throw new ActionContextNeedError('Selected source model view changed after budget qualification; review pending')
+  }
+  if (promptSources.some(source => byteLength(source.content) > 128 * 1024) || promptSources.reduce((total, source) => total + byteLength(source.content), 0) > 384 * 1024) throw new Error('Action evidence exceeds its source budget (128 KiB each / 384 KiB total); review pending')
   const sourceAliases = new Map(input.sources.map((source, index) => [`s${index + 1}`, source.id]))
   const currentActionKeys = previous?.actionKeys ?? input.registry.records.filter(record => record.introducedBy === input.articleDate).map(record => record.key)
   const reviewIndex = actionReviewIndex({ ...input, expandedActionKeys: selection.expandedActionKeys })
   const modelContext = { articleDate: input.articleDate, reviewCycle: input.cycle, newIdentityLimit: actionAdmissionLimit(input.cycle), remainingNewIdentitySlots: Math.max(0, actionAdmissionLimit(input.cycle) - countCycleAdmissions(input.registry.records.filter(record => record.origin === 'suggested' && record.introducedBy === input.articleDate), input.cycle)), articleStatuses: Object.fromEntries(input.articleStatuses),
     initialDraftCandidates: draftCandidates ?? [], initialDraftCandidatePolicy: CANDIDATE_REVIEW_POLICY,
-    sources: evidenceView.promptSources(),
+    sources: promptSources,
     evidenceView: evidenceView.receipt,
     citationPolicy: { rule: 'Only complete original L-numbered lines are citable. CONTEXT ONLY metadata rows are partially visible and cannot be cited or prove absence. Request full-row evidence if such a fact is necessary. Every quote must be exact. Completion, dismissal and supersession require every citation to be authoritative API/OWNER/MEMBER/COLLABORATOR text or repository evidence. Dismissal also permits explicit operator feedback. Article-only claims, metadata and third-party comments never establish terminal dispositions. Do not include source aliases or line labels in user-facing reasons.' },
     ...packActionIndex(reviewIndex), actionIndexEncoding: ACTION_INDEX_ENCODING,
