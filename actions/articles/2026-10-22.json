@@ -10,8 +10,8 @@
       "state": "pending",
       "reason": "Action evidence request c90a4e15543ddcacdfb2c5044c14125b93423ce00ac51052bb0185575051b532 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
     },
-    "articleDigest": "9e24aec40fb0957794abf4f987a17e59378a4897663795e9db4d6f94a750943a",
-    "roundId": "d39e4e302176c1ed704fef85277f8800063c583d005a70c64b9b391c5fcf2c05",
+    "articleDigest": "0f9c24197aea81633b19292ae759b20d0fa33698d437dd4b253c3280012ae832",
+    "roundId": "b42084fa7b06f9525adc8d7d2ec933390d5ef3678df9e27e0eea7cb8515ba906",
     "reviewCycle": {
       "phase": "generation"
     },
@@ -60,19 +60,19 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "deterministic-default",
-        "identity": "progressive-action-evidence-v5-candidate-requirements",
-        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+        "kind": "coordinator",
+        "identity": "oct22-full-cycle:corrected-draft-preview",
+        "decision": "Supervised preview binds corrected October22 Draft/current article-status index while retaining all original candidate payloads, context and evidence duties. Source freshness, new owner/counterevidence coverage and factual classifications require independent review. No model verdict, acceptance, admission, settlement or execution authority is granted."
       },
       "articleDate": "2026-10-22",
-      "articleDigest": "9e24aec40fb0957794abf4f987a17e59378a4897663795e9db4d6f94a750943a",
+      "articleDigest": "0f9c24197aea81633b19292ae759b20d0fa33698d437dd4b253c3280012ae832",
       "reviewCycle": {
         "phase": "generation"
       },
       "draftContextSha256": "227c5766ac6fef1d1efdb9a11449ad56cca7e92a18b3d1fceae14793fd48c6ce",
       "candidatePayloadsSha256": "b338ed576e8515c19968dd88f261a27e63e25f5a1bea34fbf997e4038bf30f1a",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "23b80e5c7659002cfa27470bebc606da310b4667cff5769aa53ab8426159e1cb",
+      "articleStatusesSha256": "ec6f0ab93b3645a7030b03e638fe3beb45f41c97bbac6869f7c0540b5f32d013",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -122,7 +122,7 @@
       "kind": "retained",
       "markdown": "October 21 article acceptance is gated on two open PRs: daily-logger #417 (fix: size complete action evidence coverage) and #416 (editorial: review and accept October 21 draft). Both were opened before the 2026-10-22 03:30 America/Chicago cutoff but are not yet merged; their current state is unknown beyond creation timestamps. Issue #386 (token-aware action review budget) is the structural concern backing both PRs.\n\nClassic Space Venue dev-host is a local development environment — no public URL is attested. The provenance fixture path inside the walkway-pass strand is not explicitly attested beyond PR descriptions. No live adapter is active, no minifig is bound to a fleet-runner work item, and no idle/auto-degrade timer exists. Display composition issues #5 (32-inch desk-monitor) and #6 (narrow remote-browser) are owner-gated on operator hardware access. Core #561 (fleet-runner read-projection v0) is the architectural prerequisite for live data; owner and delivery timeline are unattested.\n\nClassic-space-venue #4 (RFI-0002 research harness) is open and awaiting review; it is not confirmed how long it has been open or who is reviewing it. Whether the core wayfinder grilling cluster (#564–#567, #544) can progress independently of that harness merging is not established.\n\nLego-village-pipeline DRAFT PRs #44, #45, #46 carry no in-window activity. Their named merge prerequisite conditions are not attested in current evidence; they are not confirmed candidates to close.\n\nMorning-cockpit #60 is open with no stated blocker or owner gate.\n\nSkill telemetry stream frozen since 2026-05-12. No owner, remediation date, or formal park decision attested in evidence. The 100% quality coverage metric and 0% conversion rate are both artifacts of the frozen legacy stream, not live measurements."
     },
-    "stateDigest": "ff458c41f23b1b412501d06c376edcb2c731a24fee91e6f15c7812e2e60240c7",
+    "stateDigest": "035c037b3cb9cfac7425996ab53ebe4e7e4219ff0d770fe7560dc211dc786019",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
