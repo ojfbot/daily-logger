@@ -37,7 +37,7 @@ function setup(existing = false, command = payloads[0].command, repo = payloads[
   snapshot.stateDigest = actionStateDigest(pending.registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, { articleDate: date, roundId: snapshot.roundId, includePriorArticleRounds: true, draftCandidates: snapshot.draftCandidates, draftCandidateEvidence: snapshot.draftCandidateEvidence })
   const candidates = snapshot.draftCandidates
   const proposal = { changes: [], suggestions: [{ identity: { kind: 'captured' as const, candidateId: candidates[0].candidateId }, ...fields }],
-    candidateDispositions: [{ candidateId: candidates[0].candidateId, kind: 'promote' as const, suggestionIndex: 0, reason: 'Review the exact original.' },
+    candidateDispositions: [{ candidateId: candidates[0].candidateId, kind: 'promote' as const, reason: 'Review the exact original.' },
       { candidateId: candidates[1].candidateId, kind: 'reject' as const, reason: 'Separate original is not selected in this synthetic case.', citations: fields.factCitations }], closingOptions: [] }
   const verification = { changes: [], suggestions: [{ candidateIndex: 0, verdict: 'pass' as const, reason: 'OFFLINE controlled mechanical verdict only.', existingKey: null }], candidateDispositions: candidates.map(candidate => ({ candidateId: candidate.candidateId, verdict: 'pass' as const, reason: 'OFFLINE controlled mechanical verdict only.' })), closingOptions: [] }
   const input = { registry: pending.registry, markdown: pending.markdown, articleDate: date, cycle: generationActionCycle(), feedback: '', sources, articleStatuses: new Map([[date, 'draft']]), agents: createActionAgents() }
@@ -51,7 +51,7 @@ describe('captured candidate references before independent verification', () => 
     const before = JSON.stringify(input.registry)
     const bad = { ...proposal, suggestions: [{ ...payloads[0], ...fields, description: 'Rewritten immutable description.' }] }
     const { status: _status, sourceDate: _sourceDate, ...suggestion } = bad.suggestions[0]
-    await expect(reviewArticleActions({ ...input, agents: { propose: async (_prompt, view) => resolveActionSourceLines({ ...bad, suggestions: [suggestion] }, view), verify } })).rejects.toThrow(/does not match the captured candidate/)
+    await expect(reviewArticleActions({ ...input, agents: { propose: async (_prompt, view) => resolveActionSourceLines({ ...bad, candidateDispositions: [{ ...bad.candidateDispositions[0], suggestionIndex: 0 }, bad.candidateDispositions[1]], suggestions: [suggestion] }, view), verify } })).rejects.toThrow(/does not match the captured candidate/)
     expect(verify).not.toHaveBeenCalled()
     expect(JSON.stringify(input.registry)).toBe(before)
     expect(candidates[0].payload).toEqual(payloads[0])
@@ -60,7 +60,7 @@ describe('captured candidate references before independent verification', () => 
     const { input, candidates, proposal, verification } = setup(), before = JSON.stringify(input.registry)
     const closure = { candidateId: candidates[0].candidateId, kind: 'verified-closure', actionKey: null,
       reason: 'The first fixture obligation is complete.', citations: fields.factCitations }
-    const promote = { candidateId: candidates[1].candidateId, kind: 'promote', suggestionIndex: 0,
+    const promote = { candidateId: candidates[1].candidateId, kind: 'promote',
       reason: 'Preserve this independently authored second-row reason exactly.' }
     const original = { ...proposal, suggestions: [{ ...proposal.suggestions[0], identity: { kind: 'captured', candidateId: candidates[1].candidateId } }],
       candidateDispositions: [{ ...closure, suggestionIndex: 0 }, promote] }
@@ -86,24 +86,89 @@ describe('captured candidate references before independent verification', () => 
     expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(['claude-sonnet-4-6', 'claude-sonnet-4-6', 'claude-opus-4-6'])
     expect(JSON.stringify(input.registry)).toBe(before)
   })
+  it.each([false, true])('uses the full single repair for the synthetic Oct22 closure-plus-orphan failure; remains invalid=%s', async remainsInvalid => {
+    const { input, candidates, proposal, verification } = setup(), before = JSON.stringify(input.registry)
+    const closure = { candidateId: candidates[0].candidateId, kind: 'verified-closure', actionKey: null,
+      reason: 'OFFLINE synthetic completed obligation.', citations: fields.factCitations }
+    const original = { ...proposal, candidateDispositions: [{ ...closure, suggestionIndex: 0 }, proposal.candidateDispositions[1]] }
+    const repaired = { ...proposal, suggestions: [{ ...proposal.suggestions[0], identity: { kind: 'captured', candidateId: candidates[1].candidateId } }],
+      candidateDispositions: [closure, { candidateId: candidates[1].candidateId, kind: 'promote', reason: 'OFFLINE separate retained obligation.' }] }
+    create.mockResolvedValueOnce(response(original)).mockResolvedValueOnce(response(remainsInvalid ? { ...original, candidateDispositions: [closure, proposal.candidateDispositions[1]] } : repaired))
+      .mockResolvedValueOnce(response(verification))
+    if (remainsInvalid) {
+      await expect(reviewArticleActions(input)).rejects.toThrow(/reason=terminal-with-suggestion/)
+    } else {
+      const result = await reviewArticleActions(input)
+      expect(result.registry.articles[0].draftCandidates?.map(candidate => candidate.review.state)).toEqual(['verified-closure', 'promoted'])
+    }
+    const request = RequestSchema.parse(create.mock.calls[1][0])
+    expect(request.messages[0].content).toContain('reason=terminal-with-suggestion')
+    expect(request.messages[0].content).toContain(`candidateId=${candidates[0].candidateId}`)
+    expect(request.messages[0].content).toContain('capturedReferences=1')
+    expect(request.messages[0].content).toContain('Return the complete required tool schema.')
+    expect(create.mock.calls[1][0].tools[0].input_schema.required).toEqual(['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
+    expect(create.mock.calls.map(([raw]) => RequestSchema.parse(raw).model)).toEqual(remainsInvalid
+      ? ['claude-sonnet-4-6', 'claude-sonnet-4-6'] : ['claude-sonnet-4-6', 'claude-sonnet-4-6', 'claude-opus-4-6'])
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
+  it.each(['duplicate-captured', 'missing-captured', 'map-key-mismatch', 'unknown-closure-key'] as const)('checks an untouched %s association before choosing a local shape repair', async mode => {
+    const { input, candidates, proposal, verification } = setup(), before = JSON.stringify(input.registry)
+    const malformed = { ...proposal.candidateDispositions[1], suggestionIndex: 0 }
+    const original = (() => {
+      switch (mode) {
+        case 'duplicate-captured': return { ...proposal, suggestions: [proposal.suggestions[0], proposal.suggestions[0]], candidateDispositions: [proposal.candidateDispositions[0], malformed] }
+        case 'missing-captured': return { ...proposal, suggestions: [], candidateDispositions: [proposal.candidateDispositions[0], malformed] }
+        case 'map-key-mismatch': return { ...proposal, candidateDispositions: [{ ...proposal.candidateDispositions[0], kind: 'map-existing', actionKey: 'unknown' }, malformed] }
+        case 'unknown-closure-key': return { ...proposal, suggestions: [], candidateDispositions: [{ candidateId: candidates[0].candidateId, kind: 'verified-closure', actionKey: 'unknown', reason: 'OFFLINE unsupported key.', citations: fields.factCitations }, malformed] }
+      }
+    })()
+    create.mockResolvedValueOnce(response(original)).mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response(verification))
+    const result = await reviewArticleActions(input)
+    expect(result.registry.articles[0].draftCandidates?.map(candidate => candidate.review.state)).toEqual(['promoted', 'rejected'])
+    expect(create.mock.calls[1][0].tools[0].input_schema.required).toEqual(['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
+    expect(JSON.stringify(input.registry)).toBe(before)
+  })
   it('pins the actual reordered suggestion index instead of either candidate or response ordinal', async () => {
     const { input, candidates, proposal, verification } = setup()
     const suggestions = [
       { ...proposal.suggestions[0], identity: { kind: 'captured', candidateId: candidates[1].candidateId }, target: 'second decision', outcome: 'Review the separate evidence path.' },
       proposal.suggestions[0],
     ]
-    const target = { candidateId: candidates[0].candidateId, kind: 'promote', suggestionIndex: 1, reason: 'Review the first immutable original at its actual suggestion index.' }
+    const target = { candidateId: candidates[0].candidateId, kind: 'promote', reason: 'Review the first immutable original at its actual suggestion index.' }
     const original = { ...proposal, suggestions, candidateDispositions: [
       { candidateId: candidates[0].candidateId, kind: 'promote', suggestionIndex: 1 },
-      { candidateId: candidates[1].candidateId, kind: 'promote', suggestionIndex: 0, reason: 'Keep this second reason unchanged.' },
+      { candidateId: candidates[1].candidateId, kind: 'promote', reason: 'Keep this second reason unchanged.' },
     ] }
     create.mockResolvedValueOnce(response(original)).mockResolvedValueOnce(response(target))
       .mockResolvedValueOnce(response({ ...verification, suggestions: [verification.suggestions[0], { ...verification.suggestions[0], candidateIndex: 1 }] }))
     const result = await reviewArticleActions(input)
-    expect(create.mock.calls[1][0].tools[0].input_schema.properties.suggestionIndex.const).toBe(1)
+    expect(create.mock.calls[1][0].tools[0].input_schema.properties).not.toHaveProperty('suggestionIndex')
+    expect(RequestSchema.parse(create.mock.calls[2][0]).messages[0].content).toContain('\"suggestionIndex\":1')
     expect(create.mock.calls[1][0].tools[0].input_schema.properties.candidateId.const).toBe(candidates[0].candidateId)
     expect(result.registry.articles[0].draftCandidates?.map(candidate => candidate.review.state)).toEqual(['promoted', 'promoted'])
     expect(result.registry.records.find(record => record.original.repo === payloads[0].repo)?.original.description).toBe(payloads[0].description)
+  })
+  it('derives captured indices among new suggestions without changing closing-option positions', async () => {
+    const { proposal, candidates } = setup()
+    const mixed = { ...proposal, suggestions: [
+      { ...fields, identity: { kind: 'new', command: '/investigate', repo: 'core', description: 'Separate source-supported new work.' } },
+      proposal.suggestions[0],
+    ], closingOptions: [{ kind: 'candidate', candidateIndex: 1, title: 'Review captured work', benefit: 'Retain the owner decision.', start: 'Read evidence.',
+      entryPoint: 'fixture.md', context: 'Owner gate remains.', whyNow: 'Current evidence needs review.', outcome: 'Record decision.', nextCheck: 'Obtain owner verdict.',
+      factCitations: fields.factCitations, goalCitations: fields.goalCitations }] }
+    create.mockResolvedValueOnce(response(mixed))
+    const { fixtureEvidenceView } = await import('./evidence-view-fixtures.js')
+    const result = await createActionAgents().propose('OFFLINE assembly only.', fixtureEvidenceView(sources), { articleDate: date, draftCandidates: candidates, actionKeys: [] })
+    expect(result).toMatchObject({ candidateDispositions: [{ candidateId: candidates[0].candidateId, kind: 'promote', suggestionIndex: 1 }],
+      closingOptions: [{ candidateIndex: 1 }], suggestions: [{ command: '/investigate' }, { command: payloads[0].command, description: payloads[0].description }] })
+  })
+  it('does not replenish the shared repair budget after a full association repair', async () => {
+    const { input, proposal, verification } = setup(), before = JSON.stringify(input.registry)
+    const original = { ...proposal, suggestions: [proposal.suggestions[0], proposal.suggestions[0]], candidateDispositions: [proposal.candidateDispositions[0], { ...proposal.candidateDispositions[1], suggestionIndex: 0 }] }
+    create.mockResolvedValueOnce(response(original)).mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response({ ...verification, suggestions: null }))
+    await expect(reviewArticleActions(input)).rejects.toThrow(/role=verifier/)
+    expect(create.mock.calls.map(([raw]) => RequestSchema.parse(raw).model)).toEqual(['claude-sonnet-4-6', 'claude-sonnet-4-6', 'claude-opus-4-6'])
+    expect(JSON.stringify(input.registry)).toBe(before)
   })
   it.each(['foreign-id', 'changed-kind', 'crosslinked-index', 'missing-reason', 'full-proposal', 'unrelated-array', 'unknown-key'] as const)('refuses a %s replacement without another repair, verifier or input writes', async mode => {
     const { input, candidates, proposal } = setup(), before = JSON.stringify(input.registry)
@@ -113,13 +178,13 @@ describe('captured candidate references before independent verification', () => 
         case 'foreign-id': return { ...target, candidateId: candidates[1].candidateId }
         case 'changed-kind': return { ...target, kind: 'reject', citations: fields.factCitations }
         case 'crosslinked-index': return { ...target, suggestionIndex: 1 }
-        case 'missing-reason': return { candidateId: target.candidateId, kind: target.kind, suggestionIndex: 0 }
+        case 'missing-reason': return { candidateId: target.candidateId, kind: target.kind }
         case 'full-proposal': return proposal
         case 'unrelated-array': return { ...target, changes: [] }
         case 'unknown-key': return { ...target, PRIVATE_CONTRADICTION: 'PRIVATE_VALUE' }
       }
     })()
-    create.mockResolvedValueOnce(response({ ...proposal, candidateDispositions: [{ candidateId: target.candidateId, kind: target.kind, suggestionIndex: 0 }, proposal.candidateDispositions[1]] }))
+    create.mockResolvedValueOnce(response({ ...proposal, candidateDispositions: [{ candidateId: target.candidateId, kind: target.kind }, proposal.candidateDispositions[1]] }))
       .mockResolvedValueOnce(response(invalid))
     await expect(reviewArticleActions(input)).rejects.toThrow(/role=proposer/)
     expect(create).toHaveBeenCalledTimes(2)
@@ -150,7 +215,7 @@ describe('captured candidate references before independent verification', () => 
     const { input, proposal } = setup(true), before = JSON.stringify(input.registry)
     const target = { ...proposal.candidateDispositions[0], kind: 'map-existing', actionKey: 'existing' }
     create.mockResolvedValueOnce(response({ ...proposal, suggestions: [{ ...proposal.suggestions[0], existingKey: 'existing' }],
-      candidateDispositions: [{ candidateId: target.candidateId, kind: target.kind, suggestionIndex: 0, actionKey: 'existing' }, proposal.candidateDispositions[1]] }))
+      candidateDispositions: [{ candidateId: target.candidateId, kind: target.kind, actionKey: 'existing' }, proposal.candidateDispositions[1]] }))
       .mockResolvedValueOnce(response({ ...target, actionKey: 'foreign-existing' }))
     await expect(reviewArticleActions(input)).rejects.toThrow(/role=proposer/)
     expect(create.mock.calls[1][0].tools[0].input_schema.properties.actionKey.const).toBe('existing')
@@ -293,12 +358,12 @@ describe('captured candidate references before independent verification', () => 
         case 'promote-existing': return { ...proposal, suggestions: [{ ...first, existingKey: 'existing' }] }
         case 'map-key-mismatch': return { ...proposal, suggestions: [{ ...first, existingKey: 'existing' }], candidateDispositions: [{ ...promote, kind: 'map-existing', actionKey: 'other' }, proposal.candidateDispositions[1]] }
         case 'map-unknown-key': return { ...proposal, suggestions: [{ ...first, existingKey: 'unknown' }], candidateDispositions: [{ ...promote, kind: 'map-existing', actionKey: 'unknown' }, proposal.candidateDispositions[1]] }
-        case 'map-cross-index': return { ...proposal, suggestions: [first, { ...first, identity: { kind: 'captured', candidateId: candidates[1].candidateId }, existingKey: 'existing' }], candidateDispositions: [{ ...promote, kind: 'map-existing', suggestionIndex: 1, actionKey: 'existing' }, proposal.candidateDispositions[1]] }
+        case 'map-cross-index': return { ...proposal, suggestions: [first, { ...first, identity: { kind: 'captured', candidateId: candidates[1].candidateId }, existingKey: 'existing' }], candidateDispositions: [{ ...promote, kind: 'map-existing', actionKey: 'existing' }, proposal.candidateDispositions[1]] }
       }
     })()
     create.mockResolvedValue(response(invalid))
     await expect(reviewArticleActions(input)).rejects.toThrow()
-    expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(mode === 'negative-index' || mode === 'fractional-index' ? ['claude-sonnet-4-6'] : ['claude-sonnet-4-6', 'claude-sonnet-4-6'])
+    expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(['claude-sonnet-4-6', 'claude-sonnet-4-6'])
     expect(JSON.stringify(input.registry)).toBe(before)
   })
   it('uses the single malformed repair to obtain a valid reference before one verifier', async () => {
@@ -330,10 +395,10 @@ describe('captured candidate references before independent verification', () => 
     const { fixtureEvidenceView } = await import('./evidence-view-fixtures.js')
     const view = fixtureEvidenceView(sources)
     create.mockResolvedValue(response(proposal))
-    await expect(agents.propose(JSON.stringify({ initialDraftCandidates: candidates }), view)).rejects.toThrow(/unknown or no longer awaiting/)
+    await expect(agents.propose(JSON.stringify({ initialDraftCandidates: candidates }), view)).rejects.toThrow(/unknown-suggestion|unknown-disposition/)
     const resolved = structuredClone(candidates)
     resolved[0].review = { state: 'rejected', reason: 'Already reviewed.', citations: [] }
-    await expect(agents.propose('The prompt claims all candidates are awaiting.', view, { articleDate: date, draftCandidates: resolved, actionKeys: [] })).rejects.toThrow(/no longer awaiting/)
+    await expect(agents.propose('The prompt claims all candidates are awaiting.', view, { articleDate: date, draftCandidates: resolved, actionKeys: [] })).rejects.toThrow(/unknown-suggestion|unknown-disposition/)
     for (const draftCandidates of [[candidates[0], candidates[0]], [{ ...candidates[0], candidateId: 'f'.repeat(64) }, candidates[1]], [{ ...candidates[0], payload: { ...candidates[0].payload, sourceDate: '2026-10-20' } }, candidates[1]]]) {
       const priorCounts = countTokens.mock.calls.length
       await expect(agents.propose('Ignore stale context.', view, { articleDate: date, draftCandidates, actionKeys: [] })).rejects.toThrow(/stale, foreign or ambiguous/)
@@ -378,7 +443,7 @@ describe('captured candidate references before independent verification', () => 
     expect(captured.map(candidate => candidate.payload.command)).toEqual(['/merge daily-logger#407', '/owner-gate core#561', '/session wayfinder#543'])
     const { fixtureEvidenceView } = await import('./evidence-view-fixtures.js')
     for (const candidate of captured) {
-      create.mockResolvedValue(response({ changes: [], suggestions: [{ ...fields, identity: { kind: 'captured', candidateId: candidate.candidateId } }], candidateDispositions: captured.map(other => other.candidateId === candidate.candidateId ? { candidateId: other.candidateId, kind: 'promote', suggestionIndex: 0, reason: 'OFFLINE eligibility control, no semantic verdict.' } : { candidateId: other.candidateId, kind: 'reject', reason: 'OFFLINE placeholder never applied.', citations: fields.factCitations }), closingOptions: [] }))
+      create.mockResolvedValue(response({ changes: [], suggestions: [{ ...fields, identity: { kind: 'captured', candidateId: candidate.candidateId } }], candidateDispositions: captured.map(other => other.candidateId === candidate.candidateId ? { candidateId: other.candidateId, kind: 'promote', reason: 'OFFLINE eligibility control, no semantic verdict.' } : { candidateId: other.candidateId, kind: 'reject', reason: 'OFFLINE placeholder never applied.', citations: fields.factCitations }), closingOptions: [] }))
       const proposal = await createActionAgents().propose('Exact invocation custody; synthetic parser control only.', fixtureEvidenceView(sources), { articleDate: date, draftCandidates: captured, actionKeys: [] })
       expect(proposal).toMatchObject({ suggestions: [{ command: candidate.payload.command, repo: candidate.payload.repo, description: candidate.payload.description }] })
     }

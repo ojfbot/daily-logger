@@ -68,6 +68,7 @@ Suggestion Proposing yields Provider Action Proposal. [src: src/review-actions.t
 Candidate Reference Resolving requires Provider Action Proposal and Draft Action Candidates. [src: src/review-actions.ts]
 Candidate Reference Resolving yields Canonical Action Proposal. [src: src/review-actions.ts]
 Suggestion Verifying requires Canonical Action Proposal. [src: src/review-actions.ts]
+# Candidate IDs, not provider-authored numeric indices, bind captured suggestions. An inconsistent association uses the existing full-proposal repair instead of freezing other arrays.
 # One malformed-output repair is shared by both roles. An isolated proposer record uses private transient proposal custody; no malformed reply is persisted or logged. Other rows stay pinned, and complete native validation and independent verification precede action admission. [src: src/review-actions.ts]
 Malformed Output Repair Budget can be available or spent. [src: src/review-actions.ts]
 Action Reconciling invokes Action Output Repairing. [src: src/review-actions.ts]
@@ -413,3 +414,7 @@ Action Reconciling yields Captured Invocation Birth Output. [src: src/review-act
 Captured Invocation Birth Output consists of Created Action Record Binding and Candidate Review Transition. [src: src/action-registry-schema.ts]
 Article Action Files consists of Captured Invocation Birth Output. [src: src/action-registry-schema.ts]
 Action Registry Writing requires valid Captured Invocation Birth Output. [src: src/action-registry-schema.ts]
+
+## SD1.5 — Candidate link resolution
+Canonical Action Proposal exhibits Derived Suggestion Index. [src: src/review-actions.ts]
+Candidate Reference Resolving yields Candidate Association Diagnostic. [src: src/review-actions.ts]
