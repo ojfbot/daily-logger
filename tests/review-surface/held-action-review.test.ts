@@ -10,7 +10,8 @@ import { ActionSourceCollection } from '../../src/action-evidence-view.js'
 import { ActionRegistrySchema, actionStateDigest, completeArticleWithPendingActions, readActionRegistry, readArticleStatuses, registryRevision, sha256 } from '../../src/action-registry.js'
 import { prepareConservativeDraftCandidateEvidence } from '../../src/action-evidence-selection.js'
 import { generationActionCycle } from '../../src/action-review-cycle.js'
-import { createActionAgents, pendingActionReview } from '../../src/review-actions.js'
+import { ActionProposalSchema, createActionAgents, pendingActionReview } from '../../src/review-actions.js'
+import * as actionReview from '../../src/review-actions.js'
 import { ActionEvidenceRequestError, actionEvidenceCaseDigest, createActionEvidenceRequest } from '../../src/action-evidence-retrieval.js'
 import { writeActionStore } from '../../src/__tests__/action-store-fixture.js'
 import { verifyEditorialProof } from '../../shared/editorial-action-proof.js'
@@ -24,12 +25,12 @@ const sources = [{ id: 'fact', kind: 'repository' as const, locator: 'fixture.md
 const response = (input: unknown) => ({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'offline', name: 'review_actions', input }], usage: { output_tokens: 100 } })
 beforeEach(() => { create.mockReset(); countTokens.mockReset().mockResolvedValue({ input_tokens: 1000 }); clients.mockReset() })
 afterEach(() => { vi.unstubAllEnvs(); for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
-function fixture() {
+function fixture(capturedCommand?: string) {
   const root = mkdtempSync(join(tmpdir(), 'held-action-route-')); roots.push(root)
   const git = (...args: string[]) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
   const empty = ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [{ key: 'act-existing', original: { id: 'act-existing', command: '/adr', description: 'Unrelated older work.', repo: 'daily-logger', status: 'open', sourceDate: '2026-10-20' }, origin: 'imported', workKey: 'unrelated-older-work', state: 'open', introducedBy: '2026-10-20', includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: '', gates: [], history: [] }], articles: [] })
   const cycle = generationActionCycle(), draftStatuses = new Map([[date, 'draft']])
-  const pending = pendingActionReview({ registry: empty, articleDate: date, cycle, markdown: `---\ndate: ${date}\nstatus: draft\noutcome: accepted\n---\nOffline route fixture.\n`, reason: 'Offline held candidates.', articleStatuses: draftStatuses, draftContext: { kind: 'none' }, draftCandidates: ['review', 'validate', 'triage'].map(command => ({ command: `/${command}`, repo: 'core', description: `Review the separate ${command} concern.`, sourceDate: date, status: 'open' })) })
+  const pending = pendingActionReview({ registry: empty, articleDate: date, cycle, markdown: `---\ndate: ${date}\nstatus: draft\noutcome: accepted\n---\nOffline route fixture.\n`, reason: 'Offline held candidates.', articleStatuses: draftStatuses, draftContext: { kind: 'none' }, draftCandidates: ['review', 'validate', 'triage'].map((command, index) => ({ command: index === 0 && capturedCommand ? capturedCommand : `/${command}`, repo: 'core', description: `Review the separate ${command} concern.`, sourceDate: date, status: 'open' })) })
   const snapshot = pending.registry.articles[0]
   if (!snapshot.draftCandidates) throw new Error('Missing fixture custody')
   snapshot.draftCandidateEvidence = prepareConservativeDraftCandidateEvidence({ registry: pending.registry, articleDate: date, markdown: pending.markdown, articleStatuses: draftStatuses, cycle, feedback: '', draftCandidates: snapshot.draftCandidates })
@@ -92,6 +93,200 @@ function healthy(f: ReturnType<typeof fixture>) {
   create.mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response(verification))
   return { proposal, verification }
 }
+function capturedSuggestion(candidateId: string) {
+  return { identity: { kind: 'captured', candidateId }, target: 'Separate unresolved concern', outcome: 'Record the owner decision.', goal: 'Preserve each original concern.', doneWhen: 'The owner records a decision.', gates: ['Owner review remains required.'], existingKey: null,
+    factCitations: [{ sourceId: 'fact', startLine: 1, endLine: 1 }], goalCitations: [{ sourceId: 'goal', startLine: 1, endLine: 1 }] }
+}
+const associationModes = ['terminal-with-suggestion', 'missing-disposition', 'duplicate-disposition', 'unknown-disposition'] as const
+function invalidAssociation(mode: typeof associationModes[number], proposal: ReturnType<typeof healthy>['proposal'], candidateId: string) {
+  const first = proposal.candidateDispositions[0]
+  switch (mode) {
+    case 'terminal-with-suggestion': return { ...proposal, suggestions: [capturedSuggestion(candidateId)] }
+    case 'missing-disposition': return { ...proposal, candidateDispositions: proposal.candidateDispositions.slice(1) }
+    case 'duplicate-disposition': return { ...proposal, candidateDispositions: [first, first, ...proposal.candidateDispositions.slice(2)] }
+    case 'unknown-disposition': return { ...proposal, candidateDispositions: [{ ...first, candidateId: 'f'.repeat(64) }, ...proposal.candidateDispositions.slice(1)] }
+  }
+}
+function expectAcceptedBytes(f: ReturnType<typeof fixture>) {
+  expect(readFileSync(join(f.root, `_articles/${date}.md`), 'utf8')).toBe(f.original.article)
+  expect(readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')).toBe(f.original.action)
+}
+
+it.each(associationModes)('records closed native invariants for both failed %s attempts without a verifier or writes', async mode => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal } = healthy(f), candidateId = f.snapshot.draftCandidates?.[0].candidateId
+  if (!candidateId) throw new Error('Expected captured fixture candidate')
+  const invalid = invalidAssociation(mode, proposal, candidateId)
+  create.mockReset().mockResolvedValueOnce(response(invalid)).mockResolvedValueOnce(response(invalid))
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  const rule = mode === 'missing-disposition' || mode === 'duplicate-disposition' ? 'disposition-cardinality' : mode
+  const known = mode !== 'unknown-disposition' ? { candidateId } : {}
+  expect(result.receipt.observations.invariants).toEqual([
+    expect.objectContaining({ role: 'proposer', attempt: 'initial', stage: 'provider-association', rule, ...known }),
+    expect.objectContaining({ role: 'proposer', attempt: 'repair', stage: 'provider-association', rule, ...known }),
+  ])
+  if (mode === 'unknown-disposition') expect(result.receipt.observations.invariants?.every(value => value.candidateId === undefined)).toBe(true)
+  // Counts describe rows for this one native candidate, not the whole proposal.
+  if (mode === 'missing-disposition') expect(result.receipt.observations.invariants?.[0]).toMatchObject({ capturedReferences: 0, dispositionCount: 0 })
+  expect(result.receipt.observations.outputShapes).toBeUndefined()
+  expect(result.receipt.state).toBe('held-invalid-output'); expect(result.receipt.observations.failurePhase).toBe('structured-output')
+  expect(result.receipt.observations.responses.map(value => [value.role, value.stop])).toEqual([['proposer', 'tool_use'], ['proposer', 'tool_use']])
+  expect(create).toHaveBeenCalledTimes(2); expect(countTokens).toHaveBeenCalledTimes(2)
+  expect(create.mock.calls[1][0].tools[0].input_schema.required).toEqual(['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
+  expect(JSON.stringify(result.receipt)).not.toContain('f'.repeat(64)); expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
+  expect(result.files).toEqual([]); expectAcceptedBytes(f)
+}, 15000)
+
+it.each(['unknown-suggestion', 'captured-cardinality', 'existing-key-mismatch', 'unknown-closure-key'] as const)('records bounded provider %s invariants without retaining foreign identity text', async rule => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal } = healthy(f), candidateId = f.snapshot.draftCandidates?.[0].candidateId
+  if (!candidateId) throw new Error('Expected captured fixture candidate')
+  const promote = { candidateId, kind: 'promote', reason: 'Controlled exact original.' }
+  const invalid = rule === 'unknown-suggestion' ? { ...proposal, suggestions: [capturedSuggestion('f'.repeat(64))] }
+    : rule === 'captured-cardinality' ? { ...proposal, candidateDispositions: [promote, ...proposal.candidateDispositions.slice(1)] }
+    : rule === 'existing-key-mismatch' ? { ...proposal, suggestions: [{ ...capturedSuggestion(candidateId), existingKey: 'act-existing' }], candidateDispositions: [promote, ...proposal.candidateDispositions.slice(1)] }
+    : { ...proposal, candidateDispositions: [{ candidateId, kind: 'verified-closure', actionKey: 'PRIVATE_FOREIGN_ACTION_KEY', reason: 'Controlled unverified closure.', citations: proposal.candidateDispositions[0].citations }, ...proposal.candidateDispositions.slice(1)] }
+  create.mockReset().mockResolvedValue(response(invalid))
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.observations.invariants).toEqual(['initial', 'repair'].map(attempt => expect.objectContaining({ role: 'proposer', attempt, stage: 'provider-association', rule, ...(rule === 'unknown-suggestion' ? {} : { candidateId }) })))
+  if (rule === 'unknown-suggestion') expect(result.receipt.observations.invariants?.every(value => value.candidateId === undefined)).toBe(true)
+  expect(result.receipt.observations.outputShapes).toBeUndefined(); expect(result.receipt.state).toBe('held-invalid-output')
+  expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_'); expect(JSON.stringify(result.receipt)).not.toContain('f'.repeat(64))
+  expect(create).toHaveBeenCalledTimes(2); expect(result.files).toEqual([]); expectAcceptedBytes(f)
+}, 15000)
+
+it('preserves distinct initial and repair invariant rules in order', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal } = healthy(f), candidateId = f.snapshot.draftCandidates?.[0].candidateId
+  if (!candidateId) throw new Error('Expected captured fixture candidate')
+  create.mockReset().mockResolvedValueOnce(response(invalidAssociation('missing-disposition', proposal, candidateId))).mockResolvedValueOnce(response(invalidAssociation('terminal-with-suggestion', proposal, candidateId)))
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.observations.invariants?.map(value => [value.attempt, value.rule])).toEqual([['initial', 'disposition-cardinality'], ['repair', 'terminal-with-suggestion']])
+  expect(create).toHaveBeenCalledTimes(2); expect(result.files).toEqual([]); expectAcceptedBytes(f)
+}, 15000)
+
+it('retains one initial invariant after successful repair and one independent verifier', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal, verification } = healthy(f), candidateId = f.snapshot.draftCandidates?.[0].candidateId
+  if (!candidateId) throw new Error('Expected captured fixture candidate')
+  create.mockReset().mockResolvedValueOnce(response(invalidAssociation('missing-disposition', proposal, candidateId))).mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response(verification))
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.state).toBe('native-review-completed-unmerged')
+  expect(result.receipt.observations.invariants).toEqual([expect.objectContaining({ role: 'proposer', attempt: 'initial', rule: 'disposition-cardinality', candidateId })])
+  expect(result.receipt.observations.responses.map(value => value.role)).toEqual(['proposer', 'proposer', 'verifier'])
+  expect(create).toHaveBeenCalledTimes(3); expect(result.files).toHaveLength(2); expectAcceptedBytes(f)
+}, 15000)
+
+it('keeps a verifier initial shape failure separate after the proposer spent the single repair', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal, verification } = healthy(f), candidateId = f.snapshot.draftCandidates?.[0].candidateId
+  if (!candidateId) throw new Error('Expected captured fixture candidate')
+  create.mockReset().mockResolvedValueOnce(response(invalidAssociation('missing-disposition', proposal, candidateId))).mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response({ ...verification, changes: null }))
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.observations.invariants?.map(value => [value.role, value.attempt])).toEqual([['proposer', 'initial']])
+  expect(result.receipt.observations.outputShapes).toEqual([expect.objectContaining({ role: 'verifier', phase: 'tool-input' })])
+  expect(create).toHaveBeenCalledTimes(3); expect(result.receipt.state).toBe('held-invalid-output'); expect(result.files).toEqual([]); expectAcceptedBytes(f)
+}, 15000)
+
+it('preserves a typed association invariant through the malformed-row isolation wrapper', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal, verification } = healthy(f), candidateId = f.snapshot.draftCandidates?.[0].candidateId
+  if (!candidateId) throw new Error('Expected captured fixture candidate')
+  const second = proposal.candidateDispositions[1]
+  create.mockReset().mockResolvedValueOnce(response({ ...proposal, suggestions: [capturedSuggestion(candidateId)], candidateDispositions: [proposal.candidateDispositions[0], { candidateId: second.candidateId, kind: second.kind, citations: second.citations }, proposal.candidateDispositions[2]] }))
+    .mockResolvedValueOnce(response(proposal)).mockResolvedValueOnce(response(verification))
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.observations.outputShapes).toHaveLength(1)
+  expect(result.receipt.observations.invariants).toEqual([expect.objectContaining({ role: 'proposer', attempt: 'initial', stage: 'provider-association', rule: 'terminal-with-suggestion', candidateId })])
+  expect(create.mock.calls[1][0].tools[0].input_schema.required).toEqual(['changes', 'suggestions', 'candidateDispositions', 'closingOptions'])
+  expect(result.receipt.state).toBe('native-review-completed-unmerged'); expect(create).toHaveBeenCalledTimes(3); expectAcceptedBytes(f)
+}, 15000)
+
+it.each(['captured-payload-mismatch', 'captured-index-invalid', 'captured-index-overflow', 'unknown-disposition', 'duplicate-disposition', 'disposition-cardinality'] as const)('records native canonical %s without retaining a provider tuple or foreign ID', async rule => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal } = healthy(f), candidateId = f.snapshot.draftCandidates?.[0].candidateId
+  if (!candidateId) throw new Error('Expected captured fixture candidate')
+  const valid = { ...proposal, suggestions: [capturedSuggestion(candidateId)], candidateDispositions: [{ candidateId, kind: 'promote', reason: 'Controlled exact original.' }, ...proposal.candidateDispositions.slice(1)] }
+  create.mockReset().mockResolvedValue(response(valid))
+  const agents = createActionAgents(), propose = agents.propose
+  agents.propose = async (...args) => {
+    const parsed = ActionProposalSchema.parse(await propose(...args))
+    if (rule === 'captured-payload-mismatch') return { ...parsed, suggestions: parsed.suggestions.map(row => ({ ...row, description: 'PRIVATE_PROVIDER_TUPLE_CANARY' })) }
+    if (rule === 'disposition-cardinality') return { ...parsed, candidateDispositions: parsed.candidateDispositions.slice(1) }
+    if (rule === 'duplicate-disposition') return { ...parsed, candidateDispositions: [parsed.candidateDispositions[0], parsed.candidateDispositions[0], ...parsed.candidateDispositions.slice(2)] }
+    return { ...parsed, candidateDispositions: parsed.candidateDispositions.map((row, index) => index !== 0 ? row : rule === 'unknown-disposition' ? { ...row, candidateId: 'f'.repeat(64) } : { ...row, suggestionIndex: rule === 'captured-index-overflow' ? 99 : 4 }) }
+  }
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: options => reconcileActions({ ...options, agents, collectSources: () => new ActionSourceCollection(sources) }) })
+  expect(result.receipt.observations.invariants).toEqual(['initial', 'repair'].map(attempt => expect.objectContaining({ role: 'proposer', attempt, stage: 'canonical-identity', rule: rule === 'captured-index-overflow' ? 'captured-index-invalid' : rule, ...(rule === 'unknown-disposition' ? {} : { candidateId }) })))
+  if (rule === 'captured-index-overflow') expect(result.receipt.observations.invariants?.every(value => value.stage === 'canonical-identity' && value.suggestionIndex === undefined)).toBe(true)
+  if (rule === 'unknown-disposition') expect(result.receipt.observations.invariants?.every(value => value.candidateId === undefined)).toBe(true)
+  expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_'); expect(JSON.stringify(result.receipt)).not.toContain('f'.repeat(64))
+  expect(create).toHaveBeenCalledTimes(2); expect(result.files).toEqual([]); expectAcceptedBytes(f)
+}, 15000)
+
+it('records exact invocation mapping rejection with its known candidate and bounded suggestion position', async () => {
+  const f = fixture('/review --private-held-argument'), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal } = healthy(f), candidateId = f.snapshot.draftCandidates?.[0].candidateId
+  if (!candidateId) throw new Error('Expected captured fixture candidate')
+  const invalid = { ...proposal, suggestions: [{ ...capturedSuggestion(candidateId), existingKey: 'act-existing' }], candidateDispositions: [{ candidateId, kind: 'map-existing', actionKey: 'act-existing', reason: 'PRIVATE_MAPPING_REASON_CANARY' }, ...proposal.candidateDispositions.slice(1)] }
+  create.mockReset().mockResolvedValue(response(invalid))
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.observations.invariants).toEqual(['initial', 'repair'].map(attempt => ({ role: 'proposer', attempt, stage: 'invocation-mapping', rule: 'invocation-mapping-mismatch', candidateId, suggestionIndex: 0 })))
+  expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_'); expect(JSON.stringify(result.receipt)).not.toContain('--private-held-argument')
+  expect(create).toHaveBeenCalledTimes(2); expect(result.files).toEqual([]); expectAcceptedBytes(f)
+}, 15000)
+
+it('rejects invariant schema vocabulary, cross-stage fields and out-of-bounds counts', () => {
+  const schema = actionReview.ActionProviderInvariantObservationSchema
+  const provider = { role: 'proposer', attempt: 'initial', stage: 'provider-association', rule: 'disposition-cardinality', candidateId: 'a'.repeat(64), dispositionIndex: 0, capturedReferences: 0, dispositionCount: 3 }
+  const canonical = { role: 'proposer', attempt: 'repair', stage: 'canonical-identity', rule: 'captured-index-invalid', suggestionIndex: 4, expectedCount: 3, actualCount: 0 }
+  const invocation = { role: 'proposer', attempt: 'initial', stage: 'invocation-mapping', rule: 'invocation-mapping-mismatch', suggestionIndex: 0 }
+  for (const value of [provider, canonical, invocation]) expect(schema.safeParse(value).success).toBe(true)
+  for (const value of [
+    { ...provider, role: 'PRIVATE_ROLE' }, { ...provider, attempt: 'PRIVATE_ATTEMPT' }, { ...provider, stage: 'PRIVATE_STAGE' }, { ...provider, rule: 'PRIVATE_RULE' }, { ...provider, PRIVATE_KEY: 'PRIVATE_REPLY' },
+    { ...provider, rule: 'invocation-mapping-mismatch' }, { ...canonical, rule: 'terminal-with-suggestion' }, { ...invocation, rule: 'unknown-disposition' },
+    { ...provider, suggestionIndex: 0 }, { ...canonical, capturedReferences: 0 }, { ...invocation, dispositionIndex: 0 }, { ...invocation, suggestionIndex: undefined },
+    { ...provider, candidateId: 'PRIVATE_ID' }, ...[-1, 0.5, 6, Number.MAX_SAFE_INTEGER].map(capturedReferences => ({ ...provider, capturedReferences })),
+    ...[-1, 0.5, 5, Number.MAX_SAFE_INTEGER].map(dispositionIndex => ({ ...provider, dispositionIndex })), { ...canonical, expectedCount: 6 }, { ...canonical, actualCount: -1 },
+  ]) expect(schema.safeParse(value).success).toBe(false)
+})
+
+it('captures only bounded invariants for exact awaiting IDs and keeps legacy receipt diagnostics optional', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const candidateId = f.snapshot.draftCandidates?.[0].candidateId
+  if (!candidateId) throw new Error('Expected captured fixture candidate')
+  const observation = { role: 'proposer', attempt: 'initial', stage: 'provider-association', rule: 'disposition-cardinality' }
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: async () => {
+    console.warn(`Action output invariant: ${JSON.stringify({ ...observation, candidateId: 'f'.repeat(64) })}`)
+    console.warn(`Action output invariant: ${JSON.stringify({ ...observation, PRIVATE_KEY: 'PRIVATE_RAW_REPLY' })}`)
+    console.warn(`Action output invariant: ${JSON.stringify({ ...observation, candidateId })}`)
+    for (let index = 0; index < 4; index++) console.warn(`Action output invariant: ${JSON.stringify(observation)}`)
+    throw new Error('PRIVATE_NATIVE_EXCEPTION')
+  } })
+  expect(result.receipt.observations.invariants).toEqual([{ ...observation, candidateId }, observation, observation])
+  expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_'); expect(JSON.stringify(result.receipt)).not.toContain('f'.repeat(64))
+  expect(() => heldActionReceiptSchema.parse({ ...result.receipt, observations: { ...result.receipt.observations, invariants: Array(4).fill(observation) } })).toThrow()
+  const legacy = { billing: result.receipt.observations.billing, budgets: result.receipt.observations.budgets, responses: result.receipt.observations.responses }
+  expect(heldActionReceiptSchema.parse({ ...result.receipt, observations: legacy }).observations).toEqual(legacy)
+  expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled(); expectAcceptedBytes(f)
+}, 15000)
+
+it('rejects a no-longer-awaiting candidate before this held route can retain its identity', async () => {
+  const f = fixture(), registry = readActionRegistry(f.root)
+  const snapshot = registry.articles.find(article => article.date === date), first = snapshot?.draftCandidates?.[0]
+  if (!snapshot || !first) throw new Error('Expected captured fixture candidate')
+  const reviewed = { ...registry, articles: registry.articles.map(article => article !== snapshot ? article : { ...article, draftCandidates: article.draftCandidates?.map(candidate => candidate !== first ? candidate : { ...candidate, review: { state: 'rejected', reason: 'PRIVATE_OLD_REVIEW_CANARY', citations: [] } }) }) }
+  expect(() => ActionRegistrySchema.parse(reviewed)).toThrow(/Article-only acceptance requires original held candidates/)
+  // Committing the invalid fixture and rebinding its source does not bypass the
+  // schema read that must precede reservation and native entry.
+  const path = join(f.root, `actions/articles/${date}.json`), original = JSON.parse(readFileSync(path, 'utf8'))
+  writeFileSync(path, JSON.stringify({ ...original, snapshot: reviewed.articles.find(article => article.date === date) }))
+  f.git('add', '.'); f.git('commit', '-qm', 'offline invalid reviewed-candidate fixture')
+  const source = f.git('rev-parse', 'HEAD'), t = transport(source)
+  await expect(admitHeldAction(f.root, { ...f.inputs, source_sha: source }, { ...f.context, workflowSha: source }, t.github)).rejects.toThrow(/Article-only acceptance requires original held candidates/)
+  expect(t.state.mutations).toBe(0); expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
+}, 15000)
+
 it.each([{ repository: 'fork/daily-logger' }, { actor: 'another-owner' }, { ref: 'refs/heads/branch' }, { attempt: 2 }, { event: 'pull_request_target' }])('rejects untrusted execution before provider: %j', async change => {
   const f = fixture(), t = transport(f.source)
   await expect(admitHeldAction(f.root, f.inputs, { ...f.context, ...change }, t.github)).rejects.toThrow()

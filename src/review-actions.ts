@@ -73,7 +73,9 @@ export type ActionVerification = Omit<ParsedActionVerification, 'candidateDispos
   candidateDispositions?: ParsedActionVerification['candidateDispositions']
   closingOptions?: ParsedActionVerification['closingOptions']
 }
-class ActionOutputError extends Error {}
+class ActionOutputError extends Error {
+  constructor(message: string, readonly invariant?: ActionInvariantDetail) { super(message) }
+}
 class ActionInputFrontierError extends Error {}
 class ActionVerificationHoldError extends Error {
   constructor(message: string, readonly phase: 'verification-hold' | 'ranked-shortlist-incomplete' = 'verification-hold') { super(message) }
@@ -155,6 +157,24 @@ export const ActionProviderResponseObservationSchema = z.object({
   inputTokens: ActionTokenCountValueSchema.nullable().optional(),
   outputTokens: ActionTokenCountValueSchema.max(12000).nullable(),
 }).strict()
+const invariantCandidate = { candidateId: z.string().regex(/^[a-f0-9]{64}$/).optional() }
+const invariantIndex = z.number().int().min(0).max(4)
+const invariantCount = z.number().int().min(0).max(5)
+const ActionInvariantDetailSchema = z.discriminatedUnion('stage', [
+  z.object({ stage: z.literal('provider-association'), rule: z.enum(['unknown-disposition', 'unknown-suggestion', 'disposition-cardinality', 'captured-cardinality', 'existing-key-mismatch', 'terminal-with-suggestion', 'unknown-closure-key']),
+    ...invariantCandidate, dispositionIndex: invariantIndex.optional(), capturedReferences: invariantCount.optional(), dispositionCount: invariantCount.optional() }).strict(),
+  z.object({ stage: z.literal('canonical-identity'), rule: z.enum(['duplicate-disposition', 'disposition-cardinality', 'unknown-disposition', 'unknown-closure-key', 'captured-index-invalid', 'captured-payload-mismatch', 'existing-key-mismatch', 'promotion-existing-key', 'unlinked-invocation', 'unknown-suggestion']),
+    ...invariantCandidate, dispositionIndex: invariantIndex.optional(), suggestionIndex: invariantIndex.optional(), expectedCount: invariantCount.optional(), actualCount: invariantCount.optional() }).strict(),
+  z.object({ stage: z.literal('invocation-mapping'), rule: z.literal('invocation-mapping-mismatch'), ...invariantCandidate, suggestionIndex: invariantIndex }).strict(),
+])
+type ActionInvariantDetail = z.infer<typeof ActionInvariantDetailSchema>
+const invariantAttempt = { role: z.enum(['proposer', 'verifier']), attempt: z.enum(['initial', 'repair']) }
+export const ActionProviderInvariantObservationSchema = z.discriminatedUnion('stage', [
+  ActionInvariantDetailSchema.options[0].extend(invariantAttempt),
+  ActionInvariantDetailSchema.options[1].extend(invariantAttempt),
+  ActionInvariantDetailSchema.options[2].extend(invariantAttempt),
+]).refine(value => Buffer.byteLength(JSON.stringify(value)) <= 2048, 'Invariant diagnostic exceeds its bounded receipt size')
+
 export const ActionReviewFailurePhaseSchema = z.enum(['structured-output', 'evidence-request', 'context-or-budget', 'verification-hold', 'ranked-shortlist-incomplete'])
 type ProviderOutputPhase = 'envelope' | 'tool-block' | 'tool-input'
 class ProviderActionOutputError extends ActionOutputError {}
@@ -380,22 +400,28 @@ function actionProposalContext(articleDate: string, candidates: readonly DraftAc
 function assertCandidateAssociations(proposal: Pick<ParsedActionProposal, 'suggestions' | 'candidateDispositions'>, context: ActionProposalContext): void {
   const awaiting = context.draftCandidates.filter(candidate => candidate.review.state === 'awaiting-review')
   const ids = proposal.candidateDispositions.map(disposition => disposition.candidateId)
-  if (new Set(ids).size !== ids.length || ids.length !== awaiting.length || ids.some(id => !awaiting.some(candidate => candidate.candidateId === id))) throw new ActionOutputError('Every awaiting initial draft candidate requires exactly one disposition')
+  const identityMessage = 'Every awaiting initial draft candidate requires exactly one disposition'
+  const duplicate = ids.find((id, index) => ids.indexOf(id) !== index)
+  if (duplicate !== undefined) throw new ActionOutputError(identityMessage, { stage: 'canonical-identity', rule: 'duplicate-disposition', candidateId: duplicate, expectedCount: 1, actualCount: ids.filter(id => id === duplicate).length })
+  if (ids.length !== awaiting.length) throw new ActionOutputError(identityMessage, { stage: 'canonical-identity', rule: 'disposition-cardinality', candidateId: awaiting.find(candidate => !ids.includes(candidate.candidateId))?.candidateId, expectedCount: awaiting.length, actualCount: ids.length })
+  const unknown = ids.find(id => !awaiting.some(candidate => candidate.candidateId === id))
+  if (unknown !== undefined) throw new ActionOutputError(identityMessage, { stage: 'canonical-identity', rule: 'unknown-disposition' })
   const indices = new Set<number>()
-  for (const disposition of proposal.candidateDispositions) {
-    if (disposition.kind === 'verified-closure' && disposition.actionKey !== null && !context.actionKeys.includes(disposition.actionKey)) throw new ActionOutputError('Candidate closure references an unknown action identity')
+  for (const [dispositionIndex, disposition] of proposal.candidateDispositions.entries()) {
+    const detail = { stage: 'canonical-identity', candidateId: disposition.candidateId, dispositionIndex } as const
+    if (disposition.kind === 'verified-closure' && disposition.actionKey !== null && !context.actionKeys.includes(disposition.actionKey)) throw new ActionOutputError('Candidate closure references an unknown action identity', { ...detail, rule: 'unknown-closure-key' })
     if (disposition.kind !== 'promote' && disposition.kind !== 'map-existing') continue
     const suggestion = proposal.suggestions[disposition.suggestionIndex]
-    if (!suggestion || indices.has(disposition.suggestionIndex)) throw new ActionOutputError('Captured candidate requires its own valid suggestion index')
+    if (!suggestion || indices.has(disposition.suggestionIndex)) throw new ActionOutputError('Captured candidate requires its own valid suggestion index', { ...detail, rule: 'captured-index-invalid', ...(invariantIndex.safeParse(disposition.suggestionIndex).success ? { suggestionIndex: disposition.suggestionIndex } : {}) })
     indices.add(disposition.suggestionIndex)
     const candidate = awaiting.find(candidate => candidate.candidateId === disposition.candidateId)
-    if (!candidate || !matchesCapturedDraftCandidate(candidate, suggestion)) throw new ActionOutputError(`Suggestion does not match the captured candidate's exact command, repository and description: ${disposition.candidateId}`)
-    if (disposition.kind === 'map-existing' && (suggestion.existingKey !== disposition.actionKey || !context.actionKeys.includes(disposition.actionKey))) throw new ActionOutputError('Captured candidate existing-identity map has mismatched or unknown action keys')
-    if (disposition.kind === 'promote' && suggestion.existingKey !== null) throw new ActionOutputError('Captured candidate promotion must propose a new identity; use map-existing for an existing action')
+    if (!candidate || !matchesCapturedDraftCandidate(candidate, suggestion)) throw new ActionOutputError(`Suggestion does not match the captured candidate's exact command, repository and description: ${disposition.candidateId}`, { ...detail, rule: 'captured-payload-mismatch', suggestionIndex: disposition.suggestionIndex })
+    if (disposition.kind === 'map-existing' && (suggestion.existingKey !== disposition.actionKey || !context.actionKeys.includes(disposition.actionKey))) throw new ActionOutputError('Captured candidate existing-identity map has mismatched or unknown action keys', { ...detail, rule: 'existing-key-mismatch', suggestionIndex: disposition.suggestionIndex })
+    if (disposition.kind === 'promote' && suggestion.existingKey !== null) throw new ActionOutputError('Captured candidate promotion must propose a new identity; use map-existing for an existing action', { ...detail, rule: 'promotion-existing-key', suggestionIndex: disposition.suggestionIndex })
   }
   for (const [index, suggestion] of proposal.suggestions.entries()) {
     if (BareActionCommandSchema.safeParse(suggestion.command).success) continue
-    if (!indices.has(index)) throw new ActionOutputError('Argument-bearing suggestions require their own exact captured promotion or mapping')
+    if (!indices.has(index)) throw new ActionOutputError('Argument-bearing suggestions require their own exact captured promotion or mapping', { stage: 'canonical-identity', rule: 'unlinked-invocation', suggestionIndex: index })
   }
 }
 
@@ -420,9 +446,13 @@ function providerCandidateIndices(wire: {
   candidateDispositions: z.infer<typeof ProviderCandidateLinkSchema>[]
 }, context: ActionProposalContext): Map<string, number> {
   const awaiting = context.draftCandidates.filter(candidate => candidate.review.state === 'awaiting-review')
-  const fail = (reason: string, candidateId: string, dispositionIndex: number, capturedReferences: number): never => {
+  const fail = (reason: z.infer<typeof ActionInvariantDetailSchema.options[0]>['rule'], candidateId: string, dispositionIndex: number, capturedReferences: number): never => {
     const candidate = awaiting.find(candidate => candidate.candidateId === candidateId)
-    throw new ProviderCandidateAssociationError(`Candidate association invalid: reason=${reason}; candidateId=${candidate?.candidateId ?? '<unknown>'}; dispositionIndex=${dispositionIndex}; capturedReferences=${capturedReferences}`)
+    throw new ProviderCandidateAssociationError(`Candidate association invalid: reason=${reason}; candidateId=${candidate?.candidateId ?? '<unknown>'}; dispositionIndex=${dispositionIndex}; capturedReferences=${capturedReferences}`, {
+      stage: 'provider-association', rule: reason, ...(candidate ? { candidateId: candidate.candidateId } : {}),
+      ...(dispositionIndex >= 0 ? { dispositionIndex } : {}), capturedReferences,
+      dispositionCount: wire.candidateDispositions.filter(row => row.candidateId === candidateId).length,
+    })
   }
   for (const [index, row] of wire.candidateDispositions.entries()) {
     if (!awaiting.some(candidate => candidate.candidateId === row.candidateId)) fail('unknown-disposition', row.candidateId, index, 0)
@@ -461,7 +491,7 @@ function resolveProviderProposal(value: unknown, view: PreparedActionEvidenceVie
       return { ...proposed, ...tuple }
     }
     const candidate = context.draftCandidates.find(candidate => candidate.candidateId === identity.candidateId && candidate.review.state === 'awaiting-review')
-    if (!candidate) throw new ActionOutputError('Captured suggestion references an unknown or no longer awaiting candidate')
+    if (!candidate) throw new ActionOutputError('Captured suggestion references an unknown or no longer awaiting candidate', { stage: 'canonical-identity', rule: 'unknown-suggestion' })
     return { ...proposed, command: candidate.payload.command, repo: candidate.payload.repo, description: candidate.payload.description }
   })
   const candidateDispositions = wire.candidateDispositions.map(disposition => disposition.kind === 'promote' || disposition.kind === 'map-existing'
@@ -721,7 +751,7 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
         const diagnostic = outputShapeDiagnostic(parsed.error, role, 'tool-input', value, captured)
         const target = (() => {
           try { return isolateCandidateRecord(value, captured) } catch (error) {
-            if (error instanceof ProviderCandidateAssociationError) throw new ProviderActionOutputError(`${error.message}; record-only repair unavailable | ${diagnostic}`.slice(0, 2048))
+            if (error instanceof ProviderCandidateAssociationError) throw new ProviderActionOutputError(`${error.message}; record-only repair unavailable | ${diagnostic}`.slice(0, 2048), error.invariant)
             throw error
           }
         })()
@@ -1069,11 +1099,11 @@ function hasInvocationBirthOutput(registry: ActionRegistry, snapshot: ActionRegi
     && !BareActionCommandSchema.safeParse(record.original.command).success)) ?? false
 }
 
-function assertInvocationMappings(proposal: Pick<ParsedActionProposal, 'suggestions'>, records: ActionRegistry['records']): void {
-  for (const suggestion of proposal.suggestions) {
+function assertInvocationMappings(proposal: Pick<ParsedActionProposal, 'suggestions' | 'candidateDispositions'>, records: ActionRegistry['records']): void {
+  for (const [suggestionIndex, suggestion] of proposal.suggestions.entries()) {
     const existing = records.find(record => record.key === suggestion.existingKey)
     if (!existing || BareActionCommandSchema.safeParse(suggestion.command).success && BareActionCommandSchema.safeParse(existing.original.command).success) continue
-    if (suggestion.command !== existing.original.command || suggestion.repo !== existing.original.repo) throw new ActionOutputError('Exact invocation mapping requires the same original command, arguments and repository')
+    if (suggestion.command !== existing.original.command || suggestion.repo !== existing.original.repo) throw new ActionOutputError('Exact invocation mapping requires the same original command, arguments and repository', { stage: 'invocation-mapping', rule: 'invocation-mapping-mismatch', suggestionIndex, candidateId: proposal.candidateDispositions.find(disposition => (disposition.kind === 'promote' || disposition.kind === 'map-existing') && disposition.suggestionIndex === suggestionIndex)?.candidateId })
   }
 }
 
@@ -1507,7 +1537,20 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   // One shared repair, applied only to the failed role. A malformed verifier
   // cannot replace the proposal it was independently checking.
   async function withOutputRepair<T>(role: ActionRole, run: (correction: string, recordRepair?: ProviderCandidateRecordError) => Promise<T>): Promise<T> {
-    try { return await run('') } catch (error) {
+    async function attempt(label: 'initial' | 'repair', execute: () => Promise<T>): Promise<T> {
+      try { return await execute() } catch (error) {
+        if (error instanceof ActionOutputError && error.invariant) {
+          try {
+            const { candidateId, ...detail } = error.invariant
+            const knownCandidate = proposalContext.draftCandidates.find(candidate => candidate.review.state === 'awaiting-review' && candidate.candidateId === candidateId)
+            const observation = ActionProviderInvariantObservationSchema.safeParse({ ...detail, role, attempt: label, ...(knownCandidate ? { candidateId: knownCandidate.candidateId } : {}) })
+            if (observation.success) console.warn(`Action output invariant: ${JSON.stringify(observation.data)}`)
+          } catch { /* A diagnostic transport failure must not replace the original validation failure. */ }
+        }
+        throw error
+      }
+    }
+    try { return await attempt('initial', () => run('')) } catch (error) {
       if (repairUsed || !(error instanceof z.ZodError || error instanceof ActionOutputError)) throw error
       repairUsed = true
       const diagnostic = error instanceof z.ZodError
@@ -1515,7 +1558,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
       const output = error instanceof ProviderCandidateRecordError ? 'Return only the named candidate disposition record; every other original record and array stays pinned.' : 'Return the complete required tool schema.'
       const correction = `Previous structured output was invalid: ${diagnostic}. Repair only this ${role} output. ${output} All required fields must be authored from the unchanged evidence. Never invent a reason or silently discard a contradictory field.`
       console.warn(`Action review needs its one repair: ${correction}`)
-      return run(correction, error instanceof ProviderCandidateRecordError ? error : undefined)
+      return attempt('repair', () => run(correction, error instanceof ProviderCandidateRecordError ? error : undefined))
     }
   }
   const proposal = await withOutputRepair('proposer', async (correction, recordRepair) => {

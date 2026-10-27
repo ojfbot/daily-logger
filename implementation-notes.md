@@ -520,3 +520,8 @@ When safe result bytes exist after an authorized run, preserve those exact immut
 
 - The existing generated-link compaction was expected to make PR #416 fit, but the fresh 250,399-byte source still needed 191,201 bytes. Prepare a collector-proved lossless representation of repeated metadata; retain all fields/authored text, original source identity, unchanged limits and blocked hosted raw storage. Automatic semantic range selection remains outside this repair because opaque obligation IDs cannot prove that selected text answers a question.
 - A later verified round replaced the pending snapshot and discarded both ordinary unresolved receipts and its nested article-only-acceptance request. Preserve those receipts as history; success against a fresh source does not resolve an older request by implication.
+
+
+## Deviations — October 25 candidate validation diagnostics (2026-10-27)
+
+- The next-run plan assumed the previous complete evidence composition still fit, but fresh discussion growth under #386 causes an aggregate hold before SDK entry. Keep the diagnostic repair separate, preserve required evidence and fixed limits, and require fresh complete-source composition before considering another paid train.

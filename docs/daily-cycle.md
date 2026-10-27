@@ -103,7 +103,20 @@ Only bounded numeric budget/usage observations and closed stop categories surviv
 native diagnostics. A qualified token count is recorded before a budget rejection;
 response usage is recorded before incomplete-output rejection. Missing usage is
 unknown, not zero; these observations do not establish billing. Bounded output-shape
-facts use known field/type names, never response values or arbitrary keys. A
+facts use known field/type names, never response values or arbitrary keys. Candidate
+and invocation validation also emit optional `observations.invariants` records.
+Each record names a fixed rule and validation stage, its role, and whether the
+failure occurred on that role's initial response or its one permitted repair.
+Only an ID belonging to an awaiting candidate in the current validated input may
+be retained. In provider-association diagnostics, `dispositionCount` counts rows for the
+affected candidate, not all returned rows. Counts and array indices are bounded;
+foreign IDs, action tuples,
+model reasons and raw error text are excluded. Both attempts remain visible when
+they fail differently. An earlier failed-attempt observation in a successful
+proposal is history, not its final verdict. Old receipts without these records
+remain readable. Citation visibility and authority holds keep their separate
+evidence paths and do not gain another repair.
+ A
 current evidence receipt is emitted only while native current inputs are available;
 a self-consistent but unbound request retains identity only. Closed failure phases
 distinguish malformed output, evidence/context holds and an incomplete ranked
