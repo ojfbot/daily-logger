@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import { ActionRegistrySchema, CitationSchema, encodeActionEvidenceViewSourceReceipt, sha256, type ActionSource, type ActionRegistry, type ActionEvidenceViewReceipt } from './action-registry.js'
 import { trustedActionSourceLineNumbers } from './action-evidence-retrieval.js'
+import { factorGithubMetadata, GITHUB_METADATA_VIEW_POLICY_SHA256, type GithubMetadataRow, type PreparedGithubMetadataView } from './github-metadata-view.js'
+export type { PreparedGithubMetadataView } from './github-metadata-view.js'
 
 type Citation = z.infer<typeof CitationSchema>
 
@@ -10,7 +12,7 @@ export const ACTION_EVIDENCE_VIEW_VERSION = 'action-evidence-view-v1'
 const ACCOUNT_LINKS = new Set(['avatar_url', 'gravatar_id', 'url', 'followers_url', 'following_url', 'gists_url', 'starred_url', 'subscriptions_url', 'organizations_url', 'repos_url', 'events_url', 'received_events_url'])
 const REPOSITORY_LINKS = new Set(['forks_url', 'keys_url', 'collaborators_url', 'teams_url', 'hooks_url', 'issue_events_url', 'events_url', 'assignees_url', 'branches_url', 'tags_url', 'blobs_url', 'git_tags_url', 'git_refs_url', 'trees_url', 'statuses_url', 'languages_url', 'stargazers_url', 'contributors_url', 'subscribers_url', 'subscription_url', 'commits_url', 'git_commits_url', 'comments_url', 'issue_comment_url', 'contents_url', 'compare_url', 'merges_url', 'archive_url', 'downloads_url', 'issues_url', 'pulls_url', 'milestones_url', 'notifications_url', 'labels_url', 'releases_url', 'deployments_url', 'git_url', 'ssh_url', 'clone_url', 'svn_url'])
 const ACCOUNT_FIELDS = new Set(['user', 'owner', 'assignee', 'assignees', 'requested_reviewers', 'merged_by'])
-const POLICY = sha256(JSON.stringify({ version: ACTION_EVIDENCE_VIEW_VERSION, account: [...ACCOUNT_LINKS], repository: [...REPOSITORY_LINKS], requiredGithubMetadata: 'complete-original-rows-v1' }))
+const POLICY = sha256(JSON.stringify({ version: ACTION_EVIDENCE_VIEW_VERSION, account: [...ACCOUNT_LINKS], repository: [...REPOSITORY_LINKS], requiredGithubMetadata: 'complete-original-or-lossless-factor-v1', factoring: GITHUB_METADATA_VIEW_POLICY_SHA256 }))
 type MetadataRow = { line: number; raw: string; context: string; omitted: readonly string[] }
 
 function compactMetadata(value: unknown): { context: string; omitted: string[] } {
@@ -38,9 +40,12 @@ function compactMetadata(value: unknown): { context: string; omitted: string[] }
 class GithubSourceCapture {
   readonly #source: ActionSource
   readonly #rows: readonly MetadataRow[]
+  readonly #metadata: readonly GithubMetadataRow[]
+  #modelView: PreparedGithubMetadataView | null | undefined
   constructor(input: { id: string; locator: string; observation: string; responses: readonly string[]; trustedContent: string[] }) {
     let content = input.observation
     const rows: MetadataRow[] = []
+    const metadataRows: GithubMetadataRow[] = []
     const append = (text: string) => { content += text }
     const render = (value: unknown) => {
       if (Array.isArray(value)) { value.forEach((entry, index) => { if (index) append('\n\n'); render(entry) }); return }
@@ -51,6 +56,7 @@ class GithubSourceCapture {
       const compact = knownRecord ? compactMetadata(metadata) : { context: raw, omitted: [] }
       const line = content.split('\n').length
       append(raw)
+      metadataRows.push(Object.freeze({ line, raw }))
       if (compact.omitted.length) rows.push({ line, raw, ...compact })
       if (typeof body === 'string' && body) append(`\n${body}`)
       if (typeof diff === 'string' && diff) append(`\n${diff}`)
@@ -58,6 +64,7 @@ class GithubSourceCapture {
     for (const response of input.responses) { append('\n'); render(JSON.parse(response)) }
     this.#source = { id: input.id, kind: 'github', locator: input.locator, content, trustedContent: [...input.trustedContent] }
     this.#rows = Object.freeze(rows.map(row => Object.freeze({ ...row, omitted: Object.freeze([...row.omitted]) })))
+    this.#metadata = Object.freeze(metadataRows)
   }
   get source(): ActionSource { return structuredClone(this.#source) }
   rowsFor(source: ActionSource): readonly MetadataRow[] {
@@ -65,10 +72,17 @@ class GithubSourceCapture {
     const expectedId = `${this.#source.id}@${sha256(this.#source.content)}`
     if (source.projection || source.response || source.kind !== this.#source.kind || source.content !== this.#source.content || source.locator !== this.#source.locator
       || JSON.stringify(source.trustedContent) !== JSON.stringify(this.#source.trustedContent)
+      || source.fullContentSha256 && source.fullContentSha256 !== sha256(this.#source.content)
       || source.id !== this.#source.id && source.id !== expectedId) {
       throw new ActionEvidenceVisibilityError(`Collector provenance changed for ${source.id}; review pending`)
     }
     return this.#rows
+  }
+  modelViewFor(source: ActionSource): PreparedGithubMetadataView | undefined {
+    if (source.id.replace(/@[a-f0-9]{64}$/, '') !== this.#source.id) return undefined
+    this.rowsFor(source)
+    if (this.#modelView === undefined) this.#modelView = factorGithubMetadata({ content: this.#source.content, rows: this.#metadata }) ?? null
+    return this.#modelView ?? undefined
   }
 }
 
@@ -84,6 +98,11 @@ export class ActionSourceCollection extends Array<ActionSource> {
   }
   appendRaw(sources: readonly ActionSource[]): ActionSourceCollection { return new ActionSourceCollection([...this, ...sources], this.#captures) }
   rowsFor(source: ActionSource): readonly MetadataRow[] { return this.#captures.flatMap(capture => capture.rowsFor(source)) }
+  modelViewFor(source: ActionSource): PreparedGithubMetadataView | undefined {
+    const views = this.#captures.flatMap(capture => capture.modelViewFor(source) ?? [])
+    if (views.some(view => view.content !== views[0]?.content)) throw new ActionEvidenceVisibilityError('Conflicting collector metadata views; review pending')
+    return views[0]
+  }
 }
 
 export function actionEvidenceRegistryDigest(registry: ActionRegistry, articleDate: string): string {
@@ -124,18 +143,22 @@ export class PreparedActionEvidenceView {
       const reference = /^github:([\w-]+#\d+)(?:@[a-f0-9]{64})?$/.exec(source.id)?.[1]
       const rows = reference && required.has(reference) ? [] : capturedRows
       const byLine = new Map(rows.map(row => [row.line, row]))
-      const hiddenLines = rows.map(row => row.line)
-      hidden.set(source.id, new Set(hiddenLines))
       const { trustedContent, ...rest } = source
       if (trustedContent?.some(text => !source.content.includes(text))) throw new ActionEvidenceVisibilityError(`Trusted text is absent from raw source ${source.id}`)
-      const content = source.content.split('\n').map((line, offset) => {
+      const legacyContent = source.content.split('\n').map((line, offset) => {
         const row = byLine.get(offset + 1)
         if (row && row.raw !== line) throw new ActionEvidenceVisibilityError('Collector metadata offset no longer matches the raw source')
         return row ? `CONTEXT ONLY (original L${offset + 1} is NOT citable; omitted transport links cannot establish absence): ${row.context}` : `L${offset + 1}: ${line}`
       }).join('\n')
+      const candidateView = collection?.modelViewFor(source)
+      const factored = candidateView && Buffer.byteLength(candidateView.content) < Buffer.byteLength(legacyContent) ? candidateView : undefined
+      const hiddenLines = factored ? [...factored.hiddenLines] : rows.map(row => row.line)
+      hidden.set(source.id, new Set(hiddenLines))
+      const content = factored?.content ?? legacyContent
       const authoritativeLines = source.kind === 'github' ? [...trustedActionSourceLineNumbers(source)].filter(line => !hidden.get(source.id)?.has(line)) : source.kind === 'repository' ? 'repository source' : source.kind === 'instruction' ? 'operator instruction' : 'context only'
       const modelSource = { ...rest, id: `s${index + 1}`, authoritativeLines, content }
-      receipts.push(encodeActionEvidenceViewSourceReceipt({ sourceId: source.id, rawSha256: sha256(source.content), viewSha256: sha256(JSON.stringify(modelSource)), hiddenLines, omittedPathsSha256: sha256(JSON.stringify(rows.map(row => ({ line: row.line, paths: row.omitted })))) }))
+      receipts.push(encodeActionEvidenceViewSourceReceipt({ sourceId: source.id, rawSha256: sha256(source.content), viewSha256: sha256(JSON.stringify(modelSource)), hiddenLines,
+        omittedPathsSha256: sha256(JSON.stringify(factored ? { policy: factored.policySha256, metadataRows: factored.hiddenLines, omittedPaths: [] } : rows.map(row => ({ line: row.line, paths: row.omitted })))) }))
       return modelSource
     })
     this.#hidden = hidden
