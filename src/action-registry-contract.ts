@@ -389,9 +389,19 @@ export type DraftCandidateIdentity = (payload: DraftActionCandidatePayload, ordi
 export const ArticleOnlyAcceptanceSchema = z.object({
   kind: z.literal('article-only'), inputRoundId: digest, inputRegistrySha256: digest,
   failureKind: z.enum(['invalid-output', 'evidence-required']),
+  evidenceRequest: ActionEvidenceRequestReceiptSchema.optional(),
   sources: z.array(z.object({ id: z.string().min(1).max(512), locator: z.string().max(2048), sha256: digest }).strict()).max(64),
   rawContentRetained: z.literal(false),
-}).strict()
+}).strict().superRefine((acceptance, context) => {
+  const request = acceptance.evidenceRequest
+  if (!request) return
+  if (acceptance.failureKind !== 'evidence-required' || request.status !== 'open') context.addIssue({ code: 'custom', message: 'Current evidence request requires an open evidence-required hold' })
+  if (request.kind === 'source-view' && (!request.sourceId || !request.sourceFullContentSha256)) context.addIssue({ code: 'custom', message: 'Current source-view request requires source pins' })
+  if (request.sourceId || request.sourceFullContentSha256) {
+    const source = acceptance.sources.find(source => source.id === request.sourceId)
+    if (!source || source.sha256 !== request.sourceFullContentSha256 || request.sourceKey !== 'model-context' && request.sourceKey !== source.id.replace(/@[a-f0-9]{64}$/, '')) context.addIssue({ code: 'custom', message: 'Current evidence request must match its collected source identity and digest' })
+  }
+})
 export type ArticleOnlyAcceptance = z.infer<typeof ArticleOnlyAcceptanceSchema>
 export const editorialActionReviewOutcomeSchema = z.discriminatedUnion('state', [
   z.object({ state: z.literal('verified') }).strict(),
@@ -427,6 +437,8 @@ function createArticleActionSchema(candidateIdentity?: DraftCandidateIdentity) {
     if (rankedVersions.has(article.verification.promptVersion) && article.review.state === 'verified' && !article.closing) context.addIssue({ code: 'custom', message: `Closing prompt is missing: ${article.date}` })
     if (rankedVersions.has(article.verification.promptVersion) && article.review.state === 'verified' && article.closing?.kind === 'options') context.addIssue({ code: 'custom', message: `Legacy closing options cannot qualify a ranked shortlist: ${article.date}` })
     const candidates = article.draftCandidates ?? []
+    const request = article.review.state === 'pending' ? article.review.articleAcceptance?.evidenceRequest : undefined
+    if (request && (request.articleDate !== article.date || JSON.stringify(request.cycle) !== JSON.stringify(article.reviewCycle))) context.addIssue({ code: 'custom', message: 'Current evidence request belongs to another article or review cycle' })
     if (new Set(candidates.map(candidate => candidate.candidateId)).size !== candidates.length) context.addIssue({ code: 'custom', message: `Duplicate draft candidate identity: ${article.date}` })
     for (const [ordinal, candidate] of candidates.entries()) {
       if (candidateIdentity && candidateIdentity(candidate.payload, ordinal) !== candidate.candidateId) context.addIssue({ code: 'custom', message: `Draft candidate payload digest changed: ${candidate.candidateId}` })

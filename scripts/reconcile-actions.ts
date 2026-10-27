@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { readActionRegistry, registryRevision, writeActionRegistry, setActionInclusion, renderArticleActions, readArticleStatuses, assertFirstArticleAcceptance, completeArticleWithPendingActions } from '../src/action-registry.js'
-import { collectActionSources, createActionAgents, mockActionAgents, reviewProducedDraftActions, classifyActionReviewFailure } from '../src/review-actions.js'
+import { collectActionSources, createActionAgents, mockActionAgents, reviewProducedDraftActions, classifyActionReviewFailure, actionReviewEvidenceRequest } from '../src/review-actions.js'
 import { persistActionEvidenceResolutions, readActionEvidenceReply } from '../src/action-evidence-retrieval.js'
 
 type ReconcileOptions = { repoRoot?: string; articlePath?: string; agents?: Parameters<typeof reviewProducedDraftActions>[0]['agents']; collectSources?: (...args: Parameters<Parameters<typeof reviewProducedDraftActions>[0]['collectSources']>) => ActionSourceCollection }
@@ -52,7 +52,8 @@ export async function reconcileActions(options: ReconcileOptions = {}) {
   } catch (error) {
     const failure = classifyActionReviewFailure(error)
     if (!articleOnlyEligible || !failure || !collectedSources || !preparedEvidence) throw error
-    reviewed = completeArticleWithPendingActions({ registry: pristine, articleDate, markdown, articleStatuses: statuses, cycle: reviewCycle, failureKind: failure.kind, sources: collectedSources, draftCandidateEvidence: preparedEvidence })
+    const evidenceRequest = actionReviewEvidenceRequest(error, { registry: pristine, articleDate, markdown, articleStatuses: statuses, cycle: reviewCycle, feedback, sources: collectedSources, draftCandidateEvidence: preparedEvidence, reassessActionKeys, preserveActionKeys })
+    reviewed = completeArticleWithPendingActions({ registry: pristine, articleDate, markdown, articleStatuses: statuses, cycle: reviewCycle, failureKind: failure.kind, sources: collectedSources, draftCandidateEvidence: preparedEvidence, ...(evidenceRequest ? { evidenceRequest } : {}) })
   }
   reviewed.markdown = renderArticleActions(reviewed.markdown, reviewed.registry, articleDate, statuses)
   if (process.env.DRY_RUN !== 'true') {

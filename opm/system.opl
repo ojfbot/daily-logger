@@ -314,6 +314,8 @@ Editorial Accepting invokes Article Completing. [src: scripts/reconcile-actions.
 Article Completing affects Article. [src: src/action-registry.ts]
 Article Completing yields Article Only Acceptance. [src: src/action-registry.ts]
 Article Only Acceptance exhibits Action Review Outcome. [src: src/action-registry-contract.ts]
+# A current request is optional, checked against the exact failed case before reduction to a safe receipt. Earlier receipts remain unchanged history; neither becomes action authority. [src: src/review-actions.ts]
+Article Only Acceptance exhibits Action Evidence Request Receipt. [src: src/action-registry-contract.ts]
 Action Review Outcome can be pending or verified. [src: shared/article-review.ts]
 Clean Acceptance Outcome exhibits Action Review Outcome. [src: shared/editorial-action-proof.ts]
 Action Projecting yields Held Suggestions. [src: src/action-registry.ts]

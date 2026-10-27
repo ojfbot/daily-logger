@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `139d46086334cd55b2b188069403f77fed0f3322e63432d99d0043e45bcef665`.
+> Source SHA-256: `e4bf1f27e0e3055de74be4f33eb4e4d76d99670ec4005c6fa5c3ecc09f49d769`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -71,7 +71,7 @@ flowchart TD
   n46("Candidate Record Repairing")
   n47["Candidate Record Binding, Provider Action Proposal, and Source Evidence"]
   n48["Draft Action Candidate — states: awaiting-review, promoted, mapped-existing, rejected, verified-closure"]
-  n155["Candidate Review History"]
+  n156["Candidate Review History"]
   n205["Candidate Review Transition"]
   n206["Historical Source Metadata"]
   n49["Source Identity, Source Kind, Source Locator, and Full Content Digest"]
@@ -97,7 +97,7 @@ flowchart TD
   n61("Editorial Revising")
   n62["Editorial Revision Request"]
   n63["Draft Suggestion — states: proposed, open, done, dismissed, superseded, deferred"]
-  n160["Imported Action Baseline"]
+  n161["Imported Action Baseline"]
   n113["Article Action Files — states: pending, verified"]
   n64("Inclusion Choosing")
   n65["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
@@ -210,8 +210,8 @@ flowchart TD
   n28 -->|"yields"| n31
   n28 -->|"changes: transient to retained"| n27
   n48 -->|"part of"| n18
-  n205 -->|"part of"| n155
-  n206 -->|"part of"| n155
+  n205 -->|"part of"| n156
+  n206 -->|"part of"| n156
   n206 -->|"exhibits"| n49
   n50 -->|"part of"| n32
   n207 -->|"part of"| n32
@@ -243,7 +243,7 @@ flowchart TD
   n61 -->|"invokes"| n52
   n20 -->|"invokes"| n52
   n20 -->|"invokes"| n28
-  n160 -->|"part of"| n23
+  n161 -->|"part of"| n23
   n113 -->|"part of"| n23
   n23 -->|"requires (instrument)"| n64
   n4 -->|"requires (instrument)"| n64
@@ -725,31 +725,31 @@ flowchart TD
   n20("Editorial Accepting")
   n150["Article Only Acceptance"]
   n151["Action Review Outcome — states: pending, verified"]
+  n152["Action Evidence Request Receipt"]
   n22("Action Projecting")
-  n152["Held Suggestions"]
-  n153["Candidate Identity"]
+  n153["Held Suggestions"]
+  n154["Candidate Identity"]
   n113["Article Action Files — states: pending, verified"]
-  n154["Dated Action State Digest"]
+  n155["Dated Action State Digest"]
   n18["Draft Action Candidates"]
-  n155["Candidate Review History"]
+  n156["Candidate Review History"]
   n32["Draft Candidate Evidence Requirements — states: prior-binding, current-binding"]
-  n156["valid Candidate Review History"]
-  n157("Action Reviewing")
-  n158("Action Registry Writing")
-  n159["existing Candidate Review History"]
-  n160["Imported Action Baseline"]
-  n161("Editorial Output Binding")
-  n162["Editorial Output Artifact"]
-  n163("Clean Acceptance Output Admitting")
-  n164("Editorial Rebinding")
-  n165("Source Evidence Selecting")
+  n157["valid Candidate Review History"]
+  n158("Action Reviewing")
+  n159("Action Registry Writing")
+  n160["existing Candidate Review History"]
+  n161["Imported Action Baseline"]
+  n162("Editorial Output Binding")
+  n163["Editorial Output Artifact"]
+  n164("Clean Acceptance Output Admitting")
+  n165("Editorial Rebinding")
+  n166("Source Evidence Selecting")
   n30["Source Evidence"]
   n31["Recommendation Maintenance Memory"]
-  n166["Selected Source Evidence"]
-  n167["Evidence Coverage"]
-  n168["Action Evidence Request — states: open, resolved, cancelled, expired, superseded, declined"]
-  n169["Private Local Complete Source Artifact"]
-  n170["Action Evidence Request Receipt"]
+  n167["Selected Source Evidence"]
+  n168["Evidence Coverage"]
+  n169["Action Evidence Request — states: open, resolved, cancelled, expired, superseded, declined"]
+  n170["Private Local Complete Source Artifact"]
   n171("Source Evidence Projecting")
   n172["Action Evidence Projection"]
   n173["an open Action Evidence Request"]
@@ -826,56 +826,57 @@ flowchart TD
   n149 <-->|"affects"| n0
   n149 -->|"yields"| n150
   n150 -->|"exhibits"| n151
+  n150 -->|"exhibits"| n152
   n146 -->|"exhibits"| n151
-  n22 -->|"yields"| n152
-  n152 -->|"exhibits"| n153
-  n154 -->|"part of"| n113
-  n18 -->|"part of"| n113
+  n22 -->|"yields"| n153
+  n153 -->|"exhibits"| n154
   n155 -->|"part of"| n113
+  n18 -->|"part of"| n113
+  n156 -->|"part of"| n113
   n32 -->|"part of"| n113
-  n28 -->|"yields"| n154
+  n28 -->|"yields"| n155
   n28 -->|"changes: verified to pending"| n113
   n28 -->|"changes: pending to verified"| n113
   n28 -->|"yields"| n113
-  n28 -->|"yields"| n155
-  n156 -->|"requires (instrument)"| n28
-  n156 -->|"requires (instrument)"| n157
-  n154 -->|"requires (instrument)"| n157
-  n154 -->|"requires (instrument)"| n158
-  n159 -->|"requires (instrument)"| n158
-  n158 -->|"yields"| n155
-  n160 -->|"requires (instrument)"| n22
-  n4 -->|"requires (instrument)"| n161
-  n161 -->|"yields"| n162
-  n162 -->|"requires (instrument)"| n123
-  n162 -->|"requires (instrument)"| n163
-  n0 -->|"requires (instrument)"| n164
-  n164 <-->|"affects"| n113
-  n28 -->|"invokes"| n165
+  n28 -->|"yields"| n156
+  n157 -->|"requires (instrument)"| n28
+  n157 -->|"requires (instrument)"| n158
+  n155 -->|"requires (instrument)"| n158
+  n155 -->|"requires (instrument)"| n159
+  n160 -->|"requires (instrument)"| n159
+  n159 -->|"yields"| n156
+  n161 -->|"requires (instrument)"| n22
+  n4 -->|"requires (instrument)"| n162
+  n162 -->|"yields"| n163
+  n163 -->|"requires (instrument)"| n123
+  n163 -->|"requires (instrument)"| n164
   n0 -->|"requires (instrument)"| n165
-  n23 -->|"requires (instrument)"| n165
-  n30 -->|"requires (instrument)"| n165
-  n31 -->|"requires (instrument)"| n165
-  n32 -->|"requires (instrument)"| n165
-  n165 -->|"yields"| n166
-  n165 -->|"yields"| n167
-  n28 -->|"yields"| n168
+  n165 <-->|"affects"| n113
+  n28 -->|"invokes"| n166
+  n0 -->|"requires (instrument)"| n166
+  n23 -->|"requires (instrument)"| n166
+  n30 -->|"requires (instrument)"| n166
+  n31 -->|"requires (instrument)"| n166
+  n32 -->|"requires (instrument)"| n166
+  n166 -->|"yields"| n167
+  n166 -->|"yields"| n168
   n28 -->|"yields"| n169
   n28 -->|"yields"| n170
-  n170 -->|"part of"| n113
-  n168 -->|"requires (instrument)"| n171
+  n28 -->|"yields"| n152
+  n152 -->|"part of"| n113
   n169 -->|"requires (instrument)"| n171
+  n170 -->|"requires (instrument)"| n171
   n171 -->|"yields"| n172
   n173 -->|"requires (instrument)"| n171
-  n172 -->|"requires (instrument)"| n165
-  n174 -->|"requires (instrument)"| n165
-  n175 -->|"requires (instrument)"| n165
-  n176 -->|"yields"| n168
-  n177 -->|"changes: open to resolved, cancelled, expired, superseded, or declined"| n168
+  n172 -->|"requires (instrument)"| n166
+  n174 -->|"requires (instrument)"| n166
+  n175 -->|"requires (instrument)"| n166
+  n176 -->|"yields"| n169
+  n177 -->|"changes: open to resolved, cancelled, expired, superseded, or declined"| n169
   n177 -->|"yields"| n178
   n28 -->|"invokes"| n179
-  n166 -->|"requires (instrument)"| n179
   n167 -->|"requires (instrument)"| n179
+  n168 -->|"requires (instrument)"| n179
   n180 -->|"condition: available"| n181
   n180 -->|"requires (instrument)"| n181
   n181 -->|"yields"| n182
@@ -887,8 +888,8 @@ flowchart TD
   n179 -->|"yields"| n43
   n43 -->|"requires (instrument)"| n33
   n43 -->|"requires (instrument)"| n35
-  n166 -->|"requires (instrument)"| n33
-  n166 -->|"requires (instrument)"| n35
+  n167 -->|"requires (instrument)"| n33
+  n167 -->|"requires (instrument)"| n35
   n28 -->|"yields"| n184
   n28 -->|"yields"| n185
   n218 -->|"part of"| n185
@@ -962,6 +963,7 @@ Editorial Accepting invokes Article Completing. [src: scripts/reconcile-actions.
 Article Completing affects Article. [src: src/action-registry.ts]
 Article Completing yields Article Only Acceptance. [src: src/action-registry.ts]
 Article Only Acceptance exhibits Action Review Outcome. [src: src/action-registry-contract.ts]
+Article Only Acceptance exhibits Action Evidence Request Receipt. [src: src/action-registry-contract.ts]
 Action Review Outcome can be pending or verified. [src: shared/article-review.ts]
 Clean Acceptance Outcome exhibits Action Review Outcome. [src: shared/editorial-action-proof.ts]
 Action Projecting yields Held Suggestions. [src: src/action-registry.ts]
@@ -1110,13 +1112,13 @@ flowchart TD
   n205["Candidate Review Transition"]
   n113["Article Action Files — states: pending, verified"]
   n195["valid Captured Invocation Birth Output"]
-  n158("Action Registry Writing")
+  n159("Action Registry Writing")
   n39 -->|"exhibits"| n193
   n28 -->|"yields"| n194
   n218 -->|"part of"| n194
   n205 -->|"part of"| n194
   n194 -->|"part of"| n113
-  n195 -->|"requires (instrument)"| n158
+  n195 -->|"requires (instrument)"| n159
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
