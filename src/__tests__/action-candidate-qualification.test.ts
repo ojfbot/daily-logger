@@ -110,7 +110,7 @@ async function runFixture(hold?: string) {
     const context = parseActionModelView(prompt.slice(0, prompt.indexOf(marker)))
     expect(context.initialDraftCandidatePolicy).toContain('nonexecuting follow-up')
     expect(context.initialDraftCandidatePolicy).toContain('concrete completion and all owner gates')
-    expect(context.candidateDispositionEncoding).toBe('paired-candidate-dispositions-v1')
+    expect(context.candidateDispositionEncoding).toBe('candidate-id-derived-indices-v2')
     expect(context.initialDraftCandidates).toContainEqual(expect.objectContaining({ candidateId: ownerId, payload: expect.objectContaining({ command: '/owner-gate core#561' }), proposedDisposition: expect.objectContaining({ kind: 'promote', suggestionIndex: 0 }) }))
     return verification
   })

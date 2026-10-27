@@ -159,7 +159,7 @@ describe('captured candidate references before independent verification', () => 
     create.mockResolvedValueOnce(response(mixed))
     const { fixtureEvidenceView } = await import('./evidence-view-fixtures.js')
     const result = await createActionAgents().propose('OFFLINE assembly only.', fixtureEvidenceView(sources), { articleDate: date, draftCandidates: candidates, actionKeys: [] })
-    expect(result).toMatchObject({ candidateDispositions: [{ candidateId: candidates[0].candidateId, kind: 'promote', suggestionIndex: 1 }],
+    expect(result).toMatchObject({ candidateDispositions: [{ candidateId: candidates[0].candidateId, kind: 'promote', suggestionIndex: 1 }, { candidateId: candidates[1].candidateId, kind: 'reject' }],
       closingOptions: [{ candidateIndex: 1 }], suggestions: [{ command: '/investigate' }, { command: payloads[0].command, description: payloads[0].description }] })
   })
   it('does not replenish the shared repair budget after a full association repair', async () => {
