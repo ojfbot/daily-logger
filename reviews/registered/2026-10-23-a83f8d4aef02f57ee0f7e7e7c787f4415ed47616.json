@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-post-revision-20261023-a83f8d4aef02",
+  "article": {
+    "date": "2026-10-23",
+    "sourceCommitSha": "a83f8d4aef02f57ee0f7e7e7c787f4415ed47616",
+    "blobSha": "07709d81fc6c5f48f53bb023d498fda72c058605"
+  },
+  "reviewer": {
+    "name": "Codex \u2014 October 23 corrected article and held-action verification",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-27T05:38:29.910857Z",
+  "scope": "Source-pinned verification of the corrected accepted October23 article, original #433 findings, exact correction/acceptance trees, actual native receipt/artifact/admission and preserved queue/candidate custody. Original human dispositions remain historical. Semantic action verification, required-source recovery, live token/verifier qualification and unattended delivery remain unqualified. Shared GitHub carrier is not an independent principal.",
+  "fullRecordBlobSha": "cb515075f9e331be23f0f2b1eb65ba0a4b235e52",
+  "fullRecordPath": "reviews/articles/2026-10-23-a83f8d4aef02f57ee0f7e7e7c787f4415ed47616.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "A1",
+      "classification": "unverified_claim",
+      "title": "Three original suggested actions still need independent evidence review",
+      "location": "Suggested actions",
+      "explanation": "The actual normal acceptance train stopped on required #416 source overflow before a model request. Its approved article-only fallback preserves three original suggestions as Needs review/non-dispatchable, without a semantic action verdict, admission or closure.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/460#issuecomment-6434603521",
+        "https://github.com/ojfbot/daily-logger/actions/runs/40455874953",
+        "https://github.com/ojfbot/daily-logger/issues/386"
+      ],
+      "correction": "Keep the three suggestions visibly held and preserve their original IDs/history. Address source-bound evidence retrieval and diagnostic retention under #386 before a separately authorized action-review retry; do not execute fabricated commands or infer owner decisions.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
