@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-post-revision-20261024-a0ba4854ca5c",
+  "article": {
+    "date": "2026-10-24",
+    "sourceCommitSha": "a0ba4854ca5cd88bb59a3064edf005f59e6e7c09",
+    "blobSha": "fc1f57313970ca45f3d166580383dcbe250d356b"
+  },
+  "reviewer": {
+    "name": "Codex — October 24 accepted-source editorial and held-action verification",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-27T06:53:01Z",
+  "scope": "Source-pinned editorial verification of the corrected Accepted October 24 article and actual native article-only outcome. Original #449 findings remain open historical records. Three original suggestions remain unverified/non-dispatchable; source recovery, semantic review, token/provider qualification and unattended delivery remain unqualified. Shared GitHub transport is not a distinct reviewer principal.",
+  "fullRecordBlobSha": "c3cd96f458251d3f72131919d9e6e41a1dd48f6f",
+  "fullRecordPath": "reviews/articles/2026-10-24-a0ba4854ca5cd88bb59a3064edf005f59e6e7c09.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "H1",
+      "classification": "unverified_claim",
+      "title": "Three original suggestions still need independent source-bound evidence review",
+      "location": "Suggested actions — current #416 evidence request and historical #357 records",
+      "explanation": "The actual acceptance run held before either action agent on required #416 source overflow. Its trusted article-only fallback retains current request 368de6d217c740488b65c83bf612561bdd97f2b69a31743d68638f44bad4511d and unchanged historical #357 request, while preserving all three original identities as Needs review/non-dispatchable. This is not a semantic action verdict, admission, closure or owner approval.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/464#issuecomment-6435565425",
+        "https://github.com/ojfbot/daily-logger/actions/runs/40462656421",
+        "https://github.com/ojfbot/daily-logger/issues/386"
+      ],
+      "correction": "Keep original identities/history and current-versus-earlier evidence receipts visible. Recover source-bound evidence with independently reviewed obligation/counterevidence coverage before a separately authorized native action review. Do not execute preserved command strings, infer owner decisions or silently settle historical findings.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
