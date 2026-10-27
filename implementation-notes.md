@@ -525,3 +525,20 @@ When safe result bytes exist after an authorized run, preserve those exact immut
 ## Deviations — October 25 candidate validation diagnostics (2026-10-27)
 
 - The next-run plan assumed the previous complete evidence composition still fit, but fresh discussion growth under #386 causes an aggregate hold before SDK entry. Keep the diagnostic repair separate, preserve required evidence and fixed limits, and require fresh complete-source composition before considering another paid train.
+
+
+## October 25 evidence-fit preparation — exact coverage accounting
+
+The diagnostic repair in #472 exposed a separate pre-provider aggregate hold. A
+fresh native collection grew at #386; the final registered-review source was
+under the per-source limit, but required evidence plus coverage exceeded the
+aggregate. Lowering the existing GitHub metadata factoring threshold increased
+bytes and was rejected. This preparation packs only generated coverage rows in
+the ephemeral model view, leaves canonical coverage and authored evidence
+expanded, and replaces the fixed 16 KiB allocation estimate with complete
+rendered-byte accounting. Models, source/envelope/token limits, the shared
+repair budget, queue history and raw-storage restrictions are unchanged.
+
+This entry records offline preparation, not publication, a provider attempt or
+a successful semantic action review. Fresh composition and independent review
+must establish the candidate's actual fit before a new model-run decision.
