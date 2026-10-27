@@ -701,14 +701,14 @@ it('runs full collector→selection→both prompt paths with twelve oversized di
   expect(readActionRegistry(root).articles[0].sources.find(source => source.id === retained?.id)).toEqual(retained)
   expect(selection.receipt.sources.filter(source => source.kind === 'github' && !source.included)).toHaveLength(10)
   for (const item of selection.receipt.sources) expect(item.fullContentSha256).toBe(sha256(sources.find(source => source.id === item.id)?.content ?? ''))
-  const retry = await reviewArticleActions({ ...input([...sources, sources[0]].reverse()), registry: result.registry, markdown: result.markdown, agents: {
+  const retry = await reviewArticleActions({ ...input([...sources, sources[0]].reverse()), registry: readActionRegistry(root), markdown: result.markdown, agents: {
     propose: async () => { throw new Error('Cached retry called proposer') }, verify: async () => { throw new Error('Cached retry called verifier') },
   } })
   expect(retry.cached).toBe(true)
   expect(retry.registry).toEqual(result.registry)
 })
 
-it('backs off optional whole-source context when the complete coverage receipt exceeds the fixed reserve', () => {
+it('backs off optional whole-source context when the complete rendered coverage does not fit', () => {
   const sources: ActionSource[] = [
     { id: 'article', kind: 'report', locator: 'current article', content: 'A'.repeat(1024) },
     { id: 'operator', kind: 'instruction', locator: 'editorial feedback', content: '' },
@@ -724,13 +724,13 @@ it('backs off optional whole-source context when the complete coverage receipt e
     registry: empty(), articleDate: date, cycle: revisionActionCycle('dynamic-coverage-receipt'),
     articleStatuses: new Map([[date, 'draft']]), markdown: `---\ndate: ${date}\nstatus: draft\n---\nNo references.\n`, feedback: '', sources,
   })
-  const totalBytes = selection.sources.reduce((total, source) => total + Buffer.byteLength(source.content), 0)
+  const totalBytes = PreparedActionEvidenceView.prepare(selection.sources, sha256('budget'), sha256('budget')).promptSources().reduce((total, source) => total + Buffer.byteLength(source.content), 0)
   const omitted = selection.receipt.sources.filter(source => !source.required && !source.included)
 
   expect(totalBytes).toBeLessThanOrEqual(384 * 1024)
   expect(selection.receipt.sources.filter(source => source.required).every(source => source.included)).toBe(true)
   expect(omitted.length).toBeGreaterThan(0)
-  expect(omitted.every(source => source.reason.includes('complete coverage receipt'))).toBe(true)
+  expect(omitted.every(source => /complete coverage receipt|whole source does not fit total budget/.test(source.reason))).toBe(true)
   expect(omitted.map(source => source.id)).toEqual(sources.slice(-omitted.length).map(source => source.id))
   expect(selection.receipt.sources).toHaveLength(sources.length)
 })
@@ -756,7 +756,7 @@ it('requests a bounded view when required sources plus their complete coverage r
   } catch (error) {
     expect(error).toBeInstanceOf(ActionEvidenceRequestError)
     expect((error as ActionEvidenceRequestError).request.kind).toBe('source-view')
-    expect((error as Error).message).toMatch(/complete coverage receipt.*bounded source view requested/i)
+    expect((error as Error).message).toMatch(/total budget.*bounded source view requested/i)
   }
 })
 
@@ -927,4 +927,54 @@ it('charges a collector-proved complete view while raw copies stay held and auth
   expect(prepared.resolve(source.id, gateLine, gateLine).quote).toBe(ownerGate)
   const copy = structuredClone(source); copy.trustedContent = ['different owner claim']
   expect(() => PreparedActionEvidenceView.prepare([copy], sha256('case'), sha256('state'), collection, ['daily-logger#416'])).toThrow(/provenance/i)
+})
+
+
+it('fits complete required evidence when lossless coverage removes only repeated row keys', () => {
+  const sources: ActionSource[] = Array.from({ length: 25 }, (_, index) => ({
+    id: `review:required-${String(index).padStart(2, '0')}`,
+    kind: 'repository', locator: `required-${index}-${'m'.repeat(260)}`,
+    content: `${index}:` + 'x'.repeat((index === 0 ? 14959 : 14948) - String(index).length - 1),
+  }))
+  // Complete, one-line authored sources: 373711 raw + 100 labeled bytes.
+  const expectedRawBytes = sources.reduce((total, source) => total + Buffer.byteLength(source.content), 0)
+  const selected = selectActionEvidence({ registry: empty(), articleDate: date, markdown: 'No references.', feedback: '', sources })
+  const prepared = PreparedActionEvidenceView.prepare(selected.sources, sha256('fit-case'), sha256('fit-state'))
+  const rendered = prepared.promptSources()
+  expect(selected.receipt.sources).toHaveLength(sources.length)
+  expect(selected.receipt.sources.every(entry => entry.required && entry.included)).toBe(true)
+  expect(selected.receipt.sources.reduce((total, entry) => total + entry.bytes, 0)).toBe(expectedRawBytes)
+  expect(rendered.reduce((total, source) => total + Buffer.byteLength(source.content), 0)).toBeLessThanOrEqual(384 * 1024)
+  const coverage = selected.sources.find(source => source.id.startsWith(`${COVERAGE_SOURCE}@`))
+  if (!coverage) throw new Error('Missing complete coverage report')
+  expect(JSON.parse(coverage.content)).toEqual(selected.receipt)
+  for (const source of sources) {
+    const retained = prepared.rawSources().find(item => item.id === source.id)
+    expect(retained?.content).toBe(source.content)
+    expect(prepared.resolve(source.id, 1, 1).quote).toBe(source.content)
+  }
+})
+
+
+it('charges the entire rendered coverage at the exact aggregate boundary and holds one byte beyond', () => {
+  const sources: ActionSource[] = Array.from({ length: 4 }, (_, index) => ({ id: `review:boundary-${index}`, kind: 'repository', locator: `source-${index}`, content: 'x'.repeat(index === 3 ? 110_000 : 90_000) }))
+  const select = (rows: ActionSource[]) => selectActionEvidence({ registry: empty(), articleDate: date, markdown: 'No references.', feedback: '', sources: rows })
+  const size = (selected: ReturnType<typeof selectActionEvidence>) => PreparedActionEvidenceView.prepare(selected.sources, sha256('boundary'), sha256('state')).promptSources().reduce((total, source) => total + Buffer.byteLength(source.content), 0)
+  const initial = select(sources)
+  const remaining = 384 * 1024 - size(initial)
+  expect(remaining).toBeGreaterThan(0)
+  const last = sources.at(-1)
+  if (!last) throw new Error('Missing boundary fixture source')
+  last.content += 'x'.repeat(remaining)
+  expect(size(select(sources))).toBe(384 * 1024)
+  last.content += 'x'
+  expect(() => select(sources)).toThrow(ActionEvidenceRequestError)
+})
+
+it('keeps the labeled per-source boundary exact despite coverage packing', () => {
+  const source: ActionSource = { id: 'review:source-boundary', kind: 'repository', locator: 'required source', content: 'x'.repeat(128 * 1024 - 4) }
+  const select = () => selectActionEvidence({ registry: empty(), articleDate: date, markdown: 'No references.', feedback: '', sources: [source] })
+  expect(select().receipt.sources[0].modelBytes).toBe(128 * 1024)
+  source.content += 'x'
+  expect(() => select()).toThrow(/exceeds 128 KiB source limit/)
 })

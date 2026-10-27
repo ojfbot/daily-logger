@@ -129,6 +129,15 @@ selection and the final source guard charge the same complete labeled view,
 including its dictionary. Coverage records both raw bytes and actual model-view
 bytes/hashes. Dictionary and factored metadata rows are context only, never
 citable authority. Copying a source array cannot mint collector provenance.
+The generated coverage index also has a deterministic lossless model-only row
+encoding. Its canonical expanded JSON, source hash and retained proposal format
+stay intact. Only a closed, versioned, hash-matching context-only coverage report
+can use that encoding; its original metadata line is not citable. Rendering is
+the same after save/reload. Selection measures the complete rendered coverage
+(including the encoding rule) instead of reserving a fixed 16 KiB. If needed it
+removes only optional whole sources, then measures again; required evidence and
+the final 128/384 KiB guards remain unchanged. A changed model-view policy binds a
+new round and cannot reuse an old cached verdict.
 The full request and provider-token guards still apply, and large authored
 sources may still require an explicit bounded evidence response. Neither raw
 captures nor dictionaries are uploaded. A later successful review preserves prior
