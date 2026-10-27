@@ -102,7 +102,12 @@ before model entry. Output limits can still hold a newly produced proposal.
 Only bounded numeric budget/usage observations and closed stop categories survive
 native diagnostics. A qualified token count is recorded before a budget rejection;
 response usage is recorded before incomplete-output rejection. Missing usage is
-unknown, not zero; these observations do not establish billing.
+unknown, not zero; these observations do not establish billing. Bounded output-shape
+facts use known field/type names, never response values or arbitrary keys. A
+current evidence receipt is emitted only while native current inputs are available;
+a self-consistent but unbound request retains identity only. Closed failure phases
+distinguish malformed output, evidence/context holds and an incomplete ranked
+shortlist. These diagnostics grant no evidence resolution or action authority.
 
 The hosted worker may factor repeated collector-generated metadata into an
 ephemeral, self-contained lossless view. Exact reconstruction must preserve every
