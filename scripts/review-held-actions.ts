@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { reconcileActions } from './reconcile-actions.js'
 import { acceptanceActionCycle } from '../src/action-review-cycle.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, COVERAGE_SOURCE, prepareConservativeDraftCandidateEvidence } from '../src/action-evidence-selection.js'
-import { ActionContextNeedError, classifyActionReviewFailure } from '../src/review-actions.js'
+import { ActionContextNeedError, ActionProviderBudgetObservationSchema, ActionProviderResponseObservationSchema, classifyActionReviewFailure } from '../src/review-actions.js'
 import { ActionEvidenceRequestError } from '../src/action-evidence-retrieval.js'
 import { ArticleActionFileSchema, ActionSourceSchema, actionArticlePath, articleActionFileBytes, assertActionSnapshotStateIntegrity, readActionRegistry, readArticleStatuses, registryRevision, sha256, splitActionRegistry, stripManagedActions } from '../src/action-registry.js'
 import type { GitHub } from '../api/_lib/article-review-sources.js'
@@ -44,7 +44,7 @@ export const heldActionReceiptSchema = z.object({
   state: resultStateSchema, files: z.array(z.object({ name: z.enum(['article.md', 'actions.json']), repositoryPath: z.string(), bytes: z.number().int().positive().max(786432), sha256: digest }).strict()).max(2),
   authorization: z.literal('consumed'), nativeEntry: z.enum(['not-entered', 'native-function-entered']),
   stop: z.object({ stage: z.enum(['input', 'reservation', 'native', 'proposal', 'outcome', 'completed']), reason: reasonSchema, httpStatus: z.number().int().min(100).max(599).optional() }).strict(),
-  observations: z.object({ billing: z.literal('not-inferred'), budgets: z.array(z.object({ role: z.enum(['proposer', 'verifier']), input: z.number().int().nonnegative(), outputReserve: z.number().int().nonnegative(), total: z.number().int().nonnegative(), limit: z.number().int().positive() }).strict()).max(3), responses: z.array(z.object({ role: z.enum(['proposer', 'verifier']), stop: z.enum(['tool_use', 'end_turn', 'max_tokens', 'stop_sequence', 'null']), outputTokens: z.number().int().nonnegative() }).strict()).max(3) }).strict(),
+  observations: z.object({ billing: z.literal('not-inferred'), budgets: z.array(ActionProviderBudgetObservationSchema).max(3), responses: z.array(ActionProviderResponseObservationSchema).max(3) }).strict(),
 }).strict().superRefine((receipt, ctx) => {
   const expected = new Map([['article.md', `_articles/${receipt.binding.inputs.date}.md`], ['actions.json', actionArticlePath(receipt.binding.inputs.date)]])
   if (receipt.state === 'native-review-completed-unmerged' ? receipt.files.length !== 2 : receipt.files.length !== 0) ctx.addIssue({ code: 'custom', message: 'Only completed native review has the two dated proposal files' })
@@ -208,10 +208,16 @@ export async function executeHeldAction(options: { root: string; binding: Bindin
     Object.assign(process.env, env)
     const capture = (...values: unknown[]) => {
       if (values.length !== 1 || typeof values[0] !== 'string') return
-      const budget = /^Action (proposer|verifier) token budget: input=(\d{1,9}); output_reserve=(\d{1,9}); total=(\d{1,9}); limit=(\d{1,9})$/.exec(values[0])
-      if (budget && receipt.observations.budgets.length < 3) receipt.observations.budgets.push(z.object({ role: z.enum(['proposer', 'verifier']), input: z.number(), outputReserve: z.number(), total: z.number(), limit: z.number() }).parse({ role: budget[1], input: Number(budget[2]), outputReserve: Number(budget[3]), total: Number(budget[4]), limit: Number(budget[5]) }))
-      const response = /^Action (proposer|verifier): stop=(tool_use|end_turn|max_tokens|stop_sequence|null); output_tokens=(\d{1,9})$/.exec(values[0])
-      if (response && receipt.observations.responses.length < 3) receipt.observations.responses.push(z.object({ role: z.enum(['proposer', 'verifier']), stop: z.enum(['tool_use', 'end_turn', 'max_tokens', 'stop_sequence', 'null']), outputTokens: z.number() }).parse({ role: response[1], stop: response[2], outputTokens: Number(response[3]) }))
+      const budget = /^Action (proposer|verifier) token budget: input=(\d{1,9}); output_reserve=(\d{1,9}); total=(\d{1,10}); limit=(\d{1,9})$/.exec(values[0])
+      if (budget && receipt.observations.budgets.length < 3) {
+        const observation = ActionProviderBudgetObservationSchema.safeParse({ role: budget[1], input: Number(budget[2]), outputReserve: Number(budget[3]), total: Number(budget[4]), limit: Number(budget[5]) })
+        if (observation.success) receipt.observations.budgets.push(observation.data)
+      }
+      const response = /^Action (proposer|verifier): stop=(tool_use|end_turn|max_tokens|stop_sequence|null|unknown); output_tokens=(\d{1,9}|unavailable)(?:; input_tokens=(\d{1,9}|unavailable))?$/.exec(values[0])
+      if (response && receipt.observations.responses.length < 3) {
+        const observation = ActionProviderResponseObservationSchema.safeParse({ role: response[1], stop: response[2], outputTokens: response[3] === 'unavailable' ? null : Number(response[3]), ...(response[4] === undefined ? {} : { inputTokens: response[4] === 'unavailable' ? null : Number(response[4]) }) })
+        if (observation.success) receipt.observations.responses.push(observation.data)
+      }
     }
     for (const key of Object.keys(consoleMethods)) Reflect.set(console, key, capture)
     try {

@@ -142,6 +142,17 @@ const ProviderToolBlocksSchema = z.tuple([z.object({
   type: z.literal('tool_use'), id: z.string().min(1), name: z.literal('review_actions'), input: z.unknown(),
 }).passthrough()])
 type ActionRole = 'proposer' | 'verifier'
+const ActionTokenCountValueSchema = z.number().int().nonnegative().safe().max(999999999)
+export const ActionProviderBudgetObservationSchema = z.object({
+  role: z.enum(['proposer', 'verifier']), input: ActionTokenCountValueSchema,
+  outputReserve: ActionTokenCountValueSchema.max(12000), total: z.number().int().nonnegative().safe().max(1000011999),
+  limit: ActionTokenCountValueSchema.positive(),
+}).strict().refine(value => value.total === value.input + value.outputReserve, 'Token budget total must include the output reserve')
+export const ActionProviderResponseObservationSchema = z.object({
+  role: z.enum(['proposer', 'verifier']), stop: z.enum(['tool_use', 'end_turn', 'max_tokens', 'stop_sequence', 'null', 'unknown']),
+  inputTokens: ActionTokenCountValueSchema.nullable().optional(),
+  outputTokens: ActionTokenCountValueSchema.max(12000).nullable(),
+}).strict()
 type ProviderOutputPhase = 'envelope' | 'tool-block' | 'tool-input'
 class ProviderActionOutputError extends ActionOutputError {}
 class ProviderCandidateAssociationError extends ActionOutputError {}
@@ -460,7 +471,7 @@ function applicationHoldRequest(input: ActionHoldContext & { error: unknown }) {
 
 export type ActionTokenCount = { kind: 'counted'; inputTokens: number } | { kind: 'unavailable'; reason: string }
 const ActionTokenCountSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('counted'), inputTokens: z.number().int().nonnegative().safe() }).strict(),
+  z.object({ kind: z.literal('counted'), inputTokens: ActionTokenCountValueSchema }).strict(),
   z.object({ kind: z.literal('unavailable'), reason: z.string().min(1) }).strict(),
 ])
 export interface ActionTokenBudget {
@@ -616,9 +627,18 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
     if (qualifiedCount.data.kind === 'unavailable') throw new ActionContextNeedError(`Action token qualification unavailable: ${qualifiedCount.data.reason}; review pending`)
     const inputTokens = qualifiedCount.data.inputTokens
     const totalTokens = inputTokens + request.max_tokens
-    if (totalTokens > tokenLimit) throw new ActionContextNeedError(`Complete action provider request exceeds token budget (${inputTokens} input + ${request.max_tokens} output reserve > ${tokenLimit}); review pending`)
     console.warn(`Action ${role} token budget: input=${inputTokens}; output_reserve=${request.max_tokens}; total=${totalTokens}; limit=${tokenLimit}`)
+    if (totalTokens > tokenLimit) throw new ActionContextNeedError(`Complete action provider request exceeds token budget (${inputTokens} input + ${request.max_tokens} output reserve > ${tokenLimit}); review pending`)
     const raw: unknown = await client.messages.create(request)
+    // Measure only allowlisted scalars before a truncated or malformed response is rejected.
+    // This diagnostic must never serialize provider content or arbitrary stop/error strings.
+    const measurement = z.object({ stop_reason: z.unknown().optional(), usage: z.unknown().optional() }).safeParse(raw)
+    const rawStop = measurement.success ? measurement.data.stop_reason : undefined
+    const stop = ActionProviderResponseObservationSchema.shape.stop.safeParse(rawStop === null ? 'null' : rawStop)
+    const usage = z.object({ input_tokens: z.unknown().optional(), output_tokens: z.unknown().optional() }).safeParse(measurement.success ? measurement.data.usage : undefined)
+    const inputUsage = ActionTokenCountValueSchema.safeParse(usage.success ? usage.data.input_tokens : undefined)
+    const outputUsage = ActionTokenCountValueSchema.max(12000).safeParse(usage.success ? usage.data.output_tokens : undefined)
+    console.warn(`Action ${role}: stop=${stop.success ? stop.data : 'unknown'}; output_tokens=${outputUsage.success ? outputUsage.data : 'unavailable'}; input_tokens=${inputUsage.success ? inputUsage.data : 'unavailable'}`)
     const completion = parseProviderOutput(role, 'envelope', raw, () => ProviderStopSchema.parse(raw))
     if (completion.stop_reason !== 'tool_use') {
       const stop = IncompleteProviderStopSchema.safeParse(completion.stop_reason)
@@ -626,7 +646,6 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
       throw new Error(`Action ${role} did not finish its structured review (unrecognized stop reason)`)
     }
     const response = parseProviderOutput(role, 'envelope', raw, () => ProviderResponseSchema.parse(raw))
-    console.warn(`Action ${role}: stop=${response.stop_reason}; output_tokens=${response.usage?.output_tokens ?? 'unavailable'}`)
     const [result] = parseProviderOutput(role, 'tool-block', response.content, () => ProviderToolBlocksSchema.parse(response.content))
     return result.input
   }

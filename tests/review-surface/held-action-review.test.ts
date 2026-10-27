@@ -19,7 +19,7 @@ const { create, countTokens, clients } = vi.hoisted(() => ({ create: vi.fn(), co
 vi.mock('@anthropic-ai/sdk', () => ({ default: class { constructor(options: unknown) { clients(options) } messages = { create, countTokens } } }))
 // Synchronous Git fixtures share the host with the full suite; bound tests locally.
 const roots: string[] = [], date = '2026-10-22', operation = '11111111-1111-4111-8111-111111111111', grantId = '22222222-2222-4222-8222-222222222222', authorization = '33333333-3333-4333-8333-333333333333'
-const sources = [{ id: 'fact', kind: 'repository' as const, locator: 'fixture.md', content: 'Each original concern needs its own owner review.' }, { id: 'goal', kind: 'goal' as const, locator: 'ROADMAP.md', content: 'Preserve original decisions and review their evidence independently.' }, ...[9001, 9002, 9003].map(number => ({ id: `checkpoint-${number}`, kind: 'github' as const, locator: `https://github.com/ojfbot/core/issues/${number}`, content: `CURRENT API STATE core#${number}: state=open; owner review remains required.`, trustedContent: [`CURRENT API STATE core#${number}: state=open; owner review remains required.`] }))]
+const sources = [{ id: 'fact', kind: 'repository' as const, locator: 'fixture.md', content: 'Each original concern needs its own owner review.\nPRIVATE_RAW_SOURCE_SENTINEL' }, { id: 'goal', kind: 'goal' as const, locator: 'ROADMAP.md', content: 'Preserve original decisions and review their evidence independently.' }, ...[9001, 9002, 9003].map(number => ({ id: `checkpoint-${number}`, kind: 'github' as const, locator: `https://github.com/ojfbot/core/issues/${number}`, content: `CURRENT API STATE core#${number}: state=open; owner review remains required.`, trustedContent: [`CURRENT API STATE core#${number}: state=open; owner review remains required.`] }))]
 const response = (input: unknown) => ({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'offline', name: 'review_actions', input }], usage: { output_tokens: 100 } })
 beforeEach(() => { create.mockReset(); countTokens.mockReset().mockResolvedValue({ input_tokens: 1000 }); clients.mockReset() })
 afterEach(() => { vi.unstubAllEnvs(); for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
@@ -174,6 +174,73 @@ it('a count/HTTP failure consumes authority without claiming generation or billi
   expect(result.receipt.state).toBe('uncertain-after-entry'); expect(result.receipt.observations).toEqual({ billing: 'not-inferred', budgets: [], responses: [] })
   expect(create).not.toHaveBeenCalled(); expect(countTokens).toHaveBeenCalledTimes(1); expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
   await expect(reserveHeldAction(binding, t.github)).rejects.toThrow()
+}, 15000)
+
+it('retains a qualified overbudget count without generation or raw evidence', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  countTokens.mockResolvedValueOnce({ input_tokens: 244001, PRIVATE_COUNT_SENTINEL: 'PRIVATE_RAW_COUNT' })
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.observations.budgets).toEqual([{ role: 'proposer', input: 244001, outputReserve: 12000, total: 256001, limit: 256000 }])
+  expect(result.receipt.observations.responses).toEqual([])
+  expect(result.receipt.stop.reason).toBe('native-context-or-budget')
+  expect(countTokens).toHaveBeenCalledTimes(1); expect(create).not.toHaveBeenCalled()
+  expect(result.files).toEqual([]); expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
+  expect(readFileSync(join(f.root, `_articles/${date}.md`), 'utf8')).toBe(f.original.article)
+  expect(readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')).toBe(f.original.action)
+}, 15000)
+
+it.each(['max_tokens', 'end_turn', 'stop_sequence'] as const)('retains %s and actual usage before incomplete output is rejected', async stop => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  create.mockResolvedValueOnce({ stop_reason: stop, usage: { input_tokens: 1234, output_tokens: 12000, PRIVATE_USAGE_SENTINEL: 123 }, content: 'PRIVATE_RAW_RESPONSE_SENTINEL' })
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.state).toBe('held-invalid-output')
+  expect(result.receipt.observations.responses).toEqual([{ role: 'proposer', stop, inputTokens: 1234, outputTokens: 12000 }])
+  expect(countTokens).toHaveBeenCalledTimes(1); expect(create).toHaveBeenCalledTimes(1)
+  expect(JSON.stringify(create.mock.calls[0][0])).toContain('PRIVATE_RAW_SOURCE_SENTINEL')
+  expect(result.files).toEqual([]); expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
+  expect(readFileSync(join(f.root, `_articles/${date}.md`), 'utf8')).toBe(f.original.article)
+  expect(readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')).toBe(f.original.action)
+}, 15000)
+
+it('keeps proposer and verifier usage distinct when the verifier is truncated', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal } = healthy(f)
+  create.mockReset().mockResolvedValueOnce({ ...response(proposal), usage: { input_tokens: 1111, output_tokens: 100 } }).mockResolvedValueOnce({ stop_reason: 'max_tokens', usage: { input_tokens: 2222, output_tokens: 12000 }, content: 'PRIVATE_VERIFIER_REPLY' })
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.observations.responses).toEqual([{ role: 'proposer', stop: 'tool_use', inputTokens: 1111, outputTokens: 100 }, { role: 'verifier', stop: 'max_tokens', inputTokens: 2222, outputTokens: 12000 }])
+  expect(result.receipt.state).toBe('held-invalid-output'); expect(result.files).toEqual([])
+  expect(create).toHaveBeenCalledTimes(2); expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
+}, 15000)
+
+it('retains a bounded unknown stop with unavailable usage without arbitrary provider strings', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  create.mockResolvedValueOnce({ stop_reason: 'PRIVATE_UNKNOWN_STOP', usage: { input_tokens: -1, output_tokens: 12001 }, content: 'PRIVATE_RAW_REPLY' })
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.observations.responses).toEqual([{ role: 'proposer', stop: 'unknown', inputTokens: null, outputTokens: null }])
+  expect(result.receipt.state).toBe('uncertain-after-entry'); expect(result.files).toEqual([])
+  expect(create).toHaveBeenCalledTimes(1); expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
+}, 15000)
+
+it('retains valid input usage independently of invalid output usage on an incomplete response', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  create.mockResolvedValueOnce({ stop_reason: 'max_tokens', usage: { input_tokens: 1234, output_tokens: 12001 }, content: 'PRIVATE_INVALID_USAGE_REPLY' })
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.observations.responses).toEqual([{ role: 'proposer', stop: 'max_tokens', inputTokens: 1234, outputTokens: null }])
+  expect(result.receipt.state).toBe('held-invalid-output'); expect(result.files).toEqual([])
+  expect(create).toHaveBeenCalledTimes(1); expect(JSON.stringify(result.receipt)).not.toContain('PRIVATE_')
+}, 15000)
+
+it('keeps legacy response measurements readable and rejects out-of-range numeric observations', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  healthy(f)
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  const legacy = { ...result.receipt, observations: { ...result.receipt.observations, responses: [{ role: 'proposer', stop: 'tool_use', outputTokens: 100 }] } }
+  expect(heldActionReceiptSchema.parse(legacy).observations.responses[0]).toEqual({ role: 'proposer', stop: 'tool_use', outputTokens: 100 })
+  for (const input of [-1, 0.5, Number.MAX_SAFE_INTEGER, 1000000000]) {
+    expect(() => heldActionReceiptSchema.parse({ ...legacy, observations: { ...legacy.observations, budgets: [{ role: 'proposer', input, outputReserve: 12000, total: input + 12000, limit: 256000 }] } })).toThrow()
+    expect(() => heldActionReceiptSchema.parse({ ...legacy, observations: { ...legacy.observations, responses: [{ role: 'proposer', stop: 'tool_use', inputTokens: input, outputTokens: 100 }] } })).toThrow()
+  }
+  expect(() => heldActionReceiptSchema.parse({ ...legacy, observations: { ...legacy.observations, responses: [{ role: 'proposer', stop: 'tool_use', inputTokens: 1000, outputTokens: 12001 }] } })).toThrow()
 }, 15000)
 
 it('cannot reuse consumed authorization with another operation or reuse an operation under another grant', async () => {
