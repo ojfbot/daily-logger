@@ -5,13 +5,137 @@
   "decisions": [],
   "snapshot": {
     "date": "2026-10-23",
-    "status": "draft",
+    "status": "accepted",
     "review": {
       "state": "pending",
-      "reason": "Awaiting the authorized October23 native action review after supervised source/data correction. Historical initial hold retained: Action evidence request 099dfcec9392f116ce8bea20872e6e72e4bd014665d1b9609c8f5b7e732ac804 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
+      "reason": "The available evidence did not confirm these suggestions.",
+      "articleAcceptance": {
+        "kind": "article-only",
+        "inputRoundId": "0703cdc8d82eb955c5db7e7320db7ed44d82d02142ead91ab0dbe041fbbab2fd",
+        "inputRegistrySha256": "e3c0f8f5dfedf94346aa2cce94e6d5a03aa1c9412fe9739f94825391b4d41816",
+        "failureKind": "evidence-required",
+        "sources": [
+          {
+            "id": "article@bf46ee350bfdf1d62b7c243832a39b101df97096a9d46e0a78f0adad1587481b",
+            "locator": "current revised article",
+            "sha256": "bf46ee350bfdf1d62b7c243832a39b101df97096a9d46e0a78f0adad1587481b"
+          },
+          {
+            "id": "operator@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "locator": "editorial feedback",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "id": "repo:ROADMAP.md@8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30",
+            "locator": "ROADMAP.md",
+            "sha256": "8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30"
+          },
+          {
+            "id": "repo:AGENTS.md@fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618",
+            "locator": "AGENTS.md",
+            "sha256": "fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618"
+          },
+          {
+            "id": "repo:CLAUDE.md@a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2",
+            "locator": "CLAUDE.md",
+            "sha256": "a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2"
+          },
+          {
+            "id": "repo:opm/system.opl@139d46086334cd55b2b188069403f77fed0f3322e63432d99d0043e45bcef665",
+            "locator": "opm/system.opl",
+            "sha256": "139d46086334cd55b2b188069403f77fed0f3322e63432d99d0043e45bcef665"
+          },
+          {
+            "id": "review:reviews/articles/2026-10-23-6955554ff71e961cf2f25404e8e7c41b83817c8b.md@9d941af4d18a7fa25cda2d69373bf3dd782cb75c372ef3a1d16d26cfb51b2076",
+            "locator": "reviews/articles/2026-10-23-6955554ff71e961cf2f25404e8e7c41b83817c8b.md",
+            "sha256": "9d941af4d18a7fa25cda2d69373bf3dd782cb75c372ef3a1d16d26cfb51b2076"
+          },
+          {
+            "id": "review:reviews/registered/2026-10-23-6955554ff71e961cf2f25404e8e7c41b83817c8b.json@1ef5076b0ee4d91a17a05703ee26a7ac3564668a917fb6511c4f9f5eeb6220e9",
+            "locator": "reviews/registered/2026-10-23-6955554ff71e961cf2f25404e8e7c41b83817c8b.json",
+            "sha256": "1ef5076b0ee4d91a17a05703ee26a7ac3564668a917fb6511c4f9f5eeb6220e9"
+          },
+          {
+            "id": "github:daily-logger#416@279b8843178532bb35e9f4a7286b2a597ac9f94ce4df8fd8668ef9a4b6c3a40b",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/416",
+            "sha256": "279b8843178532bb35e9f4a7286b2a597ac9f94ce4df8fd8668ef9a4b6c3a40b"
+          },
+          {
+            "id": "github:daily-logger#431@90a53b7a2ff82535734b3639f9c6660dc57ad14cae8b7f1ca7a6c8ed4afd8f72",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/431",
+            "sha256": "90a53b7a2ff82535734b3639f9c6660dc57ad14cae8b7f1ca7a6c8ed4afd8f72"
+          },
+          {
+            "id": "github:morning-cockpit#57@5ead91592b53af5b8f330715639ab0faa3955584b5f1653e12e79b8cd66c1d2f",
+            "locator": "https://github.com/ojfbot/morning-cockpit/issues/57",
+            "sha256": "5ead91592b53af5b8f330715639ab0faa3955584b5f1653e12e79b8cd66c1d2f"
+          },
+          {
+            "id": "github:morning-cockpit#60@c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff",
+            "locator": "https://github.com/ojfbot/morning-cockpit/pull/60",
+            "sha256": "c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff"
+          },
+          {
+            "id": "github:daily-logger#421@d8b72291f9f0f420b6ba07ea5ff54210b045e1edcd20503006eb11d17a8fe246",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/421",
+            "sha256": "d8b72291f9f0f420b6ba07ea5ff54210b045e1edcd20503006eb11d17a8fe246"
+          },
+          {
+            "id": "github:daily-logger#433@f146d3925a04d14230a9f291274a10941ef121ba22774f7c055dfe708e67996a",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/433",
+            "sha256": "f146d3925a04d14230a9f291274a10941ef121ba22774f7c055dfe708e67996a"
+          },
+          {
+            "id": "github:daily-logger#430@d39bba53f8ecbd76be1405f733dd223849e89d80cf14c3d3e9e4282b9938132b",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/430",
+            "sha256": "d39bba53f8ecbd76be1405f733dd223849e89d80cf14c3d3e9e4282b9938132b"
+          },
+          {
+            "id": "github:daily-logger#424@f821fe72f37ac2b04e93847f1aa181715e4e7900521e27ad3903403a9bcc1893",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/424",
+            "sha256": "f821fe72f37ac2b04e93847f1aa181715e4e7900521e27ad3903403a9bcc1893"
+          },
+          {
+            "id": "github:daily-logger#429@c59a850fd0adfdd7cfb59d8e0b449918826c08589cbe5889ee7c0b207eb2e48c",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/429",
+            "sha256": "c59a850fd0adfdd7cfb59d8e0b449918826c08589cbe5889ee7c0b207eb2e48c"
+          },
+          {
+            "id": "github:daily-logger#428@d9a036d93c917052906a30c15396072b931b824c9bcf7c53326ebfc514964e81",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/428",
+            "sha256": "d9a036d93c917052906a30c15396072b931b824c9bcf7c53326ebfc514964e81"
+          },
+          {
+            "id": "github:daily-logger#419@cd6545d025a28bf4241cf6b9993dc21fdcafd20f455be48b7b180246800cf697",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/419",
+            "sha256": "cd6545d025a28bf4241cf6b9993dc21fdcafd20f455be48b7b180246800cf697"
+          },
+          {
+            "id": "github:daily-logger#417@c75521c6743cfb42d63e47384ddd062add9811cef02fb6e4468b44077b3d070b",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/417",
+            "sha256": "c75521c6743cfb42d63e47384ddd062add9811cef02fb6e4468b44077b3d070b"
+          },
+          {
+            "id": "goal:core:decisions/northstar/l2-ojfbot.md@2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/4ca14bc3bda4a661201078e1aca18b4f75bbc8d1",
+            "sha256": "2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb"
+          },
+          {
+            "id": "goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82",
+            "sha256": "33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d"
+          },
+          {
+            "id": "goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82",
+            "sha256": "33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d"
+          }
+        ],
+        "rawContentRetained": false
+      }
     },
     "articleDigest": "0d4ada9af3121405da0fed1a4da5cad4f8bc8955bea0f88536e4ff6e3b062bf6",
-    "roundId": "0703cdc8d82eb955c5db7e7320db7ed44d82d02142ead91ab0dbe041fbbab2fd",
+    "roundId": "09bb78247a1ca801675d87563e71b0d9a215c5189c3485e9d2c3c2238d5ab043",
     "reviewCycle": {
       "phase": "generation"
     },
@@ -60,9 +184,18 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "coordinator",
+        "kind": "derived-refresh",
         "identity": "oct23-full-cycle:supervised-corrected-draft-data",
-        "decision": "Bind corrected Draft/current full status index and explicit per-candidate primary sources under the authorized October23 article cycle. Preserve original candidate custody/history and owner/counterevidence gates; grant no action disposition, execution, settlement, approval or retry authority."
+        "decision": "Acceptance-status refresh preserves the prior evidence classification after proving the exact Draft input view; it grants no new review authority.",
+        "lineage": {
+          "kind": "acceptance-status-refresh",
+          "priorArticleStatus": "draft",
+          "articleStatus": "accepted",
+          "priorReviewCycle": {
+            "phase": "generation"
+          },
+          "priorRequirementsSha256": "76a2f381e2f8fd2d13e5c1e7f72ab6b9c69349fe020a2337a57f292cafbb1d19"
+        }
       },
       "articleDate": "2026-10-23",
       "articleDigest": "0d4ada9af3121405da0fed1a4da5cad4f8bc8955bea0f88536e4ff6e3b062bf6",
@@ -72,7 +205,7 @@
       "draftContextSha256": "70b6b253897899c7525e7bac82f41f722b50879d105fd239870a258924fa6985",
       "candidatePayloadsSha256": "aff1f02c5b474503b190fcddbf6e09cc9912bb02438d748ffd1780ba13c12f55",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "3072ce3f7882e0a847801f92d490b739522e9c2ff501d59fb74ad49521f6c5e8",
+      "articleStatusesSha256": "a1b0602d64a294021c03001a31fade73c5eec5331e40720af4a3719189b34cca",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -140,7 +273,7 @@
       "kind": "retained",
       "markdown": "The October 21 acceptance cycle (#416) remains the single blocking item. All four technical blockers have merged fixes as of this window. The next action is a manual trigger of the live provider run against the repaired pipeline; the specific command surface is the acceptance resume workflow introduced in #424. If the provider run fails, the synthetic probe (#428–430) should be run first to isolate schema-side vs. article-fit-side failure before any further code changes are attempted.\n\nPost-token-count for the compacted evidence view (#427) is not yet in the record — it will be produced by the #416 run. The growth rate of evidence as articles accumulate is an open characterization question; #427 is a point fix, not a capacity model.\n\n#421 (October 22 review DRAFT) exits on acceptance of the October 22 action review output, or closes without merge if the pipeline marks it resolved with no material findings.\n\nmorning-cockpit #60 has no activity across two windows and no stated dependency. Its disposition — merge, close, or park — is an owner gate with no technical blocker.\n\nlego-village-pipeline #44, #45, #46 are analysis-only DRAFTs with no active blockers identified. Closing them vs. converting to issues is an owner decision; they are accumulating drift at 12+ days open.\n\nclassic-space-venue #4 is parallel work, not a dependency of the editorial pipeline. Its core issue dependencies (#544, #564–567) are wayfinder/world-building research; none are editorial-pipeline blockers.\n\nAPI spend per failed acceptance cycle (~193K input tokens) is not published in this record. That cost dimension would make the compaction fix legible to anyone outside the immediate codebase.\n\nThe `DRAFT_CONTINUATION_CONTEXT` HTML comment block in the raw draft source is machine-readable pipeline state metadata. It is not reader-facing content and should not appear in any published form. Whether it is suppressed at render time or stripped before publication is a pipeline hygiene question for the next hardening pass.\n\n### Coordinator qualification — 2026-10-27\n\nThe preceding draft context is retained verbatim as historical generated material, not as current instructions or verified action dispositions. Current primary sources are https://github.com/ojfbot/daily-logger/pull/416, https://github.com/ojfbot/daily-logger/pull/431, https://github.com/ojfbot/morning-cockpit/pull/60 and https://github.com/ojfbot/morning-cockpit/issues/57.\n\nOctober21 acceptance PR daily-logger#416 merged on October24 with article Accepted and all three actions still held; this was not a healthy independent action verdict. A merged PR is not an available resume target. daily-logger#431 recorded five isolated empty-output diagnostic passes and the combined-form schema_complexity failure before this article was generated. That diagnostic did not qualify a native article review or verifier and grants no retry authority. The original candidate command strings remain audit custody; no executable capability is inferred from them.\n\nmorning-cockpit#60 remains an open documentation PR, created within the prior reporting window. Its disposition belongs to its owner. morning-cockpit#57 remains an open contract/identity decision with provenance, owner-acceptance and REST/GraphQL parity gates. No merge, closure, readiness, execution or settlement authority follows from this editorial preparation. classic-space-venue#4 and lego-village-pipeline#44 are retained parallel research/draft background for these three candidates; this classification neither resolves their work nor changes their owner gates.\n\nThis supervised source/data refresh prepares one separately authorized native action-review attempt. It does not predict its outcome, dispose of any original candidate, or authorize a probe, extra paid retry or hosted raw-evidence retention."
     },
-    "stateDigest": "16fc38c01d7f23598ae63b9ac1cbdbf20729db66cff13aea7eacea51638ed8c7",
+    "stateDigest": "2054dcaf1da517ef7a10fdb090130ffb223cb73d8290ae496f95e493cd3819e7",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
