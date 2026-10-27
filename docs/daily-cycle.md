@@ -9,6 +9,7 @@ primary evidence, not a scheduler or an issue-processing worker.
 | --- | --- | --- |
 | Daily Dev Blog | Collect activity, generate an article, and open its article PR | `.github/workflows/daily-blog.yml`, `.github/scripts/daily_blog_schedule.py`, `src/index.ts` |
 | Editorial Revision | Revise article prose from accept-PR feedback | `.github/workflows/editorial-revise.yml`, full accept PR discussion, final head and merge |
+| Review held article actions | One manually authorized native review of held suggestions on an already Accepted article; produces an unmerged dated proposal | `.github/workflows/review-held-actions.yml`, `scripts/review-held-actions.ts`, reviewed owner grant and operation reservation |
 | Daily Cleaner | Propose stale-document and TODO changes after an admitted successful blog run | `.github/workflows/daily-cleaner.yml`, `src/clean.ts`, triggering blog-run receipt |
 | Codex scheduled task | Execute its saved prompt within its existing permissions | Matching task name, saved prompt, status, schedule, and latest receipt |
 
@@ -64,6 +65,49 @@ per repo before excluding PRs. It prioritizes active issues and retains at most
 previews 200. These bounds describe article context, not a saved agent's intake.
 Full issue bodies and relevant PR comments remain the evidence for human gates
 and editorial tangents outside the revision payload.
+
+## Reviewing held actions after acceptance
+
+`Review held article actions` is a separate manual workflow for an Accepted article
+whose original candidates remain pending. It runs the native reconciler with
+`DRY_RUN=true`; it never rewrites the Accepted article or queue and does not open a
+second `accept/<date>` PR. There is no first-acceptance fallback on this route.
+
+Before dispatch, the owner must review and adopt
+`action-review-grants/<grant UUID>.json` under an explicit unused one-test
+authorization. File presence alone does not establish that authorization: its
+`authorizationReference` identifies the actual owner decision and reviewed packet.
+The strict grant pins the operation UUID, date, article/map blobs, hydrated registry
+revision, retained generation cycle, policy fingerprint and fixed native limits.
+Compute `heldActionPolicyFingerprint` after committing the reviewed route; it
+excludes grant files, so adding the reviewed grant does not require a circular
+commit pin. Dispatch separately pins the exact main SHA containing both. A changed
+policy, source, grant, input or operation needs fresh review before dispatch.
+
+The workflow admits only owner dispatches on trusted current main and attempt 1.
+It atomically reserves both the original authorization and operation in
+`action-review-claims/` refs before any token count or generation, then durably
+marks model entry. Partial, failed or uncertain claims remain consumed. An edited
+UUID, rerun, missing artifact or failed upload is not another paid attempt. Inspect
+the reservation and bounded outcome before considering new owner authority.
+
+The successful artifact is **unmerged proposed data**, not an approval or accepted
+editorial receipt. It contains only the dated article (unchanged prose/status,
+proposed managed card), dated action file and closed receipt with source/file
+digests. Normal selected citation excerpts may be retained; collector captures,
+prompts, raw model replies and the whole hydrated registry are excluded. Newly
+selected excerpts are bounded to 8 KiB; existing canonical quotes remain intact.
+The two-file proposal is capped at 1 MiB, with current input lower bounds checked
+before model entry. Output limits can still hold a newly produced proposal.
+Only strict numeric budget/stop observations and closed stop categories survive
+native diagnostics; neither implies billing success.
+
+Use `validateHeldActionArtifact` with an independently observed expected source
+SHA and exact exported file bytes. Check the actual trusted workflow run,
+reservation receipt digest and current main before preparing a supervised normal
+data PR. A new dedicated artifact cannot satisfy the existing editorial proof
+contract. Human review and merge authority remain separate. Failed or uncertain
+attempts emit no proposed data and preserve all original held work.
 
 ## Timing evidence
 
