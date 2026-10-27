@@ -8,10 +8,10 @@
     "status": "draft",
     "review": {
       "state": "pending",
-      "reason": "Action evidence request ecad3a5b58773504a2c29c3e0194a7a2d790f04155571c7671ceb334291977a9 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
+      "reason": "Awaiting the authorized October25 native action review after supervised source/data correction. Historical initial hold retained: Action evidence request ecad3a5b58773504a2c29c3e0194a7a2d790f04155571c7671ceb334291977a9 remains pending: Required action evidence github:daily-logger#357@6ee04559465b06a464953aebfacfc18456805e67519952ef308b22dfed6a50fe: exceeds 128 KiB source limit; bounded source view requested; review pending"
     },
-    "articleDigest": "1aafbdedcdc54d027714f018b899688f5248e94b16521298eb8f35857aa506cf",
-    "roundId": "ed15b985e005d0e40c56eacefdebf5058d2e2ae1341bf4106770b013c0358497",
+    "articleDigest": "36c4682d90aba9b22e211d84f0ac00c7afdef76582d1d4674892ce45b0036f01",
+    "roundId": "76cdb98ebc6bdd293fa757c35a880d5b31f0c2f29ce2e064dd0811cdd2c4e347",
     "reviewCycle": {
       "phase": "generation"
     },
@@ -60,19 +60,19 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "deterministic-default",
-        "identity": "progressive-action-evidence-v5-candidate-requirements",
-        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+        "kind": "coordinator",
+        "identity": "oct25-full-cycle:supervised-corrected-draft-data",
+        "decision": "Bind corrected Draft and full current status index to explicit per-candidate primary lifecycle/owner/counterevidence sources. Preserve immutable candidates, history and owner gates; grant no review verdict, action admission, execution, settlement, approval or retry authority."
       },
       "articleDate": "2026-10-25",
-      "articleDigest": "1aafbdedcdc54d027714f018b899688f5248e94b16521298eb8f35857aa506cf",
+      "articleDigest": "36c4682d90aba9b22e211d84f0ac00c7afdef76582d1d4674892ce45b0036f01",
       "reviewCycle": {
         "phase": "generation"
       },
-      "draftContextSha256": "cb1079b4ec78ca06bd476d67f8cef4801db7833f664b6676cf118a8b6bee0448",
+      "draftContextSha256": "20bf9c990734d212e2e70c643bc8f8b80906130bc79e70f7f8e3a2d57df5d1ab",
       "candidatePayloadsSha256": "f4bfed21743c203b5342c6c31464cf7db7e4d2286432af602abfa86bee3cd237",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "874c6cd05a7e6393a5919059d1c10031a8b85fb7393ee1d5bb0673b75c8bf5cf",
+      "articleStatusesSha256": "c353eed3dad153eac5945ff3f2f14f055661ea741bcd7406619d9ab3db813146",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -80,48 +80,93 @@
         {
           "candidateId": "91d37fd33b251756518b80e3b3c57d7324f3cf157f6ac6e25f1e1a0bef54db62",
           "payloadSha256": "ef0355b41306638b44aaabf085afff03f4f0d9eb8d3a288479ff6aef62553010",
-          "references": [],
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#421",
+              "role": "lifecycle",
+              "reason": "The original claimed action-review target is actually a now-merged review publication; current primary lifecycle is counterevidence to an executable or queued-job premise."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#443",
+              "role": "counterevidence",
+              "reason": "The token-default change must not be treated as a healthy action verdict, executable command surface, automatic schedule or authorization."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#444",
+              "role": "counterevidence",
+              "reason": "Article-only completion preserves held actions and independent gates; it does not schedule a retry or grant action approval."
+            }
+          ],
           "actionRelations": []
         },
         {
           "candidateId": "206b4b0924b33870f46e8a7974c5eeccb5f44f2a8f879cc7063b4eeece5a1a5b",
           "payloadSha256": "f08695d00468618b79bcdcfd4274a64c2a57f676faaa52e2a4dde3430fa6e08d",
-          "references": [],
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#416",
+              "role": "lifecycle",
+              "reason": "The original suggestions remain held after merged article acceptance. Complete primary receipts, consumed grants and the absent verifier result are required lifecycle/authority counterevidence; no replay or new execution is granted."
+            }
+          ],
           "actionRelations": []
         },
         {
           "candidateId": "f5a4a235ff34beed764280ce825ee358c72b19994423ee70684cd4026863d349",
           "payloadSha256": "9d56f8ca5fd19a2bdfb1572fb2fd48a9887a86236c2d8cc9bfaf1605260940f5",
-          "references": [],
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#386",
+              "role": "owner",
+              "reason": "Current primary issue and discussion govern the claimed retrieval blocker, owner/counterevidence and remaining qualification; the unresolved named commit and sole-test-blocker premise need counterevidence. Required source limits and hosted-retention boundaries remain intact."
+            }
+          ],
           "actionRelations": []
         }
       ],
       "unassignedReferences": [
         {
-          "classification": "required",
+          "classification": "context",
           "reference": "classic-space-venue#4",
-          "role": "retained-context",
-          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+          "reason": "Separate review/research/design background for these three candidate dispositions only. Its own owner, second-steward, do-not-merge, review and operative-import gates remain unchanged."
         },
         {
-          "classification": "required",
+          "classification": "context",
+          "reference": "daily-logger#433",
+          "reason": "Separate review/research/design background for these three candidate dispositions only. Its own owner, second-steward, do-not-merge, review and operative-import gates remain unchanged."
+        },
+        {
+          "classification": "context",
           "reference": "lego-village-pipeline#44",
-          "role": "retained-context",
-          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+          "reason": "Separate review/research/design background for these three candidate dispositions only. Its own owner, second-steward, do-not-merge, review and operative-import gates remain unchanged."
         },
         {
-          "classification": "required",
+          "classification": "context",
+          "reference": "lego-village-pipeline#45",
+          "reason": "Separate review/research/design background for these three candidate dispositions only. Its own owner, second-steward, do-not-merge, review and operative-import gates remain unchanged."
+        },
+        {
+          "classification": "context",
+          "reference": "lego-village-pipeline#46",
+          "reason": "Separate review/research/design background for these three candidate dispositions only. Its own owner, second-steward, do-not-merge, review and operative-import gates remain unchanged."
+        },
+        {
+          "classification": "context",
           "reference": "morning-cockpit#60",
-          "role": "retained-context",
-          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+          "reason": "Separate review/research/design background for these three candidate dispositions only. Its own owner, second-steward, do-not-merge, review and operative-import gates remain unchanged."
         }
       ]
     },
     "draftContext": {
       "kind": "retained",
-      "markdown": "Blocking context for independent action review: (1) PRs #421 and #433 are the immediate upstream gate for October 22 and October 23 acceptance cycles. Both are unblocked by the #443/#444 fixes shipped this window; next action is a pipeline run against each. (2) The three October 21 suggestions in Needs review require a separately authorized action-review run before they enter the 83-item open registry. No scheduled trigger is confirmed in the available evidence. (3) Progressive-retrieval work for issue #386: local trial at commit 907e490 exists; blocker is integration test coverage for the retrieval path, not a design objection. Owner gate required to scope the test additions and set a merge target. (4) lego-village-pipeline #44, #45, #46: no named owner gate or phase assignment recorded. DO NOT MERGE labels prevent accidental merge but do not constitute a disposition. An explicit close, park-until decision, or phase assignment is needed. (5) classic-space-venue #4 (open since 2026-10-21) and morning-cockpit #60 (open since 2026-10-21) have no in-window progress recorded. (6) Skill telemetry freeze since 2026-05-12 renders quality coverage metrics unreliable; no unfreeze timeline available. (7) Action registry backlog drain rate versus accumulation rate is not tracked in available evidence — this is an acknowledged gap, not a confirmed risk."
+      "markdown": "Blocking context for independent action review: (1) PRs #421 and #433 are the immediate upstream gate for October 22 and October 23 acceptance cycles. Both are unblocked by the #443/#444 fixes shipped this window; next action is a pipeline run against each. (2) The three October 21 suggestions in Needs review require a separately authorized action-review run before they enter the 83-item open registry. No scheduled trigger is confirmed in the available evidence. (3) Progressive-retrieval work for issue #386: local trial at commit 907e490 exists; blocker is integration test coverage for the retrieval path, not a design objection. Owner gate required to scope the test additions and set a merge target. (4) lego-village-pipeline #44, #45, #46: no named owner gate or phase assignment recorded. DO NOT MERGE labels prevent accidental merge but do not constitute a disposition. An explicit close, park-until decision, or phase assignment is needed. (5) classic-space-venue #4 (open since 2026-10-21) and morning-cockpit #60 (open since 2026-10-21) have no in-window progress recorded. (6) Skill telemetry freeze since 2026-05-12 renders quality coverage metrics unreliable; no unfreeze timeline available. (7) Action registry backlog drain rate versus accumulation rate is not tracked in available evidence — this is an acknowledged gap, not a confirmed risk.\n\n### Coordinator qualification — October 27\n\nThe preceding generated draft context and the three original command strings are retained verbatim as historical material. They are not current instructions, executable capabilities, owner decisions, verified action dispositions or grants to rerun models.\n\nThe first original candidate refers to https://github.com/ojfbot/daily-logger/pull/421. That PR published an independent review; it was not an action-review job. It has since merged, and October 22 has been accepted with its uncertain actions still held. The original `/pipeline run --action-review` interface is absent from the pinned runtime. The token default change https://github.com/ojfbot/daily-logger/pull/443 and article-only completion https://github.com/ojfbot/daily-logger/pull/444 do not schedule automatic retries or remove independent review, source, owner or execution gates.\n\nThe second original candidate refers to the three held suggestions of https://github.com/ojfbot/daily-logger/pull/416. That article was accepted without a healthy action verdict: two Sonnet responses were recorded, Opus was not reached, and no actions were admitted or closed. The merged PR is not an available replay target. Previous paid grants remain consumed. An accepted article and a valid later manual route do not make its fabricated original `--suggestions-only` command executable or authorize a new attempt.\n\nThe third original candidate concerns https://github.com/ojfbot/daily-logger/issues/386. Its named commit `907e490` is unresolved, and integration tests are not the sole remaining blocker. Progressive evidence retrieval shipped at a715fead1ddd9b8b631443cec4de4f3d96fb39b2. The current primary issue retains relevance, owner and counterevidence, clarification, token/provider fit and recoverable evidence requirements. The October 23 local projection established exact-source byte fit for one controlled obligation; it did not establish hosted connection, token fit or independent semantic success. Hosted raw-evidence retention remains blocked. Preserve those boundaries before judging this immutable command; this correction grants no issue mutation or new provider call.\n\nSeparate contextual records remain recoverable: https://github.com/ojfbot/daily-logger/pull/433 published the October 23 independent review and is now merged; its article acceptance is distinct from held-action verification. https://github.com/ojfbot/lego-village-pipeline/pull/44 and https://github.com/ojfbot/lego-village-pipeline/pull/46 retain explicit do-not-merge and close-or-supersede/reconstruction/preflight boundaries. https://github.com/ojfbot/lego-village-pipeline/pull/45 retains the second-steward check and James's merge control. https://github.com/ojfbot/classic-space-venue/pull/4 and https://github.com/ojfbot/morning-cockpit/pull/60 are separate research/documentation background; this classification removes none of their own owner or integration gates. They are not necessary dispositions for these three original command suggestions.\n\nThe corrected article describes the original reporting interval. Current lifecycle evidence is explicitly later context. The false83-count and May-telemetry-freeze statements in the retained prefix are not facts: the original public projection had 86 open and 127 completed; the committed telemetry contains October 20/21 events and does not prove actual use or coverage within the article window.\n\nThis local data refresh preserves all three candidate IDs, payloads, history and earlier evidence requests, leaving October 25 Draft and action review pending. It does not establish a provider verdict, admit, dispatch, replace or close any action, settle historical findings, replay a failed request or authorize a model retry."
     },
-    "stateDigest": "7d7067c39d23592dfc41407ed5c82f1f00cb7c92721d704fd68761c91a79d74b",
+    "stateDigest": "3622cd7ce03bc6573d888581ead07ce6be3fc9ac58e62b5f7b55f14be843515c",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
