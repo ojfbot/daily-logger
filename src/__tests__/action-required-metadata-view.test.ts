@@ -4,8 +4,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 const { github } = vi.hoisted(() => ({ github: vi.fn() }))
 vi.mock('node:child_process', () => ({ execFileSync: github }))
-import { ActionRegistrySchema, decodeActionEvidenceViewSources, sha256 } from '../action-registry.js'
+import { ActionRegistrySchema, decodeActionEvidenceViewSources, sha256, type ActionSource } from '../action-registry.js'
 import { ActionSourceCollection, PreparedActionEvidenceView } from '../action-evidence-view.js'
+import { expandGithubMetadataView } from '../github-metadata-view.js'
 import { selectActionEvidence } from '../action-evidence-selection.js'
 import { revisionActionCycle } from '../action-review-cycle.js'
 import { collectActionSources, reviewProducedDraftActions } from '../review-actions.js'
@@ -36,17 +37,46 @@ function fixture(avatarBytes = 1000) {
   return { root, input, sources, get selection() { return selectActionEvidence({ ...input, sources }) } }
 }
 
-it('makes required issue and PR rows complete while genuine optional collector rows stay compact', () => {
-  const { sources, selection } = fixture()
+function assertCompleteRequiredSource(view: PreparedActionEvidenceView, source: ActionSource) {
+  const index = view.rawSources().findIndex(row => row.id === source.id), model = view.promptSources()[index]
+  const receipt = decodeActionEvidenceViewSources(view.receipt)[index]
+  expect(model).toBeDefined(); expect(receipt).toBeDefined()
+  if (!model || !receipt) throw new Error('Required fixture source is missing from its bound view')
+  expect(receipt.rawSha256).toBe(sha256(source.content))
+  if (receipt.hiddenLines.length) {
+    expect(expandGithubMetadataView(model.content)).toBe(source.content)
+    for (const line of receipt.hiddenLines) expect(() => view.resolve(model.id, line, line)).toThrow(/partial metadata/)
+    expect(() => view.resolve(model.id, 1, source.content.split('\n').length)).toThrow(/partial metadata/)
+  } else {
+    expect(model.content).toBe(source.content.split('\n').map((line, offset) => `L${offset + 1}: ${line}`).join('\n'))
+    expect(view.resolve(model.id, 1, source.content.split('\n').length).quote).toBe(source.content)
+  }
+  const lines = source.content.split('\n')
+  for (const text of [lines[0], 'Owner review is required; this fixture is not approval.', 'Consumer counterevidence: no commitment has been accepted.']) {
+    const line = lines.indexOf(text) + 1
+    expect(line).toBeGreaterThan(0)
+    expect(model.content).toContain(`L${line}: ${text}`)
+    expect(view.resolve(model.id, line, line).quote).toBe(text)
+  }
+  expect(model.authoritativeLines).toContain(1)
+  const counterevidenceLines = lines.flatMap((text, offset) => text === 'Consumer counterevidence: no commitment has been accepted.' ? [offset + 1] : [])
+  for (const line of counterevidenceLines) {
+    // Repeated authored text remains visible but cannot become an unambiguous terminal citation.
+    if (counterevidenceLines.length === 1) expect(model.authoritativeLines).toContain(line)
+    else expect(model.authoritativeLines).not.toContain(line)
+  }
+  expect(model.authoritativeLines).not.toContain(2)
+}
+
+it.each([0, 1000])('makes required rows complete or losslessly expandable while optional rows stay compact (%i avatar bytes)', (avatarBytes) => {
+  const { sources, selection } = fixture(avatarBytes)
   expect(sources).toBeInstanceOf(ActionSourceCollection)
   const view = PreparedActionEvidenceView.prepare(sources, sha256('case'), sha256('state'), sources, selection.receipt.requiredReferences)
   const rows = decodeActionEvidenceViewSources(view.receipt)
   for (const reference of ['core#561', 'core#543', 'daily-logger#407']) {
     const index = sources.findIndex(source => source.id.startsWith(`github:${reference}@`)), source = sources[index]
     expect(index).toBeGreaterThanOrEqual(0)
-    expect(rows[index].hiddenLines).toEqual([])
-    expect(view.resolve(`s${index + 1}`, 1, source.content.split('\n').length).quote).toBe(source.content)
-    expect(view.promptSources()[index].authoritativeLines).not.toContain(2)
+    assertCompleteRequiredSource(view, source)
   }
   const optional = sources.findIndex(source => source.id.startsWith('github:core#556@'))
   expect(rows[optional].hiddenLines).toContain(2)
@@ -67,26 +97,34 @@ it('validates genuine capture provenance before completing required metadata and
   }
 })
 
-it('uses one completed view before proposer and through verifier on the Accepted-intent native composition', async () => {
-  const { input, root, sources } = fixture()
+it.each([0, 1000])('uses one bound raw-or-lossless view through both roles on Accepted-intent composition (%i avatar bytes)', async (avatarBytes) => {
+  const { input, root, sources } = fixture(avatarBytes)
   let proposerView: PreparedActionEvidenceView | undefined
-  const verify = vi.fn(async (_prompt: string, view: PreparedActionEvidenceView) => {
+  const verify = vi.fn(async (prompt: string, view: PreparedActionEvidenceView) => {
     expect(view).toBe(proposerView)
+    view.assertBinding(view.rawSources(), view.roundId, view.receipt.inputStateSha256)
+    for (const model of view.promptSources()) expect(prompt).toContain(model.content)
+    for (const ref of ['core#561', 'core#543', 'daily-logger#407']) {
+      const source = view.rawSources().find(source => source.id.startsWith(`github:${ref}@`))!
+      assertCompleteRequiredSource(view, source)
+    }
     return { changes: [], suggestions: [], candidateDispositions: [], closingOptions: [0, 1, 2].map(optionIndex => ({ optionIndex, verdict: 'pass', reason: 'OFFLINE test double; no real semantic verdict.' })) }
   })
-  const result = await reviewProducedDraftActions({ ...input, repoRoot: root, collectSources: () => sources.appendRaw([]), agents: {
-    propose: async (_prompt, view) => {
+  const propose = vi.fn(async (prompt: string, view: PreparedActionEvidenceView) => {
       proposerView = view
       const source = view.rawSources().find(source => source.id.startsWith('github:core#561@'))!
-      expect(view.resolve(source.id, 1, source.content.split('\n').length).quote).toBe(source.content)
+      assertCompleteRequiredSource(view, source)
+      view.assertBinding(view.rawSources(), view.roundId, view.receipt.inputStateSha256)
+      for (const model of view.promptSources()) expect(prompt).toContain(model.content)
       const goal = view.rawSources().find(source => source.kind === 'goal')!
       const closingOptions = ['core#561', 'core#543', 'daily-logger#407'].map((ref, index) => {
         const primary = view.rawSources().find(source => source.id.startsWith(`github:${ref}@`))!
         return { kind: 'checkpoint', target: primary.locator, title: `OFFLINE checkpoint ${index}`, entryPoint: 'Read the existing owner record.', context: 'Synthetic composition control, not a recommendation.', whyNow: 'Exercise Accepted rendering only.', outcome: `Record fixture verdict ${index}`, nextCheck: 'Owner decision remains required.', benefit: 'Test the native view boundary.', start: 'Read the source.', replaces: [], factCitations: [view.resolve(primary.id, 1, 1)], goalCitations: [view.resolve(goal.id, 1, 1)] }
       })
       return { changes: [], suggestions: [], candidateDispositions: [], closingOptions }
-    }, verify,
-  } })
+  })
+  const result = await reviewProducedDraftActions({ ...input, repoRoot: root, collectSources: () => sources.appendRaw([]), agents: { propose, verify } })
+  expect(propose).toHaveBeenCalledOnce()
   expect(verify).toHaveBeenCalledOnce()
   expect(result.registry.articles[0].status).toBe('accepted')
   expect(result.registry.articles[0].review.state).toBe('verified')
