@@ -127,5 +127,7 @@ describe('collector-bound lossless metadata factoring', () => {
     expect(() => expandGithubMetadataView(header.slice(0, prefixEnd) + JSON.stringify({ ...document, unexpected: 'closed protocol' }) + view.content.slice(headerEnd))).toThrow()
     const cyclic = header.slice(0, prefixEnd) + JSON.stringify({ version: 'github-metadata-factor-v1', dictionary: { d0: { $r: 'd0' } }, layouts: [['$r']] })
     expect(() => expandGithubMetadataView(cyclic + '\nCONTEXT ONLY original L1: [0,"d0"]')).toThrow()
+    const unused = header.slice(0, prefixEnd) + JSON.stringify({ version: 'github-metadata-factor-v1', dictionary: { d0: 'not consumed source data' }, layouts: [] })
+    expect(() => expandGithubMetadataView(unused + '\nL1: unchanged authored text')).toThrow()
   })
 })

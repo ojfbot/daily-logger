@@ -58,6 +58,7 @@ export function expandGithubMetadataView(content: string): string {
   const document = documentSchema.parse(unknown)
   if (Object.keys(document.dictionary).length > MAX_ROWS) return failure()
   if (document.layouts.some(layout => new Set(layout).size !== layout.length)) return failure()
+  const usedDefinitions = new Set<string>(), usedLayouts = new Set<number>()
   let nodes = 0, expandedBytes = 0
   const expand = (value: Json, active: ReadonlySet<string>, depth: number): Json => {
     if (++nodes > MAX_NODES || depth > MAX_DEPTH) return failure()
@@ -68,11 +69,12 @@ export function expandGithubMetadataView(content: string): string {
       if (Object.keys(value).length !== 1 || typeof id !== 'string' || !Object.hasOwn(document.dictionary, id) || active.has(id)) return failure()
       const definition = document.dictionary[id]
       if (definition === undefined) return failure()
+      usedDefinitions.add(id)
       return expand(definition, new Set([...active, id]), depth + 1)
     }
     return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, expand(item, active, depth + 1)]))
   }
-  return lines.map((line, index) => {
+  const original = lines.map((line, index) => {
     const metadata = /^CONTEXT ONLY original L(\d+): ([\s\S]*)$/.exec(line)
     let raw: string
     if (metadata) {
@@ -85,6 +87,7 @@ export function expandGithubMetadataView(content: string): string {
       if (typeof layoutId !== 'number' || !Number.isInteger(layoutId)) return failure()
       const layout = document.layouts[layoutId]
       if (!layout || row.length !== layout.length + 1) return failure()
+      usedLayouts.add(layoutId)
       const record = Object.fromEntries(layout.map((key, offset) => {
         const item = row[offset + 1]
         if (item === undefined) return failure()
@@ -100,6 +103,8 @@ export function expandGithubMetadataView(content: string): string {
     if (expandedBytes > MAX_BYTES + 1) return failure()
     return raw
   }).join('\n')
+  if (usedDefinitions.size !== Object.keys(document.dictionary).length || usedLayouts.size !== document.layouts.length) return failure()
+  return original
 }
 
 export function assertGithubMetadataView(content: string, rawContent: string): void {
