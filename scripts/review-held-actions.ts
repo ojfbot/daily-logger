@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { reconcileActions } from './reconcile-actions.js'
 import { acceptanceActionCycle } from '../src/action-review-cycle.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, COVERAGE_SOURCE, prepareConservativeDraftCandidateEvidence } from '../src/action-evidence-selection.js'
-import { ActionContextNeedError, ActionProviderBudgetObservationSchema, ActionProviderResponseObservationSchema, ActionProviderOutputShapeObservationSchema, ActionReviewFailurePhaseSchema, actionReviewEvidenceRequestIdentity, actionReviewFailurePhase, classifyActionReviewFailure } from '../src/review-actions.js'
+import { ActionContextNeedError, ActionProviderBudgetObservationSchema, ActionProviderResponseObservationSchema, ActionProviderOutputShapeObservationSchema, ActionProviderInvariantObservationSchema, ActionReviewFailurePhaseSchema, actionReviewEvidenceRequestIdentity, actionReviewFailurePhase, classifyActionReviewFailure } from '../src/review-actions.js'
 import { ActionEvidenceRequestError } from '../src/action-evidence-retrieval.js'
 import { ArticleActionFileSchema, ActionSourceSchema, ActionEvidenceRequestSchema, ActionEvidenceRequestReceiptSchema, actionArticlePath, articleActionFileBytes, assertActionSnapshotStateIntegrity, readActionRegistry, readArticleStatuses, registryRevision, sha256, splitActionRegistry, stripManagedActions } from '../src/action-registry.js'
 import type { GitHub } from '../api/_lib/article-review-sources.js'
@@ -45,7 +45,7 @@ export const heldActionReceiptSchema = z.object({
   authorization: z.literal('consumed'), nativeEntry: z.enum(['not-entered', 'native-function-entered']),
   stop: z.object({ stage: z.enum(['input', 'reservation', 'native', 'proposal', 'outcome', 'completed']), reason: reasonSchema, httpStatus: z.number().int().min(100).max(599).optional() }).strict(),
   observations: z.object({ billing: z.literal('not-inferred'), budgets: z.array(ActionProviderBudgetObservationSchema).max(3), responses: z.array(ActionProviderResponseObservationSchema).max(3),
-    outputShapes: z.array(ActionProviderOutputShapeObservationSchema).max(3).optional(), evidenceRequest: ActionEvidenceRequestReceiptSchema.optional(),
+    outputShapes: z.array(ActionProviderOutputShapeObservationSchema).max(3).optional(), invariants: z.array(ActionProviderInvariantObservationSchema).max(3).optional(), evidenceRequest: ActionEvidenceRequestReceiptSchema.optional(),
     evidenceRequestIdentity: z.object({ id: digest, kind: ActionEvidenceRequestSchema.shape.kind }).strict().optional(),
     failurePhase: ActionReviewFailurePhaseSchema.optional(),
   }).strict(),
@@ -202,11 +202,13 @@ export async function executeHeldAction(options: { root: string; binding: Bindin
   let claim = options.reserved, entered = false
   const receipt: Receipt = { kind: 'unmerged-held-action-proposal-v1', applied: false, approval: 'not-requested-or-implied', binding, state: 'rejected-before-model', files: [], authorization: 'consumed', nativeEntry: 'not-entered', stop: { stage: 'input', reason: 'none' }, observations: { billing: 'not-inferred', budgets: [], responses: [] } }
   const original = readFileSync(join(root, `_articles/${binding.inputs.date}.md`), 'utf8'), action = readFileSync(join(root, actionArticlePath(binding.inputs.date)), 'utf8')
+  let knownCandidateIds = new Set<string>()
   let files: ReturnType<typeof proposalFiles> = []
   const consoleMethods = { log: console.log, warn: console.warn, error: console.error, info: console.info, debug: console.debug }
   try {
     const fresh = await admitHeldAction(root, binding.inputs, { repository: 'ojfbot/daily-logger', actor: 'ojfbot', event: 'workflow_dispatch', ref: 'refs/heads/main', defaultBranch: 'main', workflowSha: binding.source.commit, runId: binding.runId, attempt: 1 }, github)
     requireGate(same(fresh, binding))
+    knownCandidateIds = new Set(readActionRegistry(root).articles.find(article => article.date === binding.inputs.date)?.draftCandidates?.filter(candidate => candidate.review.state === 'awaiting-review').map(candidate => candidate.candidateId))
     receipt.stop.stage = 'reservation'
     claim = await moveHeldActionClaim(binding, claim, 'model-entered', github)
     // Remote claim writes can queue behind a main update; recheck after their readbacks.
@@ -232,6 +234,12 @@ export async function executeHeldAction(options: { root: string; binding: Bindin
           const shape = ActionProviderOutputShapeObservationSchema.safeParse(JSON.parse(values[0].slice('Action output shape: '.length)))
           if (shape.success) (receipt.observations.outputShapes ??= []).push(shape.data)
         } catch { /* Retain no unparsed diagnostic text. */ }
+      }
+      if (values[0].startsWith('Action output invariant: ') && Buffer.byteLength(values[0]) <= 2112 && (receipt.observations.invariants?.length ?? 0) < 3) {
+        try {
+          const invariant = ActionProviderInvariantObservationSchema.safeParse(JSON.parse(values[0].slice('Action output invariant: '.length)))
+          if (invariant.success && (!invariant.data.candidateId || knownCandidateIds.has(invariant.data.candidateId))) (receipt.observations.invariants ??= []).push(invariant.data)
+        } catch { /* Retain no unparsed diagnostic, foreign identity or arbitrary error text. */ }
       }
       if (values[0].startsWith('Action evidence request receipt: ') && Buffer.byteLength(values[0]) <= 8192) {
         try {

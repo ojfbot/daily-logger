@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `1ba28656aa7709bd5471b28d1b0fca836933b70da2aeda960d24af1ee7ffc9fb`.
+> Source SHA-256: `214f7709bf261dd03eca466e4046604fafc9628f2f7c52edc45961569bddd4d0`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -64,7 +64,7 @@ flowchart TD
   n39["Canonical Action Proposal"]
   n40["Malformed Output Repair Budget — states: available, spent"]
   n41("Action Output Repairing")
-  n42["Output Shape Diagnostic"]
+  n42["Invalid Action Output"]
   n43["Lossless Action Model View"]
   n44["Candidate Record Binding — states: available, unavailable"]
   n45("Candidate Record Isolating")
@@ -72,18 +72,18 @@ flowchart TD
   n47["Candidate Record Binding, Provider Action Proposal, and Source Evidence"]
   n48["Draft Action Candidate — states: awaiting-review, promoted, mapped-existing, rejected, verified-closure"]
   n156["Candidate Review History"]
-  n207["Candidate Review Transition"]
-  n208["Historical Source Metadata"]
+  n210["Candidate Review Transition"]
+  n211["Historical Source Metadata"]
   n49["Source Identity, Source Kind, Source Locator, and Full Content Digest"]
   n50["Draft Candidate Evidence Association — states: required, context"]
-  n209["Background Evidence Reference"]
-  n210["Candidate Action Relation"]
-  n211["Candidate Input View"]
+  n212["Background Evidence Reference"]
+  n213["Candidate Action Relation"]
+  n214["Candidate Input View"]
   n51["Action Registry, Draft Action Candidates, Action Review Cycle, Operator Feedback, and Article Status"]
   n52("Candidate Evidence Preparing")
-  n212["Canonical Action Index"]
-  n213["Held Suggestion Memory"]
-  n214["Rejection Memory"]
+  n215["Canonical Action Index"]
+  n216["Held Suggestion Memory"]
+  n217["Rejection Memory"]
   n53["Action Review Snapshot"]
   n54("Candidate Evidence Refreshing")
   n55["unchanged Draft Candidate Evidence Association"]
@@ -92,8 +92,8 @@ flowchart TD
   n58["Action Review Snapshot and Accepted Outcome Stamp"]
   n59("Acceptance Status Evidence Refreshing")
   n60["current-binding Draft Candidate Evidence Requirements"]
-  n215["Ranked Recommendations"]
-  n216["Handled Suggestions"]
+  n218["Ranked Recommendations"]
+  n219["Handled Suggestions"]
   n61("Editorial Revising")
   n62["Editorial Revision Request"]
   n63["Draft Suggestion — states: proposed, open, done, dismissed, superseded, deferred"]
@@ -101,7 +101,7 @@ flowchart TD
   n113["Article Action Files — states: pending, verified"]
   n64("Inclusion Choosing")
   n65["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
-  n217["Canonical Actions"]
+  n220["Canonical Actions"]
   n66["JSON API"]
   n67("Frontend Rendering")
   n68["Rendered Site"]
@@ -112,8 +112,8 @@ flowchart TD
   n73["Revision Request"]
   n74("Conversation Saving")
   n75["Saved Message"]
-  n218["Review Records"]
-  n219["Correspondence"]
+  n221["Review Records"]
+  n222["Correspondence"]
   n76["Time Record Pointer"]
   n77("Time Recording")
   n78["Commit Context"]
@@ -210,18 +210,18 @@ flowchart TD
   n28 -->|"yields"| n31
   n28 -->|"changes: transient to retained"| n27
   n48 -->|"part of"| n18
-  n207 -->|"part of"| n156
-  n208 -->|"part of"| n156
-  n208 -->|"exhibits"| n49
+  n210 -->|"part of"| n156
+  n211 -->|"part of"| n156
+  n211 -->|"exhibits"| n49
   n50 -->|"part of"| n32
-  n209 -->|"part of"| n32
-  n210 -->|"part of"| n32
-  n211 -->|"part of"| n32
+  n212 -->|"part of"| n32
+  n213 -->|"part of"| n32
+  n214 -->|"part of"| n32
   n51 -->|"requires (instrument)"| n52
   n52 -->|"yields"| n32
-  n212 -->|"part of"| n211
-  n213 -->|"part of"| n211
-  n214 -->|"part of"| n211
+  n215 -->|"part of"| n214
+  n216 -->|"part of"| n214
+  n217 -->|"part of"| n214
   n53 -->|"requires (instrument)"| n54
   n55 -->|"requires (instrument)"| n54
   n56 -->|"requires (instrument)"| n54
@@ -230,10 +230,10 @@ flowchart TD
   n58 -->|"requires (instrument)"| n59
   n0 -->|"condition: accepted"| n59
   n59 -->|"yields"| n60
-  n215 -->|"part of"| n26
+  n218 -->|"part of"| n26
   n18 -->|"part of"| n26
   n27 -->|"part of"| n26
-  n216 -->|"part of"| n26
+  n219 -->|"part of"| n26
   n7 -->|"yields"| n29
   n7 -->|"invokes"| n28
   n61 -->|"yields"| n29
@@ -249,7 +249,7 @@ flowchart TD
   n4 -->|"requires (instrument)"| n64
   n64 <-->|"affects"| n23
   n19 -->|"handles (human)"| n64
-  n217 -->|"part of"| n13
+  n220 -->|"part of"| n13
   n65 -->|"part of"| n13
   n21 -->|"invokes"| n22
   n13 -->|"requires (instrument)"| n21
@@ -271,8 +271,8 @@ flowchart TD
   n71 -->|"requires (instrument)"| n74
   n74 -->|"yields"| n75
   n74 <-->|"affects"| n4
-  n218 -->|"part of"| n71
-  n219 -->|"part of"| n71
+  n221 -->|"part of"| n71
+  n222 -->|"part of"| n71
   n0 -->|"exhibits"| n76
   n0 -->|"requires (instrument)"| n77
   n13 -->|"requires (instrument)"| n77
@@ -398,7 +398,7 @@ Malformed Output Repair Budget can be available or spent. [src: src/review-actio
 Action Reconciling invokes Action Output Repairing. [src: src/review-actions.ts]
 Action Output Repairing occurs if Malformed Output Repair Budget is available. [src: src/review-actions.ts]
 Action Output Repairing changes Malformed Output Repair Budget from available to spent. [src: src/review-actions.ts]
-Action Output Repairing requires Output Shape Diagnostic. [src: src/review-actions.ts]
+Action Output Repairing requires Invalid Action Output. [src: src/review-actions.ts]
 Action Output Repairing requires Lossless Action Model View. [src: src/review-actions.ts]
 Candidate Record Binding can be available or unavailable. [src: src/review-actions.ts]
 Candidate Record Isolating requires Provider Action Proposal and Draft Action Candidates. [src: src/review-actions.ts]
@@ -770,9 +770,9 @@ flowchart TD
   n43["Lossless Action Model View"]
   n186["Evidence Resolution Intent"]
   n187["Action Review Output Provenance"]
-  n220["Created Action Record Binding"]
-  n221["Updated Action Record Binding"]
-  n222["Rejection Memory Binding"]
+  n223["Created Action Record Binding"]
+  n224["Updated Action Record Binding"]
+  n225["Rejection Memory Binding"]
   n188("Evidence Resolution Recording")
   n7("Article Generating")
   n61("Editorial Revising")
@@ -898,9 +898,9 @@ flowchart TD
   n167 -->|"requires (instrument)"| n35
   n28 -->|"yields"| n186
   n28 -->|"yields"| n187
-  n220 -->|"part of"| n187
-  n221 -->|"part of"| n187
-  n222 -->|"part of"| n187
+  n223 -->|"part of"| n187
+  n224 -->|"part of"| n187
+  n225 -->|"part of"| n187
   n187 -->|"part of"| n113
   n186 -->|"requires (instrument)"| n188
   n113 -->|"requires (instrument)"| n188
@@ -1121,15 +1121,15 @@ flowchart TD
   n39["Canonical Action Proposal"]
   n28("Action Reconciling")
   n196["Captured Invocation Birth Output"]
-  n220["Created Action Record Binding"]
-  n207["Candidate Review Transition"]
+  n223["Created Action Record Binding"]
+  n210["Candidate Review Transition"]
   n113["Article Action Files — states: pending, verified"]
   n197["valid Captured Invocation Birth Output"]
   n159("Action Registry Writing")
   n39 -->|"exhibits"| n195
   n28 -->|"yields"| n196
-  n220 -->|"part of"| n196
-  n207 -->|"part of"| n196
+  n223 -->|"part of"| n196
+  n210 -->|"part of"| n196
   n196 -->|"part of"| n113
   n197 -->|"requires (instrument)"| n159
 ```
@@ -1162,8 +1162,14 @@ flowchart TD
   n39["Canonical Action Proposal"]
   n34("Candidate Reference Resolving")
   n199["Candidate Association Diagnostic"]
+  n200["Validation Rule"]
+  n201["Validation Stage"]
+  n202["Review Attempt"]
   n39 -->|"exhibits"| n198
   n34 -->|"yields"| n199
+  n199 -->|"exhibits"| n200
+  n199 -->|"exhibits"| n201
+  n199 -->|"exhibits"| n202
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1171,6 +1177,9 @@ flowchart TD
 ```text
 Canonical Action Proposal exhibits Derived Suggestion Index. [src: src/review-actions.ts]
 Candidate Reference Resolving yields Candidate Association Diagnostic. [src: src/review-actions.ts]
+Candidate Association Diagnostic exhibits Validation Rule. [src: src/review-actions.ts]
+Candidate Association Diagnostic exhibits Validation Stage. [src: src/review-actions.ts]
+Candidate Association Diagnostic exhibits Review Attempt. [src: src/review-actions.ts]
 ```
 
 ## SD1.6 — Manual held-action review
@@ -1187,23 +1196,23 @@ title: "SD1.6 — Manual held-action review"
 flowchart TD
   accTitle: SD1.6 — Manual held-action review
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n200["Accepted Article"]
-  n201("Held Action Reviewing")
-  n202["Pending Original Candidates"]
-  n203["Reviewed Owner Grant"]
-  n204["Operation Reservation"]
-  n205["Unmerged Dated Proposal"]
-  n206["Bounded Operation Receipt"]
-  n223["Proposed Article Card"]
-  n224["Proposed Article Action File"]
-  n200 -->|"requires (instrument)"| n201
-  n202 -->|"requires (instrument)"| n201
-  n203 -->|"requires (instrument)"| n201
-  n204 -->|"requires (instrument)"| n201
-  n201 -->|"yields"| n205
-  n201 -->|"yields"| n206
-  n223 -->|"part of"| n205
-  n224 -->|"part of"| n205
+  n203["Accepted Article"]
+  n204("Held Action Reviewing")
+  n205["Pending Original Candidates"]
+  n206["Reviewed Owner Grant"]
+  n207["Operation Reservation"]
+  n208["Unmerged Dated Proposal"]
+  n209["Bounded Operation Receipt"]
+  n226["Proposed Article Card"]
+  n227["Proposed Article Action File"]
+  n203 -->|"requires (instrument)"| n204
+  n205 -->|"requires (instrument)"| n204
+  n206 -->|"requires (instrument)"| n204
+  n207 -->|"requires (instrument)"| n204
+  n204 -->|"yields"| n208
+  n204 -->|"yields"| n209
+  n226 -->|"part of"| n208
+  n227 -->|"part of"| n208
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**

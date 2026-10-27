@@ -74,7 +74,7 @@ Malformed Output Repair Budget can be available or spent. [src: src/review-actio
 Action Reconciling invokes Action Output Repairing. [src: src/review-actions.ts]
 Action Output Repairing occurs if Malformed Output Repair Budget is available. [src: src/review-actions.ts]
 Action Output Repairing changes Malformed Output Repair Budget from available to spent. [src: src/review-actions.ts]
-Action Output Repairing requires Output Shape Diagnostic. [src: src/review-actions.ts]
+Action Output Repairing requires Invalid Action Output. [src: src/review-actions.ts]
 Action Output Repairing requires Lossless Action Model View. [src: src/review-actions.ts]
 Candidate Record Binding can be available or unavailable. [src: src/review-actions.ts]
 Candidate Record Isolating requires Provider Action Proposal and Draft Action Candidates. [src: src/review-actions.ts]
@@ -428,6 +428,10 @@ Action Registry Writing requires valid Captured Invocation Birth Output. [src: s
 ## SD1.5 — Candidate link resolution
 Canonical Action Proposal exhibits Derived Suggestion Index. [src: src/review-actions.ts]
 Candidate Reference Resolving yields Candidate Association Diagnostic. [src: src/review-actions.ts]
+Candidate Association Diagnostic exhibits Validation Rule. [src: src/review-actions.ts]
+Candidate Association Diagnostic exhibits Validation Stage. [src: src/review-actions.ts]
+Candidate Association Diagnostic exhibits Review Attempt. [src: src/review-actions.ts]
+
 
 ## SD1.6 — Manual held-action review
 Held Action Reviewing requires Accepted Article. [src: scripts/review-held-actions.ts]
@@ -440,3 +444,5 @@ Unmerged Dated Proposal consists of Proposed Article Card and Proposed Article A
 
 # Closed shape diagnostics retain known fields/types, never provider values or arbitrary keys. [src: src/review-actions.ts]
 # Current evidence-request diagnostics require native current-case validation; unbound requests retain identity only. [src: scripts/review-held-actions.ts]
+
+# Candidate/identity/invocation failures emit closed rule/stage/initial-or-repair observations once per failed role attempt. Known IDs require current awaiting-candidate membership; raw replies and arbitrary error text are excluded. The held receipt may retain these observations, including repaired earlier failures, without granting an action verdict. [src: src/review-actions.ts] [src: scripts/review-held-actions.ts]
