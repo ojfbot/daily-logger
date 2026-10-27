@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261024-7c6d4dba3bf4",
+  "article": {
+    "date": "2026-10-24",
+    "sourceCommitSha": "7c6d4dba3bf456f34fc10adb0ec7c58852199b0e",
+    "blobSha": "91d6548234311f871e6e35701513e14912dde4f4"
+  },
+  "reviewer": {
+    "name": "Codex — independent October 24 factual review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-27T06:21:06Z",
+  "scope": "Final visible draft, deployed JSON, exact article/action blobs, activity counts, action-review pairing and repair behavior, receipt transport claims, token/context handling, and executable next-step boundaries. Read-only review; no acceptance, action, workflow, runtime, or scheduling authority. Amended against the same source/blob on 2026-10-27T06:21:06Z: correct the prior C2 nine-merge recommendation and C1 source cause, qualify C5/C6 precisely, and add A1–A3. Original review event and all open dispositions remain historical; no article or action change is implied.",
+  "fullRecordBlobSha": "81b4eec9f7bf44c979842c70da22b3c1826127d9",
+  "fullRecordPath": "reviews/articles/2026-10-24-7c6d4dba3bf456f34fc10adb0ec7c58852199b0e.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Malformed source abbreviation makes the API count 23 of 24 intended commits",
+      "location": "Frontmatter summary and commit list, lines 6 and 17–42; deployed JSON commitCount.",
+      "explanation": "The article has 24 intended commit entries, but `8c2989` is six characters. The pinned builder counts seven-character backticked hex references. Primary window commit e8c2989101aec4ff6d72173787eb8afa4acf1c40 is the intended identity; the single source typo fix makes the unchanged regex count 24.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/7c6d4dba3bf456f34fc10adb0ec7c58852199b0e/_articles/2026-10-24.md#L1-L42",
+        "https://github.com/ojfbot/daily-logger/compare/6955554ff71e961cf2f25404e8e7c41b83817c8b%5E...4523077e65f2c2a53535c6f1198c5699d57d094a",
+        "https://log.jim.software/api/articles/2026-10-24.json",
+        "https://github.com/ojfbot/daily-logger/commit/e8c2989101aec4ff6d72173787eb8afa4acf1c40",
+        "https://github.com/ojfbot/daily-logger/blob/7c6d4dba3bf456f34fc10adb0ec7c58852199b0e/src/build-api.ts#L146-L150"
+      ],
+      "correction": "Replace only `8c2989` with verified `e8c2989`, preserve all 24 intended identities, rebuild and verify API count 24. A runtime projection change is not established by this source typo.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Shipment list omits #431 and misclassifies the ten-merge window",
+      "location": "Summary, opening and What shipped, lines 6 and 11–17.",
+      "explanation": "The actual reporting window 2026-10-23T08:30:00Z inclusive to 2026-10-24T08:30:00Z exclusive has ten merges: #431, #432 and #434–#441. The heading omits #431; one article PR plus nine other PRs is called ten hardening PRs. The first merge #431 was Friday October 23 at 08:40:52Z, not Thursday. The original review recommendation to reduce the total to nine was incorrect and is superseded; the article finding remains open.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/7c6d4dba3bf456f34fc10adb0ec7c58852199b0e/_articles/2026-10-24.md#L11-L17",
+        "https://github.com/ojfbot/daily-logger/pull/431",
+        "https://github.com/ojfbot/daily-logger/pull/432",
+        "https://github.com/ojfbot/daily-logger/pull/441"
+      ],
+      "correction": "Keep ten merged PRs; add #431 and its bounded schema diagnostic contribution; distinguish one article PR and nine other PRs; correct Friday chronology and avoid double-counting #432. Preserve explicit unavailable shipment-time control for #431 unless separately supported evidence is added.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Candidate pairing is not partial OR-gate application",
+      "location": "Pair-each-suggestion decision, lines 46–48.",
+      "explanation": "PR #440 pairs each captured candidate with its own proposed disposition so the verifier checks the correct identity. Native application still requires every awaiting candidate and every verdict and aborts the atomic round when one required candidate is held or missing.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/440",
+        "https://github.com/ojfbot/daily-logger/blob/7c6d4dba3bf456f34fc10adb0ec7c58852199b0e/src/review-actions.ts#L939-L1085"
+      ],
+      "correction": "Describe #440 as a cross-candidate identity/pairing repair; keep the all-required-candidates atomic review boundary explicit.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "GitHub webhook failure cause is invented",
+      "location": "Async-child-process decision, lines 52–54.",
+      "explanation": "The shipped evidence is a local socket responsiveness regression. PR #440 explicitly says the historical hosted EPIPE cause remains unproved; receipts use one GitHub API POST. No primary record identifies an unprocessed GitHub webhook channel as the cause.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/440",
+        "https://github.com/ojfbot/daily-logger/blob/7c6d4dba3bf456f34fc10adb0ec7c58852199b0e/.github/scripts/continue-editorial.ts"
+      ],
+      "correction": "Report the demonstrated local connection/EOF responsiveness improvement and keep the historical hosted receipt-transport cause unknown.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Malformed-output repair does not expose raw validation messages or a schema diff",
+      "location": "Malformed-output decision, lines 70–72.",
+      "explanation": "The implementation deliberately excludes malformed replies, values, arbitrary keys, Zod messages and raw errors. It emits a bounded closed-vocabulary shape diagnostic and permits one shared role-local repair; it does not send the claimed raw validation message and expected-schema diff.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/441",
+        "https://github.com/ojfbot/daily-logger/blob/7c6d4dba3bf456f34fc10adb0ec7c58852199b0e/src/review-actions.ts#L180-L225"
+      ],
+      "correction": "Describe closed-vocabulary role/phase/path/code/type/required-field diagnostics and one shared repair. Remove raw error/schema-diff language and unsupported claims that failures are almost always formatting or reliably repaired.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Compact global context is misreported as full history text",
+      "location": "Roadmap pulse, line 80.",
+      "explanation": "Current source retains a compact identity/state/rejection index. Records expand when explicitly relevant or when they have history, gates or an original review. Parseable historical held suggestions reduce to date/fingerprint/work-key rows, while unmatched formats can retain suggestion text. This is not every full historical record going to both roles.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/7c6d4dba3bf456f34fc10adb0ec7c58852199b0e/src/action-evidence-selection.ts#L746-L771",
+        "https://github.com/ojfbot/daily-logger/commit/a715fead1ddd9b8b631443cec4de4f3d96fb39b2",
+        "https://github.com/ojfbot/daily-logger/issues/386"
+      ],
+      "correction": "Describe the shipped compact index, conditional expanded records and required-source context accurately; keep #386 relevance/clarification/token qualification open and do not claim all history is absent.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Token overflow is held before provider calls",
+      "location": "Roadmap pulse, line 80.",
+      "explanation": "The runtime counts each complete proposer/verifier request before its provider call and throws a pending context-need hold when input plus output reserve exceeds the configured limit. Issue #386 explicitly records this safe pending fallback. Silent provider truncation is not the designed overflow path.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/386",
+        "https://github.com/ojfbot/daily-logger/blob/7c6d4dba3bf456f34fc10adb0ec7c58852199b0e/src/review-actions.ts#L520-L551"
+      ],
+      "correction": "Distinguish existing pre-call byte/token holds and pending state from still-unqualified provider semantics, count accuracy and future prompt growth.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "A1",
+      "classification": "confirmed_error",
+      "title": "Earlier live attempts contradict first-attempt and exhaustive-blocker claims",
+      "location": "Opening, Roadmap pulse and first suggested action.",
+      "explanation": "PR #436 records completed proposer and verifier token hold; PR #440 records a later attempt reaching both models. These primary records contradict the first live hosted attempt premise. Merged fixes do not establish an exhaustive code-defect list or healthy full review.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/436",
+        "https://github.com/ojfbot/daily-logger/pull/437",
+        "https://github.com/ojfbot/daily-logger/pull/440",
+        "https://github.com/ojfbot/daily-logger/pull/441"
+      ],
+      "correction": "Describe a next separately authorized attempt against repaired source, retaining uncertainty and prior observed phases. Keep historical cutoff facts separate from current lifecycle. Original candidate custody is not executable capability or retry authority.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "A2",
+      "classification": "confirmed_error",
+      "title": "Canonical captured fields are expanded after the proposer, before the verifier",
+      "location": "Captured-reference decision, line 60.",
+      "explanation": "PR #438 says the proposer selects a captured suggestion by ID, then native code resolves its unchanged command/repository/description before the independent verifier reads the proposal. The claim that this occurs before either reviewer is wrong.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/438"
+      ],
+      "correction": "State proposer ID selection, then native canonical resolution/checks, then independent verifier; retain all evidence/identity/authority guards.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "A3",
+      "classification": "unverified_claim",
+      "title": "Generalized LEGO workflow meaning is unverified; individual gates remain",
+      "location": "Roadmap pulse, LEGO review paragraph.",
+      "explanation": "The primary records establish only specific #44/#46 non-operative do-not-merge and close/supersede boundaries. They do not establish a permanent workflow-wide reference-only rule. #45 separately requires a second-steward --check and James merge decision; its informational #46 reference does not establish that all merge gates are clear.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/46"
+      ],
+      "correction": "Keep #44/#46 current DO_NOT_MERGE and close/supersede criteria; state #45 steward/James gates separately. Grant no import, readiness, implementation or owner authority.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
