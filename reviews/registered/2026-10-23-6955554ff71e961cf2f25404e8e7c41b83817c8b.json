@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261023-6955554ff71e",
+  "article": {
+    "date": "2026-10-23",
+    "sourceCommitSha": "6955554ff71e961cf2f25404e8e7c41b83817c8b",
+    "blobSha": "89345eeb8cfd31fb8f7d36c48c1a1279c7027f38"
+  },
+  "reviewer": {
+    "name": "Codex — independent October 23 factual review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-23T10:36:22Z",
+  "scope": "Visible draft, deployed JSON, exact article/action blobs, cited PRs and workflow receipts, executable next steps, chronology, and review/discussion provenance. Read-only review; no acceptance, action or scheduling authority.",
+  "fullRecordBlobSha": "72bc4d3f5a16910865a19db04f921dc3a7b95d7d",
+  "fullRecordPath": "reviews/articles/2026-10-23-6955554ff71e961cf2f25404e8e7c41b83817c8b.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Known combined-schema failure reported as cleared",
+      "location": "Opening and Roadmap pulse",
+      "explanation": "The source-current six-case diagnostic finished before article generation and showed every isolated response section passing while the combined strict form still failed with HTTP 400 schema_complexity. The article instead says all technical blockers are cleared and that the remaining gate is a full live provider run.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/430#issuecomment-6359598495",
+        "https://github.com/ojfbot/daily-logger/pull/431#issuecomment-6361318221",
+        "https://github.com/ojfbot/daily-logger/actions/runs/39927672626"
+      ],
+      "correction": "State that byte/token fit was repaired but aggregate strict-schema composition remains blocked; #416 stays Draft/pending and another unchanged full-form run is not the next authorized step.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Invocation commands are fabricated and the probe grant is spent",
+      "location": "Owner recovery decision and Suggested actions",
+      "explanation": "The article invents /editorial-resume and /action-review-probe commands and says owner recovery uses a slash command. The implementation uses structured PR correspondence/API records and a guarded workflow_dispatch. The latest one-time diagnostic grant was already consumed and no further dispatch is authorized.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/6955554ff71e961cf2f25404e8e7c41b83817c8b/.github/workflows/action-schema-probe.yml",
+        "https://github.com/ojfbot/daily-logger/blob/6955554ff71e961cf2f25404e8e7c41b83817c8b/api/_lib/editorial-continuation.ts",
+        "https://github.com/ojfbot/daily-logger/pull/424",
+        "https://github.com/ojfbot/daily-logger/pull/431#issuecomment-6361318221"
+      ],
+      "correction": "Name the actual structured comment/API and workflow_dispatch surfaces and their guards. Remove the invented commands and do not recommend repeating the consumed diagnostic without fresh authority.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Workflow failure is equated with provider rejection",
+      "location": "Manual synthetic probe decision",
+      "explanation": "The workflow can fail before or after provider contact during source validation, dependency setup, secret-bound execution, transport, output validation or artifact retention. A generic failed run therefore does not itself mean the provider rejected the schema.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/6955554ff71e961cf2f25404e8e7c41b83817c8b/.github/workflows/action-schema-probe.yml",
+        "https://github.com/ojfbot/daily-logger/pull/428"
+      ],
+      "correction": "Reserve the schema-rejection conclusion for a validated safe artifact that records the provider HTTP/category result; classify other failures by their actual stage.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "PR 421 findings and lifecycle are misreported",
+      "location": "Roadmap pulse, #421",
+      "explanation": "PR #421 contains six confirmed errors and two unverified claims, all open. It is an independent review-data PR that remains draft for supervised review, not a zero-finding action-review record with an automatic merge/close condition.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/421",
+        "https://github.com/ojfbot/daily-logger/blob/12a74199f6c3e4d60713d0a4c9965c61a85cb133/reviews/articles/2026-10-22-89b826e7ef715d317e4cea5e26a90f57a72c61d9.md"
+      ],
+      "correction": "Report the six confirmed and two unverified open findings and describe #421 as a proposed/current independent review whose next step is supervised disposition, separate from action review.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Morning Cockpit PR was active in the prior window",
+      "location": "Roadmap pulse and Suggested actions, morning-cockpit #60",
+      "explanation": "PR #60 was created at 2026-10-21T09:15:28Z, 45 minutes after the prior reporting window began at the 03:30 America/Chicago cutoff. The claim that it had no activity for two windows is therefore false.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/morning-cockpit/pull/60",
+        "https://github.com/ojfbot/daily-logger/blob/6955554ff71e961cf2f25404e8e7c41b83817c8b/docs/daily-cycle.md"
+      ],
+      "correction": "Say the PR had no activity in the current window and was created in the immediately preceding window; remove the two-window-idle triage premise.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Independent reviewer identity is not authenticated",
+      "location": "Opening",
+      "explanation": "The PR records report source-pinned reviews from separate agent contexts, but the shared ojfbot GitHub account is not an independently authenticated human or provider reviewer identity.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/425",
+        "https://github.com/ojfbot/daily-logger/pull/427"
+      ],
+      "correction": "Attribute the reviews to separate Codex contexts carried by the shared GitHub account, and avoid implying independently authenticated human/provider identity without additional evidence.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
