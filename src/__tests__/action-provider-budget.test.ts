@@ -117,6 +117,8 @@ it.each([
   { input_tokens: -1 },
   { input_tokens: 1.5 },
   { input_tokens: Number.POSITIVE_INFINITY },
+  { input_tokens: 1000000000 },
+  { input_tokens: Number.MAX_SAFE_INTEGER },
 ])('holds before generation when the provider token count is malformed: %j', async result => {
   create.mockReset()
   countTokens.mockReset()
