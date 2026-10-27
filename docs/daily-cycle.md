@@ -99,8 +99,22 @@ prompts, raw model replies and the whole hydrated registry are excluded. Newly
 selected excerpts are bounded to 8 KiB; existing canonical quotes remain intact.
 The two-file proposal is capped at 1 MiB, with current input lower bounds checked
 before model entry. Output limits can still hold a newly produced proposal.
-Only strict numeric budget/stop observations and closed stop categories survive
-native diagnostics; neither implies billing success.
+Only bounded numeric budget/usage observations and closed stop categories survive
+native diagnostics. A qualified token count is recorded before a budget rejection;
+response usage is recorded before incomplete-output rejection. Missing usage is
+unknown, not zero; these observations do not establish billing.
+
+The hosted worker may factor repeated collector-generated metadata into an
+ephemeral, self-contained lossless view. Exact reconstruction must preserve every
+metadata field and all authored text. Raw source identities remain unchanged;
+selection and the final source guard charge the same complete labeled view,
+including its dictionary. Coverage records both raw bytes and actual model-view
+bytes/hashes. Dictionary and factored metadata rows are context only, never
+citable authority. Copying a source array cannot mint collector provenance.
+The full request and provider-token guards still apply, and large authored
+sources may still require an explicit bounded evidence response. Neither raw
+captures nor dictionaries are uploaded. A later successful review preserves prior
+evidence-request receipts as history without implicitly resolving them.
 
 Use `validateHeldActionArtifact` with an independently observed expected source
 SHA and exact exported file bytes. Check the actual trusted workflow run,
