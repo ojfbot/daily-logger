@@ -1,5 +1,348 @@
 [
   {
+    "date": "2026-10-27",
+    "title": "Clearing the October backlog: 19 PRs merged as three articles complete the editorial train",
+    "summary": "Nineteen PRs merged across daily-logger, core, and workstation-yuri, completing the full editorial correction-and-acceptance trains for October 22, 23, and 24 articles.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "workstation-yuri",
+        "type": "repo"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "workstation-yuri"
+    ],
+    "commitCount": 28,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Dedicated held-action reviewer route to avoid reopening accepted articles",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Derive candidate links before action-review repair, not after",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Separate current evidence request from retained history in accepted articles",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Explicit telemetry opt-in for user-scope skill installs",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "LaunchAgent one-listener cutover for Yuri Helpdesk",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "07:03 UTC",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-27T07:03:02.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "465",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/465"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "421",
+          "url": "https://github.com/ojfbot/daily-logger/pull/421"
+        },
+        "at": "2026-10-27T01:53:43.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "453",
+          "url": "https://github.com/ojfbot/daily-logger/pull/453"
+        },
+        "at": "2026-10-27T02:08:41.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "454",
+          "url": "https://github.com/ojfbot/daily-logger/pull/454"
+        },
+        "at": "2026-10-27T02:19:14.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "455",
+          "url": "https://github.com/ojfbot/daily-logger/pull/455"
+        },
+        "at": "2026-10-27T02:29:37.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "456",
+          "url": "https://github.com/ojfbot/daily-logger/pull/456"
+        },
+        "at": "2026-10-27T03:13:51.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "457",
+          "url": "https://github.com/ojfbot/daily-logger/pull/457"
+        },
+        "at": "2026-10-27T04:03:30.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "458",
+          "url": "https://github.com/ojfbot/daily-logger/pull/458"
+        },
+        "at": "2026-10-27T04:14:01.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "433",
+          "url": "https://github.com/ojfbot/daily-logger/pull/433"
+        },
+        "at": "2026-10-27T05:18:58.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "459",
+          "url": "https://github.com/ojfbot/daily-logger/pull/459"
+        },
+        "at": "2026-10-27T05:28:28.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "460",
+          "url": "https://github.com/ojfbot/daily-logger/pull/460"
+        },
+        "at": "2026-10-27T05:36:51.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "461",
+          "url": "https://github.com/ojfbot/daily-logger/pull/461"
+        },
+        "at": "2026-10-27T05:42:34.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "462",
+          "url": "https://github.com/ojfbot/daily-logger/pull/462"
+        },
+        "at": "2026-10-27T06:22:59.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "449",
+          "url": "https://github.com/ojfbot/daily-logger/pull/449"
+        },
+        "at": "2026-10-27T06:34:30.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "463",
+          "url": "https://github.com/ojfbot/daily-logger/pull/463"
+        },
+        "at": "2026-10-27T06:39:51.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "464",
+          "url": "https://github.com/ojfbot/daily-logger/pull/464"
+        },
+        "at": "2026-10-27T06:49:30.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "465",
+          "url": "https://github.com/ojfbot/daily-logger/pull/465"
+        },
+        "at": "2026-10-27T07:03:02.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "571",
+          "url": "https://github.com/ojfbot/core/pull/571"
+        },
+        "at": "2026-10-27T03:51:07.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/workstation-yuri",
+          "ref": "3",
+          "url": "https://github.com/ojfbot/workstation-yuri/pull/3"
+        },
+        "at": "2026-10-27T05:13:49.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/workstation-yuri",
+          "ref": "53",
+          "url": "https://github.com/ojfbot/workstation-yuri/pull/53"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/workstation-yuri",
+          "ref": "52",
+          "url": "https://github.com/ojfbot/workstation-yuri/pull/52"
+        },
+        "reason": "missing-merge-time"
+      }
+    ],
+    "issueTimes": [
+      {
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "386",
+          "url": "https://github.com/ojfbot/daily-logger/issues/386"
+        },
+        "event": "updated",
+        "at": "2026-10-27T07:09:33.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-10-27T14:52:32.146Z",
+        "runId": "40525071715",
+        "runNumber": 274,
+        "runAttempt": 1,
+        "event": "schedule",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/40525071715",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "51e6e6cbca988598d5a3944738382f31b70a00ef",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-10-27T14:50:47.000Z",
+          "startedAt": "2026-10-27T14:50:47.000Z",
+          "expectedAt": "2026-10-27T08:30:00.000Z",
+          "dispatchDelaySeconds": 22847,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v5-2026-10-20-local-window-single-recommendation",
+          "promptSha256": "fc00cfb33750c4d3a34e3857d142fcf7cc20208f0bfdc657a848fa8163e023f4"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.21.0",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-26",
     "title": "One commit, two draft reviews: what the editorial pipeline looks like at steady state",
     "summary": "A single daily-logger commit published the October 25 article as the editorial pipeline opened two new independent review drafts, settling into its intended steady-state rhythm.",
@@ -368,7 +711,7 @@
   },
   {
     "date": "2026-10-24",
-    "title": "daily-logger's action-review pipeline closes five more gaps as October 21 acceptance remains in motion",
+    "title": "daily-logger hardens action review while October 21 acceptance remains blocked",
     "summary": "Twenty-four daily-logger commits across ten merged PRs hardened action-review pairing, child-process bounds, captured invocation admission, and malformed-output repair in a single window.",
     "tags": [
       {
@@ -407,10 +750,11 @@
     "reposActive": [
       "daily-logger"
     ],
-    "commitCount": 23,
+    "commitCount": 24,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "accepted",
     "decisions": [
       {
         "title": "Pair each suggestion with its own disposition before the verifier runs",
@@ -457,6 +801,15 @@
       }
     ],
     "shipmentTimes": [
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "431",
+          "url": "https://github.com/ojfbot/daily-logger/pull/431"
+        },
+        "reason": "missing-merge-time"
+      },
       {
         "status": "available",
         "source": {
@@ -588,8 +941,8 @@
   },
   {
     "date": "2026-10-23",
-    "title": "daily-logger's acceptance pipeline burns through twelve PRs closing four independent gaps in one window",
-    "summary": "Twenty-three commits across one repo merged twelve daily-logger PRs hardening action-review schema compatibility, evidence compaction, owner recovery, and diagnostic tooling.",
+    "title": "daily-logger ships twelve PRs for acceptance repairs while strict-schema review remains blocked",
+    "summary": "Twenty-three commits across twelve daily-logger PRs improve evidence handling, recovery and diagnostics, but actual probes still reject the combined strict response schema.",
     "tags": [
       {
         "name": "daily-logger",
@@ -630,28 +983,29 @@
     "commitCount": 23,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "accepted",
     "decisions": [
       {
-        "title": "Compact generated GitHub action evidence into model-only views before review (#427)",
+        "title": "Compact generated GitHub evidence while preserving original citations (#427)",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Convert unsupported oneOf discriminators to anyOf in the strict action-review tool schema (#426)",
+        "title": "Repair an unsupported union without treating it as compiler qualification (#426)",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Add explicit owner recovery for failed editorial requests (#425)",
+        "title": "Recover a failed editorial request without replaying it (#425)",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Introduce a manual synthetic probe workflow for strict action-review schemas (#428, #429, #430)",
+        "title": "Use bounded synthetic probes to distinguish compiler failures from article fit (#428, #429, #430)",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
@@ -818,7 +1172,7 @@
   {
     "date": "2026-10-22",
     "title": "Classic Space Venue lands its dev-host foundation while daily-logger hardens its acceptance pipeline",
-    "summary": "Thirty-seven commits across two repos merged four Classic Space Venue PRs and nine daily-logger PRs hardening action-evidence binding and article acceptance.",
+    "summary": "Thirty-seven commits across two repos accompanied four Classic Space Venue PR merges and nine daily-logger PR merges, including action-evidence and acceptance repairs.",
     "tags": [
       {
         "name": "classic-space-venue",
@@ -857,49 +1211,82 @@
       "daily-logger",
       "classic-space-venue"
     ],
-    "commitCount": 12,
+    "commitCount": 37,
     "activityType": "build",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "accepted",
     "decisions": [
       {
-        "title": "Classic Space Venue dev-host uses labeled mock data behind a provenance header while live fleet-runner read projection is pending",
+        "title": "The dev-host labels simulated data while the live read contract remains proposed",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Root AGENTS.md names core map and fleet boundaries; bundle scene guidance lives in walkway-pass/AGENTS.md",
+        "title": "Root agent guidance states fleet boundaries; scene guidance stays in the strand",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Design bible intake preserves the immutable supplied kit and isolates derivative repairs in a separate consumer harness",
+        "title": "The supplied design kit stays unchanged; focus repairs live in the consumer harness",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Acceptance pipeline now requires the complete saved evidence binding before deriving Accepted status",
+        "title": "Acceptance reconstructs the saved Draft binding before deriving Accepted status",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Action reviews now bind to explicit per-suggestion evidence requirements rather than treating historical citations as current requirements",
+        "title": "Action reviews record explicit evidence requirements for each original suggestion",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Oversized evidence leaves a typed, auditable pending request rather than silently failing",
+        "title": "Missing or oversized evidence leaves a request that can resume locally",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       }
     ],
     "actions": [],
+    "timeReferences": [
+      {
+        "text": "2026-10-21T08:30:00Z",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-21T08:30:00.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-10-21T08:30:00Z"
+        }
+      },
+      {
+        "text": "2026-10-22T08:30:00Z",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-22T08:30:00.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-10-22T08:30:00Z"
+        }
+      },
+      {
+        "text": "2026-10-21T01:34:40Z",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-21T01:34:40.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-10-21T01:34:40Z"
+        }
+      }
+    ],
     "shipmentTimes": [
       {
         "status": "available",
@@ -945,15 +1332,6 @@
           "url": "https://github.com/ojfbot/daily-logger/pull/407"
         },
         "at": "2026-10-21T16:25:52.000Z"
-      },
-      {
-        "status": "available",
-        "source": {
-          "repo": "ojfbot/daily-logger",
-          "ref": "408",
-          "url": "https://github.com/ojfbot/daily-logger/pull/408"
-        },
-        "at": "2026-10-21T01:34:40.000Z"
       },
       {
         "status": "available",
