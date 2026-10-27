@@ -418,3 +418,12 @@ Action Registry Writing requires valid Captured Invocation Birth Output. [src: s
 ## SD1.5 — Candidate link resolution
 Canonical Action Proposal exhibits Derived Suggestion Index. [src: src/review-actions.ts]
 Candidate Reference Resolving yields Candidate Association Diagnostic. [src: src/review-actions.ts]
+
+## SD1.6 — Manual held-action review
+Held Action Reviewing requires Accepted Article. [src: scripts/review-held-actions.ts]
+Held Action Reviewing requires Pending Original Candidates. [src: scripts/review-held-actions.ts]
+Held Action Reviewing requires Reviewed Owner Grant. [src: scripts/review-held-actions.ts]
+Held Action Reviewing requires Operation Reservation. [src: scripts/review-held-actions.ts]
+Held Action Reviewing yields Unmerged Dated Proposal. [src: scripts/review-held-actions.ts]
+Held Action Reviewing yields Bounded Operation Receipt. [src: scripts/review-held-actions.ts]
+Unmerged Dated Proposal consists of Proposed Article Card and Proposed Article Action File. [src: scripts/review-held-actions.ts]

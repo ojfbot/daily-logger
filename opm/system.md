@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `a2f0fa9931f8fb44645f2002a880ef281370c698bd0a40a235d9236fa95740fa`.
+> Source SHA-256: `139d46086334cd55b2b188069403f77fed0f3322e63432d99d0043e45bcef665`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -72,18 +72,18 @@ flowchart TD
   n47["Candidate Record Binding, Provider Action Proposal, and Source Evidence"]
   n48["Draft Action Candidate — states: awaiting-review, promoted, mapped-existing, rejected, verified-closure"]
   n155["Candidate Review History"]
-  n198["Candidate Review Transition"]
-  n199["Historical Source Metadata"]
+  n205["Candidate Review Transition"]
+  n206["Historical Source Metadata"]
   n49["Source Identity, Source Kind, Source Locator, and Full Content Digest"]
   n50["Draft Candidate Evidence Association — states: required, context"]
-  n200["Background Evidence Reference"]
-  n201["Candidate Action Relation"]
-  n202["Candidate Input View"]
+  n207["Background Evidence Reference"]
+  n208["Candidate Action Relation"]
+  n209["Candidate Input View"]
   n51["Action Registry, Draft Action Candidates, Action Review Cycle, Operator Feedback, and Article Status"]
   n52("Candidate Evidence Preparing")
-  n203["Canonical Action Index"]
-  n204["Held Suggestion Memory"]
-  n205["Rejection Memory"]
+  n210["Canonical Action Index"]
+  n211["Held Suggestion Memory"]
+  n212["Rejection Memory"]
   n53["Action Review Snapshot"]
   n54("Candidate Evidence Refreshing")
   n55["unchanged Draft Candidate Evidence Association"]
@@ -92,8 +92,8 @@ flowchart TD
   n58["Action Review Snapshot and Accepted Outcome Stamp"]
   n59("Acceptance Status Evidence Refreshing")
   n60["current-binding Draft Candidate Evidence Requirements"]
-  n206["Ranked Recommendations"]
-  n207["Handled Suggestions"]
+  n213["Ranked Recommendations"]
+  n214["Handled Suggestions"]
   n61("Editorial Revising")
   n62["Editorial Revision Request"]
   n63["Draft Suggestion — states: proposed, open, done, dismissed, superseded, deferred"]
@@ -101,7 +101,7 @@ flowchart TD
   n113["Article Action Files — states: pending, verified"]
   n64("Inclusion Choosing")
   n65["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
-  n208["Canonical Actions"]
+  n215["Canonical Actions"]
   n66["JSON API"]
   n67("Frontend Rendering")
   n68["Rendered Site"]
@@ -112,8 +112,8 @@ flowchart TD
   n73["Revision Request"]
   n74("Conversation Saving")
   n75["Saved Message"]
-  n209["Review Records"]
-  n210["Correspondence"]
+  n216["Review Records"]
+  n217["Correspondence"]
   n76["Time Record Pointer"]
   n77("Time Recording")
   n78["Commit Context"]
@@ -210,18 +210,18 @@ flowchart TD
   n28 -->|"yields"| n31
   n28 -->|"changes: transient to retained"| n27
   n48 -->|"part of"| n18
-  n198 -->|"part of"| n155
-  n199 -->|"part of"| n155
-  n199 -->|"exhibits"| n49
+  n205 -->|"part of"| n155
+  n206 -->|"part of"| n155
+  n206 -->|"exhibits"| n49
   n50 -->|"part of"| n32
-  n200 -->|"part of"| n32
-  n201 -->|"part of"| n32
-  n202 -->|"part of"| n32
+  n207 -->|"part of"| n32
+  n208 -->|"part of"| n32
+  n209 -->|"part of"| n32
   n51 -->|"requires (instrument)"| n52
   n52 -->|"yields"| n32
-  n203 -->|"part of"| n202
-  n204 -->|"part of"| n202
-  n205 -->|"part of"| n202
+  n210 -->|"part of"| n209
+  n211 -->|"part of"| n209
+  n212 -->|"part of"| n209
   n53 -->|"requires (instrument)"| n54
   n55 -->|"requires (instrument)"| n54
   n56 -->|"requires (instrument)"| n54
@@ -230,10 +230,10 @@ flowchart TD
   n58 -->|"requires (instrument)"| n59
   n0 -->|"condition: accepted"| n59
   n59 -->|"yields"| n60
-  n206 -->|"part of"| n26
+  n213 -->|"part of"| n26
   n18 -->|"part of"| n26
   n27 -->|"part of"| n26
-  n207 -->|"part of"| n26
+  n214 -->|"part of"| n26
   n7 -->|"yields"| n29
   n7 -->|"invokes"| n28
   n61 -->|"yields"| n29
@@ -249,7 +249,7 @@ flowchart TD
   n4 -->|"requires (instrument)"| n64
   n64 <-->|"affects"| n23
   n19 -->|"handles (human)"| n64
-  n208 -->|"part of"| n13
+  n215 -->|"part of"| n13
   n65 -->|"part of"| n13
   n21 -->|"invokes"| n22
   n13 -->|"requires (instrument)"| n21
@@ -271,8 +271,8 @@ flowchart TD
   n71 -->|"requires (instrument)"| n74
   n74 -->|"yields"| n75
   n74 <-->|"affects"| n4
-  n209 -->|"part of"| n71
-  n210 -->|"part of"| n71
+  n216 -->|"part of"| n71
+  n217 -->|"part of"| n71
   n0 -->|"exhibits"| n76
   n0 -->|"requires (instrument)"| n77
   n13 -->|"requires (instrument)"| n77
@@ -768,9 +768,9 @@ flowchart TD
   n43["Lossless Action Model View"]
   n184["Evidence Resolution Intent"]
   n185["Action Review Output Provenance"]
-  n211["Created Action Record Binding"]
-  n212["Updated Action Record Binding"]
-  n213["Rejection Memory Binding"]
+  n218["Created Action Record Binding"]
+  n219["Updated Action Record Binding"]
+  n220["Rejection Memory Binding"]
   n186("Evidence Resolution Recording")
   n7("Article Generating")
   n61("Editorial Revising")
@@ -891,9 +891,9 @@ flowchart TD
   n166 -->|"requires (instrument)"| n35
   n28 -->|"yields"| n184
   n28 -->|"yields"| n185
-  n211 -->|"part of"| n185
-  n212 -->|"part of"| n185
-  n213 -->|"part of"| n185
+  n218 -->|"part of"| n185
+  n219 -->|"part of"| n185
+  n220 -->|"part of"| n185
   n185 -->|"part of"| n113
   n184 -->|"requires (instrument)"| n186
   n113 -->|"requires (instrument)"| n186
@@ -1106,15 +1106,15 @@ flowchart TD
   n39["Canonical Action Proposal"]
   n28("Action Reconciling")
   n194["Captured Invocation Birth Output"]
-  n211["Created Action Record Binding"]
-  n198["Candidate Review Transition"]
+  n218["Created Action Record Binding"]
+  n205["Candidate Review Transition"]
   n113["Article Action Files — states: pending, verified"]
   n195["valid Captured Invocation Birth Output"]
   n158("Action Registry Writing")
   n39 -->|"exhibits"| n193
   n28 -->|"yields"| n194
-  n211 -->|"part of"| n194
-  n198 -->|"part of"| n194
+  n218 -->|"part of"| n194
+  n205 -->|"part of"| n194
   n194 -->|"part of"| n113
   n195 -->|"requires (instrument)"| n158
 ```
@@ -1156,4 +1156,49 @@ flowchart TD
 ```text
 Canonical Action Proposal exhibits Derived Suggestion Index. [src: src/review-actions.ts]
 Candidate Reference Resolving yields Candidate Association Diagnostic. [src: src/review-actions.ts]
+```
+
+## SD1.6 — Manual held-action review
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD1.6 — Manual held-action review"
+---
+flowchart TD
+  accTitle: SD1.6 — Manual held-action review
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n198["Accepted Article"]
+  n199("Held Action Reviewing")
+  n200["Pending Original Candidates"]
+  n201["Reviewed Owner Grant"]
+  n202["Operation Reservation"]
+  n203["Unmerged Dated Proposal"]
+  n204["Bounded Operation Receipt"]
+  n221["Proposed Article Card"]
+  n222["Proposed Article Action File"]
+  n198 -->|"requires (instrument)"| n199
+  n200 -->|"requires (instrument)"| n199
+  n201 -->|"requires (instrument)"| n199
+  n202 -->|"requires (instrument)"| n199
+  n199 -->|"yields"| n203
+  n199 -->|"yields"| n204
+  n221 -->|"part of"| n203
+  n222 -->|"part of"| n203
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Held Action Reviewing requires Accepted Article. [src: scripts/review-held-actions.ts]
+Held Action Reviewing requires Pending Original Candidates. [src: scripts/review-held-actions.ts]
+Held Action Reviewing requires Reviewed Owner Grant. [src: scripts/review-held-actions.ts]
+Held Action Reviewing requires Operation Reservation. [src: scripts/review-held-actions.ts]
+Held Action Reviewing yields Unmerged Dated Proposal. [src: scripts/review-held-actions.ts]
+Held Action Reviewing yields Bounded Operation Receipt. [src: scripts/review-held-actions.ts]
+Unmerged Dated Proposal consists of Proposed Article Card and Proposed Article Action File. [src: scripts/review-held-actions.ts]
 ```

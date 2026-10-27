@@ -1,0 +1,70 @@
+name: Review held article actions
+run-name: Held actions ${{ inputs.date }} / ${{ inputs.operation_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: Accepted article date named by the reviewed owner grant
+        required: true
+        type: string
+      source_sha:
+        description: Exact current main containing the reviewed route and frozen owner grant
+        required: true
+        type: string
+      operation_id:
+        description: Exact one-operation UUID in the frozen owner grant
+        required: true
+        type: string
+      grant_id:
+        description: Reviewed action-review-grants UUID, with the original unused authorization provenance
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: held-action-review-${{ inputs.date }}
+  cancel-in-progress: false
+
+jobs:
+  review:
+    if: github.repository == 'ojfbot/daily-logger' && github.actor == 'ojfbot' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      ACTION_REVIEW_DISABLED: ${{ vars.ACTION_REVIEW_DISABLED }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - run: corepack enable && corepack prepare pnpm@9.15.4 --activate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Validate frozen authority and reserve grant and operation before any model API
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: pnpm exec tsx scripts/review-held-actions.ts prepare
+      - name: Execute one native dry-run train and emit only the closed unmerged proposal
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: pnpm exec tsx scripts/review-held-actions.ts execute
+      - name: Retain only typed receipt and successful dated proposal
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unmerged-held-action-proposal-v1-${{ inputs.operation_id }}
+          path: |
+            .git/held-action-review/receipt.json
+            .git/held-action-review/article.md
+            .git/held-action-review/actions.json
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 30
