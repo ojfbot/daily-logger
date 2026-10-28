@@ -6,8 +6,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import { ActionRegistrySchema, ACTIONS_START, readActionRegistry, registryBytes, registryRevision, writeActionRegistry, setActionInclusion, rebindArticleSnapshot, renderArticleActions, splitActionRegistry, articleActionFileBytes, articleActionFileContractBytes, ArticleActionFileSchema, managedArticleDigest, projectRegistry, type ActionRegistry } from '../action-registry.js'
+import { ActionRegistrySchema, ACTIONS_START, readActionRegistry, registryBytes, registryRevision, writeActionRegistry, setActionInclusion, rebindArticleSnapshot, renderArticleActions, splitActionRegistry, articleActionFileBytes, articleActionFileContractBytes, ArticleActionFileSchema, ArticleActionFileContractSchema, managedArticleDigest, projectRegistry, sha256, type ActionRegistry } from '../action-registry.js'
 import { isVerifiedActionOutputStorageLimit } from '../review-actions.js'
+import { unpackCoverageFromStorage } from '../action-coverage-storage.js'
 
 import { writeActionStore } from './action-store-fixture.js'
 
@@ -133,6 +134,47 @@ it('keeps small dated files pretty and uses the same lossless bounded representa
   if (!oversized.success) expect(oversized.error.issues).toEqual([expect.objectContaining({ code: 'custom', params: { kind: 'article-action-file-size', date: '2030-01-01', bytes: 65537 } })])
   expect(() => articleActionFileBytes(file)).toThrow(/64 KiB/)
   expect(() => articleActionFileContractBytes(file)).toThrow(/64 KiB/)
+})
+
+it('round-trips a 75 KiB verified-state shape through bounded, lossless coverage storage', () => {
+  const file = splitActionRegistry(propose('2030-01-01')).files[0]
+  const raw = 'a'.repeat(64), policy = 'b'.repeat(64)
+  const coverage = { version: 'progressive-action-evidence-v7-exact-coverage-views', unit: 'UTF-8 bytes',
+    collection: 'Bounded collector output, not an exhaustive repository/discussion census. Missing or omitted content is unknown, never evidence of absence or approval.',
+    selection: 'Whole-source model views; collector-proved lossless metadata factoring is allowed, with raw identity retained. No chronological comment window or excerpt. Only current carried actions, explicit feedback and retained draft continuation context require GitHub discussions. Shipment prose does not.',
+    authority: 'This coverage index is context only. Hashes, identities, omission reasons and missing evidence cannot justify completion, supersession, dismissal or human approval.',
+    requiredReferences: [], contextReferences: [], referenceRequirements: [], reviewActionKeys: [], preservedTerminalActionKeys: [], expandedActionKeys: [], resolvedRequests: [],
+    sources: Array.from({ length: 30 }, (_, index) => ({ id: `github:fixture-${index}@${raw}`, kind: 'github', locator: `https://github.com/ojfbot/daily-logger/issues/${index + 1}`,
+      fullContentSha256: raw, collectedContentSha256: raw, bytes: 1000, lines: 12, modelBytes: 1100, modelContentSha256: raw, modelPolicySha256: policy,
+      required: false, included: false, reason: 'complete optional whole source omitted so selected sources and complete coverage receipt fit total budget' })) }
+  const content = JSON.stringify(coverage)
+  file.snapshot.sources.push({ id: `action-evidence-coverage@${sha256(content)}`, kind: 'report', locator: coverage.version, content })
+  file.snapshot.rejected.push({ description: '🧪', reason: 'Synthetic size control; not a model verdict.' })
+  const filler = 75039 - Buffer.byteLength(JSON.stringify(file) + '\n')
+  expect(filler).toBeGreaterThan(0)
+  file.snapshot.rejected.at(-1)!.description += 'x'.repeat(filler)
+  expect(Buffer.byteLength(JSON.stringify(file) + '\n')).toBe(75039)
+  const parsed = ArticleActionFileSchema.parse(file)
+  const node = articleActionFileBytes(parsed), browser = articleActionFileContractBytes(parsed)
+  expect(node).toBe(browser)
+  expect(Buffer.byteLength(node)).toBeLessThanOrEqual(65536)
+  expect(node).toContain('coverage-storage-rows-v1')
+  expect(ArticleActionFileSchema.parse(JSON.parse(node))).toEqual(parsed)
+  expect(ArticleActionFileContractSchema.parse(JSON.parse(browser))).toEqual(parsed)
+  const root = mkdtempSync(join(tmpdir(), 'action-packed-'))
+  try {
+    writeActionStore(root, propose('2030-01-01'))
+    writeFileSync(join(root, 'actions/articles/2030-01-01.json'), node)
+    expect(readActionRegistry(root).articles[0]?.sources).toEqual(parsed.snapshot.sources)
+  } finally { rmSync(root, { recursive: true, force: true }) }
+  const corrupt = JSON.parse(node)
+  const encoded = JSON.parse(corrupt.snapshot.sources[1].content)
+  const expansionBomb = structuredClone(encoded)
+  expansionBomb.reasons[0] = 'r'.repeat(5000)
+  expect(unpackCoverageFromStorage(JSON.stringify(expansionBomb))).toBeUndefined()
+  encoded.reasons[0] = 'different source disposition'
+  corrupt.snapshot.sources[1].content = JSON.stringify(encoded)
+  expect(() => ArticleActionFileSchema.parse(corrupt)).toThrow(/coverage source digest/)
 })
 
 it('does not classify a foreign-date size error or an untyped lookalike as the current reviewed output hold', () => {
