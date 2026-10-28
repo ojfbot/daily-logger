@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-27, October 26 held-action grant: the plan assumed a one-file grant could enter the existing post-acceptance route; the accepted snapshot records a revision cycle while that route admitted generation only and required unchanged output cycle. Kept the prior revision in history, bound a new revision to the one-use operation, required the same cycle in the grant and proposal, and held dispatch pending independent tests.
+
 - 2026-10-27, October 26 action-state storage repair: the plan assumed two existing 18,000-character overflow controls would still hit the 64 KiB gate; reversible coverage packing made them fit, so fresh CI reached later evidence guards instead. Raised only those synthetic verdict-reason sizes to 24,000 characters and reran the same held-versus-rejected assertions; the storage limit and production behavior stayed unchanged.
 
 - 2026-10-27, October 23 action-review follow-up: accepted fallback preserved only the earlier #357 request while the latest native run stopped on the oversized #416 source; retained current request metadata separately under the checked article-only acceptance and displayed older requests as history, without closing either. A same-capture local projection passed the existing byte guard (555,285 / 655,360 bytes); the hosted held-action driver does not yet consume that view, so no paid retry or hosted success is claimed.

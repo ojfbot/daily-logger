@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
 import { reconcileActions } from './reconcile-actions.js'
 import { ActionEvidenceCoverageSchema } from '../src/action-evidence-coverage.js'
-import { acceptanceActionCycle } from '../src/action-review-cycle.js'
+import { acceptanceActionCycle, ActionReviewCycleSchema } from '../src/action-review-cycle.js'
 import { ACTION_EVIDENCE_SELECTION_VERSION, COVERAGE_SOURCE, prepareConservativeDraftCandidateEvidence } from '../src/action-evidence-selection.js'
 import { ActionContextNeedError, ActionProviderBudgetObservationSchema, ActionProviderResponseObservationSchema, ActionProviderOutputShapeObservationSchema, ActionProviderInvariantObservationSchema, ActionReviewFailurePhaseSchema, actionReviewEvidenceRequestIdentity, actionReviewFailurePhase, classifyActionReviewFailure } from '../src/review-actions.js'
 import { ActionEvidenceRequestError } from '../src/action-evidence-retrieval.js'
@@ -19,7 +19,7 @@ export const heldActionInputSchema = z.object({ date, source_sha: sha, operation
 export const heldActionGrantSchema = z.object({
   schemaVersion: z.literal(1), approvedBy: z.literal('ojfbot'), authorizationId: z.uuid(), authorizationReference: z.string().min(1).max(500),
   operationId: z.uuid(), date, articleBlob: sha, actionBlob: sha, registryRevision: digest, policyFingerprint: digest,
-  reviewCycle: z.object({ phase: z.literal('generation') }).strict(), trains: z.literal(1), limits: z.object({
+  reviewCycle: ActionReviewCycleSchema, trains: z.literal(1), limits: z.object({
     proposer: z.literal('claude-sonnet-4-6'), verifier: z.literal('claude-opus-4-6'), tokenLimit: z.literal(256000), outputReserve: z.literal(12000), envelopeBytes: z.literal(655360), sharedRepairs: z.literal(1), sdkRetries: z.literal(0),
   }).strict(), output: z.literal('unmerged-dated-proposal-with-selected-citations'),
 }).strict()
@@ -127,7 +127,7 @@ export function proposalFiles(root: string, binding: Binding, reviewed: Awaited<
   const prior = before.articles.find(article => article.date === date), next = after.articles.find(article => article.date === date)
   requireGate(prior && next?.status === 'accepted' && next.review.state === 'verified')
   assertActionSnapshotStateIntegrity(after, next)
-  requireGate(same(next.reviewCycle, prior.reviewCycle) && same(next.draftCandidates?.map(({ candidateId, payload }) => ({ candidateId, payload })), prior.draftCandidates?.map(({ candidateId, payload }) => ({ candidateId, payload }))))
+  requireGate(same(next.reviewCycle, binding.grant.reviewCycle) && same(next.draftCandidates?.map(({ candidateId, payload }) => ({ candidateId, payload })), prior.draftCandidates?.map(({ candidateId, payload }) => ({ candidateId, payload }))))
   requireGate(same(after.baseline, before.baseline) && same(after.articles.filter(article => article.date !== date), before.articles.filter(article => article.date !== date)))
   const beforeSplit = splitActionRegistry(before), afterSplit = splitActionRegistry(after)
   requireGate(same(afterSplit.baseline, beforeSplit.baseline) && same(afterSplit.files.filter(file => file.date !== date), beforeSplit.files.filter(file => file.date !== date)), 'proposal-boundary')

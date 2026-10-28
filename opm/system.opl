@@ -445,6 +445,7 @@ Candidate Association Diagnostic exhibits Review Attempt. [src: src/review-actio
 Held Action Reviewing requires Accepted Article. [src: scripts/review-held-actions.ts]
 Held Action Reviewing requires Pending Original Candidates. [src: scripts/review-held-actions.ts]
 Held Action Reviewing requires Reviewed Owner Grant. [src: scripts/review-held-actions.ts]
+Held Action Reviewing requires Action Review Cycle. [src: scripts/review-held-actions.ts]
 Held Action Reviewing requires Operation Reservation. [src: scripts/review-held-actions.ts]
 Held Action Reviewing yields Unmerged Dated Proposal. [src: scripts/review-held-actions.ts]
 Held Action Reviewing yields Bounded Operation Receipt. [src: scripts/review-held-actions.ts]
