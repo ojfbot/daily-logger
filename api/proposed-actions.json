@@ -130,5 +130,71 @@
     "includeInIndex": false,
     "dispatchable": false,
     "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "91d37fd33b251756518b80e3b3c57d7324f3cf157f6ac6e25f1e1a0bef54db62",
+    "command": "/pipeline run --action-review --date 2026-10-22 --pr 421",
+    "description": "Trigger the October 22 independent review pipeline run against PR #421. This PR is unblocked by the 256k token default (#443) and Accepted/action-review-pending state (#444) shipped this window.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-25",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "206b4b0924b33870f46e8a7974c5eeccb5f44f2a8f879cc7063b4eeece5a1a5b",
+    "command": "/pipeline run --action-review --date 2026-10-21 --suggestions-only",
+    "description": "Run the separately authorized action-review pass for the three October 21 suggestions currently sitting in Needs review. These are not yet in the 83-item open registry and will not be until this pass completes.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-25",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "f5a4a235ff34beed764280ce825ee358c72b19994423ee70684cd4026863d349",
+    "command": "/issue comment 386 --note 'progressive-retrieval blocker: integration test coverage for retrieval path at 907e490 — scope test additions before next token ceiling is hit'",
+    "description": "Record the specific blocker for the unadopted progressive-retrieval trial so issue #386 has an actionable next step rather than an open-ended 'remaining scope' label.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-25",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "1f5ff2f3fcc4de85d1e0dcd1dfe28ae56f26bc87d6523c06f4050442b9b5ea53",
+    "command": "/review-draft-status daily-logger #421 #433",
+    "description": "Check whether model passes on the two oldest open review drafts are running, queued, or stalled. Four days without promotion on #421 is long enough to distinguish queue depth from pipeline failure. Report pass state and receipt delivery status for both.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-26",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The review result exceeded the saved action-state limit. These suggestions still need review."
+  },
+  {
+    "id": "d2c28f6f0e9d8083e6834cc9a0523ea009b9c4806e321a93ab93decff10859c2",
+    "command": "/adr-status act-2026-07-31-adr-61a759 act-2026-04-07-roadmap-6f4599",
+    "description": "Confirm whether these two capture-agent blocking ADRs have been drafted (and are awaiting review) or have not been written yet. A six-month-old unresolved codegen ADR and a seven-month-old Frame OS registration item need an explicit state, owner, and decision deadline — not just a reference in a stall notice.",
+    "repo": "capture-agent",
+    "sourceDate": "2026-10-26",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The review result exceeded the saved action-state limit. These suggestions still need review."
+  },
+  {
+    "id": "1dc2f8411b6e03f3227bd8db0cf5962274793e58b64dda113f214f4ee63526c5",
+    "command": "/merge morning-cockpit #60",
+    "description": "Stale docs and comments cleanup validated by Claude Opus on October 21. Technical validation is complete; the only remaining gate is human authorization. Five days open with no merge — if there is no objection, merge it.",
+    "repo": "morning-cockpit",
+    "sourceDate": "2026-10-26",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The review result exceeded the saved action-state limit. These suggestions still need review."
   }
 ]

@@ -1,5 +1,352 @@
 [
   {
+    "date": "2026-10-28",
+    "title": "October 26 cleared: 18 PRs in one session complete the editorial train, storage-cap patch, and held-action recovery",
+    "summary": "Eighteen PRs merged in a single session completed October 26's full correction-acceptance-review train while a storage-cap patch and held-action recovery framework resolved the 64 KiB overflow that had blocked the cycle.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 28,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Pack generated coverage as reversible tuple rows when the dated-file cap is exceeded",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Derive hidden-row evidence requests from the same normalised article status as selection and validation",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Grant the accepted article a one-use revision cycle rather than a generation cycle when a pending revision exists",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Factor repeated generated metadata in the model view without discarding authored evidence",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Record bounded rule, stage, and attempt diagnostics on candidate validation failures",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "02:12Z",
+        "occurrence": 1,
+        "precision": "minute",
+        "at": "2026-10-28T02:12:52.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "452",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/452"
+        }
+      },
+      {
+        "text": "2026-10-28T01:06:59Z",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-28T01:06:59.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-10-28T01:06:59Z"
+        }
+      },
+      {
+        "text": "02:12Z–04:41Z",
+        "occurrence": 0,
+        "kind": "interval",
+        "start": {
+          "text": "02:12Z",
+          "precision": "minute",
+          "certainty": "exact",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "missing-date"
+          }
+        },
+        "end": {
+          "text": "04:41Z",
+          "precision": "minute",
+          "certainty": "exact",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "missing-date"
+          }
+        },
+        "relation": "unestablished"
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "450",
+          "url": "https://github.com/ojfbot/daily-logger/pull/450"
+        },
+        "at": "2026-10-27T16:54:58.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "466",
+          "url": "https://github.com/ojfbot/daily-logger/pull/466"
+        },
+        "at": "2026-10-27T15:02:03.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "467",
+          "url": "https://github.com/ojfbot/daily-logger/pull/467"
+        },
+        "at": "2026-10-27T16:59:11.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "468",
+          "url": "https://github.com/ojfbot/daily-logger/pull/468"
+        },
+        "at": "2026-10-27T17:11:05.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "469",
+          "url": "https://github.com/ojfbot/daily-logger/pull/469"
+        },
+        "at": "2026-10-27T17:18:33.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "470",
+          "url": "https://github.com/ojfbot/daily-logger/pull/470"
+        },
+        "at": "2026-10-27T18:23:27.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "471",
+          "url": "https://github.com/ojfbot/daily-logger/pull/471"
+        },
+        "at": "2026-10-27T18:31:44.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "472",
+          "url": "https://github.com/ojfbot/daily-logger/pull/472"
+        },
+        "at": "2026-10-27T20:34:25.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "473",
+          "url": "https://github.com/ojfbot/daily-logger/pull/473"
+        },
+        "at": "2026-10-27T21:08:12.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "474",
+          "url": "https://github.com/ojfbot/daily-logger/pull/474"
+        },
+        "at": "2026-10-27T21:14:09.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "416",
+          "url": "https://github.com/ojfbot/daily-logger/pull/416"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "452",
+          "url": "https://github.com/ojfbot/daily-logger/pull/452"
+        },
+        "at": "2026-10-28T02:12:52.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "476",
+          "url": "https://github.com/ojfbot/daily-logger/pull/476"
+        },
+        "at": "2026-10-28T02:40:41.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "478",
+          "url": "https://github.com/ojfbot/daily-logger/pull/478"
+        },
+        "at": "2026-10-28T03:13:45.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "480",
+          "url": "https://github.com/ojfbot/daily-logger/pull/480"
+        },
+        "at": "2026-10-28T03:30:59.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "481",
+          "url": "https://github.com/ojfbot/daily-logger/pull/481"
+        },
+        "at": "2026-10-28T03:42:42.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "482",
+          "url": "https://github.com/ojfbot/daily-logger/pull/482"
+        },
+        "at": "2026-10-28T03:54:39.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "483",
+          "url": "https://github.com/ojfbot/daily-logger/pull/483"
+        },
+        "at": "2026-10-28T04:34:05.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "484",
+          "url": "https://github.com/ojfbot/daily-logger/pull/484"
+        },
+        "at": "2026-10-28T04:41:39.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-10-28T15:22:56.125Z",
+        "runId": "40715129541",
+        "runNumber": 276,
+        "runAttempt": 1,
+        "event": "schedule",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/40715129541",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "91a90f04695323b039a11729cc3a51f083bf17ac",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-10-28T15:21:34.000Z",
+          "startedAt": "2026-10-28T15:21:34.000Z",
+          "expectedAt": "2026-10-28T08:30:00.000Z",
+          "dispatchDelaySeconds": 24694,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v5-2026-10-20-local-window-single-recommendation",
+          "promptSha256": "4d0913bc1df4f1496367ed05ac8939fc955ce0da56df65e5ecc8e67232c4e342"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.1",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-27",
     "title": "Clearing the October backlog: 19 PRs merged as three articles complete the editorial train",
     "summary": "Nineteen PRs merged across daily-logger, core, and workstation-yuri, completing the full editorial correction-and-acceptance trains for October 22, 23, and 24 articles.",
@@ -382,8 +729,8 @@
     "commitCount": 1,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
-    "outcome": "edited",
+    "status": "accepted",
+    "outcome": "accepted",
     "decisions": [
       {
         "title": "Completed reviews carry registered findings and source-pinned bindings",
@@ -500,8 +847,8 @@
   },
   {
     "date": "2026-10-25",
-    "title": "October 21 acceptance finally lands — and the test suite learns to stay out of live state",
-    "summary": "Eighteen daily-logger commits across seven merged PRs closed the October 21 acceptance campaign and hardened test fixtures against live article state mutations.",
+    "title": "October 21 article is accepted with three suggestions still awaiting review",
+    "summary": "Eighteen daily-logger commits accompanied seven Saturday merges that separated article acceptance from pending action review and isolated historical test fixtures.",
     "tags": [
       {
         "name": "daily-logger",
@@ -542,62 +889,35 @@
     "commitCount": 18,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "accepted",
     "decisions": [
       {
-        "title": "Pin historical test fixtures to exact commit SHAs, not live article state",
+        "title": "Pin historical test inputs while testing current code",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Introduce Accepted/action-review-pending as a first-class article state",
+        "title": "Accept a completed article while keeping unverified suggestions held",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Raise the action-review default context limit to 256k tokens",
+        "title": "Raise the default token budget without treating headroom as review success",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Register the final October 21 review outcome as a separate PR",
+        "title": "Publish the final review against the exact accepted article source",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       }
     ],
     "actions": [],
-    "timeReferences": [
-      {
-        "text": "17:56 UTC",
-        "occurrence": 0,
-        "precision": "minute",
-        "at": "2026-10-24T17:56:27.000Z",
-        "evidence": {
-          "kind": "github-pull-request",
-          "repo": "ojfbot/daily-logger",
-          "ref": "447",
-          "event": "merged",
-          "url": "https://github.com/ojfbot/daily-logger/pull/447"
-        }
-      },
-      {
-        "text": "20:26 UTC",
-        "occurrence": 0,
-        "precision": "minute",
-        "at": "2026-10-24T20:26:38.000Z",
-        "evidence": {
-          "kind": "github-pull-request",
-          "repo": "ojfbot/daily-logger",
-          "ref": "442",
-          "event": "merged",
-          "url": "https://github.com/ojfbot/daily-logger/pull/442"
-        }
-      }
-    ],
     "shipmentTimes": [
       {
         "status": "available",
