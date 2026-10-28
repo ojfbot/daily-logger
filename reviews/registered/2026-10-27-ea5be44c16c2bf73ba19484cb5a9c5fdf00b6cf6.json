@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261027-ea5be44c16c2",
+  "article": {
+    "date": "2026-10-27",
+    "sourceCommitSha": "ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6",
+    "blobSha": "baae401dd804458021bbf6bf3dc91e43328a8173"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-28T10:34:41Z",
+  "scope": "Final visible draft, deployed JSON and rendered link parity, exact article/action blobs, correction-train chronology, held-action state, source-byte versus token claims, command and owner-gate surfaces, and current review discovery. Read-only review; no article acceptance, action admission, workflow, runtime, merge, or scheduling authority.",
+  "fullRecordBlobSha": "3289a3c40fb3c286a9273b96bef0cdfd2c562dc1",
+  "fullRecordPath": "reviews/articles/2026-10-27-ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The simultaneous three-train stall is invented",
+      "location": "Line 11: PR #456 and PR #462 allegedly stalled all three trains simultaneously.",
+      "explanation": "PR #456 records an October 22 action-decision boundary. October 22 acceptance merged at 02:19 UTC and October 23 acceptance merged at 05:36 UTC, while the diagnostic display repair #462 did not merge until 06:22 UTC and changed no article or queue data. The primary chronology cannot support one simultaneous blocker across all three trains.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/456",
+        "https://github.com/ojfbot/daily-logger/pull/454",
+        "https://github.com/ojfbot/daily-logger/pull/460",
+        "https://github.com/ojfbot/daily-logger/pull/462"
+      ],
+      "correction": "Report #456 as an October 22 action-decision repair and #462 as an October 23 current-request display repair. Preserve their separate chronology and remove the three-train causal claim.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "October 24 retained three Needs review suggestions",
+      "location": "Lines 46 and 73: no held-action step fired because October 24 suggestions were not in Needs review.",
+      "explanation": "The native acceptance receipt records actionReview pending, evidence-required, and three held candidate IDs. The accepted-source review repeats that exactly three suggestions remain Needs review and non-dispatchable.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/464#issuecomment-6435565425",
+        "https://github.com/ojfbot/daily-logger/pull/465"
+      ],
+      "correction": "State that October 24 completed article-only acceptance with three held suggestions. No separate held-action run occurred; do not infer an empty held set.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Helpdesk check-ins are linked as nonexistent GitHub pull requests",
+      "location": "Lines 64 and 97: check-ins #52 and #53 link to workstation-yuri pull requests 52 and 53.",
+      "explanation": "Workstation-yuri PR #3 describes #52 and #53 as Helpdesk/Mini check-ins. The rendered /pull/52 and /pull/53 targets do not resolve to GitHub records, so the article manufactures repository pull-request identities for non-PR observations.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/workstation-yuri/pull/3",
+        "https://github.com/ojfbot/daily-logger/blob/ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6/_articles/2026-10-27.md#L62-L64"
+      ],
+      "correction": "Identify #52 and #53 as Helpdesk check-in identities. Link an actual durable check-in receipt if public; otherwise attribute the observation to PR #3 without manufacturing GitHub PR links or merge controls.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "A source-byte hold is turned into a token-limit prediction",
+      "location": "Lines 107 and 123: 250,399 bytes against a 131,072-byte source limit becomes a claim that the token limit will be hit in production.",
+      "explanation": "Issue #386 explicitly says byte limits do not prove token-window fit. The October 23 receipt records the 250,399-byte source hold before model contact and says token and verifier fit were not tested.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/386",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6434736122"
+      ],
+      "correction": "Describe a per-source byte-limit hold before model entry. Keep tokenizer, model-window, output-reserve, and future-case fit unknown.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Suggested-action commands are not executable interfaces",
+      "location": "Line 119: /review-draft merge, /ground-facts, and /audit-hooks are presented as commands.",
+      "explanation": "The pinned workflow index exposes no such command surfaces. Later source-bound custody explicitly calls the original payloads unsupported commands retained for audit, not executable recommendations.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6/docs/daily-cycle.md",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6448626429"
+      ],
+      "correction": "Preserve candidate IDs and payload text as held historical evidence, label the commands unsupported and non-dispatchable, and name the real supervised PR-review or owner-decision route.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "The action card invents cross-date and sole-blocker prerequisites",
+      "location": "Lines 103 and 119-121: PR #452 cannot advance until #450 merges, and a manual ground-facts check is the only blocker for core #572.",
+      "explanation": "PRs #450 and #452 are independent source-pinned review publications; neither establishes a cross-date readiness dependency. Core #572 already records fact/provenance contract checks, a separate independent review, bounded pilot limits, and a broader canonical-review-before-adoption gate.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/450",
+        "https://github.com/ojfbot/daily-logger/pull/452",
+        "https://github.com/ojfbot/core/pull/572"
+      ],
+      "correction": "Treat #450 and #452 as independently supervised records; ordering is an operator preference unless separately decided. Describe #572 as draft pending canonical review/adoption with bounded pilot limits, not a nonexistent command or sole manual fact check.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Morning Cockpit #60's owner gate is erased",
+      "location": "Lines 109 and 124: PR #60 has passed review and has no documented blocker.",
+      "explanation": "The source-current #386 receipt says Cockpit #60 remains under owner #57 gates and is not merge-authorized by the article. Issue #57 remains open with explicit owner decisions and unchecked acceptance criteria. PR #60 contains a generated validation statement, not an owner merge disposition.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6434736122",
+        "https://github.com/ojfbot/morning-cockpit/issues/57",
+        "https://github.com/ojfbot/morning-cockpit/pull/60"
+      ],
+      "correction": "Report #60 as awaiting owner disposition under the retained #57 contract boundary. Do not translate generated validation into merge readiness or absence of blockers.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The Helpdesk replay observation lacks an independently accessible receipt",
+      "location": "Lines 64 and 97: check-in #53 replay is called confirmation that the Helpdesk service is live and functional.",
+      "explanation": "Workstation-yuri PR #3 reports the observation, but the article's #52/#53 links are nonexistent GitHub pull requests and no independently accessible check-in receipt is linked from the article.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/workstation-yuri/pull/3",
+        "https://github.com/ojfbot/daily-logger/blob/ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6/_articles/2026-10-27.md#L62-L64"
+      ],
+      "correction": "Attribute the runtime statement to PR #3 and label independent replay verification unavailable, or link a durable check-in record binding observation time, service revision, and replay result.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
