@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "approvedBy": "ojfbot",
+  "authorizationId": "4b632709-2c58-4463-b0b3-a736aae5bfe3",
+  "authorizationReference": "https://github.com/ojfbot/daily-logger/pull/483#issuecomment-6460681701",
+  "operationId": "027dccff-8042-48af-a70b-68a5557d6fab",
+  "date": "2026-10-26",
+  "articleBlob": "d4b5bdb7b57abc34ee926ebac825aed1ef180e8b",
+  "actionBlob": "e851078d1a410ed03ac2f7ca09b6b658dc3d44a1",
+  "registryRevision": "468f1691dc4d99cc512be4f0fc5dfe9d80fa802d682482adc8ff7fc8f58fc777",
+  "policyFingerprint": "8cd079bd48f1cec9e9a86dcdbef0e74fee289b80114338659d8e8682076ea1ce",
+  "reviewCycle": {
+    "phase": "generation"
+  },
+  "trains": 1,
+  "limits": {
+    "proposer": "claude-sonnet-4-6",
+    "verifier": "claude-opus-4-6",
+    "tokenLimit": 256000,
+    "outputReserve": 12000,
+    "envelopeBytes": 655360,
+    "sharedRepairs": 1,
+    "sdkRetries": 0
+  },
+  "output": "unmerged-dated-proposal-with-selected-citations"
+}
