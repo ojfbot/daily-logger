@@ -5,7 +5,9 @@ import { mkdtempSync, readFileSync, writeFileSync, renameSync, existsSync, rmSyn
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, it, vi } from 'vitest'
+import { z } from 'zod'
 import { ActionRegistrySchema, ACTIONS_START, readActionRegistry, registryBytes, registryRevision, writeActionRegistry, setActionInclusion, rebindArticleSnapshot, renderArticleActions, splitActionRegistry, articleActionFileBytes, articleActionFileContractBytes, ArticleActionFileSchema, managedArticleDigest, projectRegistry, type ActionRegistry } from '../action-registry.js'
+import { isVerifiedActionOutputStorageLimit } from '../review-actions.js'
 
 import { writeActionStore } from './action-store-fixture.js'
 
@@ -126,6 +128,19 @@ it('keeps small dated files pretty and uses the same lossless bounded representa
   expect(node).toBe(JSON.stringify(parsed) + '\n')
   expect(articleActionFileBytes(JSON.parse(node))).toBe(node)
   file.snapshot.rejected[0].description += 'x'
+  const oversized = ArticleActionFileSchema.safeParse(file)
+  expect(oversized.success).toBe(false)
+  if (!oversized.success) expect(oversized.error.issues).toEqual([expect.objectContaining({ code: 'custom', params: { kind: 'article-action-file-size', date: '2030-01-01', bytes: 65537 } })])
   expect(() => articleActionFileBytes(file)).toThrow(/64 KiB/)
   expect(() => articleActionFileContractBytes(file)).toThrow(/64 KiB/)
+})
+
+it('does not classify a foreign-date size error or an untyped lookalike as the current reviewed output hold', () => {
+  const foreign = propose('2030-01-02')
+  foreign.articles[0].rejected = [{ description: 'x'.repeat(65 * 1024), reason: 'Foreign fixture state.' }]
+  let failure: unknown
+  try { propose('2030-01-01', foreign) } catch (error) { failure = error }
+  expect(failure).toBeInstanceOf(z.ZodError)
+  expect(isVerifiedActionOutputStorageLimit(failure)).toBe(false)
+  expect(isVerifiedActionOutputStorageLimit(new z.ZodError([{ code: 'custom', message: 'Article action state exceeds 64 KiB', path: [] }]))).toBe(false)
 })

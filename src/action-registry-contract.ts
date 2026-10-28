@@ -386,9 +386,10 @@ export const DraftRecommendationContextSchema = z.discriminatedUnion('kind', [
 export type DraftRecommendationContext = z.infer<typeof DraftRecommendationContextSchema>
 export type DraftCandidateIdentity = (payload: DraftActionCandidatePayload, ordinal: number) => string
 
+export const ArticleOnlyFailureKindSchema = z.enum(['invalid-output', 'evidence-required', 'output-storage-limit'])
 export const ArticleOnlyAcceptanceSchema = z.object({
   kind: z.literal('article-only'), inputRoundId: digest, inputRegistrySha256: digest,
-  failureKind: z.enum(['invalid-output', 'evidence-required']),
+  failureKind: ArticleOnlyFailureKindSchema,
   evidenceRequest: ActionEvidenceRequestReceiptSchema.optional(),
   sources: z.array(z.object({ id: z.string().min(1).max(512), locator: z.string().max(2048), sha256: digest }).strict()).max(64),
   rawContentRetained: z.literal(false),
@@ -405,7 +406,7 @@ export const ArticleOnlyAcceptanceSchema = z.object({
 export type ArticleOnlyAcceptance = z.infer<typeof ArticleOnlyAcceptanceSchema>
 export const editorialActionReviewOutcomeSchema = z.discriminatedUnion('state', [
   z.object({ state: z.literal('verified') }).strict(),
-  z.object({ state: z.literal('pending'), failureKind: z.enum(['invalid-output', 'evidence-required']), inputRegistrySha256: digest, heldCandidateIds: z.array(digest).max(5) }).strict(),
+  z.object({ state: z.literal('pending'), failureKind: ArticleOnlyFailureKindSchema, inputRegistrySha256: digest, heldCandidateIds: z.array(digest).max(5) }).strict(),
 ])
 
 function createArticleActionSchema(candidateIdentity?: DraftCandidateIdentity) {
@@ -520,7 +521,8 @@ function createArticleActionFileSchema(ArticleActionSchema: ReturnType<typeof cr
     decisions: z.array(z.object({ key: z.string(), decision: ActionDecisionSchema }).strict()),
     snapshot: ArticleActionSchema,
   }).strict().superRefine((file, context) => {
-    if (new TextEncoder().encode(JSON.stringify(file)).length > ACTION_FILE_LIMIT) context.addIssue({ code: 'custom', message: 'Article action state exceeds 64 KiB' })
+    const compactBytes = new TextEncoder().encode(JSON.stringify(file) + '\n').length
+    if (compactBytes > ACTION_FILE_LIMIT) context.addIssue({ code: 'custom', message: 'Article action state exceeds 64 KiB', params: { kind: 'article-action-file-size', date: file.date, bytes: compactBytes } })
     if (file.snapshot.date !== file.date || file.decisions.some(item => item.decision.articleDate !== file.date) || file.suggestions.some(item => item.origin !== 'suggested' || item.introducedBy !== file.date)) context.addIssue({ code: 'custom', message: 'Article action file crosses its date boundary' })
     for (const message of actionAdmissionErrors(file.suggestions)) context.addIssue({ code: 'custom', message })
   })

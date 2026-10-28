@@ -53,8 +53,14 @@ independent verification; accepting the article supplies no action verdict.
 
 An incomplete review retains existing source custody and fresh source locators
 and digests, with an explicit indication that fresh raw content was not retained.
-It does not upload raw evidence. Unknown provider, transport, storage, integrity,
-or concurrent-write failures still stop acceptance. See `scripts/reconcile-actions.ts`,
+It does not upload raw evidence. One additional first-acceptance case is allowed:
+after both model responses pass their native review path, the finalized action
+state for that same date may exceed the unchanged 64 KiB dated-file limit. A
+typed, current-date size failure then accepts the article with its original
+suggestions held as **Needs review**; it does not save the oversized result or
+claim an action verdict. Without explicit article-only completion, that size
+failure still blocks. Provider, transport, other storage, integrity, and
+concurrent-write failures still stop acceptance. See `scripts/reconcile-actions.ts`,
 `src/action-registry.ts`, and `shared/editorial-action-proof.ts` for the completion
 boundary and its proof. Surfacing held work is not a claim that unattended
 next-day recovery or queue execution has been implemented.
