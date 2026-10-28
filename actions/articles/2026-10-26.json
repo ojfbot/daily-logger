@@ -5,16 +5,155 @@
   "decisions": [],
   "snapshot": {
     "date": "2026-10-26",
-    "status": "draft",
+    "status": "accepted",
     "review": {
       "state": "pending",
-      "reason": "Exact corrected prose rebound through native pending data preparation; original candidates remain awaiting review."
+      "reason": "The review result exceeded the saved action-state limit. These suggestions still need review.",
+      "articleAcceptance": {
+        "kind": "article-only",
+        "inputRoundId": "6b92a40f48552dffdaa2b6c691e547964a8c1e229e4e54fe3f2405b97f91df8e",
+        "inputRegistrySha256": "ba04a7e22a60bda98cde8e4a0d8f2628d7475d758eb543b90e8c9d6cefdcdb64",
+        "failureKind": "output-storage-limit",
+        "sources": [
+          {
+            "id": "article@8aca16a0625125cfeadc137b02f8f35310300269c254d2423dd2387feff6fa67",
+            "locator": "current revised article",
+            "sha256": "8aca16a0625125cfeadc137b02f8f35310300269c254d2423dd2387feff6fa67"
+          },
+          {
+            "id": "operator@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "locator": "editorial feedback",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "id": "repo:ROADMAP.md@8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30",
+            "locator": "ROADMAP.md",
+            "sha256": "8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30"
+          },
+          {
+            "id": "repo:AGENTS.md@fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618",
+            "locator": "AGENTS.md",
+            "sha256": "fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618"
+          },
+          {
+            "id": "repo:CLAUDE.md@a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2",
+            "locator": "CLAUDE.md",
+            "sha256": "a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2"
+          },
+          {
+            "id": "repo:opm/system.opl@8b80d9ce36f07c4e9e0f6f6aa79d598370e499d7fa86dd6f67a3f4b7ed7dd135",
+            "locator": "opm/system.opl",
+            "sha256": "8b80d9ce36f07c4e9e0f6f6aa79d598370e499d7fa86dd6f67a3f4b7ed7dd135"
+          },
+          {
+            "id": "review:reviews/articles/2026-10-26-acbfc2d7c204d9a706f9143f063cb6413cfb8c6c.md@cdcaf07950172b4242dc5987ce8249b894d9aebc630a9c0059f066baf1828a69",
+            "locator": "reviews/articles/2026-10-26-acbfc2d7c204d9a706f9143f063cb6413cfb8c6c.md",
+            "sha256": "cdcaf07950172b4242dc5987ce8249b894d9aebc630a9c0059f066baf1828a69"
+          },
+          {
+            "id": "review:reviews/articles/2026-10-26-d284d36587dee9dc5f06a04d82aa1b99789dc3c0.md@de0bb414e5f79e8fb3dec8a3715af4a63ee2438fcd2ab1501db1e3f28a8bc716",
+            "locator": "reviews/articles/2026-10-26-d284d36587dee9dc5f06a04d82aa1b99789dc3c0.md",
+            "sha256": "de0bb414e5f79e8fb3dec8a3715af4a63ee2438fcd2ab1501db1e3f28a8bc716"
+          },
+          {
+            "id": "review:reviews/registered/2026-10-26-acbfc2d7c204d9a706f9143f063cb6413cfb8c6c.json@2498846724513e4be4f4a6cb221bc691c3a0dd8625bccd75b8543d91c2dc3285",
+            "locator": "reviews/registered/2026-10-26-acbfc2d7c204d9a706f9143f063cb6413cfb8c6c.json",
+            "sha256": "2498846724513e4be4f4a6cb221bc691c3a0dd8625bccd75b8543d91c2dc3285"
+          },
+          {
+            "id": "review:reviews/registered/2026-10-26-d284d36587dee9dc5f06a04d82aa1b99789dc3c0.json@82ab89ef278852094779b22619b749bfd6fafc159e1448109b41cb55736faf2b",
+            "locator": "reviews/registered/2026-10-26-d284d36587dee9dc5f06a04d82aa1b99789dc3c0.json",
+            "sha256": "82ab89ef278852094779b22619b749bfd6fafc159e1448109b41cb55736faf2b"
+          },
+          {
+            "id": "github:daily-logger#421@3ea320cd2b4bd55e677a5398b8a9e0fec2a998a5268d1c97dfffdb9db5935321",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/421",
+            "sha256": "3ea320cd2b4bd55e677a5398b8a9e0fec2a998a5268d1c97dfffdb9db5935321"
+          },
+          {
+            "id": "github:daily-logger#433@def727b58d40223f12ec3837fc0432dc49b7ccc4c465e2aacde17b576cf20610",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/433",
+            "sha256": "def727b58d40223f12ec3837fc0432dc49b7ccc4c465e2aacde17b576cf20610"
+          },
+          {
+            "id": "github:morning-cockpit#57@5ead91592b53af5b8f330715639ab0faa3955584b5f1653e12e79b8cd66c1d2f",
+            "locator": "https://github.com/ojfbot/morning-cockpit/issues/57",
+            "sha256": "5ead91592b53af5b8f330715639ab0faa3955584b5f1653e12e79b8cd66c1d2f"
+          },
+          {
+            "id": "github:morning-cockpit#60@c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff",
+            "locator": "https://github.com/ojfbot/morning-cockpit/pull/60",
+            "sha256": "c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff"
+          },
+          {
+            "id": "github:core#570@301e1b10ebfcbc9b3a8e05d4b242e42b4bd7560362160b40a415abf224fe44d5",
+            "locator": "https://github.com/ojfbot/core/issues/570",
+            "sha256": "301e1b10ebfcbc9b3a8e05d4b242e42b4bd7560362160b40a415abf224fe44d5"
+          },
+          {
+            "id": "github:lego-village-pipeline#45@4a8b2d18ac1908e76a5ce3447b8f94b84548d38c68cb1d3f10fb716bd5d4abc5",
+            "locator": "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+            "sha256": "4a8b2d18ac1908e76a5ce3447b8f94b84548d38c68cb1d3f10fb716bd5d4abc5"
+          },
+          {
+            "id": "github:classic-space-venue#8@b9c78780f2b258cae27ed9f2cdf93d6954ce8b47e219d38128939392240dae94",
+            "locator": "https://github.com/ojfbot/classic-space-venue/pull/8",
+            "sha256": "b9c78780f2b258cae27ed9f2cdf93d6954ce8b47e219d38128939392240dae94"
+          },
+          {
+            "id": "github:core#542@0a3033811059c439223b76af4ca74bdc9cd3fe4b6d5054c2aa4760be611442fd",
+            "locator": "https://github.com/ojfbot/core/issues/542",
+            "sha256": "0a3033811059c439223b76af4ca74bdc9cd3fe4b6d5054c2aa4760be611442fd"
+          },
+          {
+            "id": "github:core#560@a0c9107a40bb68fdc2147316c3286bc9be7edee2fdc5345c240a9ea822d71eb2",
+            "locator": "https://github.com/ojfbot/core/issues/560",
+            "sha256": "a0c9107a40bb68fdc2147316c3286bc9be7edee2fdc5345c240a9ea822d71eb2"
+          },
+          {
+            "id": "github:core#544@6365c87efb85c54496d2832c9f81ff12aa2f85aa2987596c85114b2b731f44dd",
+            "locator": "https://github.com/ojfbot/core/issues/544",
+            "sha256": "6365c87efb85c54496d2832c9f81ff12aa2f85aa2987596c85114b2b731f44dd"
+          },
+          {
+            "id": "github:core#566@64d5a2cc243f99549ee8ed09711f18ce0b71f651736c90f2dd22dd6fe77bbf4f",
+            "locator": "https://github.com/ojfbot/core/issues/566",
+            "sha256": "64d5a2cc243f99549ee8ed09711f18ce0b71f651736c90f2dd22dd6fe77bbf4f"
+          },
+          {
+            "id": "github:core#564@c5c431b67b25a2d4a1ec767a2604cd7c1ccf38406d26019b1d0119e1e12edad5",
+            "locator": "https://github.com/ojfbot/core/issues/564",
+            "sha256": "c5c431b67b25a2d4a1ec767a2604cd7c1ccf38406d26019b1d0119e1e12edad5"
+          },
+          {
+            "id": "goal:core:decisions/northstar/l2-ojfbot.md@2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/4ca14bc3bda4a661201078e1aca18b4f75bbc8d1",
+            "sha256": "2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb"
+          },
+          {
+            "id": "goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82",
+            "sha256": "33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d"
+          },
+          {
+            "id": "goal:core:decisions/wayfinder/classic-space-agent-world.md@c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/eccbddc808757ffb2c8137e0130d269c6dcf11d3",
+            "sha256": "c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22"
+          },
+          {
+            "id": "goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82",
+            "sha256": "33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d"
+          }
+        ],
+        "rawContentRetained": false
+      }
     },
     "articleDigest": "c7f86813c23a7c51a71829baa2e34771032667b5be9051d71c35cfdc371d15c8",
-    "roundId": "6b92a40f48552dffdaa2b6c691e547964a8c1e229e4e54fe3f2405b97f91df8e",
+    "roundId": "b942c51819992f19b9d3f3d5d14be4821eee66741ef27de8dedfdf3406b0623d",
     "reviewCycle": {
       "phase": "revision",
-      "id": "pull-request:475:revision:ab9a466a836488612bd0be21a6304fb1e47d3c58c2674d8a5baaaa0fcd6e0dff"
+      "id": "pull-request:481:clean-acceptance"
     },
     "actionKeys": [],
     "draftCandidates": [
@@ -61,20 +200,30 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "coordinator",
+        "kind": "derived-refresh",
         "identity": "oct26-supervised-exact-output-data-binding",
-        "decision": "Rebind the existing independently checked source classifications to exact corrected output bcd3b716c6c38de2dcb7d3594a81176f37502ee1. Preserve original candidate/context custody and all owner gates; no semantic verdict, action admission, execution, closure or retry authority."
+        "decision": "Acceptance-status refresh preserves the prior evidence classification after proving the exact Draft input view; it grants no new review authority.",
+        "lineage": {
+          "kind": "acceptance-status-refresh",
+          "priorArticleStatus": "draft",
+          "articleStatus": "accepted",
+          "priorReviewCycle": {
+            "phase": "revision",
+            "id": "pull-request:475:revision:ab9a466a836488612bd0be21a6304fb1e47d3c58c2674d8a5baaaa0fcd6e0dff"
+          },
+          "priorRequirementsSha256": "659396fc2592f807c37ea14ca954cb5ed68736471705519b33b6fa2f50b3c282"
+        }
       },
       "articleDate": "2026-10-26",
       "articleDigest": "c7f86813c23a7c51a71829baa2e34771032667b5be9051d71c35cfdc371d15c8",
       "reviewCycle": {
         "phase": "revision",
-        "id": "pull-request:475:revision:ab9a466a836488612bd0be21a6304fb1e47d3c58c2674d8a5baaaa0fcd6e0dff"
+        "id": "pull-request:481:clean-acceptance"
       },
       "draftContextSha256": "8cbfc8d21103b95fc2ee998f593baef3700c46d393d01d566da6fdd49bd6df77",
       "candidatePayloadsSha256": "8b369b5dad1b30d1dac4115bf43c557ce548970d157ddcea5ba08b14bdda966b",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "9bafd43eb964d468c5799eec49ca7ce194552cc1dd18a0cb8bf2f554f90ec437",
+      "articleStatusesSha256": "0d2490e8a3c9a15602a86cccf08f32c8fab18c29bc6852f313fcb1839be61f2a",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [
         "act-2026-04-07-roadmap-6f4599",
@@ -164,7 +313,7 @@
       "kind": "retained",
       "markdown": "Editorial pipeline: Four daily-logger review drafts are open simultaneously (#421, #433, #449, #450). #421 is four days old. The pipeline has no documented SLA for draft age or escalation path. Whether #433 and #421 are stalled (model passes not running) or queued (running but slow) is not determinable from this window's evidence — this is an honest gap. The three Oct 21 candidate suggestions remain in Needs-review state with zero admissions after a completed pipeline run; the article acknowledges this is consistent with the designed authority gate but cannot confirm whether the admission criteria are calibrated correctly without reviewing candidate content against the rubric. morning-cockpit #60 is technically unblocked; the merge gate is human, owner not identified in available context. lego-village-pipeline #44 and #46 are both marked DO NOT MERGE and have been open since October 11 and 13 respectively — candidates for closure if they have served their analysis purpose. classic-space-venue #4 is load-bearing for the wayfinder cluster and core #567; it has the strongest downstream dependency of any open non-daily-logger PR. capture-agent: act-2026-07-31-adr-61a759 and act-2026-04-07-roadmap-6f4599 are named blockers with no owner, no deadline, and no confirmation of whether the ADRs have been drafted or are still unwritten. The co-pinning mechanism (blob hash + source commit SHA in PR description) should be formalized in an ADR before pipeline behavior is the only documentation of the invariant.\n\nSource-coordinate clarification (coordinator, 2026-10-27; no action authority): In the unchanged historical candidate and context, #421 means daily-logger #421 and #433 means daily-logger #433. The historical background references #449 and #450 mean daily-logger #449 and daily-logger #450; #46 means lego-village-pipeline #46. These coordinates clarify the preserved text, not its unverified claims or current approval. Owner/counterevidence for the unchanged morning-cockpit #60 suggestion includes morning-cockpit #57; the cleaner attribution does not establish that owner acceptance or merge authority exists. The two named canonical action IDs remain separate capture-agent ADR and gcgcca roadmap obligations, not two capture-agent ADRs."
     },
-    "stateDigest": "c0ffd9e42690b43d2c1291ae07f224e8e4929ad5490c74dee6cd19a70a3758e2",
+    "stateDigest": "d52019adf4d8a78609273595b9bc3e10046482c0e6724a5a98e6f4078603ea1d",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
