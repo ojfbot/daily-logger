@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { reconcileActions } from '../../scripts/reconcile-actions.js'
-import { ActionSourceCollection } from '../../src/action-evidence-view.js'
+import { ActionEvidenceVisibilityError, ActionSourceCollection } from '../../src/action-evidence-view.js'
 import { ActionRegistrySchema, actionStateDigest, articleCompletionOutcome, projectRegistry, readActionRegistry, readArticleStatuses, sha256, splitActionRegistry } from '../../src/action-registry.js'
 import { draftCandidateEvidenceBinding } from '../../src/action-evidence-selection.js'
 import { generationActionCycle } from '../../src/action-review-cycle.js'
@@ -82,6 +82,23 @@ it('accepts only the pristine article when a completed proposer and verifier exc
   expect(readFileSync(f.path, 'utf8')).toContain('The review result exceeded the saved action-state limit')
   expect(readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')).not.toContain('Verified fixture:')
   expect(articleCompletionOutcome(splitActionRegistry(f.registry).files[0], splitActionRegistry(reloaded).files[0])).toMatchObject({ state: 'pending', failureKind: 'output-storage-limit' })
+})
+
+it('retains an exact current evidence request when an Accepted-input model cites a hidden source row', async () => {
+  const f = setup(), fact = sources[0]
+  const result = await reconcileActions({ repoRoot: f.root, articlePath: `_articles/${date}.md`,
+    collectSources: () => new ActionSourceCollection(sources),
+    agents: { identity: { proposer: 'fixture-proposer', verifier: 'fixture-verifier' },
+      propose: async () => { throw new ActionEvidenceVisibilityError('Unseen or partial metadata line 2', {
+        viewRoundId: sha256('view'), policySha256: sha256('policy'), sourceId: fact.id, sourceLocator: fact.locator,
+        collectedSha256: sha256('collected'), fullContentSha256: sha256(fact.content), startLine: 2, endLine: 2 }) },
+      verify: async () => { throw new Error('Verifier must not run after a source-view request') } } })
+  const snapshot = readActionRegistry(f.root).articles[0]
+  expect(result).toMatchObject({ articleCompletion: 'accepted', actionReview: 'pending' })
+  expect(snapshot.review).toMatchObject({ state: 'pending', articleAcceptance: { failureKind: 'evidence-required', rawContentRetained: false,
+    evidenceRequest: { status: 'open', sourceKey: 'model-context', sourceId: fact.id } } })
+  expect(snapshot.review.articleAcceptance?.evidenceRequest?.actionKeys).toEqual(['article-feedback'])
+  expect(projectRegistry(readActionRegistry(f.root), readArticleStatuses(f.root)).proposed).toHaveLength(3)
 })
 
 it('keeps the dated Draft unchanged when storage overflow occurs outside explicit article-only completion', async () => {
