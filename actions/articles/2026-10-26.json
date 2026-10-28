@@ -10,10 +10,11 @@
       "state": "pending",
       "reason": "Ambiguous candidate target #421 for exact-command; explicit qualified evidence association required; review pending"
     },
-    "articleDigest": "522a5ba808e5378c90ee2a0e13baf0a9528a2233b4505e396fdc62dfedf4edb7",
-    "roundId": "6aef4e0b988a2c5b11817ba28762832f86d36e90d48f6cf2c429fd7afbb980db",
+    "articleDigest": "39cbf2735d13d2acc63f5b8c0eaad3015b3d9b50a557d3a416c95851cfc04766",
+    "roundId": "8036d03214a2c20083f3d0dc9b9d17a65c3d2a7749507f1c26b0269dcc1d3dbe",
     "reviewCycle": {
-      "phase": "generation"
+      "phase": "revision",
+      "id": "pull-request:475:revision:ab9a466a836488612bd0be21a6304fb1e47d3c58c2674d8a5baaaa0fcd6e0dff"
     },
     "actionKeys": [],
     "draftCandidates": [
