@@ -542,3 +542,8 @@ repair budget, queue history and raw-storage restrictions are unchanged.
 This entry records offline preparation, not publication, a provider attempt or
 a successful semantic action review. Fresh composition and independent review
 must establish the candidate's actual fit before a new model-run decision.
+
+## Deviations — October 26 editorial continuation (2026-10-27)
+
+- The normal editorial PR was expected to carry the revised Draft into acceptance, but its action review stayed pending and the accept-branch admission rejected that unverified registry change; preserve the hosted writer output and failed receipt, then publish only the independently checked corrected Draft and its native pending binding through an ordinary source/data PR before attempting the guarded acceptance review.
+- Regenerating the October 26 API entry was expected to touch only that date, but existing generated files also reflected older October 25 drift; carry only the October 26 entry update and leave the unrelated generated rows unchanged for a separate reconciliation.

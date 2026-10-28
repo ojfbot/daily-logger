@@ -8,12 +8,13 @@
     "status": "draft",
     "review": {
       "state": "pending",
-      "reason": "Ambiguous candidate target #421 for exact-command; explicit qualified evidence association required; review pending"
+      "reason": "Exact corrected prose rebound through native pending data preparation; original candidates remain awaiting review."
     },
-    "articleDigest": "522a5ba808e5378c90ee2a0e13baf0a9528a2233b4505e396fdc62dfedf4edb7",
-    "roundId": "6aef4e0b988a2c5b11817ba28762832f86d36e90d48f6cf2c429fd7afbb980db",
+    "articleDigest": "c7f86813c23a7c51a71829baa2e34771032667b5be9051d71c35cfdc371d15c8",
+    "roundId": "6b92a40f48552dffdaa2b6c691e547964a8c1e229e4e54fe3f2405b97f91df8e",
     "reviewCycle": {
-      "phase": "generation"
+      "phase": "revision",
+      "id": "pull-request:475:revision:ab9a466a836488612bd0be21a6304fb1e47d3c58c2674d8a5baaaa0fcd6e0dff"
     },
     "actionKeys": [],
     "draftCandidates": [
@@ -57,11 +58,113 @@
         }
       }
     ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "coordinator",
+        "identity": "oct26-supervised-exact-output-data-binding",
+        "decision": "Rebind the existing independently checked source classifications to exact corrected output bcd3b716c6c38de2dcb7d3594a81176f37502ee1. Preserve original candidate/context custody and all owner gates; no semantic verdict, action admission, execution, closure or retry authority."
+      },
+      "articleDate": "2026-10-26",
+      "articleDigest": "c7f86813c23a7c51a71829baa2e34771032667b5be9051d71c35cfdc371d15c8",
+      "reviewCycle": {
+        "phase": "revision",
+        "id": "pull-request:475:revision:ab9a466a836488612bd0be21a6304fb1e47d3c58c2674d8a5baaaa0fcd6e0dff"
+      },
+      "draftContextSha256": "8cbfc8d21103b95fc2ee998f593baef3700c46d393d01d566da6fdd49bd6df77",
+      "candidatePayloadsSha256": "8b369b5dad1b30d1dac4115bf43c557ce548970d157ddcea5ba08b14bdda966b",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "9bafd43eb964d468c5799eec49ca7ce194552cc1dd18a0cb8bf2f554f90ec437",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [
+        "act-2026-04-07-roadmap-6f4599",
+        "act-2026-07-31-adr-61a759"
+      ],
+      "actionStateSha256": "5ad5f7a5fea24ccd86ff146511a54514a37c75c7b17d625b79f214f84ef60494",
+      "candidates": [
+        {
+          "candidateId": "1f5ff2f3fcc4de85d1e0dcd1dfe28ae56f26bc87d6523c06f4050442b9b5ea53",
+          "payloadSha256": "87ebfadb4ad2f21609786f8b7d0661d462b130693ecc98f12759428ba2598c71",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#421",
+              "role": "target",
+              "reason": "Current source-pinned completed review lifecycle is required counterevidence to the historical outstanding-model-pass premise."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#433",
+              "role": "target",
+              "reason": "Current source-pinned completed review lifecycle is required counterevidence to the historical outstanding-model-pass premise."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "d2c28f6f0e9d8083e6834cc9a0523ea009b9c4806e321a93ab93decff10859c2",
+          "payloadSha256": "9155709a51fde564b93c5df4f8ff4378fb204d50a44c14f7c9a5652087e5d647",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "1dc2f8411b6e03f3227bd8db0cf5962274793e58b64dda113f214f4ee63526c5",
+          "payloadSha256": "ddd076cba9f5f0570347329bdab16c08a464485d7de30884a9a5799e984f5222",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "morning-cockpit#60",
+              "role": "target",
+              "reason": "The actual proposed cleanup and current lifecycle must be inspected; cleaner/model attribution grants no approval."
+            },
+            {
+              "classification": "required",
+              "reference": "morning-cockpit#57",
+              "role": "owner",
+              "reason": "Preserve the distinct contract/identity owner gates and counterevidence; this issue neither grants merge authority nor makes every docs-only cleanup blocked."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "context",
+          "reference": "classic-space-venue#4",
+          "reason": "Preserved historical review/research/design background for these three candidates. Its own owner/do-not-merge gates remain unchanged; it is not a universal action-review prerequisite."
+        },
+        {
+          "classification": "context",
+          "reference": "core#567",
+          "reason": "Preserved historical review/research/design background for these three candidates. Its own owner/do-not-merge gates remain unchanged; it is not a universal action-review prerequisite."
+        },
+        {
+          "classification": "context",
+          "reference": "daily-logger#449",
+          "reason": "Preserved historical review/research/design background for these three candidates. Its own owner/do-not-merge gates remain unchanged; it is not a universal action-review prerequisite."
+        },
+        {
+          "classification": "context",
+          "reference": "daily-logger#450",
+          "reason": "Preserved historical review/research/design background for these three candidates. Its own owner/do-not-merge gates remain unchanged; it is not a universal action-review prerequisite."
+        },
+        {
+          "classification": "context",
+          "reference": "lego-village-pipeline#44",
+          "reason": "Preserved historical review/research/design background for these three candidates. Its own owner/do-not-merge gates remain unchanged; it is not a universal action-review prerequisite."
+        },
+        {
+          "classification": "context",
+          "reference": "lego-village-pipeline#46",
+          "reason": "Preserved historical review/research/design background for these three candidates. Its own owner/do-not-merge gates remain unchanged; it is not a universal action-review prerequisite."
+        }
+      ]
+    },
     "draftContext": {
       "kind": "retained",
-      "markdown": "Editorial pipeline: Four daily-logger review drafts are open simultaneously (#421, #433, #449, #450). #421 is four days old. The pipeline has no documented SLA for draft age or escalation path. Whether #433 and #421 are stalled (model passes not running) or queued (running but slow) is not determinable from this window's evidence — this is an honest gap. The three Oct 21 candidate suggestions remain in Needs-review state with zero admissions after a completed pipeline run; the article acknowledges this is consistent with the designed authority gate but cannot confirm whether the admission criteria are calibrated correctly without reviewing candidate content against the rubric. morning-cockpit #60 is technically unblocked; the merge gate is human, owner not identified in available context. lego-village-pipeline #44 and #46 are both marked DO NOT MERGE and have been open since October 11 and 13 respectively — candidates for closure if they have served their analysis purpose. classic-space-venue #4 is load-bearing for the wayfinder cluster and core #567; it has the strongest downstream dependency of any open non-daily-logger PR. capture-agent: act-2026-07-31-adr-61a759 and act-2026-04-07-roadmap-6f4599 are named blockers with no owner, no deadline, and no confirmation of whether the ADRs have been drafted or are still unwritten. The co-pinning mechanism (blob hash + source commit SHA in PR description) should be formalized in an ADR before pipeline behavior is the only documentation of the invariant."
+      "markdown": "Editorial pipeline: Four daily-logger review drafts are open simultaneously (#421, #433, #449, #450). #421 is four days old. The pipeline has no documented SLA for draft age or escalation path. Whether #433 and #421 are stalled (model passes not running) or queued (running but slow) is not determinable from this window's evidence — this is an honest gap. The three Oct 21 candidate suggestions remain in Needs-review state with zero admissions after a completed pipeline run; the article acknowledges this is consistent with the designed authority gate but cannot confirm whether the admission criteria are calibrated correctly without reviewing candidate content against the rubric. morning-cockpit #60 is technically unblocked; the merge gate is human, owner not identified in available context. lego-village-pipeline #44 and #46 are both marked DO NOT MERGE and have been open since October 11 and 13 respectively — candidates for closure if they have served their analysis purpose. classic-space-venue #4 is load-bearing for the wayfinder cluster and core #567; it has the strongest downstream dependency of any open non-daily-logger PR. capture-agent: act-2026-07-31-adr-61a759 and act-2026-04-07-roadmap-6f4599 are named blockers with no owner, no deadline, and no confirmation of whether the ADRs have been drafted or are still unwritten. The co-pinning mechanism (blob hash + source commit SHA in PR description) should be formalized in an ADR before pipeline behavior is the only documentation of the invariant.\n\nSource-coordinate clarification (coordinator, 2026-10-27; no action authority): In the unchanged historical candidate and context, #421 means daily-logger #421 and #433 means daily-logger #433. The historical background references #449 and #450 mean daily-logger #449 and daily-logger #450; #46 means lego-village-pipeline #46. These coordinates clarify the preserved text, not its unverified claims or current approval. Owner/counterevidence for the unchanged morning-cockpit #60 suggestion includes morning-cockpit #57; the cleaner attribution does not establish that owner acceptance or merge authority exists. The two named canonical action IDs remain separate capture-agent ADR and gcgcca roadmap obligations, not two capture-agent ADRs."
     },
-    "stateDigest": "8665c199c9dfea92ff25921c39294aefe13dc356c976f7dbe7c472d4472185b3",
+    "stateDigest": "c0ffd9e42690b43d2c1291ae07f224e8e4929ad5490c74dee6cd19a70a3758e2",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",

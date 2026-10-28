@@ -344,8 +344,8 @@
   },
   {
     "date": "2026-10-26",
-    "title": "One commit, two draft reviews: what the editorial pipeline looks like at steady state",
-    "summary": "A single daily-logger commit published the October 25 article as the editorial pipeline opened two new independent review drafts, settling into its intended steady-state rhythm.",
+    "title": "One publication commit, with completed reviews awaiting editorial decisions",
+    "summary": "Sunday brought one publication commit and two completed review drafts. Their findings still needed editorial decisions; October 21 was accepted with its suggested actions held.",
     "tags": [
       {
         "name": "daily-logger",
@@ -383,21 +383,16 @@
     "activityType": "hardening",
     "schemaVersion": 1,
     "status": "draft",
+    "outcome": "edited",
     "decisions": [
       {
-        "title": "Independent review drafts open immediately after publication, not before",
+        "title": "Completed reviews carry registered findings and source-pinned bindings",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
       },
       {
-        "title": "Article blob and source commit hash are co-pinned at review-draft creation time",
-        "summary": "",
-        "repo": "daily-logger",
-        "relatedTags": []
-      },
-      {
-        "title": "Five-day acceptance campaign on October 21 is complete; action backlog is not settled",
+        "title": "October 21 accepted via PR #416; action backlog remains unsettled",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
@@ -486,6 +481,12 @@
           "model": "claude-sonnet-4-6",
           "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
           "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        },
+        {
+          "role": "revision",
+          "model": "claude-opus-4-6",
+          "promptVersion": "editorial-revision-v3-single-recommendation-surface",
+          "promptSha256": "0d2e9420133f8a5f5d59cf05c9488f8f65f6aa917eba7e315d45532dd2b45936"
         }
       ],
       "runtime": {
