@@ -8,9 +8,10 @@
   "articleBlob": "d4b5bdb7b57abc34ee926ebac825aed1ef180e8b",
   "actionBlob": "e851078d1a410ed03ac2f7ca09b6b658dc3d44a1",
   "registryRevision": "468f1691dc4d99cc512be4f0fc5dfe9d80fa802d682482adc8ff7fc8f58fc777",
-  "policyFingerprint": "8cd079bd48f1cec9e9a86dcdbef0e74fee289b80114338659d8e8682076ea1ce",
+  "policyFingerprint": "93d3175f867028415147c49d2b3c6207df594c08a916b32428b6f1dd6acc0adf",
   "reviewCycle": {
-    "phase": "generation"
+    "phase": "revision",
+    "id": "027dccff-8042-48af-a70b-68a5557d6fab"
   },
   "trains": 1,
   "limits": {
