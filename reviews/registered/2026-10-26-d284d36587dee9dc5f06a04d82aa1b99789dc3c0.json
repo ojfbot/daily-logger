@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-followup-20261026-d284d36587de",
+  "article": {
+    "date": "2026-10-26",
+    "sourceCommitSha": "d284d36587dee9dc5f06a04d82aa1b99789dc3c0",
+    "blobSha": "5819634e6d4a18975a4f82936ce4666877986741"
+  },
+  "reviewer": {
+    "name": "Codex \u2014 October 26 follow-up factual audit",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-28T01:59:29Z",
+  "scope": "Separate follow-up verification of morning-cockpit readiness, Classic Space Venue purpose and research priority, upstream dispatch-cause wording, source-date precision, and safe correction boundaries. Original review remains unchanged; no owner/execution/action or acceptance authority implied.",
+  "fullRecordBlobSha": "50104453d2b5f03ff8070cd5e172e636e92dc4a3",
+  "fullRecordPath": "reviews/articles/2026-10-26-d284d36587dee9dc5f06a04d82aa1b99789dc3c0.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "S1",
+      "classification": "unverified_claim",
+      "title": "Morning-cockpit60 technical readiness is inferred from an authored PR-body claim",
+      "location": "Roadmap paragraph and third suggested action; repeated retained draft context",
+      "explanation": "At head dd393cacfffd6b45ba2641153be744795f0921a0, PR body says Validated by Claude Opus. One build-test check succeeded October21T09:16:35Z; zero formal reviews and zero inline review comments. This supports attributed cleaner validation and passing CI, not an independent all-gates/approval assessment or technical safety against current main. Current GitHub mergeable clean is not semantic review proof.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/morning-cockpit/pull/60",
+        "https://github.com/ojfbot/morning-cockpit/actions/runs/39575549963/job/119140049933"
+      ],
+      "correction": "Say the cleaner reports Opus validation and its head CI passes; substantive owner-contract/changed-base review, required rules and authorized merge disposition remain to be checked. Do not claim only a human click remains or authorize merge through the article.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "S2",
+      "classification": "confirmed_error",
+      "title": "Classic Space Venue is mischaracterized as venue/event scheduling domain",
+      "location": "classic-space-venue8 paragraph",
+      "explanation": "Pre-cutoff canonical README and core decision map describe an ambient LEGO agent/task operations venue over fleet-runner, with simulated dev-host until read-projection producers exist. Timekeeping concepts are a proposed interface strand, not evidence this is an event scheduling app.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/classic-space-venue/blob/c3f1679f73d7b3c18cb0dbb8b971776af3acb75c/README.md",
+        "https://github.com/ojfbot/core/blob/21691bbe2518284360ec420aa89bb4111b3e1bb2/decisions/wayfinder/classic-space-agent-world.md"
+      ],
+      "correction": "Use the actual ambient agent/task observability purpose and preserve mock/live boundary; describe8 as provisional design/semantic/timekeeping evidence, no runtime or upstream contract authority.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "S3",
+      "classification": "unverified_claim",
+      "title": "Research serving links are inflated into hard dependency and highest urgency",
+      "location": "classic-space-venue4 paragraph and retained context",
+      "explanation": "PR4 says it serves core567 and through it other tickets, explicitly assigning no ticket decision, tool choice or venue design and reserving merge to James. Serving links do not establish every linked ticket is blocked by this PR, nor comparative fleet priority.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/classic-space-venue/pull/4"
+      ],
+      "correction": "Say the research informs the linked cluster with separate disposition/owner gates; omit highest-urgency/load-bearing blocker claim unless canonical dependency/priority evidence supports it.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "S4",
+      "classification": "unverified_claim",
+      "title": "Workflow-dispatch proves event/time, not the initiating fallback mechanism",
+      "location": "Timing correction proposed by existing C6; qualifier for source-backed rewrite, not a new claim that the original article named a fallback.",
+      "explanation": "Generator run40303807727 eventworkflow_dispatch and created/start2026-10-26T09:59:07Z are primary receipts; source frontmatter reports declared08:30Z and5347sdelay. PR451 merge10:08:26Z is primary. These establish late dispatch, not whether a particular local fallback or human initiated it. First public availability remains unproved.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/actions/runs/40303807727",
+        "https://github.com/ojfbot/daily-logger/pull/451"
+      ],
+      "correction": "Use late workflow-dispatch generation. Attribute a fallback mechanism only with a separate initiating dispatch receipt. Keep original452C6 historical text unchanged.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "S5",
+      "classification": "unverified_claim",
+      "title": "Action ages mix a refreshed July record with its older April predecessor",
+      "location": "capture-agent milestones and second candidate",
+      "explanation": "At article dateOct26, July31 is87days earlier and April7 is202days earlier. July codegen description references an older April7 ADR predecessor; two dates and actual different-repo registration record must not be conflated into six/seven-month dated-item ages. The older April7 codegen predecessor makes a blanket claim that the underlying ADR is only87days old unsafe; distinguish refreshed record age from inherited obligation age.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/acbfc2d7c204d9a706f9143f063cb6413cfb8c6c/actions/registry.json"
+      ],
+      "correction": "Use source dates or87/202days, and mention predecessor explicitly only if useful. Do not infer continuous blocking duration from record age alone.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}

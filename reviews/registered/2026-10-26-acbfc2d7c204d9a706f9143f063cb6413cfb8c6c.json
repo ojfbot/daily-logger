@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261026-acbfc2d7c204",
+  "article": {
+    "date": "2026-10-26",
+    "sourceCommitSha": "acbfc2d7c204d9a706f9143f063cb6413cfb8c6c",
+    "blobSha": "5819634e6d4a18975a4f82936ce4666877986741"
+  },
+  "reviewer": {
+    "name": "Codex — independent October 26 factual review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-26T14:13:09Z",
+  "scope": "Final visible draft, deployed JSON, exact article/action blobs, authenticated rendered prose and links, independent-review lifecycle and canonical binding, open-PR counts, October 21 acceptance provenance, action ownership, generator timing, executable next steps, and authority boundaries. Read-only review; no acceptance, action, workflow, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "128b88b08700258d88b24744cc794fd711227bb9",
+  "fullRecordPath": "reviews/articles/2026-10-26-acbfc2d7c204d9a706f9143f063cb6413cfb8c6c.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Completed independent reviews are described as unfinished model pipelines",
+      "location": "Independent-review decision, roadmap pulse, and first suggested action, lines 23–25, 45–51, and 75–78.",
+      "explanation": "PRs #421, #433, #449 and #450 already contain completed source-pinned review records, validations, open findings and agent handoffs. None exposes an outstanding proposer/verifier pass, receipt queue, readiness promotion or label transition. The creation gaps for #449 and #450 also contradict the claim that reviews open as soon as publication is visible.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/421",
+        "https://github.com/ojfbot/daily-logger/pull/433",
+        "https://github.com/ojfbot/daily-logger/pull/449",
+        "https://github.com/ojfbot/daily-logger/pull/450"
+      ],
+      "correction": "Describe these as completed proposed review records awaiting supervised finding disposition and a decision whether to request source corrections. Remove the model-pass, receipt-queue, promotion and stall narrative.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "PR descriptions are not the canonical review records",
+      "location": "Hash-pinning decision and draft context, lines 29–31 and 78.",
+      "explanation": "The service validates the registered JSON, article at its source commit, article blob and full-record blob, while treating the PR body as correspondence. The schema carries those pins in the registered record and defines no proposer/verifier pass identity.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/acbfc2d7c204d9a706f9143f063cb6413cfb8c6c/api/_lib/article-review-service.ts#L62-L101",
+        "https://github.com/ojfbot/daily-logger/blob/acbfc2d7c204d9a706f9143f063cb6413cfb8c6c/shared/article-review.ts#L20-L37"
+      ],
+      "correction": "Identify registered JSON plus verified full-record Markdown and article blob as the canonical binding. Treat the PR description only as a summary/correspondence surface.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Open draft and repository counts are wrong",
+      "location": "Roadmap pulse, line 43.",
+      "explanation": "The current inventory has eight drafts across three repositories: four daily-logger reviews, classic-space-venue #8, and LEGO #44–#46. Morning-cockpit #60 is open but not draft, so including its repository does not produce seven drafts across four repositories.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/421",
+        "https://github.com/ojfbot/daily-logger/pull/433",
+        "https://github.com/ojfbot/daily-logger/pull/449",
+        "https://github.com/ojfbot/daily-logger/pull/450",
+        "https://github.com/ojfbot/classic-space-venue/pull/8",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/45",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/46",
+        "https://github.com/ojfbot/morning-cockpit/pull/60"
+      ],
+      "correction": "Report eight draft PRs across three repositories, or ten open PRs across four repositories if counting the two non-drafts. Name the population explicitly.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "October 21 acceptance is attributed to the review-registration PR",
+      "location": "October 21 acceptance decision, lines 35–37.",
+      "explanation": "Acceptance PR #416 merged the Accepted article. PR #447 later registered the final review. The final record preserves a partial outcome with all three suggestions still Needs review, Opus not reached and no action admissions or closures; it measures 3 days, 2 hours, 53 minutes from initial review opening to acceptance.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/416",
+        "https://github.com/ojfbot/daily-logger/pull/447",
+        "https://github.com/ojfbot/daily-logger/blob/acbfc2d7c204d9a706f9143f063cb6413cfb8c6c/reviews/articles/2026-10-21-f89daaf67aa0c163ddc4f08f9cd2e81ce0954cfa.md"
+      ],
+      "correction": "Attribute acceptance to #416 and review registration to #447, retain the partial action outcome, and use the measured interval instead of a five-day acceptance claim.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "A gcgcca roadmap action is assigned to capture-agent",
+      "location": "Capture-agent milestones, draft context, and second suggested action, lines 67–68 and 75–78.",
+      "explanation": "The canonical registry assigns act-2026-07-31-adr-61a759 to capture-agent for the codegen ADR, but assigns act-2026-04-07-roadmap-6f4599 to gcgcca for its Module Federation remote at :3035. The latter is not a capture-agent ADR or milestone.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/acbfc2d7c204d9a706f9143f063cb6413cfb8c6c/actions/registry.json"
+      ],
+      "correction": "Keep the two records under their actual repositories and scopes; do not combine them into one capture-agent dependency or status command.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Steady-state framing hides a late fallback dispatch",
+      "location": "Title, summary, introduction, and What shipped, lines 3, 6, and 11–17.",
+      "explanation": "Run #271 was workflow_dispatch at 04:59:07 Chicago, 5,347 seconds after the declared 03:30 trigger. PR #451 merged at 05:08:26 Chicago. These receipts establish a late fallback-dispatch path and merge, not native scheduled creation or by-04:00 public availability.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/actions/runs/40303807727",
+        "https://github.com/ojfbot/daily-logger/pull/451"
+      ],
+      "correction": "Qualify the run as fallback-dispatched and separate declared trigger, actual start, merge and observed public availability. Do not use it as schedule steady-state evidence.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Proposed review-status and ADR-status commands do not exist",
+      "location": "Suggested actions, lines 75–78.",
+      "explanation": "Pinned scripts, workflows and source expose neither /review-draft-status nor /adr-status. The first asks about nonexistent outstanding review-model passes; the second joins differently owned canonical actions. Both candidates remain awaiting-review and are not admitted or dispatchable.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/acbfc2d7c204d9a706f9143f063cb6413cfb8c6c/package.json",
+        "https://github.com/ojfbot/daily-logger/tree/acbfc2d7c204d9a706f9143f063cb6413cfb8c6c/.github/workflows",
+        "https://github.com/ojfbot/daily-logger/tree/acbfc2d7c204d9a706f9143f063cb6413cfb8c6c/src"
+      ],
+      "correction": "Use plain source-backed recommendations on the real PR and action surfaces instead of invented command syntax.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Human-read ordering and a deliberate latency tradeoff are unproved",
+      "location": "Independent-review timing decision, lines 23–25.",
+      "explanation": "Publication and review PR timestamps establish ordering, but the checked sources do not authenticate the first human read or record a design decision choosing publish latency over review-before-publish integrity. The gaps before #449 and #450 opened leave human-read ordering unknown.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/449",
+        "https://github.com/ojfbot/daily-logger/pull/450",
+        "https://github.com/ojfbot/daily-logger/blob/acbfc2d7c204d9a706f9143f063cb6413cfb8c6c/docs/article-review.md"
+      ],
+      "correction": "Report only that publication preceded these independent-review PRs. Attribute human-read timing or a deliberate optimization only to a primary decision or authenticated receipt.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
