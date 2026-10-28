@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 98
+    "count": 99
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 84
+    "count": 85
   },
   {
     "name": "core",
@@ -17,17 +17,17 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 67
+    "count": 68
   },
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 41
+    "count": 42
   },
   {
     "name": "hardening",
     "type": "practice",
-    "count": 38
+    "count": 39
   },
   {
     "name": "module-federation",
@@ -45,14 +45,14 @@
     "count": 32
   },
   {
-    "name": "adr",
-    "type": "practice",
+    "name": "tooling-for-iteration",
+    "type": "concept",
     "count": 30
   },
   {
-    "name": "tooling-for-iteration",
-    "type": "concept",
-    "count": 29
+    "name": "adr",
+    "type": "practice",
+    "count": 30
   },
   {
     "name": "sprint",
@@ -70,14 +70,14 @@
     "count": 22
   },
   {
-    "name": "phase-1",
-    "type": "phase",
+    "name": "security-as-emergent-ux",
+    "type": "concept",
     "count": 20
   },
   {
-    "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 19
+    "name": "phase-1",
+    "type": "phase",
+    "count": 20
   },
   {
     "name": "verification-flagged",
@@ -90,14 +90,14 @@
     "count": 17
   },
   {
-    "name": "asset-foundry",
-    "type": "repo",
+    "name": "editorial-pipeline",
+    "type": "concept",
     "count": 15
   },
   {
-    "name": "editorial-pipeline",
-    "type": "concept",
-    "count": 14
+    "name": "asset-foundry",
+    "type": "repo",
+    "count": 15
   },
   {
     "name": "purefoy",
