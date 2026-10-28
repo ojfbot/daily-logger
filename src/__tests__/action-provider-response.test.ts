@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { fixtureEvidenceView } from './evidence-view-fixtures.js'
-import { ActionRegistrySchema, captureDraftActionCandidates, renderArticleActions } from '../action-registry.js'
+import { ActionEvidenceVisibilityError } from '../action-evidence-view.js'
+import { ActionRegistrySchema, captureDraftActionCandidates, renderArticleActions, sha256 } from '../action-registry.js'
 import { generationActionCycle } from '../action-review-cycle.js'
 import { ActionEvidenceRequestError, createActionEvidenceRequest } from '../action-evidence-retrieval.js'
 
@@ -12,7 +13,7 @@ vi.mock('@anthropic-ai/sdk', () => ({ default: class {
   constructor(options: unknown) { constructed(options) }
   messages = { create, countTokens }
 } }))
-import { actionProviderRequest, createActionAgents, reviewArticleActions, reviewProducedDraftActions, pendingActionReview, classifyActionReviewFailure, ActionContextNeedError } from '../review-actions.js'
+import { actionProviderRequest, createActionAgents, reviewArticleActions, reviewProducedDraftActions, pendingActionReview, classifyActionReviewFailure, actionReviewEvidenceRequest, ActionContextNeedError } from '../review-actions.js'
 
 const empty = { changes: [], suggestions: [], candidateDispositions: [], closingOptions: [] }
 const response = (input: unknown) => ({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'tool_offline', name: 'review_actions', input }], usage: { output_tokens: 100 } })
@@ -281,6 +282,22 @@ describe('native-validated forced-tool response boundary', () => {
     expect(classifyActionReviewFailure(failure)).toEqual({ kind: 'evidence-required', reason: 'Actions need further evidence or independent review before they can be admitted.' })
     expect(create.mock.calls.map(([request]) => request.model)).toEqual(['claude-sonnet-4-6', 'claude-opus-4-6'])
     expect(JSON.stringify(input.registry)).toBe(before)
+  })
+
+  it('binds a hidden-row request to the actual Accepted review keys, not the empty draft snapshot keys', async () => {
+    const input = { ...reviewInput(), sources: [source] }
+    input.markdown = input.markdown.replace('status: draft', 'status: accepted')
+    input.registry.records.push({ key: 'carried', original: { id: 'carried', command: '/review', description: 'Inspect the owner gate.', repo: 'daily-logger', status: 'open', sourceDate: input.articleDate },
+      origin: 'imported', workKey: 'owner-gate', state: 'open', introducedBy: input.articleDate, includeInIndex: true, inclusionOverride: null,
+      goal: 'Resolve the owner gate.', doneWhen: 'Owner records a decision.', gates: ['Owner decision required.'], history: [] })
+    input.agents.propose = async () => { throw new ActionEvidenceVisibilityError('Unseen or partial metadata line 2', {
+      viewRoundId: 'a'.repeat(64), policySha256: 'b'.repeat(64), sourceId: source.id, sourceLocator: source.locator,
+      collectedSha256: 'c'.repeat(64), fullContentSha256: sha256(source.content), startLine: 2, endLine: 2 }) }
+    const failure = await reviewProducedDraftActions({ ...input, collectSources: () => input.sources }).catch((error: unknown) => error)
+    expect(failure).toBeInstanceOf(Error)
+    const request = actionReviewEvidenceRequest(failure, input)
+    expect(request).toMatchObject({ status: 'open', kind: 'source-view', sourceKey: 'model-context', actionKeys: ['carried'] })
+    expect(() => actionReviewEvidenceRequest(failure, { ...input, sources: [{ ...source, content: `${source.content} changed` }] })).toThrow('does not match the collected source')
   })
   it('keeps the historical pre-ranked Accepted behavior and unrelated render errors unchanged', async () => {
     const base = reviewInput(), date = '2026-10-18'

@@ -122,8 +122,12 @@ they fail differently. An earlier failed-attempt observation in a successful
 proposal is history, not its final verdict. Old receipts without these records
 remain readable. Citation visibility and authority holds keep their separate
 evidence paths and do not gain another repair.
- A
+A
 current evidence receipt is emitted only while native current inputs are available;
+a hidden-row request uses the same normalized article status and current action
+scope as evidence selection, rather than the prior snapshot's action-key list;
+the request must still pass exact case and full-source hash checks before it is
+shown as the current blocker;
 a self-consistent but unbound request retains identity only. Closed failure phases
 distinguish malformed output, evidence/context holds and an incomplete ranked
 shortlist. These diagnostics grant no evidence resolution or action authority.

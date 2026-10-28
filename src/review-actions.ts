@@ -1650,11 +1650,16 @@ export async function reviewDraftActions(input: Parameters<typeof reviewArticleA
   catch (error) {
     const contextNeed = error instanceof ActionEvidenceVisibilityError || error instanceof ActionContextNeedError
     if (error instanceof ActionEvidenceVisibilityError || error instanceof ActionContextNeedError) {
-      const currentKeys = input.registry.articles.find(article => article.date === input.articleDate)?.actionKeys ?? []
-      const actionKeys = currentKeys.length ? currentKeys : ['article-feedback']
+      const previous = input.registry.articles.find(article => article.date === input.articleDate)
+      const prepared = extractDraftRecommendationContext(stripManagedActions(input.markdown), previous?.draftContext)
+      const requestInput = { ...input, markdown: prepared.markdown, draftContext: prepared.context, draftCandidates,
+        articleStatuses: new Map(input.articleStatuses).set(input.articleDate, prepared.markdown.match(/^status:\s*"?(accepted|rejected)/m)?.[1] ?? 'draft') }
+      const scope = actionEvidenceScope(requestInput)
+      const actionKeys = scope.reviewActionKeys.length ? scope.reviewActionKeys
+        : scope.ambiguousTerminalActionKeys.length ? scope.ambiguousTerminalActionKeys : ['article-feedback']
       const location = error instanceof ActionEvidenceVisibilityError ? error.location : undefined
       const locationQuestion = location ? `View round ${location.viewRoundId}; policy ${location.policySha256}; collected SHA256 ${location.collectedSha256}; original lines ${location.startLine}-${location.endLine}. ` : ''
-      const request = createActionEvidenceRequest({ kind: location ? 'source-view' : 'clarification', caseDigest: actionEvidenceCaseDigest({ ...input, draftCandidates, actionKeys }), articleDate: input.articleDate, cycle: input.cycle, actionKeys,
+      const request = createActionEvidenceRequest({ kind: location ? 'source-view' : 'clarification', caseDigest: actionEvidenceCaseDigest({ ...requestInput, actionKeys }), articleDate: input.articleDate, cycle: input.cycle, actionKeys,
         sourceKey: 'model-context', ...(location ? { sourceIdentity: { id: location.sourceId, locator: location.sourceLocator, fullContentSha256: location.fullContentSha256 } } : {}), question: `${locationQuestion}Prepare a fully visible bounded evidence context without weakening source duties or limits: ${error.message}`.slice(0, 512), obligations: [sha256('All required sources, owner/counterevidence, full identity/history and fixed provider limits remain required.')], recipient: 'coordinator-owner' })
       error = error instanceof ActionContextNeedError
         ? new ActionContextEvidenceRequestError(request, error.message)
