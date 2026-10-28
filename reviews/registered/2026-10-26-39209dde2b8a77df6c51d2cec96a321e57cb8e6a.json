@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-post-revision-20261026-39209dde2b8a",
+  "article": {
+    "date": "2026-10-26",
+    "sourceCommitSha": "39209dde2b8a77df6c51d2cec96a321e57cb8e6a",
+    "blobSha": "d4b5bdb7b57abc34ee926ebac825aed1ef180e8b"
+  },
+  "reviewer": {
+    "name": "Codex — October 26 accepted-source editorial and held-action verification",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-28T03:47:44Z",
+  "scope": "Source-pinned verification of the Accepted October 26 narrative and actual native article-only outcome. Earlier C1-C7/U1 and S1-S5 dispositions remain historical. Three original suggestions and retained draft context remain unverified, held and non-dispatchable. No semantic action verdict, owner approval, automatic retry, supported slash commands, or distinct authenticated reviewer identity is claimed.",
+  "fullRecordBlobSha": "e377b3c8a40c3918452473a2f93689271db2df46",
+  "fullRecordPath": "reviews/articles/2026-10-26-39209dde2b8a77df6c51d2cec96a321e57cb8e6a.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "H1",
+      "classification": "unverified_claim",
+      "title": "Three original suggestions remain without a persisted independent action verdict",
+      "location": "Suggested actions — three Needs review entries and retained draft context",
+      "explanation": "The actual acceptance run completed both model responses but its verified action state exceeded the unchanged 64 KiB dated-file limit. The typed fallback preserved all three candidate identities and histories as Needs review, without admission, closure or dispatch. Original slash-command syntax and a combined wrong-owner claim remain historical payloads, not verified capabilities or recommendations. The prior evidence request is historical; the current receipt records none.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/481#issuecomment-6460021928",
+        "https://github.com/ojfbot/daily-logger/actions/runs/40627474323",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6460122423"
+      ],
+      "correction": "Keep all three visible as Needs review and non-dispatchable. Resolve the output-state persistence gap under #386 and run a separately authorized source-bound action review before admitting, closing or executing any suggestion. Do not infer that earlier requests have been resolved.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
