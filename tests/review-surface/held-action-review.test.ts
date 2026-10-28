@@ -9,7 +9,7 @@ import { reconcileActions } from '../../scripts/reconcile-actions.js'
 import { ActionSourceCollection } from '../../src/action-evidence-view.js'
 import { ActionRegistrySchema, actionStateDigest, completeArticleWithPendingActions, readActionRegistry, readArticleStatuses, registryRevision, sha256 } from '../../src/action-registry.js'
 import { prepareConservativeDraftCandidateEvidence } from '../../src/action-evidence-selection.js'
-import { generationActionCycle } from '../../src/action-review-cycle.js'
+import { acceptanceActionCycle, generationActionCycle, revisionActionCycle, type ActionReviewCycle } from '../../src/action-review-cycle.js'
 import { ActionProposalSchema, createActionAgents, pendingActionReview } from '../../src/review-actions.js'
 import * as actionReview from '../../src/review-actions.js'
 import { ActionEvidenceRequestError, actionEvidenceCaseDigest, createActionEvidenceRequest } from '../../src/action-evidence-retrieval.js'
@@ -25,11 +25,11 @@ const sources = [{ id: 'fact', kind: 'repository' as const, locator: 'fixture.md
 const response = (input: unknown) => ({ stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 'offline', name: 'review_actions', input }], usage: { output_tokens: 100 } })
 beforeEach(() => { create.mockReset(); countTokens.mockReset().mockResolvedValue({ input_tokens: 1000 }); clients.mockReset() })
 afterEach(() => { vi.unstubAllEnvs(); for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
-function fixture(capturedCommand?: string) {
+function fixture(capturedCommand?: string, cycle: ActionReviewCycle = generationActionCycle()) {
   const root = mkdtempSync(join(tmpdir(), 'held-action-route-')); roots.push(root)
   const git = (...args: string[]) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
   const empty = ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [{ key: 'act-existing', original: { id: 'act-existing', command: '/adr', description: 'Unrelated older work.', repo: 'daily-logger', status: 'open', sourceDate: '2026-10-20' }, origin: 'imported', workKey: 'unrelated-older-work', state: 'open', introducedBy: '2026-10-20', includeInIndex: true, inclusionOverride: null, goal: '', doneWhen: '', gates: [], history: [] }], articles: [] })
-  const cycle = generationActionCycle(), draftStatuses = new Map([[date, 'draft']])
+  const draftStatuses = new Map([[date, 'draft']])
   const pending = pendingActionReview({ registry: empty, articleDate: date, cycle, markdown: `---\ndate: ${date}\nstatus: draft\noutcome: accepted\n---\nOffline route fixture.\n`, reason: 'Offline held candidates.', articleStatuses: draftStatuses, draftContext: { kind: 'none' }, draftCandidates: ['review', 'validate', 'triage'].map((command, index) => ({ command: index === 0 && capturedCommand ? capturedCommand : `/${command}`, repo: 'core', description: `Review the separate ${command} concern.`, sourceDate: date, status: 'open' })) })
   const snapshot = pending.registry.articles[0]
   if (!snapshot.draftCandidates) throw new Error('Missing fixture custody')
@@ -41,7 +41,7 @@ function fixture(capturedCommand?: string) {
   mkdirSync(join(root, '_articles')); writeActionStore(root, held.registry); writeFileSync(join(root, `_articles/${date}.md`), held.markdown)
   mkdirSync(join(root, 'scripts')); writeFileSync(join(root, 'scripts/review-held-actions.ts'), '// Offline policy fingerprint fixture; no provider.\n')
   git('init', '-q'); git('config', 'user.name', 'Offline fixture'); git('config', 'user.email', 'fixture@example.invalid'); git('add', '.'); git('commit', '-qm', 'offline accepted held fixture')
-  const grant = heldActionGrantSchema.parse({ schemaVersion: 1, approvedBy: 'ojfbot', authorizationId: authorization, authorizationReference: 'OFFLINE TEST ONLY; no actual user authorization', operationId: operation, date, articleBlob: git('rev-parse', `HEAD:_articles/${date}.md`), actionBlob: git('rev-parse', `HEAD:actions/articles/${date}.json`), registryRevision: registryRevision(readActionRegistry(root)), policyFingerprint: heldActionPolicyFingerprint(root), reviewCycle: cycle, trains: 1, limits: heldActionLimits, output: 'unmerged-dated-proposal-with-selected-citations' })
+  const grant = heldActionGrantSchema.parse({ schemaVersion: 1, approvedBy: 'ojfbot', authorizationId: authorization, authorizationReference: 'OFFLINE TEST ONLY; no actual user authorization', operationId: operation, date, articleBlob: git('rev-parse', `HEAD:_articles/${date}.md`), actionBlob: git('rev-parse', `HEAD:actions/articles/${date}.json`), registryRevision: registryRevision(readActionRegistry(root)), policyFingerprint: heldActionPolicyFingerprint(root), reviewCycle: acceptanceActionCycle(operation, held.registry.articles[0]), trains: 1, limits: heldActionLimits, output: 'unmerged-dated-proposal-with-selected-citations' })
   mkdirSync(join(root, 'action-review-grants')); writeFileSync(join(root, `action-review-grants/${grantId}.json`), JSON.stringify(grant)); git('add', '.'); git('commit', '-qm', 'offline reviewed grant fixture')
   const source = git('rev-parse', 'HEAD'), inputs = { date, source_sha: source, operation_id: operation, grant_id: grantId }, context = { repository: 'ojfbot/daily-logger', actor: 'ojfbot', event: 'workflow_dispatch', ref: 'refs/heads/main', defaultBranch: 'main', workflowSha: source, runId: 900, attempt: 1 }
   const original = { article: readFileSync(join(root, `_articles/${date}.md`), 'utf8'), action: readFileSync(join(root, `actions/articles/${date}.json`), 'utf8') }
@@ -329,6 +329,32 @@ it('runs real native dry-run proposer/verifier, preserves accepted durable data 
   expect(() => heldActionReceiptSchema.parse({ ...result.receipt, outcome: 'changed' })).toThrow()
   expect(() => heldActionReceiptSchema.parse({ ...result.receipt, files: [{ ...result.receipt.files[0], repositoryPath: 'actions/registry.json' }, result.receipt.files[1]] })).toThrow()
   await expect(reserveHeldAction(binding, t.github)).rejects.toThrow(); expect(create).toHaveBeenCalledTimes(2)
+}, 15000)
+it('binds a pending accepted revision to the new one-use operation without rewriting the prior cycle', async () => {
+  const priorCycle = revisionActionCycle('pull-request:481:clean-acceptance')
+  const f = fixture(undefined, priorCycle), t = transport(f.source)
+  expect(f.snapshot.reviewCycle).toEqual(priorCycle)
+  const binding = await admitHeldAction(f.root, f.inputs, f.context, t.github)
+  expect(binding.grant.reviewCycle).toEqual(revisionActionCycle(operation))
+  const reserved = await reserveHeldAction(binding, t.github)
+  healthy(f)
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.state).toBe('native-review-completed-unmerged')
+  expect(result.files.map(file => file.name)).toEqual(['article.md', 'actions.json'])
+  expect(JSON.parse(result.files[1].content).snapshot.reviewCycle).toEqual(revisionActionCycle(operation))
+  expect(readActionRegistry(f.root).articles[0].reviewCycle).toEqual(priorCycle)
+  expectAcceptedBytes(f)
+  expect(create).toHaveBeenCalledTimes(2)
+}, 15000)
+it.each([{ phase: 'generation' }, { phase: 'revision', id: 'another-operation' }])('rejects a %j grant for a pending accepted revision before provider entry', async wrongCycle => {
+  const f = fixture(undefined, revisionActionCycle('pull-request:481:clean-acceptance'))
+  const path = join(f.root, `action-review-grants/${grantId}.json`)
+  writeFileSync(path, JSON.stringify({ ...f.grant, reviewCycle: wrongCycle }))
+  f.git('add', '.'); f.git('commit', '-qm', 'offline wrong-cycle grant')
+  const source = f.git('rev-parse', 'HEAD'), t = transport(source)
+  await expect(admitHeldAction(f.root, { ...f.inputs, source_sha: source }, { ...f.context, workflowSha: source }, t.github)).rejects.toThrow()
+  expect(t.state.mutations).toBe(0)
+  expect(countTokens).not.toHaveBeenCalled(); expect(create).not.toHaveBeenCalled()
 }, 15000)
 it.each(['malformed', 'unknown'] as const)('preserves held originals and records %s without raw diagnostics or replay', async kind => {
   const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)

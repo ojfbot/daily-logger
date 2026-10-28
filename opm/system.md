@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `c2ccfe2ae6fc7d8b649c42c4bf4834e2edae8540b4f17071069f021eb1381a86`.
+> Source SHA-256: `d9e7e1d1683b843daf135c9cf564428b35b8301505f4a85d3b37dca291c01d5b`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1213,6 +1213,7 @@ flowchart TD
   n206("Held Action Reviewing")
   n207["Pending Original Candidates"]
   n208["Reviewed Owner Grant"]
+  n29["Action Review Cycle — states: generation, revision"]
   n209["Operation Reservation"]
   n210["Unmerged Dated Proposal"]
   n211["Bounded Operation Receipt"]
@@ -1224,6 +1225,7 @@ flowchart TD
   n205 -->|"requires (instrument)"| n206
   n207 -->|"requires (instrument)"| n206
   n208 -->|"requires (instrument)"| n206
+  n29 -->|"requires (instrument)"| n206
   n209 -->|"requires (instrument)"| n206
   n206 -->|"yields"| n210
   n206 -->|"yields"| n211
@@ -1239,6 +1241,7 @@ flowchart TD
 Held Action Reviewing requires Accepted Article. [src: scripts/review-held-actions.ts]
 Held Action Reviewing requires Pending Original Candidates. [src: scripts/review-held-actions.ts]
 Held Action Reviewing requires Reviewed Owner Grant. [src: scripts/review-held-actions.ts]
+Held Action Reviewing requires Action Review Cycle. [src: scripts/review-held-actions.ts]
 Held Action Reviewing requires Operation Reservation. [src: scripts/review-held-actions.ts]
 Held Action Reviewing yields Unmerged Dated Proposal. [src: scripts/review-held-actions.ts]
 Held Action Reviewing yields Bounded Operation Receipt. [src: scripts/review-held-actions.ts]

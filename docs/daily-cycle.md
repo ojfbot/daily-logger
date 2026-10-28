@@ -84,7 +84,12 @@ Before dispatch, the owner must review and adopt
 authorization. File presence alone does not establish that authorization: its
 `authorizationReference` identifies the actual owner decision and reviewed packet.
 The strict grant pins the operation UUID, date, article/map blobs, hydrated registry
-revision, retained generation cycle, policy fingerprint and fixed native limits.
+revision, bound review cycle, policy fingerprint and fixed native limits.
+For a held initial generation, the grant retains that generation cycle. For a
+held accepted revision, the grant names a new revision cycle whose ID is the
+one-use operation UUID; the earlier revision remains in the article history.
+Admission checks the cycle against the accepted snapshot, and proposal output
+must carry the exact granted cycle.
 Compute `heldActionPolicyFingerprint` after committing the reviewed route; it
 excludes grant files, so adding the reviewed grant does not require a circular
 commit pin. Dispatch separately pins the exact main SHA containing both. A changed
