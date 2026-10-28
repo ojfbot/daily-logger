@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-10-27, October 26 action-state storage repair: the plan assumed two existing 18,000-character overflow controls would still hit the 64 KiB gate; reversible coverage packing made them fit, so fresh CI reached later evidence guards instead. Raised only those synthetic verdict-reason sizes to 24,000 characters and reran the same held-versus-rejected assertions; the storage limit and production behavior stayed unchanged.
+
 - 2026-10-27, October 23 action-review follow-up: accepted fallback preserved only the earlier #357 request while the latest native run stopped on the oversized #416 source; retained current request metadata separately under the checked article-only acceptance and displayed older requests as history, without closing either. A same-capture local projection passed the existing byte guard (555,285 / 655,360 bytes); the hosted held-action driver does not yet consume that view, so no paid retry or hosted success is claimed.
 
 - October 22 article cycle: the plan assumed inherited hosted prose revision could consume the saved Draft. Native preflight found a stale status-index binding and proved changed prose/feedback would be rejected after the rewrite call; used the existing supervised source/data correction route, preserving original candidate custody and refreshing the pending binding before normal clean acceptance. Automated rewriting remains unqualified.

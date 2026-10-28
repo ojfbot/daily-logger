@@ -69,7 +69,7 @@ it.each(['proposer', 'verifier'] as const)('holds the originals after an allowli
 
 it('accepts only the pristine article when a completed proposer and verifier exceed the dated output limit', async () => {
   const f = setup(), verification = structuredClone(f.verification)
-  for (const row of verification.candidateDispositions) row.reason = `Verified fixture: ${'x'.repeat(18_000)}`
+  for (const row of verification.candidateDispositions) row.reason = `Verified fixture: ${'x'.repeat(24_000)}`
   create.mockResolvedValueOnce(response(f.proposal)).mockResolvedValueOnce(response(verification))
   const result = await f.run(), reloaded = readActionRegistry(f.root)
   expect(create).toHaveBeenCalledTimes(2)
@@ -104,7 +104,7 @@ it('retains an exact current evidence request when an Accepted-input model cites
 it('keeps the dated Draft unchanged when storage overflow occurs outside explicit article-only completion', async () => {
   const f = setup(), verification = structuredClone(f.verification)
   vi.stubEnv('ACTION_REVIEW_ARTICLE_COMPLETION', '')
-  for (const row of verification.candidateDispositions) row.reason = `Verified fixture: ${'x'.repeat(18_000)}`
+  for (const row of verification.candidateDispositions) row.reason = `Verified fixture: ${'x'.repeat(24_000)}`
   const originalFile = readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')
   create.mockResolvedValueOnce(response(f.proposal)).mockResolvedValueOnce(response(verification))
   await expect(f.run()).rejects.toThrow('64 KiB')
