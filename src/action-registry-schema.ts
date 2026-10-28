@@ -29,7 +29,8 @@ export function captureDraftActionCandidates(values: readonly unknown[]): DraftA
   }))
 }
 
-export const { ArticleActionSchema, ActionRegistrySchema, ArticleActionFileSchema } = createActionRegistrySchemas(draftActionCandidateId)
+export const { ArticleActionSchema, ActionRegistrySchema, ArticleActionFileSchema } = createActionRegistrySchemas(draftActionCandidateId,
+  content => createHash('sha256').update(content).digest('hex'))
 
 /** Ordinary invocations keep their immutable capture and native birth output across later rounds. */
 export function assertExactInvocationAdmissions(registry: ActionRegistry): void {

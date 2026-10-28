@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { coverageStorageMarker, packCoverageForStorage, unpackCoverageFromStorage } from './action-coverage-storage.js'
 import { CanonicalActionSchema, isReviewedAction } from './action-model.js'
 import { ActionReviewCycleSchema, CONTEXT_BOUND_ACTION_REVIEW_PROMPT_VERSIONS, RANKED_ACTION_REVIEW_PROMPT_VERSIONS, actionAdmissionErrors } from './action-review-cycle.js'
 import { ActionItemSchema } from './action-item-schema.js'
@@ -513,8 +514,33 @@ export type ProposedAction = z.infer<typeof ProposedActionSchema>
 
 // One logical registry: immutable imported identities plus one bounded file per
 // article. Decisions live with the article that issued them, never on a shared row.
-function createArticleActionFileSchema(ArticleActionSchema: ReturnType<typeof createArticleActionSchema>) {
-  return z.object({
+function packedCoverageFile<T extends { snapshot: { sources: Array<{ id: string; content: string }> } }>(file: T) {
+  const matches = file.snapshot.sources.filter(source => source.id.startsWith('action-evidence-coverage@'))
+  if (matches.length !== 1) return undefined
+  const encoded = packCoverageForStorage(matches[0].content)
+  if (!encoded) return undefined
+  return { ...file, storageEncoding: coverageStorageMarker, snapshot: { ...file.snapshot,
+    sources: file.snapshot.sources.map(source => source === matches[0] ? { ...source, content: encoded } : source) } }
+}
+
+function unpackCoverageFile(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value) || !('storageEncoding' in value)) return value
+  const file = value as Record<string, unknown>
+  if (file.storageEncoding !== coverageStorageMarker || !file.snapshot || typeof file.snapshot !== 'object' || Array.isArray(file.snapshot)) return value
+  const snapshot = file.snapshot as Record<string, unknown>
+  if (!Array.isArray(snapshot.sources)) return value
+  const matches = snapshot.sources.filter(source => source && typeof source === 'object' && !Array.isArray(source)
+    && typeof source.id === 'string' && source.id.startsWith('action-evidence-coverage@'))
+  if (matches.length !== 1 || typeof matches[0].content !== 'string') return value
+  const expanded = unpackCoverageFromStorage(matches[0].content)
+  if (!expanded) return value
+  const { storageEncoding: _encoding, ...rest } = file
+  return { ...rest, snapshot: { ...snapshot,
+    sources: snapshot.sources.map(source => source === matches[0] ? { ...source, content: expanded } : source) } }
+}
+
+function createArticleActionFileSchema(ArticleActionSchema: ReturnType<typeof createArticleActionSchema>, sourceDigest?: (content: string) => string) {
+  const schema = z.object({
     schemaVersion: z.literal(1),
     date,
     suggestions: z.array(ActionRecordSchema.omit({ history: true, state: true })),
@@ -522,18 +548,23 @@ function createArticleActionFileSchema(ArticleActionSchema: ReturnType<typeof cr
     snapshot: ArticleActionSchema,
   }).strict().superRefine((file, context) => {
     const compactBytes = new TextEncoder().encode(JSON.stringify(file) + '\n').length
-    if (compactBytes > ACTION_FILE_LIMIT) context.addIssue({ code: 'custom', message: 'Article action state exceeds 64 KiB', params: { kind: 'article-action-file-size', date: file.date, bytes: compactBytes } })
+    const packed = compactBytes > ACTION_FILE_LIMIT ? packedCoverageFile(file) : undefined
+    const persistedBytes = packed ? new TextEncoder().encode(JSON.stringify(packed) + '\n').length : compactBytes
+    if (persistedBytes > ACTION_FILE_LIMIT) context.addIssue({ code: 'custom', message: 'Article action state exceeds 64 KiB', params: { kind: 'article-action-file-size', date: file.date, bytes: persistedBytes } })
+    if (sourceDigest) for (const source of file.snapshot.sources.filter(item => item.id.startsWith('action-evidence-coverage@')))
+      if (source.id !== `action-evidence-coverage@${sourceDigest(source.content)}`) context.addIssue({ code: 'custom', message: 'Generated coverage source digest does not match its content' })
     if (file.snapshot.date !== file.date || file.decisions.some(item => item.decision.articleDate !== file.date) || file.suggestions.some(item => item.origin !== 'suggested' || item.introducedBy !== file.date)) context.addIssue({ code: 'custom', message: 'Article action file crosses its date boundary' })
     for (const message of actionAdmissionErrors(file.suggestions)) context.addIssue({ code: 'custom', message })
   })
+  return z.preprocess(unpackCoverageFile, schema)
 }
 
-export function createActionRegistrySchemas(candidateIdentity?: DraftCandidateIdentity) {
+export function createActionRegistrySchemas(candidateIdentity?: DraftCandidateIdentity, sourceDigest?: (content: string) => string) {
   const ArticleActionSchema = createArticleActionSchema(candidateIdentity)
   return {
     ArticleActionSchema,
     ActionRegistrySchema: createActionRegistrySchema(ArticleActionSchema),
-    ArticleActionFileSchema: createArticleActionFileSchema(ArticleActionSchema),
+    ArticleActionFileSchema: createArticleActionFileSchema(ArticleActionSchema, sourceDigest),
   }
 }
 
@@ -555,8 +586,11 @@ export function articleActionFileContractBytes(file: ArticleActionFile): string 
   const pretty = JSON.stringify(parsed, null, 2) + '\n'
   if (new TextEncoder().encode(pretty).length <= ACTION_FILE_LIMIT) return pretty
   const compact = JSON.stringify(parsed) + '\n'
-  if (new TextEncoder().encode(compact).length > ACTION_FILE_LIMIT) throw new Error('Article action state exceeds 64 KiB; compact the evidence before publishing')
-  return compact
+  if (new TextEncoder().encode(compact).length <= ACTION_FILE_LIMIT) return compact
+  const packed = packedCoverageFile(parsed)
+  const output = packed ? JSON.stringify(packed) + '\n' : compact
+  if (new TextEncoder().encode(output).length > ACTION_FILE_LIMIT) throw new Error('Article action state exceeds 64 KiB; compact the evidence before publishing')
+  return output
 }
 export function isArticleFileInclusionChange(before: ArticleActionFile, after: ArticleActionFile, actor: string): boolean {
   if (before.snapshot.status !== 'draft') return false

@@ -105,6 +105,13 @@ prompts, raw model replies and the whole hydrated registry are excluded. Newly
 selected excerpts are bounded to 8 KiB; existing canonical quotes remain intact.
 The two-file proposal is capped at 1 MiB, with current input lower bounds checked
 before model entry. Output limits can still hold a newly produced proposal.
+When the expanded dated action file exceeds 64 KiB, the serializer may store
+only its generated, non-authoritative coverage report as reversible tuple rows.
+The original coverage JSON, source ID, citations and all action fields are
+restored and checked by the Node reader; the browser reader restores the same
+contract shape with a 128 KiB expansion bound. The on-disk file must still fit
+64 KiB. Otherwise, review remains held and no proposal is applied. This
+representation does not retain collector captures or raw model replies.
 Only bounded numeric budget/usage observations and closed stop categories survive
 native diagnostics. A qualified token count is recorded before a budget rejection;
 response usage is recorded before incomplete-output rejection. Missing usage is
