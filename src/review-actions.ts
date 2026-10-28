@@ -82,6 +82,11 @@ class ActionVerificationHoldError extends Error {
 }
 class ActionContextEvidenceRequestError extends ActionEvidenceRequestError {}
 class AcceptedArticlePendingReviewError extends Error {}
+class VerifiedActionOutputStorageLimitError extends Error {
+  constructor(readonly articleDate: string, readonly bytes: number, cause: Error) {
+    super(`Verified action output for ${articleDate} exceeds the 64 KiB dated-file limit (${bytes} bytes)`, { cause })
+  }
+}
 class ActionReviewPersistenceError extends Error {
   #acceptedArticleRefusal: boolean
   constructor(input: { reason: string; persistenceError: unknown; cause: unknown }) {
@@ -207,6 +212,10 @@ export function classifyActionReviewFailure(error: unknown): { kind: 'invalid-ou
     kind: 'evidence-required', reason: 'Actions need further evidence or independent review before they can be admitted.',
   }
   return undefined
+}
+
+export function isVerifiedActionOutputStorageLimit(error: unknown): boolean {
+  return actionReviewFailureCause(error) instanceof VerifiedActionOutputStorageLimitError
 }
 
 export function actionReviewEvidenceRequestIdentity(error: unknown) {
@@ -1411,7 +1420,18 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
   finalSnapshot.verification.evidenceViewOutputSha256 = actionEvidenceRegistryDigest(normalizedNext, input.articleDate)
   finalSnapshot.stateDigest = actionStateDigest(normalizedNext, [...keys], closing, prepared.context, { articleDate: input.articleDate, roundId: input.roundId, draftCandidates: reviewedDraftCandidates, candidateReviewHistory, draftCandidateEvidence: input.draftCandidateEvidence, reviewOutput })
   const result = ActionRegistrySchema.parse(normalizedNext)
-  for (const file of splitActionRegistry(result).files) articleActionFileBytes(file)
+  try {
+    for (const file of splitActionRegistry(result).files) articleActionFileBytes(file)
+  } catch (error) {
+    if (error instanceof z.ZodError && error.issues.length === 1) {
+      const issue = error.issues[0]
+      if (issue.code === 'custom' && issue.params?.kind === 'article-action-file-size'
+        && issue.params.date === input.articleDate && typeof issue.params.bytes === 'number') {
+        throw new VerifiedActionOutputStorageLimitError(input.articleDate, issue.params.bytes, error)
+      }
+    }
+    throw error
+  }
   return result
 }
 

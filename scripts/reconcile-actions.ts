@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { readActionRegistry, registryRevision, writeActionRegistry, setActionInclusion, renderArticleActions, readArticleStatuses, assertFirstArticleAcceptance, completeArticleWithPendingActions } from '../src/action-registry.js'
-import { collectActionSources, createActionAgents, mockActionAgents, reviewProducedDraftActions, classifyActionReviewFailure, actionReviewEvidenceRequest } from '../src/review-actions.js'
+import { collectActionSources, createActionAgents, mockActionAgents, reviewProducedDraftActions, classifyActionReviewFailure, isVerifiedActionOutputStorageLimit, actionReviewEvidenceRequest } from '../src/review-actions.js'
 import { persistActionEvidenceResolutions, readActionEvidenceReply } from '../src/action-evidence-retrieval.js'
 
 type ReconcileOptions = { repoRoot?: string; articlePath?: string; agents?: Parameters<typeof reviewProducedDraftActions>[0]['agents']; collectSources?: (...args: Parameters<Parameters<typeof reviewProducedDraftActions>[0]['collectSources']>) => ActionSourceCollection }
@@ -51,9 +51,11 @@ export async function reconcileActions(options: ReconcileOptions = {}) {
         agents: options.agents ?? (process.env.MOCK_LLM === 'true' ? mockActionAgents : createActionAgents()), reassessActionKeys, preserveActionKeys, selectedEvidenceProjectionIds: evidenceReplies.map(reply => reply.id), ...(process.env.DRY_RUN === 'true' ? {} : { repoRoot }) })
   } catch (error) {
     const failure = classifyActionReviewFailure(error)
-    if (!articleOnlyEligible || !failure || !collectedSources || !preparedEvidence) throw error
-    const evidenceRequest = actionReviewEvidenceRequest(error, { registry: pristine, articleDate, markdown, articleStatuses: statuses, cycle: reviewCycle, feedback, sources: collectedSources, draftCandidateEvidence: preparedEvidence, reassessActionKeys, preserveActionKeys })
-    reviewed = completeArticleWithPendingActions({ registry: pristine, articleDate, markdown, articleStatuses: statuses, cycle: reviewCycle, failureKind: failure.kind, sources: collectedSources, draftCandidateEvidence: preparedEvidence, ...(evidenceRequest ? { evidenceRequest } : {}) })
+    const outputStorageLimit = isVerifiedActionOutputStorageLimit(error)
+    const failureKind = outputStorageLimit ? 'output-storage-limit' : failure?.kind
+    if (!articleOnlyEligible || !failureKind || !collectedSources || !preparedEvidence) throw error
+    const evidenceRequest = outputStorageLimit ? undefined : actionReviewEvidenceRequest(error, { registry: pristine, articleDate, markdown, articleStatuses: statuses, cycle: reviewCycle, feedback, sources: collectedSources, draftCandidateEvidence: preparedEvidence, reassessActionKeys, preserveActionKeys })
+    reviewed = completeArticleWithPendingActions({ registry: pristine, articleDate, markdown, articleStatuses: statuses, cycle: reviewCycle, failureKind, sources: collectedSources, draftCandidateEvidence: preparedEvidence, ...(evidenceRequest ? { evidenceRequest } : {}) })
   }
   reviewed.markdown = renderArticleActions(reviewed.markdown, reviewed.registry, articleDate, statuses)
   if (process.env.DRY_RUN !== 'true') {

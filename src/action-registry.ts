@@ -191,7 +191,11 @@ export function projectRegistry(registry: ActionRegistry, articleStatuses: Reado
 }
 
 function articleOnlyReviewReason(kind: ArticleOnlyAcceptance['failureKind']): string {
-  return kind === 'invalid-output' ? 'The agent returned an incomplete response; these suggestions still need review.' : 'The available evidence did not confirm these suggestions.'
+  if (kind === 'invalid-output') return 'The agent returned an incomplete response; these suggestions still need review.'
+  if (kind === 'evidence-required') return 'The available evidence did not confirm these suggestions.'
+  if (kind === 'output-storage-limit') return 'The review result exceeded the saved action-state limit. These suggestions still need review.'
+  const exhaustive: never = kind
+  return exhaustive
 }
 
 export function assertFirstArticleAcceptance(registry: ActionRegistry, articleDate: string): void {

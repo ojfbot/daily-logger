@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { reconcileActions } from '../../scripts/reconcile-actions.js'
 import { ActionSourceCollection } from '../../src/action-evidence-view.js'
-import { ActionRegistrySchema, actionStateDigest, projectRegistry, readActionRegistry, readArticleStatuses, sha256 } from '../../src/action-registry.js'
+import { ActionRegistrySchema, actionStateDigest, articleCompletionOutcome, projectRegistry, readActionRegistry, readArticleStatuses, sha256, splitActionRegistry } from '../../src/action-registry.js'
 import { draftCandidateEvidenceBinding } from '../../src/action-evidence-selection.js'
 import { generationActionCycle } from '../../src/action-review-cycle.js'
 import { createActionAgents, pendingActionReview } from '../../src/review-actions.js'
@@ -65,6 +65,35 @@ it.each(['proposer', 'verifier'] as const)('holds the originals after an allowli
   expect(result.registry.articles[0].draftCandidates).toEqual(f.snapshot.draftCandidates)
   expect(result.registry.articles[0].review).toMatchObject({ state: 'pending', articleAcceptance: { failureKind: 'invalid-output' } })
   expect(readActionRegistry(f.root).articles[0].status).toBe('accepted')
+})
+
+it('accepts only the pristine article when a completed proposer and verifier exceed the dated output limit', async () => {
+  const f = setup(), verification = structuredClone(f.verification)
+  for (const row of verification.candidateDispositions) row.reason = `Verified fixture: ${'x'.repeat(18_000)}`
+  create.mockResolvedValueOnce(response(f.proposal)).mockResolvedValueOnce(response(verification))
+  const result = await f.run(), reloaded = readActionRegistry(f.root)
+  expect(create).toHaveBeenCalledTimes(2)
+  expect(countTokens).toHaveBeenCalledTimes(2)
+  expect(result).toMatchObject({ articleCompletion: 'accepted', actionReview: 'pending' })
+  expect(reloaded.records).toEqual(f.registry.records)
+  expect(reloaded.articles[0].draftCandidates).toEqual(f.snapshot.draftCandidates)
+  expect(reloaded.articles[0].review).toMatchObject({ state: 'pending', articleAcceptance: { failureKind: 'output-storage-limit', rawContentRetained: false } })
+  expect(projectRegistry(reloaded, readArticleStatuses(f.root)).proposed).toHaveLength(3)
+  expect(readFileSync(f.path, 'utf8')).toContain('The review result exceeded the saved action-state limit')
+  expect(readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')).not.toContain('Verified fixture:')
+  expect(articleCompletionOutcome(splitActionRegistry(f.registry).files[0], splitActionRegistry(reloaded).files[0])).toMatchObject({ state: 'pending', failureKind: 'output-storage-limit' })
+})
+
+it('keeps the dated Draft unchanged when storage overflow occurs outside explicit article-only completion', async () => {
+  const f = setup(), verification = structuredClone(f.verification)
+  vi.stubEnv('ACTION_REVIEW_ARTICLE_COMPLETION', '')
+  for (const row of verification.candidateDispositions) row.reason = `Verified fixture: ${'x'.repeat(18_000)}`
+  const originalFile = readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')
+  create.mockResolvedValueOnce(response(f.proposal)).mockResolvedValueOnce(response(verification))
+  await expect(f.run()).rejects.toThrow('64 KiB')
+  expect(create).toHaveBeenCalledTimes(2)
+  expect(readFileSync(join(f.root, `actions/articles/${date}.json`), 'utf8')).toBe(originalFile)
+  expect(readActionRegistry(f.root).articles[0].status).toBe('draft')
 })
 
 it.each(['provider', 'counter', 'article-cas'] as const)('hard-fails %s without creating a completed article snapshot', async kind => {
