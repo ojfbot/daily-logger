@@ -87,13 +87,24 @@ export function canonicalActionSources(sources: readonly ActionSource[]): Action
 export function actionSourceReferences(text: string): Set<string> {
   return new Set([
     ...[...text.matchAll(/https:\/\/github\.com\/ojfbot\/([\w-]+)\/(?:pull|issues)\/(\d+)/g)].map(match => `${match[1]}#${match[2]}`),
-    ...[...text.matchAll(/\b([\w-]+)\s+#(\d+)/g)].filter(match => KNOWN_REPOS.has(match[1])).map(match => `${match[1]}#${match[2]}`),
+    ...[...text.matchAll(/\b([\w-]+)\s+#(\d+)/g)].map(match => `${match[1]!.toLowerCase()}#${match[2]}`).filter(reference => KNOWN_REPOS.has(reference.split('#')[0]!)),
   ])
 }
 
 /** Exact command targets; shorthand and reviewed aliases require one explicit approved association. */
 export function actionCommandSourceReferences(command: string, approvedTargets: ReadonlySet<string> = new Set()): Set<string> {
   const references = qualifiedActionReferences(command, approvedTargets, 'exact-command')
+  const prMarkers = [...command.matchAll(/(?:^|\s)--pr(?=\s|=|$)/g)]
+  const repoMarkers = [...command.matchAll(/(?:^|\s)--repo(?=\s|=|$)/g)]
+  const prFlags = [...command.matchAll(/(?:^|\s)--pr\s+(\d+)(?=\s|$)/g)]
+  const repoFlags = [...command.matchAll(/(?:^|\s)--repo\s+([a-z][a-z0-9-]*)(?=\s|$)/g)]
+  if (prMarkers.length || repoMarkers.length) {
+    if (prMarkers.length !== prFlags.length || repoMarkers.length !== repoFlags.length || prMarkers.length > 1 || repoMarkers.length > 1) throw new Error('Ambiguous or unsupported exact-command PR target; review pending')
+  }
+  if (prFlags.length && repoFlags.length) {
+    if (!KNOWN_REPOS.has(repoFlags[0]![1]!) || EXCLUDED_REPOS.has(repoFlags[0]![1]!)) throw new Error('Ambiguous or unsupported exact-command PR target; review pending')
+    references.add(`${repoFlags[0]![1]}#${prFlags[0]![1]}`)
+  }
   for (const match of command.matchAll(/(?:^|\s)#(\d+)\b/g)) {
     const matches = [...approvedTargets].filter(reference => reference.endsWith(`#${match[1]}`))
     if (matches.length !== 1) throw new Error(`Ambiguous candidate target #${match[1]} for exact-command; explicit qualified evidence association required; review pending`)
@@ -228,6 +239,10 @@ function qualifiedActionReferences(payload: string, retainedRefs: ReadonlySet<st
   }
   for (const match of payload.matchAll(/\b([\w-]+)#(\d+)\b/g)) {
     const qualified = `${match[1]}#${match[2]}`
+    if (match[1] === 'pre-') {
+      if ([...retainedRefs].filter(reference => reference.endsWith(`#${match[2]}`)).length !== 1) throw new Error(`Ambiguous temporal candidate reference ${qualified} for ${identity}; review pending`)
+      continue
+    }
     if (KNOWN_REPOS.has(match[1])) {
       references.add(qualified)
       continue
@@ -243,6 +258,8 @@ function qualifiedActionReferences(payload: string, retainedRefs: ReadonlySet<st
 
 function candidateTargetReferences(candidate: DraftActionCandidate, retainedRefs: ReadonlySet<string>): Set<string> {
   const references = qualifiedActionReferences(JSON.stringify(candidate.payload), retainedRefs, candidate.candidateId)
+  const commandRepo = /(?:^|\s)--repo\s+([a-z][a-z0-9-]*)(?=\s|$)/.exec(candidate.payload.command)?.[1]
+  if (commandRepo && commandRepo !== candidate.payload.repo) throw new Error(`Exact-command repository differs from captured candidate: ${candidate.candidateId}; review pending`)
   for (const reference of actionCommandSourceReferences(candidate.payload.command, retainedRefs)) references.add(reference)
   return references
 }
