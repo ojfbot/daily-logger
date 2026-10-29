@@ -196,5 +196,38 @@
     "includeInIndex": false,
     "dispatchable": false,
     "reason": "The review result exceeded the saved action-state limit. These suggestions still need review."
+  },
+  {
+    "id": "b911b30629feae5a080d29eccec27b503c9f0b0eb96077cd2628aae1312e54f7",
+    "command": "/review-draft merge --pr 450 --repo daily-logger",
+    "description": "Admit the October 25 independent review draft — the oldest unmerged item in the editorial train. October 26 (#452) is sequenced behind it and cannot advance until this merges.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-27",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "9567d424807a236a887af56c3fdee6bf32cc247673c50733c742b00f362c7406",
+    "command": "/ground-facts --pr 572 --repo core --source primary",
+    "description": "Verify corrected `eli` worked example facts against the primary source and remove the draft flag. No CI gate catches cross-register fact divergence — this check is manual and is the only thing blocking #572 from leaving draft.",
+    "repo": "core",
+    "sourceDate": "2026-10-27",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "b193d7f3d0aa2059555df0acbe7833012fcddec91f8e4dd44832488d13eb6c7a",
+    "command": "/audit-hooks --scope telemetry --repo core --flag legacy",
+    "description": "Identify installations with telemetry hooks registered under the pre-#571 behavior. The PR does not automatically migrate existing hooks; rollout review of migration behavior is an open owner gate with no scheduled date.",
+    "repo": "core",
+    "sourceDate": "2026-10-27",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The available evidence did not confirm these suggestions."
   }
 ]
