@@ -12,7 +12,7 @@
   },
   "reviewedAt": "2026-10-28T10:34:41Z",
   "scope": "Final visible draft, deployed JSON and rendered link parity, exact article/action blobs, correction-train chronology, held-action state, source-byte versus token claims, command and owner-gate surfaces, and current review discovery. Read-only review; no article acceptance, action admission, workflow, runtime, merge, or scheduling authority.",
-  "fullRecordBlobSha": "3289a3c40fb3c286a9273b96bef0cdfd2c562dc1",
+  "fullRecordBlobSha": "3cbee37ea0baf1edd55e98532bffab89847efed0",
   "fullRecordPath": "reviews/articles/2026-10-27-ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6.md",
   "result": "completed",
   "findings": [
@@ -29,7 +29,9 @@
         "https://github.com/ojfbot/daily-logger/pull/462"
       ],
       "correction": "Report #456 as an October 22 action-decision repair and #462 as an October 23 current-request display repair. Preserve their separate chronology and remove the three-train causal claim.",
-      "disposition": { "kind": "open" }
+      "disposition": {
+        "kind": "open"
+      }
     },
     {
       "id": "C2",
@@ -42,7 +44,9 @@
         "https://github.com/ojfbot/daily-logger/pull/465"
       ],
       "correction": "State that October 24 completed article-only acceptance with three held suggestions. No separate held-action run occurred; do not infer an empty held set.",
-      "disposition": { "kind": "open" }
+      "disposition": {
+        "kind": "open"
+      }
     },
     {
       "id": "C3",
@@ -55,7 +59,9 @@
         "https://github.com/ojfbot/daily-logger/blob/ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6/_articles/2026-10-27.md#L62-L64"
       ],
       "correction": "Identify #52 and #53 as Helpdesk check-in identities. Link an actual durable check-in receipt if public; otherwise attribute the observation to PR #3 without manufacturing GitHub PR links or merge controls.",
-      "disposition": { "kind": "open" }
+      "disposition": {
+        "kind": "open"
+      }
     },
     {
       "id": "C4",
@@ -68,7 +74,9 @@
         "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6434736122"
       ],
       "correction": "Describe a per-source byte-limit hold before model entry. Keep tokenizer, model-window, output-reserve, and future-case fit unknown.",
-      "disposition": { "kind": "open" }
+      "disposition": {
+        "kind": "open"
+      }
     },
     {
       "id": "C5",
@@ -81,7 +89,9 @@
         "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6448626429"
       ],
       "correction": "Preserve candidate IDs and payload text as held historical evidence, label the commands unsupported and non-dispatchable, and name the real supervised PR-review or owner-decision route.",
-      "disposition": { "kind": "open" }
+      "disposition": {
+        "kind": "open"
+      }
     },
     {
       "id": "C6",
@@ -95,21 +105,24 @@
         "https://github.com/ojfbot/core/pull/572"
       ],
       "correction": "Treat #450 and #452 as independently supervised records; ordering is an operator preference unless separately decided. Describe #572 as draft pending canonical review/adoption with bounded pilot limits, not a nonexistent command or sole manual fact check.",
-      "disposition": { "kind": "open" }
+      "disposition": {
+        "kind": "open"
+      }
     },
     {
       "id": "C7",
       "classification": "confirmed_error",
-      "title": "Morning Cockpit #60's owner gate is erased",
-      "location": "Lines 109 and 124: PR #60 has passed review and has no documented blocker.",
-      "explanation": "The source-current #386 receipt says Cockpit #60 remains under owner #57 gates and is not merge-authorized by the article. Issue #57 remains open with explicit owner decisions and unchecked acceptance criteria. PR #60 contains a generated validation statement, not an owner merge disposition.",
+      "title": "Action review is incorrectly presented as a prerequisite for article acceptance",
+      "location": "The Suggested actions card says acceptance remains blocked until action review completes.",
+      "explanation": "October 23 acceptance #460 and October 24 acceptance #464 demonstrate article-only acceptance with suggestions held for independent review.",
       "evidenceUrls": [
-        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6434736122",
-        "https://github.com/ojfbot/morning-cockpit/issues/57",
-        "https://github.com/ojfbot/morning-cockpit/pull/60"
+        "https://github.com/ojfbot/daily-logger/pull/460",
+        "https://github.com/ojfbot/daily-logger/pull/464"
       ],
-      "correction": "Report #60 as awaiting owner disposition under the retained #57 contract boundary. Do not translate generated validation into merge readiness or absence of blockers.",
-      "disposition": { "kind": "open" }
+      "correction": "Say article acceptance may proceed with uncertain actions visibly Needs review; action admission and closure remain blocked until verified.",
+      "disposition": {
+        "kind": "open"
+      }
     },
     {
       "id": "U1",
@@ -122,7 +135,25 @@
         "https://github.com/ojfbot/daily-logger/blob/ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6/_articles/2026-10-27.md#L62-L64"
       ],
       "correction": "Attribute the runtime statement to PR #3 and label independent replay verification unavailable, or link a durable check-in record binding observation time, service revision, and replay result.",
-      "disposition": { "kind": "open" }
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "Morning Cockpit #60's merge-readiness claim lacks an owner disposition",
+      "location": "Lines 109 and 124: PR #60 has passed review and has no documented blocker.",
+      "explanation": "PR #60 contains generated cleanup and validation statements but no evidenced owner merge disposition. Related issue #57 concerns PR #56's source-record contract and does not establish a hard merge prerequisite for #60. The #386 receipt requires both surfaces in the evidence census, not a direct dependency. These records do not prove a blocker exists for #60.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6434736122",
+        "https://github.com/ojfbot/morning-cockpit/issues/57",
+        "https://github.com/ojfbot/morning-cockpit/pull/60"
+      ],
+      "correction": "Report #60 as open without an evidenced owner merge disposition. Identify #57 as a separate related contract concern. Infer neither merge readiness nor a hard #57 gate for #60.",
+      "disposition": {
+        "kind": "open"
+      }
     }
   ]
 }
