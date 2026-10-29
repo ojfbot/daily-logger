@@ -7,7 +7,7 @@ import { applyVerifiedActionReview } from './evidence-view-fixtures.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { ActionRegistrySchema, actionStateDigest, normalizeWorkKey, sha256, captureDraftActionCandidates, readActionRegistry, registryBytes, splitActionRegistry, hydrateActionRegistry, projectRegistry, assertExactInvocationAdmissions, renderArticleActions, type ActionRegistry } from '../action-registry.js'
-import { draftCandidateEvidenceBinding, actionCommandSourceReferences, actionRecordSourceReferences, actionEvidenceScope, selectActionEvidence } from '../action-evidence-selection.js'
+import { draftCandidateEvidenceBinding, actionCommandSourceReferences, actionRecordSourceReferences, actionEvidenceScope, actionSourceReferences, draftCandidateEvidenceScope, prepareConservativeDraftCandidateEvidence, selectActionEvidence } from '../action-evidence-selection.js'
 import { generationActionCycle } from '../action-review-cycle.js'
 import { createActionAgents, pendingActionReview, resolveActionSourceLines, reviewArticleActions, classifyActionReviewFailure } from '../review-actions.js'
 
@@ -665,6 +665,39 @@ describe('captured candidate references before independent verification', () => 
     expect(()=>actionCommandSourceReferences('/review #561')).toThrow(/Ambiguous candidate target/)
     expect(()=>actionCommandSourceReferences('/review #561',new Set(['core#561','daily-logger#561']))).toThrow(/Ambiguous candidate target/)
     expect([...actionCommandSourceReferences('/review #561',new Set(['core#561']))]).toEqual(['core#561'])
+  })
+  it('keeps the October 27 captured commands intact while preparing required primary evidence', () => {
+    const registry = ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
+    const articleDate = '2026-10-27', cycle = generationActionCycle(), statuses = new Map([[articleDate, 'draft']])
+    const original = [
+      { command: '/review-draft merge --pr 450 --repo daily-logger', repo: 'daily-logger', description: 'Review #450 before #452.', status: 'open', sourceDate: articleDate },
+      { command: '/ground-facts --pr 572 --repo core --source primary', repo: 'core', description: 'Check #572 against primary facts.', status: 'open', sourceDate: articleDate },
+      { command: '/audit-hooks --scope telemetry --repo core --flag legacy', repo: 'core', description: 'Inspect pre-#571 hook behavior.', status: 'open', sourceDate: articleDate },
+    ] as const
+    const context = { kind: 'retained' as const, markdown: 'Core #571 existing-hook migration. Core #572 stays draft.' }
+    const pending = pendingActionReview({ registry, articleDate, cycle, markdown: `---\ndate: ${articleDate}\nstatus: draft\n---\nCaptured article.\n`, reason: 'Needs evidence.', draftCandidates: original, draftContext: context, articleStatuses: statuses })
+    const captured = pending.registry.articles[0]!.draftCandidates!
+    const evidence = prepareConservativeDraftCandidateEvidence({ registry: pending.registry, articleDate, cycle, markdown: pending.markdown, feedback: '', articleStatuses: statuses, draftCandidates: captured })
+    expect(evidence.candidates.map(candidate => candidate.candidateId)).toEqual(captured.map(candidate => candidate.candidateId))
+    expect(evidence.candidates.map(candidate => candidate.references.map(reference => reference.reference))).toEqual([['daily-logger#450'], ['core#572'], []])
+    expect(evidence.unassignedReferences.map(reference => reference.reference)).toContain('core#571')
+    expect([...draftCandidateEvidenceScope({ registry: pending.registry, articleDate, markdown: pending.markdown, feedback: '', cycle, articleStatuses: statuses, draftCandidateEvidence: evidence }).requiredRefs]).toEqual(expect.arrayContaining(['daily-logger#450', 'core#572', 'core#571']))
+    expect(captured.map(candidate => candidate.payload)).toEqual(original)
+  })
+  it('does not infer a target from an unsupported or conflicting flag pair', () => {
+    expect([...actionSourceReferences('Core #571')]).toEqual(['core#571'])
+    expect([...actionCommandSourceReferences('/review-draft merge --pr 450 --repo daily-logger')]).toEqual(['daily-logger#450'])
+    expect([...actionCommandSourceReferences('/editorial-resume --pr 416 --pin-request --verify-schema --dry-run')]).toEqual([])
+    expect(() => actionCommandSourceReferences('/review --pr 450 --repo foreign')).toThrow(/unsupported exact-command PR target/)
+    expect(() => actionCommandSourceReferences('/review --pr 450 --pr 451 --repo core')).toThrow(/Ambiguous or unsupported exact-command PR target/)
+    expect(() => actionCommandSourceReferences('/review --pr 450 --repo core --repo daily-logger')).toThrow(/Ambiguous or unsupported exact-command PR target/)
+    expect(() => actionCommandSourceReferences('/review --pr bogus --pr 450 --repo core')).toThrow(/Ambiguous or unsupported exact-command PR target/)
+    expect(() => actionCommandSourceReferences('/review --pr 450 --repo core --repo bogus!')).toThrow(/Ambiguous or unsupported exact-command PR target/)
+    expect(() => actionCommandSourceReferences('/review --pr=450 --repo core')).toThrow(/Ambiguous or unsupported exact-command PR target/)
+    expect(() => actionCommandSourceReferences('/review foreign-#571', new Set(['core#571']))).toThrow(/Unsupported qualified candidate reference/)
+    expect(() => actionCommandSourceReferences('/review pre-#571')).toThrow(/Ambiguous temporal candidate reference/)
+    expect([...actionCommandSourceReferences('/review pre-#571', new Set(['core#571']))]).toEqual([])
+    expect(() => actionCommandSourceReferences('/review foreign#571')).toThrow(/Unsupported qualified candidate reference/)
   })
   it('carries the existing reviewed wayfinder alias only with its explicit captured target association', async () => {
     expect(()=>actionCommandSourceReferences('/session wayfinder#543')).toThrow(/Ambiguous candidate target/)

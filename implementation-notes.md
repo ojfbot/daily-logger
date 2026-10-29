@@ -555,3 +555,7 @@ must establish the candidate's actual fit before a new model-run decision.
 - Regenerating the October 26 API entry was expected to touch only that date, but existing generated files also reflected older October 25 drift; carry only the October 26 entry update and leave the unrelated generated rows unchanged for a separate reconciliation.
 - The clean acceptance run completed Sonnet and Opus review but the verified dated action output exceeded the unchanged 64 KiB file limit; classify only that final current-date size failure and retain the pristine suggestions as Needs review so article acceptance can complete without claiming action verification.
 - The next clean acceptance run stopped after the Sonnet proposer requested a hidden source row: the request builder used old empty action keys while the validator used two current obligations. Derive the request from the same normalized status and authoritative scope as selection, retaining exact case/source checks and the failed run; no Opus verdict was produced in this attempt.
+
+## Deviations — October 27 acceptance (2026-10-28)
+
+- The plan assumed October 27 could use the standard clean-acceptance fallback, but its Draft snapshot had no `draftCandidateEvidence`: the selector read `pre-#571` as a repo, missed title-case `Core #571`, and missed exact `--pr`/`--repo` targets. Repair only these native associations and bind the prepared map to the original held candidates before the single acceptance attempt; leave their commands unverified and retain the existing evidence gates.
