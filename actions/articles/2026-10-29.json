@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-29",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-10-29",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action evidence request d36815c3c18bb5dfc814270216047d6799fc846afb034427091eb95ab5833b97 remains pending: Unseen or partial metadata line 2 in github:daily-logger#490@8defb8386b118fd8416b444452337b8f60210d326cba39d169ba1a3b7715eae2; request full-row evidence instead"
+    },
+    "articleDigest": "af26f525523569711d48cf7059c7155b93d749184292e049257af17da906c84a",
+    "roundId": "85bbc3b96992d425b8256fd13192ace488f0e7a3dda46638b4d1bdf5fa69a88b",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "db67ef6f999e952ec2f82475bdc64f33639724a69d0b89196e089970032cde58",
+        "payload": {
+          "command": "/review-pr daily-logger #490",
+          "description": "Advance the October 28 independent review to completion. The review is in progress against source commit 1fc55540e4dca72c0c5fe20f0f099cf44524eaf8; closing it unblocks the correction and acceptance train.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-29"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "21dcfd18800389b9e4892dcac06233cad5f837b27679716c6d533672352d34be",
+        "payload": {
+          "command": "/triage-pr morning-cockpit #60",
+          "description": "Issue a disposition on the stale docs/comments PR: merge, close, or assign a named reviewer with a deadline. Eight days without a verdict is the threshold for explicit triage.",
+          "repo": "morning-cockpit",
+          "status": "open",
+          "sourceDate": "2026-10-29"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "9848037aad5ff36e0587705623d45fb32a2ebadf5a9311dd914811df1e8131b1",
+        "payload": {
+          "command": "/review-suggestions daily-logger october-27",
+          "description": "Run the separately authorized action review for the three held suggestions from the October 27 acceptance. These are in Needs Review state and independent of the October 28 editorial train.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-29"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-10-29",
+      "articleDigest": "af26f525523569711d48cf7059c7155b93d749184292e049257af17da906c84a",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "37fa6537c0919ce1250adb03f8587005b7e7cfaf47f628d96edcfd071b10d823",
+      "candidatePayloadsSha256": "bdd7f2fecc46f2ef41a4798fb630382576cb8fab9c487d0dc870ae88cae778cd",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "c29c1fbfd0c71f399f4edae4989e67feb9b62b83fd04cd4894613b3b0790ff99",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "db67ef6f999e952ec2f82475bdc64f33639724a69d0b89196e089970032cde58",
+          "payloadSha256": "dc917bf2d503268bd7aa7fd064477d3dcd447de9e6349d0fea867b376c569873",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#490",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "21dcfd18800389b9e4892dcac06233cad5f837b27679716c6d533672352d34be",
+          "payloadSha256": "10f015e586d6ea57dccc867a6a5e24df289f4d05884aa7b81a43b47db04730e8",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "morning-cockpit#60",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "9848037aad5ff36e0587705623d45fb32a2ebadf5a9311dd914811df1e8131b1",
+          "payloadSha256": "4f728ddecaebbe1d2403447cbb69b39184cd940a2f39bf6e110ebce39348fad1",
+          "references": [],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "classic-space-venue#4",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "classic-space-venue#8",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#567",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#572",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "lego-village-pipeline#44",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "workstation-yuri#4",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Critical path: daily-logger #490 (October 28 independent review) is the only active editorial item. Standard train: review closes → correction if findings warrant → evidence association check → acceptance stamp. The three held suggestions from the October 27 acceptance (Needs Review state) are independent of this train and require a separately authorized action review; no timeline is recorded.\n\nOwner gates and evidence gaps:\n- morning-cockpit #60: merge readiness unverified; no reviewer named in available record; eight days open without disposition. Needs explicit triage: merge, close, or named owner with deadline.\n- classic-space-venue #8: six days open, no activity, no disposition recorded. Parked or blocked on something external — unknown from this window's evidence.\n- Issue #386: underlying context-budget problem is unresolved; no next concrete step recorded; no downstream work currently identified as blocked.\n- workstation-yuri #4–#7: documentation-only, unblocked pending operator review.\n- core #572: open draft, no in-window activity, no blocker identified.\n- lego-village-pipeline #44–#46: DO NOT MERGE flags are intentional; #46 has active design pickup but no merge timeline.\n- classic-space-venue #4: no in-window activity; serves core #567 chain.\n\nThe seven commit SHAs listed in What Shipped are not individually mapped to PRs in this window's evidence. PR-to-SHA mapping requires direct inspection of the GitHub diff for each of #485–#489.\n\nThe DRAFT_CONTINUATION_CONTEXT block present in the draft source is a machine-readable session-handoff artifact encoded in base64 and embedded as an HTML comment. It is pipeline infrastructure, not editorial content, and does not appear in the published article."
+    },
+    "stateDigest": "fb6d5d4fe324d5d91eb1c81feea3cc8f56a0a0924835a63d8d4b3ba06bb08740",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [
+      {
+        "version": "action-evidence-request-v1",
+        "id": "d36815c3c18bb5dfc814270216047d6799fc846afb034427091eb95ab5833b97",
+        "kind": "source-view",
+        "caseDigest": "426d294979d797ce51fd7a4cac87ede2a2428b466e0abbd30dcd291374679e79",
+        "articleDate": "2026-10-29",
+        "cycle": {
+          "phase": "generation"
+        },
+        "actionKeys": [
+          "article-feedback"
+        ],
+        "sourceKey": "model-context",
+        "sourceId": "github:daily-logger#490@8defb8386b118fd8416b444452337b8f60210d326cba39d169ba1a3b7715eae2",
+        "sourceFullContentSha256": "8defb8386b118fd8416b444452337b8f60210d326cba39d169ba1a3b7715eae2",
+        "obligations": [
+          "c277495ff894f7aaedc124644f69547c4522266d3fcb8f366bd700fa8dd68c08"
+        ],
+        "recipient": "coordinator-owner",
+        "question": "View round 9a33c12b3fc330c4a84d1e7e1bd5634ced78f0979ca0a1be5944ed9fa76cb5be; policy 2d609a79e6dd1330618d5c1af2a4f3ef0d3cda33be836e3d1a394ec4243d2489; collected SHA256 8defb8386b118fd8416b444452337b8f60210d326cba39d169ba1a3b7715eae2; original lines 1-14. Prepare a fully visible bounded evidence context without weakening source duties or limits: Unseen or partial metadata line 2 in github:daily-logger#490@8defb8386b118fd8416b444452337b8f60210d326cba39d169ba1a3b7715eae2; request full-row evidence instead",
+        "sourceLocator": "https://github.com/ojfbot/daily-logger/pull/490",
+        "status": "open"
+      }
+    ],
+    "rejected": []
+  }
+}
