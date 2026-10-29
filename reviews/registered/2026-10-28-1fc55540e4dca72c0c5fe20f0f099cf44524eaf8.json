@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261028-1fc55540e4dc",
+  "article": {
+    "date": "2026-10-28",
+    "sourceCommitSha": "1fc55540e4dca72c0c5fe20f0f099cf44524eaf8",
+    "blobSha": "abd4140ba0536e892d458148ac4bdcf0a2f23d2d"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-29T10:38:59Z",
+  "scope": "Final visible draft, deployed JSON and rendered link parity, exact article blob, editorial/action chronology, byte-versus-token and storage attribution, draft/readiness/owner gates, cross-PR dependencies, and current review discovery. Read-only review; no article acceptance, action admission, workflow, runtime, merge, or scheduling authority.",
+  "fullRecordBlobSha": "34d8b7727c0f82970810e938569643a1904ad013",
+  "fullRecordPath": "reviews/articles/2026-10-28-1fc55540e4dca72c0c5fe20f0f099cf44524eaf8.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The article reports 29 commits but contains 28",
+      "location": "Line 11 says all 29 commits in the interval landed in daily-logger.",
+      "explanation": "The source contains 28 commit-list entries, and the byte-matched deployed article JSON reports commitCount 28.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/1fc55540e4dca72c0c5fe20f0f099cf44524eaf8/_articles/2026-10-28.md#L11-L56",
+        "https://log.jim.software/api/articles/2026-10-28.json"
+      ],
+      "correction": "Report 28 listed commits, or identify and source the missing twenty-ninth commit before retaining that count.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The failure time and recovery chronology are wrong",
+      "location": "Lines 11 and 62 place the failed acceptance at 03:13Z and extend its recovery through the next 88 minutes.",
+      "explanation": "Workflow run 40622778020 started at 02:45:16Z and failed at 02:47:59Z. PR #478 merged later at 03:13:45Z, acceptance #481 merged at 03:42:42Z, and post-acceptance PRs #483/#484 merged at 04:34Z/04:41Z.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/actions/runs/40622778020",
+        "https://github.com/ojfbot/daily-logger/pull/478",
+        "https://github.com/ojfbot/daily-logger/pull/481",
+        "https://github.com/ojfbot/daily-logger/pull/483",
+        "https://github.com/ojfbot/daily-logger/pull/484"
+      ],
+      "correction": "Date the failed run to 02:45–02:47Z, the article-only fallback repair to 03:13Z, and acceptance to 03:42Z. Treat #483/#484 as later held-action work.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "PR 466 is not part of the October 25 editorial train",
+      "location": "Lines 15-23 place PR #466 and merge ea5be44 in the October 25 train group.",
+      "explanation": "PR #466 is blog: 2026-10-27 and generated the October 27 article. The October 25 sequence is #450, #467, #468 and #469.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/450",
+        "https://github.com/ojfbot/daily-logger/pull/466",
+        "https://github.com/ojfbot/daily-logger/pull/467",
+        "https://github.com/ojfbot/daily-logger/pull/468",
+        "https://github.com/ojfbot/daily-logger/pull/469"
+      ],
+      "correction": "Separate #466 as October 27 article generation and do not use it to inflate the October 25 train or the claimed 18-PR close.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "PR 473 is credited with PR 483's storage mechanism",
+      "location": "Line 27 says PR #473 packed coverage as tuple rows for the 64 KiB dated-file limit.",
+      "explanation": "PR #473 packs repeated coverage metadata in the model view and measures the evidence budget. PR #483 implements reversible tuple rows for generated coverage when the on-disk dated file would exceed 65,536 bytes.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/473",
+        "https://github.com/ojfbot/daily-logger/pull/483"
+      ],
+      "correction": "Attribute model-view factoring and exact evidence accounting to #473, and the reversible dated-file coverage representation to #483.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Post-acceptance PRs are called prerequisites for acceptance",
+      "location": "Line 43 says every PR was a prerequisite for the next and acceptance required all four infrastructure fixes.",
+      "explanation": "Acceptance #481 merged at 03:42Z. Storage packer #483 and accepted-revision route/grant #484 merged later at 04:34Z and 04:41Z, so they cannot have been prerequisites for the earlier accepted article.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/481",
+        "https://github.com/ojfbot/daily-logger/pull/483",
+        "https://github.com/ojfbot/daily-logger/pull/484"
+      ],
+      "correction": "Describe #478/#480 as acceptance-path repairs, #481 as acceptance, #482 as source-bound review, and #483/#484 as later held-action preparation.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "A narrow byte measurement is turned into a universal review gate",
+      "location": "Lines 94, 108 and 109 say all six suggestions are unsafe to review and issue #386 must ship before any action review.",
+      "explanation": "Issue #386 separates byte limits from token fit. The October 25 run stopped before model entry because claim refs diverged, while the October 26 run reached both proposer and verifier and stopped at ranked-shortlist-incomplete rather than a byte/token breach.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/386",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6453894856",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6460908513"
+      ],
+      "correction": "Keep 391,621/393,216 bytes as one evidence-fit observation. Report each consumed run's actual stop and leave future byte/token/storage fit unknown.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The merge action omits draft readiness and the human gate",
+      "location": "Lines 96 and 108 call draft PR #485 the first thing to merge and propose /merge daily-logger#485.",
+      "explanation": "PR #485 was explicitly Draft and required hosted checks, preview, and the supervised train. Its review data granted no readiness or merge decision.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/485",
+        "https://github.com/ojfbot/daily-logger/blob/1fc55540e4dca72c0c5fe20f0f099cf44524eaf8/docs/daily-cycle.md"
+      ],
+      "correction": "Recommend reviewing the source-pinned findings and deciding readiness under the supervised train. Preserve the human readiness/merge gate.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "Workstation PRs 4 through 7 are not independent",
+      "location": "Lines 98 and 109 say Workstation PRs #4-#7 are independent and have no merge order.",
+      "explanation": "PRs #5 and #7 explicitly overlap two files. Both say to review and land #5 first, update #7 against resulting main, and not merge either current head without reconciliation.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/workstation-yuri/pull/5",
+        "https://github.com/ojfbot/workstation-yuri/pull/7"
+      ],
+      "correction": "Report #5 to #7 as a documented ordering and reconciliation dependency. Keep #4 and #6 separate absent other evidence.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C9",
+      "classification": "confirmed_error",
+      "title": "Core 573 is not a companion scope reduction for 572",
+      "location": "Line 98 calls #573 core #572's companion and says its closure did not affect #572 completeness.",
+      "explanation": "Core #572 changes the eli example and invocation portability. Core #573 proposed fleet-wide Claude configuration and hooks; its closure comment says Minifour setup would proceed from canonical main and does not amend #572.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/pull/572",
+        "https://github.com/ojfbot/core/pull/573",
+        "https://github.com/ojfbot/core/pull/573#issuecomment-6457898698"
+      ],
+      "correction": "Describe #572 and #573 as separate efforts. Attribute #573's closure to its recorded setup decision without inventing a companion relationship or a completeness judgment about #572.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Morning Cockpit 60 has no evidenced owner merge disposition",
+      "location": "Lines 98, 108 and 109 say PR #60 has no blocker and suggest determining the hold reason or merging.",
+      "explanation": "PR #60 contains the generated cleaner's validation statement and two medium-confidence edits, but no discussion or evidenced owner readiness/merge disposition. Absence of a comment does not establish merge safety.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/morning-cockpit/pull/60"
+      ],
+      "correction": "Report #60 as open with owner disposition and merge readiness unknown. Ask for an owner decision and evidence packet rather than offering merge by default.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
