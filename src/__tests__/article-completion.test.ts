@@ -29,6 +29,15 @@ function fixture() {
 }
 
 describe('article completion with unresolved actions', () => {
+  it('tells draft readers that suggestions are held without blocking article acceptance', () => {
+    const registry = readActionRegistry(fixtureRoot)
+    const original = readFileSync(resolve(fixtureRoot, '_articles', `${date}.md`), 'utf8')
+    const html = renderArticleActions(original, registry, date, readArticleStatuses(fixtureRoot))
+    expect(html).toContain('Action review pending. These suggestions remain held until independent review is complete.')
+    expect(html).toContain('Original draft suggestions are unverified and cannot be dispatched.')
+    expect(html).not.toContain('Acceptance remains blocked')
+  })
+
   it('accepts only the explicit article-only Accepted/pending combination', () => {
     const { mixed } = fixture()
     expect(ActionRegistrySchema.safeParse(mixed).success).toBe(true)

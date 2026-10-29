@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- October 27 article correction assumed prose-only edits would build; the action snapshot binds the article digest, and the managed card regenerated false acceptance and draft-command claims. Use native pending-snapshot reconciliation, preserve original candidate identities and held decisions, and make the renderer label historical proposals as unverified and non-dispatchable.
+
 - 2026-10-27, October 26 held-action grant: the plan assumed a one-file grant could enter the existing post-acceptance route; the accepted snapshot records a revision cycle while that route admitted generation only and required unchanged output cycle. Kept the prior revision in history, bound a new revision to the one-use operation, required the same cycle in the grant and proposal, and held dispatch pending independent tests.
 
 - 2026-10-27, October 26 action-state storage repair: the plan assumed two existing 18,000-character overflow controls would still hit the 64 KiB gate; reversible coverage packing made them fit, so fresh CI reached later evidence guards instead. Raised only those synthetic verdict-reason sizes to 24,000 characters and reran the same held-versus-rejected assertions; the storage limit and production behavior stayed unchanged.

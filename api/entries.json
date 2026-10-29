@@ -611,24 +611,6 @@
           "url": "https://github.com/ojfbot/workstation-yuri/pull/3"
         },
         "at": "2026-10-27T05:13:49.000Z"
-      },
-      {
-        "status": "unavailable",
-        "source": {
-          "repo": "ojfbot/workstation-yuri",
-          "ref": "53",
-          "url": "https://github.com/ojfbot/workstation-yuri/pull/53"
-        },
-        "reason": "missing-merge-time"
-      },
-      {
-        "status": "unavailable",
-        "source": {
-          "repo": "ojfbot/workstation-yuri",
-          "ref": "52",
-          "url": "https://github.com/ojfbot/workstation-yuri/pull/52"
-        },
-        "reason": "missing-merge-time"
       }
     ],
     "issueTimes": [

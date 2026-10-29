@@ -236,14 +236,15 @@ function sourceLabel(locator: string): string {
 function draftContextHtml(context: ActionRegistry['articles'][number]['draftContext'], pending: boolean): string[] {
   if (context?.kind !== 'retained') return []
   const state = pending ? 'No current follow-ups have been ranked yet.' : 'Current follow-ups are ranked above.'
-  return [`<details class="suggested-actions-draft-context"><summary>Article draft context</summary><div><p class="suggested-actions-draft-context-note">These notes are retained from this article’s draft and review. They are separate from prior-day maintenance context. ${state}</p>${renderArticle(context.markdown)}</div></details>`]
+  const warning = pending ? ' These are original draft notes, not current instructions. They may contain stale or disproven claims; check the independent review and current sources before acting.' : ''
+  return [`<details class="suggested-actions-draft-context"><summary>Article draft context</summary><div><p class="suggested-actions-draft-context-note">These notes are retained from this article’s draft and review. They are separate from prior-day maintenance context. ${state}${warning}</p>${renderArticle(context.markdown)}</div></details>`]
 }
 function draftCandidatesHtml(candidates: ActionRegistry['articles'][number]['draftCandidates'], pending: boolean, articleAccepted = false): string[] {
   if (candidates === undefined) return pending ? ['<div class="draft-candidates-unknown"><p>The original draft suggestions were not captured. Their contents are unknown, and none have been reconstructed.</p></div>'] : []
   if (pending && candidates.length === 0) return ['<div class="draft-candidates-awaiting draft-candidates-empty"><p>This draft contains no suggestions. Nothing is awaiting review, and no missing suggestion has been invented.</p><p class="draft-candidate-quality">The initial target is 3–5 suggestions.</p></div>']
   if (pending && candidates.length < 3) {
     const items = candidates.map(candidate => `<li data-draft-candidate-id="${escaped(candidate.candidateId)}"><article><strong>${oneLine(candidate.payload.command)} · ${oneLine(candidate.payload.repo)}</strong><p>${oneLine(candidate.payload.description)}</p><p class="draft-candidate-status">${articleAccepted ? 'Needs review' : 'Awaiting review'}</p></article></li>`).join('')
-    return [`<div class="draft-candidates-awaiting draft-candidates-incomplete"><p>These suggestions are awaiting review.</p><p class="draft-candidate-quality">This draft contains ${candidates.length} suggestion${candidates.length === 1 ? '' : 's'}; the initial target is 3–5. Review remains pending, and no missing suggestion has been invented.</p>${items ? `<ol>${items}</ol>` : ''}</div>`]
+    return [`<div class="draft-candidates-awaiting draft-candidates-incomplete"><p>These suggestions are awaiting review.</p><p>Original draft suggestions are unverified and cannot be dispatched. Their commands and descriptions may be inaccurate.</p><p class="draft-candidate-quality">This draft contains ${candidates.length} suggestion${candidates.length === 1 ? '' : 's'}; the initial target is 3–5. Review remains pending, and no missing suggestion has been invented.</p>${items ? `<ol>${items}</ol>` : ''}</div>`]
   }
   const label = (candidate: NonNullable<typeof candidates>[number]) => {
     if (candidate.review.state === 'awaiting-review') return articleAccepted ? 'Needs review' : 'Awaiting review'
@@ -253,7 +254,7 @@ function draftCandidatesHtml(candidates: ActionRegistry['articles'][number]['dra
     return 'Verified as already closed'
   }
   const items = candidates.map(candidate => `<li data-draft-candidate-id="${escaped(candidate.candidateId)}"><article><strong>${oneLine(candidate.payload.command)} · ${oneLine(candidate.payload.repo)}</strong><p>${oneLine(candidate.payload.description)}</p><p class="draft-candidate-status">${label(candidate)}</p>${candidate.review.state === 'awaiting-review' ? '' : `<p>${oneLine(candidate.review.reason)}</p>`}</article></li>`).join('')
-  if (pending) return [`<div class="draft-candidates-awaiting"><p>These suggestions are awaiting review.</p><ol>${items}</ol></div>`]
+  if (pending) return [`<div class="draft-candidates-awaiting"><p>These suggestions are awaiting review.</p><p>Original draft suggestions are unverified and cannot be dispatched. Their commands and descriptions may be inaccurate.</p><ol>${items}</ol></div>`]
   const targetNote = candidates.length < 3 ? `<p class="draft-candidate-quality">The draft began with ${candidates.length} suggestion${candidates.length === 1 ? '' : 's'}, below the initial target of 3–5. Review accounted for every retained suggestion; no missing suggestion was invented.</p>` : ''
   return [`<details class="draft-candidates-reviewed"><summary>How draft suggestions were handled <span>${candidates.length}</span></summary>${targetNote}${items ? `<ol>${items}</ol>` : ''}</details>`]
 }
@@ -319,7 +320,7 @@ export function renderArticleActions(markdown: string, registry: ActionRegistry,
         ...(earlierRequests.length ? [`<details class="suggested-actions-draft-context"><summary>Earlier evidence requests</summary><div>${earlierRequests.map(request => `<p><code>${escaped(request.sourceKey)}</code> · Request: <code>${escaped(request.id)}</code> · Recorded status: ${escaped(request.status)} · Recipient: ${escaped(request.recipient)}.</p>`).join('')}</div></details>`] : [])]
       : snapshot.evidenceRequests?.filter(request => request.status === 'open').map(request =>
         `<p class="action-evidence-request"><strong>Evidence request pending:</strong> <code>${escaped(request.id)}</code> · Recipient: ${escaped(request.recipient)} · Private artifact: <code>.action-evidence/${escaped(request.id)}/request.json</code>.</p>`) ?? []
-    const completion = articleAccepted ? 'Article accepted. These suggestions still need independent review.' : 'Action review pending. Acceptance remains blocked until the review is complete.'
+    const completion = articleAccepted ? 'Article accepted. These suggestions still need independent review.' : 'Action review pending. These suggestions remain held until independent review is complete.'
     const retention = articleAccepted ? '<details class="suggested-actions-draft-context"><summary>Review details</summary><div><p>No action was added or closed. Original suggestions and previously saved sources are retained. Only identities and digests of fresh sources were recorded; their raw content was not retained.</p></div></details>' : ''
     return `${unmanagedArticleProse(markdown).trimEnd()}\n\n${ACTIONS_START}\n<section class="suggested-actions-card suggested-actions-card-needs-review" aria-labelledby="suggested-actions-${escaped(articleDate)}">\n<header class="suggested-actions-header"><h3 id="suggested-actions-${escaped(articleDate)}">Suggested actions</h3><p>${completion}</p></header>\n${[reason, retention, ...requests, ...candidates, ...context].filter(Boolean).join('\n')}\n</section>\n${ACTIONS_END}\n`
   }
