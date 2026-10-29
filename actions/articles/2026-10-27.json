@@ -5,13 +5,160 @@
   "decisions": [],
   "snapshot": {
     "date": "2026-10-27",
-    "status": "draft",
+    "status": "accepted",
     "review": {
       "state": "pending",
-      "reason": "Native candidate evidence associations are prepared; independent action review remains pending."
+      "reason": "The available evidence did not confirm these suggestions.",
+      "articleAcceptance": {
+        "kind": "article-only",
+        "inputRoundId": "535ff42248095b0ba9c052a83e081666ac3c688de970fc23b79054566af5fe50",
+        "inputRegistrySha256": "0bb02dafe3197545441512e0e8861578b6cc30f13014c113c5d53985398b5455",
+        "failureKind": "evidence-required",
+        "evidenceRequest": {
+          "version": "action-evidence-request-v1",
+          "id": "ae3ecfc27c43cb6c0802da0600266caca86b5c04e09a52218a0ba65414c3e590",
+          "kind": "source-view",
+          "caseDigest": "8327b36d0d60a302c155e2c4a4a37df9d5382250e4516b81318b1005656fb299",
+          "articleDate": "2026-10-27",
+          "cycle": {
+            "phase": "generation"
+          },
+          "actionKeys": [
+            "article-feedback"
+          ],
+          "sourceKey": "model-context",
+          "sourceId": "github:core#572@d927113456216d60a384764402d44d140cd71860e5de56492b7e1aea70af3e66",
+          "sourceFullContentSha256": "d927113456216d60a384764402d44d140cd71860e5de56492b7e1aea70af3e66",
+          "obligations": [
+            "c277495ff894f7aaedc124644f69547c4522266d3fcb8f366bd700fa8dd68c08"
+          ],
+          "recipient": "coordinator-owner",
+          "question": "View round 4b2bcfbf3572dc472372486e85d54544faf4a8eaa4902e48b2f12eacbe816723; policy 4c590e6f37f9f8bced470d69fbd2b46cdda3fc48747a68cf17e7afaa9dfcfcb6; collected SHA256 d927113456216d60a384764402d44d140cd71860e5de56492b7e1aea70af3e66; original lines 41-54. Prepare a fully visible bounded evidence context without weakening source duties or limits: Unseen or partial metadata line 41 in github:core#572@d927113456216d60a384764402d44d140cd71860e5de56492b7e1aea70af3e66; request full-row evidence instead",
+          "sourceLocator": "https://github.com/ojfbot/core/pull/572",
+          "status": "open"
+        },
+        "sources": [
+          {
+            "id": "article@d1734d6d3b7121280407b3bde8d4cb3658895ede995b401baf3647677eab87da",
+            "locator": "current revised article",
+            "sha256": "d1734d6d3b7121280407b3bde8d4cb3658895ede995b401baf3647677eab87da"
+          },
+          {
+            "id": "operator@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "locator": "editorial feedback",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "id": "repo:ROADMAP.md@8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30",
+            "locator": "ROADMAP.md",
+            "sha256": "8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30"
+          },
+          {
+            "id": "repo:AGENTS.md@fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618",
+            "locator": "AGENTS.md",
+            "sha256": "fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618"
+          },
+          {
+            "id": "repo:CLAUDE.md@a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2",
+            "locator": "CLAUDE.md",
+            "sha256": "a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2"
+          },
+          {
+            "id": "repo:opm/system.opl@d9e7e1d1683b843daf135c9cf564428b35b8301505f4a85d3b37dca291c01d5b",
+            "locator": "opm/system.opl",
+            "sha256": "d9e7e1d1683b843daf135c9cf564428b35b8301505f4a85d3b37dca291c01d5b"
+          },
+          {
+            "id": "review:reviews/articles/2026-10-27-ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6.md@be82505bcab5859183c56556c15db7fbc4db3495918751f5cf84508edecb13fb",
+            "locator": "reviews/articles/2026-10-27-ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6.md",
+            "sha256": "be82505bcab5859183c56556c15db7fbc4db3495918751f5cf84508edecb13fb"
+          },
+          {
+            "id": "review:reviews/registered/2026-10-27-ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6.json@f92803f837b8d90a88879c5d77e34ca271c697d33d3d89180d027352fe7fc372",
+            "locator": "reviews/registered/2026-10-27-ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6.json",
+            "sha256": "f92803f837b8d90a88879c5d77e34ca271c697d33d3d89180d027352fe7fc372"
+          },
+          {
+            "id": "github:classic-space-venue#4@4371c102a39c910f14e0836c5aeeaa881e5227c0a73b6bd35b95bcbefd7170b9",
+            "locator": "https://github.com/ojfbot/classic-space-venue/pull/4",
+            "sha256": "4371c102a39c910f14e0836c5aeeaa881e5227c0a73b6bd35b95bcbefd7170b9"
+          },
+          {
+            "id": "github:core#567@f8add487778ddd953b5499098ad56a7d9344a9bc7ae288324050499401bc38ff",
+            "locator": "https://github.com/ojfbot/core/issues/567",
+            "sha256": "f8add487778ddd953b5499098ad56a7d9344a9bc7ae288324050499401bc38ff"
+          },
+          {
+            "id": "github:core#571@0803030d02437df3d5a8bb08d44e09988105026beba29eab6f74ede3ebdd1421",
+            "locator": "https://github.com/ojfbot/core/pull/571",
+            "sha256": "0803030d02437df3d5a8bb08d44e09988105026beba29eab6f74ede3ebdd1421"
+          },
+          {
+            "id": "github:core#572@d927113456216d60a384764402d44d140cd71860e5de56492b7e1aea70af3e66",
+            "locator": "https://github.com/ojfbot/core/pull/572",
+            "sha256": "d927113456216d60a384764402d44d140cd71860e5de56492b7e1aea70af3e66"
+          },
+          {
+            "id": "github:daily-logger#450@ecaf8dcef345572a2d97f53e591df4b72b408706847b1329ffa8be93e4059539",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/450",
+            "sha256": "ecaf8dcef345572a2d97f53e591df4b72b408706847b1329ffa8be93e4059539"
+          },
+          {
+            "id": "github:morning-cockpit#60@c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff",
+            "locator": "https://github.com/ojfbot/morning-cockpit/pull/60",
+            "sha256": "c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff"
+          },
+          {
+            "id": "github:daily-logger#485@c211d776b04e09a5b94c11db2e87fa44c2989626049d91302779477d78dde5ec",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/485",
+            "sha256": "c211d776b04e09a5b94c11db2e87fa44c2989626049d91302779477d78dde5ec"
+          },
+          {
+            "id": "github:workstation-yuri#3@066ca7b546780f41e680a8a809636098224c1c97d3e36ed9cffce45b12ff3157",
+            "locator": "https://github.com/ojfbot/workstation-yuri/pull/3",
+            "sha256": "066ca7b546780f41e680a8a809636098224c1c97d3e36ed9cffce45b12ff3157"
+          },
+          {
+            "id": "github:daily-logger#465@3c158b1e9ca1095030711b05815d2b75d90fe184f12b59c21b491cb3655ea712",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/465",
+            "sha256": "3c158b1e9ca1095030711b05815d2b75d90fe184f12b59c21b491cb3655ea712"
+          },
+          {
+            "id": "github:daily-logger#464@3fdbdc68896c6e41359758325851363b8b7d104ed889b6e7c8f94834e2cef85a",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/464",
+            "sha256": "3fdbdc68896c6e41359758325851363b8b7d104ed889b6e7c8f94834e2cef85a"
+          },
+          {
+            "id": "github:daily-logger#463@c25a2917d41286ea20a99dde981f0e70450dcbbba3f9cf7124851dba1cc88a87",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/463",
+            "sha256": "c25a2917d41286ea20a99dde981f0e70450dcbbba3f9cf7124851dba1cc88a87"
+          },
+          {
+            "id": "github:daily-logger#449@ee2c268c807f319bd827a2b714284de370743bd8c9ebd36d282c8a68c7333cdc",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/449",
+            "sha256": "ee2c268c807f319bd827a2b714284de370743bd8c9ebd36d282c8a68c7333cdc"
+          },
+          {
+            "id": "goal:core:decisions/northstar/l2-ojfbot.md@2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/4ca14bc3bda4a661201078e1aca18b4f75bbc8d1",
+            "sha256": "2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb"
+          },
+          {
+            "id": "goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82",
+            "sha256": "33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d"
+          },
+          {
+            "id": "goal:core:decisions/wayfinder/classic-space-agent-world.md@c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/eccbddc808757ffb2c8137e0130d269c6dcf11d3",
+            "sha256": "c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22"
+          }
+        ],
+        "rawContentRetained": false
+      }
     },
     "articleDigest": "78a0a53440366a71571736dcd333e4601619ac35f01eb290eeb1ee581886c32f",
-    "roundId": "535ff42248095b0ba9c052a83e081666ac3c688de970fc23b79054566af5fe50",
+    "roundId": "f6f9b27a55cdce253ed5c2e5f96fbd134af5eac692301bfbf2bc719c27d74a42",
     "reviewCycle": {
       "phase": "generation"
     },
@@ -60,9 +207,18 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "deterministic-default",
+        "kind": "derived-refresh",
         "identity": "progressive-action-evidence-v7-exact-coverage-views",
-        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+        "decision": "Acceptance-status refresh preserves the prior evidence classification after proving the exact Draft input view; it grants no new review authority.",
+        "lineage": {
+          "kind": "acceptance-status-refresh",
+          "priorArticleStatus": "draft",
+          "articleStatus": "accepted",
+          "priorReviewCycle": {
+            "phase": "generation"
+          },
+          "priorRequirementsSha256": "f80d93be06200f45d765a3793d1e7fd7c1fdc9e2b1c52f879ce0650fa7285631"
+        }
       },
       "articleDate": "2026-10-27",
       "articleDigest": "78a0a53440366a71571736dcd333e4601619ac35f01eb290eeb1ee581886c32f",
@@ -72,7 +228,7 @@
       "draftContextSha256": "db45d9ec5fe660fcbb8bd274ff164f657bbc131df99b25268fe5c2bc96e1b815",
       "candidatePayloadsSha256": "c42ab35a47db8c9165dfc4531bd25e76d10a7ccdb2f4bef6d4cdeff21405cd0b",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "f6590019d87dd42a1799eb9ea1279f9f68fd0e06d630c2feffdeff3e63ba6c07",
+      "articleStatusesSha256": "90c55265e3a09fd5bf60749cadf84f63ac65fea88fa7278579f2a3622f23707c",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -141,7 +297,7 @@
       "kind": "retained",
       "markdown": "Editorial pipeline: #450 (Oct 25 review draft) is sequenced first; #452 (Oct 26) follows. Both are in draft independent-review state and neither has been admitted. Next step for each is review draft merge, then correction if warranted, then acceptance, then accepted-source verification, then conditional held-action step.\n\nCore #572: draft, self-reviewed only, factual defect in `eli` worked example. Acceptance criterion is owner verification of corrected facts against primary source. No CI gate catches cross-register divergence. No target date set.\n\nCore #571 existing-hook migration: the PR does not automatically migrate installations with legacy telemetry hooks registered under the old behavior. This is an open owner gate — rollout review of existing hook migration behavior has not been scheduled or assigned.\n\nIssue #386 (token budget ceiling): 250,399-byte discussion against 131,072-byte source limit is the documented failure mode. #462 does not address it. No owner, no target, no stated consequence threshold documented.\n\nMorning-cockpit #60: open since October 21, passed Claude Opus review, no documented blocker. Disposition unknown — requires owner decision on whether to merge or close.\n\nClassic-space-venue #4: active research surface for RFI-0002 / core #567 cluster. Updated this window but not merged. No action required unless the research dependency on core #567 advances.\n\nGate 02 / Selfco Sync replacement cutover: execution-pending, recovery owner holds ordered handoff runbook. Not yet executed. No completion date recorded."
     },
-    "stateDigest": "dbcb9c1f2ca003288fab21853cdcd62720175a67f722ff348e640f9527a1852c",
+    "stateDigest": "8a80fdbd39ea4a6daab801e8c4cab9e397205d69280bcb104a1d27b728bb3c56",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
