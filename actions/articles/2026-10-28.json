@@ -57,11 +57,98 @@
         }
       }
     ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-10-28",
+      "articleDigest": "c5a4a96cd18f7bc382c019ba689ffbd95ebf04b650fddfe7e2789d7ddd50a643",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "c073da546813c58d84191ba5c54ccb91411dd89da098116a25dc70c08f23895d",
+      "candidatePayloadsSha256": "7a53b7d6d6ce0a85ce9097ef5a4a8b2a015624e42d39e6892a79c118e7299bd4",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "db37ffe9a6455704b6595888cbffe91dae40ae54cfdd639cbcf35b4ff7438d4e",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "33e71c636d809b430b6cf6e4aa2a04575ed8a92f37390a160205fa9eff6125aa",
+          "payloadSha256": "b4de070dae5eab2ce1ecc2235c5de1222ee90d9d76f8580f14fb8aa8dd1e3a74",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#485",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "5215cea05a4a07fb881458eb2d0da6a54cf43554d98af53febead9f0e33ced97",
+          "payloadSha256": "3bb6cf2160db21f14f6908b278fbdceb552b59aabc6f38ec91796a1db143d5b8",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#386",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "fc9fdafa10e58d5e9bf4bcc4b250065232bacd6e008d3d6e029bc2f2ab02147d",
+          "payloadSha256": "fed24d789135b243dac1afa82dfb9ebde98919c19e0541df10c4847c90de697f",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "morning-cockpit#60",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "classic-space-venue#4",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#567",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#572",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "lego-village-pipeline#44",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
     "draftContext": {
       "kind": "retained",
       "markdown": "Both Oct 25 and Oct 26 are Accepted. The six held suggestions (three each) are in Needs Review state but are effectively blocked on Issue #386 shipping before independent action review can run safely — the 391,621/393,216 byte aggregate margin (~1,600 bytes) makes a breach on the next held-action context load a near-certainty without budget scoping. daily-logger #485 (Oct 27 independent review, DRAFT) is the confirmed next editorial step and does not depend on #386. core #572 is DRAFT/open correcting a factual conflict in the `eli` worked example; companion #573 closed 2026-10-28T01:06:59Z without merging (full-peer Claude configuration reproducibility, deliberate scope reduction, does not affect #572). Four workstation-yuri DRAFTs (#4–#7) are independent of each other and of the daily-logger train; no merge order is confirmed in the available record. morning-cockpit #60 open since 2026-10-21 with no documented merge blocker — hold reason unknown, requires owner clarification. Whether classic-space-venue #4 is a hard blocker on core #567 is not confirmed. lego-village-pipeline #44, #45, #46 are parked analysis-only or DO NOT MERGE. The 64 KiB dated-file cap is unchanged post-#483; PR #483 adds a fallback, not a limit increase. The Oct 26 one-use revision grant registered in #484 is consumed regardless of run outcome; a fresh grant is needed for any follow-up editorial action on Oct 26."
     },
-    "stateDigest": "79e73c613bb888110b9fd0dd03d144bdf4b6beb67edb3517ad5665f3be3a4e9f",
+    "stateDigest": "e8956524e2276e83aac408085a38329c4f39c3624a2b29d0966c83292bcc306c",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",

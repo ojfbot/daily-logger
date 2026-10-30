@@ -231,7 +231,7 @@ function applicableReviewOutput(registry: ActionRegistry, snapshot: ActionRegist
   return output
 }
 
-function qualifiedActionReferences(payload: string, retainedRefs: ReadonlySet<string>, identity: string): Set<string> {
+function qualifiedActionReferences(payload: string, retainedRefs: ReadonlySet<string>, identity: string, candidateRepo?: string): Set<string> {
   const references = actionSourceReferences(payload)
   for (const match of payload.matchAll(/https:\/\/([^/\s]+)\/([^/\s]+)\/([\w-]+)\/(?:pull|issues)\/(\d+)/g)) {
     if (match[1] !== 'github.com' || match[2] !== 'ojfbot') throw new Error(`Foreign candidate reference ${match[0]} for ${identity}; review pending`)
@@ -241,6 +241,19 @@ function qualifiedActionReferences(payload: string, retainedRefs: ReadonlySet<st
     const qualified = `${match[1]}#${match[2]}`
     if (match[1] === 'pre-') {
       if ([...retainedRefs].filter(reference => reference.endsWith(`#${match[2]}`)).length !== 1) throw new Error(`Ambiguous temporal candidate reference ${qualified} for ${identity}; review pending`)
+      continue
+    }
+    if (match[1] === 'issue' && candidateRepo && KNOWN_REPOS.has(candidateRepo) && !EXCLUDED_REPOS.has(candidateRepo)) {
+      const target = `${candidateRepo}#${match[2]}`
+      const retainedMatches = [...retainedRefs].filter(reference => reference.endsWith(`#${match[2]}`))
+      if (retainedMatches.some(reference => reference !== target)) throw new Error(`Ambiguous candidate target ${qualified} for ${identity}; explicit qualified evidence association required; review pending`)
+      references.add(target)
+      continue
+    }
+    if (match[1] === 'issue') {
+      const matches = [...retainedRefs].filter(reference => reference.endsWith(`#${match[2]}`))
+      if (matches.length !== 1) throw new Error(`Ambiguous candidate target ${qualified} for ${identity}; explicit qualified evidence association required; review pending`)
+      references.add(matches[0]!)
       continue
     }
     if (KNOWN_REPOS.has(match[1])) {
@@ -257,10 +270,10 @@ function qualifiedActionReferences(payload: string, retainedRefs: ReadonlySet<st
 }
 
 function candidateTargetReferences(candidate: DraftActionCandidate, retainedRefs: ReadonlySet<string>): Set<string> {
-  const references = qualifiedActionReferences(JSON.stringify(candidate.payload), retainedRefs, candidate.candidateId)
+  const references = qualifiedActionReferences(JSON.stringify(candidate.payload), retainedRefs, candidate.candidateId, candidate.payload.repo)
   const commandRepo = /(?:^|\s)--repo\s+([a-z][a-z0-9-]*)(?=\s|$)/.exec(candidate.payload.command)?.[1]
   if (commandRepo && commandRepo !== candidate.payload.repo) throw new Error(`Exact-command repository differs from captured candidate: ${candidate.candidateId}; review pending`)
-  for (const reference of actionCommandSourceReferences(candidate.payload.command, retainedRefs)) references.add(reference)
+  for (const reference of actionCommandSourceReferences(candidate.payload.command, new Set([...retainedRefs, ...references]))) references.add(reference)
   return references
 }
 

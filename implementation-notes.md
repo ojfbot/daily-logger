@@ -580,3 +580,4 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 28 article correction (2026-10-29)
 
 - The correction assumed recorded merge facts would make each newly worded clock eligible for a popover, but the API builder reported missing evidence for several text occurrences; keep linked primary receipts and explicit chronology, preserve the existing time artifact, and leave those popovers unavailable rather than inventing timestamp bindings.
+- The acceptance plan assumed the corrected Draft already had candidate evidence associations, but its original `issue#386` shorthand had blocked map creation; bind that shorthand only to the captured candidate repository, reject conflicting same-number references, and require current primary evidence before the existing review or article-only acceptance path runs.
