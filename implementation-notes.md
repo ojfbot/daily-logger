@@ -575,3 +575,4 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 27 candidate association offline replay (2026-10-29)
 
 - The plan expected to replay the exact two-fault response and one-fault repair, but the bounded hosted receipt intentionally retained only typed diagnostics, not raw model replies; reconstruct that fault pattern with synthetic provider outputs, freeze unaffected candidates in a candidate-scoped correction prototype, and keep the historical cause unknown.
+- The scoped correction assumed freezing unrelated suggestion records also preserved their meaning, but independent review showed that removing an earlier suggestion retargeted a pinned closing-option index; preserve original suggestion slots and hold the corrected proposal if any unchanged closing reference would change target.

@@ -749,10 +749,11 @@ const CandidateAssociationCorrectionSchema = z.object({ replacements: z.array(z.
 function isolateCandidateAssociation(value: unknown, context: ActionProposalContext, error: ProviderCandidateAssociationError) {
   const issues = error.invariant?.stage === 'provider-association-batch' ? error.invariant.issues
     : error.invariant?.stage === 'provider-association' ? [error.invariant] : []
-  const candidateIds = [...new Set(issues.map(issue => issue.candidateId))]
+  const reportedIds = [...new Set(issues.map(issue => issue.candidateId))]
   const awaiting = new Set(context.draftCandidates.filter(candidate => candidate.review.state === 'awaiting-review').map(candidate => candidate.candidateId))
   // Global/foreign association faults have no safe candidate-scoped correction.
-  if (candidateIds.length === 0 || candidateIds.some(id => !id || !awaiting.has(id))) return undefined
+  if (reportedIds.length === 0 || reportedIds.some(id => !id || !awaiting.has(id))) return undefined
+  const candidateIds = z.array(z.string().regex(/^[a-f0-9]{64}$/)).parse(reportedIds)
   if (Buffer.byteLength(JSON.stringify(value), 'utf8') > 640 * 1024) return undefined
   const parsed = ProviderLineProposalSchema.safeParse(value)
   if (!parsed.success) return undefined
@@ -775,13 +776,36 @@ function isolateCandidateAssociation(value: unknown, context: ActionProposalCont
         }
       }
       const corrected = new Set(candidateIds)
+      const byCandidate = new Map(correction.replacements.map(row => [row.candidateId, row]))
+      const inserted = new Set<string>()
+      const suggestions = originalSuggestions.flatMap((originalRow, index) => {
+        const identity = parsed.data.suggestions[index].identity
+        if (identity.kind !== 'captured' || !corrected.has(identity.candidateId)) return [originalRow]
+        const replacement = byCandidate.get(identity.candidateId)
+        if (!replacement?.suggestion || inserted.has(identity.candidateId)) return []
+        inserted.add(identity.candidateId)
+        return [replacement.suggestion]
+      })
+      for (const candidateId of candidateIds) {
+        const replacement = byCandidate.get(candidateId)
+        if (replacement?.suggestion && !inserted.has(candidateId)) suggestions.push(replacement.suggestion)
+      }
+      // closingOptions.candidateIndex is positional. A removal must not silently
+      // retarget an unchanged closing option to a neighboring suggestion.
+      for (const option of parsed.data.closingOptions) {
+        if (option.kind !== 'candidate') continue
+        const before = parsed.data.suggestions[option.candidateIndex]
+        const after = suggestions[option.candidateIndex]
+        const parsedAfter = ProviderSuggestionSchema.safeParse(after)
+        const sameOriginal = originalSuggestions[option.candidateIndex] === after
+        const sameCorrectedCandidate = before?.identity.kind === 'captured' && corrected.has(before.identity.candidateId)
+          && parsedAfter.success && parsedAfter.data.identity.kind === 'captured'
+          && parsedAfter.data.identity.candidateId === before.identity.candidateId
+        if (!sameOriginal && !sameCorrectedCandidate) throw new ProviderActionOutputError('Candidate-scoped correction would retarget a pinned closing option')
+      }
       return {
         ...original,
-        suggestions: [...originalSuggestions.filter((_, index) => {
-          const row = parsed.data.suggestions[index]
-          return row.identity.kind !== 'captured' || !corrected.has(row.identity.candidateId)
-        }),
-          ...correction.replacements.flatMap(row => row.suggestion === null ? [] : [row.suggestion])],
+        suggestions,
         candidateDispositions: [...originalDispositions.filter((_, index) => !corrected.has(parsed.data.candidateDispositions[index].candidateId)),
           ...correction.replacements.map(row => row.disposition)],
       }
