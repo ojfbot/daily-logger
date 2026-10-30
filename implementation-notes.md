@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- The October 27 pre-dispatch audit assumed GitHub claim refs lived under `/git/ref/action-review-claims/`, but the native route writes `refs/heads/action-review-claims/`; correct the read path, retract the manual 404-as-unused claim, and rely on the successful native reservation plus matching finished refs and typed receipt for this consumed run.
+
 - The October 27 measured-review plan assumed the merged runtime repair alone made a one-use grant admissible, but October 29 added an article-status entry and invalidated only the saved status-index hash; rebind that metadata and state digest on the original three held candidates before publishing a grant, with no reclassification, provider call, queue mutation or gate relaxation.
 
 - October 27 article correction assumed prose-only edits would build; the action snapshot binds the article digest, and the managed card regenerated false acceptance and draft-command claims. Use native pending-snapshot reconciliation, preserve original candidate identities and held decisions, and make the renderer label historical proposals as unverified and non-dispatchable.
