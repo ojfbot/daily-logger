@@ -5,13 +5,137 @@
   "decisions": [],
   "snapshot": {
     "date": "2026-10-29",
-    "status": "draft",
+    "status": "accepted",
     "review": {
       "state": "pending",
-      "reason": "Action evidence request d36815c3c18bb5dfc814270216047d6799fc846afb034427091eb95ab5833b97 remains pending: Unseen or partial metadata line 2 in github:daily-logger#490@8defb8386b118fd8416b444452337b8f60210d326cba39d169ba1a3b7715eae2; request full-row evidence instead"
+      "reason": "The agent returned an incomplete response; these suggestions still need review.",
+      "articleAcceptance": {
+        "kind": "article-only",
+        "inputRoundId": "85bbc3b96992d425b8256fd13192ace488f0e7a3dda46638b4d1bdf5fa69a88b",
+        "inputRegistrySha256": "b9795f5b26f889af84c929de5a72d22160dfe8cd12070076864492d14e5b68f2",
+        "failureKind": "invalid-output",
+        "sources": [
+          {
+            "id": "article@b155a21440517df9782cdb6a0bbc888d915e6ddecec9ed9a4df5d6a948b03279",
+            "locator": "current revised article",
+            "sha256": "b155a21440517df9782cdb6a0bbc888d915e6ddecec9ed9a4df5d6a948b03279"
+          },
+          {
+            "id": "operator@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "locator": "editorial feedback",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "id": "repo:ROADMAP.md@8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30",
+            "locator": "ROADMAP.md",
+            "sha256": "8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30"
+          },
+          {
+            "id": "repo:AGENTS.md@fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618",
+            "locator": "AGENTS.md",
+            "sha256": "fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618"
+          },
+          {
+            "id": "repo:CLAUDE.md@a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2",
+            "locator": "CLAUDE.md",
+            "sha256": "a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2"
+          },
+          {
+            "id": "repo:opm/system.opl@6576f1efc2651c739831927e7944a39736d77653bd756970ad636c4f2d36f170",
+            "locator": "opm/system.opl",
+            "sha256": "6576f1efc2651c739831927e7944a39736d77653bd756970ad636c4f2d36f170"
+          },
+          {
+            "id": "review:reviews/articles/2026-10-29-bede9313b6abf9795bf0e1e5bb3bd63625412c2c.md@34c689d09aa06261468d884a295691d37647f842e43ea444265c5a00a522178d",
+            "locator": "reviews/articles/2026-10-29-bede9313b6abf9795bf0e1e5bb3bd63625412c2c.md",
+            "sha256": "34c689d09aa06261468d884a295691d37647f842e43ea444265c5a00a522178d"
+          },
+          {
+            "id": "review:reviews/registered/2026-10-29-bede9313b6abf9795bf0e1e5bb3bd63625412c2c.json@c4a53129e24151b15b7c23f294459ebaeb0ba4d6e3ef760ed8fb8afda867750b",
+            "locator": "reviews/registered/2026-10-29-bede9313b6abf9795bf0e1e5bb3bd63625412c2c.json",
+            "sha256": "c4a53129e24151b15b7c23f294459ebaeb0ba4d6e3ef760ed8fb8afda867750b"
+          },
+          {
+            "id": "github:classic-space-venue#4@4371c102a39c910f14e0836c5aeeaa881e5227c0a73b6bd35b95bcbefd7170b9",
+            "locator": "https://github.com/ojfbot/classic-space-venue/pull/4",
+            "sha256": "4371c102a39c910f14e0836c5aeeaa881e5227c0a73b6bd35b95bcbefd7170b9"
+          },
+          {
+            "id": "github:classic-space-venue#8@b9c78780f2b258cae27ed9f2cdf93d6954ce8b47e219d38128939392240dae94",
+            "locator": "https://github.com/ojfbot/classic-space-venue/pull/8",
+            "sha256": "b9c78780f2b258cae27ed9f2cdf93d6954ce8b47e219d38128939392240dae94"
+          },
+          {
+            "id": "github:core#567@f8add487778ddd953b5499098ad56a7d9344a9bc7ae288324050499401bc38ff",
+            "locator": "https://github.com/ojfbot/core/issues/567",
+            "sha256": "f8add487778ddd953b5499098ad56a7d9344a9bc7ae288324050499401bc38ff"
+          },
+          {
+            "id": "github:core#572@45957aa5994d734e8f5a5d304662938a2e63326d07544b5871cebff341e58eb7",
+            "locator": "https://github.com/ojfbot/core/pull/572",
+            "sha256": "45957aa5994d734e8f5a5d304662938a2e63326d07544b5871cebff341e58eb7"
+          },
+          {
+            "id": "github:daily-logger#490@a25a44c2e9553a1c7265a856bf38bd9c812fee7676ebc14c9fc2b7aa65a540c0",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/490",
+            "sha256": "a25a44c2e9553a1c7265a856bf38bd9c812fee7676ebc14c9fc2b7aa65a540c0"
+          },
+          {
+            "id": "github:lego-village-pipeline#44@ef1aebf2bb1e3947a8632273be71653cfcf40a40e39285f4603540120bcd03d3",
+            "locator": "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+            "sha256": "ef1aebf2bb1e3947a8632273be71653cfcf40a40e39285f4603540120bcd03d3"
+          },
+          {
+            "id": "github:morning-cockpit#60@c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff",
+            "locator": "https://github.com/ojfbot/morning-cockpit/pull/60",
+            "sha256": "c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff"
+          },
+          {
+            "id": "github:workstation-yuri#4@a6068d1192cfae5781eb95227f0061bf894d6508e2e48cef3f6f83046d5b7e74",
+            "locator": "https://github.com/ojfbot/workstation-yuri/pull/4",
+            "sha256": "a6068d1192cfae5781eb95227f0061bf894d6508e2e48cef3f6f83046d5b7e74"
+          },
+          {
+            "id": "github:core#564@c5c431b67b25a2d4a1ec767a2604cd7c1ccf38406d26019b1d0119e1e12edad5",
+            "locator": "https://github.com/ojfbot/core/issues/564",
+            "sha256": "c5c431b67b25a2d4a1ec767a2604cd7c1ccf38406d26019b1d0119e1e12edad5"
+          },
+          {
+            "id": "github:daily-logger#483@153d2d24ac9dbc566fce5414ea7b914b8e7b5ecbf791c69e2da2c3dba5168ab5",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/483",
+            "sha256": "153d2d24ac9dbc566fce5414ea7b914b8e7b5ecbf791c69e2da2c3dba5168ab5"
+          },
+          {
+            "id": "github:daily-logger#386@d754f6d6480e2b4956a609e8a0e25492239a427ec3e96ae6b5db44b7d1445972",
+            "locator": "https://github.com/ojfbot/daily-logger/issues/386",
+            "sha256": "d754f6d6480e2b4956a609e8a0e25492239a427ec3e96ae6b5db44b7d1445972"
+          },
+          {
+            "id": "github:workstation-yuri#7@46f0273869fbf87fdce8d1ea5257982d73aa640c48f252db7ffe0b38ec5c42f1",
+            "locator": "https://github.com/ojfbot/workstation-yuri/pull/7",
+            "sha256": "46f0273869fbf87fdce8d1ea5257982d73aa640c48f252db7ffe0b38ec5c42f1"
+          },
+          {
+            "id": "goal:core:decisions/northstar/l2-ojfbot.md@2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/4ca14bc3bda4a661201078e1aca18b4f75bbc8d1",
+            "sha256": "2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb"
+          },
+          {
+            "id": "goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82",
+            "sha256": "33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d"
+          },
+          {
+            "id": "goal:core:decisions/wayfinder/classic-space-agent-world.md@c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/eccbddc808757ffb2c8137e0130d269c6dcf11d3",
+            "sha256": "c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22"
+          }
+        ],
+        "rawContentRetained": false
+      }
     },
     "articleDigest": "a0b63295f1fc59486d8154bfba24f36db6a97cbc74b1b0bbedb6829c59bcd6fd",
-    "roundId": "85bbc3b96992d425b8256fd13192ace488f0e7a3dda46638b4d1bdf5fa69a88b",
+    "roundId": "321748f316b64dc2dee5de2bcaed1962349965cbe2b82363a90a9d97e94b0313",
     "reviewCycle": {
       "phase": "generation"
     },
@@ -60,9 +184,18 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "deterministic-default",
+        "kind": "derived-refresh",
         "identity": "progressive-action-evidence-v7-exact-coverage-views",
-        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+        "decision": "Acceptance-status refresh preserves the prior evidence classification after proving the exact Draft input view; it grants no new review authority.",
+        "lineage": {
+          "kind": "acceptance-status-refresh",
+          "priorArticleStatus": "draft",
+          "articleStatus": "accepted",
+          "priorReviewCycle": {
+            "phase": "generation"
+          },
+          "priorRequirementsSha256": "194bd6f2571bfd18e81ff99469d5a8bffe925ba0c9e2613ceb2236c63268f5a6"
+        }
       },
       "articleDate": "2026-10-29",
       "articleDigest": "a0b63295f1fc59486d8154bfba24f36db6a97cbc74b1b0bbedb6829c59bcd6fd",
@@ -72,7 +205,7 @@
       "draftContextSha256": "37fa6537c0919ce1250adb03f8587005b7e7cfaf47f628d96edcfd071b10d823",
       "candidatePayloadsSha256": "bdd7f2fecc46f2ef41a4798fb630382576cb8fab9c487d0dc870ae88cae778cd",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "dc6e158b4ee2cf7e667e77edafa20e389ee5e94d13f209538803445dfe7142de",
+      "articleStatusesSha256": "bc83c3d1739aa5c0e70bd85dd197225dc4236e6a6d71c8f843c00668efb0fe82",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -153,7 +286,7 @@
       "kind": "retained",
       "markdown": "Critical path: daily-logger #490 (October 28 independent review) is the only active editorial item. Standard train: review closes → correction if findings warrant → evidence association check → acceptance stamp. The three held suggestions from the October 27 acceptance (Needs Review state) are independent of this train and require a separately authorized action review; no timeline is recorded.\n\nOwner gates and evidence gaps:\n- morning-cockpit #60: merge readiness unverified; no reviewer named in available record; eight days open without disposition. Needs explicit triage: merge, close, or named owner with deadline.\n- classic-space-venue #8: six days open, no activity, no disposition recorded. Parked or blocked on something external — unknown from this window's evidence.\n- Issue #386: underlying context-budget problem is unresolved; no next concrete step recorded; no downstream work currently identified as blocked.\n- workstation-yuri #4–#7: documentation-only, unblocked pending operator review.\n- core #572: open draft, no in-window activity, no blocker identified.\n- lego-village-pipeline #44–#46: DO NOT MERGE flags are intentional; #46 has active design pickup but no merge timeline.\n- classic-space-venue #4: no in-window activity; serves core #567 chain.\n\nThe seven commit SHAs listed in What Shipped are not individually mapped to PRs in this window's evidence. PR-to-SHA mapping requires direct inspection of the GitHub diff for each of #485–#489.\n\nThe DRAFT_CONTINUATION_CONTEXT block present in the draft source is a machine-readable session-handoff artifact encoded in base64 and embedded as an HTML comment. It is pipeline infrastructure, not editorial content, and does not appear in the published article."
     },
-    "stateDigest": "f7e58310d908e69dee426f837300195665c31549616c0825864e366061f906da",
+    "stateDigest": "8ca8b309fc337fd51776a8d26ab75bcf9bcae7c65a359e4f10dc8211f9dc238d",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
