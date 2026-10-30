@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-post-acceptance-20261029-eea50cff6c84",
+  "article": {
+    "date": "2026-10-29",
+    "sourceCommitSha": "eea50cff6c84a2d7f0095564148b968104122748",
+    "blobSha": "44b5939cd47ba9e5b39291c986502d6e105a4bb9"
+  },
+  "reviewer": {
+    "name": "Codex — independent October 29 accepted-source audit",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-30T20:52:13Z",
+  "scope": "Source-pinned read-only audit of corrected October 29 authored prose, original review findings, article-only acceptance receipt and production Accepted/Pending projection. Held original suggestions remain unverified and non-dispatchable. No distinct authenticated GitHub reviewer identity or action verdict is claimed.",
+  "fullRecordBlobSha": "2c94f7ed53b81342426839bb52aa3d7cf47dced1",
+  "fullRecordPath": "reviews/articles/2026-10-29-eea50cff6c84a2d7f0095564148b968104122748.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "H1",
+      "classification": "unverified_claim",
+      "title": "Three original suggestions remain without an independent action verdict",
+      "location": "Suggested actions — historical candidate card and expandable draft context",
+      "explanation": "The original candidate commands and some stale claims remain visible as explicitly unverified historical input. The first acceptance attempt failed an unsupported closure after Sonnet and Opus; the second stopped on a candidate-association repair that would remove a pinned closing option. The article is Accepted with action review Pending, all three original IDs held, and no action admission or closure.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/512#issuecomment-6533107374",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6533147021",
+        "https://log.jim.software/articles/2026-10-29"
+      ],
+      "correction": "Keep the originals visible but non-dispatchable. Reproduce the candidate-scoped association and pinned closing option offline; preserve every identity and target or hold the proposal. Require a separately authorized guarded review before any action verdict.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
