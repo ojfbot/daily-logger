@@ -1432,7 +1432,7 @@ export function applyVerifiedActionReview(input: { registry: ActionRegistry; art
       if (!checkedCitations(disposition.citations, input.sources, ['repository', 'github', 'goal', 'instruction'])) throw new Error(`Initial draft candidate rejection lacks exact evidence: ${candidate.candidateId}`)
       return { ...candidate, review: { state: 'rejected' as const, reason: disposition.reason, citations: disposition.citations } }
     }
-    if (!checkedCitations(disposition.citations, input.sources, ['repository', 'github'], true)) throw new Error(`Initial draft candidate closure lacks authoritative exact evidence: ${candidate.candidateId}`)
+    if (!checkedCitations(disposition.citations, input.sources, ['repository', 'github'], true)) throw new ActionVerificationHoldError(`Initial draft candidate closure lacks authoritative exact evidence: ${candidate.candidateId}`)
     if (disposition.actionKey) {
       const record = next.records.find(item => item.key === disposition.actionKey)
       const state = record ? acceptedActionState(record, input.articleStatuses, next) : undefined

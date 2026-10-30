@@ -597,6 +597,7 @@ must establish the candidate's actual fit before a new model-run decision.
 
 - Plan assumed the accepted-article held-action route could test October 29 directly; the article remains Draft with an open source-pinned editorial review, so I kept the route closed and used the existing editorial correction/acceptance sequence before any hosted action run.
 - Plan assumed current draft candidate evidence could be replayed against main; later article statuses changed its bound status index, so the next article correction must refresh the exact evidence binding while preserving original candidate identities and history.
+- The guarded October 29 acceptance reached Sonnet and Opus but native validation rejected an unsupported closure; the fallback then refused to persist a pending state onto the stamped Accepted article because that exact native hold was thrown as a generic error. Keep the closure evidence gate and classify only this native failure as an evidence-required hold so first-acceptance article-only completion can preserve the original candidates.
 
 ## Deviations — October 29 article correction (2026-10-30)
 

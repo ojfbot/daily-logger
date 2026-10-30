@@ -6,10 +6,10 @@ import { writeActionStore } from './action-store-fixture.js'
 import { applyVerifiedActionReview } from './evidence-view-fixtures.js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import { ActionRegistrySchema, actionStateDigest, normalizeWorkKey, sha256, captureDraftActionCandidates, readActionRegistry, registryBytes, splitActionRegistry, hydrateActionRegistry, projectRegistry, assertExactInvocationAdmissions, renderArticleActions, type ActionRegistry } from '../action-registry.js'
+import { ActionRegistrySchema, actionStateDigest, normalizeWorkKey, sha256, captureDraftActionCandidates, readActionRegistry, registryBytes, splitActionRegistry, hydrateActionRegistry, projectRegistry, assertExactInvocationAdmissions, renderArticleActions, completeArticleWithPendingActions, type ActionRegistry } from '../action-registry.js'
 import { draftCandidateEvidenceBinding, actionCommandSourceReferences, actionRecordSourceReferences, actionEvidenceScope, actionSourceReferences, draftCandidateEvidenceScope, prepareConservativeDraftCandidateEvidence, selectActionEvidence } from '../action-evidence-selection.js'
 import { generationActionCycle } from '../action-review-cycle.js'
-import { createActionAgents, pendingActionReview, resolveActionSourceLines, reviewArticleActions, classifyActionReviewFailure } from '../review-actions.js'
+import { createActionAgents, pendingActionReview, resolveActionSourceLines, reviewArticleActions, reviewDraftActions, classifyActionReviewFailure } from '../review-actions.js'
 
 const { create, countTokens } = vi.hoisted(() => ({ create: vi.fn(), countTokens: vi.fn() }))
 vi.mock('@anthropic-ai/sdk', () => ({ default: class { messages = { create, countTokens } } }))
@@ -413,6 +413,42 @@ describe('captured candidate references before independent verification', () => 
     await expect(reviewArticleActions({ ...input, sources: sources.map(source => source.id === 'fact' ? { ...source, kind: 'github' as const, trustedContent: [] } : source) })).rejects.toThrow(/closure lacks authoritative/)
     expect(create).toHaveBeenCalledTimes(2)
     expect(JSON.stringify(input.registry)).toBe(before)
+  })
+
+  it('holds an accepted article when a model-verified closure lacks exact evidence, without admitting the action', async () => {
+    const { input, candidates, verification } = setup()
+    const registry = structuredClone(input.registry)
+    const snapshot = registry.articles[0]
+    delete snapshot.draftCandidateEvidence
+    snapshot.draftCandidateEvidence = prepareConservativeDraftCandidateEvidence({ ...input, registry, draftCandidates: candidates })
+    snapshot.stateDigest = actionStateDigest(registry, snapshot.actionKeys, snapshot.closing, snapshot.draftContext, {
+      articleDate: date, roundId: snapshot.roundId, includePriorArticleRounds: true,
+      draftCandidates: snapshot.draftCandidates, draftCandidateEvidence: snapshot.draftCandidateEvidence,
+    })
+    const markdown = input.markdown.replace('status: draft', 'status: "accepted"\noutcome: accepted')
+    const articleStatuses = new Map([[date, 'accepted']])
+    const draftCandidateEvidence = prepareConservativeDraftCandidateEvidence({ ...input, registry, markdown, articleStatuses, draftCandidates: candidates })
+    const closure = { changes: [], suggestions: [], candidateDispositions: candidates.map(candidate => ({
+      candidateId: candidate.candidateId, kind: 'verified-closure', actionKey: null,
+      reason: 'OFFLINE synthetic closure without authoritative evidence.', citations: fields.factCitations,
+    })), closingOptions: [] }
+    const before = JSON.stringify(registry)
+    create.mockResolvedValueOnce(response(closure)).mockResolvedValueOnce(response({ ...verification, suggestions: [] }))
+    const failure = await reviewDraftActions({ ...input, registry, markdown, articleStatuses, draftCandidateEvidence,
+      sources: sources.map(source => source.id === 'fact' ? { ...source, kind: 'github' as const, trustedContent: [] } : source),
+    }).catch((error: unknown) => error)
+    expect(classifyActionReviewFailure(failure)).toEqual({
+      kind: 'evidence-required', reason: 'Actions need further evidence or independent review before they can be admitted.',
+    })
+    expect(create.mock.calls.map(([request]) => RequestSchema.parse(request).model)).toEqual(['claude-sonnet-4-6', 'claude-opus-4-6'])
+    expect(JSON.stringify(registry)).toBe(before)
+    const held = completeArticleWithPendingActions({ registry, articleDate: date, markdown, articleStatuses,
+      cycle: input.cycle, failureKind: 'evidence-required', sources: [], draftCandidateEvidence })
+    const accepted = held.registry.articles.find(article => article.date === date)
+    expect(accepted?.status).toBe('accepted')
+    expect(accepted?.review.state).toBe('pending')
+    expect(accepted?.draftCandidates?.map(candidate => candidate.candidateId)).toEqual(candidates.map(candidate => candidate.candidateId))
+    expect(held.registry.records).toEqual(registry.records)
   })
 
   it.each(['/review exact first argument', '/review second preserved argument'])('admits exact captured invocation %s through verifier and native output', async command => {
