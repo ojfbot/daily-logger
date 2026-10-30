@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261029-bede9313b6ab",
+  "article": {
+    "date": "2026-10-29",
+    "sourceCommitSha": "bede9313b6abf9795bf0e1e5bb3bd63625412c2c",
+    "blobSha": "cfcb2dba0bce614dbe43f651a92167f91440e05a"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-30T10:35:13Z",
+  "scope": "Final visible draft, deployed JSON and authenticated rendered parity, exact article and action-state blobs, editorial train identities, prior finding/evidence chronology, ADR attribution, held-action receipts, owner and merge gates, current next actions, and review discovery. Read-only review; no article acceptance, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "f1be3527d5e6cc6f08542baa56bf7d8e59538db6",
+  "fullRecordPath": "reviews/articles/2026-10-29-bede9313b6abf9795bf0e1e5bb3bd63625412c2c.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The train count includes an unrelated article PR and commit",
+      "location": "The summary and lines 11-25 say seven commits across five PRs completed the October 27 train and that every listed commit belongs to it.",
+      "explanation": "PR #486 is the October 28 article publication, merged as 1fc55540. The October 27 train is #485, #487, #488 and #489, with six mainline commits; including #486 creates the seven/five totals.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/bede9313b6abf9795bf0e1e5bb3bd63625412c2c/_articles/2026-10-29.md#L6-L25",
+        "https://github.com/ojfbot/daily-logger/pull/485",
+        "https://github.com/ojfbot/daily-logger/pull/486",
+        "https://github.com/ojfbot/daily-logger/pull/487",
+        "https://github.com/ojfbot/daily-logger/pull/488",
+        "https://github.com/ojfbot/daily-logger/pull/489"
+      ],
+      "correction": "Report four train PRs and six train commits. Keep #486 and 1fc5554 as separate October 28 article publication activity in the same reporting window.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "PR 485 is paired with an impossible source and blob identity",
+      "location": "Lines 17 and 43 say PR #485 reviewed source commit 1fc55540 and blob baae401d.",
+      "explanation": "The registered October 27 review and PR #485 bind blob baae401d to source ea5be44c. Commit 1fc55540 introduced the October 28 article and cannot reproduce the named October 27 blob.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/f759b34293cec7b8f78f4b2ecc5bf827617e3e10/reviews/registered/2026-10-27-ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6.json",
+        "https://github.com/ojfbot/daily-logger/pull/485",
+        "https://github.com/ojfbot/daily-logger/pull/486"
+      ],
+      "correction": "Use source ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6 with blob baae401dd804458021bbf6bf3dc91e43328a8173.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The prior review and action state are materially mischaracterized",
+      "location": "Line 17 reduces the seven findings to four different categories and says #487 made the action card reflect verified current state.",
+      "explanation": "The source review separately records held-action state reversal, byte-versus-token confusion, unsupported commands, invented dependencies and a false acceptance prerequisite. PR #487 says the three original commands remain unverified and non-dispatchable.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/f759b34293cec7b8f78f4b2ecc5bf827617e3e10/reviews/articles/2026-10-27-ea5be44c16c2bf73ba19484cb5a9c5fdf00b6cf6.md",
+        "https://github.com/ojfbot/daily-logger/pull/487"
+      ],
+      "correction": "Preserve the actual finding classes and say #487 labels the original candidate commands and context unverified while correcting the article prose.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The evidence parsing failure is described as a date path bug",
+      "location": "Lines 17 and 37 say a date string at the head of a path segment was misread as a repository name.",
+      "explanation": "PR #488 records a descriptive pre-#571 temporal prefix, title-case Core #571 and exact --pr N --repo R target handling. It does not describe a date string or path segment.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/488"
+      ],
+      "correction": "Describe the actual candidate-reference ambiguity around pre-#571, case and exact flag pairs without inventing a path/date mechanism.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "ADR 0037 and ADR 0038 do not define the claimed review sequence",
+      "location": "Lines 31 and 43 attribute an independent-review ordering rule and source-pin requirement to ADR-0037 and ADR-0038.",
+      "explanation": "ADR-0037 defines the OAuth proxy, acceptance PR and manual merge gate. ADR-0038 defines feedback-driven revision CI and human review before merge. Neither ADR defines the independent review registry, source commit/blob registration or the asserted four-PR sequence.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/f759b34293cec7b8f78f4b2ecc5bf827617e3e10/decisions/adr/0037-editorial-stamp-workflow.md",
+        "https://github.com/ojfbot/daily-logger/blob/f759b34293cec7b8f78f4b2ecc5bf827617e3e10/decisions/adr/0038-editorial-revision-workflow.md",
+        "https://github.com/ojfbot/daily-logger/blob/f759b34293cec7b8f78f4b2ecc5bf827617e3e10/shared/article-review.ts"
+      ],
+      "correction": "Attribute source-pinned reviews to the current review schema and service. Present the October 27 order as the observed supervised sequence unless an accepted decision makes it universal.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Workstation PRs 5 and 7 have an explicit merge blocker",
+      "location": "Lines 59 and 85 say Workstation #4 through #7 have no merge blockers and are unblocked pending operator review.",
+      "explanation": "PRs #5 and #7 both say they overlap two files, require #5 to land first, require #7 to be updated afterward, and forbid merging either current head without reconciliation.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/workstation-yuri/pull/5",
+        "https://github.com/ojfbot/workstation-yuri/pull/7"
+      ],
+      "correction": "Preserve the documented #5 to #7 ordering and reconciliation gate. Keep #4 and #6 separate absent their own dependency evidence.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Issue 386 had a concrete diagnostic and measured non-token stop",
+      "location": "Lines 67 and 84 make the October 26 storage cap the active context-budget anchor and say no next concrete step was recorded.",
+      "explanation": "The October 26 measured run fit the provider token gate and stopped at ranked-shortlist-incomplete. Before article generation, the October 27 acceptance receipt recorded a 160159-token proposer input, an evidence request for missing core #572 lines, no Opus call and a concrete next diagnostic for source selection.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6460908513",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6487891713",
+        "https://github.com/ojfbot/daily-logger/pull/483"
+      ],
+      "correction": "Retain the 64 KiB overflow as earlier history, then report the later storage repair, measured token fit and shortlist/evidence-selection stops with their recorded diagnostics.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "The visible next action is completed and uses unsupported commands",
+      "location": "Lines 53, 78-79 and 90 call #490 the live critical path and present /review-pr, /triage-pr and /review-suggestions as candidate commands.",
+      "explanation": "PR #490 later merged, followed by correction #498, acceptance #502 and final review #503. The daily-cycle index defines the real supervised workflows but exposes none of the named slash-command interfaces.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/490",
+        "https://github.com/ojfbot/daily-logger/pull/498",
+        "https://github.com/ojfbot/daily-logger/pull/502",
+        "https://github.com/ojfbot/daily-logger/pull/503",
+        "https://github.com/ojfbot/daily-logger/blob/f759b34293cec7b8f78f4b2ecc5bf827617e3e10/docs/daily-cycle.md"
+      ],
+      "correction": "Preserve candidate IDs and historical text as unverified custody, not dispatchable commands. Qualify #490 as completed after publication and route remaining work through the real supervised surfaces.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The first and reference implementation claims lack a census",
+      "location": "Lines 31 and 49 call the October 27 sequence the first clean full cycle and the reference implementation for future runs.",
+      "explanation": "The four PRs establish this sequence, but their discussions and ADR-0037/0038 do not define the population of earlier cycles, a comparison method or an owner decision adopting it as universal. The acceptance run also retained held actions after an evidence request.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/485",
+        "https://github.com/ojfbot/daily-logger/pull/489",
+        "https://github.com/ojfbot/daily-logger/blob/f759b34293cec7b8f78f4b2ecc5bf827617e3e10/decisions/adr/0037-editorial-stamp-workflow.md",
+        "https://github.com/ojfbot/daily-logger/blob/f759b34293cec7b8f78f4b2ecc5bf827617e3e10/decisions/adr/0038-editorial-revision-workflow.md"
+      ],
+      "correction": "Describe the observed sequence and artifacts. Drop first and universal-reference language unless a bounded historical census and owner decision support it.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "The eight-day triage threshold has no owner record",
+      "location": "Lines 55, 78 and 82 say eight days without a verdict is the threshold for explicit triage and recommend assigning a named reviewer with a deadline.",
+      "explanation": "Morning Cockpit PR #60 has generated cleanup text and green CI but no owner-adopted eight-day policy, reviewer deadline or merge disposition. Silence does not create one.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/morning-cockpit/pull/60"
+      ],
+      "correction": "Report owner disposition and merge readiness as unknown. Ask for merge, close or a review checkpoint without inventing a threshold or deadline.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
