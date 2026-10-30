@@ -68,7 +68,7 @@ Suggestion Proposing yields Provider Action Proposal. [src: src/review-actions.t
 Candidate Reference Resolving requires Provider Action Proposal and Draft Action Candidates. [src: src/review-actions.ts]
 Candidate Reference Resolving yields Canonical Action Proposal. [src: src/review-actions.ts]
 Suggestion Verifying requires Canonical Action Proposal. [src: src/review-actions.ts]
-# Candidate IDs, not provider-authored numeric indices, bind captured suggestions. An inconsistent association uses the existing full-proposal repair instead of freezing other arrays.
+# Candidate IDs, not provider-authored numeric indices, bind captured suggestions. Known candidate-scoped association faults permit only those candidate records to be replaced; global or foreign faults retain the full-proposal repair path.
 # One malformed-output repair is shared by both roles. An isolated proposer record uses private transient proposal custody; no malformed reply is persisted or logged. Other rows stay pinned, and complete native validation and independent verification precede action admission. [src: src/review-actions.ts]
 Malformed Output Repair Budget can be available or spent. [src: src/review-actions.ts]
 Action Reconciling invokes Action Output Repairing. [src: src/review-actions.ts]
@@ -439,6 +439,11 @@ Candidate Reference Resolving yields Candidate Association Diagnostic. [src: src
 Candidate Association Diagnostic exhibits Validation Rule. [src: src/review-actions.ts]
 Candidate Association Diagnostic exhibits Validation Stage. [src: src/review-actions.ts]
 Candidate Association Diagnostic exhibits Review Attempt. [src: src/review-actions.ts]
+Candidate Association Correcting requires Candidate Association Diagnostic, Provider Action Proposal, and Draft Action Candidates. [src: src/review-actions.ts]
+Candidate Association Correcting requires Claude API. [src: src/review-actions.ts]
+Candidate Association Correcting yields Provider Action Proposal. [src: src/review-actions.ts]
+Action Output Repairing invokes Candidate Association Correcting. [src: src/review-actions.ts]
+# Candidate Association Correcting replaces only the reported known candidates' disposition and captured suggestion rows. All other proposal records remain fixed; the complete merged proposal still passes native validation before independent verification. [src: src/review-actions.ts]
 
 
 ## SD1.6 — Manual held-action review
