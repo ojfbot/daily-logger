@@ -10,7 +10,7 @@
       "state": "pending",
       "reason": "Action evidence request d36815c3c18bb5dfc814270216047d6799fc846afb034427091eb95ab5833b97 remains pending: Unseen or partial metadata line 2 in github:daily-logger#490@8defb8386b118fd8416b444452337b8f60210d326cba39d169ba1a3b7715eae2; request full-row evidence instead"
     },
-    "articleDigest": "af26f525523569711d48cf7059c7155b93d749184292e049257af17da906c84a",
+    "articleDigest": "a0b63295f1fc59486d8154bfba24f36db6a97cbc74b1b0bbedb6829c59bcd6fd",
     "roundId": "85bbc3b96992d425b8256fd13192ace488f0e7a3dda46638b4d1bdf5fa69a88b",
     "reviewCycle": {
       "phase": "generation"
@@ -65,14 +65,14 @@
         "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
       },
       "articleDate": "2026-10-29",
-      "articleDigest": "af26f525523569711d48cf7059c7155b93d749184292e049257af17da906c84a",
+      "articleDigest": "a0b63295f1fc59486d8154bfba24f36db6a97cbc74b1b0bbedb6829c59bcd6fd",
       "reviewCycle": {
         "phase": "generation"
       },
       "draftContextSha256": "37fa6537c0919ce1250adb03f8587005b7e7cfaf47f628d96edcfd071b10d823",
       "candidatePayloadsSha256": "bdd7f2fecc46f2ef41a4798fb630382576cb8fab9c487d0dc870ae88cae778cd",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "c29c1fbfd0c71f399f4edae4989e67feb9b62b83fd04cd4894613b3b0790ff99",
+      "articleStatusesSha256": "dc6e158b4ee2cf7e667e77edafa20e389ee5e94d13f209538803445dfe7142de",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -153,7 +153,7 @@
       "kind": "retained",
       "markdown": "Critical path: daily-logger #490 (October 28 independent review) is the only active editorial item. Standard train: review closes → correction if findings warrant → evidence association check → acceptance stamp. The three held suggestions from the October 27 acceptance (Needs Review state) are independent of this train and require a separately authorized action review; no timeline is recorded.\n\nOwner gates and evidence gaps:\n- morning-cockpit #60: merge readiness unverified; no reviewer named in available record; eight days open without disposition. Needs explicit triage: merge, close, or named owner with deadline.\n- classic-space-venue #8: six days open, no activity, no disposition recorded. Parked or blocked on something external — unknown from this window's evidence.\n- Issue #386: underlying context-budget problem is unresolved; no next concrete step recorded; no downstream work currently identified as blocked.\n- workstation-yuri #4–#7: documentation-only, unblocked pending operator review.\n- core #572: open draft, no in-window activity, no blocker identified.\n- lego-village-pipeline #44–#46: DO NOT MERGE flags are intentional; #46 has active design pickup but no merge timeline.\n- classic-space-venue #4: no in-window activity; serves core #567 chain.\n\nThe seven commit SHAs listed in What Shipped are not individually mapped to PRs in this window's evidence. PR-to-SHA mapping requires direct inspection of the GitHub diff for each of #485–#489.\n\nThe DRAFT_CONTINUATION_CONTEXT block present in the draft source is a machine-readable session-handoff artifact encoded in base64 and embedded as an HTML comment. It is pipeline infrastructure, not editorial content, and does not appear in the published article."
     },
-    "stateDigest": "fb6d5d4fe324d5d91eb1c81feea3cc8f56a0a0924835a63d8d4b3ba06bb08740",
+    "stateDigest": "f7e58310d908e69dee426f837300195665c31549616c0825864e366061f906da",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
