@@ -5,13 +5,137 @@
   "decisions": [],
   "snapshot": {
     "date": "2026-10-28",
-    "status": "draft",
+    "status": "accepted",
     "review": {
       "state": "pending",
-      "reason": "Unsupported qualified candidate reference issue#386 for 5215cea05a4a07fb881458eb2d0da6a54cf43554d98af53febead9f0e33ced97; review pending"
+      "reason": "The agent returned an incomplete response; these suggestions still need review.",
+      "articleAcceptance": {
+        "kind": "article-only",
+        "inputRoundId": "a615aac2a4422cdff4daf4ad0aa20019b703e1a1d38a25cfdb553495fe9b3699",
+        "inputRegistrySha256": "4a07464f6d356c0c4b7af061880008b85cd77a5edccbbb56dce25aa15a9013b7",
+        "failureKind": "invalid-output",
+        "sources": [
+          {
+            "id": "article@66c433e1a2a581671332e4f17788781138da728ad1bcf82819410a894e309bac",
+            "locator": "current revised article",
+            "sha256": "66c433e1a2a581671332e4f17788781138da728ad1bcf82819410a894e309bac"
+          },
+          {
+            "id": "operator@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "locator": "editorial feedback",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "id": "repo:ROADMAP.md@8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30",
+            "locator": "ROADMAP.md",
+            "sha256": "8d5ce3d4b43a88ab9974725faa46439c22f7c457f050c9796c49d3a4e9adfa30"
+          },
+          {
+            "id": "repo:AGENTS.md@fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618",
+            "locator": "AGENTS.md",
+            "sha256": "fd5572d416d293fd82cdad049d848945d7d5e1c697b1140e869179ba5e8d5618"
+          },
+          {
+            "id": "repo:CLAUDE.md@a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2",
+            "locator": "CLAUDE.md",
+            "sha256": "a157515d1c5d689282d2ca2ce42aabb9eebcf3e0a4e65bd1ca246466db0310b2"
+          },
+          {
+            "id": "repo:opm/system.opl@6576f1efc2651c739831927e7944a39736d77653bd756970ad636c4f2d36f170",
+            "locator": "opm/system.opl",
+            "sha256": "6576f1efc2651c739831927e7944a39736d77653bd756970ad636c4f2d36f170"
+          },
+          {
+            "id": "review:reviews/articles/2026-10-28-1fc55540e4dca72c0c5fe20f0f099cf44524eaf8.md@ae26462708c46af29e12c8426ee6df6dcf0f18c6309cd115471345cea443e9e2",
+            "locator": "reviews/articles/2026-10-28-1fc55540e4dca72c0c5fe20f0f099cf44524eaf8.md",
+            "sha256": "ae26462708c46af29e12c8426ee6df6dcf0f18c6309cd115471345cea443e9e2"
+          },
+          {
+            "id": "review:reviews/registered/2026-10-28-1fc55540e4dca72c0c5fe20f0f099cf44524eaf8.json@8abc416af1811d04f0a2864958c9575cd7a97c96ad0b52a6d5343232188ca488",
+            "locator": "reviews/registered/2026-10-28-1fc55540e4dca72c0c5fe20f0f099cf44524eaf8.json",
+            "sha256": "8abc416af1811d04f0a2864958c9575cd7a97c96ad0b52a6d5343232188ca488"
+          },
+          {
+            "id": "github:classic-space-venue#4@4371c102a39c910f14e0836c5aeeaa881e5227c0a73b6bd35b95bcbefd7170b9",
+            "locator": "https://github.com/ojfbot/classic-space-venue/pull/4",
+            "sha256": "4371c102a39c910f14e0836c5aeeaa881e5227c0a73b6bd35b95bcbefd7170b9"
+          },
+          {
+            "id": "github:core#567@f8add487778ddd953b5499098ad56a7d9344a9bc7ae288324050499401bc38ff",
+            "locator": "https://github.com/ojfbot/core/issues/567",
+            "sha256": "f8add487778ddd953b5499098ad56a7d9344a9bc7ae288324050499401bc38ff"
+          },
+          {
+            "id": "github:core#572@3c393d6058f7e0a8eaa5a5b5333b42bdec70725e951b696cb82377f007b92229",
+            "locator": "https://github.com/ojfbot/core/pull/572",
+            "sha256": "3c393d6058f7e0a8eaa5a5b5333b42bdec70725e951b696cb82377f007b92229"
+          },
+          {
+            "id": "github:daily-logger#386@5051f11ed6cbc6715ba42f57c572864122695dfea22ece0867f3eb7b405c41b4",
+            "locator": "https://github.com/ojfbot/daily-logger/issues/386",
+            "sha256": "5051f11ed6cbc6715ba42f57c572864122695dfea22ece0867f3eb7b405c41b4"
+          },
+          {
+            "id": "github:daily-logger#485@a004c42c084ab47360f18ae9021906dd33ac5efd2744c5405a62cbfa7e6b275b",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/485",
+            "sha256": "a004c42c084ab47360f18ae9021906dd33ac5efd2744c5405a62cbfa7e6b275b"
+          },
+          {
+            "id": "github:lego-village-pipeline#44@ef1aebf2bb1e3947a8632273be71653cfcf40a40e39285f4603540120bcd03d3",
+            "locator": "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+            "sha256": "ef1aebf2bb1e3947a8632273be71653cfcf40a40e39285f4603540120bcd03d3"
+          },
+          {
+            "id": "github:morning-cockpit#60@c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff",
+            "locator": "https://github.com/ojfbot/morning-cockpit/pull/60",
+            "sha256": "c03a97653ba2b5c736ad9362b9de27649a433b5248260233a3038337df25f8ff"
+          },
+          {
+            "id": "github:classic-space-venue#8@b9c78780f2b258cae27ed9f2cdf93d6954ce8b47e219d38128939392240dae94",
+            "locator": "https://github.com/ojfbot/classic-space-venue/pull/8",
+            "sha256": "b9c78780f2b258cae27ed9f2cdf93d6954ce8b47e219d38128939392240dae94"
+          },
+          {
+            "id": "github:landing#5@30dd7859e38ecea4cc76a0500899d36b3550f2fcece261be8ff74e5397761588",
+            "locator": "https://github.com/ojfbot/landing/pull/5",
+            "sha256": "30dd7859e38ecea4cc76a0500899d36b3550f2fcece261be8ff74e5397761588"
+          },
+          {
+            "id": "github:daily-logger#484@4b29f4ddb82d92a2e663ab9283da3ffb59589f782f3b42d368095b091e4c7316",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/484",
+            "sha256": "4b29f4ddb82d92a2e663ab9283da3ffb59589f782f3b42d368095b091e4c7316"
+          },
+          {
+            "id": "github:daily-logger#483@df8a1ccd72ec231933e0003a1ace92745e9492f9ce3525d5115d4304bace6add",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/483",
+            "sha256": "df8a1ccd72ec231933e0003a1ace92745e9492f9ce3525d5115d4304bace6add"
+          },
+          {
+            "id": "github:daily-logger#482@d429fff43ac119c68ff75e79330e1a8aa37a0e41596cbbbda20dede1256b0dec",
+            "locator": "https://github.com/ojfbot/daily-logger/pull/482",
+            "sha256": "d429fff43ac119c68ff75e79330e1a8aa37a0e41596cbbbda20dede1256b0dec"
+          },
+          {
+            "id": "goal:core:decisions/northstar/l2-ojfbot.md@2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/4ca14bc3bda4a661201078e1aca18b4f75bbc8d1",
+            "sha256": "2cf5fcf9e8156620ed8d7ad06801fed708dea65a13142e5c1d94950a8ec0ebfb"
+          },
+          {
+            "id": "goal:core:decisions/northstar/roadmap-l2-ojfbot.md@33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/6a1dc5b18c830a17295ffdc21469dd3b2c5c1b82",
+            "sha256": "33ab200ee9a1b6b4776c77b73561c32053931659b5ba19f64f5e9f35d2c9479d"
+          },
+          {
+            "id": "goal:core:decisions/wayfinder/classic-space-agent-world.md@c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22",
+            "locator": "https://api.github.com/repos/ojfbot/core/git/blobs/eccbddc808757ffb2c8137e0130d269c6dcf11d3",
+            "sha256": "c24152505b7c6c397015e41bb8e2a3c4dfa731692fec93be98c99479741b1a22"
+          }
+        ],
+        "rawContentRetained": false
+      }
     },
     "articleDigest": "c5a4a96cd18f7bc382c019ba689ffbd95ebf04b650fddfe7e2789d7ddd50a643",
-    "roundId": "a615aac2a4422cdff4daf4ad0aa20019b703e1a1d38a25cfdb553495fe9b3699",
+    "roundId": "0c7223fe36354d0ada6bcf26ff8094706e34b25ba97107de67013e4ddeb22c07",
     "reviewCycle": {
       "phase": "generation"
     },
@@ -60,9 +184,18 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "deterministic-default",
+        "kind": "derived-refresh",
         "identity": "progressive-action-evidence-v7-exact-coverage-views",
-        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+        "decision": "Acceptance-status refresh preserves the prior evidence classification after proving the exact Draft input view; it grants no new review authority.",
+        "lineage": {
+          "kind": "acceptance-status-refresh",
+          "priorArticleStatus": "draft",
+          "articleStatus": "accepted",
+          "priorReviewCycle": {
+            "phase": "generation"
+          },
+          "priorRequirementsSha256": "8b18a5861195df5e6ac3eb732ed5d3471e811f67142d15c9f62678c3426f90fb"
+        }
       },
       "articleDate": "2026-10-28",
       "articleDigest": "c5a4a96cd18f7bc382c019ba689ffbd95ebf04b650fddfe7e2789d7ddd50a643",
@@ -72,7 +205,7 @@
       "draftContextSha256": "c073da546813c58d84191ba5c54ccb91411dd89da098116a25dc70c08f23895d",
       "candidatePayloadsSha256": "7a53b7d6d6ce0a85ce9097ef5a4a8b2a015624e42d39e6892a79c118e7299bd4",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "c29c1fbfd0c71f399f4edae4989e67feb9b62b83fd04cd4894613b3b0790ff99",
+      "articleStatusesSha256": "dc6e158b4ee2cf7e667e77edafa20e389ee5e94d13f209538803445dfe7142de",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -148,7 +281,7 @@
       "kind": "retained",
       "markdown": "Both Oct 25 and Oct 26 are Accepted. The six held suggestions (three each) are in Needs Review state but are effectively blocked on Issue #386 shipping before independent action review can run safely — the 391,621/393,216 byte aggregate margin (~1,600 bytes) makes a breach on the next held-action context load a near-certainty without budget scoping. daily-logger #485 (Oct 27 independent review, DRAFT) is the confirmed next editorial step and does not depend on #386. core #572 is DRAFT/open correcting a factual conflict in the `eli` worked example; companion #573 closed 2026-10-28T01:06:59Z without merging (full-peer Claude configuration reproducibility, deliberate scope reduction, does not affect #572). Four workstation-yuri DRAFTs (#4–#7) are independent of each other and of the daily-logger train; no merge order is confirmed in the available record. morning-cockpit #60 open since 2026-10-21 with no documented merge blocker — hold reason unknown, requires owner clarification. Whether classic-space-venue #4 is a hard blocker on core #567 is not confirmed. lego-village-pipeline #44, #45, #46 are parked analysis-only or DO NOT MERGE. The 64 KiB dated-file cap is unchanged post-#483; PR #483 adds a fallback, not a limit increase. The Oct 26 one-use revision grant registered in #484 is consumed regardless of run outcome; a fresh grant is needed for any follow-up editorial action on Oct 26."
     },
-    "stateDigest": "024601e0f8a7dd64f9f758e58e2f53b4a5153c12f342bad1681e2eecce1d61f6",
+    "stateDigest": "e6e9f2e25341d91377a9bc772d6c2394a2fa2865b38c5cf2b9efda6bb3862f14",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
