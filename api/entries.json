@@ -1,5 +1,191 @@
 [
   {
+    "date": "2026-10-29",
+    "title": "October 29: correction, evidence association, and acceptance closed the October 27 editorial train in four sequential PRs",
+    "summary": "Seven daily-logger commits across five merged PRs completed the October 27 editorial train — independent review, draft correction, evidence binding, and acceptance — in a single session.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 7,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Correction gates acceptance: review findings must be addressed before the stamp workflow runs",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Evidence association is a separate, mechanical prerequisite for the acceptance workflow",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Source-pinned reviews record a named article blob, not a mutable branch head",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "2026-10-29T04:24:52Z",
+        "occurrence": 0,
+        "precision": "second",
+        "at": "2026-10-29T04:24:52.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-10-29T04:24:52Z"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "485",
+          "url": "https://github.com/ojfbot/daily-logger/pull/485"
+        },
+        "at": "2026-10-29T03:24:02.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "486",
+          "url": "https://github.com/ojfbot/daily-logger/pull/486"
+        },
+        "at": "2026-10-28T15:32:28.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "487",
+          "url": "https://github.com/ojfbot/daily-logger/pull/487"
+        },
+        "at": "2026-10-29T03:38:07.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "488",
+          "url": "https://github.com/ojfbot/daily-logger/pull/488"
+        },
+        "at": "2026-10-29T04:13:55.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "489",
+          "url": "https://github.com/ojfbot/daily-logger/pull/489"
+        },
+        "at": "2026-10-29T04:24:52.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "456",
+          "url": "https://github.com/ojfbot/daily-logger/pull/456"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "462",
+          "url": "https://github.com/ojfbot/daily-logger/pull/462"
+        },
+        "reason": "missing-merge-time"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-10-29T15:29:40.056Z",
+        "runId": "40901827570",
+        "runNumber": 278,
+        "runAttempt": 1,
+        "event": "schedule",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/40901827570",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "37d3918c4a789652d3b403e3a57cdaf64581755a",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-10-29T15:27:55.000Z",
+          "startedAt": "2026-10-29T15:27:55.000Z",
+          "expectedAt": "2026-10-29T08:30:00.000Z",
+          "dispatchDelaySeconds": 25075,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v5-2026-10-20-local-window-single-recommendation",
+          "promptSha256": "fc00cfb33750c4d3a34e3857d142fcf7cc20208f0bfdc657a848fa8163e023f4"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.1",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-28",
     "title": "October 26 cleared: 18 PRs in one session complete the editorial train, storage-cap patch, and held-action recovery",
     "summary": "Eighteen PRs merged in a single session completed October 26's full correction-acceptance-review train while a storage-cap patch and held-action recovery framework resolved the 64 KiB overflow that had blocked the cycle.",
@@ -400,7 +586,8 @@
     "commitCount": 28,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "accepted",
     "decisions": [
       {
         "title": "Dedicated held-action reviewer route to avoid reopening accepted articles",

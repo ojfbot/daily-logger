@@ -2,6 +2,14 @@
 
 ## Deviations
 
+- The October 27 new-run plan assumed a public authorization comment could be posted, but approval review rejected it; use only the owner-approved minimal grant reference while preserving one-use IDs and exact source pins.
+
+- The batch-diagnostic publication assumed the existing single-fault correction text was not a test contract, but hosted CI showed two October 22 repair controls require its exact `reason=` format; preserve that format for one fault and use the new batch text only for multiple faults before repeating checks.
+
+- The October 27 pre-dispatch audit assumed GitHub claim refs lived under `/git/ref/action-review-claims/`, but the native route writes `refs/heads/action-review-claims/`; correct the read path, retract the manual 404-as-unused claim, and rely on the successful native reservation plus matching finished refs and typed receipt for this consumed run.
+
+- The October 27 measured-review plan assumed the merged runtime repair alone made a one-use grant admissible, but October 29 added an article-status entry and invalidated only the saved status-index hash; rebind that metadata and state digest on the original three held candidates before publishing a grant, with no reclassification, provider call, queue mutation or gate relaxation.
+
 - October 27 article correction assumed prose-only edits would build; the action snapshot binds the article digest, and the managed card regenerated false acceptance and draft-command claims. Use native pending-snapshot reconciliation, preserve original candidate identities and held decisions, and make the renderer label historical proposals as unverified and non-dispatchable.
 
 - 2026-10-27, October 26 held-action grant: the plan assumed a one-file grant could enter the existing post-acceptance route; the accepted snapshot records a revision cycle while that route admitted generation only and required unchanged output cycle. Kept the prior revision in history, bound a new revision to the one-use operation, required the same cycle in the grant and proposal, and held dispatch pending independent tests.
@@ -559,3 +567,12 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 27 acceptance (2026-10-28)
 
 - The plan assumed October 27 could use the standard clean-acceptance fallback, but its Draft snapshot had no `draftCandidateEvidence`: the selector read `pre-#571` as a repo, missed title-case `Core #571`, and missed exact `--pr`/`--repo` targets. Repair only these native associations and bind the prepared map to the original held candidates before the single acceptance attempt; leave their commands unverified and retain the existing evidence gates.
+
+## Deviations — October 27 action citation follow-up (2026-10-29)
+
+- The follow-up assumed core #572 evidence was absent from the bounded view, but a current-source reproduction showed the proposer citation crossed one deliberately non-citable generated metadata row before visible authored PR text; use the existing one-repair allowance for a corrected exact citation while preserving source hashes, native visibility checks, independent verification and the historical request.
+
+## Deviations — October 27 candidate association offline replay (2026-10-29)
+
+- The plan expected to replay the exact two-fault response and one-fault repair, but the bounded hosted receipt intentionally retained only typed diagnostics, not raw model replies; reconstruct that fault pattern with synthetic provider outputs, freeze unaffected candidates in a candidate-scoped correction prototype, and keep the historical cause unknown.
+- The scoped correction assumed freezing unrelated suggestion records also preserved their meaning, but independent review showed that removing an earlier suggestion retargeted a pinned closing-option index; preserve original suggestion slots and hold the corrected proposal if any unchanged closing reference would change target.

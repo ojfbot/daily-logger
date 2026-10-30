@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { fixtureEvidenceView } from './evidence-view-fixtures.js'
-import { ActionEvidenceVisibilityError } from '../action-evidence-view.js'
+import { ActionEvidenceVisibilityError, ActionSourceCollection, captureGithubActionSource } from '../action-evidence-view.js'
 import { ActionRegistrySchema, captureDraftActionCandidates, renderArticleActions, sha256 } from '../action-registry.js'
 import { generationActionCycle } from '../action-review-cycle.js'
 import { ActionEvidenceRequestError, createActionEvidenceRequest } from '../action-evidence-retrieval.js'
@@ -51,6 +51,44 @@ function reviewInput() {
 }
 
 describe('native-validated forced-tool response boundary', () => {
+  it('spends one existing repair on a proposer citation crossing generated metadata, then verifies only visible original lines', async () => {
+    const body = 'The owner-authored PR body keeps the review gate open.'
+    const capture = captureGithubActionSource({ id: 'github:core#572', locator: 'https://github.com/ojfbot/core/pull/572',
+      observation: 'CURRENT API STATE core#572: state=open; head=test; merged_at=none.',
+      responses: [JSON.stringify([1, 2].map(id => ({ id, html_url: 'https://github.com/ojfbot/core/pull/572', author_association: 'OWNER',
+        user: { id: 1, login: 'ojfbot', avatar_url: 'https://example.invalid/' + 'a'.repeat(4000) }, body })))], trustedContent: [body] })
+    const source = { ...capture.source, id: `${capture.source.id}@${sha256(capture.source.content)}` }
+    const sources = new ActionSourceCollection([source], [capture])
+    const input = reviewInput()
+    input.markdown += '\nReview https://github.com/ojfbot/core/pull/572.\n'
+    input.registry.records.push({ key: 'carried', original: { id: 'carried', command: '/review', description: 'Inspect core #572.', repo: 'core', status: 'open', sourceDate: input.articleDate },
+      origin: 'imported', workKey: 'core#572 review', state: 'open', introducedBy: input.articleDate, includeInIndex: true, inclusionOverride: null,
+      goal: 'Keep owner review visible.', doneWhen: 'Owner reviews core #572.', gates: ['Owner review required.'], history: [] })
+    const wire = (startLine: number) => ({ changes: [{ actionKey: 'carried', state: 'open', description: 'Obtain the owner review.',
+      reason: 'Owner review remains required.', citations: [{ sourceId: source.id, startLine, endLine: 3 }] }], suggestions: [], candidateDispositions: [], closingOptions: [] })
+    create.mockResolvedValueOnce(response(wire(2))).mockResolvedValueOnce(response(wire(3)))
+      .mockResolvedValueOnce(response({ changes: [{ actionKey: 'carried', verdict: 'pass', reason: 'The owner gate remains open.' }], suggestions: [], candidateDispositions: [], closingOptions: [] }))
+    const warnings = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const result = await reviewArticleActions({ ...input, sources, agents: createActionAgents() })
+      expect(result.registry.articles[0].review.state).toBe('verified')
+      expect(create.mock.calls.map(([request]) => request.model)).toEqual(['claude-sonnet-4-6', 'claude-sonnet-4-6', 'claude-opus-4-6'])
+      expect(create.mock.calls[1][0].messages[0].content).toContain('non-citable generated metadata row')
+      expect(warnings.mock.calls.some(([message]) => String(message).includes('"stage":"citation-visibility","rule":"hidden-generated-metadata"'))).toBe(true)
+      expect(result.registry.records[0].history.at(-1)?.citations[0]).toMatchObject({ sourceLineStart: 3, sourceLineEnd: 3, quote: body })
+      const before = JSON.stringify(input.registry)
+      create.mockReset().mockResolvedValueOnce(response(wire(2))).mockResolvedValueOnce(response(wire(2)))
+      const failed = await reviewArticleActions({ ...input, sources, agents: createActionAgents() }).catch((error: unknown) => error)
+      expect(failed).toBeInstanceOf(ActionEvidenceVisibilityError)
+      expect(create.mock.calls.map(([request]) => request.model)).toEqual(['claude-sonnet-4-6', 'claude-sonnet-4-6'])
+      expect(JSON.stringify(input.registry)).toBe(before)
+      create.mockReset().mockResolvedValueOnce(response({ ...wire(2), changes: [{ ...wire(2).changes[0], citations: [{ sourceId: source.id, startLine: 2, endLine: 2 }] }] }))
+      const hiddenOnly = await reviewArticleActions({ ...input, sources, agents: createActionAgents() }).catch((error: unknown) => error)
+      expect(hiddenOnly).toBeInstanceOf(ActionEvidenceVisibilityError)
+      expect(create.mock.calls).toHaveLength(1)
+    } finally { warnings.mockRestore() }
+  })
+
   it('preserves both nonempty native roles and full count/create parity without a provider strict flag', async () => {
     const wire = { ...proposal, candidateDispositions: proposal.candidateDispositions.map(({ suggestionIndex: _index, ...row }) => row), suggestions: proposal.suggestions.map(({ command: _command, repo: _repo, description: _description, ...fields }) => ({ ...fields, identity: { kind: 'captured', candidateId: captured[0].candidateId } })) }
     create.mockResolvedValueOnce(response(wire)).mockResolvedValueOnce(response(verification))

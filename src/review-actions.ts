@@ -165,12 +165,18 @@ export const ActionProviderResponseObservationSchema = z.object({
 const invariantCandidate = { candidateId: z.string().regex(/^[a-f0-9]{64}$/).optional() }
 const invariantIndex = z.number().int().min(0).max(4)
 const invariantCount = z.number().int().min(0).max(5)
+const ProviderAssociationDetailSchema = z.object({ stage: z.literal('provider-association'), rule: z.enum(['unknown-disposition', 'unknown-suggestion', 'disposition-cardinality', 'captured-cardinality', 'existing-key-mismatch', 'terminal-with-suggestion', 'unknown-closure-key']),
+  ...invariantCandidate, dispositionIndex: invariantIndex.optional(), capturedReferences: invariantCount.optional(), dispositionCount: invariantCount.optional() }).strict()
+const ProviderAssociationIssueSchema = ProviderAssociationDetailSchema.omit({ stage: true })
+type ProviderAssociationIssue = z.infer<typeof ProviderAssociationIssueSchema>
+// Five dispositions and five suggestions can produce at most eleven independent association faults.
 const ActionInvariantDetailSchema = z.discriminatedUnion('stage', [
-  z.object({ stage: z.literal('provider-association'), rule: z.enum(['unknown-disposition', 'unknown-suggestion', 'disposition-cardinality', 'captured-cardinality', 'existing-key-mismatch', 'terminal-with-suggestion', 'unknown-closure-key']),
-    ...invariantCandidate, dispositionIndex: invariantIndex.optional(), capturedReferences: invariantCount.optional(), dispositionCount: invariantCount.optional() }).strict(),
+  ProviderAssociationDetailSchema,
+  z.object({ stage: z.literal('provider-association-batch'), issues: z.array(ProviderAssociationIssueSchema).min(2).max(11) }).strict(),
   z.object({ stage: z.literal('canonical-identity'), rule: z.enum(['duplicate-disposition', 'disposition-cardinality', 'unknown-disposition', 'unknown-closure-key', 'captured-index-invalid', 'captured-payload-mismatch', 'existing-key-mismatch', 'promotion-existing-key', 'unlinked-invocation', 'unknown-suggestion']),
     ...invariantCandidate, dispositionIndex: invariantIndex.optional(), suggestionIndex: invariantIndex.optional(), expectedCount: invariantCount.optional(), actualCount: invariantCount.optional() }).strict(),
   z.object({ stage: z.literal('invocation-mapping'), rule: z.literal('invocation-mapping-mismatch'), ...invariantCandidate, suggestionIndex: invariantIndex }).strict(),
+  z.object({ stage: z.literal('citation-visibility'), rule: z.literal('hidden-generated-metadata'), ...invariantCandidate }).strict(),
 ])
 type ActionInvariantDetail = z.infer<typeof ActionInvariantDetailSchema>
 const invariantAttempt = { role: z.enum(['proposer', 'verifier']), attempt: z.enum(['initial', 'repair']) }
@@ -178,11 +184,19 @@ export const ActionProviderInvariantObservationSchema = z.discriminatedUnion('st
   ActionInvariantDetailSchema.options[0].extend(invariantAttempt),
   ActionInvariantDetailSchema.options[1].extend(invariantAttempt),
   ActionInvariantDetailSchema.options[2].extend(invariantAttempt),
+  ActionInvariantDetailSchema.options[3].extend(invariantAttempt),
+  ActionInvariantDetailSchema.options[4].extend(invariantAttempt),
 ]).refine(value => Buffer.byteLength(JSON.stringify(value)) <= 2048, 'Invariant diagnostic exceeds its bounded receipt size')
 
 export const ActionReviewFailurePhaseSchema = z.enum(['structured-output', 'evidence-request', 'context-or-budget', 'verification-hold', 'ranked-shortlist-incomplete'])
 type ProviderOutputPhase = 'envelope' | 'tool-block' | 'tool-input'
 class ProviderActionOutputError extends ActionOutputError {}
+class CitationVisibilityOutputError extends ProviderActionOutputError {
+  constructor(readonly visibilityError: ActionEvidenceVisibilityError) {
+    super('A citation crossed a non-citable generated metadata row. Cite only fully visible original L lines; use the separate current API state line for state facts. If the hidden row is essential, do not substitute unrelated text.',
+      { stage: 'citation-visibility', rule: 'hidden-generated-metadata' })
+  }
+}
 class ProviderCandidateAssociationError extends ActionOutputError {}
 class CandidateRecordIsolationError extends Error {}
 class IncompleteProviderResponseError extends Error {}
@@ -276,6 +290,19 @@ class ProviderCandidateRecordError extends ProviderActionOutputError {
     return repair(correction)
   }
 }
+class ProviderCandidateAssociationRepairError extends ProviderActionOutputError {
+  #repair: ((correction: string) => Promise<ActionProposal>) | undefined
+  constructor(error: ProviderCandidateAssociationError, repair: (correction: string) => Promise<ActionProposal>) {
+    super(error.message, error.invariant)
+    this.#repair = repair
+  }
+  repair(correction: string): Promise<ActionProposal> {
+    const repair = this.#repair
+    this.#repair = undefined
+    if (!repair) throw new Error('Candidate association repair was already consumed')
+    return repair(correction)
+  }
+}
 const repairFields = new Set([
   ...Object.keys(ProviderLineProposalSchema.shape), ...Object.keys(ProviderVerificationSchema.shape),
   ...Object.keys(ProviderSuggestionSchema.shape), ...Object.keys(LineProposalSchema.shape.suggestions.element.shape),
@@ -285,6 +312,7 @@ const repairFields = new Set([
   ...Object.keys(ActionVerificationSchema.shape.suggestions.unwrap().element.shape),
   ...Object.keys(ActionVerificationSchema.shape.closingOptions.unwrap().element.shape),
   'identity', 'kind', 'sourceId', 'startLine', 'endLine', 'sourceLineStart', 'sourceLineEnd', 'quote',
+  'replacements', 'disposition', 'suggestion',
   'content', 'stop_reason', 'usage', 'output_tokens', 'type', 'id', 'name', 'input',
 ])
 const DiagnosticFieldSchema = z.enum([...repairFields, '<field>', '<index>', '<unknown-key>'])
@@ -455,37 +483,48 @@ function providerCandidateIndices(wire: {
   candidateDispositions: z.infer<typeof ProviderCandidateLinkSchema>[]
 }, context: ActionProposalContext): Map<string, number> {
   const awaiting = context.draftCandidates.filter(candidate => candidate.review.state === 'awaiting-review')
-  const fail = (reason: z.infer<typeof ActionInvariantDetailSchema.options[0]>['rule'], candidateId: string, dispositionIndex: number, capturedReferences: number): never => {
-    const candidate = awaiting.find(candidate => candidate.candidateId === candidateId)
-    throw new ProviderCandidateAssociationError(`Candidate association invalid: reason=${reason}; candidateId=${candidate?.candidateId ?? '<unknown>'}; dispositionIndex=${dispositionIndex}; capturedReferences=${capturedReferences}`, {
-      stage: 'provider-association', rule: reason, ...(candidate ? { candidateId: candidate.candidateId } : {}),
-      ...(dispositionIndex >= 0 ? { dispositionIndex } : {}), capturedReferences,
-      dispositionCount: wire.candidateDispositions.filter(row => row.candidateId === candidateId).length,
-    })
-  }
-  for (const [index, row] of wire.candidateDispositions.entries()) {
-    if (!awaiting.some(candidate => candidate.candidateId === row.candidateId)) fail('unknown-disposition', row.candidateId, index, 0)
-  }
-  for (const suggestion of wire.suggestions) {
+  const issues: ProviderAssociationIssue[] = []
+  const add = (issue: ProviderAssociationIssue) => { issues.push(ProviderAssociationIssueSchema.parse(issue)) }
+  const unknownRows = wire.candidateDispositions.flatMap((row, index) => awaiting.some(candidate => candidate.candidateId === row.candidateId) ? [] : [index])
+  if (unknownRows.length) add({ rule: 'unknown-disposition', dispositionIndex: unknownRows[0], dispositionCount: unknownRows.length, capturedReferences: 0 })
+  const unknownSuggestions = wire.suggestions.filter(suggestion => {
     const identity = suggestion.identity
-    if (identity.kind === 'captured' && !awaiting.some(candidate => candidate.candidateId === identity.candidateId)) fail('unknown-suggestion', identity.candidateId, -1, 1)
-  }
+    return identity.kind === 'captured' && !awaiting.some(candidate => candidate.candidateId === identity.candidateId)
+  })
+  if (unknownSuggestions.length) add({ rule: 'unknown-suggestion', capturedReferences: unknownSuggestions.length })
   const indices = new Map<string, number>()
   for (const candidate of awaiting) {
     const rows = wire.candidateDispositions.flatMap((row, index) => row.candidateId === candidate.candidateId ? [{ row, index }] : [])
     const matches = wire.suggestions.flatMap((suggestion, index) => suggestion.identity.kind === 'captured' && suggestion.identity.candidateId === candidate.candidateId ? [{ suggestion, index }] : [])
     const disposition = rows[0]
-    if (rows.length !== 1 || !disposition) fail('disposition-cardinality', candidate.candidateId, disposition?.index ?? -1, matches.length)
+    if (rows.length !== 1 || !disposition) {
+      add({ rule: 'disposition-cardinality', candidateId: candidate.candidateId, ...(disposition ? { dispositionIndex: disposition.index } : {}), capturedReferences: matches.length, dispositionCount: rows.length })
+      continue
+    }
     const { row, index } = disposition
     if (row.kind === 'promote' || row.kind === 'map-existing') {
       const match = matches[0]
-      if (matches.length !== 1 || !match) fail('captured-cardinality', candidate.candidateId, index, matches.length)
-      if (row.kind === 'promote' ? match.suggestion.existingKey !== null : !context.actionKeys.includes(row.actionKey) || match.suggestion.existingKey !== row.actionKey) fail('existing-key-mismatch', candidate.candidateId, index, matches.length)
+      if (matches.length !== 1 || !match) {
+        add({ rule: 'captured-cardinality', candidateId: candidate.candidateId, dispositionIndex: index, capturedReferences: matches.length, dispositionCount: rows.length })
+        continue
+      }
+      if (row.kind === 'promote' ? match.suggestion.existingKey !== null : !context.actionKeys.includes(row.actionKey) || match.suggestion.existingKey !== row.actionKey) {
+        add({ rule: 'existing-key-mismatch', candidateId: candidate.candidateId, dispositionIndex: index, capturedReferences: matches.length, dispositionCount: rows.length })
+        continue
+      }
       indices.set(candidate.candidateId, match.index)
     } else {
-      if (matches.length !== 0) fail('terminal-with-suggestion', candidate.candidateId, index, matches.length)
-      if (row.kind === 'verified-closure' && row.actionKey !== null && !context.actionKeys.includes(row.actionKey)) fail('unknown-closure-key', candidate.candidateId, index, matches.length)
+      if (matches.length !== 0) add({ rule: 'terminal-with-suggestion', candidateId: candidate.candidateId, dispositionIndex: index, capturedReferences: matches.length, dispositionCount: rows.length })
+      if (row.kind === 'verified-closure' && row.actionKey !== null && !context.actionKeys.includes(row.actionKey)) add({ rule: 'unknown-closure-key', candidateId: candidate.candidateId, dispositionIndex: index, capturedReferences: matches.length, dispositionCount: rows.length })
     }
+  }
+  if (issues.length) {
+    const detail = issues.length === 1 ? { stage: 'provider-association', ...issues[0] } : { stage: 'provider-association-batch', issues }
+    const first = issues[0]
+    const message = issues.length === 1
+      ? `Candidate association invalid: reason=${first.rule}; candidateId=${first.candidateId ?? '<unknown>'}; dispositionIndex=${first.dispositionIndex ?? -1}; capturedReferences=${first.capturedReferences ?? 0}`
+      : `Candidate associations invalid: ${JSON.stringify(issues)}`
+    throw new ProviderCandidateAssociationError(message, ActionInvariantDetailSchema.parse(detail))
   }
   return indices
 }
@@ -506,7 +545,24 @@ function resolveProviderProposal(value: unknown, view: PreparedActionEvidenceVie
   const candidateDispositions = wire.candidateDispositions.map(disposition => disposition.kind === 'promote' || disposition.kind === 'map-existing'
     ? { ...disposition, suggestionIndex: indices.get(disposition.candidateId) }
     : disposition)
-  const proposal = resolveActionSourceLines({ ...wire, suggestions, candidateDispositions }, view)
+  let proposal: ActionProposal
+  try {
+    proposal = resolveActionSourceLines({ ...wire, suggestions, candidateDispositions }, view)
+  } catch (error) {
+    if (!(error instanceof ActionEvidenceVisibilityError) || !error.location) throw error
+    const hiddenLine = Number(/^Unseen or partial metadata line (\d+) in /.exec(error.message)?.[1])
+    const { sourceId, startLine, endLine } = error.location
+    const repairable = startLine < endLine && (hiddenLine === startLine || hiddenLine === endLine)
+      && [hiddenLine === startLine ? [startLine + 1, endLine] : [startLine, endLine - 1]].some(([first, last]) => {
+        try { return !!view.resolve(sourceId, first, last).quote.trim() } catch { return false }
+      })
+    if (!repairable) throw error
+    // The source is present: the proposer selected a generated metadata row in
+    // an otherwise visible citation. Spend the existing output-repair allowance
+    // on new exact endpoints. A repeated visibility failure retains the
+    // original source-view request after that allowance is spent.
+    throw new CitationVisibilityOutputError(error)
+  }
   assertCandidateAssociations(ActionProposalSchema.parse(proposal), context)
   return proposal
 }
@@ -684,6 +740,79 @@ function isolateCandidateRecord(value: unknown, context: ActionProposalContext) 
     schema: branch.extend({ ...references, candidateId: z.literal(row.candidateId) }) }
 }
 
+const CandidateAssociationCorrectionSchema = z.object({ replacements: z.array(z.object({
+  candidateId: z.string().regex(/^[a-f0-9]{64}$/),
+  disposition: ProviderCandidateDispositionSchema,
+  suggestion: ProviderSuggestionSchema.nullable(),
+}).strict()).min(1).max(5) }).strict()
+
+function isolateCandidateAssociation(value: unknown, context: ActionProposalContext, error: ProviderCandidateAssociationError) {
+  const issues = error.invariant?.stage === 'provider-association-batch' ? error.invariant.issues
+    : error.invariant?.stage === 'provider-association' ? [error.invariant] : []
+  const reportedIds = [...new Set(issues.map(issue => issue.candidateId))]
+  const awaiting = new Set(context.draftCandidates.filter(candidate => candidate.review.state === 'awaiting-review').map(candidate => candidate.candidateId))
+  // Global/foreign association faults have no safe candidate-scoped correction.
+  if (reportedIds.length === 0 || reportedIds.some(id => !id || !awaiting.has(id))) return undefined
+  const candidateIds = z.array(z.string().regex(/^[a-f0-9]{64}$/)).parse(reportedIds)
+  if (Buffer.byteLength(JSON.stringify(value), 'utf8') > 640 * 1024) return undefined
+  const parsed = ProviderLineProposalSchema.safeParse(value)
+  if (!parsed.success) return undefined
+  // Preserve the original wire values where they are not targets;
+  // Zod may materialize defaults that the provider did not actually return.
+  const original = repairObject.parse(structuredClone(value))
+  const originalSuggestions = z.array(z.unknown()).parse(original.suggestions)
+  const originalDispositions = z.array(z.unknown()).parse(original.candidateDispositions)
+  return {
+    candidateIds,
+    merge(value: unknown) {
+      const correction = CandidateAssociationCorrectionSchema.parse(value)
+      const returned = correction.replacements.map(row => row.candidateId)
+      if (returned.length !== candidateIds.length || new Set(returned).size !== returned.length
+        || returned.some(id => !candidateIds.includes(id))) throw new ProviderActionOutputError('Candidate-scoped correction did not match the reported candidate set')
+      for (const row of correction.replacements) {
+        if (row.disposition.candidateId !== row.candidateId
+          || row.suggestion !== null && (row.suggestion.identity.kind !== 'captured' || row.suggestion.identity.candidateId !== row.candidateId)) {
+          throw new ProviderActionOutputError('Candidate-scoped correction changed a candidate identity')
+        }
+      }
+      const corrected = new Set(candidateIds)
+      const byCandidate = new Map(correction.replacements.map(row => [row.candidateId, row]))
+      const inserted = new Set<string>()
+      const suggestions = originalSuggestions.flatMap((originalRow, index) => {
+        const identity = parsed.data.suggestions[index].identity
+        if (identity.kind !== 'captured' || !corrected.has(identity.candidateId)) return [originalRow]
+        const replacement = byCandidate.get(identity.candidateId)
+        if (!replacement?.suggestion || inserted.has(identity.candidateId)) return []
+        inserted.add(identity.candidateId)
+        return [replacement.suggestion]
+      })
+      for (const candidateId of candidateIds) {
+        const replacement = byCandidate.get(candidateId)
+        if (replacement?.suggestion && !inserted.has(candidateId)) suggestions.push(replacement.suggestion)
+      }
+      // closingOptions.candidateIndex is positional. A removal must not silently
+      // retarget an unchanged closing option to a neighboring suggestion.
+      for (const option of parsed.data.closingOptions) {
+        if (option.kind !== 'candidate') continue
+        const before = parsed.data.suggestions[option.candidateIndex]
+        const after = suggestions[option.candidateIndex]
+        const parsedAfter = ProviderSuggestionSchema.safeParse(after)
+        const sameOriginal = originalSuggestions[option.candidateIndex] === after
+        const sameCorrectedCandidate = before?.identity.kind === 'captured' && corrected.has(before.identity.candidateId)
+          && parsedAfter.success && parsedAfter.data.identity.kind === 'captured'
+          && parsedAfter.data.identity.candidateId === before.identity.candidateId
+        if (!sameOriginal && !sameCorrectedCandidate) throw new ProviderActionOutputError('Candidate-scoped correction would retarget a pinned closing option')
+      }
+      return {
+        ...original,
+        suggestions,
+        candidateDispositions: [...originalDispositions.filter((_, index) => !corrected.has(parsed.data.candidateDispositions[index].candidateId)),
+          ...correction.replacements.map(row => row.disposition)],
+      }
+    },
+  }
+}
+
 export function actionProviderRequest(role: 'proposer' | 'verifier', prompt: string) {
     const schema = role === 'proposer' ? ProviderLineProposalSchema : ProviderVerificationSchema
     // The provider supports anyOf but not oneOf. Converting only required, disjoint const
@@ -779,7 +908,27 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
         })
       }
     }
-    return parseProviderOutput(role, 'tool-input', value, () => role === 'proposer' ? resolveProviderProposal(value, view, captured) : ProviderVerificationSchema.parse(value), captured)
+    if (role === 'proposer') {
+      try { return parseProviderOutput(role, 'tool-input', value, () => resolveProviderProposal(value, view, captured), captured) }
+      catch (error) {
+        if (!(error instanceof ProviderCandidateAssociationError)) throw error
+        const target = isolateCandidateAssociation(value, captured, error)
+        if (!target) throw error
+        throw new ProviderCandidateAssociationRepairError(error, async correction => {
+          const base = actionProviderRequest('proposer', `${prompt}\n${correction}\nRepair only the association for candidateIds=${target.candidateIds.join(',')}. Return exactly one replacement pair per named candidate. All other original proposal records stay pinned and untrusted until full native validation.`)
+          const schema: unknown = JSON.parse(JSON.stringify(z.toJSONSchema(CandidateAssociationCorrectionSchema)))
+          const wireSchema = ProviderSchemaObject.parse(providerToolSchema(schema))
+          const request = { ...base,
+            system: `${RULES}\nYou are the action proposer correcting only the named candidate associations. Return ONLY replacements under the tool schema. Each replacement supplies one disposition and either its captured suggestion or null. Do not return or change any other candidate or proposal array. Cite the unchanged evidence; do not invent reasons.`,
+            tools: [{ ...base.tools[0], description: 'Return only the named candidate association replacements.', input_schema: { ...wireSchema, type: 'object' as const } }],
+          }
+          const replacement = await toolInput('proposer', request)
+          const merged = parseProviderOutput('proposer', 'tool-input', replacement, () => target.merge(replacement), captured)
+          return parseProviderOutput('proposer', 'tool-input', merged, () => resolveProviderProposal(merged, view, captured), captured)
+        })
+      }
+    }
+    return parseProviderOutput(role, 'tool-input', value, () => ProviderVerificationSchema.parse(value), captured)
   }
   return { identity: { proposer: 'claude-sonnet-4-6', verifier: 'claude-opus-4-6' }, propose: (prompt, sources, context) => call('proposer', prompt, sources, context), verify: (prompt, sources, context) => call('verifier', prompt, sources, context) }
 }
@@ -1556,14 +1705,21 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   let repairUsed = false
   // One shared repair, applied only to the failed role. A malformed verifier
   // cannot replace the proposal it was independently checking.
-  async function withOutputRepair<T>(role: ActionRole, run: (correction: string, recordRepair?: ProviderCandidateRecordError) => Promise<T>): Promise<T> {
+  async function withOutputRepair<T>(role: ActionRole, run: (correction: string, recordRepair?: ProviderCandidateRecordError | ProviderCandidateAssociationRepairError) => Promise<T>): Promise<T> {
     async function attempt(label: 'initial' | 'repair', execute: () => Promise<T>): Promise<T> {
       try { return await execute() } catch (error) {
         if (error instanceof ActionOutputError && error.invariant) {
           try {
-            const { candidateId, ...detail } = error.invariant
-            const knownCandidate = proposalContext.draftCandidates.find(candidate => candidate.review.state === 'awaiting-review' && candidate.candidateId === candidateId)
-            const observation = ActionProviderInvariantObservationSchema.safeParse({ ...detail, role, attempt: label, ...(knownCandidate ? { candidateId: knownCandidate.candidateId } : {}) })
+            const knownCandidate = (candidateId: string | undefined) => proposalContext.draftCandidates.find(candidate => candidate.review.state === 'awaiting-review' && candidate.candidateId === candidateId)?.candidateId
+            const invariant = error.invariant
+            const safeIssue = <T extends { candidateId?: string }>({ candidateId, ...issue }: T) => {
+              const safeId = knownCandidate(candidateId)
+              return { ...issue, ...(safeId ? { candidateId: safeId } : {}) }
+            }
+            const detail = invariant.stage === 'provider-association-batch'
+              ? { ...invariant, issues: invariant.issues.map(safeIssue) }
+              : safeIssue(invariant)
+            const observation = ActionProviderInvariantObservationSchema.safeParse({ ...detail, role, attempt: label })
             if (observation.success) console.warn(`Action output invariant: ${JSON.stringify(observation.data)}`)
           } catch { /* A diagnostic transport failure must not replace the original validation failure. */ }
         }
@@ -1575,10 +1731,15 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
       repairUsed = true
       const diagnostic = error instanceof z.ZodError
         ? outputShapeDiagnostic(error, role, 'tool-input') : error instanceof ProviderActionOutputError ? error.message : `role=${role}; phase=identity; ${error.message}`
-      const output = error instanceof ProviderCandidateRecordError ? 'Return only the named candidate disposition record; every other original record and array stays pinned.' : 'Return the complete required tool schema.'
+      const output = error instanceof ProviderCandidateRecordError ? 'Return only the named candidate disposition record; every other original record and array stays pinned.'
+        : error instanceof ProviderCandidateAssociationRepairError ? 'Return only the named candidate association replacements; every other original record and array stays pinned.' : 'Return the complete required tool schema.'
       const correction = `Previous structured output was invalid: ${diagnostic}. Repair only this ${role} output. ${output} All required fields must be authored from the unchanged evidence. Never invent a reason or silently discard a contradictory field.`
       console.warn(`Action review needs its one repair: ${correction}`)
-      return attempt('repair', () => run(correction, error instanceof ProviderCandidateRecordError ? error : undefined))
+      try { return await attempt('repair', () => run(correction, error instanceof ProviderCandidateRecordError || error instanceof ProviderCandidateAssociationRepairError ? error : undefined)) }
+      catch (repairError) {
+        if (repairError instanceof CitationVisibilityOutputError) throw repairError.visibilityError
+        throw repairError
+      }
     }
   }
   const proposal = await withOutputRepair('proposer', async (correction, recordRepair) => {
