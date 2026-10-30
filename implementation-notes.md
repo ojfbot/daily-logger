@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- The October 27 measured-review plan assumed the merged runtime repair alone made a one-use grant admissible, but October 29 added an article-status entry and invalidated only the saved status-index hash; rebind that metadata and state digest on the original three held candidates before publishing a grant, with no reclassification, provider call, queue mutation or gate relaxation.
+
 - October 27 article correction assumed prose-only edits would build; the action snapshot binds the article digest, and the managed card regenerated false acceptance and draft-command claims. Use native pending-snapshot reconciliation, preserve original candidate identities and held decisions, and make the renderer label historical proposals as unverified and non-dispatchable.
 
 - 2026-10-27, October 26 held-action grant: the plan assumed a one-file grant could enter the existing post-acceptance route; the accepted snapshot records a revision cycle while that route admitted generation only and required unchanged output cycle. Kept the prior revision in history, bound a new revision to the one-use operation, required the same cycle in the grant and proposal, and held dispatch pending independent tests.

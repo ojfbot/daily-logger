@@ -207,18 +207,9 @@
     "draftCandidateEvidence": {
       "version": "draft-candidate-evidence-v2",
       "provenance": {
-        "kind": "derived-refresh",
-        "identity": "progressive-action-evidence-v7-exact-coverage-views",
-        "decision": "Acceptance-status refresh preserves the prior evidence classification after proving the exact Draft input view; it grants no new review authority.",
-        "lineage": {
-          "kind": "acceptance-status-refresh",
-          "priorArticleStatus": "draft",
-          "articleStatus": "accepted",
-          "priorReviewCycle": {
-            "phase": "generation"
-          },
-          "priorRequirementsSha256": "f80d93be06200f45d765a3793d1e7fd7c1fdc9e2b1c52f879ce0650fa7285631"
-        }
+        "kind": "coordinator",
+        "identity": "flywheel-coordinator:oct27-current-status-20261029",
+        "decision": "Rebind only the later article-status index after October 29 publication. Prior requirements SHA256 b3e4c294a416e67e3064f853521ab10dbda8f96b9259acd53add050f36ce1598; candidate payloads, required references, canonical input index and action states were rechecked unchanged. No model verdict, admission, closure or execution authority is granted."
       },
       "articleDate": "2026-10-27",
       "articleDigest": "78a0a53440366a71571736dcd333e4601619ac35f01eb290eeb1ee581886c32f",
@@ -228,7 +219,7 @@
       "draftContextSha256": "db45d9ec5fe660fcbb8bd274ff164f657bbc131df99b25268fe5c2bc96e1b815",
       "candidatePayloadsSha256": "c42ab35a47db8c9165dfc4531bd25e76d10a7ccdb2f4bef6d4cdeff21405cd0b",
       "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "articleStatusesSha256": "90c55265e3a09fd5bf60749cadf84f63ac65fea88fa7278579f2a3622f23707c",
+      "articleStatusesSha256": "c29c1fbfd0c71f399f4edae4989e67feb9b62b83fd04cd4894613b3b0790ff99",
       "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
       "inputActionKeys": [],
       "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -297,7 +288,7 @@
       "kind": "retained",
       "markdown": "Editorial pipeline: #450 (Oct 25 review draft) is sequenced first; #452 (Oct 26) follows. Both are in draft independent-review state and neither has been admitted. Next step for each is review draft merge, then correction if warranted, then acceptance, then accepted-source verification, then conditional held-action step.\n\nCore #572: draft, self-reviewed only, factual defect in `eli` worked example. Acceptance criterion is owner verification of corrected facts against primary source. No CI gate catches cross-register divergence. No target date set.\n\nCore #571 existing-hook migration: the PR does not automatically migrate installations with legacy telemetry hooks registered under the old behavior. This is an open owner gate — rollout review of existing hook migration behavior has not been scheduled or assigned.\n\nIssue #386 (token budget ceiling): 250,399-byte discussion against 131,072-byte source limit is the documented failure mode. #462 does not address it. No owner, no target, no stated consequence threshold documented.\n\nMorning-cockpit #60: open since October 21, passed Claude Opus review, no documented blocker. Disposition unknown — requires owner decision on whether to merge or close.\n\nClassic-space-venue #4: active research surface for RFI-0002 / core #567 cluster. Updated this window but not merged. No action required unless the research dependency on core #567 advances.\n\nGate 02 / Selfco Sync replacement cutover: execution-pending, recovery owner holds ordered handoff runbook. Not yet executed. No completion date recorded."
     },
-    "stateDigest": "8a80fdbd39ea4a6daab801e8c4cab9e397205d69280bcb104a1d27b728bb3c56",
+    "stateDigest": "dcf4f2b4a7f97f9d20705d3cc67acf6abc052bc9dcd97d3ef0b4eb7a9173a6b1",
     "verification": {
       "proposer": "not-verified",
       "verifier": "not-verified",
