@@ -762,6 +762,7 @@ function isolateCandidateAssociation(value: unknown, context: ActionProposalCont
   const original = repairObject.parse(structuredClone(value))
   const originalSuggestions = z.array(z.unknown()).parse(original.suggestions)
   const originalDispositions = z.array(z.unknown()).parse(original.candidateDispositions)
+  const originalClosingOptions = z.array(z.unknown()).parse(original.closingOptions)
   return {
     candidateIds,
     merge(value: unknown) {
@@ -778,34 +779,43 @@ function isolateCandidateAssociation(value: unknown, context: ActionProposalCont
       const corrected = new Set(candidateIds)
       const byCandidate = new Map(correction.replacements.map(row => [row.candidateId, row]))
       const inserted = new Set<string>()
+      const retainedIndices = new Map<number, number>()
+      const retainedCandidateIndices = new Map<string, number>()
+      let nextIndex = 0
       const suggestions = originalSuggestions.flatMap((originalRow, index) => {
         const identity = parsed.data.suggestions[index].identity
-        if (identity.kind !== 'captured' || !corrected.has(identity.candidateId)) return [originalRow]
+        if (identity.kind !== 'captured' || !corrected.has(identity.candidateId)) {
+          retainedIndices.set(index, nextIndex++)
+          return [originalRow]
+        }
         const replacement = byCandidate.get(identity.candidateId)
-        if (!replacement?.suggestion || inserted.has(identity.candidateId)) return []
+        if (!replacement?.suggestion) return []
+        if (inserted.has(identity.candidateId)) {
+          const retainedIndex = retainedCandidateIndices.get(identity.candidateId)
+          if (retainedIndex !== undefined) retainedIndices.set(index, retainedIndex)
+          return []
+        }
         inserted.add(identity.candidateId)
+        retainedCandidateIndices.set(identity.candidateId, nextIndex)
+        retainedIndices.set(index, nextIndex++)
         return [replacement.suggestion]
       })
       for (const candidateId of candidateIds) {
         const replacement = byCandidate.get(candidateId)
         if (replacement?.suggestion && !inserted.has(candidateId)) suggestions.push(replacement.suggestion)
       }
-      // closingOptions.candidateIndex is positional. A removal must not silently
-      // retarget an unchanged closing option to a neighboring suggestion.
-      for (const option of parsed.data.closingOptions) {
-        if (option.kind !== 'candidate') continue
-        const before = parsed.data.suggestions[option.candidateIndex]
-        const after = suggestions[option.candidateIndex]
-        const parsedAfter = ProviderSuggestionSchema.safeParse(after)
-        const sameOriginal = originalSuggestions[option.candidateIndex] === after
-        const sameCorrectedCandidate = before?.identity.kind === 'captured' && corrected.has(before.identity.candidateId)
-          && parsedAfter.success && parsedAfter.data.identity.kind === 'captured'
-          && parsedAfter.data.identity.candidateId === before.identity.candidateId
-        if (!sameOriginal && !sameCorrectedCandidate) throw new ProviderActionOutputError('Candidate-scoped correction would retarget a pinned closing option')
-      }
+      // Keep each closing option attached to its original suggestion as earlier
+      // corrected rows disappear. A removed target cannot be reassigned.
+      const closingOptions = parsed.data.closingOptions.map((option, index) => {
+        if (option.kind !== 'candidate') return originalClosingOptions[index]
+        const candidateIndex = retainedIndices.get(option.candidateIndex)
+        if (candidateIndex === undefined) throw new ProviderActionOutputError('Candidate-scoped correction would remove a pinned closing option')
+        return { ...z.record(z.string(), z.unknown()).parse(originalClosingOptions[index]), candidateIndex }
+      })
       return {
         ...original,
         suggestions,
+        closingOptions,
         candidateDispositions: [...originalDispositions.filter((_, index) => !corrected.has(parsed.data.candidateDispositions[index].candidateId)),
           ...correction.replacements.map(row => row.disposition)],
       }
