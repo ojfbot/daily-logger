@@ -165,9 +165,14 @@ export const ActionProviderResponseObservationSchema = z.object({
 const invariantCandidate = { candidateId: z.string().regex(/^[a-f0-9]{64}$/).optional() }
 const invariantIndex = z.number().int().min(0).max(4)
 const invariantCount = z.number().int().min(0).max(5)
+const ProviderAssociationDetailSchema = z.object({ stage: z.literal('provider-association'), rule: z.enum(['unknown-disposition', 'unknown-suggestion', 'disposition-cardinality', 'captured-cardinality', 'existing-key-mismatch', 'terminal-with-suggestion', 'unknown-closure-key']),
+  ...invariantCandidate, dispositionIndex: invariantIndex.optional(), capturedReferences: invariantCount.optional(), dispositionCount: invariantCount.optional() }).strict()
+const ProviderAssociationIssueSchema = ProviderAssociationDetailSchema.omit({ stage: true })
+type ProviderAssociationIssue = z.infer<typeof ProviderAssociationIssueSchema>
+// Five dispositions and five suggestions can produce at most eleven independent association faults.
 const ActionInvariantDetailSchema = z.discriminatedUnion('stage', [
-  z.object({ stage: z.literal('provider-association'), rule: z.enum(['unknown-disposition', 'unknown-suggestion', 'disposition-cardinality', 'captured-cardinality', 'existing-key-mismatch', 'terminal-with-suggestion', 'unknown-closure-key']),
-    ...invariantCandidate, dispositionIndex: invariantIndex.optional(), capturedReferences: invariantCount.optional(), dispositionCount: invariantCount.optional() }).strict(),
+  ProviderAssociationDetailSchema,
+  z.object({ stage: z.literal('provider-association-batch'), issues: z.array(ProviderAssociationIssueSchema).min(2).max(11) }).strict(),
   z.object({ stage: z.literal('canonical-identity'), rule: z.enum(['duplicate-disposition', 'disposition-cardinality', 'unknown-disposition', 'unknown-closure-key', 'captured-index-invalid', 'captured-payload-mismatch', 'existing-key-mismatch', 'promotion-existing-key', 'unlinked-invocation', 'unknown-suggestion']),
     ...invariantCandidate, dispositionIndex: invariantIndex.optional(), suggestionIndex: invariantIndex.optional(), expectedCount: invariantCount.optional(), actualCount: invariantCount.optional() }).strict(),
   z.object({ stage: z.literal('invocation-mapping'), rule: z.literal('invocation-mapping-mismatch'), ...invariantCandidate, suggestionIndex: invariantIndex }).strict(),
@@ -180,6 +185,7 @@ export const ActionProviderInvariantObservationSchema = z.discriminatedUnion('st
   ActionInvariantDetailSchema.options[1].extend(invariantAttempt),
   ActionInvariantDetailSchema.options[2].extend(invariantAttempt),
   ActionInvariantDetailSchema.options[3].extend(invariantAttempt),
+  ActionInvariantDetailSchema.options[4].extend(invariantAttempt),
 ]).refine(value => Buffer.byteLength(JSON.stringify(value)) <= 2048, 'Invariant diagnostic exceeds its bounded receipt size')
 
 export const ActionReviewFailurePhaseSchema = z.enum(['structured-output', 'evidence-request', 'context-or-budget', 'verification-hold', 'ranked-shortlist-incomplete'])
@@ -463,37 +469,44 @@ function providerCandidateIndices(wire: {
   candidateDispositions: z.infer<typeof ProviderCandidateLinkSchema>[]
 }, context: ActionProposalContext): Map<string, number> {
   const awaiting = context.draftCandidates.filter(candidate => candidate.review.state === 'awaiting-review')
-  const fail = (reason: z.infer<typeof ActionInvariantDetailSchema.options[0]>['rule'], candidateId: string, dispositionIndex: number, capturedReferences: number): never => {
-    const candidate = awaiting.find(candidate => candidate.candidateId === candidateId)
-    throw new ProviderCandidateAssociationError(`Candidate association invalid: reason=${reason}; candidateId=${candidate?.candidateId ?? '<unknown>'}; dispositionIndex=${dispositionIndex}; capturedReferences=${capturedReferences}`, {
-      stage: 'provider-association', rule: reason, ...(candidate ? { candidateId: candidate.candidateId } : {}),
-      ...(dispositionIndex >= 0 ? { dispositionIndex } : {}), capturedReferences,
-      dispositionCount: wire.candidateDispositions.filter(row => row.candidateId === candidateId).length,
-    })
-  }
-  for (const [index, row] of wire.candidateDispositions.entries()) {
-    if (!awaiting.some(candidate => candidate.candidateId === row.candidateId)) fail('unknown-disposition', row.candidateId, index, 0)
-  }
-  for (const suggestion of wire.suggestions) {
+  const issues: ProviderAssociationIssue[] = []
+  const add = (issue: ProviderAssociationIssue) => { issues.push(ProviderAssociationIssueSchema.parse(issue)) }
+  const unknownRows = wire.candidateDispositions.flatMap((row, index) => awaiting.some(candidate => candidate.candidateId === row.candidateId) ? [] : [index])
+  if (unknownRows.length) add({ rule: 'unknown-disposition', dispositionIndex: unknownRows[0], dispositionCount: unknownRows.length, capturedReferences: 0 })
+  const unknownSuggestions = wire.suggestions.filter(suggestion => {
     const identity = suggestion.identity
-    if (identity.kind === 'captured' && !awaiting.some(candidate => candidate.candidateId === identity.candidateId)) fail('unknown-suggestion', identity.candidateId, -1, 1)
-  }
+    return identity.kind === 'captured' && !awaiting.some(candidate => candidate.candidateId === identity.candidateId)
+  })
+  if (unknownSuggestions.length) add({ rule: 'unknown-suggestion', capturedReferences: unknownSuggestions.length })
   const indices = new Map<string, number>()
   for (const candidate of awaiting) {
     const rows = wire.candidateDispositions.flatMap((row, index) => row.candidateId === candidate.candidateId ? [{ row, index }] : [])
     const matches = wire.suggestions.flatMap((suggestion, index) => suggestion.identity.kind === 'captured' && suggestion.identity.candidateId === candidate.candidateId ? [{ suggestion, index }] : [])
     const disposition = rows[0]
-    if (rows.length !== 1 || !disposition) fail('disposition-cardinality', candidate.candidateId, disposition?.index ?? -1, matches.length)
+    if (rows.length !== 1 || !disposition) {
+      add({ rule: 'disposition-cardinality', candidateId: candidate.candidateId, ...(disposition ? { dispositionIndex: disposition.index } : {}), capturedReferences: matches.length, dispositionCount: rows.length })
+      continue
+    }
     const { row, index } = disposition
     if (row.kind === 'promote' || row.kind === 'map-existing') {
       const match = matches[0]
-      if (matches.length !== 1 || !match) fail('captured-cardinality', candidate.candidateId, index, matches.length)
-      if (row.kind === 'promote' ? match.suggestion.existingKey !== null : !context.actionKeys.includes(row.actionKey) || match.suggestion.existingKey !== row.actionKey) fail('existing-key-mismatch', candidate.candidateId, index, matches.length)
+      if (matches.length !== 1 || !match) {
+        add({ rule: 'captured-cardinality', candidateId: candidate.candidateId, dispositionIndex: index, capturedReferences: matches.length, dispositionCount: rows.length })
+        continue
+      }
+      if (row.kind === 'promote' ? match.suggestion.existingKey !== null : !context.actionKeys.includes(row.actionKey) || match.suggestion.existingKey !== row.actionKey) {
+        add({ rule: 'existing-key-mismatch', candidateId: candidate.candidateId, dispositionIndex: index, capturedReferences: matches.length, dispositionCount: rows.length })
+        continue
+      }
       indices.set(candidate.candidateId, match.index)
     } else {
-      if (matches.length !== 0) fail('terminal-with-suggestion', candidate.candidateId, index, matches.length)
-      if (row.kind === 'verified-closure' && row.actionKey !== null && !context.actionKeys.includes(row.actionKey)) fail('unknown-closure-key', candidate.candidateId, index, matches.length)
+      if (matches.length !== 0) add({ rule: 'terminal-with-suggestion', candidateId: candidate.candidateId, dispositionIndex: index, capturedReferences: matches.length, dispositionCount: rows.length })
+      if (row.kind === 'verified-closure' && row.actionKey !== null && !context.actionKeys.includes(row.actionKey)) add({ rule: 'unknown-closure-key', candidateId: candidate.candidateId, dispositionIndex: index, capturedReferences: matches.length, dispositionCount: rows.length })
     }
+  }
+  if (issues.length) {
+    const detail = issues.length === 1 ? { stage: 'provider-association', ...issues[0] } : { stage: 'provider-association-batch', issues }
+    throw new ProviderCandidateAssociationError(`Candidate associations invalid: ${JSON.stringify(issues)}`, ActionInvariantDetailSchema.parse(detail))
   }
   return indices
 }
@@ -1586,9 +1599,16 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
       try { return await execute() } catch (error) {
         if (error instanceof ActionOutputError && error.invariant) {
           try {
-            const { candidateId, ...detail } = error.invariant
-            const knownCandidate = proposalContext.draftCandidates.find(candidate => candidate.review.state === 'awaiting-review' && candidate.candidateId === candidateId)
-            const observation = ActionProviderInvariantObservationSchema.safeParse({ ...detail, role, attempt: label, ...(knownCandidate ? { candidateId: knownCandidate.candidateId } : {}) })
+            const knownCandidate = (candidateId: string | undefined) => proposalContext.draftCandidates.find(candidate => candidate.review.state === 'awaiting-review' && candidate.candidateId === candidateId)?.candidateId
+            const invariant = error.invariant
+            const safeIssue = <T extends { candidateId?: string }>({ candidateId, ...issue }: T) => {
+              const safeId = knownCandidate(candidateId)
+              return { ...issue, ...(safeId ? { candidateId: safeId } : {}) }
+            }
+            const detail = invariant.stage === 'provider-association-batch'
+              ? { ...invariant, issues: invariant.issues.map(safeIssue) }
+              : safeIssue(invariant)
+            const observation = ActionProviderInvariantObservationSchema.safeParse({ ...detail, role, attempt: label })
             if (observation.success) console.warn(`Action output invariant: ${JSON.stringify(observation.data)}`)
           } catch { /* A diagnostic transport failure must not replace the original validation failure. */ }
         }
