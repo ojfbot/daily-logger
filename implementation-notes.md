@@ -559,3 +559,7 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 27 acceptance (2026-10-28)
 
 - The plan assumed October 27 could use the standard clean-acceptance fallback, but its Draft snapshot had no `draftCandidateEvidence`: the selector read `pre-#571` as a repo, missed title-case `Core #571`, and missed exact `--pr`/`--repo` targets. Repair only these native associations and bind the prepared map to the original held candidates before the single acceptance attempt; leave their commands unverified and retain the existing evidence gates.
+
+## Deviations — October 27 action citation follow-up (2026-10-29)
+
+- The follow-up assumed core #572 evidence was absent from the bounded view, but a current-source reproduction showed the proposer citation crossed one deliberately non-citable generated metadata row before visible authored PR text; use the existing one-repair allowance for a corrected exact citation while preserving source hashes, native visibility checks, independent verification and the historical request.
