@@ -10,8 +10,8 @@
       "state": "pending",
       "reason": "Unsupported qualified candidate reference issue#386 for 5215cea05a4a07fb881458eb2d0da6a54cf43554d98af53febead9f0e33ced97; review pending"
     },
-    "articleDigest": "707c7e1b70284eb9a69c73e53f22aeb28dfb5d92022a18722aa50359a4c45797",
-    "roundId": "1b0e045537e947b28bd7416e9a711ce8676a546db4f2d79c5294a66498d3740b",
+    "articleDigest": "c5a4a96cd18f7bc382c019ba689ffbd95ebf04b650fddfe7e2789d7ddd50a643",
+    "roundId": "a615aac2a4422cdff4daf4ad0aa20019b703e1a1d38a25cfdb553495fe9b3699",
     "reviewCycle": {
       "phase": "generation"
     },

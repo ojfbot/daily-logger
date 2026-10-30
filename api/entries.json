@@ -187,8 +187,8 @@
   },
   {
     "date": "2026-10-28",
-    "title": "October 26 cleared: 18 PRs in one session complete the editorial train, storage-cap patch, and held-action recovery",
-    "summary": "Eighteen PRs merged in a single session completed October 26's full correction-acceptance-review train while a storage-cap patch and held-action recovery framework resolved the 64 KiB overflow that had blocked the cycle.",
+    "title": "October 26 accepted: editorial repairs and later held-action work across 18 PRs",
+    "summary": "October 26 reached article acceptance after two focused repairs; later PRs addressed the separate held-action route. The article records 18 merged PRs and 28 listed commits.",
     "tags": [
       {
         "name": "daily-logger",
@@ -278,6 +278,32 @@
         }
       },
       {
+        "text": "04:34Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-28T04:34:05.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "483",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/483"
+        }
+      },
+      {
+        "text": "04:41Z",
+        "occurrence": 1,
+        "precision": "minute",
+        "at": "2026-10-28T04:41:39.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "484",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/484"
+        }
+      },
+      {
         "text": "2026-10-28T01:06:59Z",
         "occurrence": 0,
         "precision": "second",
@@ -288,7 +314,7 @@
         }
       },
       {
-        "text": "02:12Z–04:41Z",
+        "text": "02:12Z to 04:41Z",
         "occurrence": 0,
         "kind": "interval",
         "start": {
@@ -326,15 +352,6 @@
         "status": "available",
         "source": {
           "repo": "ojfbot/daily-logger",
-          "ref": "466",
-          "url": "https://github.com/ojfbot/daily-logger/pull/466"
-        },
-        "at": "2026-10-27T15:02:03.000Z"
-      },
-      {
-        "status": "available",
-        "source": {
-          "repo": "ojfbot/daily-logger",
           "ref": "467",
           "url": "https://github.com/ojfbot/daily-logger/pull/467"
         },
@@ -357,6 +374,15 @@
           "url": "https://github.com/ojfbot/daily-logger/pull/469"
         },
         "at": "2026-10-27T17:18:33.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "466",
+          "url": "https://github.com/ojfbot/daily-logger/pull/466"
+        },
+        "at": "2026-10-27T15:02:03.000Z"
       },
       {
         "status": "available",
