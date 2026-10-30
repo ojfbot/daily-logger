@@ -4,6 +4,7 @@ import { useEntries } from '../hooks/useEntries.ts'
 import { useFilters } from '../hooks/useFilters.ts'
 import { MetricsBar } from './MetricsBar.tsx'
 import type { EntryData } from '../store/types.ts'
+import { titleWithReportingWeekday } from '../../../../src/article-title.ts'
 
 function FilterBar({ tags, filtered, total }: { tags: { name: string; type: string; count: number }[]; filtered: number; total: number }) {
   const { active, toggleFilter, clearFilters, hasActiveFilters } = useFilters()
@@ -56,7 +57,7 @@ function EntryCard({ entry }: { entry: EntryData }) {
     <div className="entry-card">
       <Link to={`/articles/${entry.date}`}>
         <div className="entry-date">{entry.date}</div>
-        <div className="entry-title">{entry.title}</div>
+        <div className="entry-title">{titleWithReportingWeekday(entry.date, entry.title)}</div>
         <div className="entry-summary">{entry.summary}</div>
         <div className="entry-meta">
           <div className="entry-tags">

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useEntries } from '../hooks/useEntries.ts'
+import { titleWithReportingWeekday } from '../../../../src/article-title.ts'
 
 export function RepoDetailPage() {
   const { name } = useParams<{ name: string }>()
@@ -44,7 +45,7 @@ export function RepoDetailPage() {
                 <time className="entry-date">{e.date}</time>
                 <span className="entry-stat">{e.commitCount} commits</span>
               </div>
-              <h3 className="entry-title">{e.title}</h3>
+              <h3 className="entry-title">{titleWithReportingWeekday(e.date, e.title)}</h3>
               <p className="entry-summary">{e.summary}</p>
             </Link>
           </article>

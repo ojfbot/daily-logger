@@ -17,6 +17,7 @@ import { EditorialSidebar } from './EditorialSidebar.tsx'
 import { ArticleProvenanceDetails } from './ArticleProvenanceDetails.tsx'
 import { DiscussionDrafts, usePageDiscussionDrafts } from './DiscussionDrafts.tsx'
 import { ArticleActions } from './ArticleActions.tsx'
+import { titleWithReportingWeekday } from '../../../../src/article-title.ts'
 import { decorateShipmentTimesHtml } from '../utils/shipmentTimes.ts'
 import { decorateIssueTimesHtml } from '../utils/issueTimes.ts'
 
@@ -198,7 +199,7 @@ export function ArticlePage() {
               </span>
             )}
           </div>
-          <h1 className="article-title">{displayEntry.title}</h1>
+          <h1 className="article-title">{titleWithReportingWeekday(displayEntry.date, displayEntry.title)}</h1>
           <div className="article-meta">
             <div className="entry-tags">
               {displayEntry.tags.map((t) => (
@@ -244,7 +245,7 @@ export function ArticlePage() {
               <div className="related-heading">RELATED ARTICLES</div>
               {related.map((e) => (
                 <div key={e.date} className="related-item">
-                  <Link to={`/articles/${e.date}`}>{e.date} — {e.title}</Link>
+                  <Link to={`/articles/${e.date}`}>{e.date} — {titleWithReportingWeekday(e.date, e.title)}</Link>
                   <span className="entry-stat">{e.overlap} shared tags</span>
                 </div>
               ))}
