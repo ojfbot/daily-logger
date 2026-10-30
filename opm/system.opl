@@ -443,7 +443,7 @@ Candidate Association Correcting requires Candidate Association Diagnostic, Prov
 Candidate Association Correcting requires Claude API. [src: src/review-actions.ts]
 Candidate Association Correcting yields Provider Action Proposal. [src: src/review-actions.ts]
 Action Output Repairing invokes Candidate Association Correcting. [src: src/review-actions.ts]
-# Candidate Association Correcting replaces only the reported known candidates' disposition and captured suggestion rows. All other proposal records remain fixed; the complete merged proposal still passes native validation before independent verification. [src: src/review-actions.ts]
+# Candidate Association Correcting replaces only the reported known candidates' disposition and captured suggestion rows. Other proposal records remain fixed; a changed closing-option candidate reference holds the proposal. The complete merged proposal still passes native validation before independent verification. [src: src/review-actions.ts]
 
 
 ## SD1.6 — Manual held-action review

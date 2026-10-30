@@ -300,6 +300,25 @@ it('rejects a correction that relabels a named candidate inside its replacement'
   expect(create).toHaveBeenCalledTimes(2); expectAcceptedBytes(f)
 }, 20000)
 
+it('holds a scoped correction that would retarget an unchanged closing candidate index', async () => {
+  const f = fixture(), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
+  const { proposal } = healthy(f), first = f.snapshot.draftCandidates?.[0].candidateId
+  if (!first) throw new Error('Expected captured fixture candidate')
+  const unrelated = (description: string) => ({ ...capturedSuggestion(first), identity: { kind: 'new', command: '/review', repo: 'core', description } })
+  const { target: _target, ...handoff } = proposal.closingOptions[0]
+  const invalid = { ...proposal,
+    suggestions: [capturedSuggestion(first), unrelated('Unrelated B'), unrelated('Unrelated C')],
+    closingOptions: [{ ...handoff, kind: 'candidate', candidateIndex: 1 }, ...proposal.closingOptions.slice(1)],
+  }
+  create.mockReset().mockResolvedValueOnce(response(invalid)).mockResolvedValueOnce(response(scopedCorrection(proposal, [first])))
+  const result = await executeHeldAction({ root: f.root, binding, reserved, github: t.github, native: native(f, t) })
+  expect(result.receipt.state).toBe('held-invalid-output')
+  expect(result.receipt.observations.invariants).toEqual([expect.objectContaining({ role: 'proposer', attempt: 'initial', rule: 'terminal-with-suggestion', candidateId: first })])
+  expect(result.receipt.observations.responses.map(value => value.role)).toEqual(['proposer', 'proposer'])
+  expect(result.files).toEqual([])
+  expect(create).toHaveBeenCalledTimes(2); expectAcceptedBytes(f)
+}, 20000)
+
 it('retains every realizable association fault within the receipt bound', async () => {
   const f = fixture(undefined, generationActionCycle(), 5), t = transport(f.source), binding = await admitHeldAction(f.root, f.inputs, f.context, t.github), reserved = await reserveHeldAction(binding, t.github)
   const { proposal } = healthy(f), candidates = f.snapshot.draftCandidates ?? []

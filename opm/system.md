@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `9404c3e55b8cef8d691eb87f2b7319cd95336e61a54fcea08b9481666ba8f32e`.
+> Source SHA-256: `6576f1efc2651c739831927e7944a39736d77653bd756970ad636c4f2d36f170`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
