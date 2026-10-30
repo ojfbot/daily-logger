@@ -151,6 +151,11 @@ selection and the final source guard charge the same complete labeled view,
 including its dictionary. Coverage records both raw bytes and actual model-view
 bytes/hashes. Dictionary and factored metadata rows are context only, never
 citable authority. Copying a source array cannot mint collector provenance.
+For a required GitHub discussion whose complete labeled source fits the unchanged
+128 KiB source limit, the reviewer sees the original metadata rows at their
+original line numbers. Larger discussions may still use the lossless context-only
+view, with hidden metadata uncitable and a bounded evidence request when it is
+needed. The 384 KiB total and token gates still apply before a model call.
 The generated coverage index also has a deterministic lossless model-only row
 encoding. Its canonical expanded JSON, source hash and retained proposal format
 stay intact. Only a closed, versioned, hash-matching context-only coverage report

@@ -22,6 +22,20 @@ function fixture(extra: object = {}, count = 60) {
 const prepare = (source: ActionSource, collection?: ActionSourceCollection) => PreparedActionEvidenceView.prepare([source], sha256('synthetic case'), sha256('synthetic state'), collection, ['daily-logger#999999'])
 
 describe('collector-bound lossless metadata factoring', () => {
+  it('shows every original line of a required discussion when its complete view fits the source limit', () => {
+    const { source, collection } = fixture({}, 20)
+    expect(collection.modelViewFor(source)).toBeDefined()
+    const view = prepare(source, collection)
+    const lines = source.content.split('\n')
+    const model = view.promptSources()[0]
+    expect(Buffer.byteLength(model.content)).toBeLessThanOrEqual(128 * 1024)
+    expect(model.content).toBe(lines.map((line, index) => `L${index + 1}: ${line}`).join('\n'))
+    expect(decodeActionEvidenceViewSources(view.receipt)[0].hiddenLines).toEqual([])
+    const metadataLine = lines.findIndex(line => line.startsWith('{"id":1,')) + 1
+    expect(metadataLine).toBeGreaterThan(0)
+    expect(view.resolve('s1', metadataLine, metadataLine).quote).toBe(lines[metadataLine - 1])
+  })
+
   it('fits a synthetic oversized full discussion while retaining exact rendered-wire expansion and raw identities', () => {
     const { source, collection } = fixture(), original = structuredClone(source)
     expect(Buffer.byteLength(source.content)).toBeGreaterThan(131072)
