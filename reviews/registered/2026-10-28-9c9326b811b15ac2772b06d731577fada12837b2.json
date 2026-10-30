@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-post-acceptance-20261028-9c9326b811b1",
+  "article": {
+    "date": "2026-10-28",
+    "sourceCommitSha": "9c9326b811b15ac2772b06d731577fada12837b2",
+    "blobSha": "f9ad2618db3a329cfb22309e7e2868bc10834e26"
+  },
+  "reviewer": {
+    "name": "Codex — October 28 accepted-source editorial and held-action verification",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-30T05:14:24Z",
+  "scope": "Source-pinned verification of the Accepted October 28 narrative, corrected original findings, actual article-only action outcome, and production projection. The original three candidates remain unverified and non-dispatchable. This grants no action verdict, owner approval, model retry, or distinct authenticated reviewer identity.",
+  "fullRecordBlobSha": "60cbf3fb4cb65e52803065c2b60b2e895bfd57db",
+  "fullRecordPath": "reviews/articles/2026-10-28-9c9326b811b15ac2772b06d731577fada12837b2.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "H1",
+      "classification": "unverified_claim",
+      "title": "Three original suggestions remain without an independent action verdict",
+      "location": "Suggested actions — three Needs review candidates and retained draft context",
+      "explanation": "The October 28 acceptance run reached Sonnet with measured token headroom, but the initial proposal failed terminal-with-suggestion and its one scoped repair would retarget a pinned closing option. Opus did not run. The native article-only boundary accepted the corrected article while preserving all three original candidate identities and payloads as Needs review with zero admissions. Original slash commands and disputed claims remain historical draft input, not verified recommendations.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/502",
+        "https://github.com/ojfbot/daily-logger/actions/runs/41006671001",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6515539279"
+      ],
+      "correction": "Keep the candidates visible but non-dispatchable. Reproduce the candidate-association and pinned-closing-option interaction offline, then independently review any repair before a separately authorized action-review run. Preserve all current evidence, identity, token and one-repair gates.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
