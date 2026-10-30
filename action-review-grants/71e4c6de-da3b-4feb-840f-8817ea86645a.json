@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "approvedBy": "ojfbot",
+  "authorizationId": "0fd6cb10-274c-42eb-a717-db5c4cbe1408",
+  "authorizationReference": "Codex task owner authorization for one October 27 held-action model run (2026-10-29); reviewed runtime PR: https://github.com/ojfbot/daily-logger/pull/496",
+  "operationId": "49a476cc-cad7-42be-96eb-4bd638bf9d65",
+  "date": "2026-10-27",
+  "articleBlob": "533f6764dc8863c6be21a5d5a66a24500fa0cb03",
+  "actionBlob": "ae6446c9f3c683058728e982a7e163f6250e31d7",
+  "registryRevision": "9a317b60de692d1d7d363b34a5ad58db65624c2a7931dd3ead424595d7d08356",
+  "policyFingerprint": "d3b78ffc4dfe009095387e28163b020dc906de2369b2e46eb779fb63e873e066",
+  "reviewCycle": {
+    "phase": "generation"
+  },
+  "trains": 1,
+  "limits": {
+    "proposer": "claude-sonnet-4-6",
+    "verifier": "claude-opus-4-6",
+    "tokenLimit": 256000,
+    "outputReserve": 12000,
+    "envelopeBytes": 655360,
+    "sharedRepairs": 1,
+    "sdkRetries": 0
+  },
+  "output": "unmerged-dated-proposal-with-selected-citations"
+}
