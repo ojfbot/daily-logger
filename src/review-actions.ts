@@ -506,7 +506,11 @@ function providerCandidateIndices(wire: {
   }
   if (issues.length) {
     const detail = issues.length === 1 ? { stage: 'provider-association', ...issues[0] } : { stage: 'provider-association-batch', issues }
-    throw new ProviderCandidateAssociationError(`Candidate associations invalid: ${JSON.stringify(issues)}`, ActionInvariantDetailSchema.parse(detail))
+    const first = issues[0]
+    const message = issues.length === 1
+      ? `Candidate association invalid: reason=${first.rule}; candidateId=${first.candidateId ?? '<unknown>'}; dispositionIndex=${first.dispositionIndex ?? -1}; capturedReferences=${first.capturedReferences ?? 0}`
+      : `Candidate associations invalid: ${JSON.stringify(issues)}`
+    throw new ProviderCandidateAssociationError(message, ActionInvariantDetailSchema.parse(detail))
   }
   return indices
 }

@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- The batch-diagnostic publication assumed the existing single-fault correction text was not a test contract, but hosted CI showed two October 22 repair controls require its exact `reason=` format; preserve that format for one fault and use the new batch text only for multiple faults before repeating checks.
+
 - The October 27 pre-dispatch audit assumed GitHub claim refs lived under `/git/ref/action-review-claims/`, but the native route writes `refs/heads/action-review-claims/`; correct the read path, retract the manual 404-as-unused claim, and rely on the successful native reservation plus matching finished refs and typed receipt for this consumed run.
 
 - The October 27 measured-review plan assumed the merged runtime repair alone made a one-use grant admissible, but October 29 added an article-status entry and invalidated only the saved status-index hash; rebind that metadata and state digest on the original three held candidates before publishing a grant, with no reclassification, provider call, queue mutation or gate relaxation.
