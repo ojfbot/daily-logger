@@ -171,6 +171,7 @@ const ActionInvariantDetailSchema = z.discriminatedUnion('stage', [
   z.object({ stage: z.literal('canonical-identity'), rule: z.enum(['duplicate-disposition', 'disposition-cardinality', 'unknown-disposition', 'unknown-closure-key', 'captured-index-invalid', 'captured-payload-mismatch', 'existing-key-mismatch', 'promotion-existing-key', 'unlinked-invocation', 'unknown-suggestion']),
     ...invariantCandidate, dispositionIndex: invariantIndex.optional(), suggestionIndex: invariantIndex.optional(), expectedCount: invariantCount.optional(), actualCount: invariantCount.optional() }).strict(),
   z.object({ stage: z.literal('invocation-mapping'), rule: z.literal('invocation-mapping-mismatch'), ...invariantCandidate, suggestionIndex: invariantIndex }).strict(),
+  z.object({ stage: z.literal('citation-visibility'), rule: z.literal('hidden-generated-metadata'), ...invariantCandidate }).strict(),
 ])
 type ActionInvariantDetail = z.infer<typeof ActionInvariantDetailSchema>
 const invariantAttempt = { role: z.enum(['proposer', 'verifier']), attempt: z.enum(['initial', 'repair']) }
@@ -178,11 +179,18 @@ export const ActionProviderInvariantObservationSchema = z.discriminatedUnion('st
   ActionInvariantDetailSchema.options[0].extend(invariantAttempt),
   ActionInvariantDetailSchema.options[1].extend(invariantAttempt),
   ActionInvariantDetailSchema.options[2].extend(invariantAttempt),
+  ActionInvariantDetailSchema.options[3].extend(invariantAttempt),
 ]).refine(value => Buffer.byteLength(JSON.stringify(value)) <= 2048, 'Invariant diagnostic exceeds its bounded receipt size')
 
 export const ActionReviewFailurePhaseSchema = z.enum(['structured-output', 'evidence-request', 'context-or-budget', 'verification-hold', 'ranked-shortlist-incomplete'])
 type ProviderOutputPhase = 'envelope' | 'tool-block' | 'tool-input'
 class ProviderActionOutputError extends ActionOutputError {}
+class CitationVisibilityOutputError extends ProviderActionOutputError {
+  constructor(readonly visibilityError: ActionEvidenceVisibilityError) {
+    super('A citation crossed a non-citable generated metadata row. Cite only fully visible original L lines; use the separate current API state line for state facts. If the hidden row is essential, do not substitute unrelated text.',
+      { stage: 'citation-visibility', rule: 'hidden-generated-metadata' })
+  }
+}
 class ProviderCandidateAssociationError extends ActionOutputError {}
 class CandidateRecordIsolationError extends Error {}
 class IncompleteProviderResponseError extends Error {}
@@ -506,7 +514,24 @@ function resolveProviderProposal(value: unknown, view: PreparedActionEvidenceVie
   const candidateDispositions = wire.candidateDispositions.map(disposition => disposition.kind === 'promote' || disposition.kind === 'map-existing'
     ? { ...disposition, suggestionIndex: indices.get(disposition.candidateId) }
     : disposition)
-  const proposal = resolveActionSourceLines({ ...wire, suggestions, candidateDispositions }, view)
+  let proposal: ActionProposal
+  try {
+    proposal = resolveActionSourceLines({ ...wire, suggestions, candidateDispositions }, view)
+  } catch (error) {
+    if (!(error instanceof ActionEvidenceVisibilityError) || !error.location) throw error
+    const hiddenLine = Number(/^Unseen or partial metadata line (\d+) in /.exec(error.message)?.[1])
+    const { sourceId, startLine, endLine } = error.location
+    const repairable = startLine < endLine && (hiddenLine === startLine || hiddenLine === endLine)
+      && [hiddenLine === startLine ? [startLine + 1, endLine] : [startLine, endLine - 1]].some(([first, last]) => {
+        try { return !!view.resolve(sourceId, first, last).quote.trim() } catch { return false }
+      })
+    if (!repairable) throw error
+    // The source is present: the proposer selected a generated metadata row in
+    // an otherwise visible citation. Spend the existing output-repair allowance
+    // on new exact endpoints. A repeated visibility failure retains the
+    // original source-view request after that allowance is spent.
+    throw new CitationVisibilityOutputError(error)
+  }
   assertCandidateAssociations(ActionProposalSchema.parse(proposal), context)
   return proposal
 }
@@ -1578,7 +1603,11 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
       const output = error instanceof ProviderCandidateRecordError ? 'Return only the named candidate disposition record; every other original record and array stays pinned.' : 'Return the complete required tool schema.'
       const correction = `Previous structured output was invalid: ${diagnostic}. Repair only this ${role} output. ${output} All required fields must be authored from the unchanged evidence. Never invent a reason or silently discard a contradictory field.`
       console.warn(`Action review needs its one repair: ${correction}`)
-      return attempt('repair', () => run(correction, error instanceof ProviderCandidateRecordError ? error : undefined))
+      try { return await attempt('repair', () => run(correction, error instanceof ProviderCandidateRecordError ? error : undefined)) }
+      catch (repairError) {
+        if (repairError instanceof CitationVisibilityOutputError) throw repairError.visibilityError
+        throw repairError
+      }
     }
   }
   const proposal = await withOutputRepair('proposer', async (correction, recordRepair) => {
