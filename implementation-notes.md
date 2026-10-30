@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- The October 27 new-run plan assumed a public authorization comment could be posted, but approval review rejected it; use only the owner-approved minimal grant reference while preserving one-use IDs and exact source pins.
+
 - The batch-diagnostic publication assumed the existing single-fault correction text was not a test contract, but hosted CI showed two October 22 repair controls require its exact `reason=` format; preserve that format for one fault and use the new batch text only for multiple faults before repeating checks.
 
 - The October 27 pre-dispatch audit assumed GitHub claim refs lived under `/git/ref/action-review-claims/`, but the native route writes `refs/heads/action-review-claims/`; correct the read path, retract the manual 404-as-unused claim, and rely on the successful native reservation plus matching finished refs and typed receipt for this consumed run.
