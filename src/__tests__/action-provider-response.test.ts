@@ -56,7 +56,7 @@ describe('native-validated forced-tool response boundary', () => {
     const capture = captureGithubActionSource({ id: 'github:core#572', locator: 'https://github.com/ojfbot/core/pull/572',
       observation: 'CURRENT API STATE core#572: state=open; head=test; merged_at=none.',
       responses: [JSON.stringify([1, 2].map(id => ({ id, html_url: 'https://github.com/ojfbot/core/pull/572', author_association: 'OWNER',
-        user: { id: 1, login: 'ojfbot', avatar_url: 'https://example.invalid/' + 'a'.repeat(4000) }, body })))], trustedContent: [body] })
+        user: { id: 1, login: 'ojfbot', avatar_url: 'https://example.invalid/' + 'a'.repeat(80000) }, body })))], trustedContent: [body] })
     const source = { ...capture.source, id: `${capture.source.id}@${sha256(capture.source.content)}` }
     const sources = new ActionSourceCollection([source], [capture])
     const input = reviewInput()

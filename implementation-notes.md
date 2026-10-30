@@ -592,3 +592,8 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 28 action association repair (2026-10-30)
 
 - The first remap assumed each captured candidate occupied a unique suggestion row, but independent review found duplicate captured rows can collapse onto one retained suggestion; map every original row to its retained replacement and still reject any closing target removed entirely.
+
+## Deviations — October 29 Suggested Actions review (2026-10-30)
+
+- Plan assumed the accepted-article held-action route could test October 29 directly; the article remains Draft with an open source-pinned editorial review, so I kept the route closed and used the existing editorial correction/acceptance sequence before any hosted action run.
+- Plan assumed current draft candidate evidence could be replayed against main; later article statuses changed its bound status index, so the next article correction must refresh the exact evidence binding while preserving original candidate identities and history.

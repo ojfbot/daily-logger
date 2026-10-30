@@ -13,7 +13,7 @@ export const ACTION_EVIDENCE_VIEW_VERSION = 'action-evidence-view-v1'
 const ACCOUNT_LINKS = new Set(['avatar_url', 'gravatar_id', 'url', 'followers_url', 'following_url', 'gists_url', 'starred_url', 'subscriptions_url', 'organizations_url', 'repos_url', 'events_url', 'received_events_url'])
 const REPOSITORY_LINKS = new Set(['forks_url', 'keys_url', 'collaborators_url', 'teams_url', 'hooks_url', 'issue_events_url', 'events_url', 'assignees_url', 'branches_url', 'tags_url', 'blobs_url', 'git_tags_url', 'git_refs_url', 'trees_url', 'statuses_url', 'languages_url', 'stargazers_url', 'contributors_url', 'subscribers_url', 'subscription_url', 'commits_url', 'git_commits_url', 'comments_url', 'issue_comment_url', 'contents_url', 'compare_url', 'merges_url', 'archive_url', 'downloads_url', 'issues_url', 'pulls_url', 'milestones_url', 'notifications_url', 'labels_url', 'releases_url', 'deployments_url', 'git_url', 'ssh_url', 'clone_url', 'svn_url'])
 const ACCOUNT_FIELDS = new Set(['user', 'owner', 'assignee', 'assignees', 'requested_reviewers', 'merged_by'])
-const POLICY = sha256(JSON.stringify({ version: ACTION_EVIDENCE_VIEW_VERSION, account: [...ACCOUNT_LINKS], repository: [...REPOSITORY_LINKS], requiredGithubMetadata: 'complete-original-or-lossless-factor-v1', factoring: GITHUB_METADATA_VIEW_POLICY_SHA256, coverage: COVERAGE_MODEL_VIEW_POLICY_SHA256 }))
+const POLICY = sha256(JSON.stringify({ version: ACTION_EVIDENCE_VIEW_VERSION, account: [...ACCOUNT_LINKS], repository: [...REPOSITORY_LINKS], requiredGithubMetadata: 'complete-original-under-source-limit-or-lossless-factor-v2', factoring: GITHUB_METADATA_VIEW_POLICY_SHA256, coverage: COVERAGE_MODEL_VIEW_POLICY_SHA256 }))
 type MetadataRow = { line: number; raw: string; context: string; omitted: readonly string[] }
 
 function compactMetadata(value: unknown): { context: string; omitted: string[] } {
@@ -142,6 +142,11 @@ export class PreparedActionEvidenceView {
     this.#modelSources = sources.map((source, index) => {
       const capturedRows = collection?.rowsFor(source) ?? []
       const reference = /^github:([\w-]+#\d+)(?:@[a-f0-9]{64})?$/.exec(source.id)?.[1]
+      // A required primary source should expose its original rows when that
+      // complete labeled source fits the unchanged per-source budget. A
+      // lossless model codec does not make hidden metadata citable.
+      const completeContent = source.content.split('\n').map((line, offset) => `L${offset + 1}: ${line}`).join('\n')
+      const completeRequired = !!reference && required.has(reference) && Buffer.byteLength(completeContent) <= 128 * 1024
       const rows = reference && required.has(reference) ? [] : capturedRows
       const byLine = new Map(rows.map(row => [row.line, row]))
       const { trustedContent, ...rest } = source
@@ -151,7 +156,7 @@ export class PreparedActionEvidenceView {
         if (row && row.raw !== line) throw new ActionEvidenceVisibilityError('Collector metadata offset no longer matches the raw source')
         return row ? `CONTEXT ONLY (original L${offset + 1} is NOT citable; omitted transport links cannot establish absence): ${row.context}` : `L${offset + 1}: ${line}`
       }).join('\n')
-      const candidateView = coverageModelView(source) ?? collection?.modelViewFor(source)
+      const candidateView = completeRequired ? undefined : coverageModelView(source) ?? collection?.modelViewFor(source)
       const factored = candidateView && Buffer.byteLength(candidateView.content) < Buffer.byteLength(legacyContent) ? candidateView : undefined
       const hiddenLines = factored ? [...factored.hiddenLines] : rows.map(row => row.line)
       hidden.set(source.id, new Set(hiddenLines))
