@@ -571,3 +571,7 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 27 action citation follow-up (2026-10-29)
 
 - The follow-up assumed core #572 evidence was absent from the bounded view, but a current-source reproduction showed the proposer citation crossed one deliberately non-citable generated metadata row before visible authored PR text; use the existing one-repair allowance for a corrected exact citation while preserving source hashes, native visibility checks, independent verification and the historical request.
+
+## Deviations — October 27 candidate association offline replay (2026-10-29)
+
+- The plan expected to replay the exact two-fault response and one-fault repair, but the bounded hosted receipt intentionally retained only typed diagnostics, not raw model replies; reconstruct that fault pattern with synthetic provider outputs, freeze unaffected candidates in a candidate-scoped correction prototype, and keep the historical cause unknown.

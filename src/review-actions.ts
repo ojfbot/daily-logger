@@ -290,6 +290,19 @@ class ProviderCandidateRecordError extends ProviderActionOutputError {
     return repair(correction)
   }
 }
+class ProviderCandidateAssociationRepairError extends ProviderActionOutputError {
+  #repair: ((correction: string) => Promise<ActionProposal>) | undefined
+  constructor(error: ProviderCandidateAssociationError, repair: (correction: string) => Promise<ActionProposal>) {
+    super(error.message, error.invariant)
+    this.#repair = repair
+  }
+  repair(correction: string): Promise<ActionProposal> {
+    const repair = this.#repair
+    this.#repair = undefined
+    if (!repair) throw new Error('Candidate association repair was already consumed')
+    return repair(correction)
+  }
+}
 const repairFields = new Set([
   ...Object.keys(ProviderLineProposalSchema.shape), ...Object.keys(ProviderVerificationSchema.shape),
   ...Object.keys(ProviderSuggestionSchema.shape), ...Object.keys(LineProposalSchema.shape.suggestions.element.shape),
@@ -299,6 +312,7 @@ const repairFields = new Set([
   ...Object.keys(ActionVerificationSchema.shape.suggestions.unwrap().element.shape),
   ...Object.keys(ActionVerificationSchema.shape.closingOptions.unwrap().element.shape),
   'identity', 'kind', 'sourceId', 'startLine', 'endLine', 'sourceLineStart', 'sourceLineEnd', 'quote',
+  'replacements', 'disposition', 'suggestion',
   'content', 'stop_reason', 'usage', 'output_tokens', 'type', 'id', 'name', 'input',
 ])
 const DiagnosticFieldSchema = z.enum([...repairFields, '<field>', '<index>', '<unknown-key>'])
@@ -726,6 +740,55 @@ function isolateCandidateRecord(value: unknown, context: ActionProposalContext) 
     schema: branch.extend({ ...references, candidateId: z.literal(row.candidateId) }) }
 }
 
+const CandidateAssociationCorrectionSchema = z.object({ replacements: z.array(z.object({
+  candidateId: z.string().regex(/^[a-f0-9]{64}$/),
+  disposition: ProviderCandidateDispositionSchema,
+  suggestion: ProviderSuggestionSchema.nullable(),
+}).strict()).min(1).max(5) }).strict()
+
+function isolateCandidateAssociation(value: unknown, context: ActionProposalContext, error: ProviderCandidateAssociationError) {
+  const issues = error.invariant?.stage === 'provider-association-batch' ? error.invariant.issues
+    : error.invariant?.stage === 'provider-association' ? [error.invariant] : []
+  const candidateIds = [...new Set(issues.map(issue => issue.candidateId))]
+  const awaiting = new Set(context.draftCandidates.filter(candidate => candidate.review.state === 'awaiting-review').map(candidate => candidate.candidateId))
+  // Global/foreign association faults have no safe candidate-scoped correction.
+  if (candidateIds.length === 0 || candidateIds.some(id => !id || !awaiting.has(id))) return undefined
+  if (Buffer.byteLength(JSON.stringify(value), 'utf8') > 640 * 1024) return undefined
+  const parsed = ProviderLineProposalSchema.safeParse(value)
+  if (!parsed.success) return undefined
+  // Preserve the original wire values where they are not targets;
+  // Zod may materialize defaults that the provider did not actually return.
+  const original = repairObject.parse(structuredClone(value))
+  const originalSuggestions = z.array(z.unknown()).parse(original.suggestions)
+  const originalDispositions = z.array(z.unknown()).parse(original.candidateDispositions)
+  return {
+    candidateIds,
+    merge(value: unknown) {
+      const correction = CandidateAssociationCorrectionSchema.parse(value)
+      const returned = correction.replacements.map(row => row.candidateId)
+      if (returned.length !== candidateIds.length || new Set(returned).size !== returned.length
+        || returned.some(id => !candidateIds.includes(id))) throw new ProviderActionOutputError('Candidate-scoped correction did not match the reported candidate set')
+      for (const row of correction.replacements) {
+        if (row.disposition.candidateId !== row.candidateId
+          || row.suggestion !== null && (row.suggestion.identity.kind !== 'captured' || row.suggestion.identity.candidateId !== row.candidateId)) {
+          throw new ProviderActionOutputError('Candidate-scoped correction changed a candidate identity')
+        }
+      }
+      const corrected = new Set(candidateIds)
+      return {
+        ...original,
+        suggestions: [...originalSuggestions.filter((_, index) => {
+          const row = parsed.data.suggestions[index]
+          return row.identity.kind !== 'captured' || !corrected.has(row.identity.candidateId)
+        }),
+          ...correction.replacements.flatMap(row => row.suggestion === null ? [] : [row.suggestion])],
+        candidateDispositions: [...originalDispositions.filter((_, index) => !corrected.has(parsed.data.candidateDispositions[index].candidateId)),
+          ...correction.replacements.map(row => row.disposition)],
+      }
+    },
+  }
+}
+
 export function actionProviderRequest(role: 'proposer' | 'verifier', prompt: string) {
     const schema = role === 'proposer' ? ProviderLineProposalSchema : ProviderVerificationSchema
     // The provider supports anyOf but not oneOf. Converting only required, disjoint const
@@ -821,7 +884,27 @@ export function createActionAgents(options: { tokenBudget?: ActionTokenBudget } 
         })
       }
     }
-    return parseProviderOutput(role, 'tool-input', value, () => role === 'proposer' ? resolveProviderProposal(value, view, captured) : ProviderVerificationSchema.parse(value), captured)
+    if (role === 'proposer') {
+      try { return parseProviderOutput(role, 'tool-input', value, () => resolveProviderProposal(value, view, captured), captured) }
+      catch (error) {
+        if (!(error instanceof ProviderCandidateAssociationError)) throw error
+        const target = isolateCandidateAssociation(value, captured, error)
+        if (!target) throw error
+        throw new ProviderCandidateAssociationRepairError(error, async correction => {
+          const base = actionProviderRequest('proposer', `${prompt}\n${correction}\nRepair only the association for candidateIds=${target.candidateIds.join(',')}. Return exactly one replacement pair per named candidate. All other original proposal records stay pinned and untrusted until full native validation.`)
+          const schema: unknown = JSON.parse(JSON.stringify(z.toJSONSchema(CandidateAssociationCorrectionSchema)))
+          const wireSchema = ProviderSchemaObject.parse(providerToolSchema(schema))
+          const request = { ...base,
+            system: `${RULES}\nYou are the action proposer correcting only the named candidate associations. Return ONLY replacements under the tool schema. Each replacement supplies one disposition and either its captured suggestion or null. Do not return or change any other candidate or proposal array. Cite the unchanged evidence; do not invent reasons.`,
+            tools: [{ ...base.tools[0], description: 'Return only the named candidate association replacements.', input_schema: { ...wireSchema, type: 'object' as const } }],
+          }
+          const replacement = await toolInput('proposer', request)
+          const merged = parseProviderOutput('proposer', 'tool-input', replacement, () => target.merge(replacement), captured)
+          return parseProviderOutput('proposer', 'tool-input', merged, () => resolveProviderProposal(merged, view, captured), captured)
+        })
+      }
+    }
+    return parseProviderOutput(role, 'tool-input', value, () => ProviderVerificationSchema.parse(value), captured)
   }
   return { identity: { proposer: 'claude-sonnet-4-6', verifier: 'claude-opus-4-6' }, propose: (prompt, sources, context) => call('proposer', prompt, sources, context), verify: (prompt, sources, context) => call('verifier', prompt, sources, context) }
 }
@@ -1598,7 +1681,7 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
   let repairUsed = false
   // One shared repair, applied only to the failed role. A malformed verifier
   // cannot replace the proposal it was independently checking.
-  async function withOutputRepair<T>(role: ActionRole, run: (correction: string, recordRepair?: ProviderCandidateRecordError) => Promise<T>): Promise<T> {
+  async function withOutputRepair<T>(role: ActionRole, run: (correction: string, recordRepair?: ProviderCandidateRecordError | ProviderCandidateAssociationRepairError) => Promise<T>): Promise<T> {
     async function attempt(label: 'initial' | 'repair', execute: () => Promise<T>): Promise<T> {
       try { return await execute() } catch (error) {
         if (error instanceof ActionOutputError && error.invariant) {
@@ -1624,10 +1707,11 @@ export async function reviewArticleActions(input: { registry: ActionRegistry; ar
       repairUsed = true
       const diagnostic = error instanceof z.ZodError
         ? outputShapeDiagnostic(error, role, 'tool-input') : error instanceof ProviderActionOutputError ? error.message : `role=${role}; phase=identity; ${error.message}`
-      const output = error instanceof ProviderCandidateRecordError ? 'Return only the named candidate disposition record; every other original record and array stays pinned.' : 'Return the complete required tool schema.'
+      const output = error instanceof ProviderCandidateRecordError ? 'Return only the named candidate disposition record; every other original record and array stays pinned.'
+        : error instanceof ProviderCandidateAssociationRepairError ? 'Return only the named candidate association replacements; every other original record and array stays pinned.' : 'Return the complete required tool schema.'
       const correction = `Previous structured output was invalid: ${diagnostic}. Repair only this ${role} output. ${output} All required fields must be authored from the unchanged evidence. Never invent a reason or silently discard a contradictory field.`
       console.warn(`Action review needs its one repair: ${correction}`)
-      try { return await attempt('repair', () => run(correction, error instanceof ProviderCandidateRecordError ? error : undefined)) }
+      try { return await attempt('repair', () => run(correction, error instanceof ProviderCandidateRecordError || error instanceof ProviderCandidateAssociationRepairError ? error : undefined)) }
       catch (repairError) {
         if (repairError instanceof CitationVisibilityOutputError) throw repairError.visibilityError
         throw repairError
