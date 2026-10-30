@@ -25,7 +25,7 @@ async function mount(page: Page, bodyHtml: string, timeReferences: unknown[], me
   await page.route('**/api/articles/2026-10-18.json', route => route.fulfill({ json: article }))
   await page.route('**/api/article-reviews**', route => route.fulfill({ status: 503, json: { error: 'No review fixture' } }))
   await page.goto('/articles/2026-10-18')
-  await expect(page.locator('h1')).toHaveText(article.title)
+  await expect(page.locator('h1')).toHaveText('Saturday — Related event clocks')
   return { trigger: page.locator('.time-ref'), panel: page.locator('.time-popover'), requests }
 }
 

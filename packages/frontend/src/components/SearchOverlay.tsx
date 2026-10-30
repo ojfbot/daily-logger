@@ -2,12 +2,13 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useEntries } from '../hooks/useEntries.ts'
 import type { EntryData } from '../store/types.ts'
+import { titleWithReportingWeekday } from '../../../../src/article-title.ts'
 
 function searchEntries(entries: EntryData[], query: string): EntryData[] {
   if (!query.trim()) return entries.slice(0, 5)
   const terms = query.toLowerCase().split(/\s+/)
   return entries.filter((e) => {
-    const haystack = `${e.title} ${e.summary} ${e.tags.map((t) => t.name).join(' ')} ${e.reposActive.join(' ')} ${(e.decisions ?? []).map(d => d.title).join(' ')}`.toLowerCase()
+    const haystack = `${titleWithReportingWeekday(e.date, e.title)} ${e.summary} ${e.tags.map((t) => t.name).join(' ')} ${e.reposActive.join(' ')} ${(e.decisions ?? []).map(d => d.title).join(' ')}`.toLowerCase()
     return terms.every((t) => haystack.includes(t))
   }).slice(0, 10)
 }
@@ -70,7 +71,7 @@ export function SearchOverlay({ open, onClose }: Props) {
               onClick={() => handleSelect(e.date)}
             >
               <span className="search-result-date">{e.date}</span>
-              <span className="search-result-title">{e.title}</span>
+              <span className="search-result-title">{titleWithReportingWeekday(e.date, e.title)}</span>
             </button>
           ))}
         </div>

@@ -2,6 +2,12 @@
 
 ## Deviations
 
+- The initial weekday rewrite assumed a leading weekday named the reporting day, but independent review found it can be content such as “Friday Night”; rewrite only an explicit separated label and preserve other weekday prose under a workday prefix.
+
+- The title rollout assumed browser fixtures asserted article behavior independently of the displayed heading, but the grouped-time fixture expected its raw title; update that exact heading assertion to the new reporting-workday display and rerun all browser journeys before merge.
+
+- The reporting-workday title plan assumed a weekday prefix alone would read cleanly, but the October 29 source already starts with its article date; remove only a matching run-date prefix before adding the workday weekday, preserving older dates named in titles.
+
 - The October 27 new-run plan assumed a public authorization comment could be posted, but approval review rejected it; use only the owner-approved minimal grant reference while preserving one-use IDs and exact source pins.
 
 - The batch-diagnostic publication assumed the existing single-fault correction text was not a test contract, but hosted CI showed two October 22 repair controls require its exact `reason=` format; preserve that format for one fault and use the new batch text only for multiple faults before repeating checks.

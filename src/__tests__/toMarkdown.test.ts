@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { toMarkdown } from '../generate-article.js'
+import { titleWithReportingWeekday } from '../article-title.js'
 import type { GeneratedArticle } from '../types.js'
 import { buildArticleProvenance, promptSha256 } from '../run-provenance.js'
 
@@ -48,6 +49,24 @@ const withProvenance: GeneratedArticle = {
 }
 
 describe('toMarkdown — frontmatter structure', () => {
+  it('uses the workday before the article date, even when the title names an older article', () => {
+    expect(titleWithReportingWeekday('2026-10-29', 'October 27 article acceptance work')).toBe('Wednesday — October 27 article acceptance work')
+    expect(titleWithReportingWeekday('2026-10-29', 'October 29: correction and acceptance')).toBe('Wednesday — correction and acceptance')
+  })
+
+  it('preserves weekdays used as content and corrects only explicit date labels', () => {
+    expect(titleWithReportingWeekday('2026-10-29', "Tuesday's acceptance work")).toBe("Wednesday — Tuesday's acceptance work")
+    expect(titleWithReportingWeekday('2026-10-29', "Wednesday's acceptance work")).toBe("Wednesday's acceptance work")
+    expect(titleWithReportingWeekday('2026-10-29', 'Monday.com integration')).toBe('Wednesday — Monday.com integration')
+    expect(titleWithReportingWeekday('2026-10-29', "Friday Night's deployment")).toBe("Wednesday — Friday Night's deployment")
+    expect(titleWithReportingWeekday('2026-10-29', 'Tuesday — Acceptance work')).toBe('Wednesday — Acceptance work')
+  })
+
+  it('uses calendar workdays across daylight-saving transitions', () => {
+    expect(titleWithReportingWeekday('2026-11-01', 'A bounded report')).toBe('Saturday — A bounded report')
+    expect(titleWithReportingWeekday('2026-11-02', 'A bounded report')).toBe('Sunday — A bounded report')
+  })
+
   it('opens and closes with --- fences', () => {
     const md = toMarkdown(base)
     const lines = md.split('\n')
@@ -59,7 +78,7 @@ describe('toMarkdown — frontmatter structure', () => {
 
   it('emits title, date, tags, summary fields', () => {
     const md = toMarkdown(base)
-    expect(md).toContain('title: "Test article"')
+    expect(md).toContain('title: "Friday — Test article"')
     expect(md).toContain('date: 2026-02-28')
     expect(md).toContain('summary: "A short summary."')
   })
@@ -81,7 +100,7 @@ describe('toMarkdown — frontmatter structure', () => {
 
   it('escapes double quotes in title', () => {
     const md = toMarkdown({ ...base, title: 'Say "hello" world' })
-    expect(md).toContain('title: "Say \\"hello\\" world"')
+    expect(md).toContain('title: "Friday — Say \\"hello\\" world"')
   })
 
   it('escapes double quotes in summary', () => {

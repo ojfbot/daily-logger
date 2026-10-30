@@ -17,6 +17,10 @@ const emptyCtx: BlogContext = {
 }
 
 describe('buildUserPrompt — open PRs section', () => {
+  it('labels the reporting workday separately from the article date', () => {
+    expect(buildUserPrompt(emptyCtx)).toContain('reporting workday: Friday; run date: Saturday')
+  })
+
   it('omits the section when openPRs is empty', () => {
     const prompt = buildUserPrompt(emptyCtx)
     expect(prompt).not.toContain('Open PRs')
