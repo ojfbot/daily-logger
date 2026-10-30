@@ -666,6 +666,22 @@ describe('captured candidate references before independent verification', () => 
     expect(()=>actionCommandSourceReferences('/review #561',new Set(['core#561','daily-logger#561']))).toThrow(/Ambiguous candidate target/)
     expect([...actionCommandSourceReferences('/review #561',new Set(['core#561']))]).toEqual(['core#561'])
   })
+  it('binds captured issue shorthand to its declared repository while retaining primary-source requirements', () => {
+    const registry = ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
+    const articleDate = '2026-10-28', cycle = generationActionCycle(), statuses = new Map([[articleDate, 'draft']])
+    const original = { command: '/prioritize issue#386', repo: 'daily-logger', description: 'Review Issue #386 against its current primary evidence.', status: 'open' as const, sourceDate: articleDate }
+    const context = { kind: 'retained' as const, markdown: 'Issue #386 remains a proposed follow-up.' }
+    const pending = pendingActionReview({ registry, articleDate, cycle, markdown: `---\ndate: ${articleDate}\nstatus: draft\n---\nCaptured article.\n`, reason: 'Needs evidence.', draftCandidates: [original], draftContext: context, articleStatuses: statuses })
+    const captured = pending.registry.articles[0]!.draftCandidates!
+    const evidence = prepareConservativeDraftCandidateEvidence({ registry: pending.registry, articleDate, cycle, markdown: pending.markdown, feedback: '', articleStatuses: statuses, draftCandidates: captured })
+    expect(evidence.candidates[0]?.references).toMatchObject([{ classification: 'required', reference: 'daily-logger#386', role: 'target' }])
+    expect(captured[0]?.payload).toEqual(original)
+    expect(() => actionCommandSourceReferences(original.command)).toThrow(/Ambiguous candidate target/)
+    expect([...actionCommandSourceReferences(original.command, new Set(['daily-logger#386']))]).toEqual(['daily-logger#386'])
+    expect(() => actionCommandSourceReferences(original.command, new Set(['core#386', 'daily-logger#386']))).toThrow(/Ambiguous candidate target/)
+    pending.registry.articles[0]!.draftContext = { kind: 'retained', markdown: 'Conflicting primary https://github.com/ojfbot/core/issues/386.' }
+    expect(() => prepareConservativeDraftCandidateEvidence({ registry: pending.registry, articleDate, cycle, markdown: pending.markdown, feedback: '', articleStatuses: statuses, draftCandidates: captured })).toThrow(/Ambiguous candidate target/)
+  })
   it('keeps the October 27 captured commands intact while preparing required primary evidence', () => {
     const registry = ActionRegistrySchema.parse({ schemaVersion: 1, baseline: { commit: 'a'.repeat(40), openSha256: 'b'.repeat(64), doneSha256: 'c'.repeat(64), articleActions: {}, heldSuggestions: [] }, records: [], articles: [] })
     const articleDate = '2026-10-27', cycle = generationActionCycle(), statuses = new Map([[articleDate, 'draft']])
