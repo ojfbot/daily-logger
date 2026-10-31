@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261031-fe89ccf6d45a",
+  "article": {
+    "date": "2026-10-31",
+    "sourceCommitSha": "fe89ccf6d45aacd72962a6e4316e0660f50aaa2f",
+    "blobSha": "6b74df501837001e7d280161e66ed877dc9d5269"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-10-31T10:33:53Z",
+  "scope": "Final visible draft, deployed JSON parity, exact source/article/action bytes, October 29 review-correction-acceptance train identities and timing, consumed held-action grant receipt, CI scope enforcement, open fleet PR arithmetic, pre-generation PR reviews and dispositions, byte-budget arithmetic, and current review discovery. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "be8ee9a69a9e5c15f4aa8f4b66a34ddbc3ac093a",
+  "fullRecordPath": "reviews/articles/2026-10-31-fe89ccf6d45aacd72962a6e4316e0660f50aaa2f.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "PR 505 is Codex review data, not a Claude invocation",
+      "location": "Line 17 calls PR #505 a separate Claude invocation with a bounded evidence view that returned a structured verdict.",
+      "explanation": "PR #505 publishes the Codex independent-daily-article-review record and changes only the full review, registered JSON and review registry. Its exact-source handoff identifies Codex and says no exact reviewer model configuration was exposed. No Claude provider invocation or receipt is part of that PR.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/fe89ccf6d45aacd72962a6e4316e0660f50aaa2f/_articles/2026-10-31.md#L17",
+        "https://github.com/ojfbot/daily-logger/pull/505",
+        "https://github.com/ojfbot/daily-logger/pull/505#issuecomment-6520687053"
+      ],
+      "correction": "Identify #505 as the source-pinned Codex article review, distinct from the native Sonnet/Opus action-review path and from GitHub transport identity.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The October 28 one-use grant was already consumed",
+      "location": "Lines 72, 96 and 97 say grant #506 is ready for a guarded dispatch and is the immediate available next action.",
+      "explanation": "Before article generation, run 41089029461 had already reserved and consumed the grant and operation from PR #506. It stopped held-invalid-output before Opus, produced no proposal, and the receipt explicitly says no rerun is authorized.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/fe89ccf6d45aacd72962a6e4316e0660f50aaa2f/_articles/2026-10-31.md#L72",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6527914572",
+        "https://github.com/ojfbot/daily-logger/pull/506"
+      ],
+      "correction": "Report the consumed attempt and its typed failure. Preserve the candidates as Needs Review, but do not recommend dispatching #506 or present /dispatch-action as executable.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The acceptance PR is given the source-pin merge time",
+      "location": "Line 72 says PR #512 accepted the article at 20:57Z Friday.",
+      "explanation": "PR #512 merged at 20:48:12Z as eea50cff. PR #513, the accepted-source review, merged at 20:57:08Z as a82f7dd7.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/512",
+        "https://github.com/ojfbot/daily-logger/pull/513"
+      ],
+      "correction": "Use 20:48:12Z for acceptance and 20:57:08Z for the later source-pinned review.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The claimed generic workflow-stage CI gate does not exist",
+      "location": "Line 66 says CI rejects PRs that touch more than one workflow stage.",
+      "explanation": "The PR Check workflow runs browser, type, lint, unit, article-reference and pipeline checks plus branch-specific acceptance validation. Editorial helpers guard exact paths for accept operations, but no check classifies arbitrary changed files by workflow stage or rejects a PR for spanning stages.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/fe89ccf6d45aacd72962a6e4316e0660f50aaa2f/.github/workflows/pr-check.yml",
+        "https://github.com/ojfbot/daily-logger/blob/fe89ccf6d45aacd72962a6e4316e0660f50aaa2f/.github/scripts/editorial-action-registry.ts"
+      ],
+      "correction": "Say the train used scoped PRs and branch-specific path guards. Do not claim a repository-wide semantic stage-scope CI rule.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The open fleet PR total is fourteen, not thirteen",
+      "location": "Line 76 reports thirteen open PRs, while lines 78 through 86 enumerate seven plus one plus two plus one plus three.",
+      "explanation": "The listed counts total 14. The primary PR records named by the article were open at the source snapshot.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/fe89ccf6d45aacd72962a6e4316e0660f50aaa2f/_articles/2026-10-31.md#L76-L86",
+        "https://github.com/ojfbot/workstation-yuri/pulls?q=is%3Apr+is%3Aopen",
+        "https://github.com/ojfbot/classic-space-venue/pulls?q=is%3Apr+is%3Aopen",
+        "https://github.com/ojfbot/lego-village-pipeline/pulls?q=is%3Apr+is%3Aopen"
+      ],
+      "correction": "Report fourteen open PRs across five repos, or state a specific exclusion rule and adjust the itemized list.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Workstation 8 through 10 already had substantive reviews",
+      "location": "Lines 78 and 99 say no findings were posted on any Workstation PR #4 through #10.",
+      "explanation": "Before generator run #281 began, PR #8 had a detailed replace review, PR #9 had three reviews, and PR #10 had a replace review. They include test receipts, ranked findings, and explicit replacement or deletion recommendations.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/workstation-yuri/pull/8#pullrequestreview-5719781612",
+        "https://github.com/ojfbot/workstation-yuri/pull/9#pullrequestreview-5719749460",
+        "https://github.com/ojfbot/workstation-yuri/pull/10#pullrequestreview-5719751296",
+        "https://github.com/ojfbot/daily-logger/actions/runs/41186676595"
+      ],
+      "correction": "Keep #4 through #7 as having no posted findings, but report the actual pre-reviews and dispositions on #8 through #10.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Classic Space 4 has explicit blockers and a checkpoint",
+      "location": "Lines 82, 96 and 100 say no blocker or holding reason is recorded for Classic Space Venue #4.",
+      "explanation": "The October 27 review requires two fixes: narrow the animation-export conclusion and add source identities to the depth ledger. It names a revised research head as the next checkpoint, the PR author as correction owner, and James as merge and dispatcher authority.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/classic-space-venue/pull/4#pullrequestreview-5661492423"
+      ],
+      "correction": "Report the two requested corrections, revised-head checkpoint, and owner and merge gates instead of asking for a new blocker name or closure.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "LEGO 44 and 46 have recorded dispositions and owners",
+      "location": "Lines 86, 96 and 102 say DO NOT MERGE is only a warning and no disposition is recorded for #44 or #46.",
+      "explanation": "PR #44 explicitly preserves a non-operative analysis snapshot and makes no import or register change. PR #46 is a reviewed derivative with four named follow-up owner roles, reviewer and acceptance requirements, James's retained authority, an exact pickup source, and exit criteria.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/lego-village-pipeline/pull/44",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/46#pullrequestreview-5498479017",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/46#issuecomment-6150669460"
+      ],
+      "correction": "Describe #44 as a preserved non-operative review snapshot and #46 as a reviewed derivative with named follow-up owners and exit criteria.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C9",
+      "classification": "confirmed_error",
+      "title": "The 320 KiB budget percentage uses a decimal denominator",
+      "location": "Lines 74 and 98 say 274,352 bytes consume 86 percent of a 320 KiB budget.",
+      "explanation": "320 KiB is 327,680 bytes, so 274,352 bytes is about 83.73 percent. The 86 percent figure follows only if 320 KiB is incorrectly treated as 320,000 bytes.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/386"
+      ],
+      "correction": "Report approximately 83.7 percent, or explicitly use a decimal 320,000-byte limit. Keep byte budgets distinct from tokenizer or provider counts.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
