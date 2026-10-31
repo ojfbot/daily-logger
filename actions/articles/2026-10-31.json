@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-31",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-10-31",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Initial draft candidate promotion was not admitted: 6e585db6fd7b00a2c455d019d71e0c3d847d18010764c78706b28ba0683683d6"
+    },
+    "articleDigest": "d34b304e0f38fd823f058191a003d9ac22802c313c754d4929d4c69044d81458",
+    "roundId": "06ce9c9cc4c1facc2acb4498d1a8ac106ea2df3679a73e4a49ce721cfdd5d3f5",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "6e585db6fd7b00a2c455d019d71e0c3d847d18010764c78706b28ba0683683d6",
+        "payload": {
+          "command": "/dispatch-action --grant oct28-held --article f9ad2618 --action 610ce866",
+          "description": "Dispatch the one-use October 28 held-action grant authorized in PR #506. Pinned to article blob f9ad2618 and action blob 610ce866; requires guarded dispatch from the accepted main source. No automatic rerun is permitted if dispatch fails.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-31"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "68be3a4f026fee06f1f20d9b8be57661c31619ad70bcba8c51243c9bf0d01fb9",
+        "payload": {
+          "command": "/triage-pr --repo classic-space-venue --pr 4 --disposition name-blocker-or-close",
+          "description": "classic-space-venue #4 (RFI-0002 multiagent research) is a non-draft open since October 21 with no recorded blocker. Name the blocking dependency or close with a note. Ten days open on a non-draft research RFI without a stated disposition is a queue integrity issue.",
+          "repo": "classic-space-venue",
+          "status": "open",
+          "sourceDate": "2026-10-31"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "42756669d61076175d3fe8e6666174311579670ac8e720965edde8ce2e1780df",
+        "payload": {
+          "command": "/triage-pr --repo lego-village-pipeline --prs 44,46 --disposition close-with-issue-link-or-name-upstream-dependency",
+          "description": "lego-village-pipeline #44 and #46 are marked DO NOT MERGE and have been open for three weeks as analysis-only drafts. Close with a linked issue if they are reference snapshots, or name the upstream design decision they are waiting on. DO NOT MERGE is not a durable disposition.",
+          "repo": "lego-village-pipeline",
+          "status": "open",
+          "sourceDate": "2026-10-31"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-10-31",
+      "articleDigest": "d34b304e0f38fd823f058191a003d9ac22802c313c754d4929d4c69044d81458",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "5ae338bb70237edea46cace5548325fd9d8e96429b6014f6536ba87fdd96bdf7",
+      "candidatePayloadsSha256": "fd05ae1091e0b56646262cc84a0bb7b7e6e67c1528e1f8dd35d508ca7748c66f",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "1228a3724946def4f5088e0d52e4914303ec92139ddbc42f1c36a88593603f9c",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "6e585db6fd7b00a2c455d019d71e0c3d847d18010764c78706b28ba0683683d6",
+          "payloadSha256": "a61b6cf2984328868291a342e7b6951c55cea2c053674660d1d5ecf2c9f0b596",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "68be3a4f026fee06f1f20d9b8be57661c31619ad70bcba8c51243c9bf0d01fb9",
+          "payloadSha256": "ce33c2aafcbba8227f876df8cbce1f95113b7da6458d0918536eeb6811cb0aff",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "classic-space-venue#4",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "42756669d61076175d3fe8e6666174311579670ac8e720965edde8ce2e1780df",
+          "payloadSha256": "bf38194a0887b2791d29c9ef206036532e560c6522b1323601a74ce7b5f06902",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "lego-village-pipeline#44",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#572",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "morning-cockpit#60",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "workstation-yuri#4",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "October 29 article accepted; three action candidates in Needs Review. One-use October 28 held-action grant ready for guarded dispatch (article blob f9ad2618, action blob 610ce866); no automatic rerun permitted; this is the immediate available action for October 28 candidates. October 29 candidates follow independent action review separately.\n\nIssue #386 token-aware budget: 274,352 proposer-bytes against 320 KiB ceiling (86%); prior replay reached ~540 KiB of 640 KiB total. Fix direction documented (compact global identity + rejection index, expand only article-relevant records) but not implemented. Scheduling status unknown from this window's evidence — owner gate before marking active.\n\nworkstation-yuri #4–#7 (October 27, four days, no findings): disposition unknown. #8–#10 (opened Friday evening, no findings): same. Whether batch-open is intentional strategy requires owner confirmation before treating as stale.\n\nclassic-space-venue #4: non-draft, ten days open, no blocker identified in evidence. Owner gate: name blocking dependency or close.\n\nmorning-cockpit #60: non-draft cleanup, ten days open, no blocker. Merge-conflict risk increases with time. Owner gate: merge or close.\n\nlego-village-pipeline #44, #46: DO NOT MERGE analysis drafts, three weeks open. No disposition recorded. Options: close with issue link if they are reference snapshots; name upstream dependency if blocked. Owner gate before marking resolved.\n\ncore #572: draft, no review activity this window. No stated blocker.\n\nPipeline state machine location and evidence-view builder file not identified in article — a returning maintainer would need those references to orient. Consider adding a one-line pointer in repo docs."
+    },
+    "stateDigest": "2af2dd7a749234ba2ae53fb7d0d04c49b7d8dcac1e48bb969eb5e7b9b7ae34da",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

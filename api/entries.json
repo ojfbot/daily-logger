@@ -1,8 +1,212 @@
 [
   {
+    "date": "2026-10-31",
+    "title": "Friday — October 29 Article Accepted After Eight-PR Correction and Workflow Hardening Sprint",
+    "summary": "Ten daily-logger commits closed a nine-PR train that corrected, accepted, and source-pinned the October 29 article while hardening the editorial pipeline's evidence-exposure and hold-repair logic.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 10,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Hold unsupported closure rather than block article acceptance",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Expose bounded required GitHub evidence rows as citable lines",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Remap closing recommendations through candidate-position tracking during scoped repair",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Reporting workday weekday in article titles is now deterministic",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Separation of correction, acceptance, and source-pin into distinct PRs is an observed ordering pattern, not an enforced rule",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "513",
+          "url": "https://github.com/ojfbot/daily-logger/pull/513"
+        },
+        "at": "2026-10-30T20:57:08.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "512",
+          "url": "https://github.com/ojfbot/daily-logger/pull/512"
+        },
+        "at": "2026-10-30T20:48:12.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "511",
+          "url": "https://github.com/ojfbot/daily-logger/pull/511"
+        },
+        "at": "2026-10-30T20:42:34.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "509",
+          "url": "https://github.com/ojfbot/daily-logger/pull/509"
+        },
+        "at": "2026-10-30T20:32:00.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "508",
+          "url": "https://github.com/ojfbot/daily-logger/pull/508"
+        },
+        "at": "2026-10-30T20:28:37.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "507",
+          "url": "https://github.com/ojfbot/daily-logger/pull/507"
+        },
+        "at": "2026-10-30T16:46:15.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "506",
+          "url": "https://github.com/ojfbot/daily-logger/pull/506"
+        },
+        "at": "2026-10-30T16:19:26.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "505",
+          "url": "https://github.com/ojfbot/daily-logger/pull/505"
+        },
+        "at": "2026-10-30T20:24:29.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "504",
+          "url": "https://github.com/ojfbot/daily-logger/pull/504"
+        },
+        "at": "2026-10-30T16:13:01.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-10-31T08:58:52.014Z",
+        "runId": "41186676595",
+        "runNumber": 281,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/41186676595",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "a82f7dd7bc07fb223f6d16855eaccff581d3c92d",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-10-31T08:57:26.000Z",
+          "startedAt": "2026-10-31T08:57:26.000Z",
+          "expectedAt": "2026-10-31T08:30:00.000Z",
+          "dispatchDelaySeconds": 1646,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "a1d74059d1e5e39c2f36f3832f971a92867d7011c85d583612329f5f12100de9"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.1",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-29",
     "title": "October 29: correction, evidence association, and acceptance closed the October 27 editorial train in four sequential PRs",
-    "summary": "Seven daily-logger commits across five merged PRs completed the October 27 editorial train — independent review, draft correction, evidence binding, and acceptance — in a single session.",
+    "summary": "Six daily-logger commits across four merged PRs completed the October 27 editorial train; a separate PR published the October 28 draft in the same reporting window.",
     "tags": [
       {
         "name": "daily-logger",
@@ -39,10 +243,11 @@
     "commitCount": 7,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "accepted",
     "decisions": [
       {
-        "title": "Correction gates acceptance: review findings must be addressed before the stamp workflow runs",
+        "title": "The supervised October 27 correction preceded acceptance",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
@@ -54,7 +259,7 @@
         "relatedTags": []
       },
       {
-        "title": "Source-pinned reviews record a named article blob, not a mutable branch head",
+        "title": "The registered review pins the article source and blob",
         "summary": "",
         "repo": "daily-logger",
         "relatedTags": []
@@ -87,15 +292,6 @@
         "status": "available",
         "source": {
           "repo": "ojfbot/daily-logger",
-          "ref": "486",
-          "url": "https://github.com/ojfbot/daily-logger/pull/486"
-        },
-        "at": "2026-10-28T15:32:28.000Z"
-      },
-      {
-        "status": "available",
-        "source": {
-          "repo": "ojfbot/daily-logger",
           "ref": "487",
           "url": "https://github.com/ojfbot/daily-logger/pull/487"
         },
@@ -120,22 +316,13 @@
         "at": "2026-10-29T04:24:52.000Z"
       },
       {
-        "status": "unavailable",
+        "status": "available",
         "source": {
           "repo": "ojfbot/daily-logger",
-          "ref": "456",
-          "url": "https://github.com/ojfbot/daily-logger/pull/456"
+          "ref": "486",
+          "url": "https://github.com/ojfbot/daily-logger/pull/486"
         },
-        "reason": "missing-merge-time"
-      },
-      {
-        "status": "unavailable",
-        "source": {
-          "repo": "ojfbot/daily-logger",
-          "ref": "462",
-          "url": "https://github.com/ojfbot/daily-logger/pull/462"
-        },
-        "reason": "missing-merge-time"
+        "at": "2026-10-28T15:32:28.000Z"
       }
     ],
     "provenance": {
@@ -229,7 +416,8 @@
     "commitCount": 28,
     "activityType": "hardening",
     "schemaVersion": 1,
-    "status": "draft",
+    "status": "accepted",
+    "outcome": "accepted",
     "decisions": [
       {
         "title": "Pack generated coverage as reversible tuple rows when the dated-file cap is exceeded",

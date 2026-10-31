@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 100
+    "count": 101
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 86
+    "count": 87
   },
   {
     "name": "core",
@@ -22,12 +22,12 @@
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 43
+    "count": 44
   },
   {
     "name": "hardening",
     "type": "practice",
-    "count": 40
+    "count": 41
   },
   {
     "name": "module-federation",
@@ -45,19 +45,19 @@
     "count": 32
   },
   {
+    "name": "adr",
+    "type": "practice",
+    "count": 31
+  },
+  {
     "name": "tooling-for-iteration",
     "type": "concept",
     "count": 30
   },
   {
-    "name": "adr",
-    "type": "practice",
-    "count": 30
-  },
-  {
     "name": "sprint",
     "type": "concept",
-    "count": 25
+    "count": 26
   },
   {
     "name": "cv-builder",
@@ -85,14 +85,14 @@
     "count": 18
   },
   {
-    "name": "cleanup",
+    "name": "editorial-pipeline",
     "type": "concept",
     "count": 17
   },
   {
-    "name": "editorial-pipeline",
+    "name": "cleanup",
     "type": "concept",
-    "count": 16
+    "count": 17
   },
   {
     "name": "asset-foundry",
