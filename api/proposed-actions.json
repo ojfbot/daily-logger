@@ -229,5 +229,71 @@
     "includeInIndex": false,
     "dispatchable": false,
     "reason": "The available evidence did not confirm these suggestions."
+  },
+  {
+    "id": "33e71c636d809b430b6cf6e4aa2a04575ed8a92f37390a160205fa9eff6125aa",
+    "command": "/merge daily-logger#485",
+    "description": "Merge the October 27 independent review DRAFT — the confirmed next step in the editorial train. Changes only three review-data paths; no prose or status impact. Prerequisite for October 27 acceptance.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-28",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
+  },
+  {
+    "id": "5215cea05a4a07fb881458eb2d0da6a54cf43554d98af53febead9f0e33ced97",
+    "command": "/prioritize issue#386",
+    "description": "Issue #386 (scope action-review context, enforce token-aware budget) is the gate on all six held suggestions across October 25 and 26. At ~1,600 bytes of model-source headroom, the next held-action review run is likely to breach without this fix. Ship before triggering any action review.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-28",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
+  },
+  {
+    "id": "fc9fdafa10e58d5e9bf4bcc4b250065232bacd6e008d3d6e029bc2f2ab02147d",
+    "command": "/clarify morning-cockpit#60",
+    "description": "PR has been open since 2026-10-21, is Opus-validated cleanup, and has no documented merge blocker in the available record. Determine and document the hold reason or merge.",
+    "repo": "morning-cockpit",
+    "sourceDate": "2026-10-28",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
+  },
+  {
+    "id": "db67ef6f999e952ec2f82475bdc64f33639724a69d0b89196e089970032cde58",
+    "command": "/review-pr daily-logger #490",
+    "description": "Advance the October 28 independent review to completion. The review is in progress against source commit 1fc55540e4dca72c0c5fe20f0f099cf44524eaf8; closing it unblocks the correction and acceptance train.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-29",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
+  },
+  {
+    "id": "21dcfd18800389b9e4892dcac06233cad5f837b27679716c6d533672352d34be",
+    "command": "/triage-pr morning-cockpit #60",
+    "description": "Issue a disposition on the stale docs/comments PR: merge, close, or assign a named reviewer with a deadline. Eight days without a verdict is the threshold for explicit triage.",
+    "repo": "morning-cockpit",
+    "sourceDate": "2026-10-29",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
+  },
+  {
+    "id": "9848037aad5ff36e0587705623d45fb32a2ebadf5a9311dd914811df1e8131b1",
+    "command": "/review-suggestions daily-logger october-27",
+    "description": "Run the separately authorized action review for the three held suggestions from the October 27 acceptance. These are in Needs Review state and independent of the October 28 editorial train.",
+    "repo": "daily-logger",
+    "sourceDate": "2026-10-29",
+    "status": "needs-review",
+    "includeInIndex": false,
+    "dispatchable": false,
+    "reason": "The agent returned an incomplete response; these suggestions still need review."
   }
 ]
