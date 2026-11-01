@@ -1,8 +1,8 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 149,
-    "totalCommits": 1912,
+    "articleCount": 150,
+    "totalCommits": 1916,
     "relatedTags": [
       "daily-logger",
       "workstation-yuri",
@@ -12,8 +12,8 @@
       "rest-day",
       "assistant-centric",
       "model-behavior-as-design",
-      "sprint",
       "hardening",
+      "sprint",
       "adr",
       "security-as-emergent-ux",
       "tooling-for-iteration",

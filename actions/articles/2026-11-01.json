@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-01",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-01",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Initial draft candidate promotion was not admitted: 2ac268550d564188ccdda5041a9005638c331f6f1b4a654b08f882f98cecacf3"
+    },
+    "articleDigest": "bbe21470c80677d2113c0a81c81617339c3a57118f8d2a1a2cdf275ea84ef4ff",
+    "roundId": "85ad11f28e037b2c01a1f536f8c773ba9bb333684d9f774385f3f7aac8abf77c",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "92f04620e9105c67eb7939d61cfabe09216b3abeb4bee8918251b763f472a170",
+        "payload": {
+          "command": "/triage daily-logger#516",
+          "description": "Inspect the failed daily-blog.yml run at https://github.com/ojfbot/daily-logger/actions/runs/41267355441 to determine failure mode (auth expiry, cron misconfiguration, or downstream API error) before choosing /disable, /enable, or a targeted fix. The cause is not established and the right response depends on what the run log shows.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-01"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "8fb23b53ee2c0e21d35557454996b0f30eb15c1dfb608f8133625173e454bb2e",
+        "payload": {
+          "command": "/advance daily-logger#515",
+          "description": "Unblock the October 31 editorial train by determining whether daily-logger #515 (independent review draft, last updated 2026-10-31T10:36Z) is stalled on the pipeline failure in #516 or on a human decision. If the pipeline is healthy, advance the review to correction.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-01"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "2ac268550d564188ccdda5041a9005638c331f6f1b4a654b08f882f98cecacf3",
+        "payload": {
+          "command": "/review workstation-yuri",
+          "description": "Establish a named reviewer, sequence, and cadence for the seven open review-only draft PRs (#4–#10). All are awaiting structured review findings posted as PR comments; without a documented sequence, parallel accumulation will continue.",
+          "repo": "workstation-yuri",
+          "status": "open",
+          "sourceDate": "2026-11-01"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-01",
+      "articleDigest": "bbe21470c80677d2113c0a81c81617339c3a57118f8d2a1a2cdf275ea84ef4ff",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "e216e49c4da882e8d9b14d70387a6003da7d9ab98e8adf4d35b256513c2df229",
+      "candidatePayloadsSha256": "074ff7f628f8985e91dd735afd589f9ceaf798f5d15c7c0414f94523ef3b38b1",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "24ef18a3428b5f9ce746f30b197513741a595871723f3333ab9dba6f860a88d3",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "92f04620e9105c67eb7939d61cfabe09216b3abeb4bee8918251b763f472a170",
+          "payloadSha256": "cd1e3e480e802264eebc6daa2bdc9cd481a41f4b0815df00635467a5b825adbb",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#516",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "8fb23b53ee2c0e21d35557454996b0f30eb15c1dfb608f8133625173e454bb2e",
+          "payloadSha256": "e9e182b28ef2ba990df7b8a599afc0bba6c84a6e95f28d63dc477a1616c698fa",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#515",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "2ac268550d564188ccdda5041a9005638c331f6f1b4a654b08f882f98cecacf3",
+          "payloadSha256": "2b447ff0cb17eaf52239db2905fd5f539ebfbdf313b7be2d93b00559310b7cdd",
+          "references": [],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "classic-space-venue#4",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "classic-space-venue#8",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "lego-village-pipeline#44",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "morning-cockpit#60",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "The October 31 editorial train is blocked at the independent review stage (daily-logger #515). The review has been open for two days with no movement. The dependency on issue #516 (pipeline failure) or a human gate is not established; this requires direct inspection before the train can advance to correction.\n\nIssue #516 cause is unknown from available evidence. The failed run URL is https://github.com/ojfbot/daily-logger/actions/runs/41267355441. The right triage path — /disable, /enable, or targeted fix — depends on the failure mode (auth expiry, cron misconfiguration, downstream API error). This is the highest-priority open question for pipeline health.\n\nThe bounded backfill reference procedure (set ACTION_REVIEW_DISABLED repo variable → dispatch with date_override → remove variable after job start) is now on main via PR #517. No additional action is required for past backfills; this procedure is the reference for future runs.\n\nworkstation-yuri review cadence: seven draft PRs await structured review findings. No named reviewer or schedule is documented in available evidence. Owner gate required to establish sequence.\n\nclassic-space-venue #4 and morning-cockpit #60 are non-draft PRs open since October 21 with no disposition. These are candidates for explicit close, park, or active-work decisions.\n\nlego-village-pipeline #44, #45, #46 and classic-space-venue #8 are stale drafts ranging from October 11–23 with no movement or disposition. Whether these represent intentional parking or accumulating drag is not determinable from available evidence."
+    },
+    "stateDigest": "75f9e9cf7f99385c6f04366d45fd663d15dd0ee11285b4fb157495d100b5dd1c",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
