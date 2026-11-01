@@ -113,6 +113,185 @@
     }
   },
   {
+    "date": "2026-11-01",
+    "title": "Saturday — October 30 Article Published and Scope-Repair for Action-Review Pause",
+    "summary": "Three daily-logger commits on Saturday published the October 30 article and fixed an action-review pause leaking into the test suite during bounded backfill runs.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 4,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Scope ACTION_REVIEW_DISABLED to the generation step, not the job",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Bounded backfill requires a temporary pause on Suggested Actions to avoid deadline consumption",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "09:09Z",
+        "occurrence": 1,
+        "precision": "minute",
+        "at": "2026-10-31T09:09:07.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "514",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/514"
+        }
+      },
+      {
+        "text": "03:09Z",
+        "occurrence": 1,
+        "precision": "minute",
+        "at": "2026-11-01T03:09:12.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "517",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/517"
+        }
+      },
+      {
+        "text": "03:19Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-01T03:19:16.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "518",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/518"
+        }
+      },
+      {
+        "text": "2026-10-31T10:36Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-10-31T10:36:00.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-10-31T10:36Z"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "514",
+          "url": "https://github.com/ojfbot/daily-logger/pull/514"
+        },
+        "at": "2026-10-31T09:09:07.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "517",
+          "url": "https://github.com/ojfbot/daily-logger/pull/517"
+        },
+        "at": "2026-11-01T03:09:12.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "518",
+          "url": "https://github.com/ojfbot/daily-logger/pull/518"
+        },
+        "at": "2026-11-01T03:19:16.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-01T16:17:01.625Z",
+        "runId": "41325359186",
+        "runNumber": 285,
+        "runAttempt": 1,
+        "event": "schedule",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/41325359186",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "00455fce162f93e920b4bc8328181219078f22d0",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-01T16:15:10.000Z",
+          "startedAt": "2026-11-01T16:15:10.000Z",
+          "expectedAt": "2026-11-01T09:30:00.000Z",
+          "dispatchDelaySeconds": 24310,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "a1d74059d1e5e39c2f36f3832f971a92867d7011c85d583612329f5f12100de9"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.1",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-31",
     "title": "Friday — October 29 Article Accepted After Eight-PR Correction and Workflow Hardening Sprint",
     "summary": "Ten daily-logger commits closed a nine-PR train that corrected, accepted, and source-pinned the October 29 article while hardening the editorial pipeline's evidence-exposure and hold-repair logic.",
