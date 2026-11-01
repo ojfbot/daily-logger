@@ -35,7 +35,6 @@ concurrency:
 env:
   DAILY_BLOG_SCHEDULE: '30 3 * * *'
   DAILY_BLOG_TIMEZONE: America/Chicago
-  ACTION_REVIEW_DISABLED: ${{ vars.ACTION_REVIEW_DISABLED }}
 
 jobs:
   generate:
@@ -118,6 +117,9 @@ jobs:
         if: steps.preflight.outputs.mode == 'generate'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Runtime pause applies only to generation. Unit tests must exercise
+          # both enabled and paused behavior under their own fixtures.
+          ACTION_REVIEW_DISABLED: ${{ vars.ACTION_REVIEW_DISABLED }}
           # GH_PAT has read access to all private ojfbot repos for the sweep.
           GH_TOKEN: ${{ secrets.GH_PAT }}
           # The narrower workflow token reads this Actions run for provenance.
