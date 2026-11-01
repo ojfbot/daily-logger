@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-30",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-10-30",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked"
+    },
+    "articleDigest": "59e74441e656df7f48173b57eec80d3ef2f26515dcdd46efd6be4590fc7fbb4d",
+    "roundId": "a7909a687c776a46d806858fd271a6a24692023538f73e532dc08c614d04f033",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "26fed45007feff2e24485073d22e2d5dd12215be2166d9c5c228035568737f58",
+        "payload": {
+          "command": "/run-held-action-grant pr=497 date=2026-10-27",
+          "description": "Trigger the live provider run against the renewed one-use grant bound in PR #497. Record the outcome receipt. If the run fails to produce a usable receipt, a second renewal will be required before another attempt.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-30"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "026af31ae51fd87de5d299e1112fe1085b859e70117ae57e351741df94da3605",
+        "payload": {
+          "command": "/investigate-pr-status pr=504 require=merge-timestamp",
+          "description": "Confirm whether PR #504 (preserve closing recommendations during candidate association repair) has an in-window merge timestamp. If confirmed merged, add to shipped record. If status is genuinely ambiguous, document the evidence-pipeline gap explicitly.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-10-30"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "863f8a68923e69890c6b73f7fd0ff384ccc4360074c70c1505fc8700f6d18abd",
+        "payload": {
+          "command": "/surface-findings pr=8,9,10 repo=workstation-yuri",
+          "description": "Trigger findings surface for workstation-yuri #8 (duplex protocol v7 / Helpdesk work routes), #9 (Yojimbo pipeline snapshot), and #10 (Pi bridge v4 / Pi status service). These are independent review passes; surface each independently and record disposition.",
+          "repo": "workstation-yuri",
+          "status": "open",
+          "sourceDate": "2026-10-30"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-10-30",
+      "articleDigest": "59e74441e656df7f48173b57eec80d3ef2f26515dcdd46efd6be4590fc7fbb4d",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "08cf055a9fafdea764509535bf29cdbed06797ced9e55c04b46069f143feb625",
+      "candidatePayloadsSha256": "abe5ad7a3838659dfc6ebc273e7fe841fd90fd2287c6a1c246fd837ccb9bb53e",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "9852ce31ae8562f6389b5c804b9688f2f0bba9f678e5744b601f8928606a2326",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "26fed45007feff2e24485073d22e2d5dd12215be2166d9c5c228035568737f58",
+          "payloadSha256": "1d9c094e51f9fd3c8fa09b5bbd2c90b690f9c8dc7b54686d10765823751d9471",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "026af31ae51fd87de5d299e1112fe1085b859e70117ae57e351741df94da3605",
+          "payloadSha256": "7edb2fdc2bb52edc46a23dff86b8431e6a9446350debb789c386097e00def81d",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "863f8a68923e69890c6b73f7fd0ff384ccc4360074c70c1505fc8700f6d18abd",
+          "payloadSha256": "f3080f122a47c49f0e47651d2c795cd13539ffb44982268555f5bc9812f80186",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "workstation-yuri#8",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#572",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "daily-logger#515",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "morning-cockpit#60",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Current execution state for re-entry: the October 27 held-action workflow is ready for a live provider run against the grant bound in PR #497. This is the next ordered step; it has not been initiated. The three awaiting suggestions are candidate-association items from the October 27 accepted article. Outcome: a confirmed receipt that either resolves the suggestions or produces a new fault set requiring repair.\n\nPR #504 status is unresolved — evidence shows current-status merged in PR activity snapshot but no in-window merge timestamp. Requires evidence-pipeline investigation to confirm whether it belongs in the shipped list.\n\nMorning-cockpit #60 has been open since October 21 with no recorded activity this window. Owner and disposition unknown from available evidence.\n\nCore #572 block is unconfirmed. Whether it depends on held-action infrastructure or a human decision is not established by available evidence.\n\nWorkstation-yuri #8, #9, #10 findings have not surfaced. These are independent passes; no gating relationship between them is established in available evidence.\n\nOctober 30 article (this article) and October 29 article (PR #491, merged) have not entered editorial review. October 31 independent review (daily-logger #515) is open as a draft."
+    },
+    "stateDigest": "aba73ec77b6f7d7616baaa962137626d78d0be43514a6b7a70d6a701a27c2935",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
