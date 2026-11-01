@@ -602,3 +602,7 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 29 article correction (2026-10-30)
 
 - The correction plan assumed article prose alone could publish, but the static builder rejected the prior pending action snapshot's article digest. Rebound only the dated snapshot's article/status hashes and state digest with the native writer, preserving all three original candidate IDs, the open request history, and Draft state.
+
+## Deviations — October 30 historical backfill (2026-10-31)
+
+- The backfill plan assumed the repository action-review pause affected only generation, but job-level wiring also injected it into the unit suite and caused the first recovery run to fail before drafting. Scope the variable to the Generate article step, retain normal test fixtures, and rerun the same dated backfill with actions held.
