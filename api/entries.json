@@ -204,6 +204,296 @@
     }
   },
   {
+    "date": "2026-10-30",
+    "title": "Thursday — October 28 editorial train closed in six sequential PRs across one session",
+    "summary": "Sixteen daily-logger commits across thirteen merged PRs completed the October 28 editorial train — independent review, correction, evidence binding, and acceptance — in a single session.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 16,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Correction precedes acceptance: no article stamps without a source-pinned review first",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Status-index binding is distinct from action-snapshot binding — the PR #500 stop explains why",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Issue-shorthand resolution is scoped to the candidate's captured repository",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Candidate-association faults must be collected in full before repair, not stopped at the first",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Mixed-citation repair uses the existing single repair allowance for partially-visible citations only",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "04:43Z and 05:18Z",
+        "occurrence": 0,
+        "kind": "interval",
+        "start": {
+          "text": "04:43Z",
+          "precision": "minute",
+          "certainty": "exact",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "missing-date"
+          }
+        },
+        "end": {
+          "text": "05:18Z",
+          "precision": "minute",
+          "certainty": "exact",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "missing-date"
+          }
+        },
+        "relation": "unestablished"
+      },
+      {
+        "text": "00:56Z and 04:13Z",
+        "occurrence": 0,
+        "kind": "interval",
+        "start": {
+          "text": "00:56Z",
+          "precision": "minute",
+          "certainty": "exact",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "missing-date"
+          }
+        },
+        "end": {
+          "text": "04:13Z",
+          "precision": "minute",
+          "certainty": "exact",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "missing-date"
+          }
+        },
+        "relation": "unestablished"
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "491",
+          "url": "https://github.com/ojfbot/daily-logger/pull/491"
+        },
+        "at": "2026-10-29T15:43:11.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "490",
+          "url": "https://github.com/ojfbot/daily-logger/pull/490"
+        },
+        "at": "2026-10-30T04:43:46.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "498",
+          "url": "https://github.com/ojfbot/daily-logger/pull/498"
+        },
+        "at": "2026-10-30T04:50:54.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "499",
+          "url": "https://github.com/ojfbot/daily-logger/pull/499"
+        },
+        "at": "2026-10-30T05:00:36.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "501",
+          "url": "https://github.com/ojfbot/daily-logger/pull/501"
+        },
+        "at": "2026-10-30T05:06:52.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "502",
+          "url": "https://github.com/ojfbot/daily-logger/pull/502"
+        },
+        "at": "2026-10-30T05:11:59.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "503",
+          "url": "https://github.com/ojfbot/daily-logger/pull/503"
+        },
+        "at": "2026-10-30T05:18:39.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "466",
+          "url": "https://github.com/ojfbot/daily-logger/pull/466"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "492",
+          "url": "https://github.com/ojfbot/daily-logger/pull/492"
+        },
+        "at": "2026-10-30T00:56:37.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "494",
+          "url": "https://github.com/ojfbot/daily-logger/pull/494"
+        },
+        "at": "2026-10-30T01:50:30.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "495",
+          "url": "https://github.com/ojfbot/daily-logger/pull/495"
+        },
+        "at": "2026-10-30T01:57:35.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "496",
+          "url": "https://github.com/ojfbot/daily-logger/pull/496"
+        },
+        "at": "2026-10-30T04:06:15.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "497",
+          "url": "https://github.com/ojfbot/daily-logger/pull/497"
+        },
+        "at": "2026-10-30T04:13:02.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-01T03:10:50.079Z",
+        "runId": "41268019546",
+        "runNumber": 284,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/41268019546",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "b09fcbf73d5922d6ed76c68aa467f14c52e51502",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-01T03:09:29.000Z",
+          "startedAt": "2026-11-01T03:09:29.000Z",
+          "expectedAt": "2026-10-30T08:30:00.000Z",
+          "dispatchDelaySeconds": 153569,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "a1d74059d1e5e39c2f36f3832f971a92867d7011c85d583612329f5f12100de9"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.1",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-29",
     "title": "October 29: correction, evidence association, and acceptance closed the October 27 editorial train in four sequential PRs",
     "summary": "Six daily-logger commits across four merged PRs completed the October 27 editorial train; a separate PR published the October 28 draft in the same reporting window.",
