@@ -1,5 +1,118 @@
 [
   {
+    "date": "2026-11-02",
+    "title": "Sunday — BookcaseDiscovery Arrives: A New Repo's First Commit and a Pipeline Alert",
+    "summary": "One initial commit in a new BookcaseDiscovery repo and a live daily-blog pipeline alert defined Sunday's characteristically thin reporting window.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "workstation-yuri",
+        "type": "repo"
+      },
+      {
+        "name": "BookcaseDiscovery",
+        "type": "concept"
+      },
+      {
+        "name": "editorial-pipeline",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Treating an Unknown Repo's Initial Commit as a Scaffolding Signal, Not a Feature",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Pipeline Alert as a First-Class Editorial Signal",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Sunday Rest Day Is Not a Gap in the Record",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-02T17:33:58.652Z",
+        "runId": "41492058593",
+        "runNumber": 286,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/41492058593",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "00455fce162f93e920b4bc8328181219078f22d0",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-02T17:32:03.000Z",
+          "startedAt": "2026-11-02T17:32:03.000Z",
+          "expectedAt": "2026-11-02T09:30:00.000Z",
+          "dispatchDelaySeconds": 28923,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "a1d74059d1e5e39c2f36f3832f971a92867d7011c85d583612329f5f12100de9"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.1",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-10-31",
     "title": "Friday — October 29 Article Accepted After Eight-PR Correction and Workflow Hardening Sprint",
     "summary": "Ten daily-logger commits closed a nine-PR train that corrected, accepted, and source-pinned the October 29 article while hardening the editorial pipeline's evidence-exposure and hold-repair logic.",

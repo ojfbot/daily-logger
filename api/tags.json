@@ -2,12 +2,12 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 102
+    "count": 103
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 88
+    "count": 89
   },
   {
     "name": "core",
@@ -17,12 +17,12 @@
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 70
+    "count": 71
   },
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 45
+    "count": 46
   },
   {
     "name": "hardening",
@@ -42,7 +42,7 @@
   {
     "name": "rest-day",
     "type": "activity",
-    "count": 32
+    "count": 33
   },
   {
     "name": "adr",
@@ -82,7 +82,7 @@
   {
     "name": "editorial-pipeline",
     "type": "concept",
-    "count": 18
+    "count": 19
   },
   {
     "name": "verification-flagged",
@@ -195,6 +195,11 @@
     "count": 6
   },
   {
+    "name": "workstation-yuri",
+    "type": "repo",
+    "count": 5
+  },
+  {
     "name": "skill-telemetry",
     "type": "concept",
     "count": 5
@@ -238,11 +243,6 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
-  },
-  {
-    "name": "workstation-yuri",
-    "type": "repo",
-    "count": 4
   },
   {
     "name": "seh-study",
@@ -523,6 +523,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "BookcaseDiscovery",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "test-isolation",

@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-02",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-02",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action evidence request 7e7368b0842042349a5f3dd5cd1f4afa749feba34923e6d37091c015bae60c95 remains pending: Required action evidence github:workstation-yuri#10@15ee04441b6ec55dbc458eb51b3f4cfc2f458198ad02b8f07be22eefbedab064: exceeds 128 KiB source limit; bounded source view requested; review pending"
+    },
+    "articleDigest": "dfe259a510ff367391aabcc3f53eb4a973006526850eee63fef722f2f87bb2f2",
+    "roundId": "6fb8a7288daa25d86d6c187c2432ee211f167585dd50e11a5bc58ef202932808",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "76981e6eec6c4383961ddd31d2a5e03070e44561db274af1cac58db949206795",
+        "payload": {
+          "command": "/inspect-run https://github.com/ojfbot/daily-logger/actions/runs/41267355441",
+          "description": "Inspect the failed daily-blog.yml run log to determine which failure branch applies: regression from #517 ACTION_REVIEW_DISABLED scoping change, transient runner fault, or structural issue in the generation step. This is the prerequisite for all other editorial queue actions.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-02"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "57981b8174f67a4a40df7acafebf1c73838727ec975630a463bbd8d78f221870",
+        "payload": {
+          "command": "/disposition-pr morning-cockpit#60",
+          "description": "PR #60 (clean stale docs/comments) has been open since 2026-10-21 — approximately 12 days with no merge event. Explicitly merge, close, or document the blocker. A PR with no stated intent past two weeks is a liability item, not a backlog item.",
+          "repo": "morning-cockpit",
+          "status": "open",
+          "sourceDate": "2026-11-02"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "41eadfd80d58424b62fa5c8db6c3552c1aa03a4b531708f34008dac15fb88f88",
+        "payload": {
+          "command": "/schedule-review workstation-yuri#8 workstation-yuri#9 workstation-yuri#10",
+          "description": "The three review-only PRs (#8, #9, #10) have no scheduled review session and no stated service rate. Record structured findings as PR review comments and close each PR after findings are captured. Without a session on the calendar, these will persist indefinitely.",
+          "repo": "workstation-yuri",
+          "status": "open",
+          "sourceDate": "2026-11-02"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-02",
+      "articleDigest": "dfe259a510ff367391aabcc3f53eb4a973006526850eee63fef722f2f87bb2f2",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "bb156515e05db7b587d9c26cf6100fb46f9e32345102b14632b66bf5d0650058",
+      "candidatePayloadsSha256": "a28368e6b8a1bd11fc17881c5fecb1091b5d7f4a62eb8f9b34f2e16f6b742302",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "650e7977a33921acb3eba371d4c868344cb392bad2351bb9c63c964ac4578417",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "76981e6eec6c4383961ddd31d2a5e03070e44561db274af1cac58db949206795",
+          "payloadSha256": "4fbc4843bd63f880af049c0409d720cc0bbd18596db51032bedda5cd2587e617",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "57981b8174f67a4a40df7acafebf1c73838727ec975630a463bbd8d78f221870",
+          "payloadSha256": "b616e7c0fc9805b568418ab22f380153f7cd9c192a50124fa5cded1cfcf0c173",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "morning-cockpit#60",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "41eadfd80d58424b62fa5c8db6c3552c1aa03a4b531708f34008dac15fb88f88",
+          "payloadSha256": "675b37c69287bfb9345d3d27ad2457321e5d3595efb8ae6217fca47ee1b4d230",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "workstation-yuri#10",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "workstation-yuri#8",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "workstation-yuri#9",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#572",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "daily-logger#519",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Priority order for next session: (1) Inspect daily-logger run log at https://github.com/ojfbot/daily-logger/actions/runs/41267355441 — determine which of the three failure branches applies before any other editorial action. (2) Confirm whether October 31 (#515) and November 1 (#516) failure states are independent or compounding. (3) If pipeline is clean or transient fault confirmed, merge daily-logger #519. (4) Disposition morning-cockpit #60 — twelve days open with no stated intent. (5) Schedule a workstation-yuri review session to begin closing the three review-only PRs (#8, #9, #10) and advancing the four documentation drafts.\n\nEvidence gaps: ADR-0035 is cited as governing the pipeline-alert behavior; its existence as a dated, written document with a rationale section is not confirmed from available evidence — it may be a retroactive label. The fleet manifest's file path is not surfaced in this article; BookcaseDiscovery's absence from it is stated but the manifest location is not cited. Whether \"review-only\" posture on workstation-yuri PRs #8, #9, #10 is enforced by branch protection/labels or is a social contract in the PR description is unconfirmed. morning-cockpit #60 open duration is approximately 12 days based on the 2026-10-21 date in the PR description; exact open date not independently verified.\n\nOwner gates: daily-logger #519 merge awaits human editorial decision after #516 diagnostic. workstation-yuri review-only PRs await a scheduled review session. core #572 awaits a review pass before promotion to ready state."
+    },
+    "stateDigest": "82346d3309409c79cc0c9cfa27220f974bce80d4f440e9dac80db0f17518a478",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [
+      {
+        "version": "action-evidence-request-v1",
+        "id": "7e7368b0842042349a5f3dd5cd1f4afa749feba34923e6d37091c015bae60c95",
+        "kind": "source-view",
+        "caseDigest": "f44192b214cea326bca50683e071ce490579108a4a1da8f6e2c7b0822169102c",
+        "articleDate": "2026-11-02",
+        "cycle": {
+          "phase": "generation"
+        },
+        "actionKeys": [
+          "article-feedback"
+        ],
+        "sourceKey": "github:workstation-yuri#10",
+        "sourceId": "github:workstation-yuri#10@15ee04441b6ec55dbc458eb51b3f4cfc2f458198ad02b8f07be22eefbedab064",
+        "sourceFullContentSha256": "15ee04441b6ec55dbc458eb51b3f4cfc2f458198ad02b8f07be22eefbedab064",
+        "obligations": [
+          "c266d2d013daf44c72eb53371dacb3488f2a0f9d112a5059f9584e206f39a9ef"
+        ],
+        "recipient": "source-producer",
+        "status": "open"
+      }
+    ],
+    "rejected": []
+  }
+}
