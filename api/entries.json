@@ -14,7 +14,7 @@
       },
       {
         "name": "BookcaseDiscovery",
-        "type": "concept"
+        "type": "repo"
       },
       {
         "name": "editorial-pipeline",
@@ -38,7 +38,8 @@
       }
     ],
     "reposActive": [
-      "daily-logger"
+      "daily-logger",
+      "BookcaseDiscovery"
     ],
     "commitCount": 1,
     "activityType": "build",
