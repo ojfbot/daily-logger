@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-03",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-03",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "[\n  {\n    \"origin\": \"string\",\n    \"code\": \"invalid_format\",\n    \"format\": \"regex\",\n    \"pattern\": \"/^[a-z0-9-]+#\\\\d+$/\",\n    \"path\": [\n      \"candidates\",\n      0,\n      \"references\",\n      0,\n      \"reference\"\n    ],\n    \"message\": \"Invalid string: must match pattern /^[a-z0-9-]+#\\\\d+$/\"\n  }\n]"
+    },
+    "articleDigest": "3c771eecd162becc1cd42bf76707c0aa5b937c9326a1f91276b0a24391ca9396",
+    "roundId": "b8c6693bb5c941c3ed7f30764e57e0708303b94b8e28a4b3fd1a18c982eb064d",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "094170c9bf23f86ae61af453ebf9d6b50578d99847b8d4ed7123c7c8986d8cdf",
+        "payload": {
+          "command": "/review BookcaseDiscovery#27",
+          "description": "Review and merge C-4 (catalog gap measurement on pilot-000). This PR uses F-0's cached reader text — no new model runs required. Its merge closes the catalog coverage evidence gap and unblocks R-2 recommendation work. The unknown-spine rate it produces is the primary open question about whether the OC36 recall tradeoff is working.",
+          "repo": "BookcaseDiscovery",
+          "status": "open",
+          "sourceDate": "2026-11-03"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "d15d84bfa33ed75c22b1e6a3d004951f7ce7daf86e67a6e2e9223d5bd74decc8",
+        "payload": {
+          "command": "/confirm daily-logger#516",
+          "description": "Confirm whether the daily-blog.yml pipeline failure (opened 2026-11-01) is resolved or still active. The Nov 2 article merged successfully but the alert issue remains open. Close the issue if resolved; file a fix PR if not. This is a precondition for the next generation run.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-03"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "7e5b9bf2ca193a4f9072310723c728ad7b15a82398e07f54597d57ff2d5766fa",
+        "payload": {
+          "command": "/disposition workstation-yuri#4,#5,#6,#7,#8,#9,#10",
+          "description": "Make an explicit call on the seven DRAFT review-only PRs open since 2026-10-27: merge, close, or park to a named phase. Without a recorded disposition these accumulate drift and consume triage attention in every subsequent roadmap pulse.",
+          "repo": "workstation-yuri",
+          "status": "open",
+          "sourceDate": "2026-11-03"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "C-4 (BookcaseDiscovery #27) is the active gate: it measures ISFDB catalog coverage against F-0's cached reader text with no new model runs, and its merge is the stated prerequisite before R-2 recommendation work begins. The unknown-spine rate from pilot-000 is the most consequential open number in the pipeline — it determines whether the OC36 recall tradeoff is acceptable or needs revisiting before R-2 is scoped.\n\ndaily-logger #516 (daily-blog.yml pipeline alert) is an unresolved evidence gap: the Nov 2 article merged successfully but the alert issue remains open. Confirming whether the pipeline failure is resolved or still active is a precondition for the next generation run. Owner should confirm and close or document.\n\ndaily-logger #524 and #515 (independent review drafts for Nov 2 and Oct 31 articles) each carry findings requiring owner acknowledgement before acceptance. Neither is operative until reviewed and stamped through the editorial workflow.\n\ndaily-logger #522 (fixture/live-corpus collision) has no fix PR filed. The recovery path is currently manual.\n\nworkstation-yuri #4–#10: seven DRAFT review-only PRs with no in-window activity since 2026-10-27. Owner disposition needed: merge, close, or park to a named phase. Current state is drift accumulation with no recorded gate.\n\ncore #572 (fix: ground eli facts, DRAFT since 2026-10-27): correctness fix for the eli skill. No stated blocker or owner gate recorded; DRAFT status indicates not yet ready for merge review.\n\nEvidence gaps not resolvable from available context: (1) actual unknown-spine rate from Q-1 failure-pattern analysis on pilot-000 — this is the headline missing number; (2) test coverage on the model judgment layer specifically, as the 647 tests are confirmed to cover contracts, ledger, and catalog parsing but judgment-layer coverage is not independently verified; (3) whether the ISFDB parser has any schema-version pinning or format-change detection; (4) whether the SQLite WAL ledger choice has a filed ADR or written rationale beyond workstation-local convenience; (5) daily-blog.yml pipeline status post #520 merge."
+    },
+    "stateDigest": "f7a975d5f5b16096411e118b266ba770974b2de792375a703b1ce8c84535d5e3",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

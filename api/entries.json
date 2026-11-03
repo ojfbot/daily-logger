@@ -1,5 +1,418 @@
 [
   {
+    "date": "2026-11-03",
+    "title": "Monday — BookcaseDiscovery Sprint: 26 PRs Merged as a New Fleet Member Arrives Fully Formed",
+    "summary": "BookcaseDiscovery merged 26 PRs in a single session, shipping the complete v0 pipeline from capture ingestion through machine labelling, catalog indexing, reading-profile modelling, and failure-pattern analysis.",
+    "tags": [
+      {
+        "name": "BookcaseDiscovery",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "model-behavior-as-design",
+        "type": "concept"
+      },
+      {
+        "name": "event-sourcing",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "BookcaseDiscovery",
+      "core"
+    ],
+    "commitCount": 12,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Event-sourced ledger as the single source of truth (L-1 / L-2)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Privacy guard as a machine-enforced boundary, not a policy statement (Z-1)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Open-weight models label everything; no hand-labelling queue (OC36)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ISFDB as the canonical catalog backend, indexed locally via streaming mysqldump parser",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Reading profile as a typed model with public seeds and configurable weights (R-0 / R-1)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet registration as a three-repo atomic operation (Z-2 + core #574 + daily-logger #521)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "1",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/1"
+        },
+        "at": "2026-11-02T17:49:52.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "2",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/2"
+        },
+        "at": "2026-11-02T17:51:03.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "3",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/3"
+        },
+        "at": "2026-11-02T17:47:33.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "4",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/4"
+        },
+        "at": "2026-11-02T17:52:28.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "5",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/5"
+        },
+        "at": "2026-11-02T18:05:41.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "6",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/6"
+        },
+        "at": "2026-11-02T18:00:05.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "7",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/7"
+        },
+        "at": "2026-11-02T18:43:12.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "8",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/8"
+        },
+        "at": "2026-11-02T18:00:53.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "9",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/9"
+        },
+        "at": "2026-11-02T18:19:41.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "10",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/10"
+        },
+        "at": "2026-11-02T18:22:00.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "11",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/11"
+        },
+        "at": "2026-11-02T18:20:37.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "12",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/12"
+        },
+        "at": "2026-11-02T18:23:57.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "13",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/13"
+        },
+        "at": "2026-11-02T18:43:47.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "14",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/14"
+        },
+        "at": "2026-11-02T19:31:01.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "15",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/15"
+        },
+        "at": "2026-11-02T19:29:38.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "16",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/16"
+        },
+        "at": "2026-11-02T19:41:52.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "17",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/17"
+        },
+        "at": "2026-11-02T20:14:33.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "18",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/18"
+        },
+        "at": "2026-11-02T20:41:47.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "19",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/19"
+        },
+        "at": "2026-11-02T20:43:47.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "20",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/20"
+        },
+        "at": "2026-11-02T21:15:44.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "21",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/21"
+        },
+        "at": "2026-11-02T21:22:54.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "22",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/22"
+        },
+        "at": "2026-11-03T02:31:13.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "23",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/23"
+        },
+        "at": "2026-11-03T05:00:47.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "24",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/24"
+        },
+        "at": "2026-11-03T05:01:50.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "25",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/25"
+        },
+        "at": "2026-11-03T05:03:00.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "574",
+          "url": "https://github.com/ojfbot/core/pull/574"
+        },
+        "at": "2026-11-03T02:48:28.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "519",
+          "url": "https://github.com/ojfbot/daily-logger/pull/519"
+        },
+        "at": "2026-11-03T03:01:42.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "520",
+          "url": "https://github.com/ojfbot/daily-logger/pull/520"
+        },
+        "at": "2026-11-02T17:45:23.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "521",
+          "url": "https://github.com/ojfbot/daily-logger/pull/521"
+        },
+        "at": "2026-11-03T02:48:46.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "523",
+          "url": "https://github.com/ojfbot/daily-logger/pull/523"
+        },
+        "at": "2026-11-03T03:50:47.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-03T17:16:18.176Z",
+        "runId": "41682280128",
+        "runNumber": 289,
+        "runAttempt": 1,
+        "event": "schedule",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/41682280128",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "da9518aa64ccc788995e35eacc8480ec9d964706",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-03T17:14:25.000Z",
+          "startedAt": "2026-11-03T17:14:25.000Z",
+          "expectedAt": "2026-11-03T09:30:00.000Z",
+          "dispatchDelaySeconds": 27865,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "0595dc466fc133e076b8132066541c2981c592f3e18fbb20f9e97308e40cf4fe"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.1",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-02",
     "title": "Sunday — BookcaseDiscovery Arrives: A New Repo's First Commit and a Pipeline Alert",
     "summary": "One initial commit in a new BookcaseDiscovery repo and a live daily-blog pipeline alert defined Sunday's characteristically thin reporting window.",
