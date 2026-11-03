@@ -75,6 +75,8 @@ export const REPO_NOTES: Record<string, string> = {
   'play-well-library': 'play-well cluster — canonical LEGO village content library (branch flow play/<user> → staging → main)',
   'foundry-recipes': 'Blender tutorial extraction pipeline — sped-up reels become structured BlenderRecipe records in Notion, read on demand by asset-foundry',
   'classic-space-venue': 'Classic Space Venue (CSV) — ambient Arcade venue where LEGO Classic Space minifigs will represent live ojfbot agents/tasks via fleet-runner only; dev-host work uses labelled mock data while the fleet-runner read projection is pending; founded 2026-10-20 from core wayfinder map #541',
+  // Added 2026-11-02 (BookcaseDiscovery card Z-2, fleet registration; northstar l1-bookcase-discovery).
+  'BookcaseDiscovery': 'phone-at-a-bookshelf discovery — spine detection + OCR, local ISFDB catalog identification with evidence bands, taste-based recommendations; public build-in-public repo (AGPL-3.0), no photos in git',
 }
 
 /** Names that appear in older article tags/bodies but are no longer org repos (renames). */
