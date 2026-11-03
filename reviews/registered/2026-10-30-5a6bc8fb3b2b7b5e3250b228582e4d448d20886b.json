@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261030-5a6bc8fb3b2b",
+  "article": {
+    "date": "2026-10-30",
+    "sourceCommitSha": "5a6bc8fb3b2b7b5e3250b228582e4d448d20886b",
+    "blobSha": "37269653fd12bdb5194a0e820c4f65b497e1d41a"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-03T03:42:37Z",
+  "scope": "Final visible Draft, exact source/article/action bytes, reporting-window first-parent history and PR grouping, consumed October 27 one-use grant receipt, October 28 follow-up merge timing, Workstation review identities and dispositions, October 29 editorial completion, and current review discovery. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "7b16752d7014659b62853772d524799841192650",
+  "fullRecordPath": "reviews/articles/2026-10-30-5a6bc8fb3b2b7b5e3250b228582e4d448d20886b.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The summary attributes the whole window to the October 28 train",
+      "location": "Frontmatter line 6 attributes sixteen commits across thirteen merged PRs to completion of the October 28 editorial train.",
+      "explanation": "The aggregate total is correct, but it combines article PR #491, six merged October 28 editorial PRs, and six October 27 held-action PRs. Only six merged PRs closed the October 28 train.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5a6bc8fb3b2b7b5e3250b228582e4d448d20886b/_articles/2026-10-30.md#L3-L6",
+        "https://github.com/ojfbot/daily-logger/pull/491",
+        "https://github.com/ojfbot/daily-logger/pull/490",
+        "https://github.com/ojfbot/daily-logger/pull/497"
+      ],
+      "correction": "Report sixteen commits and thirteen merged PRs as the total window, then separately state that six merged PRs closed the October 28 train.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The October 27 shipment group omits PR 493 and misgroups commit 9db9be4",
+      "location": "Lines 32 through 44 call the work four PRs, link five PRs, omit #493, and include 9db9be4 in the commit list.",
+      "explanation": "The October 27 work spans six merged PRs, #492 through #497, and eight commits. PR #493 bound the first current-evidence grant. Commit 9db9be4 is the October 28 source review and belongs to that editorial group. Three of the six PRs are evidence or grant bindings rather than runtime repair implementations.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5a6bc8fb3b2b7b5e3250b228582e4d448d20886b/_articles/2026-10-30.md#L32-L44",
+        "https://github.com/ojfbot/daily-logger/pull/493",
+        "https://github.com/ojfbot/daily-logger/commit/9db9be46f8604381db728310b36d305d88742f5a"
+      ],
+      "correction": "List #492 through #497, distinguish runtime repairs from evidence/grant bindings, move 9db9be4 to the October 28 group, and report eight commits for October 27 held-action work.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The article recommends rerunning an already consumed one-use grant",
+      "location": "Lines 82, 98 and 99 say #497 has not been run and recommend triggering it.",
+      "explanation": "Run 41001746798 had already consumed #497's grant before article generation. Sonnet's initial and scoped-repair outputs failed native validation, Opus was not called, and the receipt explicitly authorizes no rerun.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5a6bc8fb3b2b7b5e3250b228582e4d448d20886b/_articles/2026-10-30.md#L82",
+        "https://github.com/ojfbot/daily-logger/issues/386#issuecomment-6514858725",
+        "https://github.com/ojfbot/daily-logger/pull/497",
+        "https://github.com/ojfbot/daily-logger/actions/runs/41001746798"
+      ],
+      "correction": "Report the consumed failed run and remaining diagnostic gap. Keep the candidates held, but remove /run-held-action-grant pr=497 as an executable next step.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "PR 504 has a known out-of-window merge time",
+      "location": "Lines 84, 98 and 100 call #504 operationally unknown and propose investigating whether it merged in the reporting window.",
+      "explanation": "PR #504 merged and closed at 2026-10-30T16:13:01Z. The reporting interval ended at 08:30Z, so the status is known and the merge belongs to the following window.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/504",
+        "https://github.com/ojfbot/daily-logger/blob/5a6bc8fb3b2b7b5e3250b228582e4d448d20886b/_articles/2026-10-30.md#L84"
+      ],
+      "correction": "State that #504 merged after the reporting cutoff and remove the status-investigation candidate.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Workstation PR 8 and PR 10 are described in reverse",
+      "location": "Line 86 calls #8 Pi bridge v4 and #10 duplex protocol v7.",
+      "explanation": "Workstation #8 is Duplex protocol v7 and Helpdesk work routes. #10 is Pi bridge v4 and Pi status service. #9 is the Yojimbo pipeline snapshot.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/workstation-yuri/pull/8",
+        "https://github.com/ojfbot/workstation-yuri/pull/9",
+        "https://github.com/ojfbot/workstation-yuri/pull/10"
+      ],
+      "correction": "Identify #8 as duplex and Helpdesk, #9 as the Yojimbo snapshot, and #10 as Pi bridge and status service.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Workstation 8 through 10 already had substantive reviews",
+      "location": "Lines 86, 98 and 103 say findings have not surfaced and propose triggering the three reviews.",
+      "explanation": "Before article capture, #8 had a detailed replacement review, #9 had three substantive reviews, and #10 had a replacement review. They include tests, ranked findings, questions, and explicit dispositions.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/workstation-yuri/pull/8#pullrequestreview-5719781612",
+        "https://github.com/ojfbot/workstation-yuri/pull/9#pullrequestreview-5719749460",
+        "https://github.com/ojfbot/workstation-yuri/pull/10#pullrequestreview-5719751296"
+      ],
+      "correction": "Summarize the existing findings and dispositions. Replace the surface-findings candidate with follow-up that starts from those reviews, if justified.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The October 29 article had already completed editorial review and acceptance",
+      "location": "Line 104 says the October 29 article had not entered editorial review.",
+      "explanation": "Before this article's capture, PR #505 registered its review, #509 corrected it, #512 accepted it, and #513 registered the final source-pinned audit. Its three suggested actions remained held, but the editorial train was complete.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/pull/505",
+        "https://github.com/ojfbot/daily-logger/pull/509",
+        "https://github.com/ojfbot/daily-logger/pull/512",
+        "https://github.com/ojfbot/daily-logger/pull/513"
+      ],
+      "correction": "Report October 29 as Accepted with a final source-pinned review and three held, non-dispatchable candidates.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The one-session claim lacks a durable session identity",
+      "location": "Title, summary and line 11 describe the October 28 train as occurring across one session.",
+      "explanation": "Git commits, PRs, checks and receipts prove the train's order and outcomes, but do not expose a stable chat or agent-session identity binding the entire train to one session.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5a6bc8fb3b2b7b5e3250b228582e4d448d20886b/_articles/2026-10-30.md#L3-L11"
+      ],
+      "correction": "Omit the one-session claim or link a durable handoff/session record that proves it without relying on private conversation history.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
