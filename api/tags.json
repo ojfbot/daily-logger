@@ -2,27 +2,27 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 104
+    "count": 105
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 90
+    "count": 91
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 74
+    "count": 75
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 72
+    "count": 73
   },
   {
     "name": "model-behavior-as-design",
     "type": "concept",
-    "count": 47
+    "count": 48
   },
   {
     "name": "hardening",
@@ -45,19 +45,19 @@
     "count": 33
   },
   {
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 31
+  },
+  {
     "name": "adr",
     "type": "practice",
     "count": 31
   },
   {
-    "name": "tooling-for-iteration",
-    "type": "concept",
-    "count": 30
-  },
-  {
     "name": "sprint",
     "type": "concept",
-    "count": 26
+    "count": 27
   },
   {
     "name": "cv-builder",
@@ -67,7 +67,7 @@
   {
     "name": "security-as-emergent-ux",
     "type": "concept",
-    "count": 22
+    "count": 23
   },
   {
     "name": "morning-cockpit",
@@ -360,6 +360,11 @@
     "count": 3
   },
   {
+    "name": "BookcaseDiscovery",
+    "type": "repo",
+    "count": 2
+  },
+  {
     "name": "classic-space-venue",
     "type": "repo",
     "count": 2
@@ -525,8 +530,8 @@
     "count": 2
   },
   {
-    "name": "BookcaseDiscovery",
-    "type": "repo",
+    "name": "event-sourcing",
+    "type": "concept",
     "count": 1
   },
   {
