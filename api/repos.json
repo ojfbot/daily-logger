@@ -2049,6 +2049,21 @@
     ]
   },
   {
+    "name": "BookcaseDiscovery",
+    "articleCount": 1,
+    "totalCommits": 1,
+    "relatedTags": [
+      "daily-logger",
+      "workstation-yuri",
+      "BookcaseDiscovery",
+      "editorial-pipeline",
+      "ci-cd",
+      "rest-day",
+      "assistant-centric",
+      "model-behavior-as-design"
+    ]
+  },
+  {
     "name": "classic-space-venue",
     "articleCount": 1,
     "totalCommits": 37,
