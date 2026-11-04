@@ -1,13 +1,19 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 151,
-    "totalCommits": 1928,
+    "articleCount": 152,
+    "totalCommits": 1938,
     "relatedTags": [
       "BookcaseDiscovery",
-      "daily-logger",
       "core",
+      "daily-logger",
       "sprint",
+      "fleet-runner",
+      "pre-registered-evals",
+      "multi-host-compute",
+      "evidence-governed",
+      "geometry-cache",
+      "gate-authority",
       "assistant-centric",
       "model-behavior-as-design",
       "event-sourcing",
@@ -44,7 +50,6 @@
       "html-rendering",
       "pipeline-integrity",
       "correspondence-protocol",
-      "fleet-runner",
       "selfco-vault",
       "shell",
       "cv-builder",
@@ -245,13 +250,19 @@
   },
   {
     "name": "core",
-    "articleCount": 86,
-    "totalCommits": 1542,
+    "articleCount": 87,
+    "totalCommits": 1552,
     "relatedTags": [
       "BookcaseDiscovery",
-      "daily-logger",
       "core",
+      "daily-logger",
       "sprint",
+      "fleet-runner",
+      "pre-registered-evals",
+      "multi-host-compute",
+      "evidence-governed",
+      "geometry-cache",
+      "gate-authority",
       "assistant-centric",
       "model-behavior-as-design",
       "event-sourcing",
@@ -282,7 +293,6 @@
       "pipeline-integrity",
       "adr",
       "correspondence-protocol",
-      "fleet-runner",
       "selfco-vault",
       "shell",
       "cv-builder",
@@ -1829,6 +1839,32 @@
     ]
   },
   {
+    "name": "BookcaseDiscovery",
+    "articleCount": 3,
+    "totalCommits": 23,
+    "relatedTags": [
+      "BookcaseDiscovery",
+      "core",
+      "daily-logger",
+      "sprint",
+      "fleet-runner",
+      "pre-registered-evals",
+      "multi-host-compute",
+      "evidence-governed",
+      "geometry-cache",
+      "gate-authority",
+      "assistant-centric",
+      "model-behavior-as-design",
+      "event-sourcing",
+      "ci-cd",
+      "security-as-emergent-ux",
+      "tooling-for-iteration",
+      "workstation-yuri",
+      "editorial-pipeline",
+      "rest-day"
+    ]
+  },
+  {
     "name": "workstation-yuri",
     "articleCount": 3,
     "totalCommits": 69,
@@ -1974,26 +2010,6 @@
       "tooling-for-iteration",
       "skill-audit",
       "babylon-migration"
-    ]
-  },
-  {
-    "name": "BookcaseDiscovery",
-    "articleCount": 2,
-    "totalCommits": 13,
-    "relatedTags": [
-      "BookcaseDiscovery",
-      "daily-logger",
-      "core",
-      "sprint",
-      "assistant-centric",
-      "model-behavior-as-design",
-      "event-sourcing",
-      "ci-cd",
-      "security-as-emergent-ux",
-      "tooling-for-iteration",
-      "workstation-yuri",
-      "editorial-pipeline",
-      "rest-day"
     ]
   },
   {

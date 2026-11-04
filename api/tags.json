@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 105
+    "count": 106
   },
   {
     "name": "ci-cd",
@@ -12,7 +12,7 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 75
+    "count": 76
   },
   {
     "name": "assistant-centric",
@@ -57,7 +57,7 @@
   {
     "name": "sprint",
     "type": "concept",
-    "count": 27
+    "count": 28
   },
   {
     "name": "cv-builder",
@@ -300,6 +300,16 @@
     "count": 4
   },
   {
+    "name": "BookcaseDiscovery",
+    "type": "repo",
+    "count": 3
+  },
+  {
+    "name": "fleet-runner",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "fleet-onboard",
     "type": "concept",
     "count": 3
@@ -360,11 +370,6 @@
     "count": 3
   },
   {
-    "name": "BookcaseDiscovery",
-    "type": "repo",
-    "count": 2
-  },
-  {
     "name": "classic-space-venue",
     "type": "repo",
     "count": 2
@@ -381,11 +386,6 @@
   },
   {
     "name": "editorial-workflow",
-    "type": "concept",
-    "count": 2
-  },
-  {
-    "name": "fleet-runner",
     "type": "concept",
     "count": 2
   },
@@ -528,6 +528,31 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "pre-registered-evals",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "multi-host-compute",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "evidence-governed",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "geometry-cache",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "gate-authority",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "event-sourcing",
