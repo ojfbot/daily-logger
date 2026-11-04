@@ -1,5 +1,430 @@
 [
   {
+    "date": "2026-11-04",
+    "title": "Tuesday — BookcaseDiscovery Sprint Day 2: 28 PRs Merged, Fleet-Runner Multi-Host Happy Path Closed",
+    "summary": "BookcaseDiscovery merged 28 PRs closing pass-1 at the research level while core verified a real Yojimbo–Yuri read-vision job and committed the gate-authority framework that governs all fleet execution.",
+    "tags": [
+      {
+        "name": "BookcaseDiscovery",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "pre-registered-evals",
+        "type": "concept"
+      },
+      {
+        "name": "multi-host-compute",
+        "type": "concept"
+      },
+      {
+        "name": "evidence-governed",
+        "type": "concept"
+      },
+      {
+        "name": "geometry-cache",
+        "type": "concept"
+      },
+      {
+        "name": "gate-authority",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "BookcaseDiscovery",
+      "core"
+    ],
+    "commitCount": 10,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Pre-registered evaluation protocol as the merge gate for every BookcaseDiscovery card",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Geometry cache as the partition contract for F-0i",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Negative results ship as first-class artifacts, not discards",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet-runner gate authority derived from four orthogonal axes, not role",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Pilot evidence before resident-worker promotion",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "57",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/57"
+        },
+        "at": "2026-11-04T08:57:07.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "56",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/56"
+        },
+        "at": "2026-11-04T08:56:08.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "55",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/55"
+        },
+        "at": "2026-11-04T08:36:11.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "54",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/54"
+        },
+        "at": "2026-11-04T08:35:12.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "52",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/52"
+        },
+        "at": "2026-11-04T06:57:22.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "51",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/51"
+        },
+        "at": "2026-11-04T06:17:18.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "50",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/50"
+        },
+        "at": "2026-11-04T05:33:38.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "49",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/49"
+        },
+        "at": "2026-11-04T04:41:53.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "48",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/48"
+        },
+        "at": "2026-11-04T04:12:39.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "47",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/47"
+        },
+        "at": "2026-11-04T04:10:11.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "46",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/46"
+        },
+        "at": "2026-11-04T04:09:27.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "45",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/45"
+        },
+        "at": "2026-11-04T04:11:09.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "44",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/44"
+        },
+        "at": "2026-11-04T03:40:37.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "43",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/43"
+        },
+        "at": "2026-11-04T03:20:57.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "42",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/42"
+        },
+        "at": "2026-11-04T03:16:29.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "41",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/41"
+        },
+        "at": "2026-11-04T02:43:22.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "39",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/39"
+        },
+        "at": "2026-11-04T02:05:35.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "38",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/38"
+        },
+        "at": "2026-11-04T01:45:56.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "36",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/36"
+        },
+        "at": "2026-11-04T01:55:50.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "35",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/35"
+        },
+        "at": "2026-11-04T01:44:59.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "34",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/34"
+        },
+        "at": "2026-11-03T22:38:11.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "33",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/33"
+        },
+        "at": "2026-11-03T22:16:14.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "32",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/32"
+        },
+        "at": "2026-11-03T21:54:51.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "31",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/31"
+        },
+        "at": "2026-11-03T21:54:15.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "29",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/29"
+        },
+        "at": "2026-11-03T20:05:26.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "28",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/28"
+        },
+        "at": "2026-11-03T19:46:44.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "27",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/27"
+        },
+        "at": "2026-11-03T20:07:17.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "26",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/26"
+        },
+        "at": "2026-11-03T15:41:50.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "578",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/578"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "575",
+          "url": "https://github.com/ojfbot/core/pull/575"
+        },
+        "at": "2026-11-03T19:32:35.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "28",
+          "url": "https://github.com/ojfbot/core/pull/28"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "525",
+          "url": "https://github.com/ojfbot/daily-logger/pull/525"
+        },
+        "at": "2026-11-03T17:26:50.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-04T17:27:50.297Z",
+        "runId": "41877544769",
+        "runNumber": 290,
+        "runAttempt": 1,
+        "event": "schedule",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/41877544769",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "069cf477f49bbbb13a869daecf8b2150c0076789",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-04T17:26:16.000Z",
+          "startedAt": "2026-11-04T17:26:16.000Z",
+          "expectedAt": "2026-11-04T09:30:00.000Z",
+          "dispatchDelaySeconds": 28576,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "0595dc466fc133e076b8132066541c2981c592f3e18fbb20f9e97308e40cf4fe"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.1",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-03",
     "title": "Monday — BookcaseDiscovery Sprint: 26 PRs Merged as a New Fleet Member Arrives Fully Formed",
     "summary": "BookcaseDiscovery merged 26 PRs in a single session, shipping the complete v0 pipeline from capture ingestion through machine labelling, catalog indexing, reading-profile modelling, and failure-pattern analysis.",

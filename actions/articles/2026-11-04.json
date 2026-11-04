@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-04",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-04",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Ambiguous candidate target #580 for exact-command; explicit qualified evidence association required; review pending"
+    },
+    "articleDigest": "c34a4a20c98f6bc61f62695dc31406b0320519e2ebaa146db5e27570918ad5d1",
+    "roundId": "ae5e5a966ddd9a16cef66092cd55dee4a778f596bc535ce9c8f3ecfc09c57aac",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "6c8607e33d854332b351cf8c8e71eacab144a5c76ae2d54bda14746941b49329",
+        "payload": {
+          "command": "/merge core #579 #580 #581 #582 #583 --sequence",
+          "description": "Merge the stacked fleet-runner PR sequence in order to unblock resident-worker registration (core #584), Yuri daytime test (BookcaseDiscovery #59), compute tracer (BookcaseDiscovery #40), and N-1 job handler (BookcaseDiscovery #53). No technical blocker recorded — this is an owner gate.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-04"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "a189f1713035ef4a927edfce5c045765cb01f6c20626956e7516992ad624771a",
+        "payload": {
+          "command": "/triage daily-logger #516",
+          "description": "Determine how long daily-blog.yml has been failing, identify the unblock, and either fix or explicitly accept-with-known-failure. A live pipeline alert in the logging infrastructure is not an editorial queue item.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-04"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "97f70ab9f0d6661d890a56f6772d20eb8f2f711cfac07dc8624ec8b347621587",
+        "payload": {
+          "command": "/open BookcaseDiscovery --card Q-3-remediation",
+          "description": "Q-3 gap audit produced a ranked list of stop rungs and causes on pilot-000. Open the next remediation card targeting the top-ranked stop rung, or explicitly record the decision not to pursue remediation before fleet-compute integration.",
+          "repo": "BookcaseDiscovery",
+          "status": "open",
+          "sourceDate": "2026-11-04"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Primary unblock for fleet-compute track: owner merges core #579→#580→#581→#582→#583 in sequence. No technical blocker recorded. Downstream unblocked by that merge: BookcaseDiscovery #30, #40, #59, core #584, BookcaseDiscovery #53. These are all currently draft or open-and-waiting; none can progress until #583 is in.\\n\\nQ-3 gap audit ranked output exists in pilot-000 evidence. Next remediation card selection is an owner decision; no card has been opened.\\n\\ndaily-logger #516 (`daily-blog.yml` pipeline alert): duration of failure and unblock condition not in available evidence. Needs owner triage.\\n\\ndaily-logger independent-review PRs #526, #524, #515: no disposition or deadline recorded. #515 is 4 days old. Owner decision on whether to close, merge, or set a resolution date.\\n\\ncore #577 (stale-worker fencing test) on hold pending core #530. Fencing is a correctness requirement for multi-host lease expiry; the happy-path claim on core #578 carries an open asterisk until this resolves.\\n\\nGeometry cache format, invalidation contract, and regeneration command are not documented in this window's evidence. A maintainer returning cold cannot answer \"how do I regenerate the cache\" from the current record.\\n\\nOpt-in flag enforcement for pre-registered-evals protocol: no CI gate or automated enforcement described. Protocol appears to be owner-discipline-enforced. This is a legitimate answer for a solo project but is not stated explicitly anywhere in the record.\\n\\nNB-3 depth and pixel rule spot-check failure: reason for failure not documented beyond \"fail their spot check.\" Does not invalidate the spot-check methodology but the specific failure mode is unrecorded.\\n\\nAll 28 BookcaseDiscovery PRs were reviewed in a single session. No reviewer other than owner is identified in the available evidence. This is consistent with a solo project operating under the pre-registered eval protocol as the primary gate mechanism, but the review disposition is not stated."
+    },
+    "stateDigest": "2859dd4f21bf18068f38f6a19f734f8cd852c101c4f8bdcae1d30c593d4ba113",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
