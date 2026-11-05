@@ -1,17 +1,19 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 152,
-    "totalCommits": 1938,
+    "articleCount": 153,
+    "totalCommits": 1947,
     "relatedTags": [
       "BookcaseDiscovery",
-      "core",
       "daily-logger",
-      "sprint",
-      "fleet-runner",
+      "core",
       "pre-registered-evals",
-      "multi-host-compute",
       "evidence-governed",
+      "sprint",
+      "negative-results",
+      "label-ledger",
+      "fleet-runner",
+      "multi-host-compute",
       "geometry-cache",
       "gate-authority",
       "assistant-centric",
@@ -1813,6 +1815,34 @@
     ]
   },
   {
+    "name": "BookcaseDiscovery",
+    "articleCount": 4,
+    "totalCommits": 32,
+    "relatedTags": [
+      "BookcaseDiscovery",
+      "daily-logger",
+      "core",
+      "pre-registered-evals",
+      "evidence-governed",
+      "sprint",
+      "negative-results",
+      "label-ledger",
+      "fleet-runner",
+      "multi-host-compute",
+      "geometry-cache",
+      "gate-authority",
+      "assistant-centric",
+      "model-behavior-as-design",
+      "event-sourcing",
+      "ci-cd",
+      "security-as-emergent-ux",
+      "tooling-for-iteration",
+      "workstation-yuri",
+      "editorial-pipeline",
+      "rest-day"
+    ]
+  },
+  {
     "name": "selfco-box",
     "articleCount": 4,
     "totalCommits": 60,
@@ -1836,32 +1866,6 @@
       "vault-tooling",
       "knowledge-management",
       "vault-integration"
-    ]
-  },
-  {
-    "name": "BookcaseDiscovery",
-    "articleCount": 3,
-    "totalCommits": 23,
-    "relatedTags": [
-      "BookcaseDiscovery",
-      "core",
-      "daily-logger",
-      "sprint",
-      "fleet-runner",
-      "pre-registered-evals",
-      "multi-host-compute",
-      "evidence-governed",
-      "geometry-cache",
-      "gate-authority",
-      "assistant-centric",
-      "model-behavior-as-design",
-      "event-sourcing",
-      "ci-cd",
-      "security-as-emergent-ux",
-      "tooling-for-iteration",
-      "workstation-yuri",
-      "editorial-pipeline",
-      "rest-day"
     ]
   },
   {

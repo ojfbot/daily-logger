@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-05",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-05",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Ambiguous or unsupported exact-command PR target; review pending"
+    },
+    "articleDigest": "e4ba76a22b21d28253b9af0efe721a79019836f317b0ba811befd90c41f4c5da",
+    "roundId": "08b86dbb5744c330f274d8e9f874a9046a7aa3954027146e2f9e1f549500b498",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "307128c1b63f63c89c383f2fd9899c85613f65a4b9e0e10f1e4c818d5150c429",
+        "payload": {
+          "command": "gh pr list --repo ojfbot/core --state open | grep -E '57[9-9]|58[0-4]'",
+          "description": "Confirm current open/closed state of the fleet-runner merge sequence (#579–#584); the happy-path evidence is complete and these PRs are owner-gated, not technically blocked.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-05"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "7ddcf36f15ea53bfd5a3fc06f7e5ea02d40445b75017dd0a92ca5cd9eb723e33",
+        "payload": {
+          "command": "bookcase dataset build --dry-run --box-set pre-rb1",
+          "description": "Verify the frozen pre-RB-1 box set snapshot reproduces prior published figures before any new upstream geometry card lands.",
+          "repo": "BookcaseDiscovery",
+          "status": "open",
+          "sourceDate": "2026-11-05"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "653b163034a2eeb55a33541397887b2fa0b8df7d74148735f2cf3566d1c88ad7",
+        "payload": {
+          "command": "gh pr view 59 --repo ojfbot/BookcaseDiscovery && gh pr view 53 --repo ojfbot/BookcaseDiscovery",
+          "description": "Review the two nearest conductor-merge candidates (#59 Yuri daytime test, #53 N-1 Qwen handler) for any remaining blockers before the next sprint window.",
+          "repo": "BookcaseDiscovery",
+          "status": "open",
+          "sourceDate": "2026-11-05"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Evidence gaps and owner gates for independent action review:\n\n- Core #579–#584 merge sequence: evidence complete (core #578 checklist fully satisfied), owner-gated. BookcaseDiscovery #30 is blocked on this sequence completing. No technical dependency remains; this is a prioritization decision.\n- BookcaseDiscovery #59 (Yuri daytime test) and #53 (N-1 Qwen handler): nearest conductor-merge candidates. #53 is stacked on #40.\n- TS-0 training run authorization: owner-gated decision, not a label count threshold. No trigger condition has been committed. 824 labels are staged; no downstream model ships yet.\n- SC-1 K2 / ISFDB catalog scope: documented as a catalog constraint by inference from failure pattern, not from a multi-genre sanity check. No card queued for re-test with a broader catalog.\n- C-9 / IMP-1 unblock: requires GPU imprint reads on open-catalog accepts. Not scheduled.\n- F-0h v2: no queued card. SC-1's failure removes the shelf-context input; no replacement strategy has been proposed.\n- Q-3 gap taxonomy (catalog-gap 25.9%, frame-edge 16.7%, single-reader 14.1%): authoritative next-problem surface for missed-book recovery. No card queued.\n- daily-logger #515 (Oct 31 review draft): open six days. Editorial review gate; steps not publicly documented.\n- workstation-yuri #8, #9, #10: open since Oct 30, labeled review-only. Expected to close after review; no explicit exit condition in PR bodies.\n- core #585: stale docs cleanup, open and not yet merged."
+    },
+    "stateDigest": "b83910b2e8d5445a166563945e80c7e084b9e244fc081c9efb81df1b3626ff83",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
