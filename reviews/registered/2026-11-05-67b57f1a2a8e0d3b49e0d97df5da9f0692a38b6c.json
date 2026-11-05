@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261105-67b57f1a2a8e",
+  "article": {
+    "date": "2026-11-05",
+    "sourceCommitSha": "67b57f1a2a8e0d3b49e0d97df5da9f0692a38b6c",
+    "blobSha": "33ac00844c6e482f4e130a7d3802c3b008c5af7a"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-05T11:34:28Z",
+  "scope": "Final visible Draft, exact source/article/action bytes, shipped-card count, fleet-runner and BookcaseDiscovery stack ordering, core #578 checklist dependencies, exact dataset CLI surface, and current review registry/discovery state. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "78ed21969418706e9023bbd809baff417ccd03da",
+  "fullRecordPath": "reviews/articles/2026-11-05-67b57f1a2a8e0d3b49e0d97df5da9f0692a38b6c.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The title says seven cards closed while the article reports eight",
+      "location": "The title on line 3 says seven; lines 6 and 11 say eight and lines 15 through 61 enumerate eight PRs.",
+      "explanation": "The shipment list contains eight distinct merged BookcaseDiscovery PRs: #60, #58 and #61 through #66. The title disagrees with the article's own correct summary and list.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/67b57f1a2a8e0d3b49e0d97df5da9f0692a38b6c/_articles/2026-11-05.md#L3-L11",
+        "https://github.com/ojfbot/daily-logger/blob/67b57f1a2a8e0d3b49e0d97df5da9f0692a38b6c/_articles/2026-11-05.md#L15-L61"
+      ],
+      "correction": "Change the title count from seven to eight.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "PRs 59 and 53 are not the nearest independent merge candidates",
+      "location": "Lines 105, 107, 121, 124 and 125 call #59 and #53 nearest merge candidates and say no technical dependency remains.",
+      "explanation": "PR #59 is stacked on #53; #53 is stacked on #40 and marked draft/do not merge; #40 depends on core #584. The article erases explicit technical ordering constraints.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/67b57f1a2a8e0d3b49e0d97df5da9f0692a38b6c/_articles/2026-11-05.md#L105-L125",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/59",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/53",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/40",
+        "https://github.com/ojfbot/core/pull/584"
+      ],
+      "correction": "Report the recorded order as core #584 to BookcaseDiscovery #40 to #53 to #59, with each PR's existing draft, review and owner gates; do not present #59 or #53 as independently ready.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Core 584 is not a recorded prerequisite for BookcaseDiscovery 30",
+      "location": "Lines 105 and 107 say #30 is blocked on all of core #579 through #584.",
+      "explanation": "Core issue #578's completed happy-path checklist includes #579, #580, #581, BookcaseDiscovery #30, #582 and #583, but not #584. BookcaseDiscovery #30 records dependencies on the #578 path and #580/#581; #584 is later resident-worker follow-up work.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/67b57f1a2a8e0d3b49e0d97df5da9f0692a38b6c/_articles/2026-11-05.md#L105-L107",
+        "https://github.com/ojfbot/core/issues/578",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/30",
+        "https://github.com/ojfbot/core/pull/584"
+      ],
+      "correction": "Describe #30 against its recorded core #578/#580/#581 prerequisites and current PR state; treat #584 as follow-up work unless the owning PR records that dependency.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The held dataset command uses unsupported CLI flags",
+      "location": "Line 121 proposes bookcase dataset build --dry-run --box-set pre-rb1.",
+      "explanation": "The shipped dataset CLI accepts --set, --version and --help. It does not define --dry-run or --box-set, and the build command writes a new private dataset version.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/67b57f1a2a8e0d3b49e0d97df5da9f0692a38b6c/_articles/2026-11-05.md#L117-L125",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/311a4e19a0457b860c0c02ee2e94241e7368a062/src/run/dataset-cli.ts",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/64"
+      ],
+      "correction": "Do not execute the proposed command. Use a documented read-only verification path, or add an explicitly reviewed non-writing mode first.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
