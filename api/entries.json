@@ -1,5 +1,214 @@
 [
   {
+    "date": "2026-11-05",
+    "title": "Wednesday — BookcaseDiscovery Sprint Day 3: Negative Results Ship Too — Seven Cards Closed, Re-baseline Holds",
+    "summary": "BookcaseDiscovery merged eight PRs closing geometry, catalog, and identification cards — negative results, re-baselines, and a label ledger — while core opened a stale-docs cleanup.",
+    "tags": [
+      {
+        "name": "BookcaseDiscovery",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "pre-registered-evals",
+        "type": "concept"
+      },
+      {
+        "name": "evidence-governed",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      },
+      {
+        "name": "negative-results",
+        "type": "concept"
+      },
+      {
+        "name": "label-ledger",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "BookcaseDiscovery"
+    ],
+    "commitCount": 9,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Negative results commit as closed evidence records, not abandoned branches",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Pre-registration commits before first full-set run, not before design",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "RB-1 as a checkpoint, not a correction: re-baselining six cards at once after geometry stabilises",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "TS-0 label ledger: machine labels flagged by class strength, never filtered before training",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "SC-1 K2 failure reveals that ISFDB's single-genre catalog makes section-agreement shuffle-equivalent",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "60",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/60"
+        },
+        "at": "2026-11-04T15:44:33.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "58",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/58"
+        },
+        "at": "2026-11-04T12:58:46.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "61",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/61"
+        },
+        "at": "2026-11-04T18:21:31.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "62",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/62"
+        },
+        "at": "2026-11-04T18:20:35.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "63",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/63"
+        },
+        "at": "2026-11-04T18:54:23.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "64",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/64"
+        },
+        "at": "2026-11-05T01:00:10.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "65",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/65"
+        },
+        "at": "2026-11-05T01:20:19.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "66",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/66"
+        },
+        "at": "2026-11-05T01:28:11.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "527",
+          "url": "https://github.com/ojfbot/daily-logger/pull/527"
+        },
+        "at": "2026-11-04T17:51:41.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-05T10:02:16.312Z",
+        "runId": "42007042455",
+        "runNumber": 291,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/42007042455",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "d6907a703c200c611fec57600a07debc0a995814",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-05T10:00:18.000Z",
+          "startedAt": "2026-11-05T10:00:18.000Z",
+          "expectedAt": "2026-11-05T09:30:00.000Z",
+          "dispatchDelaySeconds": 1818,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "0595dc466fc133e076b8132066541c2981c592f3e18fbb20f9e97308e40cf4fe"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.1",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-04",
     "title": "Tuesday — BookcaseDiscovery Sprint Day 2: 28 PRs Merged, Fleet-Runner Multi-Host Happy Path Closed",
     "summary": "BookcaseDiscovery merged 28 PRs closing pass-1 at the research level while core verified a real Yojimbo–Yuri read-vision job and committed the gate-authority framework that governs all fleet execution.",
