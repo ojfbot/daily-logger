@@ -65,7 +65,7 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 | `src/index.ts` | Entry point — orchestrates collect → generate → write |
 | `src/collect-context.ts` | GitHub API sweep via `gh` CLI (single page per call, 16 MB buffer) |
 | `src/fleet.ts` | Sweep membership: `discoverRepos()` (derived from `gh repo list`), `EXCLUDED_REPOS`, `REPO_NOTES` → `KNOWN_REPOS`, `reportSurfaceDrift()` |
-| `src/collect-telemetry.ts` | Aggregates skill usage from `~/selfco/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources. **Note:** commit `4dd6765` fixed a silent no-op where skill-audit fetched telemetry from the wrong remote; telemetry collection now targets the correct source. |
+| `src/collect-telemetry.ts` | Aggregates skill usage from `~/.local/state/ojfbot/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources. **Note:** commit `4dd6765` fixed a silent no-op where skill-audit fetched telemetry from the wrong remote; telemetry collection now targets the correct source. |
 | `src/generate-article.ts` | Anthropic API call + prompt, JSON → markdown (includes dedicated skill telemetry section) |
 | `src/run-provenance.ts` | Best-effort Actions run timing, article authoring provenance, frontmatter preservation, and diagnostic reporting |
 | `src/schema.ts` | Zod schemas + validation (ArticleDataSchema/ArticleDataV2, TypedTagSchema, ShipmentEntrySchema, DecisionEntrySchema, ActionItemSchema, ClosedActionSchema, CodeReferenceSchema, StructuredArticleSchema; `actionId`, `validateArticleOutput`, `getValidationErrors`) |

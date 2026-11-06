@@ -5,7 +5,7 @@ import { occurredInWindow, type ActivityWindow } from './activity-window.js'
 
 /**
  * Which stream produced the skill-invocation counts:
- * - 'dispositions'           — ~/selfco/tracking/skill-dispositions.jsonl (live, ADR-0095)
+ * - 'dispositions'           — ~/.local/state/ojfbot/tracking/skill-dispositions.jsonl (live, ADR-0095)
  * - 'legacy-skill-telemetry' — ~/.claude/skill-telemetry.jsonl (frozen 2026-05-12)
  * - 'none'                   — neither file exists
  */
@@ -128,7 +128,7 @@ export function collectTelemetry(window: ActivityWindow): TelemetrySummary | nul
   // explicit fallback used only when the dispositions file is absent.
   const dispositionsPath =
     process.env.SKILL_DISPOSITIONS_PATH ||
-    join(homedir(), 'selfco', 'tracking', 'skill-dispositions.jsonl')
+    join(homedir(), '.local', 'state', 'ojfbot', 'tracking', 'skill-dispositions.jsonl')
 
   const toolEntries = filterByWindow(readJsonl<ToolEntry>(toolPath), window)
   const sessionEntries = filterByWindow(readJsonl<SessionEntry>(sessionPath), window)
