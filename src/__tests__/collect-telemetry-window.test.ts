@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { activityWindow } from '../activity-window.js'
 import { collectTelemetry } from '../collect-telemetry.js'
 
@@ -12,6 +12,23 @@ afterEach(() => {
 })
 
 describe('telemetry shares the half-open reporting interval', () => {
+  it('reads skill dispositions from the host state directory by default', () => {
+    folder = mkdtempSync(join(tmpdir(), 'daily-telemetry-default-'))
+    vi.stubEnv('HOME', folder)
+    vi.stubEnv('SKILL_DISPOSITIONS_PATH', '')
+    vi.stubEnv('TELEMETRY_DIR', join(folder, 'telemetry'))
+    const window = activityWindow('2026-11-01')
+    const ts = new Date(window.start).toISOString()
+    const ledger = join(folder, '.local', 'state', 'ojfbot', 'tracking', 'skill-dispositions.jsonl')
+    mkdirSync(dirname(ledger), { recursive: true })
+    writeFileSync(ledger, JSON.stringify({ ts, event: 'skill:disposition', skill: 'validate', engaged: true }))
+
+    expect(collectTelemetry(window)).toMatchObject({
+      skillsInvoked: [{ name: 'validate', count: 1 }],
+      skillSource: 'dispositions',
+    })
+  })
+
   it('bounds every count while keeping source freshness explicitly unwindowed', () => {
     folder = mkdtempSync(join(tmpdir(), 'daily-telemetry-window-'))
     vi.stubEnv('TELEMETRY_DIR', folder)
