@@ -1,5 +1,147 @@
 [
   {
+    "date": "2026-11-08",
+    "title": "Saturday — Fleet Rename: Yojimbo Lands in BookcaseDiscovery and workstation-yuri",
+    "summary": "Saturday's single commit documents the Mac mini's rename from Minifour to Yojimbo, while core opens two new draft PRs hardening the Fleet Runner NAS service path.",
+    "tags": [
+      {
+        "name": "BookcaseDiscovery",
+        "type": "repo"
+      },
+      {
+        "name": "workstation-yuri",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "morning-cockpit",
+        "type": "repo"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "naming-consistency",
+        "type": "concept"
+      },
+      {
+        "name": "data-layer-integrity",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "BookcaseDiscovery"
+    ],
+    "commitCount": 1,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Rename Yojimbo in prose only — preserve device identifiers and directory paths",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet Runner G3 isolation path: sandbox before live cutover",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "05:33Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-08T05:33:05.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/workstation-yuri",
+          "ref": "11",
+          "event": "opened",
+          "url": "https://github.com/ojfbot/workstation-yuri/pull/11"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "88",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/88"
+        },
+        "at": "2026-11-08T05:19:19.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-08T10:09:40.782Z",
+        "runId": "42470134994",
+        "runNumber": 297,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/42470134994",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "67b57f1a2a8e0d3b49e0d97df5da9f0692a38b6c",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-08T10:08:24.000Z",
+          "startedAt": "2026-11-08T10:08:24.000Z",
+          "expectedAt": "2026-11-08T09:30:00.000Z",
+          "dispatchDelaySeconds": 2304,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "25c08446c32fb01fb983e3a07dc3137dd404aada664345830469d2d33d26e8df"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-05",
     "title": "Wednesday — BookcaseDiscovery Sprint Day 3: Negative Results Ship Too — Seven Cards Closed, Re-baseline Holds",
     "summary": "BookcaseDiscovery merged eight PRs closing geometry, catalog, and identification cards — negative results, re-baselines, and a label ledger — while core opened a stale-docs cleanup.",
