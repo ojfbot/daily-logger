@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-08",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-08",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Initial draft candidate promotion was not admitted: 01c3afafb1acae678bafdf3ae0c23e42c5cdfdc7ad51172ae51c72a1c9ddef40"
+    },
+    "articleDigest": "83a22698dbe365c6189c0329f64f392186edbe742b424f20ed3f7f197b0fd2bb",
+    "roundId": "d0a2f63427f8d9c379eb0174ef911762ea46cb21ede8419cb431ddf1748d8324",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "01c3afafb1acae678bafdf3ae0c23e42c5cdfdc7ad51172ae51c72a1c9ddef40",
+        "payload": {
+          "command": "/pr-status core#584",
+          "description": "Confirm whether core #584 is still being actively drafted or is ready for review — this is the single gate blocking the entire Fleet Runner hardening sequence and all BookcaseDiscovery compute work.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-08"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "dd978ee3b6ffbd4013ee420cabded49edbbbfca910b0ab7a84fdd7f775cf5bde",
+        "payload": {
+          "command": "/merge workstation-yuri#11",
+          "description": "workstation-yuri #11 is independently mergeable today — it applies the Yojimbo rename to helpdesk prose and does not gate on the device-value transition.",
+          "repo": "workstation-yuri",
+          "status": "open",
+          "sourceDate": "2026-11-08"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "9aa6ed878dbec6be3011c03896fbd14166609392c1a39c685f344b75d6a0de11",
+        "payload": {
+          "command": "/triage core#585",
+          "description": "Confirm disposition of core #585 (stale docs/comments cleanup, opened 2026-11-04) — it has been open for four days with no stated status. Merge, park, or close.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-08"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-08",
+      "articleDigest": "83a22698dbe365c6189c0329f64f392186edbe742b424f20ed3f7f197b0fd2bb",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "a1dba809a0da3083b7c782162a7aaeec982860b96b45728e1c786b70deff9083",
+      "candidatePayloadsSha256": "42af2e7753047df3f0d642c57538ca8cfed6b68097af60560cbcca542171b01a",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "512f287565e2f3317a43af3f0037aeb1f3303ff98b5ef057750177c3ecdfbe75",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [
+        "act-2026-05-18-investigate-9a0199"
+      ],
+      "actionStateSha256": "9b07fe19cb435573418b75c7e728174e754dcfd0d9dc0fcb05050f4b7a10a690",
+      "candidates": [
+        {
+          "candidateId": "01c3afafb1acae678bafdf3ae0c23e42c5cdfdc7ad51172ae51c72a1c9ddef40",
+          "payloadSha256": "3c443bfc4ff336539fb50261febf392f12b3c5bf2508de239916f844b97ed764",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#584",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "dd978ee3b6ffbd4013ee420cabded49edbbbfca910b0ab7a84fdd7f775cf5bde",
+          "payloadSha256": "fe6a4cb09bdc693c5329de27c02eb4739f11b984f74adc45619c6b14539c2be0",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "workstation-yuri#11",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "9aa6ed878dbec6be3011c03896fbd14166609392c1a39c685f344b75d6a0de11",
+          "payloadSha256": "cd1be70f2b7923ba6fa5d3c3bfd72a2c267d42728f6272f92f5e9c1b3823df65",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#585",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#583",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#587",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "daily-logger#531",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "morning-cockpit#61",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Critical path gate: core #584 is the furthest-upstream draft in the hardening sequence and the single PR whose merge-readiness most unblocks downstream work. Its current status is draft (still being written). No further hardening sequencing decisions can be made until its scope is confirmed. Owner should confirm #584's readiness estimate before any other hardening triage.\n\nCore #583, #582, #581, #580: verified complete work, open only due to stack dependency on #578's acceptance. These do not require rework. Merge sequencing decision rests with whoever accepts #578.\n\nworkstation-yuri #11: mergeable now. Device-value transition (minifour → yojimbo in helpdesk check-ins) is a separate, live-site action owned by Yuri and is not gated on #11.\n\nSelfco cutover cluster: core #587 → daily-logger #531 and morning-cockpit #61 should be reviewed as a unit. No target date for #587's qualification is stated in available context.\n\nCore #585 (stale docs cleanup, opened 2026-11-04): disposition unknown. Owner should confirm whether this is ready to merge, intentionally parked, or forgotten.\n\nact-2026-05-18-investigate-9a0199: still open. No classification, no named owner, no close date. Requires explicit disposition — open, parked, or closed with rationale.\n\nEvidence gap: no information available on whether any part of the system is accessible at a live URL or demoable in current state. This article covers a documentation-only commit day; system runtime status was not reported and cannot be inferred from available context."
+    },
+    "stateDigest": "9e5f814684ff83a061cd281f6fa16ce59fed65af48a5812eb386f72de46fe6e1",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
