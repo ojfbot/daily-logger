@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261108-5378513202f3",
+  "article": {
+    "date": "2026-11-08",
+    "sourceCommitSha": "5378513202f3b5f47271cb5eeeb800b6ff32aa30",
+    "blobSha": "5d52c6780c5ce62260631c2edb79da27c4103cf4"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-08T12:15:17Z",
+  "scope": "Final visible Draft, exact source/article/action bytes, generation timing, PR chronology, G3 evidence gates, review identity and status, Fleet Runner and BookcaseDiscovery dependency ordering, workstation-yuri code scope and readiness, and current review registry/discovery state. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "b42c6f4710e2ac6d8713d9d2800d1c579b440066",
+  "fullRecordPath": "reviews/articles/2026-11-08-5378513202f3b5f47271cb5eeeb800b6ff32aa30.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Only one of the two core hardening PRs opened Saturday",
+      "location": "The summary on line 6 says core opens two new draft PRs on Saturday.",
+      "explanation": "Core #586 opened on 2026-11-06, while core #588 opened on 2026-11-08. The summary incorrectly counts both as new Saturday work.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5378513202f3b5f47271cb5eeeb800b6ff32aa30/_articles/2026-11-08.md#L3-L8",
+        "https://github.com/ojfbot/core/pull/586",
+        "https://github.com/ojfbot/core/pull/588"
+      ],
+      "correction": "Say Saturday opened #588 on top of the already-open #586, rather than counting both as new Saturday PRs.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The G3 qualification gate has not passed",
+      "location": "Line 31 presents #588 as the G3 qualification path without disclosing its outstanding result.",
+      "explanation": "Core #588 records three actual appliance reboot trials as pending and an independent checker rejecting the evidence as incomplete. Core #578 calls for owner-driven reboot receipts and no live queue cutover.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5378513202f3b5f47271cb5eeeb800b6ff32aa30/_articles/2026-11-08.md#L29-L33",
+        "https://github.com/ojfbot/core/pull/588",
+        "https://github.com/ojfbot/core/issues/578#issuecomment-6718461081"
+      ],
+      "correction": "State that the sandbox procedure exists but G3 remains unpassed until the owner-driven reboot trials and receipts are complete, with no live cutover.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The article overstates independent-review status and identity",
+      "location": "Line 31 says #586 and #588 both carry a named independent-review acceptance gate.",
+      "explanation": "Core #586 has an AI-agent top-level comment submitted through the shared ojfbot account, not a GitHub review submission or distinct human/provider identity. Core #588 has an automated checker but no source-review submission or named-finding disposition record.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5378513202f3b5f47271cb5eeeb800b6ff32aa30/_articles/2026-11-08.md#L29-L33",
+        "https://github.com/ojfbot/core/pull/586#issuecomment-6676895991",
+        "https://github.com/ojfbot/core/pull/588",
+        "https://github.com/ojfbot/core/issues/578#issuecomment-6718461081"
+      ],
+      "correction": "Distinguish the authenticated GitHub account, reported agent/model, automated checker and formal review state; do not claim both PRs carry accepted named independent-review findings.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The roadmap is not one chain blocking all BookcaseDiscovery compute work",
+      "location": "Lines 37 through 41 and the held action on line 64 say #584 blocks the entire hardening sequence and all BookcaseDiscovery compute work.",
+      "explanation": "BookcaseDiscovery #37 is a separate interruption-drill follow-up, not part of the #40 to #53 to #59 stack. Those three PRs have advanced through live two-host work. Core #584 is relevant to the resident-worker chain but does not establish that all compute work is parked or unable to advance.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5378513202f3b5f47271cb5eeeb800b6ff32aa30/_articles/2026-11-08.md#L35-L43",
+        "https://github.com/ojfbot/daily-logger/blob/5378513202f3b5f47271cb5eeeb800b6ff32aa30/_articles/2026-11-08.md#L60-L72",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/37",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/40",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/53",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/59",
+        "https://github.com/ojfbot/core/pull/584"
+      ],
+      "correction": "Report the resident-worker order as core #584 to BookcaseDiscovery #40 to #53 to #59 with existing gates, and #37 as a separate follow-up; do not generalize #584 into a blocker for all compute work.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "workstation-yuri 11 is not a prose-only, review-ready merge",
+      "location": "Lines 25 and 47 call #11 prose-only and line 64 proposes merging it as independently mergeable today.",
+      "explanation": "Workstation-yuri #11 changes 27 files and receiver code to admit yojimbo while temporarily showing both labels. Its live reload and verification are separately tracked, and it has no recorded GitHub review submission. API mergeability is not review or owner approval.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5378513202f3b5f47271cb5eeeb800b6ff32aa30/_articles/2026-11-08.md#L21-L27",
+        "https://github.com/ojfbot/daily-logger/blob/5378513202f3b5f47271cb5eeeb800b6ff32aa30/_articles/2026-11-08.md#L45-L47",
+        "https://github.com/ojfbot/daily-logger/blob/5378513202f3b5f47271cb5eeeb800b6ff32aa30/_articles/2026-11-08.md#L60-L67",
+        "https://github.com/ojfbot/workstation-yuri/pull/11"
+      ],
+      "correction": "Describe #11 as receiver-compatibility code plus prose, retain the separate live reload and verification gate, and do not treat mergeability metadata as review readiness.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
