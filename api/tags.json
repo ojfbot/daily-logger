@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 108
+    "count": 109
   },
   {
     "name": "ci-cd",
@@ -12,7 +12,7 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 78
+    "count": 79
   },
   {
     "name": "assistant-centric",
@@ -27,7 +27,7 @@
   {
     "name": "hardening",
     "type": "practice",
-    "count": 44
+    "count": 45
   },
   {
     "name": "module-federation",
@@ -190,6 +190,11 @@
     "count": 7
   },
   {
+    "name": "BookcaseDiscovery",
+    "type": "repo",
+    "count": 6
+  },
+  {
     "name": "workstation-yuri",
     "type": "repo",
     "count": 6
@@ -200,8 +205,8 @@
     "count": 6
   },
   {
-    "name": "BookcaseDiscovery",
-    "type": "repo",
+    "name": "fleet-runner",
+    "type": "concept",
     "count": 5
   },
   {
@@ -248,11 +253,6 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
-  },
-  {
-    "name": "fleet-runner",
-    "type": "concept",
-    "count": 4
   },
   {
     "name": "seh-study",
@@ -368,6 +368,11 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
+  },
+  {
+    "name": "data-layer-integrity",
+    "type": "concept",
+    "count": 2
   },
   {
     "name": "pre-registered-evals",
@@ -540,12 +545,17 @@
     "count": 2
   },
   {
-    "name": "naming-consistency",
+    "name": "nas-backup",
     "type": "concept",
     "count": 1
   },
   {
-    "name": "data-layer-integrity",
+    "name": "content-addressed-storage",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "naming-consistency",
     "type": "concept",
     "count": 1
   },

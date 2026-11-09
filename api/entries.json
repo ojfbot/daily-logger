@@ -1,5 +1,145 @@
 [
   {
+    "date": "2026-11-09",
+    "title": "Sunday — NAS Backup Drill Lands as Fleet Runner Integration Deepens",
+    "summary": "BookcaseDiscovery's DL-6 content-addressed backup system merged Sunday while six Fleet Runner NAS integration draft PRs opened across core and BookcaseDiscovery.",
+    "tags": [
+      {
+        "name": "BookcaseDiscovery",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "data-layer-integrity",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "nas-backup",
+        "type": "concept"
+      },
+      {
+        "name": "content-addressed-storage",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "BookcaseDiscovery"
+    ],
+    "commitCount": 2,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "SQLite snapshot via VACUUM INTO on a read-only connection",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Content-addressed store with mtime/size skip heuristic",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Append-only target mount: no overwrites, deleted files retained in older snapshots",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet Runner NAS integration splits into independent process observations and owner-controlled claim gates",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "89",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/89"
+        },
+        "at": "2026-11-08T18:26:22.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "532",
+          "url": "https://github.com/ojfbot/daily-logger/pull/532"
+        },
+        "at": "2026-11-08T10:19:30.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-09T09:59:45.126Z",
+        "runId": "42597427567",
+        "runNumber": 299,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/42597427567",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "5378513202f3b5f47271cb5eeeb800b6ff32aa30",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-09T09:58:27.000Z",
+          "startedAt": "2026-11-09T09:58:27.000Z",
+          "expectedAt": "2026-11-09T09:30:00.000Z",
+          "dispatchDelaySeconds": 1707,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "25c08446c32fb01fb983e3a07dc3137dd404aada664345830469d2d33d26e8df"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-08",
     "title": "Saturday — Fleet Rename: Yojimbo Lands in BookcaseDiscovery and workstation-yuri",
     "summary": "Saturday's single commit documents the Mac mini's rename from Minifour to Yojimbo, while core opens two new draft PRs hardening the Fleet Runner NAS service path.",
