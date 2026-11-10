@@ -1,5 +1,154 @@
 [
   {
+    "date": "2026-11-10",
+    "title": "Monday — Fleet Runner NAS Thread Deepens While Backup System Review Opens",
+    "summary": "One commit Monday publishes the November 9 article while twelve open draft PRs across core and BookcaseDiscovery await the Fleet Runner NAS dependency chain to clear.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "BookcaseDiscovery",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "data-layer-integrity",
+        "type": "concept"
+      },
+      {
+        "name": "nas-backup",
+        "type": "concept"
+      },
+      {
+        "name": "dependency-graph",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "BookcaseDiscovery",
+      "morning-cockpit",
+      "daily-logger",
+      "workstation-yuri"
+    ],
+    "commitCount": 1,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Content-addressed storage chosen for the NAS backup target — not a file mirror",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "SQLite VACUUM INTO chosen for consistent ledger snapshots under live writes",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fleet Runner NAS integration decomposed into six separate draft PRs with an explicit merge-order dependency",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Layering test drives module boundary enforcement in the pipeline",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "10:12Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-09T10:12:20.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "534",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/534"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "534",
+          "url": "https://github.com/ojfbot/daily-logger/pull/534"
+        },
+        "at": "2026-11-09T10:12:20.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-10T09:59:27.136Z",
+        "runId": "42795052514",
+        "runNumber": 301,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/42795052514",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "05769c7e38d34b46b10f63dc8564e24cef0fc095",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-10T09:57:37.000Z",
+          "startedAt": "2026-11-10T09:57:37.000Z",
+          "expectedAt": "2026-11-10T09:30:00.000Z",
+          "dispatchDelaySeconds": 1657,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "25c08446c32fb01fb983e3a07dc3137dd404aada664345830469d2d33d26e8df"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-09",
     "title": "Sunday — NAS Backup Drill Lands as Fleet Runner Integration Deepens",
     "summary": "BookcaseDiscovery's DL-6 content-addressed backup system merged Sunday while six Fleet Runner NAS integration draft PRs opened across core and BookcaseDiscovery.",
