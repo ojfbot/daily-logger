@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-10",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-10",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Ambiguous or unsupported exact-command PR target; review pending"
+    },
+    "articleDigest": "e764dac5fbc6bc0aa3d129ed7d95297733d3b1fd82bd55cd653291f070d30559",
+    "roundId": "06f421ca15dddfed18907f19488ee59a1aab5d7da85f2c118b9826927b4d8caa",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "10263f8eea2940e71c9d53828fe7be69260357bdb5b5dcbd561ddd4b972bf5ba",
+        "payload": {
+          "command": "/gh pr view 584 --repo ojfbot/core",
+          "description": "Retrieve the description, status, and assignee for core #584 — the base gate for the entire NAS dependency chain that is uncharacterized in today's evidence.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-10"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "2d7e2c6bbe15da78ec328fce7742e7de672fed56338fc01408188181b81e4085",
+        "payload": {
+          "command": "/gh pr view 586 --repo ojfbot/core",
+          "description": "Determine the current blocking condition on core #586 (G0–G2 qualification) — specifically whether it is waiting on review, a CI pass, or an unresolved design decision — so the NAS track ETA can be assessed.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-10"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "e5e43fd023d92b067feaa40dd006ddb6425e450749486c8738070969cf70d436",
+        "payload": {
+          "command": "/gh pr view 40 --repo ojfbot/BookcaseDiscovery",
+          "description": "Confirm whether BookcaseDiscovery #40 (the unstated base dependency for #53, the Qwen job handler) is merged, open, or stale before any review time is allocated to #53.",
+          "repo": "BookcaseDiscovery",
+          "status": "open",
+          "sourceDate": "2026-11-10"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Core #584 is the single most important unknown in this window. It is referenced three times as the base gate for the entire NAS integration track and has no entry, description, or status in the collected evidence. The independent action review must determine: what does #584 do, what is its current state (draft/open/merged), and what is blocking it. If it is already merged, the article should be corrected and core #586 becomes the active gate. If it is open or draft, the blocking condition for #586 is itself blocked — the critical path has two unknown-ETA gates in sequence.\n\nCore #586's blocking condition (review, CI, or a pending design decision) is similarly absent from the evidence. \"Gates everything downstream\" describes a consequence, not a status.\n\nCore #590 (NAS tenant identity ADR) is a regular open PR with no stated merge blockers and no stated reviewer. Its disposition should be named before the implementation PRs that depend on the identity model advance further.\n\nBookcaseDiscovery #53 is stacked on #40, which does not appear anywhere in the PR list. #40's status (merged, open, stale) is unknown.\n\nThe editorial review queue has five open draft PRs (daily-logger #526, #529, #530, #533, #535), the oldest from November 3. These represent accuracy-closure obligations on published articles. No batch-close cadence or dedicated slot is stated in evidence.\n\nThe telemetry cutover thread (core #587 → morning-cockpit #61 → daily-logger #531) is parallelizable with the NAS track. Core #587's blocking condition is not in evidence. If it is unblocked, this thread represents real capacity that could advance while the NAS gate is closed.\n\nThe decisions documented in the decisions section (content-addressed storage, VACUUM INTO, six-PR decomposition, layering enforcement) were made in prior windows — the DL-6 and DL-4b work predates Monday's interval. Monday's single commit was an automated publication. The decisions section is accurate context, not Monday's decisions.\n\nThe layering enforcement pattern (KNOWN array reduced to zero in BookcaseDiscovery test/layering.test.ts) is a candidate for documentation in the architecture notes given its reusability across other pipeline repos. No follow-up engineering work is suggested by the evidence, but the pattern is not currently documented beyond the PR itself."
+    },
+    "stateDigest": "b2a0b314eb0a8f253b7e2dc44f18aba768003a71dea547d9796edd948d2d3f40",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 109
+    "count": 110
   },
   {
     "name": "ci-cd",
@@ -12,7 +12,7 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 79
+    "count": 80
   },
   {
     "name": "assistant-centric",
@@ -42,7 +42,7 @@
   {
     "name": "rest-day",
     "type": "activity",
-    "count": 34
+    "count": 35
   },
   {
     "name": "tooling-for-iteration",
@@ -160,6 +160,11 @@
     "count": 8
   },
   {
+    "name": "BookcaseDiscovery",
+    "type": "repo",
+    "count": 7
+  },
+  {
     "name": "lego-village-pipeline",
     "type": "repo",
     "count": 7
@@ -190,8 +195,8 @@
     "count": 7
   },
   {
-    "name": "BookcaseDiscovery",
-    "type": "repo",
+    "name": "fleet-runner",
+    "type": "concept",
     "count": 6
   },
   {
@@ -203,11 +208,6 @@
     "name": "ojfbot",
     "type": "concept",
     "count": 6
-  },
-  {
-    "name": "fleet-runner",
-    "type": "concept",
-    "count": 5
   },
   {
     "name": "skill-telemetry",
@@ -310,6 +310,11 @@
     "count": 4
   },
   {
+    "name": "data-layer-integrity",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "fleet-onboard",
     "type": "concept",
     "count": 3
@@ -370,7 +375,7 @@
     "count": 3
   },
   {
-    "name": "data-layer-integrity",
+    "name": "nas-backup",
     "type": "concept",
     "count": 2
   },
@@ -545,7 +550,7 @@
     "count": 2
   },
   {
-    "name": "nas-backup",
+    "name": "dependency-graph",
     "type": "concept",
     "count": 1
   },
