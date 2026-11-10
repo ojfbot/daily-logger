@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261110-8c665468b652",
+  "article": {
+    "date": "2026-11-10",
+    "sourceCommitSha": "8c665468b652ecbc90f4b706510dd800a539a130",
+    "blobSha": "447b5b60105d476e33a77cae69d31424dc953e23"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-10T11:37:13Z",
+  "scope": "Final visible Draft, exact source/article/action/deployed-JSON bytes, generation and publication timing, DL-6 backup coverage and retention limits, open-PR inventory, Fleet Runner Git ancestry and qualification state, proposed ADR review ownership, review-data versus editorial authority, held action custody, and current review registry/discovery state. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "7ba6a5b1104157024010fd5f34c08fd69cb3c0fa",
+  "fullRecordPath": "reviews/articles/2026-11-10-8c665468b652ecbc90f4b706510dd800a539a130.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The backup does not store every file",
+      "location": "Line 25 says each file is stored by its hash.",
+      "explanation": "The pinned backup contract excludes the credentials file, restore-drill scratch roots, and specified SQLite WAL, SHM, and journal files.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L23-L25",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/c4659cb037633cdf501076d0a29361f277524aa4/docs/backup.md#L24-L33",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/89"
+      ],
+      "correction": "Say regular data-root content is stored by hash subject to the documented credential, scratch-root, and SQLite side-file exclusions.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Pruning and the quick-check blind spot defeat the absolute recovery guarantee",
+      "location": "Line 25 calls every run append-only by default and says a bad run can never overwrite a good backup.",
+      "explanation": "Default keep-four retention prunes older snapshots and unreferenced bodies, while a same-size, same-mtime source change is not reread and can go unseen.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L23-L25",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/89",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/c4659cb037633cdf501076d0a29361f277524aa4/docs/backup.md#L133-L142"
+      ],
+      "correction": "Say kept manifests and object bodies are not overwritten, while retention deletes aged snapshots and unreferenced bodies and the size/mtime quick check has a documented blind spot. Do not promise that bad runs can never age out the last good snapshot.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The open-PR inventory is fifteen Draft and nine non-Draft PRs",
+      "location": "The summary and lines 11 and 49 report twelve open Draft PRs and one open regular PR across core and BookcaseDiscovery.",
+      "explanation": "At review time GitHub listed eight Draft and eight non-Draft PRs in core plus seven Draft and one non-Draft PR in BookcaseDiscovery; every counted PR predated the article source revision.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L3-L11",
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L47-L49",
+        "https://github.com/ojfbot/core/pulls",
+        "https://github.com/ojfbot/BookcaseDiscovery/pulls"
+      ],
+      "correction": "Report fifteen Draft and nine non-Draft open PRs, or name a narrower filter and count only PRs that satisfy it.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The NAS work is not one six-hop strict merge chain",
+      "location": "Lines 37 and 57–66 call #584 the base, put #589 directly on #586, call #591 independent of input delivery, and put #90 behind #584 and #586.",
+      "explanation": "Core #584 is stacked on #579 through #583, #589 is based on #588, and #591 is based on #589. BookcaseDiscovery #90 is based on #53 and vendors a pinned core client, while #91 and #92 form a separate application stack.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L35-L37",
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L55-L66",
+        "https://github.com/ojfbot/core/pull/584",
+        "https://github.com/ojfbot/core/pull/589",
+        "https://github.com/ojfbot/core/pull/591",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/90",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/91",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/92"
+      ],
+      "correction": "Show the full core stack, the separate BookcaseDiscovery stack, and the pinned vendoring and qualification relationship between them instead of one six-hop merge order.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Downstream implementation and qualification already proceeded",
+      "location": "Lines 53 and 59–64 say #584 and #586 must land before any downstream NAS work can proceed and that they gate everything downstream.",
+      "explanation": "Core #588, #589, and #591 record completed G3, automatic-input, and observer/control qualification. BookcaseDiscovery #90, #91, and #92 record real two-Mac input, policy/resource, presence, and control proofs on exact stacked or vendored revisions.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L51-L64",
+        "https://github.com/ojfbot/core/pull/588",
+        "https://github.com/ojfbot/core/pull/589",
+        "https://github.com/ojfbot/core/pull/591",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/90",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/91",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/92"
+      ],
+      "correction": "Distinguish merge ancestry from work progress: the stack is unmerged, but downstream implementation and bounded qualification have already proceeded.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Core #590 names its reviewer and acceptance gate",
+      "location": "Line 80 and retained context line 104 say the Proposed ADR has no stated reviewer or disposition.",
+      "explanation": "Core #590 explicitly leaves Owner review unchecked, says numbering and glossary adoption follow acceptance, and lists six open questions. The implementation PRs reviewed here do not declare accepted #590 as their merge prerequisite.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L78-L80",
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L102-L105",
+        "https://github.com/ojfbot/core/pull/590"
+      ],
+      "correction": "Report owner review and the six open questions as the ADR's documented gate; do not say the reviewer is unstated or invent ADR acceptance as a prerequisite for unrelated stacked PRs.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Review-data PRs are advisory records, not the article-correction path",
+      "location": "Line 84 says the five Draft review PRs are accuracy-closure obligations and that the correction path runs through them.",
+      "explanation": "The pinned method and discovery service keep independent review data and correspondence separate from article revision, acceptance, readiness, and merge. The prior day's exact-source review PR states the same boundary.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L82-L84",
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/docs/article-review.md",
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/api/_lib/article-review-service.ts",
+        "https://github.com/ojfbot/daily-logger/pull/535"
+      ],
+      "correction": "Describe them as Draft review-data proposals with open findings awaiting supervised editorial disposition, and route article correction through the separate editorial revision flow.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "The three held lookups ask for states already present in primary sources",
+      "location": "Lines 53, 59–60, 91, and 101–105 call #584, #586, and BookcaseDiscovery #40 uncharacterized and propose status lookups.",
+      "explanation": "Core #584 is an open Draft based on #583's head; #586 is an open Draft with recorded G0–G2 receipts, later stacked work, and an explicit no-merge-request limit; BookcaseDiscovery #40 is an open Draft with recorded live two-host acceptance.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L51-L60",
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L88-L91",
+        "https://github.com/ojfbot/daily-logger/blob/8c665468b652ecbc90f4b706510dd800a539a130/_articles/2026-11-10.md#L97-L105",
+        "https://github.com/ojfbot/core/pull/584",
+        "https://github.com/ojfbot/core/pull/586",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/40"
+      ],
+      "correction": "Preserve the candidate IDs but mark the lookup premises invalid or superseded in supervised action review; if follow-up remains useful, ask for the owner's actual disposition of the full stacks.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
