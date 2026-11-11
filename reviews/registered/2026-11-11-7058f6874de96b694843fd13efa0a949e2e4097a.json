@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261111-7058f6874de9",
+  "article": {
+    "date": "2026-11-11",
+    "sourceCommitSha": "7058f6874de96b694843fd13efa0a949e2e4097a",
+    "blobSha": "438ef3336d0285aa7614c3b448ad761277ee3951"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": "01a1ca66-55d9-7f42-b254-1b5f346a8da7"
+  },
+  "reviewedAt": "2026-11-11T12:57:24Z",
+  "scope": "Final visible Draft; exact source, article, action-state, and deployed-JSON bytes; generation and publication timing; FleetRunner merged-PR count, restored-generation fencing, recovery and interruption qualification, roadmap gates, image runtime-user semantics; BookcaseDiscovery PR status, NS-K2 critical-path scope, clip metadata preservation; held action custody; and current review registry/discovery state. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "24ebdd1a2583a114e935ebfef375ff490bc9042a",
+  "fullRecordPath": "reviews/articles/2026-11-11-7058f6874de96b694843fd13efa0a949e2e4097a.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Seven core and BookcaseDiscovery PRs merged, not six",
+      "location": "The title, summary, and line 11 say six PRs merged across core and BookcaseDiscovery.",
+      "explanation": "The article names two merged core PRs (#591, #592) and five merged BookcaseDiscovery PRs (#92, #30, #93, #94, #96), all within the reporting window.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/7058f6874de96b694843fd13efa0a949e2e4097a/_articles/2026-11-11.md#L3-L11",
+        "https://github.com/ojfbot/core/pull/591",
+        "https://github.com/ojfbot/core/pull/592",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/92",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/30",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/93",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/94",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/96"
+      ],
+      "correction": "Say seven PRs merged across core and BookcaseDiscovery; if generated daily-logger #536 is included, distinguish it as an eighth listed editorial merge.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Missing restored-generation configuration fails closed with HTTP 401",
+      "location": "Lines 39 and 67 and held action context say an unset FLEET_GENERATION silently disables the fence and produces no safety signal.",
+      "explanation": "Unset adapter configuration signs legacy request targets without a generation. The pinned restored service requires exactly one matching generation and rejects the request with HTTP 401, which the client surfaces as FleetHttpError.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/7058f6874de96b694843fd13efa0a949e2e4097a/_articles/2026-11-11.md#L37-L39",
+        "https://github.com/ojfbot/daily-logger/blob/7058f6874de96b694843fd13efa0a949e2e4097a/_articles/2026-11-11.md#L65-L67",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/af2c6871b3a61f5fe2606bf66838e0732435afed/app-generation.md",
+        "https://github.com/ojfbot/core/blob/dad1d204bb2e01c691aa69de3ce3f0b218f7de21/packages/fleet-runner/src/server.ts#L131-L141",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/af2c6871b3a61f5fe2606bf66838e0732435afed/src/run/vendor/fleet-runner/client.ts"
+      ],
+      "correction": "Say omission is compatible only with a legacy-generation service; a restored service rejects it visibly. Describe the remaining operational configuration gap, and target BookcaseDiscovery #93 rather than nonexistent core #93.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "G6 is not downstream of G7 and its bounded work already ran",
+      "location": "Line 99 and retained context say G6, #593, and BookcaseDiscovery #95 cannot run until #594 merges and call restore capability suspended.",
+      "explanation": "Core #593 already records an 80-row interruption campaign and isolation proof; BookcaseDiscovery #95 has an exact-head source review and seven tests. #578 tracks G6 physical trials and G7 restores as separate gates. #594 already produced a held restored database while full G7 remains unqualified on transport and trial completeness.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/7058f6874de96b694843fd13efa0a949e2e4097a/_articles/2026-11-11.md#L97-L99",
+        "https://github.com/ojfbot/core/pull/593",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/95",
+        "https://github.com/ojfbot/core/pull/594",
+        "https://github.com/ojfbot/core/issues/578#issuecomment-6780710959"
+      ],
+      "correction": "Keep G6 and G7 separate. Preserve completed G6 source/campaign evidence and open physical trials; report #594's held restore plus the still-incomplete G7 transport and restore qualification; place G8 after the qualified prerequisites.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "Five BookcaseDiscovery PRs reported as open were merged",
+      "location": "Line 105 and retained lines 128-129 say #85 still needs exit review and group #85-#89 with open #59 as undispositioned open work.",
+      "explanation": "PR #85 records its conductor exit check and merged November 6; #86 and #87 also merged November 6; #88 and #89 merged November 8. Only #59 in the named set remained open.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/7058f6874de96b694843fd13efa0a949e2e4097a/_articles/2026-11-11.md#L103-L105",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/85",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/86",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/87",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/88",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/89",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/59"
+      ],
+      "correction": "Report #85-#89 as merged historical work with recorded outcomes and keep only #59 as open with its documented bounded daytime-test scope.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "NS-K2 explicitly maps thirty CLIs off the critical path",
+      "location": "Lines 53, 73, and 103 and the held decision action call the list approximately 25 and say its relationship to the next F-0 run was not mapped.",
+      "explanation": "PR #96 defines thirteen generalized stages as the critical path to TS-2, documents their stage order, and labels the untouched list off-path. Expanding KN-1 to KN-3 and C-5 to C-10, the article's list contains thirty CLIs.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/7058f6874de96b694843fd13efa0a949e2e4097a/_articles/2026-11-11.md#L51-L53",
+        "https://github.com/ojfbot/daily-logger/blob/7058f6874de96b694843fd13efa0a949e2e4097a/_articles/2026-11-11.md#L71-L73",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/96"
+      ],
+      "correction": "Say thirteen stages were generalized for the declared path and thirty named CLIs remain explicitly off-path. Do not claim the mapping is missing or preserve the held decision action on that premise.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "The cited roadmap records document their open gates",
+      "location": "Line 99 and retained line 124 say what #578, #309, and #307 await is not documented.",
+      "explanation": "The latest #578 checkpoint names exact heads awaiting approval, unavailable management SSH, open physical trials, an unexecuted under-load backup, and unstarted G8. #309 says it is blocked by #311 and defines the host/reach decision. #307 says runtime implementation is not cleared while decisions remain active.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/7058f6874de96b694843fd13efa0a949e2e4097a/_articles/2026-11-11.md#L97-L99",
+        "https://github.com/ojfbot/core/issues/578#issuecomment-6780710959",
+        "https://github.com/ojfbot/core/issues/309",
+        "https://github.com/ojfbot/core/issues/307"
+      ],
+      "correction": "Summarize the documented gates and owners instead of treating a collector synopsis gap as absence from the primary issue records.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The clip helper preserves metadata beyond the verified privacy checks",
+      "location": "The line 77 heading says no metadata leakage while line 79 says timed-metadata tracks are copied.",
+      "explanation": "The helper copies every non-audio track, asset metadata, per-track metadata, language codes, and metadata-track associations. PR #94 reports retained mebx tracks and separately verifies no location tag; that is not a blanket no-metadata-leakage result.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/7058f6874de96b694843fd13efa0a949e2e4097a/_articles/2026-11-11.md#L77-L79",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/a6f1763ff4e6c7cea02ccb9a77e39635e867d3dc/helpers/video/strip-audio.swift#L72-L114",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/94"
+      ],
+      "correction": "Say the pipeline removes audio and verifies no location tag while deliberately preserving other asset, track, and timed metadata; do not claim blanket no metadata leakage.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "The nonroot image default is overridable by Compose",
+      "location": "Lines 89-91 say a misconfigured Compose file cannot grant root and call the constraint unbypassable by operator configuration.",
+      "explanation": "The Dockerfile sets USER node, establishing the image default. Docker Compose's service-level user field overrides the image user declared by Dockerfile USER.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/7058f6874de96b694843fd13efa0a949e2e4097a/_articles/2026-11-11.md#L89-L91",
+        "https://github.com/ojfbot/core/blob/78c71e9a7f085c092425fdbe99193a06c06e9e3f/packages/fleet-runner/Dockerfile#L33-L47",
+        "https://docs.docker.com/reference/compose-file/services/#user"
+      ],
+      "correction": "Say the image defaults to nonroot and the qualified profile ran nonroot. Treat it as a verified deployment/profile invariant, not an unbypassable property; runtime configuration can override it.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
