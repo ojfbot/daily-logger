@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-11",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-11",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Unsupported qualified candidate reference BD#95 for cf29c365cff21883712f2bd4cc834ec50efe2c38170fa2d1cce7d02e8e9fed39; review pending"
+    },
+    "articleDigest": "e099fc623bdd6d218dcb5044b46111f3aef88b8faa0a6fed18339f8c1b6e7d31",
+    "roundId": "d13fbb74dcf118ca09f2c6b6152d64db3f6be772feac8e94751199a3837c8f9b",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "cf29c365cff21883712f2bd4cc834ec50efe2c38170fa2d1cce7d02e8e9fed39",
+        "payload": {
+          "command": "/review core#594",
+          "description": "Confirm active-work status on the file-mode defect (`copyFileSync` preserves `0400`, blocks G7 restore trial). If not in active work, assign and prioritize — G6, G7, G8 and the interruption qualification thread (#593, BD#95) are all blocked on this merge.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-11"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "9489cde3106a46ed330fc9911e6f53b240d029437b4a19e318b81e46c3d8f840",
+        "payload": {
+          "command": "/decision BD#96 off-path-CLIs",
+          "description": "Document the owner decision on whether any of the ~25 CLIs left hard-coded by NS-K2 sit on the critical path to F-0 on `sf-store-001`. If the answer is no, state it and proceed to the GPU run. If yes, scope and prioritize the generalization work before scheduling the slot.",
+          "repo": "BookcaseDiscovery",
+          "status": "open",
+          "sourceDate": "2026-11-11"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "497042b8e98f6b578d2454903600565d1d8a60e7406ea6acd1bdbf4e8d0ab689",
+        "payload": {
+          "command": "/operator-doc core#93 FLEET_GENERATION",
+          "description": "Add operator guidance for the post-restore `FLEET_GENERATION` case: if the variable is unset after a restore, the generation fence does not engage and no warning is issued. This is an undocumented failure mode in the current runbook.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-11"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Most urgent: core #594 (file-mode defect, `copyFileSync` preserves `0400`, blocks G7 restore trial and all downstream qualification). No manual workaround is documented; restore capability is suspended. This opened 2026-11-10 and its current work status is not confirmed in this window's output — owner should verify whether it is in active work or sitting.\n\nCore #593 (interruption qualification, physical trial procedure) and BookcaseDiscovery #95 (bounded HTTPS interruption adapter) are G6 prerequisites; both are blocked on #594.\n\nCore #578 checklist complete; downstream gates #309 and #307 are open. What those gates are waiting on is not documented — owner gate.\n\nBookcaseDiscovery #93 pins vendored core to `dad1d204bb2e01c691aa69de3ce3f0b218f7de21`; any further core fleet-runner changes require a vendor update in BookcaseDiscovery.\n\nFLEET_GENERATION unset post-restore is an undocumented operator failure mode — the generation fence silently does not engage. No warning is issued. This is a documentation gap, not a code defect.\n\nNS-K2 left ~25 CLIs hard-coded (F-0b, F-0d, F-0g2, F-0j, F-0k, F-0m, Q-1, Q-2, Q-3, S-1, S-2, SC-1, U-4, H-1, KN-1 to KN-3, MM-1, MM-2, C-5 to C-10, NS-10, NS-11, TS-1, section-prior, rb1-cli.ts). Whether any are on the critical path to F-0 on sf-store-001 is an owner question not resolved by NS-K2's scope.\n\nBookcaseDiscovery #85 needs conductor exit check (keep rule passed: K1 52.8%, K2 10.05 deg; PROXY only, does not carry to yardstick).\n\nBookcaseDiscovery #87, #86, #89, #88, #59: no in-window activity, no dispositions documented. Each needs active/parked/closeable status from owner.\n\nCore #590 (draft NAS tenant identity ADR): no activity since #591 merged to main. If identity model is decided, ADR should close. If still open, should be stated explicitly.\n\nDaily-logger review backlog: #537, #535, #533, #530, #529, #526, #524, #515 — oldest is October 31 (11 days). No disposition documented. Owner should confirm whether lag is intentional or process gap.\n\nTelemetry cutover thread (core #587, morning-cockpit #61, daily-logger #531): DRAFT, no blocking dependency resolved this window.\n\nRestore runbook accuracy: the file-mode defect in #594 postdates the runbook inventory correction cleared in #592. Runbook accuracy relative to the confirmed defect is not verified."
+    },
+    "stateDigest": "bb45b9c0fbb7bffa3160d62096e6fc973df44aee199f4e2f49eb818e7ca9efa6",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
