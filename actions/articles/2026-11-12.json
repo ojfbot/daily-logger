@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-12",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-12",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "[\n  {\n    \"origin\": \"string\",\n    \"code\": \"invalid_format\",\n    \"format\": \"regex\",\n    \"pattern\": \"/^[a-z0-9-]+#\\\\d+$/\",\n    \"path\": [\n      \"candidates\",\n      2,\n      \"references\",\n      0,\n      \"reference\"\n    ],\n    \"message\": \"Invalid string: must match pattern /^[a-z0-9-]+#\\\\d+$/\"\n  },\n  {\n    \"origin\": \"string\",\n    \"code\": \"invalid_format\",\n    \"format\": \"regex\",\n    \"pattern\": \"/^[a-z0-9-]+#\\\\d+$/\",\n    \"path\": [\n      \"candidates\",\n      2,\n      \"references\",\n      1,\n      \"reference\"\n    ],\n    \"message\": \"Invalid string: must match pattern /^[a-z0-9-]+#\\\\d+$/\"\n  }\n]"
+    },
+    "articleDigest": "5cb5708f6fa53250431f40faa4ce063a36b223956022e96ab0470f4e56384483",
+    "roundId": "7dd7eb656c1da525e0c79cefd3350efcefe4eeda6d3ca8c9c27ba2a232c06649",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "27da1d630a8b896e350b941a2221f3bdc154237313bff9876944fb886a2e7f27",
+        "payload": {
+          "command": "/resolve-gate core#590 --question 'does NAS tenant identity ADR need to merge before G7 restore trials begin, or can trials proceed under current model?'",
+          "description": "The G7 start is blocked on an unresolved sequencing question: running three empty-volume restore trials against an unsettled tenant identity model risks re-runs if the ADR lands with breaking changes. An explicit ruling — merge #590 first, or document that G7 is identity-model-agnostic — should be committed before trials start.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-12"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "131cd50f5fd0cde7cd2339a05dec9913396cd3b1133cb687dc77ada06e513e6e",
+        "payload": {
+          "command": "/triage-backlog daily-logger --prs 515,524,526,529,530,531,533,535,537,539 --action 'close|park-until-G8|schedule-cadence'",
+          "description": "Nine draft review PRs spanning 2026-10-31 to 2026-11-11 have no stated disposition. #515 is 12 days old. If these are audit artifacts that live in draft permanently, say so and close them. If they're on a cadence, commit the cadence. The current state — accumulating open drafts with no policy — is an observability gap in the logging system itself.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-12"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "c0e886923fa8ad24ec67b8e1fb94f8976c0487d101ff479e6d6bb5b09f616d96",
+        "payload": {
+          "command": "/disposition BookcaseDiscovery#37 BookcaseDiscovery#59 --action 'close|park-until-G7-clears|schedule-merge'",
+          "description": "BookcaseDiscovery #37 (historical HTTP branch) and #59 (Yuri daytime test) have no in-window activity and no explicit next action. Both feel closeable or explicitly parkable given the interruption adapter (#95) has landed, but the article cannot commit to that without an owner ruling. Explicit disposition prevents them from becoming stale liabilities.",
+          "repo": "BookcaseDiscovery",
+          "status": "open",
+          "sourceDate": "2026-11-12"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "G7 start is blocked on an unresolved owner question: whether core #590 (NAS tenant identity ADR, Proposed, no merge event) must merge before three empty-volume restore trials run. If trials proceed against an unsettled identity model, re-runs are likely. No projected start date for G7 is available. G8 (cutover, 48-hour soak) follows G7 under core #578/#309/#307.\n\nBookcaseDiscovery TS-0 and TS-2 can proceed in parallel with Fleet Runner G7; NS-K2 generalization (#96, merged last window) enables --set sf-store-001 without code changes. sf-store-002 held-out status depends on next dataset build.\n\nselfco cutover thread (core #587, daily-logger #531, morning-cockpit #61) age and blocker unknown from available evidence; no in-window merge activity.\n\nArticle review backlog: nine draft PRs in daily-logger spanning 2026-10-31 to 2026-11-11, no stated cadence or close policy. #515 is 12 days old. Disposition (cadence, explicit park, or close) is an open owner question.\n\nworkstation-yuri #11 (Yojimbo Help Desk prose rename) is unblocked and has no dependency on any open gate.\n\nBookcaseDiscovery #37 (historical HTTP branch) and #59 (Yuri daytime test) have no in-window activity; explicit park or close decision needed.\n\nThe authoritative G-gate sequence spec is referenced under core #578; the pre-registration for F-0 sampling lives at evals/F0-frames/prereg.md. No single runnable command to confirm live deployment state is documented in the available evidence for this window."
+    },
+    "stateDigest": "9cc9c401a058bc3ce214a0cec6a8a785b80d223392c1096dab164e8b5d625d06",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

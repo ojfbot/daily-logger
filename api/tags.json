@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 111
+    "count": 112
   },
   {
     "name": "ci-cd",
@@ -12,7 +12,7 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 81
+    "count": 82
   },
   {
     "name": "assistant-centric",
@@ -45,6 +45,11 @@
     "count": 35
   },
   {
+    "name": "sprint",
+    "type": "concept",
+    "count": 31
+  },
+  {
     "name": "tooling-for-iteration",
     "type": "concept",
     "count": 31
@@ -53,11 +58,6 @@
     "name": "adr",
     "type": "practice",
     "count": 31
-  },
-  {
-    "name": "sprint",
-    "type": "concept",
-    "count": 30
   },
   {
     "name": "cv-builder",
@@ -135,6 +135,11 @@
     "count": 10
   },
   {
+    "name": "BookcaseDiscovery",
+    "type": "repo",
+    "count": 9
+  },
+  {
     "name": "provenance",
     "type": "concept",
     "count": 9
@@ -150,8 +155,8 @@
     "count": 9
   },
   {
-    "name": "BookcaseDiscovery",
-    "type": "repo",
+    "name": "fleet-runner",
+    "type": "concept",
     "count": 8
   },
   {
@@ -165,8 +170,8 @@
     "count": 8
   },
   {
-    "name": "fleet-runner",
-    "type": "concept",
+    "name": "workstation-yuri",
+    "type": "repo",
     "count": 7
   },
   {
@@ -200,14 +205,14 @@
     "count": 7
   },
   {
-    "name": "workstation-yuri",
-    "type": "repo",
-    "count": 6
-  },
-  {
     "name": "ojfbot",
     "type": "concept",
     "count": 6
+  },
+  {
+    "name": "data-layer-integrity",
+    "type": "concept",
+    "count": 5
   },
   {
     "name": "skill-telemetry",
@@ -253,11 +258,6 @@
     "name": "container-presenter",
     "type": "arch",
     "count": 5
-  },
-  {
-    "name": "data-layer-integrity",
-    "type": "concept",
-    "count": 4
   },
   {
     "name": "seh-study",
@@ -548,6 +548,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "physical-trial-verification",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "session-generalization",

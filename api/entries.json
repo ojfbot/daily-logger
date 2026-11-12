@@ -1,5 +1,285 @@
 [
   {
+    "date": "2026-11-12",
+    "title": "Wednesday — Fleet Runner Physical Trial Verification Closes; F-0 Machine Agreement Lands on sf-store-001",
+    "summary": "Wednesday merged seven PRs across four repos, completing Fleet Runner's six-trial physical verification loop and landing pre-registered F-0 machine-agreement results on 205 frames of sf-store-001.",
+    "tags": [
+      {
+        "name": "BookcaseDiscovery",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "workstation-yuri",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "physical-trial-verification",
+        "type": "concept"
+      },
+      {
+        "name": "data-layer-integrity",
+        "type": "concept"
+      },
+      {
+        "name": "sprint",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "BookcaseDiscovery",
+      "workstation-yuri"
+    ],
+    "commitCount": 6,
+    "activityType": "build",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Pre-registration locks F-0 sampling density before execution: scope reduction ruling committed to prereg.md as an amendment",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Off-by-one in trial-count boundary: verification and admission gates must use separate named constants",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Backup restore must chmod the destination before opening: copyFileSync inherits source permissions",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Lua CI built from pinned upstream source rather than OS package host; loadfile used instead of dofile for parse-without-execute semantics",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "10:31Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-11T10:31:50.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "538",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/538"
+        }
+      },
+      {
+        "text": "14:49Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-11T14:49:33.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/core",
+          "ref": "593",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/core/pull/593"
+        }
+      },
+      {
+        "text": "14:50Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-11T14:50:04.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "95",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/95"
+        }
+      },
+      {
+        "text": "14:51Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-11T14:51:12.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/core",
+          "ref": "594",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/core/pull/594"
+        }
+      },
+      {
+        "text": "16:04Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-11T16:04:15.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "97",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/97"
+        }
+      },
+      {
+        "text": "01:47Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-12T01:47:16.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "98",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/98"
+        }
+      },
+      {
+        "text": "02:13Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-12T02:13:02.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/workstation-yuri",
+          "ref": "12",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/workstation-yuri/pull/12"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "538",
+          "url": "https://github.com/ojfbot/daily-logger/pull/538"
+        },
+        "at": "2026-11-11T10:31:50.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "593",
+          "url": "https://github.com/ojfbot/core/pull/593"
+        },
+        "at": "2026-11-11T14:49:33.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "95",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/95"
+        },
+        "at": "2026-11-11T14:50:04.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "594",
+          "url": "https://github.com/ojfbot/core/pull/594"
+        },
+        "at": "2026-11-11T14:51:12.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "97",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/97"
+        },
+        "at": "2026-11-11T16:04:15.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "98",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/98"
+        },
+        "at": "2026-11-12T01:47:16.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/workstation-yuri",
+          "ref": "12",
+          "url": "https://github.com/ojfbot/workstation-yuri/pull/12"
+        },
+        "at": "2026-11-12T02:13:02.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-12T09:58:40.700Z",
+        "runId": "43195953913",
+        "runNumber": 305,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/43195953913",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "7058f6874de96b694843fd13efa0a949e2e4097a",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-12T09:56:53.000Z",
+          "startedAt": "2026-11-12T09:56:53.000Z",
+          "expectedAt": "2026-11-12T09:30:00.000Z",
+          "dispatchDelaySeconds": 1613,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "25c08446c32fb01fb983e3a07dc3137dd404aada664345830469d2d33d26e8df"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-11",
     "title": "Tuesday — Fleet Runner NAS Integration Closes: Six PRs Merge, Video Pipeline Opens",
     "summary": "Tuesday's window cleared the Fleet Runner NAS dependency chain — six PRs merged across core and BookcaseDiscovery while the video clip ingest pipeline opened a new training-data path.",
