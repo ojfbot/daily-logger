@@ -2,7 +2,7 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 112
+    "count": 113
   },
   {
     "name": "ci-cd",
@@ -12,12 +12,12 @@
   {
     "name": "core",
     "type": "repo",
-    "count": 82
+    "count": 83
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 73
+    "count": 74
   },
   {
     "name": "model-behavior-as-design",
@@ -27,7 +27,7 @@
   {
     "name": "hardening",
     "type": "practice",
-    "count": 45
+    "count": 46
   },
   {
     "name": "module-federation",
@@ -135,6 +135,11 @@
     "count": 10
   },
   {
+    "name": "fleet-runner",
+    "type": "concept",
+    "count": 9
+  },
+  {
     "name": "BookcaseDiscovery",
     "type": "repo",
     "count": 9
@@ -153,11 +158,6 @@
     "name": "MrPlug",
     "type": "repo",
     "count": 9
-  },
-  {
-    "name": "fleet-runner",
-    "type": "concept",
-    "count": 8
   },
   {
     "name": "security-scanning",
@@ -205,6 +205,11 @@
     "count": 7
   },
   {
+    "name": "build",
+    "type": "concept",
+    "count": 6
+  },
+  {
     "name": "ojfbot",
     "type": "concept",
     "count": 6
@@ -237,11 +242,6 @@
   {
     "name": "f1-pit-wall",
     "type": "repo",
-    "count": 5
-  },
-  {
-    "name": "build",
-    "type": "concept",
     "count": 5
   },
   {
@@ -548,6 +548,16 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "service-boundary",
+    "type": "concept",
+    "count": 1
+  },
+  {
+    "name": "env-convention",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "physical-trial-verification",
