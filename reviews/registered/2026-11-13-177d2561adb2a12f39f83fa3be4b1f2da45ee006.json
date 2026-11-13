@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261113-177d2561adb2",
+  "article": {
+    "date": "2026-11-13",
+    "sourceCommitSha": "177d2561adb2a12f39f83fa3be4b1f2da45ee006",
+    "blobSha": "5aaf9cfbd739c2d6f8aea00e1cd464068243207b"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-13T11:34:56Z",
+  "scope": "Final visible Draft, exact source/article/action/deployed bytes, core package-env and NAS planning PRs, full Fleet Runner gate discussion, complete daily-logger review-PR inventory, workstation-yuri #12 lifecycle, current review schema/discovery and held-candidate custody. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "e189e7d35ea2ac4cfa7746a441b39e22485ea736",
+  "fullRecordPath": "reviews/articles/2026-11-13-177d2561adb2a12f39f83fa3be4b1f2da45ee006.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The package-env contract is not a sole-source env-file rule",
+      "location": "Line 31 says the package .env file is the sole configuration source and deviations are violations; line 69 calls the convention established.",
+      "explanation": "PR #598 allows real environment variables to override the file, keeps *_FILE secret paths, and makes one settings module the environment-reading boundary. Its ADR remains a draft, existing packages migrate later, and the current guard emits expected migration warnings.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/177d2561adb2a12f39f83fa3be4b1f2da45ee006/_articles/2026-11-13.md#L29-L31",
+        "https://github.com/ojfbot/core/pull/598"
+      ],
+      "correction": "Describe #598 as a proposed package-settings boundary with one untracked file, allowed environment and secret-file overrides, one settings module, and pending migration and ADR acceptance.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "G7 already had owners and active qualification",
+      "location": "Line 51 erases G7 ownership and sequencing; lines 67 through 69 say G7 cannot be sequenced until the #590/#595 relationship is answered.",
+      "explanation": "The conductor records G7 as separately owned, with dedicated recovery and restored-generation owners. Actual restore qualification had already exposed a defect, applied its reviewed fix and restored a held database before #595 opened. #595 preserves current conductor owners and requires later sequencing reconciliation; it does not gate G7.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/177d2561adb2a12f39f83fa3be4b1f2da45ee006/_articles/2026-11-13.md#L51",
+        "https://github.com/ojfbot/core/issues/578#issuecomment-6776753557",
+        "https://github.com/ojfbot/core/issues/578#issuecomment-6778127362",
+        "https://github.com/ojfbot/core/issues/578#issuecomment-6780710959",
+        "https://github.com/ojfbot/core/pull/595"
+      ],
+      "correction": "Keep the #590/#595 relationship as an unresolved account-migration design question, but report G7 as separately owned and already in qualification; do not block it without a new owner decision.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The article-review queue inventory is wrong",
+      "location": "Lines 53, 67 and 69 list nine independent audits, include #531 and say the oldest dates to November 3.",
+      "explanation": "Ten review-only Draft PRs were open: #515, #524, #526, #529, #530, #533, #535, #537, #539 and #541. The oldest, #515, opened October 31. #531 changes telemetry code and instructions rather than review data.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/177d2561adb2a12f39f83fa3be4b1f2da45ee006/_articles/2026-11-13.md#L53",
+        "https://github.com/ojfbot/daily-logger/pull/515",
+        "https://github.com/ojfbot/daily-logger/pull/524",
+        "https://github.com/ojfbot/daily-logger/pull/531"
+      ],
+      "correction": "Report ten open review-data Draft PRs, oldest #515 from October 31, remove #531 from the set, and use that exact set for any triage candidate.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "workstation-yuri PR 12 had already merged",
+      "location": "Lines 57 and 69 call #12 non-draft, awaiting owner review and separated from closure only by an owner pull event.",
+      "explanation": "PR #12 merged at 2026-11-12T02:13:02Z, more than a day before the article capture. Its checks and pre-merge owner-review wording were historical by generation time.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/177d2561adb2a12f39f83fa3be4b1f2da45ee006/_articles/2026-11-13.md#L57",
+        "https://github.com/ojfbot/workstation-yuri/pull/12"
+      ],
+      "correction": "Report #12 as merged and remove it from open or merge-ready work and from retained action context.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "No public record makes PR 598 a prerequisite for PR 597",
+      "location": "Line 67 says #598 is a prerequisite discipline for #597 deployment and that no implementation is authorized until both close.",
+      "explanation": "PR #597 requires operator wording review and reconciliation with conductor sequencing. PR #598 says existing packages migrate later and Selfco workers adopt the convention when they move. Neither record binds #597 review, implementation or deployment to #598 closing first.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/177d2561adb2a12f39f83fa3be4b1f2da45ee006/_articles/2026-11-13.md#L67",
+        "https://github.com/ojfbot/core/pull/597",
+        "https://github.com/ojfbot/core/pull/598"
+      ],
+      "correction": "Present #597 and #598 as separate pending owner reviews unless the owner records an explicit dependency and entrance criterion.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "The detailed workstation-home failure mechanism is unsupported",
+      "location": "Line 37 says the services resolve relative to the operator home and silently fail on remote SSH, an unmounted home or a different effective user.",
+      "explanation": "PR #595 establishes the public requirement to replace workstation-home dependencies and qualify restart without login, permissions, recovery and rollback. Its public handoff omits the private audit and does not establish the article's three specific current failure scenarios.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/177d2561adb2a12f39f83fa3be4b1f2da45ee006/_articles/2026-11-13.md#L35-L37",
+        "https://github.com/ojfbot/core/pull/595"
+      ],
+      "correction": "Use the documented rationale of removing workstation-home and login dependencies, or link a publishable primary receipt that proves the specific path-resolution and failure behavior.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
