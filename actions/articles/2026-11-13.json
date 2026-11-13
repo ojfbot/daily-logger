@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-13",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-13",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked"
+    },
+    "articleDigest": "46410aae6550e48b4c788c731a3c0e5623e3086a3985910c5d269e176eac8078",
+    "roundId": "86525fdb6808f30a76721eb97ce929155b6641a057a273be39bbaab05423859d",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "c34fe3206aee27652fb16d855ebd298d6f7957c4562a9c38d9d1ed34cce0b94b",
+        "payload": {
+          "command": "/review core#597 core#598",
+          "description": "Both Selfco-worker migration and env-convention PRs are non-draft and waiting on operator review. No implementation is authorised until these close. Review them together — #598's convention is a prerequisite discipline for #597's deployment.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-13"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "b5a2a0cc43cfc644ec0b47b389f6f5a7115e2fe34bdefb7d00bf6d5e88d12bed",
+        "payload": {
+          "command": "/clarify core#590 core#595 --question 'does #590 gate G7/G8 or is it parallel to #595'",
+          "description": "The dependency order between the NAS tenant identity ADR (#590) and the applications-account migration plan (#595) is unresolved. This is the most consequential open architectural question in the Fleet Runner gate sequence — G7 cannot be sequenced until it is answered.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-13"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "605fc9be0ee1732d8dd766ef1b3e022973de8e72679564c51df79e62c6d614d4",
+        "payload": {
+          "command": "/triage daily-logger --prs 526,529,530,531,533,535,537,539,541 --question 'who is the verifier, what is the merge criterion, what is the unblock path'",
+          "description": "Nine independent audit draft PRs are open, the oldest dating to 2026-11-03. The queue is growing faster than it is closing. Surface the owner, the merge trigger, and whether the process is working or stalled.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-13"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-13",
+      "articleDigest": "46410aae6550e48b4c788c731a3c0e5623e3086a3985910c5d269e176eac8078",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "d77b31aa816765851a4e4fff54da08e3c1f116f2e5bf4ffac860c66635bc1705",
+      "candidatePayloadsSha256": "9257858641ab832dd8899be3f2f98d281e4af4d69cee5d7d5b67e3075834b9e7",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "6e836de7e1c5fa6af9232bcdbe19764a9dc73780635c4f241ec600394adcea47",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "c34fe3206aee27652fb16d855ebd298d6f7957c4562a9c38d9d1ed34cce0b94b",
+          "payloadSha256": "5475bae203e966a234d32a5fe9d99d75fdef84f862ff77236d6e8c90fc25b5bc",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#597",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "core#598",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "b5a2a0cc43cfc644ec0b47b389f6f5a7115e2fe34bdefb7d00bf6d5e88d12bed",
+          "payloadSha256": "27527c996e400482468084e26ea1f7604ddaf4174815795dc243f98ec9ddc540",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#590",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "core#595",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "605fc9be0ee1732d8dd766ef1b3e022973de8e72679564c51df79e62c6d614d4",
+          "payloadSha256": "700b593433cc90f799e2629d2ed7eefb9993d696828af6d9644571345f58d5c9",
+          "references": [],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#585",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#596",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "workstation-yuri#12",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Owner gates: core #597 and #598 are non-draft and require operator review before any implementation work on the Selfco service migration or env convention begins. Core #596 is a planning draft — no implementation is authorised until routing semantics are accepted and the draft graduates. Core #595 is a planning draft — the dependency relationship between #595 and #590 (NAS tenant identity ADR) is unresolved and must be clarified before either can be sequenced against G7/G8.\n\nEvidence gaps: (1) The relationship between core #590 and the G7/G8 gate sequence is not established from available evidence — this is the highest-priority open architectural question in the Fleet Runner gate sequence. (2) The article review queue in daily-logger (nine open draft PRs, oldest 2026-11-03) has no recorded unblock path, no stated owner for the verifier review pass, and no merge criteria visible from this window's evidence. (3) The CI and production secret injection path for the env convention established in core #598 is not addressed by that PR; it is a known open item. (4) The draft graduation criteria for core #596 and #595 are not stated in either PR. (5) workstation-yuri #12 is merge-ready with no recorded blocker — an owner pull event is the only thing separating it from closed. (6) Core #585 (stale docs cleanup, opened 2026-11-04) has no recorded disposition after nine days open and non-draft; needs a merge or close decision. (7) G7, G8, and Morning Cockpit binding have no sequencing, owner, or target date visible from this window. (8) The 0% quality-skill conversion streak has not been named as a decision — either retire the metric (quality is enforced at PR merge, not in-session) or name the sprint where in-session coverage closes. (9) The monorepo consolidation rationale for core has no corresponding ADR on record equivalent to core #590 for NAS tenant identity."
+    },
+    "stateDigest": "1d5dc82ce7df12a294d04dcb0d8160bb8a4e2296ee21bda93f68c5f0cf09ade4",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

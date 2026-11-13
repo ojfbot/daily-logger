@@ -1,5 +1,150 @@
 [
   {
+    "date": "2026-11-13",
+    "title": "Thursday — Fleet Runner Expands: Selfco Workers Join Core, Cross-Harness Routing Planned",
+    "summary": "Thursday's window shipped one article commit and opened four architectural planning PRs in core, charting the next expansion of Fleet Runner's service boundary.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "service-boundary",
+        "type": "concept"
+      },
+      {
+        "name": "env-convention",
+        "type": "concept"
+      },
+      {
+        "name": "build",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Selfco capture worker migrates from selfco-box into core as an independent service",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "One untracked env file per application package (core #598)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "NAS applications account migration planned before next Fleet Runner gate",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Cross-harness routing gets its first formal authority contract (core #596)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "10:07Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-12T10:07:58.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "540",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/540"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "540",
+          "url": "https://github.com/ojfbot/daily-logger/pull/540"
+        },
+        "at": "2026-11-12T10:07:58.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-13T09:59:59.496Z",
+        "runId": "43405509485",
+        "runNumber": 307,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/43405509485",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "8eb63bae017f17d0b5d2abf0fb29e10612fa7207",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-13T09:58:30.000Z",
+          "startedAt": "2026-11-13T09:58:30.000Z",
+          "expectedAt": "2026-11-13T09:30:00.000Z",
+          "dispatchDelaySeconds": 1710,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "25c08446c32fb01fb983e3a07dc3137dd404aada664345830469d2d33d26e8df"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-12",
     "title": "Wednesday — Fleet Runner Physical Trial Verification Closes; F-0 Machine Agreement Lands on sf-store-001",
     "summary": "Wednesday merged seven PRs across four repos, completing Fleet Runner's six-trial physical verification loop and landing pre-registered F-0 machine-agreement results on 205 frames of sf-store-001.",
