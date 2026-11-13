@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261109-05769c7e38d3",
+  "article": {
+    "date": "2026-11-09",
+    "sourceCommitSha": "05769c7e38d34b46b10f63dc8564e24cef0fc095",
+    "blobSha": "b8e811898e540e7052619f60935d0b77b8cb73b5"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-09T11:43:26Z",
+  "scope": "Final visible Draft, exact source/article/action/deployed-JSON bytes, generation and publication timing, DL-6 backup coverage and restore evidence, Fleet Runner PR state and dependency ordering, NS-5/NS-10/NS-11 decision scope, live versus legacy telemetry sources, existing review PR dispositions, held action custody, and current review registry/discovery state. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "e02fa25c74a059a18ef5b22611b96fbb76f6c317",
+  "fullRecordPath": "reviews/articles/2026-11-09-05769c7e38d34b46b10f63dc8564e24cef0fc095.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Backup coverage excludes files the article says are included",
+      "location": "The summary and lines 11 and 17 say every SQLite fact ledger and classified data file, and all other data files, are backed up.",
+      "explanation": "The pinned backup contract excludes the credentials file, restore-drill scratch roots, and specified SQLite WAL, SHM, and journal files. It does not provide the exception-free coverage claimed by the article.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/_articles/2026-11-09.md#L3-L17",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/c4659cb037633cdf501076d0a29361f277524aa4/docs/backup.md#L11-L33"
+      ],
+      "correction": "Say the backup covers the classified data-root inventory subject to its documented credential, scratch-root, and SQLite side-file exclusions.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The restore drill does more than hash checking and a real run was documented",
+      "location": "Line 17 defines a pass as restored-tree hashes matching, while retained context on line 81 says no real production-data drill is documented.",
+      "explanation": "The drill also replays restored ledgers, rebuilds the dataset, and compares the TS-0 version and labels bytes. BookcaseDiscovery #89 records a real first backup and restore drill with identical replay and dataset results.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/_articles/2026-11-09.md#L15-L17",
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/_articles/2026-11-09.md#L76-L82",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/c4659cb037633cdf501076d0a29361f277524aa4/docs/backup.md#L90-L104",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/89"
+      ],
+      "correction": "Describe verified object reads plus ledger replay and byte-identical dataset reconstruction, and acknowledge the recorded real-data drill with its stated limits.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The six-PR count, universal dependency chain, and ADR blocker are false",
+      "location": "The summary and lines 11, 49, and 59 call all six PRs Draft, put all six behind core #584/#586, and require ADR #590 acceptance before #589/#90 merge.",
+      "explanation": "Core #590 is non-Draft and based on main. The other PRs record their own immediate stack bases, and #589/#90 do not establish accepted #590 as a merge prerequisite.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/_articles/2026-11-09.md#L47-L61",
+        "https://github.com/ojfbot/core/pull/589",
+        "https://github.com/ojfbot/core/pull/590",
+        "https://github.com/ojfbot/core/pull/591",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/90",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/91",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/92"
+      ],
+      "correction": "Report five Draft PRs plus non-Draft #590, preserve each actual immediate base and owner/review gate, and do not invent ADR acceptance as a merge prerequisite.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The article parks NS-10 and NS-11 after recording them complete",
+      "location": "Line 55 says NS-10 and NS-11 are closed, but line 57 and the held capture-session candidate say they are parked or gated by NS-5.",
+      "explanation": "The NS-11 report records a passed development keep rule and separately labels the zero-case NS-5 degraded tier insufficient data, neither go nor no-go. That missing sample does not reopen completed NS-10/NS-11 work.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/_articles/2026-11-09.md#L53-L59",
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/_articles/2026-11-09.md#L71-L78",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/c4659cb037633cdf501076d0a29361f277524aa4/evals/NS11/report.md#L5-L14"
+      ],
+      "correction": "Keep NS-10 and NS-11's documented development work complete while reporting the separate NS-5 degraded-tier decision as unavailable pending 14 qualifying cases.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The live skill-usage stream is not the frozen legacy file",
+      "location": "Line 61 and retained context on line 80 say the skill telemetry stream has been frozen since 2026-05-12.",
+      "explanation": "Current collection makes the live skill-dispositions ledger primary. Only the legacy skill-telemetry.jsonl fallback is documented as frozen on that date.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/_articles/2026-11-09.md#L61-L63",
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/_articles/2026-11-09.md#L79-L82",
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/src/collect-telemetry.ts#L6-L12",
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/src/collect-telemetry.ts#L124-L168"
+      ],
+      "correction": "Identify the exact source and freshness timestamp behind each figure; do not generalize the legacy fallback's freeze date to the live dispositions stream.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "The review PRs have a documented Draft and open-finding disposition",
+      "location": "Line 63 and retained context say daily-logger #526, #529, and #530 have no known merge blockers or documented disposition.",
+      "explanation": "Each is a Draft review-data proposal whose body preserves open findings and explicitly stops before article revision, acceptance, readiness, and merge. That is a documented bounded-review state, not evidence of merge readiness.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/_articles/2026-11-09.md#L61-L65",
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/_articles/2026-11-09.md#L76-L83",
+        "https://github.com/ojfbot/daily-logger/pull/526",
+        "https://github.com/ojfbot/daily-logger/pull/529",
+        "https://github.com/ojfbot/daily-logger/pull/530"
+      ],
+      "correction": "Describe them as open Draft review proposals with open findings awaiting supervised editorial disposition; do not infer merge readiness or a process gap from age alone.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The mtime and size heuristic's immutability premise is not established",
+      "location": "Line 37 says all data-root files are append-only JSONL caches or immutable model weights and that code contracts enforce this property.",
+      "explanation": "The pinned inventory includes SQLite facts, originals, labels, datasets, derived caches, catalogs, models, and unclassified files. The reviewed evidence documents the same-size/same-mtime corruption limit but contains no exhaustive write-path audit proving the article's binary premise.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/05769c7e38d34b46b10f63dc8564e24cef0fc095/_articles/2026-11-09.md#L35-L39",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/c4659cb037633cdf501076d0a29361f277524aa4/docs/backup.md#L11-L33",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/c4659cb037633cdf501076d0a29361f277524aa4/docs/backup.md#L133-L142"
+      ],
+      "correction": "Present the skip heuristic and its documented corruption limit without claiming every included file is append-only JSONL or immutable weights unless a pinned exhaustive audit proves it.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
