@@ -1,5 +1,215 @@
 [
   {
+    "date": "2026-11-14",
+    "title": "Friday — Fleet Runner Closes Two PRs: Versioned Declared-Command Worker and HelpDesk Roundtrip Proof",
+    "summary": "Friday's window merged two substantial Fleet Runner PRs in core — the versioned declared-command worker and an isolated HelpDesk roundtrip proof — completing a multi-day hardening arc.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "independent-review",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "service-boundary",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core"
+    ],
+    "commitCount": 4,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Independent review as a defect-finding gate, not a rubber stamp",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Loopback-only HTTP as a security invariant, not a configuration choice",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Process-group cleanup must survive the command root exiting",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Identical-request idempotency as a first-class proof case",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "20:45Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-13T20:45:26.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/core",
+          "ref": "599",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/core/pull/599"
+        }
+      },
+      {
+        "text": "00:24Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-14T00:24:06.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/core",
+          "ref": "601",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/core/pull/601"
+        }
+      },
+      {
+        "text": "10:15Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-13T10:15:10.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "542",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/542"
+        }
+      },
+      {
+        "text": "2026-11-13T22:36Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-13T22:36:00.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-11-13T22:36Z"
+        }
+      },
+      {
+        "text": "2026-11-13T11:39Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-13T11:39:00.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-11-13T11:39Z"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "599",
+          "url": "https://github.com/ojfbot/core/pull/599"
+        },
+        "at": "2026-11-13T20:45:26.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "601",
+          "url": "https://github.com/ojfbot/core/pull/601"
+        },
+        "at": "2026-11-14T00:24:06.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "542",
+          "url": "https://github.com/ojfbot/daily-logger/pull/542"
+        },
+        "at": "2026-11-13T10:15:10.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-14T10:02:42.135Z",
+        "runId": "43583224161",
+        "runNumber": 309,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/43583224161",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "177d2561adb2a12f39f83fa3be4b1f2da45ee006",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-14T10:00:54.000Z",
+          "startedAt": "2026-11-14T10:00:54.000Z",
+          "expectedAt": "2026-11-14T09:30:00.000Z",
+          "dispatchDelaySeconds": 1854,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "25c08446c32fb01fb983e3a07dc3137dd404aada664345830469d2d33d26e8df"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-13",
     "title": "Thursday — Fleet Runner Expands: Selfco Workers Join Core, Cross-Harness Routing Planned",
     "summary": "Thursday's window shipped one article commit and opened four architectural planning PRs in core, charting the next expansion of Fleet Runner's service boundary.",

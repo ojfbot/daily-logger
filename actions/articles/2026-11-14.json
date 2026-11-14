@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-14",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-14",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked"
+    },
+    "articleDigest": "783837070f97b294725de7570792266a060bac404727afb5cd61b9779285c6d8",
+    "roundId": "018c910ad04b0f0f4ee4ccd2393c5606c92e2819fd248d22d77e3b02b9caaed8",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "da64badadea40218b4716a5f360bac085ed10dc53f2d2f2b70b95429ec17f215",
+        "payload": {
+          "command": "/review core#600",
+          "description": "Assign an independent review designation to the live evidence bundle verification draft — this is the stated gate before a Fleet Runner draft is eligible for merge, and it has not yet been assigned since the PR opened on 2026-11-13.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-14"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "51f60bdfc08e5611a9ef95e1d346776f855ff054e01450530d6d7de1a6f4cf4b",
+        "payload": {
+          "command": "/review core#598",
+          "description": "Conduct operator review of the env-file convention ADR — it has been non-draft and eligible for review since Thursday with no review event recorded in this window.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-14"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "4427cbfa9ea9a077f94bbaa41cdbe8fe0afacd039990514f91baca1447e5a0d8",
+        "payload": {
+          "command": "/triage daily-logger audit-drafts",
+          "description": "Establish or state the merge criterion for audit draft PRs (#529–#543) and name the owner of that decision — eight open drafts across ten days with no stated disposition is the clearest process-health signal in the current state.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-14"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-14",
+      "articleDigest": "783837070f97b294725de7570792266a060bac404727afb5cd61b9779285c6d8",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "ae0513ae75d9e5a79289b427f73d7d8968e2bd30407b307a53b282bd51d1facb",
+      "candidatePayloadsSha256": "3579d42eb9e07c63115779bf1cd8e028012024c627fc4a62f62fb030f0652a40",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "cbbed66f06d891ec1e33dad40ba2b41e0d1ce1659ace84a11daea15a7235992b",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "da64badadea40218b4716a5f360bac085ed10dc53f2d2f2b70b95429ec17f215",
+          "payloadSha256": "1ca4b06f83751ef88c678854156e4e94d8ad417b95c63fda257fce334825677d",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#600",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "51f60bdfc08e5611a9ef95e1d346776f855ff054e01450530d6d7de1a6f4cf4b",
+          "payloadSha256": "3eca5c6f93761476d0ff4033efcf3314e2ba4a492691ad080a943406ffc2b12f",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#598",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "4427cbfa9ea9a077f94bbaa41cdbe8fe0afacd039990514f91baca1447e5a0d8",
+          "payloadSha256": "b5a45e6b8946dde08ec48da820dab29d43ca70264a36577dc3e0e6c4c604fc41",
+          "references": [],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "workstation-yuri#12",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Immediate continuation context for independent action review:\n\n1. core #600 [DRAFT] is the only un-drafted next Fleet Runner step. It lacks an independent review designation, which is the stated gate before a Fleet Runner draft is eligible for merge. Whether the absence of that designation is an oversight or deliberate pacing is not determinable from available evidence. First question for Monday: does #600 receive an independent review designation, and if not, why not.\n\n2. core #598 is non-draft and has been eligible for operator review since Thursday. No review event occurred in this window. No stated reason for absence of review is in the available evidence.\n\n3. workstation-yuri #12 passed CI and is blocked only on owner action. No dependency on another PR is stated.\n\n4. Eight daily-logger audit drafts (#529–#543) are open with no stated merge criterion and no named owner for the merge decision. The queue is growing. The article does not have evidence of a deliberate hold or a process gate that would explain the accumulation. This is the clearest process-health signal in the current state.\n\n5. The signed-request protocol's cryptographic primitives (signing primitive, what is signed, what the signed-client protocol guarantees and does not guarantee) are not described in the available evidence at the level needed to evaluate the privilege-escalation closure claim. This is a documentation gap, not necessarily an implementation gap.\n\n6. The operational footprint of the installed Fleet Runner worker (target host(s), management surface, update cycle ownership, behavior when the Node 24 signature rotates) is not described in the available evidence. The article documents security hardening; it does not document operational burden.\n\n7. The architectural rationale for HTTP over loopback versus a Unix domain socket is not present in the available evidence. The loopback restriction is documented as a fix; whether HTTP is the right primitive for a local worker is an open design question.\n\n8. d51afde is the load-bearing security commit for #601. It is referenced three times in the article but not linked and not described structurally. A reader returning to this codebase should locate d51afde in core and treat it as the canonical before/after marker for the four hardening defects."
+    },
+    "stateDigest": "822e06731c0b212719595a0ce34e4e75ddbeec2610ea42445550fffc0fc8bd07",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
