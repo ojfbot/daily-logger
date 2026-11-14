@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261114-a63837dad0d9",
+  "article": {
+    "date": "2026-11-14",
+    "sourceCommitSha": "a63837dad0d9290c509a4e905d0c352fadc75ab6",
+    "blobSha": "fbbe9d84e9b0bc2d9dfc4c81a5f7fadb31dedd82"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": "01a1d9cf-d76c-7022-b583-0449ef6cad82"
+  },
+  "reviewedAt": "2026-11-14T11:33:06Z",
+  "scope": "Final visible Draft, exact source/article/action/deployed bytes, core #578/#590/#599-#601 lifecycle and implementation records, the complete open daily-logger review-data PR set and intended Draft lifecycle, workstation-yuri #12 lifecycle, current review schema/discovery and held-candidate custody. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "48db622af25a6bd1e1c3ba80a01031c545878311",
+  "fullRecordPath": "reviews/articles/2026-11-14-a63837dad0d9290c509a4e905d0c352fadc75ab6.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The #599 replay reported no blocking findings",
+      "location": "Line 38 says both #599 and #601 review rounds found concrete blocking defects.",
+      "explanation": "PR #599 reports that its independent Yojimbo replay passed the two cases with no blocking findings. The four blocking defects belong to PR #601, not #599.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a63837dad0d9290c509a4e905d0c352fadc75ab6/_articles/2026-11-14.md#L36-L38",
+        "https://github.com/ojfbot/core/pull/599",
+        "https://github.com/ojfbot/core/pull/601"
+      ],
+      "correction": "Say both PRs record independent replay or review activity, but only #601 records four blockers; describe #599 as a clean bounded replay.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The HTTP restriction governs an outbound endpoint, not a worker listener",
+      "location": "Lines 24 and 44 say unrestricted HTTP exposed the worker's HTTP surface to subnet callers.",
+      "explanation": "The final #601 settings parser validates the endpoint used by the worker client and permits HTTP only for loopback hosts; remote endpoints require HTTPS. The PR does not add a worker-owned HTTP listener.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a63837dad0d9290c509a4e905d0c352fadc75ab6/_articles/2026-11-14.md#L22-L24",
+        "https://github.com/ojfbot/core/blob/d51afde050f7b6cc09653c6a31e9367a22f0d973/packages/fleet-runner/src/worker-settings.ts",
+        "https://github.com/ojfbot/core/blob/d51afde050f7b6cc09653c6a31e9367a22f0d973/packages/fleet-runner/worker-release.md"
+      ],
+      "correction": "Describe the defect as permitting an insecure remote HTTP endpoint for worker traffic; do not claim an exposed inbound worker surface or a direct Unix-socket replacement.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "PR #600 predates #601's merge and already records a completed replay",
+      "location": "Lines 64, 82 and 85 say #600 opened 13 minutes after #601 merged, lacks independent review, and should receive /review next.",
+      "explanation": "PR #600 opened at 2026-11-13T22:36:52Z; #601 merged at 2026-11-14T00:24:06Z, about 1 hour 47 minutes later. #600's public body already records independent Yojimbo execution, both cases passing, and no blocking findings.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a63837dad0d9290c509a4e905d0c352fadc75ab6/_articles/2026-11-14.md#L62-L64",
+        "https://github.com/ojfbot/core/pull/600",
+        "https://github.com/ojfbot/core/pull/601"
+      ],
+      "correction": "State that #600 was staged before #601 merged and already records an independent replay; remove /review core#600 unless a new owner requests a different gate.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "PR #590 states its owner-review hold",
+      "location": "Line 66 says core #590 has no stated hold reason.",
+      "explanation": "PR #590 is a Proposed, unnumbered ADR whose unchecked test-plan item is owner review; acceptance then numbers it with /adr accept and applies the glossary terms.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a63837dad0d9290c509a4e905d0c352fadc75ab6/_articles/2026-11-14.md#L66",
+        "https://github.com/ojfbot/core/pull/590"
+      ],
+      "correction": "Report #590 as waiting on the explicit owner-review and ADR-acceptance gate, not as an unexplained open draft.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The review-data set and intended Draft lifecycle are misreported",
+      "location": "Lines 68, 82 and 91 say eight audit drafts span #529-#543 and treat the lack of a merge criterion or owner as an unexplained queue.",
+      "explanation": "Eleven review-only Draft PRs were open: #515, #524, #526, #529, #530, #533, #535, #537, #539, #541 and #543. #529 is November 5 and #530 November 4. Their PR bodies intentionally reserve revision, acceptance and merge authority and name supervised finding disposition as the next step.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a63837dad0d9290c509a4e905d0c352fadc75ab6/_articles/2026-11-14.md#L68",
+        "https://github.com/ojfbot/daily-logger/pull/515",
+        "https://github.com/ojfbot/daily-logger/pull/524",
+        "https://github.com/ojfbot/daily-logger/pull/543"
+      ],
+      "correction": "Report eleven open review-data Draft PRs with the correct date mapping and explain that Draft/open is the publication state pending supervised disposition, not evidence of a missing merge owner.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "workstation-yuri PR #12 had already merged",
+      "location": "Lines 70 and 89 say #12 is pending owner review and merge and blocked only on owner action.",
+      "explanation": "PR #12 merged at 2026-11-12T02:13:02Z, more than two days before the article capture. Its pre-merge body wording is historical after that lifecycle event.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a63837dad0d9290c509a4e905d0c352fadc75ab6/_articles/2026-11-14.md#L70",
+        "https://github.com/ojfbot/workstation-yuri/pull/12"
+      ],
+      "correction": "Report #12 as merged and remove it from open work and retained continuation context.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The public record does not independently authenticate the named review sessions",
+      "location": "Lines 17, 24, 38 and 56 present the Yojimbo replays and #601 re-verification as independent review facts.",
+      "explanation": "The shared-account PR bodies report separate Claude/Codex sessions and opaque HelpDesk message numbers, but #599, #600 and #601 have no GitHub review submissions and the HelpDesk reports are not publicly linked. The implemented safeguards are visible; distinct provider, session and machine identity are not independently authenticated by the public record.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/pull/599",
+        "https://github.com/ojfbot/core/pull/600",
+        "https://github.com/ojfbot/core/pull/601"
+      ],
+      "correction": "Attribute replay and re-verification to the PR author record or link a public source-bound report; do not treat a shared account or model agreement as independently authenticated identity.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
