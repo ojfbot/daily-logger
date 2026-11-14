@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261102-50efb408f74f",
+  "article": {
+    "date": "2026-11-02",
+    "sourceCommitSha": "50efb408f74f7faa6f084af267c80e0e6c1b5d92",
+    "blobSha": "d07b96f2f58ed0c73095da861c1e5a8208116502"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": "01a1a12f-b41d-7361-a66e-8e4997c52863"
+  },
+  "reviewedAt": "2026-11-03T11:38:51Z",
+  "scope": "Final visible Draft, exact source/article/action bytes, initial BookcaseDiscovery README and dynamic fleet discovery, the November 1 failure alert and repair chronology, ADR-0035 versus the actual alert job, PR #519 capture-time checks, existing Workstation reviews, and the article's explicit open-PR inventory. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "84e1586f19892264028ade1f76c2116dec77b0ce",
+  "fullRecordPath": "reviews/articles/2026-11-02-50efb408f74f7faa6f084af267c80e0e6c1b5d92.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The initial commit already states BookcaseDiscovery's purpose",
+      "location": "Lines 17 and 25 say purpose is unknown and will arrive when a README is authored.",
+      "explanation": "The initial commit already contains a README that describes phone-based live bookshelf-spine recognition and taste-based book discovery.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/50efb408f74f7faa6f084af267c80e0e6c1b5d92/_articles/2026-11-02.md#L15-L25",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/a5bf7a84fff02c5de3ac1a0be40300013a4eb842/README.md"
+      ],
+      "correction": "Report the initial README's stated purpose and keep only detailed architecture and fleet relationships explicitly unknown.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The sweep is dynamic, not an authoritative static manifest",
+      "location": "Lines 17 and 25 use absence from a fleet manifest to classify the public repo.",
+      "explanation": "The pinned fleet contract derives sweep membership from the live GitHub org. Public repos remain swept when REPO_NOTES and prompt grounding are missing; that absence is surface drift, not exclusion from the fleet sweep.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/00455fce162f93e920b4bc8328181219078f22d0/src/fleet.ts#L1-L31",
+        "https://github.com/ojfbot/daily-logger/blob/00455fce162f93e920b4bc8328181219078f22d0/src/fleet.ts#L123-L159"
+      ],
+      "correction": "Distinguish automatic sweep membership from missing role-note and prompt-grounding surfaces.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "PR 517 was the later fix, not a possible cause of the failed run",
+      "location": "Lines 31, 43 and 70 present a three-branch diagnosis with PR #517 as a possible regression.",
+      "explanation": "Run 41267355441 failed unit tests and skipped generation before PR #517 existed. PR #517 records job-scoped ACTION_REVIEW_DISABLED as the cause and moves it to generation-step scope as the repair.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/actions/runs/41267355441",
+        "https://github.com/ojfbot/daily-logger/pull/517"
+      ],
+      "correction": "Report the known test contamination and merged repair; do not make rediscovering it a prerequisite for unrelated editorial work.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "ADR 0035 does not define the pipeline-alert mechanism",
+      "location": "Line 31 attributes failed-run GitHub issues to ADR-0035.",
+      "explanation": "ADR-0035 is a Proposed status, auto-merge and feedback decision. The GitHub issue alert is defined directly in daily-blog.yml's alert-on-failure job and labeled roadmap A2.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/00455fce162f93e920b4bc8328181219078f22d0/decisions/adr/0035-article-status-lifecycle.md",
+        "https://github.com/ojfbot/daily-logger/blob/00455fce162f93e920b4bc8328181219078f22d0/.github/workflows/daily-blog.yml#L271-L306"
+      ],
+      "correction": "Attribute the alert to the workflow's failure-alert job and its actual roadmap or decision source.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "PR 519 was blocked by a failing required check",
+      "location": "Lines 45 and 73 say #519 had no known blockers and was ready for a human merge decision.",
+      "explanation": "At capture, head 8d4d7b1 had a failed Test + pipeline smoke test because structured draft-candidate evidence binding was stale or foreign. Corrective commits and passing checks arrived on November 3.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/actions/runs/41326278094/job/124906768323",
+        "https://github.com/ojfbot/daily-logger/pull/519"
+      ],
+      "correction": "Report the stale evidence-binding CI blocker and keep later repair and merge events outside this capture-time state.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Workstation 8 through 10 already had structured reviews",
+      "location": "Lines 51, 70 and 71 propose scheduling reviews and recording findings for #8, #9 and #10.",
+      "explanation": "All three PRs already had substantive reviews submitted on October 30, with tests, ranked findings, scope limits, questions and explicit dispositions.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/workstation-yuri/pull/8#pullrequestreview-5719781612",
+        "https://github.com/ojfbot/workstation-yuri/pull/9#pullrequestreview-5719749460",
+        "https://github.com/ojfbot/workstation-yuri/pull/10#pullrequestreview-5719751296"
+      ],
+      "correction": "Start from the existing review findings and open decisions instead of proposing another generic review pass.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The open and non-merge PR counts are understated",
+      "location": "Lines 45 through 59 enumerate the queue, then report 13 open PRs and 10 Draft or non-merge.",
+      "explanation": "The enumerated groups total 16 open PRs across six repos. Thirteen, not ten, were Draft or explicitly non-merge; the ordinary non-Draft PRs were #519, Morning Cockpit #60 and Classic Space #4.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/50efb408f74f7faa6f084af267c80e0e6c1b5d92/_articles/2026-11-02.md#L45-L59",
+        "https://github.com/ojfbot/daily-logger/pull/519",
+        "https://github.com/ojfbot/workstation-yuri/pull/4",
+        "https://github.com/ojfbot/lego-village-pipeline/pull/44"
+      ],
+      "correction": "Report 16 open PRs across six repos, 13 Draft or explicitly non-merge, and recalculate the queue interpretation.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
