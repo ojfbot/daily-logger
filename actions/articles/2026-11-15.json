@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-15",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-15",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked"
+    },
+    "articleDigest": "ee141dda72da60f8577b8cd994d44e1dfe4c5eaa914c0cff0bf97b14ccc1842c",
+    "roundId": "4a73f44ebba91f733e47584dafd096a7e121695e50624e817183d976905522b7",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "cea1a0b87b13f3e2c08e3364693b00bb38ba7944cb1dcd9d444c82b89130e674",
+        "payload": {
+          "command": "/merge core#602",
+          "description": "Merge stale-docs cleanup PR — Opus-validated, non-draft, no known blockers. Ready now.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-15"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "70e20340c9a0f7f925aa36bcd4a8af883bd52cd854691a35acc868b6af112138",
+        "payload": {
+          "command": "/review core#598 core#597",
+          "description": "Operator review of env-file convention and Selfco worker plan — both non-draft, prerequisites for moving Selfco capture worker into core as a deployed service.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-15"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "76d334de264c0c290bc40b4a3a6d40c14b8c655b408555021a793229225aade2",
+        "payload": {
+          "command": "/confirm-status core#594",
+          "description": "Resolve ambiguous merge status: listed in merged-7-day window but no in-window merge timestamp recorded. Confirm open or merged before next publish.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-15"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-15",
+      "articleDigest": "ee141dda72da60f8577b8cd994d44e1dfe4c5eaa914c0cff0bf97b14ccc1842c",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "b9916e7dc80751a8d4583b6f364d61a527f81858e345d9cdec689b897efd2ff9",
+      "candidatePayloadsSha256": "dddf557d162a0de1e57edf7022b014be310bf1f34f9ee50f460c0523a2615ea3",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "3126abb8a0b76fa5763e0314275a756598f0c5bb48a10f3d7b5290e3e1c5dc49",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "cea1a0b87b13f3e2c08e3364693b00bb38ba7944cb1dcd9d444c82b89130e674",
+          "payloadSha256": "2ce91e4fd0a8b4e01d51c703ceebed0a4b084f3b6ba718c282cdd93c34d9ef29",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#602",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "70e20340c9a0f7f925aa36bcd4a8af883bd52cd854691a35acc868b6af112138",
+          "payloadSha256": "2584c071c169d0d17f9586284b7554c931abff3411c08298fe112957269c6a53",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#597",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "core#598",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "76d334de264c0c290bc40b4a3a6d40c14b8c655b408555021a793229225aade2",
+          "payloadSha256": "e73f1276351da246ff98936821670ac2915c657615b5001ca530b1a067ca6941",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#594",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#590",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "workstation-yuri#11",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Native-dispatch probe redesign: no PR open, no owner assigned. Empty Codex allowlist is the correct state until a probe exists that tests tool fields in real ChatGPT-subscription rollouts. This is not a timed decay — the allowlist stays empty until the probe design is reviewed and passes. Owner assignment is an operator decision.\n\nCore #594 merge status is ambiguous — listed in merged-7-day window but no in-window merge timestamp recorded. Needs a ten-second check against the PR before next publish.\n\nCore #590 (NAS tenant identity ADR) has been open since 2026-11-08 with no recorded activity. Either it is blocked on a named dependency (candidate: #595 NAS migration plan) or it should be explicitly parked with a stated reason. An ADR held open this long without recorded movement is indistinguishable from abandoned.\n\nSeven independent audit draft PRs (#533, #535, #537, #539, #541, #543, #545) have no defined merge criterion and no disposition process. The queue grows by one per published article. This needs a process decision before the next audit cycle, not another article entry.\n\nBookcaseDiscovery 4K validation scope: ingest and test suite confirmed (1,905 passing, 13 skipped). Model inference against 4K tier not yet run. GPU measurement against sf-store-003 is the next card. OC35 (owner ruling on sf-store-005 held-out classification) is a governance gate independent of the technical measurement — sf-store-003 can be measured without resolving OC35.\n\nmacOS defaults preflight fix (PR #606): the two accepted message strings are pinned in the fix file. Any future macOS version introducing a new message variant will cause a preflight hold by design — that is the intended safe default. The file path where these strings are pinned should be referenced in the next debugging guide or onboarding doc for workstation-yuri.\n\nWorkstation-yuri #11 (Yojimbo device label) has no recorded CI event in this window. Status should be confirmed before merge eligibility is assumed.\n\nThe 30-minute same-device approval window in PR #605 is a session-scoped TTL on the supervised entry: the approval is bound to the originating device identity and expires after 30 minutes. This is a security boundary — anyone extending or modifying this window in future PRs should document the threat model change explicitly."
+    },
+    "stateDigest": "9d3a686ceed7d2861a42c0920605bf6b0a7a868c6a8f02305a1bc1992c6a68a1",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
