@@ -1,5 +1,219 @@
 [
   {
+    "date": "2026-11-15",
+    "title": "Saturday — Native Dispatch Hardening Sprint: Codex Subscription Revoked, macOS Preference Fixes, and BookcaseDiscovery Shoot Intake",
+    "summary": "Saturday's window merged seven PRs across core and BookcaseDiscovery, hardening the native-dispatch layer through five successive qualification corrections and ingesting the 2026-11-11 shoot's 4K clips and 48 MP stills.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "BookcaseDiscovery",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "native-dispatch",
+        "type": "concept"
+      },
+      {
+        "name": "independent-review",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "BookcaseDiscovery"
+    ],
+    "commitCount": 13,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Revoke Codex subscription qualification after live tool exposure",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Accept only exact observed macOS preference-absence messages in supervised preflight",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Incremental versioned release series for native-dispatch (0.1.0 → 0.3.4)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "4K ingest held to no-code-change invariant by design-time resolution independence",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "10:12Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-14T10:12:03.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "544",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/544"
+        }
+      },
+      {
+        "text": "11:38Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-14T11:38:37.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "545",
+          "event": "opened",
+          "url": "https://github.com/ojfbot/daily-logger/pull/545"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "603",
+          "url": "https://github.com/ojfbot/core/pull/603"
+        },
+        "at": "2026-11-14T17:20:47.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "604",
+          "url": "https://github.com/ojfbot/core/pull/604"
+        },
+        "at": "2026-11-15T00:19:06.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "605",
+          "url": "https://github.com/ojfbot/core/pull/605"
+        },
+        "at": "2026-11-15T02:13:09.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "606",
+          "url": "https://github.com/ojfbot/core/pull/606"
+        },
+        "at": "2026-11-15T03:05:35.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "607",
+          "url": "https://github.com/ojfbot/core/pull/607"
+        },
+        "at": "2026-11-15T05:18:47.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "99",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/99"
+        },
+        "at": "2026-11-15T04:45:08.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "544",
+          "url": "https://github.com/ojfbot/daily-logger/pull/544"
+        },
+        "at": "2026-11-14T10:12:03.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-15T09:59:59.279Z",
+        "runId": "43701806575",
+        "runNumber": 311,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/43701806575",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "a63837dad0d9290c509a4e905d0c352fadc75ab6",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-15T09:58:39.000Z",
+          "startedAt": "2026-11-15T09:58:39.000Z",
+          "expectedAt": "2026-11-15T09:30:00.000Z",
+          "dispatchDelaySeconds": 1719,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "0595dc466fc133e076b8132066541c2981c592f3e18fbb20f9e97308e40cf4fe"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-14",
     "title": "Friday — Fleet Runner Closes Two PRs: Versioned Declared-Command Worker and HelpDesk Roundtrip Proof",
     "summary": "Friday's window merged two substantial Fleet Runner PRs in core — the versioned declared-command worker and an isolated HelpDesk roundtrip proof — completing a multi-day hardening arc.",
