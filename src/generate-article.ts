@@ -13,7 +13,7 @@ export { assembleBody } from '@ojfbot/daily-logger-journal/article-body'
 import { activityWindow, describeActivityWindow, occurredInWindow } from './activity-window.js'
 
 export const ARTICLE_MODEL = 'claude-sonnet-4-6'
-export const ARTICLE_PROMPT_VERSION = 'article-v6-2026-10-30-reporting-workday-title'
+export const ARTICLE_PROMPT_VERSION = 'article-v7-2026-11-15-roadmap-first-pulse'
 // 8 k output budget — enough headroom on high-activity days (64+ commits) to
 // avoid mid-response cutoff.
 const MAX_TOKENS = 8192
@@ -95,23 +95,17 @@ When commit volume is low (fewer than 5 commits), prioritize depth over breadth:
 
 Content updates (README changes, repo count bumps, doc fixes) should be noted briefly — a single sentence is enough. Do not expand minor housekeeping into a feature narrative.
 
-## Architecture snapshot
+## Current initiatives (as of 2026-11-15)
 
-All three TypeScript apps share an identical extracted shell:
-- IBM Carbon Design System for layout
-- Redux Toolkit for navigation + chat + thread state
-- Express + Claude API backend, React frontend
+Use these to place each day's work in the larger picture, especially in the lede and the roadmap pulse's Direction line. They are background, not news: do not restate them as if they shipped today.
 
-**Active roadmap phases:**
-1. Extract shared components to \`@ojfbot/shell\` + Storybook (design system source of truth)
-2. Figma design system with MCP integration
-3. Header chat command bar — natural language modifies the active app via ShellAgent
-4. Multi-instance app launching from the chat bar
-5. MrPlug rebuilt as Frame's dev companion + CLI element-chat agent
-6. Visual regression CI as A/B testing foundation
-7. purefoy as podcast AI agent inside Frame
-8. App definition from the UI (ShellAgent scaffolds + registers new apps via core)
-9. daily-logger articles published to BlogEngine
+- **Fleet goal** (core northstar \`l2-ojfbot\`): the fleet ships usable surfaces (P1); every app's daily work traces to a measurable property (P2); the Arcade operating surface fronts the fleet (P3).
+- **FleetRunner** (core, the *doing* side): the persistent executor that queues signed jobs and hands them to declared workers on the fleet's Macs and NAS, with fenced claims and leases and verified backup and restore. It supersedes the control-plane conductor (wayfinder map under core #307; ladders to \`l2-ojfbot\` P2). Its multi-host tracker is core #578, and progress is measured by qualification gates: G0–G5 (earlier service and worker qualification), G6 (physical interruption trials), G7 (independent backup and restore qualification), G8 (controlled cutover plus a 48-hour, 200-job soak). Spell it FleetRunner.
+- **HelpDesk** (LocalHelp, the *talking* side): presence check-ins and an addressed relay forum between devices and agents, signed per device, with the helpdesk-device adapter and duty listeners that answer correspondence through core's native-dispatch. HelpDesk never runs jobs. Together they form one cross-device, multi-agent system: agents coordinate through HelpDesk, and FleetRunner does the work.
+- **BookcaseDiscovery** (northstar \`l1-bookcase-discovery\`): built card by card from its DELIVERY-PLAN. Card IDs (DL-6, NS-11, F-0, …) are internal; name what a card does, and give the ID only as a reference.
+- **Frame OS and the Arcade**: "Frame OS" now names only the Tier-A in-process app cluster (shell, cv-builder, BlogEngine, TripPlanner: a Vite Module Federation host with Carbon, Redux Toolkit and an Express + Claude API backend). The Arcade is the operating surface that fronts the whole fleet (\`l2-ojfbot\` P3).
+
+Gloss any gate, card or code name at its first mention in a short clause, e.g. "G7, the independent restore check".
 
 ## Tone and writing standards
 
@@ -145,7 +139,7 @@ Call the \`write_article\` tool with all required fields. Do not add preamble or
 Field rules:
 - \`whatShipped\`: GFM markdown. Name specific PRs (#number), commits (7-char hash), files. ONLY reference merged/committed work here — open/in-flight PRs must go in roadmapPulse.
 - \`theDecisions\`: The most important section. Explain WHY each architectural choice was made, what alternatives were considered, and what would break if the decision were different. If applicable, tag the engineering concern area.
-- \`roadmapPulse\`: MUST explicitly reference every open PR from the Open PRs context by [repo] #number as in-flight work — do not omit any. When capture-agent (formerly gcgcca) activity is present, validate progress against its milestones in ROADMAP.md and note which architectural requirements (type bridge, Frame OS integration, API contracts, test coverage) are advancing or stalled.
+- \`roadmapPulse\`: a roadmap, not an inventory. Open with three bold-labelled lines: **Direction** (one sentence placing today's work in a current initiative), **Next milestone** (the next concrete gate or merge, and what it proves), **Blocked** (what is blocked, by what, and who decides; or "Nothing is blocked"). Follow with at most two short paragraphs on movement worth explaining. End with an **Also in flight** list that references every other open PR from the Open PRs context by [repo] #number, one line each with a few-word purpose and its state (draft, in review, blocked); do not omit any. Put daily-logger's own review-only audit drafts on one line (count and oldest). Do not carry over a previous day's paragraph unless its facts changed. Keep the pulse under 300 words. When capture-agent (formerly gcgcca) activity is present, validate progress against its milestones in ROADMAP.md and note which architectural requirements (type bridge, Frame OS integration, API contracts, test coverage) are advancing or stalled.
 - \`whatsNext\`: factual continuation context for the independent action review. Preserve useful current-state facts, owner gates and unresolved evidence, but do not rank work, give a parallel action list or tell the reader what to do next. The verified Suggested actions card is the sole recommendation surface.
 - Total word count across lede + the three reader-facing prose sections: 800–1200 words.
 - Zero-commit days: \`whatShipped\` becomes "What we explored" — architecture deep-dive or tradeoff analysis. Never write filler.
@@ -389,7 +383,7 @@ const ARTICLE_TOOL_V2: Anthropic.Tool = {
       },
       roadmapPulse: {
         type: 'string',
-        description: 'GFM markdown for Roadmap pulse. MUST explicitly reference every open PR by [repo] #number.',
+        description: 'GFM markdown for Roadmap pulse: Direction / Next milestone / Blocked lines first, then an "Also in flight" list that references every open PR by [repo] #number.',
       },
       whatsNext: {
         type: 'string',
