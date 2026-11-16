@@ -606,3 +606,8 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 30 historical backfill (2026-10-31)
 
 - The backfill plan assumed the repository action-review pause affected only generation, but job-level wiring also injected it into the unit suite and caused the first recovery run to fail before drafting. Scope the variable to the Generate article step, retain normal test fixtures, and rerun the same dated backfill with actions held.
+
+## Deviations — roadmap-first pulse and current initiatives (2026-11-15)
+
+- The plan was to change only the drafter's `roadmapPulse` rule and replace its Frame OS-era "Architecture snapshot". The council synthesis pass rewrites every section and had no instruction about the pulse, so it could expand the pulse back into a PR-by-PR narrative. Added one clause to synthesis rule 5 to keep the Direction / Next milestone / Blocked lines and the "Also in flight" list. Bumped both prompt versions so article provenance shows the change.
+- The conservative choice was to keep "reference every open PR by [repo] #number" and move it into the closing "Also in flight" list, rather than drop it.
