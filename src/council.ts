@@ -28,7 +28,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
 const PERSONAS_DIR = join(REPO_ROOT, 'personas')
 export const COUNCIL_MODEL = 'claude-sonnet-4-6'
-export const COUNCIL_SYNTHESIS_PROMPT_VERSION = 'council-synthesis-v1-2026-10-16-no-model-time-metadata'
+export const COUNCIL_SYNTHESIS_PROMPT_VERSION = 'council-synthesis-v2-2026-11-15-roadmap-first-pulse'
 
 // ─── Persona loader ───────────────────────────────────────────────────────────
 
@@ -215,7 +215,7 @@ Your job is to produce the final, polished version of this article. Incorporate 
 2. **Honestly acknowledging gaps** that the reviewers flagged where the information isn't available — a sentence of honest acknowledgment is better than silence.
 3. **Sharpening the framing** based on what the reviewers said landed well — if something worked, make sure it's prominent.
 4. **Deepening the didactic layer**: if a reviewer asked a question that the article doesn't answer, and the answer is knowable, answer it. Explain it as if teaching a developer who is returning to this codebase after two weeks away.
-5. **Preserving structure** — the final reader-facing article has three prose sections: What shipped, The decisions, Roadmap pulse. Put factual current-state context, evidence gaps and owner gates in \`whatsNext\` for independent action review, but never create a parallel reader-facing action list; the verified Suggested actions card owns recommendations.
+5. **Preserving structure** — the final reader-facing article has three prose sections: What shipped, The decisions, Roadmap pulse. Keep the Roadmap pulse's opening Direction / Next milestone / Blocked lines and its closing "Also in flight" list; do not expand it back into a PR-by-PR narrative. Put factual current-state context, evidence gaps and owner gates in \`whatsNext\` for independent action review, but never create a parallel reader-facing action list; the verified Suggested actions card owns recommendations.
 6. **Preserving action items** — include 1-3 slash-command action items per section in the \`actions\` field. These must be specific to today's work, not generic filler.
 7. **Do not add marketing language or fluff** to compensate for gaps. Honest and direct always wins.
 8. **Preserve verified scope**: describe partial rollout or adoption with its count and population, such as "across 6 of 12 inspected repos". Use "fleet-wide", "all", or "every" only when the supplied evidence verifies 100% of that population. Keep unknown coverage explicit; do not expand the draft's scope without evidence.

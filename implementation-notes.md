@@ -656,3 +656,8 @@ must establish the candidate's actual fit before a new model-run decision.
 - 2026-11-18. The read deadline design assumed destroying a PostgreSQL socket stopped active SQL, but forced cutoff and disconnect probes showed the backend could keep executing. Added a separately bounded cancellation connection to cancel the owned backend before destroying its client, with real-query cleanup regressions.
 - 2026-11-18. Command GET initially filtered by the HTTP actor, but run summaries also link prior trusted-CLI commands with older actor labels. Made configured-owner inspection cover those fixture records while preserving the authenticated actor namespace for new admissions, and verified legacy direct attempts retain null command IDs.
 - 2026-11-18. The HTTP error contract assumed normal hooks covered router failures, but independent Fastify reproduction showed bad URL encoding and overlong parameters bypassed those hooks and reflected raw paths. Added raw router sanitizers and exact error/no-store canary regressions.
+
+## Deviations — roadmap-first pulse and current initiatives (2026-11-15)
+
+- The plan was to change only the drafter's `roadmapPulse` rule and replace its Frame OS-era "Architecture snapshot". The council synthesis pass rewrites every section and had no instruction about the pulse, so it could expand the pulse back into a PR-by-PR narrative. Added one clause to synthesis rule 5 to keep the Direction / Next milestone / Blocked lines and the "Also in flight" list. Bumped both prompt versions so article provenance shows the change.
+- The conservative choice was to keep "reference every open PR by [repo] #number" and move it into the closing "Also in flight" list, rather than drop it.
