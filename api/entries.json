@@ -1,5 +1,205 @@
 [
   {
+    "date": "2026-11-16",
+    "title": "Sunday — Repo-Sync Loop Lands in Core; BookcaseDiscovery Scales to 4K",
+    "summary": "Sunday's window merged three PRs: core gains a versioned repo-sync loop for both Macs, and BookcaseDiscovery measures its stack against 4K frames and 48 MP stills.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "BookcaseDiscovery",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "BookcaseDiscovery"
+    ],
+    "commitCount": 9,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Repo-sync loop promoted from ad-hoc hook to versioned core script",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fast-forward safety split: update-ref vs. merge --ff-only by checkout state",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "BookcaseDiscovery measures before it scales: sample-then-project pattern",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Five-round Codex review cycle before merge: qualification corrections as first-class work",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "05:57Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-16T05:57:35.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/core",
+          "ref": "609",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/core/pull/609"
+        }
+      },
+      {
+        "text": "15:56Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-15T15:56:52.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "100",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/100"
+        }
+      },
+      {
+        "text": "10:08Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-15T10:08:06.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "546",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/546"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "609",
+          "url": "https://github.com/ojfbot/core/pull/609"
+        },
+        "at": "2026-11-16T05:57:35.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "5",
+          "url": "https://github.com/ojfbot/core/pull/5"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "100",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/100"
+        },
+        "at": "2026-11-15T15:56:52.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "546",
+          "url": "https://github.com/ojfbot/daily-logger/pull/546"
+        },
+        "at": "2026-11-15T10:08:06.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-16T10:03:16.251Z",
+        "runId": "43845049947",
+        "runNumber": 313,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/43845049947",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "815e9467d294687455f0018fe721073edd9c4db7",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-16T10:01:27.000Z",
+          "startedAt": "2026-11-16T10:01:27.000Z",
+          "expectedAt": "2026-11-16T09:30:00.000Z",
+          "dispatchDelaySeconds": 1887,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "25c08446c32fb01fb983e3a07dc3137dd404aada664345830469d2d33d26e8df"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-15",
     "title": "Saturday — Native Dispatch Hardening Sprint: Codex Subscription Revoked, macOS Preference Fixes, and BookcaseDiscovery Shoot Intake",
     "summary": "Saturday's window merged seven PRs across core and BookcaseDiscovery, hardening the native-dispatch layer through five successive qualification corrections and ingesting the 2026-11-11 shoot's 4K clips and 48 MP stills.",
