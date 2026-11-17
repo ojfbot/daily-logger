@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-17",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-17",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked"
+    },
+    "articleDigest": "8edc729e0371bbe1895522d5ff6c40607456f53a8baeb478090f088ac5c8ff22",
+    "roundId": "c90c351a30bc8f5e5db78cfb8ca0345a54c1d506cef54d07b1ae91032240a4ef",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "c893794efd4be442ad24057afa1f692c8242359c53d6c80569347e3d3bff284b",
+        "payload": {
+          "command": "/review core#619",
+          "description": "Standing correspondence and durable authorization closure — the in-flight draft that extends the qualified 2.1.308 entry to a durable authorization model. Review for scope and dependency completeness before it exits draft.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-17"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "bdaae4a42375c63d3ea0a4cf6f7008d8378592cd87c8f8d44b4117cf9e06f931",
+        "payload": {
+          "command": "/decide BookcaseDiscovery catalog-v2-switch",
+          "description": "Review the false-positive delta (not just the 15–20% match-rate recovery) between catalog-v1 and catalog-v2 and record the owner call on whether to switch the default. The measurement is committed; the decision is not.",
+          "repo": "BookcaseDiscovery",
+          "status": "open",
+          "sourceDate": "2026-11-17"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "1af9b191d27adb54f034bf9d316f0afbba354340b7d275772d7414d5fc53cc99",
+        "payload": {
+          "command": "/triage daily-logger#548 daily-logger#549",
+          "description": "Both PRs are non-draft and address structural prompt gaps flagged across multiple independent reviews. Neither has a stated blocker. Identify what is holding each one and either merge or state the dependency explicitly.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-17"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-17",
+      "articleDigest": "8edc729e0371bbe1895522d5ff6c40607456f53a8baeb478090f088ac5c8ff22",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "ff6dda39b4fcc42450d44a433a93c97aa2a129be7233ca33ac6a1edb0bce642e",
+      "candidatePayloadsSha256": "981cfc2e6536c74e32db99df7e9d7c787bf1d4e5b89fe78fe6f6e7faef157e5d",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "f3105c7ad52a500738861e757729621cdae3818691087e1d48cc61a155916405",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "c893794efd4be442ad24057afa1f692c8242359c53d6c80569347e3d3bff284b",
+          "payloadSha256": "f88208d90142d241ab926c466e652d1dbe0a8f79ce94c9af1af4c8a5f9120763",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#619",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "bdaae4a42375c63d3ea0a4cf6f7008d8378592cd87c8f8d44b4117cf9e06f931",
+          "payloadSha256": "79984b882587516399cb870680fed505c3b16cb9c0f3a4070c380d4099b30f6e",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "1af9b191d27adb54f034bf9d316f0afbba354340b7d275772d7414d5fc53cc99",
+          "payloadSha256": "9f2aaa51a4bf8956fd05e469800281b79e255d0d9771ce7e0d0a14bec17f1c62",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#548",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#549",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#597",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#602",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#609",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#615",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#618",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Gate before first live correspondence window: (1) core #619 must exit draft and reach review-ready; (2) CG307-U1 native admission review must complete for both core #618 and BookcaseDiscovery #103; (3) owner explicit per-machine setup on each Mac. Yuri prerequisite: main checkout must carry the core #609 repo-sync loop script before installation — that script changes scheduled jobs and requires explicit owner yes per machine; not yet installed on either Mac. Core #609 is not confirmed on the critical path to correspondence activation, but its uninstalled state is a gap in the committed → installed lifecycle. Core #615 (built-in drift registry) is open and outside the correspondence charter; the fourth plugin observed in the afternoon 2.1.308 session on 2026-11-16 is not yet identified from committed evidence. Core #602 (stale docs cleanup, opened 2026-11-14) is non-draft with no reported blocker and no stated relationship to any open PR — disposition unknown. Core #597 and #598 are prerequisites for the Selfco worker migration and are higher-dependency than #602 despite appearing as equivalent items in the flat roadmap list. Daily-logger #549 and #548 are non-draft and address structural prompt gaps flagged across multiple independent reviews; neither has a stated blocker. The nine draft audit PRs (#533–#551) have no stated merge cadence or owner assignment; their disposition as reference artifacts vs. publishable articles is an open owner call. BookcaseDiscovery catalog v1/v2 decision: the owner needs to evaluate false-positive delta (not just match-rate recovery) before switching defaults; no decision framework is committed. Requalification frequency for built-in drift is not yet characterized from committed evidence; the 2026-11-16 observation is the first recorded instance and requalification is currently a manual process."
+    },
+    "stateDigest": "f347142d92f337cc908ee7351153c63ce085e4a2ef21d2c3a68b1b2e1d787ffa",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

@@ -1,5 +1,276 @@
 [
   {
+    "date": "2026-11-17",
+    "title": "Monday — Native Dispatch Reaches 0.4.3: Claude Correspondence Qualified, Ledger Proof Installed, Unattended Status Window Admitted",
+    "summary": "Monday's window merged twelve PRs across core and BookcaseDiscovery, completing the native-dispatch correspondence qualification stack and installing a bounded ledger proof paired with BookcaseDiscovery.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "BookcaseDiscovery",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "native-dispatch",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core",
+      "BookcaseDiscovery"
+    ],
+    "commitCount": 17,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Exact built-in pin with per-invocation isolation (native-dispatch 0.4.2 → 0.4.3)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Fail-closed on built-in drift, with a registry issue for tracking changes",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Preapproved unattended status window as a bounded, distinct approval kind",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Paired ledger proof: core bounded proof + BookcaseDiscovery installed replay command (CG307-U1)",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Catalog v2 as a measurement, not a default switch",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "2026-11-17T07:09Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-17T07:09:00.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-11-17T07:09Z"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "608",
+          "url": "https://github.com/ojfbot/core/pull/608"
+        },
+        "at": "2026-11-16T18:00:31.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "611",
+          "url": "https://github.com/ojfbot/core/pull/611"
+        },
+        "at": "2026-11-16T14:47:32.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "612",
+          "url": "https://github.com/ojfbot/core/pull/612"
+        },
+        "at": "2026-11-16T18:30:36.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "613",
+          "url": "https://github.com/ojfbot/core/pull/613"
+        },
+        "at": "2026-11-16T19:19:43.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "614",
+          "url": "https://github.com/ojfbot/core/pull/614"
+        },
+        "at": "2026-11-16T19:34:50.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "616",
+          "url": "https://github.com/ojfbot/core/pull/616"
+        },
+        "at": "2026-11-16T23:29:49.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "617",
+          "url": "https://github.com/ojfbot/core/pull/617"
+        },
+        "at": "2026-11-17T02:02:33.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "618",
+          "url": "https://github.com/ojfbot/core/pull/618"
+        },
+        "at": "2026-11-17T07:57:02.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "103",
+          "url": "https://github.com/ojfbot/core/pull/103"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "101",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/101"
+        },
+        "at": "2026-11-16T11:39:15.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "102",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/102"
+        },
+        "at": "2026-11-17T00:24:35.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "103",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/103"
+        },
+        "at": "2026-11-17T07:57:09.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "618",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/618"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "550",
+          "url": "https://github.com/ojfbot/daily-logger/pull/550"
+        },
+        "at": "2026-11-16T10:12:49.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-17T10:05:20.628Z",
+        "runId": "44061301521",
+        "runNumber": 315,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/44061301521",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "3863b49e9998fd0c92e2bd235d44a9f3d0152b85",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-17T10:03:48.000Z",
+          "startedAt": "2026-11-17T10:03:48.000Z",
+          "expectedAt": "2026-11-17T09:30:00.000Z",
+          "dispatchDelaySeconds": 2028,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "25c08446c32fb01fb983e3a07dc3137dd404aada664345830469d2d33d26e8df"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-16",
     "title": "Sunday — Repo-Sync Loop Lands in Core; BookcaseDiscovery Scales to 4K",
     "summary": "Sunday's window merged three PRs: core gains a versioned repo-sync loop for both Macs, and BookcaseDiscovery measures its stack against 4K frames and 48 MP stills.",
