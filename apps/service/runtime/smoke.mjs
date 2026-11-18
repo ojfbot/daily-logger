@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
+import { ownedContainer } from './owned-container.mjs'
 
 const [image, ...extra] = process.argv.slice(2)
 assert.ok(image && extra.length === 0, 'Usage: pnpm service:runtime:smoke IMAGE')
@@ -18,13 +19,14 @@ const environment = { ...process.env, DAILYLOGGER_RUNTIME_IMAGE: image,
   DAILYLOGGER_GITHUB_CLIENT_ID: 'runtime-fixture-client', DAILYLOGGER_GITHUB_CLIENT_SECRET: 'runtime-fixture-secret' }
 
 function docker(args, { input, acceptFailure = false, timeout = 30000 } = {}) {
-  const result = spawnSync('docker', args, { env: environment, input, encoding: 'utf8', timeout, maxBuffer: 4 * 1024 * 1024 })
+  const result = spawnSync('docker', args, { env: environment, input, encoding: 'utf8', timeout, killSignal: 'SIGKILL', maxBuffer: 4 * 1024 * 1024 })
   if (!acceptFailure && (result.error || result.status !== 0)) {
-    throw new Error(`Runtime proof Docker command failed: ${args[0]}; exit ${result.status}; ${result.stderr.slice(-4000) || result.error?.message || ''}\n${result.stdout.slice(-6000)}`)
+    throw new Error(`Runtime proof Docker command failed: ${args[0]}; exit ${result.status}; ${result.stderr?.slice(-4000) || result.error?.message || ''}\n${result.stdout?.slice(-6000) ?? ''}`)
   }
   return result
 }
 const compose = (args, options) => docker(['compose', '-p', project, '-f', composeFile, ...args], options)
+const offlineContainer = ownedContainer(docker, `${project}-offline`, randomUUID())
 const script = (service, input) => compose(['exec', '-T', service, 'node', '--import', 'tsx', '--input-type=module'], { input }).stdout
 const cli = (service, args) => JSON.parse(script(service, `
   import { execFileSync } from 'node:child_process';
@@ -53,14 +55,16 @@ async function waitFor(read, timeout = 20000) {
 
 let failed = false
 try {
-  const offline = docker(['run', '--rm', '-i', '--network', 'none', '--read-only', '--cap-drop', 'ALL',
+  const offline = offlineContainer.run(['--rm', '-i', '--network', 'none', '--read-only', '--cap-drop', 'ALL',
     '--security-opt', 'no-new-privileges', '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,mode=1777,size=64m', image,
     '--input-type=module'], { input: `
       import assert from 'node:assert/strict';
       import { execFileSync } from 'node:child_process';
-      import { existsSync,readFileSync,writeFileSync } from 'node:fs';
+      import { existsSync,readFileSync,writeFileSync,mkdtempSync,rmSync,statSync } from 'node:fs';
       import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
       import { readFixture,reviewFixture } from './src/fixture.ts';
+      import { createLangfuseTelemetry } from './src/telemetry-export-process.ts';
+      import { NOOP_TELEMETRY } from './src/telemetry.ts';
       assert.equal(process.getuid(),1000);
       assert.equal(existsSync('test'),false);
       assert.equal(existsSync('/app/.git/objects/info/alternates'),false);
@@ -73,7 +77,37 @@ try {
       assert.equal(review.articleSha256,context.articleSha256);
       assert.equal(review.actionsSha256,context.actionsSha256);
       await import('./src/http-server.ts'); await import('./src/delivery-worker.ts');
-      console.log(JSON.stringify({proof:'offline-final-image',node:process.version,git:execFileSync('git',['--version'],{encoding:'utf8'}).trim(),uid:process.getuid(),fixtureCommit:context.fixtureCommit,nativeSqlite:'passed'}));
+      assert.equal(createLangfuseTelemetry(),NOOP_TELEMETRY);
+      assert.equal(existsSync('scripts/build-telemetry.mjs'),false);
+      for(const asset of ['dist/telemetry/telemetry-export-child.mjs','dist/telemetry/telemetry-export-worker.mjs']) {
+        assert.equal(statSync(asset).uid,1000);
+        assert.throws(()=>writeFileSync(asset,'forbidden'));
+      }
+      const secretRoot=mkdtempSync('/tmp/exporter-startup-proof-');
+      let telemetry;
+      try {
+        // Disposable synthetic identity only; no trust installation or endpoint.
+        execFileSync('openssl',['req','-x509','-newkey','ec','-pkeyopt','ec_paramgen_curve:P-256','-nodes','-keyout',secretRoot+'/unused-ca.key','-out',secretRoot+'/ca.pem','-days','1','-subj','/CN=Disposable exporter startup fixture'],{stdio:'ignore',timeout:5000,killSignal:'SIGKILL'});
+        writeFileSync(secretRoot+'/public','pk-synthetic-offline-startup',{mode:0o600});
+        writeFileSync(secretRoot+'/secret','sk-synthetic-offline-startup',{mode:0o600});
+        telemetry=createLangfuseTelemetry({mode:'langfuse',endpoint:'https://127.0.0.1:1/api/public/otel/v1/traces',publicKeyFile:secretRoot+'/public',secretKeyFile:secretRoot+'/secret',caFile:secretRoot+'/ca.pem',environment:'qualification'});
+        assert.notEqual(telemetry,NOOP_TELEMETRY);
+        assert.equal(typeof telemetry.exporterDiagnostics,'function');
+        const deadline=Date.now()+4500;
+        while(!telemetry.exporterDiagnostics().ready) {
+          assert.equal(telemetry.exporterDiagnostics().closed,false,'Compiled exporter child failed startup');
+          assert.ok(Date.now()<deadline,'Compiled exporter did not become ready');
+          await new Promise(resolve=>setTimeout(resolve,10));
+        }
+        assert.equal(telemetry.exporterDiagnostics().acknowledged,0);
+        assert.equal(telemetry.exporterDiagnostics().failures,0);
+        assert.equal(telemetry.diagnostics().accepted,0);
+      } finally {
+        if(telemetry) await telemetry.shutdown();
+        rmSync(secretRoot,{recursive:true,force:true});
+      }
+      assert.equal(telemetry.exporterDiagnostics().closed,true);
+      console.log(JSON.stringify({proof:'offline-final-image',node:process.version,git:execFileSync('git',['--version'],{encoding:'utf8'}).trim(),uid:process.getuid(),fixtureCommit:context.fixtureCommit,nativeSqlite:'passed',compiledExporterChild:'ready-then-closed',exporterBatches:0,defaultTelemetry:'disabled'}));
     ` })
   process.stdout.write(offline.stdout)
   const config = JSON.parse(compose(['config', '--format', 'json']).stdout)
@@ -136,9 +170,13 @@ try {
   console.log(JSON.stringify({ proof: 'production-runtime-with-external-http-tests', result: 'passed', realGithubLogin: 'not-qualified' }))
 } catch (error) { failed = true; throw error }
 finally {
+  let cleanupFailed = false
+  try { offlineContainer.cleanup() }
+  catch { cleanupFailed = true; process.stderr.write('Owned offline runtime container cleanup failed; no unverified container was removed\n') }
   const cleanup = compose(['down', '--volumes', '--remove-orphans'], { timeout: 45000, acceptFailure: true })
   if (cleanup.error || cleanup.status !== 0) {
-    process.stderr.write(`Disposable runtime cleanup failed: ${cleanup.stderr.slice(-2000)}\n`)
-    if (!failed) throw new Error('Disposable runtime cleanup failed')
+    cleanupFailed = true
+    process.stderr.write(`Disposable runtime cleanup failed: ${cleanup.stderr?.slice(-2000) ?? ''}\n`)
   }
+  if (cleanupFailed && !failed) throw new Error('Disposable runtime cleanup failed')
 }

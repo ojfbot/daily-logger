@@ -13,6 +13,8 @@ COPY apps/service/package.json ./apps/service/package.json
 RUN pnpm --filter @ojfbot/daily-logger-service... install --frozen-lockfile
 COPY apps/service/src ./apps/service/src
 COPY apps/service/migrations ./apps/service/migrations
+COPY apps/service/scripts/build-telemetry.mjs ./apps/service/scripts/build-telemetry.mjs
+RUN pnpm --filter @ojfbot/daily-logger-service build:telemetry
 RUN pnpm --filter @ojfbot/daily-logger-service deploy --prod /production/service
 
 FROM base AS runtime

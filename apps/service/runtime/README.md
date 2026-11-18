@@ -18,33 +18,52 @@ pnpm service:runtime:smoke dailylogger-runtime:local
 ```
 
 Context preparation copies only committed runtime inputs selected by the
-service's `files` list and required build/schema assets. Changed runtime inputs,
+service's `files` list and required build/schema assets. The `dist` deploy tree
+is excluded even if force-committed: the image rebuilds it from source. Only the
+explicit exporter build script is admitted as an `.mjs` build input; arbitrary
+scripts and host output remain excluded. Changed runtime inputs,
 symlinks and existing destinations reject. Untracked files, environment files,
 developer node_modules and source Git metadata never enter the build context.
 A fresh local-only shallow fetch supplies the public fixture commit. The store
 has no remote, alternate object store, local reflogs, source config or hooks; its shallow
 boundary and object identities are verified before packaging.
 
-The build installs from the frozen workspace lock for the target platform and
-uses pnpm production deploy. The service owns its pinned `tsx` loader. SQL and
+The build installs from the frozen workspace lock for the target platform, uses
+the service's exact esbuild development dependency to compile the two isolated
+exporter entry points, and then uses pnpm production deploy. The service owns its
+pinned production `tsx` loader and Langfuse/OTel dependencies. SQL and
 schema assets retain their existing paths. Source and Git metadata belong to
 UID/GID1000 and are read-only; `/app/node_modules` links to the same service-owned
 production dependency tree so root-directory CLI subprocesses resolve the loader.
-Build tools, source tests and fault preloads are excluded from the runtime.
+The exporter build script, source tests and fault preloads are excluded from the
+runtime. The existing production `tsx` loader retains its own transitive compiler;
+the compiled exporter child does not launch that loader or a compiler helper.
 
 Node24.22.3 and PostgreSQL18.7 base images are pinned by official multi-platform
 index digest. Each built image still requires target-platform proof; rebuilding
 later can resolve newer distribution packages. Do not equate the macOS object
 preparation proof with a Linux image build.
 
-The smoke command owns a unique disposable Compose project and removes only its
-containers, networks and volumes. It tests the actual image offline and with a
+The smoke command owns a unique disposable Compose project and a separately named
+offline container. Standalone cleanup checks its exact name and random ownership
+label, then removes only the verified container ID, including after Docker-client
+timeout. Each lookup/removal has a five-second limit; a failure is reported while
+project-only Compose cleanup still runs. The synthetic OpenSSL subprocess also
+has a five-second limit. It tests the actual image offline and with a
 read-only filesystem, opens native SQLite, runs production entrypoints before
 mounting test code, requires explicit repeatable migration, and completes a
 cross-container fixture start/restart/resume with canonical artifact bytes.
 It then mounts the existing HTTP tests read-only to verify the production
 dependency closure against disposable PostgreSQL. All credentials in this
 harness are generated or fixed test values. This is not real GitHub login proof.
+
+The offline final-image portion also verifies that both compiled exporter entry
+points are present and read-only under UID 1000. It first checks the no-op default,
+then constructs an explicitly configured adapter with disposable synthetic key/CA
+files under `/tmp`, waits for the real SDK child to report ready, and closes it.
+No observations are emitted and the container has no network: this proves the
+production dependency/path/UID startup closure, not TLS transport or Langfuse
+ingestion. The ordinary API/worker commands still do not inject the adapter.
 
 ## Deployment inputs
 
@@ -71,7 +90,8 @@ API and worker share `/var/lib/dailylogger/fixtures` at the same absolute path.
 PostgreSQL stores that path, so a different worker mount is invalid. Named-volume
 ownership is verified in CI; actual NAS bind-mount ownership needs separate proof.
 Application PostgreSQL and fixture files use separate persistent volumes.
-Telemetry stays no-op with no exporter, database, credentials or disk spool.
+Telemetry stays no-op by default. The exporter code/dependencies are packaged but
+the CLI does not enable them; no telemetry database, credentials or disk spool is configured.
 Any later telemetry storage, retention and backups remain independent.
 
 The worker, migration and database use an internal container network. Only the
