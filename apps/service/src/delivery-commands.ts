@@ -5,6 +5,7 @@ import { digest, json, requireCondition } from './fixture.js'
 import { admitRunInTransaction, runOperation, type LockedRunContext, type RunRow } from './postgres-runner.js'
 import { POSTGRES_WORKFLOW_VERSION } from './postgres-fixture.js'
 import { QUEUE, QUEUE_OPTIONS, transactionAdapter } from './delivery-db.js'
+import { NOOP_TELEMETRY, observeAdmissionResponse, type Telemetry } from './telemetry.js'
 
 type Kind = 'start' | 'resume' | 'recover' | 'cancel'
 export interface CommandRequest { schemaVersion: 1; actorId: string; key: string; operation: Kind; payload: Record<string, string> }
@@ -115,15 +116,17 @@ export async function admitCommandInTransaction(client: pg.PoolClient, boss: PgB
   return { status, body }
 }
 
-export async function admitCommand(pool: pg.Pool, boss: PgBoss, value: unknown) {
+export async function admitCommand(pool: pg.Pool, boss: PgBoss, value: unknown, telemetry: Telemetry = NOOP_TELEMETRY) {
   const client = await pool.connect()
+  let admission: Admission
   try {
     await client.query('BEGIN')
     await client.query("SET LOCAL lock_timeout='5s'; SET LOCAL statement_timeout='10s'")
-    const admission = await admitCommandInTransaction(client, boss, value)
+    admission = await admitCommandInTransaction(client, boss, value)
     await client.query('COMMIT')
-    return admission
   } catch (error) { await client.query('ROLLBACK'); throw error } finally { client.release() }
+  observeAdmissionResponse(telemetry, admission)
+  return admission
 }
 
 export function isTransient(error: unknown): boolean {

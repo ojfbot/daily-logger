@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `1d115fb05a4d26727398055e68d2dec7b15bcad166a36931aadcfc0c3ea463d0`.
+> Source SHA-256: `de0a6c9f3c983c8fc30742c422091443630487479c66ea6b16d160b2519eaea4`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1495,4 +1495,66 @@ Fixture Cancellation Requesting yields Run Cancellation. [src: apps/service/src/
 Run Cancellation can be requested, effective, or already_completed. [src: apps/service/migrations/002_delivery_commands.sql]
 Fixture Cancellation Reconciling requires Graph Checkpoints. [src: apps/service/src/delivery-worker.ts]
 Fixture Cancellation Reconciling affects Run Cancellation. [src: apps/service/src/delivery-worker.ts]
+```
+
+## SD2.3 — Offline fixture metadata observations
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.3 — Offline fixture metadata observations"
+---
+flowchart TD
+  accTitle: SD2.3 — Offline fixture metadata observations
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n280["Committed Admission Response"]
+  n281("Admission Response Observing")
+  n282("Offline Observation Recording")
+  n272("Fixture Delivery Executing")
+  n262("PostgreSQL Fixture Executing")
+  n237("Fixture Replaying")
+  n283["Explicit Offline Observation Configuration"]
+  n284["Closed Observation Policy"]
+  n285["Projected Fixture Observations"]
+  n286["Correlation Metadata"]
+  n287["Fixed Lifecycle Labels"]
+  n288["Bounded Timing"]
+  n289("Offline Observation Exporting")
+  n290["Trusted Nonblocking Test Sinks"]
+  n291["Telemetry Diagnostics"]
+  n280 -->|"requires (instrument)"| n281
+  n281 -->|"invokes"| n282
+  n272 -->|"invokes"| n282
+  n262 -->|"invokes"| n282
+  n237 -->|"invokes"| n282
+  n283 -->|"requires (instrument)"| n282
+  n284 -->|"requires (instrument)"| n282
+  n282 -->|"yields"| n285
+  n286 -->|"part of"| n285
+  n287 -->|"part of"| n285
+  n288 -->|"part of"| n285
+  n285 -->|"requires (instrument)"| n289
+  n290 -->|"requires (instrument)"| n289
+  n289 -->|"yields"| n291
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Admission Response Observing requires Committed Admission Response. [src: apps/service/src/delivery-commands.ts]
+Admission Response Observing invokes Offline Observation Recording. [src: apps/service/src/telemetry.ts]
+Fixture Delivery Executing invokes Offline Observation Recording. [src: apps/service/src/delivery-worker.ts]
+PostgreSQL Fixture Executing invokes Offline Observation Recording. [src: apps/service/src/postgres-runner.ts]
+Fixture Replaying invokes Offline Observation Recording. [src: apps/service/src/workflow.ts]
+Offline Observation Recording requires Explicit Offline Observation Configuration. [src: apps/service/src/telemetry.ts]
+Offline Observation Recording requires Closed Observation Policy. [src: apps/service/src/telemetry-schema.ts]
+Offline Observation Recording yields Projected Fixture Observations. [src: apps/service/src/telemetry-schema.ts]
+Projected Fixture Observations consists of Correlation Metadata, Fixed Lifecycle Labels, and Bounded Timing. [src: apps/service/src/telemetry-schema.ts]
+Offline Observation Exporting requires Projected Fixture Observations. [src: apps/service/src/telemetry.ts]
+Offline Observation Exporting requires Trusted Nonblocking Test Sinks. [src: apps/service/src/telemetry.ts]
+Offline Observation Exporting yields Telemetry Diagnostics. [src: apps/service/src/telemetry.ts]
 ```
