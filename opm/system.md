@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `21da1b789ba10953e82fc3a7d960cbb8dc75a6a017831ab37c0d88244493a6a2`.
+> Source SHA-256: `6cb205a587f925dca1acaa199f90e5c3ea76a5ef8119ca30446e15346a90ee2d`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1689,7 +1689,7 @@ Private HTTPS Forwarding requires Explicit IPv4 Bridge Listener. [src: apps/serv
 Private HTTPS Forwarding yields Forwarded Fixture HTTP Request. [src: apps/service/runtime/prepare-ingress.ts]
 ```
 
-## SD2.5 — Opt-in metadata exporter process
+## SD2.6 — Opt-in metadata exporter process
 
 **Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
 rounded nodes identify processes. Labeled solid arrows distinguish human participation,
@@ -1698,10 +1698,10 @@ Use the source facts below for properties, state detail, and decomposition membe
 
 ```mermaid
 ---
-title: "SD2.5 — Opt-in metadata exporter process"
+title: "SD2.6 — Opt-in metadata exporter process"
 ---
 flowchart TD
-  accTitle: SD2.5 — Opt-in metadata exporter process
+  accTitle: SD2.6 — Opt-in metadata exporter process
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
   n322["Explicit Exporter Configuration"]
   n310("Exporter Process Admitting")
