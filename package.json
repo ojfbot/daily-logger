@@ -36,6 +36,8 @@
     "check:action-size": "tsx scripts/check-action-size.ts",
     "check:shipment-times": "tsx scripts/check-shipment-time-coverage.ts",
     "service:postgres": "node --import tsx apps/service/src/postgres-cli.ts",
+    "service:delivery": "node --import tsx apps/service/src/delivery-cli.ts",
+    "test:service:delivery": "pnpm --filter @ojfbot/daily-logger-service test:delivery",
     "test:service:postgres": "pnpm --filter @ojfbot/daily-logger-service test:postgres"
   },
   "dependencies": {
