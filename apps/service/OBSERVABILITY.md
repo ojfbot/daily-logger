@@ -103,8 +103,12 @@ Build the two isolated ESM entry points with `pnpm --filter
 adapter. Normal service tests also perform this build using the repository's
 locked esbuild. The application continues to run from the existing source tree;
 the adapter resolves `apps/service/dist/telemetry/telemetry-export-child.mjs`.
-The current runtime image has **not** been extended or requalified for these
-artifacts. Missing artifacts fail open by closing the optional child.
+The runtime Dockerfile now builds these artifacts from committed source before
+production deploy. Its offline final-image smoke requires an actual child-ready
+signal under UID 1000 with a read-only root filesystem and networking disabled;
+it does not emit observations or require an endpoint. See the runtime packaging
+receipt for which platform checks have actually run. Missing artifacts fail open
+by closing the optional child. API/worker CLI injection remains disabled.
 
 `createLangfuseTelemetry(config?)` returns the existing no-op adapter unless
 explicit configuration passes the closed validator. The only enabled shape is:
@@ -199,8 +203,8 @@ supervision remains a separate gate. V8 limits (96 MiB child old space; worker
 64 MiB old/16 MiB young/4 MiB stack) are **not total RSS or CPU quotas**. No new
 container memory/process limit or production capacity claim is made here.
 
-Integration still required: include the built ESM artifacts, choose protected
-secret/CA mounts and endpoint, construct one owned adapter per API/worker, and
+Integration still required: qualify the built image on its target platform,
+choose protected secret/CA mounts and endpoint, construct one owned adapter per API/worker, and
 inject it into their existing optional telemetry arguments. Preserve current
 HTTP blockade/LangSmith suppression, existing deadlines and no-op defaults.
 Run the real PostgreSQL HTTP-to-instrumented-worker suite with this actual adapter
