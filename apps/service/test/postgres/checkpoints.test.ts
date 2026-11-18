@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { spawn, spawnSync, type SpawnSyncReturns } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { once } from 'node:events'
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, before, test } from 'node:test'
@@ -321,16 +321,39 @@ test('nested admissions cannot mutate completed artifacts or bypass a missing an
   assert.equal(success(command('status', forRun(started.runId))).status, 'complete')
 })
 
-test('a missing admitted directory cannot be recreated by a different request key', async () => {
-  const directory = join(sandbox, 'missing-admitted-directory')
+test('missing destinations hold new admissions without guessing absent case aliases; intact existing runs remain usable', async t => {
+  const intact = start('namespace-intact-control')
+  const directory = join(sandbox, 'MissingAdmittedDirectory')
+  const alias = join(sandbox, 'missingadmitteddirectory')
+  const parked = join(sandbox, 'temporarily-moved-admission')
+  const unrelated = join(sandbox, 'unrelated-during-missing-directory')
   const admitted = await admitRun(db, 'missing-directory-owner', directory)
-  rmSync(directory, { recursive: true })
-  await assert.rejects(admitRun(db, 'missing-directory-contender', directory), /already bound to another request key/)
-  assert.equal(existsSync(directory), false, 'A conflicting key must not recreate the missing directory or marker')
-  assert.equal((await db.query('SELECT 1 FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['missing-directory-contender'])).rows.length, 0)
-  await assert.rejects(admitRun(db, 'missing-directory-owner', directory), /Reserved destination is missing/)
-  assert.equal(existsSync(directory), false, 'The existing key also stays held instead of repairing missing ownership')
-  assert.deepEqual((await db.query('SELECT run_id,status FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['missing-directory-owner'])).rows, [{ run_id: admitted.run_id, status: 'admitted' }])
+  const insensitive = existsSync(alias)
+  t.diagnostic(`Missing-destination alias qualification filesystem case-insensitive: ${insensitive}`)
+  if (process.env.DAILYLOGGER_REQUIRE_CASE_INSENSITIVE === '1') assert.equal(insensitive, true)
+  // Preserve the original inode and marker for finally; no recreated ownership.
+  renameSync(directory, parked)
+  try {
+    assert.equal(existsSync(directory), false)
+    assert.equal(existsSync(alias), false)
+    await assert.rejects(admitRun(db, 'missing-directory-contender', directory), /already bound to another request key/)
+    await assert.rejects(admitRun(db, 'missing-directory-alias', alias), /namespace has a missing bound destination/)
+    await assert.rejects(admitRun(db, 'missing-directory-unrelated', unrelated), /namespace has a missing bound destination/)
+    for (const path of [directory, alias, unrelated]) assert.equal(existsSync(path), false, 'Held admission must create no directory or marker')
+    assert.equal((await db.query('SELECT 1 FROM dailylogger_service.fixture_runs WHERE request_key=ANY($1::text[])', [['missing-directory-contender', 'missing-directory-alias', 'missing-directory-unrelated']])).rows.length, 0)
+    await assert.rejects(admitRun(db, 'missing-directory-owner', directory), /Reserved destination is missing/)
+    assert.equal(existsSync(directory), false, 'The existing key also stays held instead of repairing missing ownership')
+    assert.deepEqual((await db.query('SELECT run_id,status FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['missing-directory-owner'])).rows, [{ run_id: admitted.run_id, status: 'admitted' }])
+    const retried = success(command('start', ['--request-key', 'namespace-intact-control', '--run-dir', intact.runDir]))
+    assert.equal(retried.checkpointId, intact.checkpointId)
+    assert.equal(success(command('status', forRun(intact.runId))).checkpointId, intact.checkpointId)
+  } finally {
+    // Only these test-owned candidate paths could have been created by a bug.
+    for (const path of [directory, alias, unrelated]) if (existsSync(path)) rmSync(path, { recursive: true })
+    renameSync(parked, directory)
+  }
+  assert.equal((await admitRun(db, 'missing-directory-owner', directory)).run_id, admitted.run_id)
+  assert.ok((await admitRun(db, 'missing-directory-unrelated', unrelated)).run_id, 'New admission resumes after original physical ownership is restored')
 })
 
 test('concurrent ancestor and descendant admission serialize without creating a losing marker', { timeout: 30_000 }, async () => {

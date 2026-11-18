@@ -65,9 +65,13 @@ export async function admitRunInTransaction(client: pg.PoolClient, requestKey: s
   const destinations = await client.query<{ run_dir: string; request_key: string }>('SELECT run_dir,request_key FROM dailylogger_service.fixture_runs')
   for (const destination of destinations.rows) {
     // Resolve physical aliases for existing bindings without case-folding paths
-    // on case-sensitive filesystems. Retain absent bindings as protected paths.
-    const bound = existsSync(destination.run_dir) ? realpathSync.native(destination.run_dir) : destination.run_dir
+    // on case-sensitive filesystems. An absent leaf has no resolvable physical
+    // spelling: hold new admissions until the namespace is repaired instead of
+    // guessing whether a different absent spelling aliases the missing binding.
+    const present = existsSync(destination.run_dir)
+    const bound = present ? realpathSync.native(destination.run_dir) : destination.run_dir
     requireAdmission(bound !== canonical || destination.request_key === existing.rows[0]?.request_key, 'Run directory is already bound to another request key')
+    requireAdmission(present || existing.rows.length > 0, 'Admission namespace has a missing bound destination; new admissions are held until ownership is restored')
     requireAdmission(!canonical.startsWith(`${bound}${sep}`) && !bound.startsWith(`${canonical}${sep}`), 'Run directory overlaps an existing run directory')
   }
   if (existing.rows.length) {
