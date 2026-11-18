@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-11-18. The published-socket test client reused the runtime image without its writable temporary mount, so tsx could not initialize its private cache. Added the same bounded tmpfs used by the other disposable clients while keeping its root filesystem read-only.
+
 - 2026-11-18. Proxy privacy checks initially collected logs only after container replacement, but removed containers no longer contributed their successful/forbidden request logs. Capture each generation before recreation, then scan the combined buffers without printing request values.
 
 - 2026-11-18. The proxy callback canary used a prefixed state string, but the API validates an exact 43-character base64url state before checking the login cookie. Replaced it with a valid random state so the test reaches the intended forbidden-cookie path instead of merely testing malformed input.
