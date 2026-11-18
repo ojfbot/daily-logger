@@ -25,7 +25,7 @@ export function prepareRuntimeContext(destination: string, sourceRoot = REPO_ROO
   const service = z.object({ files: z.array(z.string().regex(/^[a-z][a-z0-9-]*$/)).min(1) }).parse(
     JSON.parse(git(source, ['show', `${revision}:apps/service/package.json`]).toString('utf8')))
   const allowed = [...metadata, ...service.files.map(path => `apps/service/${path}`)]
-  if (git(source, ['status', '--porcelain', '--untracked-files=no', '--', ...allowed]).length) {
+  if (git(source, ['status', '--porcelain', '--untracked-files=no', '--', ...allowed, 'apps/service/runtime']).length) {
     throw new Error('Commit runtime inputs before preparing their context')
   }
   const entries = git(source, ['ls-tree', '-r', '-z', revision, '--', ...allowed]).toString('utf8').split('\0').filter(Boolean)
@@ -50,11 +50,13 @@ export function prepareRuntimeContext(destination: string, sourceRoot = REPO_ROO
     const staging = join(target, 'fixture-source')
     mkdirSync(staging)
     git(staging, ['-c', 'init.templateDir=', 'init', '--quiet'])
+    git(staging, ['config', '--local', 'core.logAllRefUpdates', 'false'])
     git(staging, ['fetch', '--quiet', '--no-tags', '--depth=1', source, SOURCE_COMMIT], true)
     git(staging, ['update-ref', 'refs/heads/fixture-source', SOURCE_COMMIT])
     git(staging, ['symbolic-ref', 'HEAD', 'refs/heads/fixture-source'])
     rmSync(join(staging, '.git/FETCH_HEAD'), { force: true })
-    if (git(staging, ['remote']).length || existsSync(join(staging, '.git/objects/info/alternates'))) throw new Error('Fixture store must be self-contained without remotes')
+    if (git(staging, ['remote']).length || existsSync(join(staging, '.git/objects/info/alternates'))
+      || existsSync(join(staging, '.git/logs'))) throw new Error('Fixture store must have no remotes, alternates or local reflogs')
     const configKeys = git(staging, ['config', '--local', '--name-only', '--list']).toString('utf8').trim().split('\n')
     if (configKeys.some(key => !key.startsWith('core.'))) throw new Error('Unexpected fixture Git configuration')
     git(staging, ['fsck', '--full', '--no-reflogs'])
