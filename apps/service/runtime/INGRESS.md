@@ -84,8 +84,10 @@ The proxy keeps the original authority and disables access/request error logs
 that could capture OAuth callback codes, state or cookies. Errors are closed
 JSON with no-store; upstream failures retain exact-key reconciliation semantics.
 Automatic HTTPS issuance, HTTP redirects, HTTP/3/UDP, admin publication and
-mutation retries are disabled. The leaf files supply trusted TLS without any
-certificate-verification bypass.
+load-balancer retries are disabled. CI proves single forwarding for the current
+JSON mutation when its upstream drops the accepted request. Changes to request
+body or replay semantics need transport requalification. The leaf files supply
+trusted TLS without any certificate-verification bypass.
 
 ## Qualification
 
