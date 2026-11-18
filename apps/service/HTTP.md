@@ -20,12 +20,19 @@ environment. The fixture root must exist outside Git checkouts and metadata.
 | `DAILYLOGGER_GITHUB_CLIENT_SECRET` | OAuth application client secret. |
 | `DAILYLOGGER_FIXTURE_ROOT` | Absolute application-owned directory for fixture reservations. |
 | `DAILYLOGGER_HTTP_PORT` | Loopback listener port, default `4300`. |
+| `DAILYLOGGER_HTTP_HOST` | Default `127.0.0.1`; explicit `0.0.0.0` opt-in for the private container ingress overlay. |
 
 Register `${DAILYLOGGER_PRIVATE_ORIGIN}/v1/auth/callback` as the OAuth callback.
 The HTTPS reverse proxy forwards the configured origin's `Host` header to the
 loopback listener. The server compares that host exactly and uses its configured
 origin for redirects. Cookies use `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/`,
 and the `__Host-` prefix.
+
+The private ingress overlay opts into IPv4 listening inside the app's container
+namespace and publishes only the proxy's TLS port. Application peers can reach
+that backend; its session/owner/Origin/CSRF checks remain required. Do not use
+this bridge setting for a host-network or bare-host deployment. The default
+without the overlay remains loopback. [Private ingress preparation](runtime/INGRESS.md).
 
 Install the migration-aware API and worker code together before applying 003.
 Every installed migration has a checked version and digest. The current direct

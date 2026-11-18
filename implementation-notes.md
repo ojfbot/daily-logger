@@ -2,6 +2,13 @@
 
 ## Deviations
 
+- 2026-11-18. Proxy privacy checks initially collected logs only after container replacement, but removed containers no longer contributed their successful/forbidden request logs. Capture each generation before recreation, then scan the combined buffers without printing request values.
+
+- 2026-11-18. The proxy callback canary used a prefixed state string, but the API validates an exact 43-character base64url state before checking the login cookie. Replaced it with a valid random state so the test reaches the intended forbidden-cookie path instead of merely testing malformed input.
+
+- 2026-11-18. Ingress proof assumed overriding HTTP Host left TLS identity unchanged, but Node derives default SNI from that header. The verifying client now selects TLS servername independently from its URL, so foreign-Host tests reach HTTP policy while wrong-name tests still exercise TLS rejection.
+- 2026-11-18. Explicitly disabling IPv6 only in the ingress overlay looked equivalent to the base default, but Compose hashes the configuration difference and may replace a network with external test clients attached. Made the base network setting explicit before startup so overlay application preserves its network identity.
+
 - 2026-11-18. A fresh credential-free Git store still created reflogs carrying builder identity. Disabled reference logging before fetching or creating refs and added context/image assertions that no local reflogs are packaged.
 
 - 2026-11-18. Runtime CI initially mounted only the HTTP test directory, but the combined suite launches its observation worker from the delivery test directory. Added that read-only external helper mount while keeping both test directories out of the shipped image and retaining the earlier unmounted production-entrypoint proof.
