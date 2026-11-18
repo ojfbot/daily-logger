@@ -1,0 +1,18 @@
+{
+  "name": "@ojfbot/daily-logger-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "shadow": "node --import tsx src/cli.ts",
+    "type-check": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@langchain/core": "1.3.4",
+    "@langchain/langgraph": "1.7.5",
+    "@langchain/langgraph-checkpoint": "1.2.3",
+    "@langchain/langgraph-checkpoint-sqlite": "1.1.1"
+  },
+  "engines": { "node": ">=24.0.0" }
+}
