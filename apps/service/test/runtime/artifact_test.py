@@ -1,0 +1,515 @@
+"""Behavioral tests for the authenticated, non-executing artifact receiver."""
+import base64
+import copy
+from datetime import datetime, timedelta, timezone
+import hashlib
+import importlib.util
+import io
+import json
+import os
+from pathlib import Path
+import stat
+import struct
+import subprocess
+import sys
+import tarfile
+import tempfile
+import unittest
+from unittest.mock import patch
+import warnings
+import zipfile
+
+
+MODULE = Path(__file__).resolve().parents[2] / 'runtime/artifact.py'
+SPEC = importlib.util.spec_from_file_location('dailylogger_artifact_under_test', MODULE)
+artifact = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(artifact)
+REAL_SUBPROCESS_RUN = subprocess.run
+BUILT, HEAD, BASE = '3' * 40, '1' * 40, '2' * 40
+REPOSITORY = 'ojfbot/daily-logger'
+WORKFLOW = '.github/workflows/service-runtime.yml'
+UPLOAD = 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02'
+
+
+def encoded(value):
+    return json.dumps(value, separators=(',', ':')).encode()
+
+
+def hashed(value):
+    return hashlib.sha256(value).hexdigest()
+
+
+def tar_bytes(entries):
+    output = io.BytesIO()
+    with tarfile.open(fileobj=output, mode='w', format=tarfile.USTAR_FORMAT) as archive:
+        for name, data in entries:
+            member = tarfile.TarInfo(name)
+            member.size = len(data)
+            member.mode = 0o644
+            archive.addfile(member, io.BytesIO(data))
+    return output.getvalue()
+
+
+def image_tar(*, user='1000:1000', architecture='amd64', system='linux',
+              missing_layer=False, corrupt_layer=False, missing_diff=False):
+    layer = tar_bytes([('etc/fixture-proof.txt', b'An actual disposable image layer\n')])
+    config = encoded({'architecture': architecture, 'os': system,
+                      'config': {'User': user},
+                      'rootfs': {'type': 'layers', 'diff_ids': [] if missing_diff else ['sha256:' + hashed(layer)]}})
+    image_id = 'sha256:' + hashed(config)
+    config_name = hashed(config) + '.json'
+    entries = [('manifest.json', encoded([{'Config': config_name,
+                'RepoTags': ['dailylogger-runtime:proof'], 'Layers': ['fixture/layer.tar']}])),
+               (config_name, config)]
+    if not missing_layer:
+        entries.append(('fixture/layer.tar', layer + b'corruption' if corrupt_layer else layer))
+    return tar_bytes(entries), image_id
+
+
+class GithubFixture:
+    """Trusted API records and downloaded bytes are independently mutable."""
+    def __init__(self):
+        self.expected = {'schemaVersion': 1, 'artifactId': 700, 'runId': 100,
+                         'attempt': 2, 'source': {'builtRevision': BUILT,
+                         'event': 'pull_request', 'ref': 'refs/pull/55/merge',
+                         'pullRequest': {'number': 55, 'head': HEAD, 'base': BASE}}}
+        self.source_files = {
+            'pnpm-lock.yaml': b'lockfileVersion: 9.0\n',
+            'apps/service/runtime/Dockerfile': b'FROM synthetic-fixture-only\n',
+            'apps/service/runtime/compose.yaml': b'image: postgres:18.7-trixie@sha256:' + b'a' * 64 + b'\n',
+            'apps/service/runtime/prepare-ingress.ts': b"export const PROXY_IMAGE = 'caddy:2.11.9-alpine@sha256:" + b'b' * 64 + b"'\n",
+            WORKFLOW: ('name: Synthetic fixture producer\njobs:\n  runtime-image:\n'
+                       '    steps:\n      - uses: ' + UPLOAD + '\n').encode(),
+        }
+        self.image, image_id = image_tar()
+        self.manifest = {
+            'schemaVersion': 1, 'purpose': 'disposable-fixture-candidate', 'repository': REPOSITORY,
+            'source': copy.deepcopy(self.expected['source']),
+            'ci': {'workflowPath': WORKFLOW, 'workflowId': 50, 'runId': 100,
+                   'attempt': 2, 'jobId': 110, 'jobKey': 'runtime-image'},
+            'image': {'identityKind': 'docker-config-sha256', 'configId': image_id,
+                      'platform': 'linux/amd64', 'uid': 1000, 'gid': 1000},
+            'archive': {'name': 'runtime-image.tar', 'size': len(self.image), 'sha256': hashed(self.image)},
+            'context': {'schemaVersion': 1, 'sourceRevision': BUILT, 'fixtureCommit': '4' * 40,
+                        'articleSha256': '5' * 64, 'actionsSha256': '6' * 64,
+                        'configuredRemotes': 0, 'alternateObjectStores': 0},
+            'sourceFileDigests': {name: hashed(data) for name, data in self.source_files.items()},
+            'upstreamImages': {'postgres': 'postgres:18.7-trixie@sha256:' + 'a' * 64,
+                               'caddy': 'caddy:2.11.9-alpine@sha256:' + 'b' * 64},
+            'qualifications': {
+                'preparation': {'tests': 8, 'passed': 8, 'failed': 0, 'skipped': 0},
+                'offline': {'proof': 'offline-final-image', 'node': 'v24.22.3', 'git': 'git version 2.47.3',
+                            'uid': 1000, 'fixtureCommit': '4' * 40, 'nativeSqlite': 'passed'},
+                'entrypoints': {'proof': 'production-entrypoints-and-cross-container-storage',
+                                'migration': 'explicit-and-repeatable', 'fixture': 'complete',
+                                'shutdown': 'clean', 'publishedPorts': 0},
+                'http': {'proof': 'production-runtime-with-external-http-tests', 'result': 'passed',
+                         'realGithubLogin': 'not-qualified',
+                         'counts': {'tests': 17, 'passed': 17, 'failed': 0, 'skipped': 0}},
+                'ingress': {'proof': 'private-tls-proxy', 'strictTls': True, 'defaultLoopback': True,
+                            'peerAcl': 'passed', 'hostPort': 'preserved', 'independentContainerRecreation': 'passed',
+                            'leafReplacement': 'passed', 'sessionsAndCommands': 'preserved', 'logout': 'revoked',
+                            'mutationForwardCount': 1, 'logCanaries': 'absent', 'realGithubLogin': 'not-qualified'},
+                'exportReload': {'status': 'passed', 'imageRecordRemoved': True,
+                                 'archiveClosure': 'passed', 'emptyLayerStore': False},
+            },
+        }
+        root = f'repos/{REPOSITORY}/'
+        self.artifact_route = root + 'actions/artifacts/700'
+        self.run_route = root + 'actions/runs/100/attempts/2'
+        self.jobs_route = self.run_route + '/jobs?per_page=100&page=1'
+        self.commit_route = root + f'commits/{BUILT}'
+        self.records = {
+            root: {'id': 42, 'full_name': REPOSITORY},
+            self.artifact_route: {'id': 700, 'name': 'dailylogger-fixture-100-2', 'expired': False,
+                'expires_at': (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+                'workflow_run': {'id': 100, 'repository_id': 42, 'head_repository_id': 42, 'head_sha': HEAD}},
+            self.run_route: {'id': 100, 'run_attempt': 2, 'workflow_id': 50, 'status': 'completed',
+                'conclusion': 'success', 'path': WORKFLOW, 'event': 'pull_request',
+                'repository': {'full_name': REPOSITORY}, 'head_sha': HEAD,
+                'pull_requests': [{'number': 55}]},
+            self.jobs_route: {'jobs': [{'id': 110, 'name': 'runtime-image', 'run_id': 100,
+                'status': 'completed', 'conclusion': 'success', 'head_sha': HEAD}]},
+            self.commit_route: {'sha': BUILT, 'parents': [{'sha': BASE}, {'sha': HEAD}]},
+        }
+        self.calls = []
+        self.downloads = []
+        self.download_error = None
+        self.repack()
+
+    def get(self, route):
+        self.calls.append(route)
+        prefix = f'repos/{REPOSITORY}/contents/'
+        if route.startswith(prefix):
+            path, revision = route[len(prefix):].split('?ref=')
+            if revision != BUILT or path not in self.source_files:
+                raise AssertionError('Unexpected committed-source request: ' + route)
+            return {'type': 'file', 'encoding': 'base64',
+                    'content': base64.b64encode(self.source_files[path]).decode()}
+        if route not in self.records:
+            raise AssertionError('Unexpected API request: ' + route)
+        return copy.deepcopy(self.records[route])
+
+    def download(self, artifact_id, destination, maximum=artifact.MAX_ARCHIVE):
+        self.downloads.append(artifact_id)
+        if len(self.zip_bytes) > maximum:
+            raise ValueError('Synthetic download exceeds its authenticated byte allowance')
+        Path(destination).write_bytes(self.zip_bytes)
+        if self.download_error:
+            raise self.download_error
+
+    def repack(self, *, manifest_bytes=None, image_bytes=None, entries=None,
+               compression=zipfile.ZIP_STORED):
+        output = io.BytesIO()
+        with warnings.catch_warnings(), zipfile.ZipFile(output, 'w', compression=compression) as archive:
+            warnings.simplefilter('ignore', UserWarning)
+            if entries is None:
+                entries = [('manifest.json', manifest_bytes if manifest_bytes is not None else encoded(self.manifest)),
+                           ('runtime-image.tar', image_bytes if image_bytes is not None else self.image)]
+            for name, data in entries:
+                archive.writestr(name, data)
+        self.authenticate_outer(output.getvalue())
+
+    def authenticate_outer(self, data):
+        self.zip_bytes = data
+        self.records[self.artifact_route]['digest'] = 'sha256:' + hashed(data)
+        self.records[self.artifact_route]['size_in_bytes'] = len(data)
+
+    def replace_image(self, **options):
+        self.image, image_id = image_tar(**options)
+        self.manifest['image']['configId'] = image_id
+        self.manifest['archive'].update(size=len(self.image), sha256=hashed(self.image))
+        self.repack()
+
+
+class ArtifactBoundaryTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(prefix='dailylogger-artifact-test-')
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.sentinel = self.root / 'unrelated.txt'
+        self.sentinel.write_bytes(b'Unrelated data must survive failures')
+        self.fixture = GithubFixture()
+        self.processes = []
+
+    def verify(self, fixture=None, output=None):
+        fixture = fixture or self.fixture
+        output = output or self.root / 'verified'
+
+        def boundary(args, *positional, **options):
+            self.processes.append(args)
+            if args[:1] != ['git']:
+                raise AssertionError('Verifier attempted execution outside its Git output-location check: ' + repr(args))
+            return REAL_SUBPROCESS_RUN(args, *positional, **options)
+
+        with patch.object(artifact.subprocess, 'run', side_effect=boundary), \
+                patch.object(artifact, 'run', side_effect=AssertionError('Verifier must never execute Docker, SSH or a runtime command')):
+            return artifact.verify_fixture(copy.deepcopy(fixture.expected), output, fixture)
+
+    def rejected(self, fixture=None):
+        fixture = fixture or self.fixture
+        with self.assertRaises((ValueError, OSError, zipfile.BadZipFile, tarfile.TarError)):
+            self.verify(fixture)
+        self.assertFalse((self.root / 'verified').exists(), 'Rejected candidate staging must be removed')
+        self.assertEqual(self.sentinel.read_bytes(), b'Unrelated data must survive failures')
+
+    def test_authenticated_candidate_stages_exact_bytes_without_loading_or_production_eligibility(self):
+        receipt = self.verify()
+        self.assertEqual(receipt['artifactId'], 700)
+        self.assertEqual(receipt['runId'], 100)
+        self.assertEqual(receipt['attempt'], 2)
+        self.assertEqual(receipt['jobId'], 110)
+        self.assertEqual(receipt['source']['builtRevision'], BUILT)
+        self.assertNotEqual(BUILT, HEAD)
+        self.assertNotEqual(BUILT, BASE)
+        self.assertEqual(receipt['outerSha256'], hashed(self.fixture.zip_bytes))
+        self.assertEqual(receipt['archiveSha256'], hashed(self.fixture.image))
+        self.assertFalse(receipt['productionEligible'])
+        self.assertFalse(receipt['imageLoaded'])
+        output = self.root / 'verified'
+        self.assertEqual({path.name for path in output.iterdir()}, {'manifest.json', 'runtime-image.tar', 'verification.json'})
+        self.assertEqual((output / 'runtime-image.tar').read_bytes(), self.fixture.image)
+        self.assertEqual(json.loads((output / 'manifest.json').read_bytes()), self.fixture.manifest)
+        self.assertEqual(json.loads((output / 'verification.json').read_bytes()), receipt)
+        self.assertEqual(stat.S_IMODE(output.stat().st_mode), 0o700)
+        self.assertEqual(self.fixture.downloads, [700])
+
+    def test_output_ownership_git_metadata_and_overrides_are_not_authorization(self):
+        directory = self.root / 'existing'
+        directory.mkdir()
+        marker = directory / 'keep'
+        marker.write_text('existing data')
+        symlink = self.root / 'link'
+        symlink.symlink_to(directory, target_is_directory=True)
+        for output in (self.sentinel, directory, symlink):
+            with self.subTest(output=output.name), self.assertRaises(ValueError):
+                self.verify(output=output)
+        self.assertEqual(marker.read_text(), 'existing data')
+        self.assertTrue(symlink.is_symlink())
+        self.assertEqual(self.fixture.calls, [])
+        self.assertEqual(self.fixture.downloads, [])
+        checkout, bare = self.root / 'checkout', self.root / 'bare'
+        git_env = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
+        for args in (['init', '--quiet', str(checkout)], ['init', '--quiet', '--bare', str(bare)]):
+            REAL_SUBPROCESS_RUN(['git', '-c', 'init.templateDir=', *args], check=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=git_env)
+        metadata = self.root / 'ordinary-parent' / '.git'
+        metadata.mkdir(parents=True)
+        overrides = {'GIT_DIR': str(self.root / 'not-a-repository'),
+                     'GIT_WORK_TREE': str(self.root), 'GIT_CEILING_DIRECTORIES': str(checkout)}
+        for parent in (checkout, checkout / '.git', bare, metadata):
+            output = parent / 'candidate'
+            with self.subTest(parent=parent), patch.dict(os.environ, overrides):
+                with self.assertRaises(ValueError):
+                    self.verify(output=output)
+            self.assertFalse(output.exists())
+        self.assertTrue((checkout / '.git').is_dir())
+        self.assertTrue((bare / 'HEAD').is_file())
+        self.assertEqual(self.sentinel.read_bytes(), b'Unrelated data must survive failures')
+
+    def test_substituted_outer_bytes_reject_even_when_inner_bundle_is_self_consistent(self):
+        authenticated = copy.deepcopy(self.fixture.records[self.fixture.artifact_route])
+        self.fixture.manifest['qualifications']['offline']['node'] = 'v24.22.4'
+        self.fixture.repack()
+        self.assertEqual(len(self.fixture.zip_bytes), authenticated['size_in_bytes'])
+        self.fixture.records[self.fixture.artifact_route] = authenticated
+        self.rejected()
+
+    def test_missing_or_malformed_authenticated_digest_rejects_before_download(self):
+        for digest in (None, 'f' * 64, 'sha256:not-a-digest'):
+            with self.subTest(digest=digest):
+                fixture = GithubFixture()
+                fixture.records[fixture.artifact_route]['digest'] = digest
+                self.rejected(fixture)
+                self.assertEqual(fixture.downloads, [])
+
+    def test_expired_artifact_flag_and_expired_timestamp_both_reject(self):
+        for changes in ({'expired': True}, {'expires_at': '2000-01-01T00:00:00Z'}):
+            with self.subTest(changes=changes):
+                fixture = GithubFixture()
+                fixture.records[fixture.artifact_route].update(changes)
+                self.rejected(fixture)
+                self.assertEqual(fixture.downloads, [])
+
+    def test_wrong_repository_artifact_or_run_association_rejects(self):
+        for field, value in (('id', 101), ('repository_id', 99), ('head_repository_id', 99)):
+            with self.subTest(field=field):
+                fixture = GithubFixture()
+                fixture.records[fixture.artifact_route]['workflow_run'][field] = value
+                self.rejected(fixture)
+        self.fixture.records[f'repos/{REPOSITORY}/']['full_name'] = 'other/repository'
+        self.rejected()
+
+    def test_wrong_or_unsuccessful_workflow_attempt_rejects(self):
+        for field, value in (('id', 101), ('run_attempt', 1), ('path', '.github/workflows/other.yml'),
+                             ('event', 'push'), ('status', 'in_progress'), ('conclusion', 'failure')):
+            with self.subTest(field=field):
+                fixture = GithubFixture()
+                fixture.records[fixture.run_route][field] = value
+                self.rejected(fixture)
+                self.assertEqual(fixture.downloads, [])
+
+    def test_ambiguous_or_additional_jobs_do_not_establish_unique_producer(self):
+        for duplicate in (True, False):
+            with self.subTest(duplicate=duplicate):
+                fixture = GithubFixture()
+                job = copy.deepcopy(fixture.records[fixture.jobs_route]['jobs'][0])
+                job['id'] = 111
+                if not duplicate:
+                    job['name'] = 'unreviewed-uploader'
+                fixture.records[fixture.jobs_route]['jobs'].append(job)
+                self.rejected(fixture)
+
+    def test_missing_failed_wrong_source_or_manifest_named_job_rejects(self):
+        for field, value in (('name', 'other-job'), ('run_id', 101), ('head_sha', BASE),
+                             ('status', 'queued'), ('conclusion', 'cancelled'), ('id', 111)):
+            with self.subTest(field=field):
+                fixture = GithubFixture()
+                fixture.records[fixture.jobs_route]['jobs'][0][field] = value
+                self.rejected(fixture)
+        self.fixture.records[self.fixture.jobs_route]['jobs'] = []
+        self.rejected()
+
+    def test_authenticated_head_and_synthetic_merge_parents_are_checked_independently(self):
+        for target in ('run-head', 'artifact-head', 'parents', 'commit-sha', 'pr-number'):
+            with self.subTest(target=target):
+                fixture = GithubFixture()
+                if target == 'run-head':
+                    fixture.records[fixture.run_route]['head_sha'] = BASE
+                elif target == 'artifact-head':
+                    fixture.records[fixture.artifact_route]['workflow_run']['head_sha'] = BASE
+                elif target == 'parents':
+                    fixture.records[fixture.commit_route]['parents'].reverse()
+                elif target == 'commit-sha':
+                    fixture.records[fixture.commit_route]['sha'] = HEAD
+                else:
+                    fixture.records[fixture.run_route]['pull_requests'] = [{'number': 56}]
+                self.rejected(fixture)
+
+    def test_manifest_cannot_choose_another_built_revision_or_ci_identity(self):
+        for target in ('builtRevision', 'runId', 'attempt', 'workflowId', 'jobId'):
+            with self.subTest(target=target):
+                fixture = GithubFixture()
+                if target == 'builtRevision':
+                    fixture.manifest['source']['builtRevision'] = HEAD
+                    fixture.manifest['context']['sourceRevision'] = HEAD
+                else:
+                    fixture.manifest['ci'][target] += 1
+                fixture.repack()
+                self.rejected(fixture)
+
+    def test_authenticated_committed_source_hash_mismatch_rejects(self):
+        self.fixture.source_files['pnpm-lock.yaml'] = b'changed authenticated lockfile\n'
+        self.rejected()
+
+    def test_unreviewed_workflow_uploader_or_job_shape_rejects(self):
+        for suffix in (f'      - uses: {UPLOAD}\n', '  unreviewed-job:\n    steps: []\n'):
+            with self.subTest(suffix=suffix):
+                fixture = GithubFixture()
+                fixture.source_files[WORKFLOW] += suffix.encode()
+                self.rejected(fixture)
+
+    def test_duplicate_manifest_json_keys_are_rejected_after_authenticating_outer_bytes(self):
+        raw = encoded(self.fixture.manifest)
+        self.fixture.repack(manifest_bytes=b'{"schemaVersion":1,' + raw[1:])
+        self.rejected()
+
+    def test_extra_duplicate_traversal_and_backslash_zip_members_reject_without_extraction(self):
+        valid = [('manifest.json', encoded(self.fixture.manifest)), ('runtime-image.tar', self.fixture.image)]
+        cases = [valid + [('unexpected.txt', b'no')], valid + [('manifest.json', b'{}')],
+                 [('../escape.json', valid[0][1]), valid[1]],
+                 [('..\\escape.json', valid[0][1]), valid[1]],
+                 [('/absolute.json', valid[0][1]), valid[1]]]
+        for index, entries in enumerate(cases):
+            with self.subTest(index=index):
+                fixture = GithubFixture()
+                fixture.repack(entries=entries)
+                self.rejected(fixture)
+        self.assertFalse((self.root / 'escape.json').exists())
+
+    def test_zip_symlink_and_directory_payload_members_reject(self):
+        for mode in (stat.S_IFLNK | 0o777, stat.S_IFDIR | 0o700):
+            with self.subTest(mode=mode):
+                fixture = GithubFixture()
+                link = zipfile.ZipInfo('runtime-image.tar')
+                link.create_system = 3
+                link.external_attr = mode << 16
+                fixture.repack(entries=[('manifest.json', encoded(fixture.manifest)), (link, b'../unrelated.txt')])
+                self.rejected(fixture)
+
+    def test_oversized_metadata_declared_payload_and_compression_bomb_reject(self):
+        fixture = GithubFixture()
+        fixture.repack(manifest_bytes=b'x' * (artifact.MAX_MANIFEST + 1))
+        self.rejected(fixture)
+        fixture = GithubFixture()
+        data = bytearray(fixture.zip_bytes)
+        start = data.index(b'PK\x01\x02')
+        second = data.index(b'PK\x01\x02', start + 4)
+        struct.pack_into('<I', data, second + 24, artifact.MAX_ARCHIVE + 1)
+        fixture.authenticate_outer(bytes(data))
+        self.rejected(fixture)
+        fixture = GithubFixture()
+        fixture.repack(image_bytes=b'\0' * (2 * 1024 * 1024), compression=zipfile.ZIP_DEFLATED)
+        self.rejected(fixture)
+
+    def test_inner_archive_tamper_rejects_with_correct_authenticated_outer_digest(self):
+        self.fixture.repack(image_bytes=self.fixture.image + b'changed inner payload')
+        self.rejected()
+
+    def test_config_digest_and_image_platform_or_user_are_not_manifest_assertions(self):
+        fixture = GithubFixture()
+        fixture.manifest['image']['configId'] = 'sha256:' + 'f' * 64
+        fixture.repack()
+        self.rejected(fixture)
+        for options in ({'user': '0:0'}, {'user': '1000:0'}, {'architecture': 'arm64'}, {'system': 'windows'}):
+            with self.subTest(options=options):
+                fixture = GithubFixture()
+                fixture.replace_image(**options)
+                self.rejected(fixture)
+
+    def test_layer_absence_digest_corruption_and_incomplete_closure_reject(self):
+        for option in ('missing_layer', 'corrupt_layer', 'missing_diff'):
+            with self.subTest(option=option):
+                fixture = GithubFixture()
+                fixture.replace_image(**{option: True})
+                self.rejected(fixture)
+
+    def test_missing_failed_skipped_or_false_qualification_receipts_reject(self):
+        for target in ('missing', 'failed', 'skipped', 'zero-tests', 'http-failure', 'ingress-failure', 'reload-failure'):
+            with self.subTest(target=target):
+                fixture = GithubFixture()
+                proof = fixture.manifest['qualifications']
+                if target == 'missing':
+                    del proof['offline']
+                elif target == 'failed':
+                    proof['http']['counts']['failed'] = 1
+                elif target == 'skipped':
+                    proof['preparation']['skipped'] = 1
+                elif target == 'zero-tests':
+                    proof['preparation'].update(tests=0, passed=0)
+                elif target == 'http-failure':
+                    proof['http']['result'] = 'failed'
+                elif target == 'ingress-failure':
+                    proof['ingress']['strictTls'] = False
+                else:
+                    proof['exportReload']['imageRecordRemoved'] = False
+                fixture.repack()
+                self.rejected(fixture)
+
+    def test_closed_schema_and_integer_fields_reject_extra_keys_and_boolean_numbers(self):
+        for target in ('extra', 'boolean-count', 'boolean-version', 'boolean-ports'):
+            with self.subTest(target=target):
+                fixture = GithubFixture()
+                if target == 'extra':
+                    fixture.manifest['privateOrigin'] = 'https://private.invalid'
+                elif target == 'boolean-count':
+                    fixture.manifest['qualifications']['preparation']['skipped'] = False
+                elif target == 'boolean-version':
+                    fixture.expected['schemaVersion'] = True
+                else:
+                    fixture.manifest['qualifications']['entrypoints']['publishedPorts'] = False
+                fixture.repack()
+                self.rejected(fixture)
+
+    def test_download_failures_are_bounded_and_remove_only_owned_output(self):
+        self.fixture.download_error = OSError('synthetic interrupted download')
+        self.rejected()
+        binaries = self.root / 'bin'
+        binaries.mkdir()
+        gh = binaries / 'gh'
+        payload = b'bounded synthetic GitHub download' * 4
+        gh.write_text(f'#!{sys.executable}\nimport os\nos.write(1,{payload!r})\n')
+        gh.chmod(0o755)
+        with patch.dict(os.environ, {'PATH': str(binaries) + os.pathsep + os.environ.get('PATH', '')}):
+            destination = self.root / 'small-download.zip'
+            artifact.Github().download(700, destination, len(payload))
+            self.assertEqual(destination.read_bytes(), payload)
+            limited = self.root / 'limited-download.zip'
+            with self.assertRaises((ValueError, OSError, subprocess.SubprocessError)):
+                artifact.Github().download(700, limited, 16)
+            self.assertLessEqual(limited.stat().st_size, 16, 'Excess subprocess bytes must not reach disk')
+            with self.assertRaises(FileExistsError):
+                artifact.Github().download(700, destination, len(payload))
+            self.assertEqual(destination.read_bytes(), payload)
+        self.assertEqual(self.sentinel.read_bytes(), b'Unrelated data must survive failures')
+
+    def test_tap_proof_rejects_missing_duplicate_failed_skipped_and_cancelled_tests(self):
+        valid = '# tests 3\n# pass 3\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n'
+        self.assertEqual(artifact.tap_counts(valid), {'tests': 3, 'passed': 3, 'failed': 0, 'skipped': 0})
+        for bad in (valid.replace('# pass 3\n', ''), valid + '# pass 3\n',
+                    valid.replace('# fail 0', '# fail 1'), valid.replace('# skipped 0', '# skipped 1'),
+                    valid.replace('# cancelled 0', '# cancelled 1'), valid.replace('# todo 0', '# todo 1')):
+            with self.subTest(summary=bad), self.assertRaises(ValueError):
+                artifact.tap_counts(bad)
+
+    def test_export_rejects_unowned_execution_before_any_docker_or_output_mutation(self):
+        with patch.dict('os.environ', {}, clear=True), \
+                patch.object(artifact, 'run', side_effect=AssertionError('Unowned export must not execute')):
+            with self.assertRaises(ValueError):
+                artifact.export_fixture('dailylogger-runtime:proof', self.root, self.root / 'export', self.fixture)
+        self.assertFalse((self.root / 'export').exists())
+        self.assertEqual(self.fixture.calls, [])
+
+
+if __name__ == '__main__':
+    unittest.main()

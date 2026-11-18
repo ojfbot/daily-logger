@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `9ca690a37f778edc752ace3534e386f8372ee2b256b763c57e92c1a9495bceba`.
+> Source SHA-256: `7ca23c60b2b68adf5cc25f002edef9a9a0f23a2b7c2450021c81cadf5d0851ea`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1684,4 +1684,66 @@ Private HTTPS Forwarding requires Private Leaf Generation. [src: apps/service/ru
 Private HTTPS Forwarding requires Approved Socket Peer. [src: apps/service/runtime/prepare-ingress.ts]
 Private HTTPS Forwarding requires Explicit IPv4 Bridge Listener. [src: apps/service/src/http-cli.ts] [src: apps/service/runtime/prepare-ingress.ts]
 Private HTTPS Forwarding yields Forwarded Fixture HTTP Request. [src: apps/service/runtime/prepare-ingress.ts]
+```
+
+## SD2.7 — Disposable fixture image delivery
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.7 — Disposable fixture image delivery"
+---
+flowchart TD
+  accTitle: SD2.7 — Disposable fixture image delivery
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n321("Fixture Artifact Exporting")
+  n322["Committed Runtime Context"]
+  n323["CI Run Identity"]
+  n324["Runtime Image"]
+  n325["Exported Fixture Image"]
+  n326("Fixture Image Qualifying")
+  n327["Fixture Qualification Receipts"]
+  n328["Closed Fixture Manifest"]
+  n329("Fixture Artifact Verifying")
+  n330["Authenticated GitHub Artifact Evidence"]
+  n331["Independently Pinned Build Identity"]
+  n332["Verified Fixture Candidate"]
+  n333["Private Verification Receipt"]
+  n322 -->|"requires (instrument)"| n321
+  n323 -->|"requires (instrument)"| n321
+  n324 -->|"requires (instrument)"| n321
+  n321 -->|"yields"| n325
+  n321 -->|"invokes"| n326
+  n325 -->|"requires (instrument)"| n326
+  n326 -->|"yields"| n327
+  n321 -->|"yields"| n328
+  n330 -->|"requires (instrument)"| n329
+  n331 -->|"requires (instrument)"| n329
+  n325 -->|"requires (instrument)"| n329
+  n328 -->|"requires (instrument)"| n329
+  n329 -->|"yields"| n332
+  n329 -->|"yields"| n333
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Fixture Artifact Exporting requires Committed Runtime Context. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting requires CI Run Identity. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting requires Runtime Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting yields Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting invokes Fixture Image Qualifying. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying yields Fixture Qualification Receipts. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting yields Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Authenticated GitHub Artifact Evidence. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Independently Pinned Build Identity. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying yields Verified Fixture Candidate. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
 ```

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { createHash, randomBytes, randomUUID, X509Certificate } from 'node:crypto'
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -140,6 +140,16 @@ try {
     '--entrypoint', 'caddy', PROXY_IMAGE, 'adapt', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile']).stdout)
   assert.ok(adapted.logging.logs.default.exclude.includes('http'))
   assert.equal(adapted.admin.disabled, true)
+  for (const key of ['DAILYLOGGER_TLS_DIRECTORY', 'DAILYLOGGER_INGRESS_CONFIG_DIR']) {
+    const original = environment[key]
+    const missing = join(root, `missing-${key}`)
+    environment[key] = missing
+    try {
+      const rejected = compose(['run', '--rm', '--no-deps', 'proxy', 'validate', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile'], { acceptFailure: true })
+      assert.notEqual(rejected.status, 0)
+      assert.equal(existsSync(missing), false, 'Missing bind sources must not be created')
+    } finally { environment[key] = original }
+  }
   compose(['up', '-d', 'api', 'worker', 'proxy'])
   await waitFor(() => request(clients.allowed).status === 401)
   const published = docker(['run', '--rm', '-i', '--network', 'host', '--read-only',

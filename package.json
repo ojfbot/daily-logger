@@ -45,7 +45,10 @@
     "test:service:runtime": "node --import tsx --test apps/service/test/runtime/*.test.ts",
     "service:runtime:smoke": "node apps/service/runtime/smoke.mjs",
     "service:ingress:prepare": "node --import tsx apps/service/runtime/prepare-ingress.ts",
-    "service:ingress:smoke": "node --import tsx apps/service/runtime/ingress-smoke.mjs"
+    "service:ingress:smoke": "node --import tsx apps/service/runtime/ingress-smoke.mjs",
+    "service:artifact:export": "python3 apps/service/runtime/artifact.py export",
+    "service:artifact:verify": "python3 apps/service/runtime/artifact.py verify",
+    "test:service:artifact": "python3 -m unittest discover -s apps/service/test/runtime -p '*_test.py'"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
