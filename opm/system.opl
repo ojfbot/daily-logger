@@ -555,3 +555,23 @@ Fixture Projection Reading requires Private Owner Session. [src: apps/service/sr
 Fixture Projection Reading requires Read Only Database Snapshot. [src: apps/service/src/http-db.ts]
 Fixture Projection Reading yields Browser Fixture View. [src: apps/service/src/http-projections.ts]
 # Projection reading retains command/run/attempt identity, reports application observation times, and suppresses resume availability after a recorded cancellation. [src: apps/service/src/http-projections.ts]
+
+## SD2.4 — Offline fixture metadata observations
+
+Fixture HTTP Admitting invokes Admission Response Observing. [src: apps/service/src/http-server.ts]
+Admission Response Observing requires Committed Admission Response. [src: apps/service/src/delivery-commands.ts] [src: apps/service/src/http-server.ts]
+Admission Response Observing invokes Offline Observation Recording. [src: apps/service/src/telemetry.ts]
+Fixture Delivery Executing invokes Offline Observation Recording. [src: apps/service/src/delivery-worker.ts]
+PostgreSQL Fixture Executing invokes Offline Observation Recording. [src: apps/service/src/postgres-runner.ts]
+Fixture Replaying invokes Offline Observation Recording. [src: apps/service/src/workflow.ts]
+Offline Observation Recording requires Explicit Offline Observation Configuration. [src: apps/service/src/telemetry.ts]
+Offline Observation Recording requires Closed Observation Policy. [src: apps/service/src/telemetry-schema.ts]
+Offline Observation Recording yields Projected Fixture Observations. [src: apps/service/src/telemetry-schema.ts]
+Projected Fixture Observations consists of Correlation Metadata, Fixed Lifecycle Labels, and Bounded Timing. [src: apps/service/src/telemetry-schema.ts]
+Offline Observation Exporting requires Projected Fixture Observations. [src: apps/service/src/telemetry.ts]
+Offline Observation Exporting requires Trusted Nonblocking Test Sinks. [src: apps/service/src/telemetry.ts]
+Offline Observation Exporting yields Telemetry Diagnostics. [src: apps/service/src/telemetry.ts]
+# Observation capture is disabled by default; the optional hooks do not change graph state, approval subjects, canonical records, or artifact bytes. [src: apps/service/src/telemetry.ts] [src: apps/service/src/workflow.ts]
+# Admission observations describe a committed response, including an identical retry; they do not assert that a new admission was created. Caller-owned transaction helpers remain provisional until their caller confirms commit. [src: apps/service/src/delivery-commands.ts] [src: apps/service/src/telemetry.ts]
+# Attempt identity is attached only after its durable insert. Node observations end at a human interrupt; no span remains open for the owner's decision. Missing observations after process death do not establish success or queue acknowledgment. [src: apps/service/src/postgres-runner.ts] [src: apps/service/src/workflow.ts] [src: apps/service/src/delivery-worker.ts]
+# Export queues, batches, payloads, asynchronous waits and unresolved sink calls are bounded. JavaScript cannot preempt a synchronously blocking in-process sink; real SDK transport and Langfuse readback remain separately qualified work. [src: apps/service/src/telemetry.ts]
