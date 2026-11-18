@@ -2,7 +2,7 @@ import type pg from 'pg'
 import type { PgBoss } from 'pg-boss'
 import { randomUUID } from 'node:crypto'
 import { digest, json, requireCondition } from './fixture.js'
-import { admitRun, runOperation, type LockedRunContext, type RunRow } from './postgres-runner.js'
+import { admitRunInTransaction, runOperation, type LockedRunContext, type RunRow } from './postgres-runner.js'
 import { POSTGRES_WORKFLOW_VERSION } from './postgres-fixture.js'
 import { QUEUE, QUEUE_OPTIONS, transactionAdapter } from './delivery-db.js'
 
@@ -67,7 +67,7 @@ export async function admitCommandInTransaction(client: pg.PoolClient, boss: PgB
       const internalKey = `delivery:${digest(`${request.actorId}\0${request.key}\0${canonicalDigest}`)}`
       const prior = await client.query<RunRow>('SELECT * FROM dailylogger_service.fixture_runs WHERE request_key=$1', [internalKey])
       requireCondition(!prior.rows.length || prior.rows[0].delivery_owner === 's03b', 'Cannot adopt a direct-CLI run')
-      run = await admitRun(client, internalKey, request.payload.runDir)
+      run = await admitRunInTransaction(client, internalKey, request.payload.runDir)
       await client.query("UPDATE dailylogger_service.fixture_runs SET delivery_owner='s03b' WHERE run_id=$1", [run.run_id])
     } catch (error) {
       await client.query('ROLLBACK TO SAVEPOINT run_admission')
