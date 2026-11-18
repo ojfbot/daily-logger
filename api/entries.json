@@ -1,5 +1,124 @@
 [
   {
+    "date": "2026-11-18",
+    "title": "Tuesday — FleetRunner Wake Verification Hardens to 0.2.1; Daily-Logger Gains Persistent LangGraph Fixture",
+    "summary": "Tuesday's window merged three PRs across core and daily-logger: FleetRunner's wake proof tightens to 0.2.1, and daily-logger lands its first SQLite-backed LangGraph fixture with a service delivery roadmap.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "langgraph",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "daily-logger"
+    ],
+    "commitCount": 0,
+    "activityType": "rest",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Filter macOS power events to the exact scheduled wake before freezing the run window",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Bind the verified wake and its cleanup helper to the later run plan through an idle-worker restart",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "SQLite as the LangGraph checkpoint store for the offline fixture — PostgreSQL deferred",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Qualify Publisher before Cleaner in the service delivery plan",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-18T09:59:58.394Z",
+        "runId": "44280941306",
+        "runNumber": 317,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/44280941306",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "7072501e372802754dc36d604b4a49cb9ae65502",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-18T09:58:41.000Z",
+          "startedAt": "2026-11-18T09:58:41.000Z",
+          "expectedAt": "2026-11-18T09:30:00.000Z",
+          "dispatchDelaySeconds": 1721,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "0595dc466fc133e076b8132066541c2981c592f3e18fbb20f9e97308e40cf4fe"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-17",
     "title": "Monday — Native Dispatch Reaches 0.4.3: Claude Correspondence Qualified, Ledger Proof Installed, Unattended Status Window Admitted",
     "summary": "Monday's window merged twelve PRs across core and BookcaseDiscovery, completing the native-dispatch correspondence qualification stack and installing a bounded ledger proof paired with BookcaseDiscovery.",

@@ -1,19 +1,20 @@
 [
   {
     "name": "daily-logger",
-    "articleCount": 163,
+    "articleCount": 164,
     "totalCommits": 2014,
     "relatedTags": [
       "core",
-      "BookcaseDiscovery",
       "daily-logger",
-      "native-dispatch",
       "fleet-runner",
-      "security-as-emergent-ux",
+      "langgraph",
       "assistant-centric",
       "hardening",
-      "tooling-for-iteration",
+      "security-as-emergent-ux",
       "ci-cd",
+      "BookcaseDiscovery",
+      "native-dispatch",
+      "tooling-for-iteration",
       "independent-review",
       "service-boundary",
       "env-convention",
@@ -255,7 +256,6 @@
       "settings-modal",
       "blogengine",
       "structured-output",
-      "langgraph",
       "draw-io",
       "s3",
       "eval-loop"
