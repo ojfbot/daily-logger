@@ -143,6 +143,7 @@ try {
   compose(['up', '-d', 'api', 'worker', 'proxy'])
   await waitFor(() => request(clients.allowed).status === 401)
   const published = docker(['run', '--rm', '-i', '--network', 'host', '--read-only',
+    '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,mode=1777,size=16m',
     '-v', `${join(root, 'issuer/root.crt')}:/trust/root.crt:ro`, image, '--input-type=module'], { input: `
       import{request}from'node:https';import{readFileSync}from'node:fs';import{lookup}from'node:dns';
       const status=await new Promise((resolve,reject)=>{const req=request('${origin}/v1/auth/me',{ca:readFileSync('/trust/root.crt'),lookup:(host,options,cb)=>lookup('127.0.0.1',options,cb)},res=>{res.resume();res.on('end',()=>resolve(res.statusCode))});req.on('error',reject);req.setTimeout(3000,()=>req.destroy(new Error('Published TLS timeout')));req.end()});
