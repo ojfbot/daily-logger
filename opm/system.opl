@@ -575,3 +575,16 @@ Offline Observation Exporting yields Telemetry Diagnostics. [src: apps/service/s
 # Admission observations describe a committed response, including an identical retry; they do not assert that a new admission was created. Caller-owned transaction helpers remain provisional until their caller confirms commit. [src: apps/service/src/delivery-commands.ts] [src: apps/service/src/telemetry.ts]
 # Attempt identity is attached only after its durable insert. Node observations end at a human interrupt; no span remains open for the owner's decision. Missing observations after process death do not establish success or queue acknowledgment. [src: apps/service/src/postgres-runner.ts] [src: apps/service/src/workflow.ts] [src: apps/service/src/delivery-worker.ts]
 # Export queues, batches, payloads, asynchronous waits and unresolved sink calls are bounded. JavaScript cannot preempt a synchronously blocking in-process sink; real SDK transport and Langfuse readback remain separately qualified work. [src: apps/service/src/telemetry.ts]
+
+## SD2.5 — Private fixture HTTPS ingress
+
+Private Ingress Preparing requires Private Ingress Configuration. [src: apps/service/runtime/prepare-ingress.ts]
+Private Ingress Preparing yields Private Proxy Configuration. [src: apps/service/runtime/prepare-ingress.ts]
+Private Proxy Configuration consists of Exact Private Authority, Private IPv4 Publication, and Approved Peer CIDRs. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Private Proxy Configuration. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Private Leaf Generation. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Approved Socket Peer. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Explicit IPv4 Bridge Listener. [src: apps/service/src/http-cli.ts] [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding yields Forwarded Fixture HTTP Request. [src: apps/service/runtime/prepare-ingress.ts]
+# The separate proxy namespace preserves the original Host and port, admits immediate socket peers without trusting forwarding headers, and publishes no API/database port. Trusted application peers retain direct API reachability. [src: apps/service/runtime/prepare-ingress.ts] [src: apps/service/runtime/compose.yaml]
+# The proxy reads a read-only parent leaf directory, not a signing key. Certificate issuance, client trust, private DNS and real owner login remain separate live qualification. [src: apps/service/runtime/INGRESS.md]

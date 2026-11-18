@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-11-18. The installed OPM renderer was assumed to match the checked-in view, but it collapsed existing compound requirements and changed unrelated rendering. Preserved the prior generated view while obtaining compatible rendering through the existing reviewer.
+
 - 2026-11-18. The published-socket test client reused the runtime image without its writable temporary mount, so tsx could not initialize its private cache. Added the same bounded tmpfs used by the other disposable clients while keeping its root filesystem read-only.
 
 - 2026-11-18. Proxy privacy checks initially collected logs only after container replacement, but removed containers no longer contributed their successful/forbidden request logs. Capture each generation before recreation, then scan the combined buffers without printing request values.

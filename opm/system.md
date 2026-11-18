@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `dd0fdb7da3b2fb2b7da92d9952722f1074d5ecf9abc0375e2164e378ed6781e8`.
+> Source SHA-256: `9ca690a37f778edc752ace3534e386f8372ee2b256b763c57e92c1a9495bceba`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1634,4 +1634,54 @@ Projected Fixture Observations consists of Correlation Metadata, Fixed Lifecycle
 Offline Observation Exporting requires Projected Fixture Observations. [src: apps/service/src/telemetry.ts]
 Offline Observation Exporting requires Trusted Nonblocking Test Sinks. [src: apps/service/src/telemetry.ts]
 Offline Observation Exporting yields Telemetry Diagnostics. [src: apps/service/src/telemetry.ts]
+```
+
+## SD2.5 — Private fixture HTTPS ingress
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.5 — Private fixture HTTPS ingress"
+---
+flowchart TD
+  accTitle: SD2.5 — Private fixture HTTPS ingress
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n310("Private Ingress Preparing")
+  n311["Private Ingress Configuration"]
+  n312["Private Proxy Configuration"]
+  n313["Exact Private Authority"]
+  n314["Private IPv4 Publication"]
+  n315["Approved Peer CIDRs"]
+  n316("Private HTTPS Forwarding")
+  n317["Private Leaf Generation"]
+  n318["Approved Socket Peer"]
+  n319["Explicit IPv4 Bridge Listener"]
+  n320["Forwarded Fixture HTTP Request"]
+  n311 -->|"requires (instrument)"| n310
+  n310 -->|"yields"| n312
+  n313 -->|"part of"| n312
+  n314 -->|"part of"| n312
+  n315 -->|"part of"| n312
+  n312 -->|"requires (instrument)"| n316
+  n317 -->|"requires (instrument)"| n316
+  n318 -->|"requires (instrument)"| n316
+  n319 -->|"requires (instrument)"| n316
+  n316 -->|"yields"| n320
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Private Ingress Preparing requires Private Ingress Configuration. [src: apps/service/runtime/prepare-ingress.ts]
+Private Ingress Preparing yields Private Proxy Configuration. [src: apps/service/runtime/prepare-ingress.ts]
+Private Proxy Configuration consists of Exact Private Authority, Private IPv4 Publication, and Approved Peer CIDRs. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Private Proxy Configuration. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Private Leaf Generation. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Approved Socket Peer. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Explicit IPv4 Bridge Listener. [src: apps/service/src/http-cli.ts] [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding yields Forwarded Fixture HTTP Request. [src: apps/service/runtime/prepare-ingress.ts]
 ```
