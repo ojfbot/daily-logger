@@ -98,6 +98,9 @@ jobs:
       - name: Type-check
         run: pnpm type-check
 
+      - name: Service fixture type-check
+        run: pnpm type-check:service
+
       - name: Lint
         run: pnpm lint
 
@@ -115,6 +118,9 @@ jobs:
 
       - name: Unit tests
         run: pnpm test
+
+      - name: Offline service checkpoint tests
+        run: pnpm test:service
 
       - name: Validate changed article references
         env:

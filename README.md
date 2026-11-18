@@ -2,7 +2,9 @@
 
 > **Read the live blog: [log.jim.software](https://log.jim.software)**
 
-Part of the [ojfbot](https://github.com/ojfbot) org — building **Frame**, an AI App OS that hosts Claude-powered applications inside a unified, natural-language shell. This repo is Phase 9 of the Frame roadmap: the self-documenting development system.
+DailyLogger is the public engineering journal for the CircusGreen / [ojfbot](https://github.com/ojfbot) fleet.
+
+The [service delivery plan](docs/agent-service/README.md) proposes a web app and persistent LangGraph backend in this monorepo, with Langfuse observability, weekly owner-confirmed priorities, and qualified fleet integrations. Protected journal sections are a later security-reviewed phase. The current pipeline is described below.
 
 daily-logger generates one markdown blog article per day by sweeping the last 24 h of commits (and 7 days of PRs/issues, both open and closed) across all Frame stack repos, feeding that context to Claude Sonnet, and opening a draft PR for editorial review. An editorial revision CI workflow then self-reviews the draft. Merging the PR deploys the article to Vercel.
 
