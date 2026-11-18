@@ -2,7 +2,7 @@
 
 DailyLogger will become a public engineering journal with a persistent agent backend and a web application in this repository. The journal should explain meaningful CircusGreen fleet progress, use current human-confirmed priorities, and preserve useful follow-up work without repeating it into every article.
 
-The owner selected Langfuse on 2026-11-17. The target is a TypeScript LangGraph application running on owner-controlled infrastructure, with the existing public website continuing to serve readers independently of that infrastructure. Protected journal sections are a separate, later delivery phase.
+The owner selected LangSmith as the primary observability and evaluation platform on 2026-11-18, superseding the 2026-11-17 Langfuse selection. The target is a TypeScript LangGraph application running on owner-controlled infrastructure, with the existing public website continuing to serve readers independently of that infrastructure. Protected journal sections are a separate, later delivery phase.
 
 ## Plan and architecture
 
@@ -11,14 +11,14 @@ The owner selected Langfuse on 2026-11-17. The target is a TypeScript LangGraph 
 - [Review reconciliation](review-reconciliation.md) records Yuri's findings, attributed delivery choices, and the corrections to initial acceptance, failover, timing, and Cleaner admission.
 - [M1A verification](m1a-verification-2026-11-17.md) records the offline checkpoint and existing-reader proof, with its limits.
 
-This is an implementation proposal. Langfuse, the public-journal purpose, and keeping the web app and backend together are owner direction; package names and the supporting technology choices below are proposed implementation decisions. No service deployment, runtime migration, schedule change, or shared fleet contract acceptance is recorded by these documents.
+This is an implementation proposal. LangSmith, the public-journal purpose, and keeping the web app and backend together are owner direction; package names and the supporting technology choices below are proposed implementation decisions. No service deployment, runtime migration, schedule change, or shared fleet contract acceptance is recorded by these documents.
 
 ## Delivery outcomes
 
 | Milestone | Observable outcome |
 | --- | --- |
 | M0 | A recorded baseline and a small, approved priority snapshot replace ambiguous product assumptions in the service design. |
-| M1 | M1A first proves an offline persisted workflow through the existing reader; M1B adds authenticated controls, production-target storage integration, and Langfuse proof. |
+| M1 | M1A first proves an offline persisted workflow through the existing reader; M1B adds authenticated controls, production-target storage integration, and LangSmith qualification. |
 | M2 | A real collected day produces a reviewed journal draft through the service, with bounded model usage and a human checkpoint. |
 | M3 | The service produces a passing public Draft by the 04:00 Chicago readback target, with exact-version acceptance through the existing editor and fenced manual failover. Cleaner qualifies after Publisher. |
 | M4 | A weekly human check-in updates journal priorities; additional reviewers and follow-up planners demonstrate measurable value. |

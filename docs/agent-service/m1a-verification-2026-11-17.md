@@ -59,9 +59,9 @@ This independently reproduces Yuri's reported baseline and verifies the actual s
 
 ## Remaining qualification
 
-SQLite proves process restart and the tested process-crash boundaries on one development machine. It does not qualify host power loss, production backup/restore, PostgreSQL concurrency, a durable job queue, authenticated controls, or distributed publication ownership. No live collection, model quality, Langfuse export, public delivery deadline, signed-in acceptance, or protected-content isolation was tested.
+SQLite proves process restart and the tested process-crash boundaries on one development machine. It does not qualify host power loss, production backup/restore, PostgreSQL concurrency, a durable job queue, authenticated controls, or distributed publication ownership. No live collection, model quality, LangSmith export, public delivery deadline, signed-in acceptance, or protected-content isolation was tested.
 
-M1B supplies authenticated controls, production-target persistence and Langfuse. M2 adds real collection and bounded model/reviewer execution. M3 qualifies exact displayed-revision acceptance, shared publication authority and manual failover, live public readback, and Publisher-before-Cleaner activation. See the [roadmap](delivery-roadmap.md) and [review reconciliation](review-reconciliation.md).
+M1B supplies authenticated controls, production-target persistence and LangSmith. M2 adds real collection and bounded model/reviewer execution. M3 qualifies exact displayed-revision acceptance, shared publication authority and manual failover, live public readback, and Publisher-before-Cleaner activation. See the [roadmap](delivery-roadmap.md) and [review reconciliation](review-reconciliation.md).
 
 ## Review remediation
 

@@ -606,3 +606,7 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 30 historical backfill (2026-10-31)
 
 - The backfill plan assumed the repository action-review pause affected only generation, but job-level wiring also injected it into the unit suite and caused the first recovery run to fail before drafting. Scope the variable to the Generate article step, retain normal test fixtures, and rerun the same dated backfill with actions held.
+
+## Deviations — S05b LangSmith fixture mapping (2026-11-18)
+
+- The new mapper test initially passed `mkdtemp`'s existing directory to `initializeRun`, but the fixture contract admits only a nonexistent run-directory leaf. Use a child `run` directory so the test exercises the existing admission invariant instead of weakening it.

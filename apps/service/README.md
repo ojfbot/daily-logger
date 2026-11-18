@@ -4,7 +4,7 @@ The [S03a PostgreSQL fixture path](POSTGRES.md) adds checkpoint storage and dura
 run/attempt identities. [S03b durable delivery](DELIVERY.md) adds transactional
 command admission and a pg-boss worker for that same fixture. The SQLite commands
 below retain their original behavior. An owner API, model providers,
-authentication, publication, and Langfuse remain later slices.
+authentication, publication, and LangSmith remain later slices.
 
 This package is the first executable slice of the proposed persistent backend.
 It runs a real TypeScript LangGraph with the official SQLite checkpointer. It
@@ -14,7 +14,7 @@ review article quality, admit actions, publish, or replace the scheduled runner.
 The existing web app remains at `packages/frontend`.
 
 This is **M1A**, not completion of M1 or a deployable service. PostgreSQL remains
-the production persistence target. Langfuse export, a scheduler, authenticated
+the production persistence target. LangSmith export, a scheduler, authenticated
 API, provider adapters, deployment, and protected journal content are deferred.
 
 ## Run the proof

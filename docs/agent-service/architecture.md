@@ -1,6 +1,6 @@
 # DailyLogger application architecture
 
-Status: proposed implementation design, revised after Yuri's review on 2026-11-17 America/Chicago. See the [review reconciliation](review-reconciliation.md), [roadmap](delivery-roadmap.md), and [plan index](README.md). Reported cross-session owner choices are attributed in the reconciliation; implementation and production qualification remain separate.
+Status: proposed implementation design, revised after Yuri's review on 2026-11-18 America/Chicago. LangSmith is the selected primary observability and evaluation platform, superseding the earlier Langfuse direction. See the [review reconciliation](review-reconciliation.md), [roadmap](delivery-roadmap.md), and [plan index](README.md). Reported cross-session owner choices are attributed in the reconciliation; implementation and production qualification remain separate.
 
 ## Product and ownership
 
@@ -19,11 +19,11 @@ The backend is a modular application with an HTTP entry point and a background w
 | Application persistence | PostgreSQL for workflows, attempts, review records, approvals, artifact metadata, events, and delivery intents. Explicit versioned SQL migrations. |
 | Background delivery | pg-boss over PostgreSQL for application run requests, wakeups, and recurrence. LangGraph owns the steps within a run; pg-boss does not define a second graph. |
 | Artifact storage | A private application-owned volume for the first single-host service, addressed by digest; an object-store adapter when needed. Reference large artifacts from checkpoints. |
-| Observability | OpenTelemetry and Langfuse. Langfuse is a separately operated deployment that can later serve other fleet applications. |
+| Observability | OpenTelemetry and LangSmith. OTel is the portable instrumentation boundary; LangSmith is the primary trace, thread, dataset, evaluation and readback target. |
 | Model access | A typed provider adapter; preserve the working Anthropic integration initially. Add a second configured provider or local endpoint with capability tests. Integrate Switchboard through its qualified interface when available. |
 | Public publication | Existing GitHub article/action records, PR checks, and automated Vercel deployment. Preserve published URLs and JSON contracts. |
 
-Pin mutually compatible package and container versions during M1, including LangGraph, its checkpointer, Langfuse instrumentation, Zod, and the existing Node/pnpm toolchain. Do not turn the package move into an unrelated dependency upgrade.
+Pin mutually compatible package and container versions during M1, including LangGraph, its checkpointer, the OpenTelemetry API/OTLP exporter, Zod, and the existing Node/pnpm toolchain. Do not turn the package move into an unrelated dependency upgrade.
 
 The first M1 proof is an offline fixture workflow with a supported local durable checkpointer. That development backend establishes process-restart behavior only. PostgreSQL concurrency, backup, release compatibility, and production recovery remain separate qualification work. The fixture cannot call the live collector, model providers, or publication endpoints.
 
@@ -48,7 +48,7 @@ daily-logger/
     journal/                     # pure journal/action rules and existing validators
     workflows/                   # LangGraph state, nodes, subgraphs, prompt assets
     integrations/                # GitHub, providers, core/FleetRunner/HelpDesk adapters
-    observability/               # OTel setup, IDs, redaction, Langfuse mapping
+    observability/               # OTel setup, IDs, redaction, LangSmith mapping
   api/                           # existing Vercel functions during migration
   src/                           # compatibility CLI wrappers until extraction finishes
   _articles/                     # canonical published journal artifacts
@@ -85,14 +85,14 @@ flowchart LR
   Deploy --> Public
   Private -. telemetry .-> Collector[OTel Collector]
   Worker -. telemetry .-> Collector
-  Collector --> LF[Private Langfuse deployment]
+  Collector --> LS[Approved LangSmith project]
 ```
 
 Use one web source tree with two deployment configurations initially. The public build serves the journal at `log.jim.software`; the private build exposes run status, review, and priority controls on a VPN-accessible origin with a same-origin API. Preserve current Vercel editorial functions until a replacement is deliberately cut over. The private hostname and host are deployment inputs, not invented requirements for a new public endpoint.
 
 Cut over publication and exact-revision acceptance through the existing editor. Deliver the richer LAN workspace in parallel: Draft inbox, one revision history per article, any-two revision comparison, retained feedback across repeated rewrites and failures, restore as a new revision, and explicit running/failed/stale states. Default both surfaces to dark on a fresh visit, provide an accessible light switch, and retain the visitor's explicit choice. Verify keyboard access, narrow layouts, status labels, and diff contrast in both themes. Yuri's sample-data prototype is design evidence; its simulated writes do not qualify the production editor.
 
-Serve the private Vite build as static assets through the private ingress, routing `/v1/*` to the service API. Release those assets with a compatible API version. Public web, backend, and Langfuse have independent deployment lifecycles; keeping application code together does not require hosting everything on the NAS or deploying all components for every change.
+Serve the private Vite build as static assets through the private ingress, routing `/v1/*` to the service API. Release those assets with a compatible API version. Public web, backend, and LangSmith have independent deployment lifecycles; keeping application code together does not require hosting everything on the NAS or deploying all components for every change.
 
 Private access requires application authentication and owner authorization in addition to VPN reachability. Reuse the established GitHub OAuth pattern after reviewing its callback, session, and CSRF assumptions for the private origin. Use separate host-scoped sessions; do not assume the public site's cookie authenticates the private service. Validate the owner identity on each mutation. Machine integrations receive narrowly scoped service identities and cannot submit a human approval.
 
@@ -100,7 +100,7 @@ The public site remains readable when the NAS is unavailable. No Vercel-to-VPN c
 
 Build an application image once per reviewed release and run API and worker processes separately from it. Begin with one worker and one publication owner. Use dedicated application storage and credentials, health/readiness checks, process restart supervision, resource limits, and graceful shutdown. Expose actionable alerts for missed eligible runs, stuck reviews, exhausted budgets, and unknown publication, delivered through an explicitly configured owner channel. An unattended single-host deployment needs tested backups and restore; Docker Compose alone supplies neither high availability nor a backup policy.
 
-Langfuse runs outside the application image. Its own web/worker services and PostgreSQL, ClickHouse, Redis/Valkey, and blob storage have separate data ownership and credentials. A physical database server may be shared only through separate databases and roles. Keep production Langfuse lifecycle under the fleet infrastructure owner; this repo owns its instrumentation and local development configuration. Its optional gateway is not part of this design.
+LangSmith remains outside the application image. S05b requires an approved private project, region, credential scope, retention/deletion evidence and access model before live export. Cloud, BYOC, and self-hosted deployment remain deployment choices rather than assumptions in this application design. This repository owns its allowlisted instrumentation and runbook; the service owner owns account and credential administration.
 
 ## Persistence and canonical records
 
@@ -113,7 +113,7 @@ Langfuse runs outside the application image. Its own web/worker services and Pos
 | Reviews and approvals | Attributable records bound to exact subject revision, evidence/policy versions, allowed operation, and expiry or revocation where relevant. |
 | Published articles and action dispositions | Existing Git records remain canonical during this roadmap. Database projections carry the Git revision they represent. |
 | DailyLogger domain events | Application-owned append-only records of its own observations and transitions, with corrections represented explicitly. Remote systems retain authority for their native facts. |
-| Langfuse traces, scores, and datasets | Diagnostic and evaluation records linked to durable IDs. Trace deletion cannot remove an approval, original action, or publication receipt. |
+| LangSmith traces, threads, scores, and datasets | Diagnostic and evaluation records linked to durable IDs. Trace deletion cannot remove an approval, original action, or publication receipt. |
 
 Use an application transaction to save an accepted command, its state change, and the corresponding outbox entry. Deliver external effects from the outbox, then record readback and receipts. Never hold a database transaction across a model call or a human wait. A transactional inbox deduplicates external deliveries by authenticated source and native delivery ID.
 
@@ -200,7 +200,7 @@ LangGraph's durable checkpointer persists progress, but the application must mak
 | Local host is unreachable during manual failover | Use the shared transfer gate; prove old-writer exclusion and resolve unknown writes/queued auto-merge before enabling Actions. Otherwise remain held. |
 | Public readback misses 04:00 | Report the missed delivery target; continue bounded read-only reconciliation without regenerating to repair deployment. Record any eventual verified receipt separately; late-publication Cleaner eligibility follows the owner policy required before automatic activation. |
 | Cleaner stops after branch push, before PR creation | Reconcile the persisted branch/commit and matching PR, then resume the same effect intent. Hold unknown or changed remote state; do not duplicate or overwrite it. |
-| Langfuse is unavailable | Continue durable application recording, expose telemetry degradation, and use bounded buffering/drop accounting. No unbounded disk queue. |
+| LangSmith is unavailable | Continue durable application recording, expose telemetry degradation, and use bounded buffering/drop accounting. No unbounded disk queue. |
 | Application database is unavailable | Reject new admissions and stop effects that cannot first record durable intent. |
 | Release changes graph shape | Keep paused runs bound to their graph version; drain or explicitly migrate them with compatibility proof. Never resume old state under arbitrary new node names. |
 
@@ -212,17 +212,17 @@ Define a DailyLogger adapter profile mapped to the proposed core crosswalk. Wher
 
 Use trace/span IDs for execution correlation and stable workflow/action/artifact IDs for work relationships. Preserve typed links such as `derived_from`, `reports_on`, and `corrects`; a mention is not a dependency. Trace context and self-declared event metadata do not authenticate authority. Qualify any shared profile through a real producer and independent consumers using core's existing promotion process.
 
-Instrument collection, context selection, model calls, tool calls, review, checkpoints, and publication. Langfuse should answer which input and prompt produced a draft, why it needed revision, which reviewer found the problem, and what each attempt cost. Track source coverage, queue age, pending review age, retries, uncertain effects, and export failures as operational metrics. Keep high-cardinality action/run IDs in traces and records rather than metric labels.
+Instrument collection, context selection, model calls, tool calls, review, checkpoints, and publication. LangSmith should answer which input and prompt produced a draft, why it needed revision, which reviewer found the problem, and what each attempt cost. Track source coverage, queue age, pending review age, retries, uncertain effects, and export failures as operational metrics. Keep high-cardinality action/run IDs in traces and records rather than metric labels.
 
 The first implementation boundary is [S05a offline fixture observations](../../apps/service/OBSERVABILITY.md). Explicit hooks project only fixed lifecycle labels, application-generated correlation IDs and bounded timing before any test sink receives a record. Admission observations describe the response after confirmed commit, including identical retries; they do not assert a newly created command. Durable attempts, saved run state, delivery-call results and queue acknowledgement retain separate meanings. The adapter is disabled by default and keeps observations outside graph state, approvals and artifacts.
 
-S05a's in-process test sinks must be trusted and nonblocking. Queues and asynchronous export waits are bounded; a timed-out sink is quarantined without repeatedly creating unresolved exports. Synchronous JavaScript blocking cannot be preempted by that timeout. S05b must qualify the real SDK transport, map application correlation UUIDs to SDK trace/span identities, and demonstrate actual private Langfuse readback and outage behavior before claiming operational observability. Fixture events supply no model-quality, token-cost or production evidence.
+S05a's in-process test sinks must be trusted and nonblocking. Queues and asynchronous export waits are bounded; a timed-out sink is quarantined without repeatedly creating unresolved exports. Synchronous JavaScript blocking cannot be preempted by that timeout. S05b begins with `src/langsmith-otel.ts`: it maps the closed observation projection to native OTel parent contexts, keeps application IDs only as bounded metadata, and sets `langsmith.trace.session_id` from the durable `runId`. It has no endpoint or credential configuration. S05b must still qualify the real OTLP transport, actual private LangSmith readback and outage behavior before claiming operational observability. Fixture events supply no model-quality, token-cost or production evidence.
 
-Prompt assets remain versioned with reviewed code initially; record their digest in Langfuse. A later Langfuse prompt-management adoption must preserve reproducible version pins and promotion controls. Store human edits and reviewer findings as evaluation data with distinct authorship, rubric, dataset revision, and model version. Do not promote a model-generated score into an approval or an accepted fact.
+Prompt assets remain versioned with reviewed code initially; record their digest in LangSmith metadata once live export is qualified. A later LangSmith prompt-management adoption must preserve reproducible version pins and promotion controls. Store human edits and reviewer findings as evaluation data with distinct authorship, rubric, dataset revision, and model version. Do not promote a model-generated score into an approval or an accepted fact.
 
 ## Security boundaries
 
-Use metadata-first telemetry. Allow content capture only for approved fields and sources, and redact before it crosses the applicable boundary. Apply policy to every exporter, errors, events, artifact names, links, and attachments; SDK input/output masking alone is insufficient. Configure private projects, retention/deletion, backups, and access explicitly. Verify which Langfuse edition supplies required retention features rather than assuming all administration features are open source.
+Use metadata-first telemetry. Allow content capture only for approved fields and sources, and redact before it crosses the applicable boundary. Apply policy to every exporter, errors, events, artifact names, links, and attachments; SDK input/output masking alone is insufficient. Configure private projects, retention/deletion, backups, and access explicitly. Verify actual LangSmith retention/deletion behavior for the approved project instead of treating a UI setting as proof of physical purge.
 
 Collection preserves current repository exclusions and private-source opt-ins; broad GitHub credentials do not expand that policy. Public generation uses an explicitly approved evidence projection. Secret values, private owner notes, raw checkpoints, and unrestricted tool results never enter the public Git repository, static JSON, generated feed, or public build context. Treat retrieved documents as data, not authority to call tools or change instructions.
 
@@ -248,5 +248,5 @@ FleetRunner later invokes a scoped application command and receives run/receipt 
 - [LangGraph subgraphs](https://docs.langchain.com/oss/javascript/langgraph/use-subgraphs) support separate bounded reviewer workflows.
 - [pg-boss](https://pgboss.io/) provides PostgreSQL-backed job delivery and scheduling; external-effect idempotency remains this application's responsibility.
 - [Fastify](https://fastify.dev/docs/latest/) supplies the HTTP server; application policy stays in domain operations.
-- [Langfuse LangGraph integration](https://langfuse.com/integrations/frameworks/langchain), [OTel ingestion](https://langfuse.com/integrations/native/opentelemetry), [self-hosting](https://langfuse.com/self-hosting), [masking](https://langfuse.com/docs/observability/features/masking), and [retention](https://langfuse.com/docs/administration/data-retention) define the integration and operational requirements.
+- [LangSmith OTel tracing](https://docs.langchain.com/langsmith/trace-with-opentelemetry), [threads](https://docs.langchain.com/langsmith/threads), [evaluation](https://docs.langchain.com/langsmith/evaluation), and [data purging/compliance](https://docs.langchain.com/langsmith/data-purging-compliance) define the integration and operational requirements.
 - [OTel GenAI conventions](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/README.md) remain in Development; pin their schema version. [W3C Trace Context](https://www.w3.org/TR/trace-context/) and [CloudEvents](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md) supply correlation and event-envelope conventions.
