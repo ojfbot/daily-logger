@@ -23,7 +23,7 @@ stays in the collected context when another event qualifies a run.
 
 ## Project context
 
-Part of the CircusGreen / ojfbot fleet — see core's current goals for the full picture. This repository already uses a pnpm workspace. The owner-directed target is a DailyLogger monorepo containing the web app and a persistent agent backend, with Langfuse for observability. See `docs/agent-service/README.md` for the proposed architecture and delivery roadmap. The current pipeline remains in place until the relevant migration milestone is implemented and qualified.
+Part of the CircusGreen / ojfbot fleet — see core's current goals for the full picture. This repository already uses a pnpm workspace. The owner-directed target is a DailyLogger monorepo containing the web app and a persistent agent backend, with LangSmith as the primary observability and evaluation platform. See `docs/agent-service/README.md` for the proposed architecture and delivery roadmap. The current pipeline remains in place until the relevant migration milestone is implemented and qualified.
 
 ## Development
 

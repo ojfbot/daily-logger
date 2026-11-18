@@ -4,7 +4,7 @@ This slice runs the existing recorded fixture graph with a real PostgreSQL
 checkpointer. It adds durable logical run identities, idempotent admission,
 per-command attempt records, and serialization across separate CLI processes.
 It preserves the original SQLite CLI. It does not complete M1B or S03: pg-boss
-delivery is S03b; authenticated owner controls and Langfuse remain separate work.
+delivery is S03b; authenticated owner controls and LangSmith remain separate work.
 
 The fixture copies the November 17 article and dated action file from the pinned
 Git commit. It makes no model, collector, GitHub, HTTP or publication call. Its

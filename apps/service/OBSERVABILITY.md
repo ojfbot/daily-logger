@@ -6,9 +6,13 @@ CLIs select the no-op adapter; there is no exporter environment variable, endpoi
 credential, SDK, OTLP payload or production telemetry configuration here. The
 fixture HTTP blockade and ambient LangSmith suppression remain unchanged.
 
-S05b must pin and qualify the official Langfuse SDK/server pair and map this
-allowlisted application data to it. These tests do not establish Langfuse ingestion,
-indexing, UI access, retention, deletion or production readiness.
+S05b uses LangSmith as the selected platform through standard OpenTelemetry spans.
+`src/langsmith-otel.ts` maps only this allowlisted application data, retains native
+OTel trace/span identities, and applies the durable `runId` as LangSmith's session
+identifier whenever the record has one. It reads no endpoint, credentials, ambient
+resource attributes, baggage, inputs, outputs, errors, or attachments. These tests
+do not establish LangSmith ingestion, indexing, UI access, retention, deletion or
+production readiness.
 
 ## Meaning of observations
 
@@ -34,9 +38,10 @@ query or business-state mutation is performed for telemetry.
 
 One application `traceId` is generated per delivery invocation; it is a **segment
 correlation UUID**, not an OpenTelemetry wire trace ID. `observationId` and
-`parentId` are application observation UUIDs, not OTel span IDs. S05b must test the
-official SDK mapping for stable start/end pairs, parent/child relationships and
-run grouping. Removing UUID hyphens alone is not a valid span-ID mapping.
+`parentId` are application observation UUIDs, not OTel span IDs. The S05b mapper
+uses native OTel parent contexts and keeps application UUIDs as bounded metadata;
+removing UUID hyphens alone is not a valid span-ID mapping. Real OTLP export and
+LangSmith readback remain separate qualification work.
 
 The same durable `runId` groups restarted segments. `commandId` and `attemptId`
 remain distinct; status/cancellation paths without a new attempt invent none.
@@ -81,8 +86,9 @@ The supported sinks are **trusted, nonblocking in-process test sinks**. Promise
 timeouts cannot preempt synchronous CPU or filesystem blocking on the event loop.
 A finite blocking negative control is classified as an overrun and quarantined
 when it returns; this does not undo its elapsed delay. Arbitrary blocking adapters
-are outside the isolation claim. S05b must qualify the real SDK's event-loop impact
-and use process/thread isolation if required before claiming production isolation.
+are outside the isolation claim. S05b must qualify the real OTLP exporter's
+event-loop impact and use process/thread isolation if required before claiming
+production isolation.
 
 ## Qualification
 
@@ -107,4 +113,4 @@ cancellation's separate call/graph semantics, exporter outage/shutdown, settleme
 failure, process death/checkpoint recovery, and a rejected attempt INSERT. Test capture files are disposable harness
 output outside canonical artifact bundles. Existing crash/deduplication suites
 remain part of qualification. Passing offline tests alone does not qualify the
-PostgreSQL instrumentation or any Langfuse backend.
+PostgreSQL instrumentation or the selected LangSmith backend.
