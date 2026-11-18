@@ -1,9 +1,11 @@
-import { Annotation, Command, END, START, StateGraph, interrupt } from '@langchain/langgraph'
+import { Annotation, Command, END, START, StateGraph, interrupt, isGraphInterrupt } from '@langchain/langgraph'
 import type { BaseCheckpointSaver } from '@langchain/langgraph-checkpoint'
 import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite'
 import { join } from 'node:path'
 import { approvalDigest, digest, json, requireCondition, reviewFixture, type Fixture, type Review } from './fixture.js'
 import { artifactFiles, recordAttempt, validateArtifacts, validateInputs, writeArtifacts } from './storage.js'
+import { NOOP_SPAN, safeSpan, type ObservationSpan } from './telemetry.js'
+import type { ObservationNode } from './telemetry-schema.js'
 
 const State = Annotation.Root({
   manifestDigest: Annotation<string>,
@@ -16,12 +18,28 @@ const State = Annotation.Root({
 
 export type WorkflowState = typeof State.State
 
+/** Observe computation without replacing its result, error or interrupt object. */
+export async function observeNodeExecution<T>(observation: ObservationSpan, execute: () => Promise<T>): Promise<T> {
+  observation = safeSpan(observation)
+  try {
+    const result = await execute()
+    observation.end('succeeded')
+    return result
+  } catch (error) {
+    let paused = false
+    try { paused = isGraphInterrupt(error) } catch { /* arbitrary thrown values remain unchanged */ }
+    observation.end(paused ? 'paused' : 'failed')
+    throw error
+  }
+}
+
 export function createWorkflow(runDir: string, fixture: Fixture, runtime: {
   checkpointer: BaseCheckpointSaver
   threadId: string
   recordNode?: (node: string) => void | Promise<void>
   assertActive?: () => void
   receiptIdentity?: { milestone: string; runId: string }
+  nodeObservation?: (node: ObservationNode) => ObservationSpan
 }) {
   const recordNode = runtime.recordNode ?? ((node: string) => recordAttempt(runDir, node))
   const expectedReview = reviewFixture(fixture)
@@ -41,24 +59,29 @@ export function createWorkflow(runDir: string, fixture: Fixture, runtime: {
       validateArtifacts(runDir, files)
     }
   }
+  const observedNode = <T>(name: ObservationNode, execute: (state: WorkflowState) => Promise<T>) => async (state: WorkflowState): Promise<T> => {
+    let observation = NOOP_SPAN
+    try { observation = safeSpan(runtime.nodeObservation?.(name) ?? NOOP_SPAN) } catch { /* optional diagnostics only */ }
+    return observeNodeExecution(observation, () => execute(state))
+  }
 
   const graph = new StateGraph(State)
-    .addNode('collect_fixture', async (state) => {
+    .addNode('collect_fixture', observedNode('collect_fixture', async (state) => {
       validate(state)
       await recordNode('collect_fixture')
       return { collected: { sourceCommit: fixture.manifest.source.commit } }
-    })
-    .addNode('draft_fixture', async (state) => {
+    }))
+    .addNode('draft_fixture', observedNode('draft_fixture', async (state) => {
       validate(state)
       await recordNode('draft_fixture')
       return { draft: { articleSha256: expectedReview.articleSha256, actionsSha256: expectedReview.actionsSha256 } }
-    })
-    .addNode('review_fixture', async (state) => {
+    }))
+    .addNode('review_fixture', observedNode('review_fixture', async (state) => {
       validate(state)
       await recordNode('review_fixture')
       return { review: reviewFixture(fixture) }
-    })
-    .addNode('human_gate', async (state) => {
+    }))
+    .addNode('human_gate', observedNode('human_gate', async (state) => {
       validate(state)
       const answer = interrupt({
         kind: 'shadow-artifact-approval',
@@ -70,15 +93,15 @@ export function createWorkflow(runDir: string, fixture: Fixture, runtime: {
       }) as { approvalDigest: string }
       requireCondition(answer?.approvalDigest === expectedApproval, 'Stale approval digest; resume rejected')
       return { approval: { digest: expectedApproval, scope: 'write-isolated-shadow-artifacts-only' } }
-    })
-    .addNode('write_shadow_artifacts', async (state) => {
+    }))
+    .addNode('write_shadow_artifacts', observedNode('write_shadow_artifacts', async (state) => {
       validate(state)
       requireCondition(state.approval?.digest === expectedApproval, 'Shadow output requires the exact review approval')
       await recordNode('write_shadow_artifacts')
       runtime.assertActive?.()
       writeArtifacts(runDir, files)
       return { published: { receiptSha256: digest(files['receipt.json']) } }
-    })
+    }))
     .addEdge(START, 'collect_fixture')
     .addEdge('collect_fixture', 'draft_fixture')
     .addEdge('draft_fixture', 'review_fixture')
