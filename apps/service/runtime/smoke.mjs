@@ -58,9 +58,11 @@ try {
     '--input-type=module'], { input: `
       import assert from 'node:assert/strict';
       import { execFileSync } from 'node:child_process';
-      import { existsSync,readFileSync,writeFileSync } from 'node:fs';
+      import { existsSync,readFileSync,writeFileSync,mkdtempSync,rmSync,statSync } from 'node:fs';
       import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
       import { readFixture,reviewFixture } from './src/fixture.ts';
+      import { createLangfuseTelemetry } from './src/telemetry-export-process.ts';
+      import { NOOP_TELEMETRY } from './src/telemetry.ts';
       assert.equal(process.getuid(),1000);
       assert.equal(existsSync('test'),false);
       assert.equal(existsSync('/app/.git/objects/info/alternates'),false);
@@ -73,7 +75,37 @@ try {
       assert.equal(review.articleSha256,context.articleSha256);
       assert.equal(review.actionsSha256,context.actionsSha256);
       await import('./src/http-server.ts'); await import('./src/delivery-worker.ts');
-      console.log(JSON.stringify({proof:'offline-final-image',node:process.version,git:execFileSync('git',['--version'],{encoding:'utf8'}).trim(),uid:process.getuid(),fixtureCommit:context.fixtureCommit,nativeSqlite:'passed'}));
+      assert.equal(createLangfuseTelemetry(),NOOP_TELEMETRY);
+      assert.equal(existsSync('scripts/build-telemetry.mjs'),false);
+      for(const asset of ['dist/telemetry/telemetry-export-child.mjs','dist/telemetry/telemetry-export-worker.mjs']) {
+        assert.equal(statSync(asset).uid,1000);
+        assert.throws(()=>writeFileSync(asset,'forbidden'));
+      }
+      const secretRoot=mkdtempSync('/tmp/exporter-startup-proof-');
+      let telemetry;
+      try {
+        // Disposable synthetic identity only; no trust installation or endpoint.
+        execFileSync('openssl',['req','-x509','-newkey','ec','-pkeyopt','ec_paramgen_curve:P-256','-nodes','-keyout',secretRoot+'/unused-ca.key','-out',secretRoot+'/ca.pem','-days','1','-subj','/CN=Disposable exporter startup fixture'],{stdio:'ignore'});
+        writeFileSync(secretRoot+'/public','pk-synthetic-offline-startup',{mode:0o600});
+        writeFileSync(secretRoot+'/secret','sk-synthetic-offline-startup',{mode:0o600});
+        telemetry=createLangfuseTelemetry({mode:'langfuse',endpoint:'https://127.0.0.1:1/api/public/otel/v1/traces',publicKeyFile:secretRoot+'/public',secretKeyFile:secretRoot+'/secret',caFile:secretRoot+'/ca.pem',environment:'qualification'});
+        assert.notEqual(telemetry,NOOP_TELEMETRY);
+        assert.equal(typeof telemetry.exporterDiagnostics,'function');
+        const deadline=Date.now()+4500;
+        while(!telemetry.exporterDiagnostics().ready) {
+          assert.equal(telemetry.exporterDiagnostics().closed,false,'Compiled exporter child failed startup');
+          assert.ok(Date.now()<deadline,'Compiled exporter did not become ready');
+          await new Promise(resolve=>setTimeout(resolve,10));
+        }
+        assert.equal(telemetry.exporterDiagnostics().acknowledged,0);
+        assert.equal(telemetry.exporterDiagnostics().failures,0);
+        assert.equal(telemetry.diagnostics().accepted,0);
+      } finally {
+        if(telemetry) await telemetry.shutdown();
+        rmSync(secretRoot,{recursive:true,force:true});
+      }
+      assert.equal(telemetry.exporterDiagnostics().closed,true);
+      console.log(JSON.stringify({proof:'offline-final-image',node:process.version,git:execFileSync('git',['--version'],{encoding:'utf8'}).trim(),uid:process.getuid(),fixtureCommit:context.fixtureCommit,nativeSqlite:'passed',compiledExporterChild:'ready-then-closed',exporterBatches:0,defaultTelemetry:'disabled'}));
     ` })
   process.stdout.write(offline.stdout)
   const config = JSON.parse(compose(['config', '--format', 'json']).stdout)
