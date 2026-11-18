@@ -195,7 +195,7 @@ def run(args, *, binary=False, env=None, timeout=60, allow_failure=False, input_
 
 class Github:
     def get(self, route):
-        require(route.startswith(f'repos/{REPOSITORY}/'), 'Unexpected GitHub route')
+        require(route == f'repos/{REPOSITORY}' or route.startswith(f'repos/{REPOSITORY}/'), 'Unexpected GitHub route')
         data = run(['gh', 'api', '--hostname', 'github.com', '-H', 'Accept: application/vnd.github+json', route], binary=True)
         require(len(data) <= 4 * 1024 * 1024, 'GitHub response too large')
         return json_bytes(data)
@@ -270,7 +270,7 @@ def input_files(read):
 def github_evidence(expected, github):
     parse_expected(expected)
     source = expected['source']; run_id = expected['runId']; attempt = expected['attempt']
-    repo = github.get(f'repos/{REPOSITORY}/')
+    repo = github.get(f'repos/{REPOSITORY}')
     require(repo.get('full_name') == REPOSITORY, 'Wrong repository evidence')
     record = github.get(f'repos/{REPOSITORY}/actions/artifacts/{expected["artifactId"]}')
     require(record.get('id') == expected['artifactId'] and record.get('expired') is False
