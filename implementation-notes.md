@@ -2,6 +2,9 @@
 
 ## Deviations
 
+- 2026-11-18. Artifact cleanup assumed a created pathname remained owned, but independent review replaced it before failure and reproduced deletion of the replacement. Hold the created directory descriptor, perform relative file I/O, and check device/inode before cleanup; retain an ownership-changed stage for reconciliation instead of deleting another directory.
+- 2026-11-18. A nonzero Git probe and post-parse tar member limits were assumed sufficient, but independent review reproduced a bare-repository probe error and oversized PAX allocation. Accept only the recognized outside-repository result under a deadline and preflight raw tar extension/header budgets before invoking tarfile.
+
 - 2026-11-18. The exporter assumed Docker inspect's ID was the config digest, but real containerd-backed CI returned an index/manifest target. Record the engine target and config digest separately, verify their archive descriptor graph and layer closure, and execute/reload by the actual engine identity.
 
 - 2026-11-18. The reviewed private mount paths were assumed to exist, but independent host-permission review found Compose could create missing bind sources. Disabled host-path creation for both proxy mounts and added actual missing-source startup failures that assert no host directory was created.

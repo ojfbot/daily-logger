@@ -12,6 +12,7 @@ import selectors
 import shutil
 import stat
 import subprocess
+import sys
 import tarfile
 import time
 import zipfile
@@ -64,11 +65,10 @@ def json_bytes(data):
     return json.loads(data, object_pairs_hook=unique, parse_constant=lambda _: require(False, 'Invalid JSON number'))
 
 
-def sha256(path):
+def sha256_stream(stream):
     result = hashlib.sha256()
-    with Path(path).open('rb') as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b''):
-            result.update(chunk)
+    for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+        result.update(chunk)
     return result.hexdigest()
 
 
@@ -177,9 +177,16 @@ def parse_manifest(value):
     return value
 
 
-def run(args, *, binary=False, env=None, timeout=60, allow_failure=False):
-    result = subprocess.run(args, cwd=SOURCE_ROOT, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+def run(args, *, binary=False, env=None, timeout=60, allow_failure=False, input_file=None, output_file=None):
+    result = subprocess.run(args, cwd=SOURCE_ROOT, env=env, stdin=input_file,
+                            stdout=output_file or subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+    if result.returncode != 0 and not allow_failure and args[0] == 'pnpm':
+        locations = sorted(set(re.findall(r'apps/service/(?:runtime|test)/[A-Za-z0-9_./-]+\.(?:mjs|ts|py):\d+(?::\d+)?',
+                                           result.stderr.decode(errors='replace'))))
+        print('Fixture proof source locations: ' + ', '.join(locations[:12]), file=sys.stderr)
     require(allow_failure or result.returncode == 0, 'Fixture command failed: ' + ' '.join(args[:2]))
+    if output_file is not None:
+        return None
     return result if allow_failure else result.stdout if binary else result.stdout.decode()
 
 
@@ -192,31 +199,34 @@ class Github:
 
     def download(self, artifact_id, destination, maximum=MAX_ARCHIVE):
         positive(maximum)
-        with Path(destination).open('xb') as output:
-            process = subprocess.Popen(['gh', 'api', '--hostname', 'github.com',
-                f'repos/{REPOSITORY}/actions/artifacts/{artifact_id}/zip'],
-                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-            try:
-                deadline = time.monotonic() + 180
-                remaining = maximum
-                with selectors.DefaultSelector() as selector:
-                    selector.register(process.stdout, selectors.EVENT_READ)
-                    while True:
-                        budget = deadline - time.monotonic()
-                        require(budget > 0, 'Artifact download deadline exceeded')
-                        require(selector.select(budget), 'Artifact download deadline exceeded')
-                        chunk = os.read(process.stdout.fileno(), min(1024 * 1024, remaining + 1))
-                        if not chunk:
-                            break
-                        require(len(chunk) <= remaining, 'Artifact download exceeded authenticated size')
-                        output.write(chunk)
-                        remaining -= len(chunk)
-                require(process.wait(timeout=max(deadline - time.monotonic(), 0.001)) == 0, 'Artifact download failed')
-            finally:
-                if process.poll() is None:
-                    process.kill()
-                process.wait()
-                process.stdout.close()
+        if not hasattr(destination, 'write'):
+            with Path(destination).open('xb') as output:
+                return self.download(artifact_id, output, maximum)
+        output = destination
+        process = subprocess.Popen(['gh', 'api', '--hostname', 'github.com',
+            f'repos/{REPOSITORY}/actions/artifacts/{artifact_id}/zip'],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        try:
+            deadline = time.monotonic() + 180
+            remaining = maximum
+            with selectors.DefaultSelector() as selector:
+                selector.register(process.stdout, selectors.EVENT_READ)
+                while True:
+                    budget = deadline - time.monotonic()
+                    require(budget > 0, 'Artifact download deadline exceeded')
+                    require(selector.select(budget), 'Artifact download deadline exceeded')
+                    chunk = os.read(process.stdout.fileno(), min(1024 * 1024, remaining + 1))
+                    if not chunk:
+                        break
+                    require(len(chunk) <= remaining, 'Artifact download exceeded authenticated size')
+                    output.write(chunk)
+                    remaining -= len(chunk)
+            require(process.wait(timeout=max(deadline - time.monotonic(), 0.001)) == 0, 'Artifact download failed')
+        finally:
+            if process.poll() is None:
+                process.kill()
+            process.wait()
+            process.stdout.close()
 
 
 def jobs_for(github, run_id, attempt):
@@ -303,8 +313,32 @@ def safe_name(name):
         and all(part not in ('', '.', '..') for part in name.rstrip('/').split('/'))
 
 
-def inspect_image_archive(path):
-    with tarfile.open(path, 'r:') as archive:
+def preflight_tar(stream):
+    stream.seek(0, 2)
+    length = stream.tell()
+    require(0 < length <= MAX_ARCHIVE, 'Oversized image archive')
+    offset = headers = extensions = 0
+    while offset < length:
+        stream.seek(offset)
+        header = stream.read(512)
+        require(len(header) == 512, 'Truncated tar header')
+        if header == b'\0' * 512:
+            break
+        size = tarfile.nti(header[124:136])
+        require(type(size) is int and 0 <= size <= MAX_ARCHIVE, 'Oversized tar member')
+        headers += 1
+        require(headers <= 20000, 'Too many tar headers')
+        if header[156:157] in (b'x', b'g', b'L', b'K'):
+            extensions += size
+            require(size <= 64 * 1024 and extensions <= 1024 * 1024, 'Tar extension metadata exceeds budget')
+        offset += 512 + ((size + 511) // 512) * 512
+        require(offset <= length, 'Truncated tar member')
+    stream.seek(0)
+
+
+def inspect_image_archive(stream):
+    preflight_tar(stream)
+    with tarfile.open(fileobj=stream, mode='r:') as archive:
         members = {}
         for member in archive:
             require(safe_name(member.name) and member.name not in members and (member.isfile() or member.isdir()), 'Unsafe image archive member')
@@ -412,11 +446,60 @@ def private_output(path):
     require('.git' not in parent.parts and not any((ancestor / '.git').exists()
             for ancestor in (parent, *parent.parents)), 'Artifact output must be outside Git')
     environment = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
-    environment.update(GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL='/dev/null')
+    environment.update(GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL='/dev/null', GIT_DISCOVERY_ACROSS_FILESYSTEM='1', LC_ALL='C')
     probe = subprocess.run(['git', '-C', str(parent), 'rev-parse', '--git-dir'], env=environment,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    require(probe.returncode != 0, 'Artifact output must be outside Git')
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=5)
+    require(probe.returncode == 128 and probe.stderr == b'fatal: not a git repository (or any of the parent directories): .git\n',
+            'Git exclusion could not establish an outside-repository destination')
     path.mkdir(mode=0o700)
+
+
+class OwnedOutput:
+    """Keep file operations on the created directory, even if its pathname moves."""
+    def __init__(self, path):
+        private_output(path)
+        self.path = path
+        self.fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        self.identity = os.fstat(self.fd)
+        try:
+            self.check()
+        except BaseException:
+            os.close(self.fd)
+            raise
+
+    def check(self):
+        current = self.path.lstat()
+        require(stat.S_ISDIR(current.st_mode) and (current.st_dev, current.st_ino) ==
+                (self.identity.st_dev, self.identity.st_ino), 'Output directory ownership changed; retained for reconciliation')
+
+    def open(self, name, mode):
+        self.check()
+        require(name in ('download.zip', 'runtime-image.tar', 'manifest.json', 'verification.json'), 'Unexpected owned file')
+        flags = os.O_RDONLY if mode == 'rb' else os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        descriptor = os.open(name, flags | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600, dir_fd=self.fd)
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            os.close(descriptor)
+            raise ValueError('Owned payload must be a regular file')
+        return os.fdopen(descriptor, mode)
+
+    def size(self, name):
+        with self.open(name, 'rb') as stream:
+            return os.fstat(stream.fileno()).st_size
+
+    def hash(self, name):
+        with self.open(name, 'rb') as stream:
+            return sha256_stream(stream)
+
+    def write_json(self, name, value):
+        with self.open(name, 'xb') as stream:
+            stream.write((json.dumps(value, indent=2) + '\n').encode())
+
+    def cleanup(self):
+        self.check()
+        shutil.rmtree(self.path)
+
+    def close(self):
+        os.close(self.fd)
 
 
 def artifact_name(run_id, attempt):
@@ -428,14 +511,14 @@ def verify_fixture(expected, output, github=None):
     github = github or Github()
     require(not output.exists() and not output.is_symlink(), 'Output must be new')
     evidence = github_evidence(expected, github)
-    private_output(output)
+    owned = OwnedOutput(output)
     try:
-        outer = output / 'download.zip'
         metadata = evidence['artifact']
-        github.download(expected['artifactId'], outer, metadata['size_in_bytes'])
-        require(0 < outer.stat().st_size <= MAX_ARCHIVE and sha256(outer) == metadata['digest'][7:]
-                and outer.stat().st_size == metadata['size_in_bytes'], 'Outer artifact bytes mismatch')
-        with zipfile.ZipFile(outer) as archive:
+        with owned.open('download.zip', 'xb') as destination:
+            github.download(expected['artifactId'], destination, metadata['size_in_bytes'])
+        require(0 < owned.size('download.zip') <= MAX_ARCHIVE and owned.hash('download.zip') == metadata['digest'][7:]
+                and owned.size('download.zip') == metadata['size_in_bytes'], 'Outer artifact bytes mismatch')
+        with owned.open('download.zip', 'rb') as outer, zipfile.ZipFile(outer) as archive:
             members = archive.infolist()
             require(len(members) == 2 and {item.filename for item in members} == {'manifest.json', 'runtime-image.tar'}, 'Unexpected artifact members')
             for item in members:
@@ -450,27 +533,30 @@ def verify_fixture(expected, output, github=None):
                 'attempt': expected['attempt'], 'jobId': evidence['job']['id'], 'jobKey': JOB}, 'Manifest producer identity mismatch')
             require(manifest['sourceFileDigests'] == evidence['sourceFileDigests']
                     and manifest['upstreamImages'] == evidence['upstreamImages'], 'Committed source digest mismatch')
-            with archive.open('runtime-image.tar') as source, (output / 'runtime-image.tar').open('xb') as destination:
+            with archive.open('runtime-image.tar') as source, owned.open('runtime-image.tar', 'xb') as destination:
                 shutil.copyfileobj(source, destination, 1024 * 1024)
-            image_archive = output / 'runtime-image.tar'
-            require(image_archive.stat().st_size == manifest['archive']['size']
-                    and sha256(image_archive) == manifest['archive']['sha256'], 'Inner archive bytes mismatch')
-            identities = inspect_image_archive(image_archive)
+            require(owned.size('runtime-image.tar') == manifest['archive']['size']
+                    and owned.hash('runtime-image.tar') == manifest['archive']['sha256'], 'Inner archive bytes mismatch')
+            with owned.open('runtime-image.tar', 'rb') as stream:
+                identities = inspect_image_archive(stream)
             require(identities['configId'] == manifest['image']['configId']
                     and identities['engineKinds'].get(manifest['image']['engineId']) == manifest['image']['engineIdentityKind'],
                     'Image config/engine identity mismatch')
-            (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+            owned.write_json('manifest.json', manifest)
         receipt = {'schemaVersion': 1, 'purpose': 'verified-disposable-fixture-candidate', 'artifactId': expected['artifactId'],
             'outerSha256': metadata['digest'][7:], 'runId': expected['runId'], 'attempt': expected['attempt'],
             'jobId': evidence['job']['id'], 'source': expected['source'], 'archiveSha256': manifest['archive']['sha256'],
             'imageConfigId': manifest['image']['configId'], 'imageEngineId': manifest['image']['engineId'],
             'engineIdentityKind': manifest['image']['engineIdentityKind'], 'productionEligible': False, 'imageLoaded': False}
-        (output / 'verification.json').write_text(json.dumps(receipt, indent=2) + '\n')
-        outer.unlink()
+        owned.write_json('verification.json', receipt)
+        owned.check()
+        os.unlink('download.zip', dir_fd=owned.fd)
         return receipt
     except BaseException:
-        shutil.rmtree(output)
+        owned.cleanup()
         raise
+    finally:
+        owned.close()
 
 
 def tap_counts(text):
@@ -519,19 +605,21 @@ def export_fixture(image, context, output, github=None):
     image_id = inspected['Id']; require(re.fullmatch(r'sha256:[0-9a-f]{64}', image_id) is not None, 'Invalid config ID')
     require(json_bytes(run(['docker', 'run', '--rm', '--network', 'none', '--read-only', '--entrypoint', 'cat',
                 image_id, '/app/runtime-context.json'])) == receipt, 'Image context mismatch')
-    private_output(output)
+    owned = OwnedOutput(output)
     try:
-        archive = output / 'runtime-image.tar'
-        run(['docker', 'image', 'save', '--output', str(archive), image], timeout=180)
-        require(0 < archive.stat().st_size <= MAX_ARCHIVE, 'Oversized image export')
-        identities = inspect_image_archive(archive)
+        with owned.open('runtime-image.tar', 'xb') as archive:
+            run(['docker', 'image', 'save', image], output_file=archive, timeout=180)
+        require(0 < owned.size('runtime-image.tar') <= MAX_ARCHIVE, 'Oversized image export')
+        with owned.open('runtime-image.tar', 'rb') as archive:
+            identities = inspect_image_archive(archive)
         require(image_id in identities['engineKinds'], 'Engine identity is absent from saved image graph')
         image_identity = {'identityKind': 'docker-config-sha256', 'configId': identities['configId'],
             'engineId': image_id, 'engineIdentityKind': identities['engineKinds'][image_id], 'platform': 'linux/amd64', 'uid': 1000, 'gid': 1000}
         run(['docker', 'image', 'rm', image])
         absent = run(['docker', 'image', 'inspect', image_id], allow_failure=True)
         require(absent.returncode != 0, 'Owned image record still exists; no force removal allowed')
-        run(['docker', 'image', 'load', '--input', str(archive)], timeout=180)
+        with owned.open('runtime-image.tar', 'rb') as archive:
+            run(['docker', 'image', 'load'], input_file=archive, timeout=180)
         loaded = json_bytes(run(['docker', 'image', 'inspect', image_id]))[0]
         require(loaded['Id'] == image_id and loaded['Config']['User'] == '1000:1000'
                 and loaded['Os'] == 'linux' and loaded['Architecture'] == 'amd64', 'Reloaded image mismatch')
@@ -554,25 +642,27 @@ def export_fixture(image, context, output, github=None):
         manifest = parse_manifest({'schemaVersion': 1, 'purpose': 'disposable-fixture-candidate', 'repository': REPOSITORY,
             'source': source, 'ci': {'workflowPath': WORKFLOW, 'workflowId': workflow['workflow_id'], 'runId': run_id,
                 'attempt': attempt, 'jobId': job['id'], 'jobKey': JOB}, 'image': image_identity,
-            'archive': {'name': 'runtime-image.tar', 'size': archive.stat().st_size, 'sha256': sha256(archive)},
+            'archive': {'name': 'runtime-image.tar', 'size': owned.size('runtime-image.tar'), 'sha256': owned.hash('runtime-image.tar')},
             'context': receipt, 'sourceFileDigests': source_hashes, 'upstreamImages': upstreams, 'qualifications': proofs})
         serialized = json.dumps(manifest, indent=2) + '\n'
         needles = [value.encode() for key in ('GH_TOKEN', 'GITHUB_TOKEN', 'DAILYLOGGER_ARTIFACT_CREDENTIAL_CANARY')
                    if (value := os.environ.get(key))]
-        with archive.open('rb') as stream:
+        with owned.open('runtime-image.tar', 'rb') as stream:
             tail = b''
             for chunk in iter(lambda: stream.read(1024 * 1024), b''):
                 data = tail + chunk
                 require(not any(needle in data for needle in needles), 'Credential canary found in archive')
                 tail = data[-max([len(needle) for needle in needles] + [1]):]
         require(not any(needle in serialized.encode() for needle in needles), 'Credential canary found in manifest')
-        (output / 'manifest.json').write_text(serialized)
+        owned.write_json('manifest.json', manifest)
         return {'purpose': manifest['purpose'], 'imageConfigId': image_identity['configId'], 'imageEngineId': image_id,
                 'engineIdentityKind': image_identity['engineIdentityKind'], 'artifactName': artifact_name(run_id, attempt),
                 'builtRevision': revision, 'productionEligible': False}
     except BaseException:
-        shutil.rmtree(output)
+        owned.cleanup()
         raise
+    finally:
+        owned.close()
 
 
 def main():

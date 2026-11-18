@@ -190,6 +190,7 @@ class GithubFixture:
         self.calls = []
         self.downloads = []
         self.download_error = None
+        self.on_download = None
         self.repack()
 
     def get(self, route):
@@ -209,7 +210,13 @@ class GithubFixture:
         self.downloads.append(artifact_id)
         if len(self.zip_bytes) > maximum:
             raise ValueError('Synthetic download exceeds its authenticated byte allowance')
-        Path(destination).write_bytes(self.zip_bytes)
+        if hasattr(destination, 'write'):
+            destination.write(self.zip_bytes)
+            destination.flush()
+        else:
+            Path(destination).write_bytes(self.zip_bytes)
+        if self.on_download:
+            self.on_download(destination)
         if self.download_error:
             raise self.download_error
 
@@ -264,7 +271,7 @@ class ArtifactBoundaryTests(unittest.TestCase):
         self.fixture = GithubFixture()
         self.processes = []
 
-    def verify(self, fixture=None, output=None):
+    def verify(self, fixture=None, output=None, git_probe=None):
         fixture = fixture or self.fixture
         output = output or self.root / 'verified'
 
@@ -272,6 +279,8 @@ class ArtifactBoundaryTests(unittest.TestCase):
             self.processes.append(args)
             if args[:1] != ['git']:
                 raise AssertionError('Verifier attempted execution outside its Git output-location check: ' + repr(args))
+            if git_probe is not None and 'rev-parse' in args:
+                return git_probe
             return REAL_SUBPROCESS_RUN(args, *positional, **options)
 
         with patch.object(artifact.subprocess, 'run', side_effect=boundary), \
@@ -296,6 +305,8 @@ class ArtifactBoundaryTests(unittest.TestCase):
         self.assertNotEqual(BUILT, BASE)
         self.assertEqual(receipt['outerSha256'], hashed(self.fixture.zip_bytes))
         self.assertEqual(receipt['archiveSha256'], hashed(self.fixture.image))
+        self.assertEqual(receipt['imageEngineId'], self.fixture.manifest['image']['configId'])
+        self.assertEqual(receipt['engineIdentityKind'], 'config-sha256')
         self.assertFalse(receipt['productionEligible'])
         self.assertFalse(receipt['imageLoaded'])
         output = self.root / 'verified'
@@ -346,6 +357,67 @@ class ArtifactBoundaryTests(unittest.TestCase):
         self.assertEqual(len(self.fixture.zip_bytes), authenticated['size_in_bytes'])
         self.fixture.records[self.fixture.artifact_route] = authenticated
         self.rejected()
+
+    def test_ambiguous_git_probe_failure_does_not_authorize_output_creation(self):
+        for stderr in (b'fatal: detected dubious ownership in repository\n',
+                       b'fatal: bad config line 1 in file /invalid/config\n'):
+            with self.subTest(stderr=stderr):
+                fixture = GithubFixture()
+                probe = subprocess.CompletedProcess(['git'], 128, stdout=b'', stderr=stderr)
+                with self.assertRaises(ValueError):
+                    self.verify(fixture, git_probe=probe)
+                self.assertFalse((self.root / 'verified').exists())
+                self.assertEqual(fixture.downloads, [])
+
+    def test_output_path_replacement_during_download_preserves_unowned_directory_and_symlink(self):
+        for replacement_kind in ('directory', 'symlink'):
+            for download_raises in (False, True):
+                with self.subTest(replacement_kind=replacement_kind, download_raises=download_raises):
+                    location = self.root / f'{replacement_kind}-{download_raises}'
+                    location.mkdir()
+                    output = location / 'verified'
+                    moved = location / 'moved-owned-stage'
+                    target = location / 'replacement-target' if replacement_kind == 'symlink' else output
+                    fixture = GithubFixture()
+                    def replace_path(_destination):
+                        output.rename(moved)
+                        target.mkdir()
+                        (target / 'keep').write_bytes(b'Unowned replacement sentinel')
+                        if replacement_kind == 'symlink':
+                            output.symlink_to(target, target_is_directory=True)
+                    fixture.on_download = replace_path
+                    if download_raises:
+                        fixture.download_error = OSError('Synthetic failure after directory substitution')
+                    with self.assertRaises((ValueError, OSError)):
+                        self.verify(fixture, output)
+                    self.assertEqual((target / 'keep').read_bytes(), b'Unowned replacement sentinel')
+                    self.assertEqual({path.name for path in target.iterdir()}, {'keep'})
+                    self.assertEqual(output.is_symlink(), replacement_kind == 'symlink')
+                    self.assertFalse((target / 'verification.json').exists())
+                    self.assertEqual(self.sentinel.read_bytes(), b'Unrelated data must survive failures')
+
+    def test_huge_raw_pax_or_gnu_metadata_rejects_before_tarfile_parser_allocation(self):
+        content = b'comment=' + b'x' * (2 * 1024 * 1024) + b'\n'
+        record_length = len(content) + 2
+        while len(str(record_length)) + 1 + len(content) != record_length:
+            record_length = len(str(record_length)) + 1 + len(content)
+        pax = str(record_length).encode() + b' ' + content
+        for kind, body, include_body in ((tarfile.XHDTYPE, pax, True),
+                                         (tarfile.GNUTYPE_LONGNAME, b'x' * (2 * 1024 * 1024) + b'\0', True),
+                                         (tarfile.XHDTYPE, pax, False)):
+            with self.subTest(kind=kind, include_body=include_body):
+                fixture = GithubFixture()
+                header = tarfile.TarInfo('././@PaxHeader' if kind == tarfile.XHDTYPE else '././@LongLink')
+                header.type = kind
+                header.size = len(body)
+                raw = header.tobuf(format=tarfile.USTAR_FORMAT)
+                if include_body:
+                    raw += body + b'\0' * (-len(body) % 512)
+                fixture.image = raw + b'\0' * 1024
+                fixture.manifest['archive'].update(size=len(fixture.image), sha256=hashed(fixture.image))
+                fixture.repack()
+                with patch.object(artifact.tarfile, 'open', side_effect=AssertionError('Oversized metadata reached allocating tarfile parser')):
+                    self.rejected(fixture)
 
     def test_missing_or_malformed_authenticated_digest_rejects_before_download(self):
         for digest in (None, 'f' * 64, 'sha256:not-a-digest'):
@@ -516,6 +588,8 @@ class ArtifactBoundaryTests(unittest.TestCase):
                 output = self.root / ('oci-gzip' if compressed else 'oci-plain')
                 receipt = self.verify(fixture, output)
                 self.assertEqual(receipt['imageConfigId'], identities['configId'])
+                self.assertEqual(receipt['imageEngineId'], identities['indexId'])
+                self.assertEqual(receipt['engineIdentityKind'], 'index-sha256')
                 staged = json.loads((output / 'manifest.json').read_bytes())
                 self.assertEqual(staged['image']['engineId'], identities['indexId'])
                 self.assertEqual(staged['image']['engineIdentityKind'], 'index-sha256')
@@ -526,6 +600,8 @@ class ArtifactBoundaryTests(unittest.TestCase):
         receipt = self.verify()
         self.assertNotEqual(identities['manifestId'], identities['configId'])
         self.assertEqual(receipt['imageConfigId'], identities['configId'])
+        self.assertEqual(receipt['imageEngineId'], identities['manifestId'])
+        self.assertEqual(receipt['engineIdentityKind'], 'manifest-sha256')
         staged = json.loads((self.root / 'verified/manifest.json').read_bytes())
         self.assertEqual(staged['image']['engineId'], identities['manifestId'])
         self.assertEqual(staged['image']['engineIdentityKind'], 'manifest-sha256')
