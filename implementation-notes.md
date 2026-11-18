@@ -606,3 +606,7 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 30 historical backfill (2026-10-31)
 
 - The backfill plan assumed the repository action-review pause affected only generation, but job-level wiring also injected it into the unit suite and caused the first recovery run to fail before drafting. Scope the variable to the Generate article step, retain normal test fixtures, and rerun the same dated backfill with actions held.
+
+## Deviations
+
+- 2026-11-18. The S04 pickup assumed the reviewed S03a reservation repairs protected completed bundles, but an absent nested leaf through a case-aliased parent bypassed the database ancestry check when the ancestor marker was missing. Kept #555 changes-requested, sent the real PostgreSQL reproduction and regular/native realpath mismatch to Yojimbo in HelpDesk sequence 14164, and continued the fixture-only S04 contract mapping.
