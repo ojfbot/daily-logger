@@ -64,6 +64,7 @@ try {
       assert.equal(process.getuid(),1000);
       assert.equal(existsSync('test'),false);
       assert.equal(existsSync('/app/.git/objects/info/alternates'),false);
+      assert.equal(existsSync('/app/.git/logs'),false);
       assert.equal(execFileSync('git',['-C','/app','remote'],{encoding:'utf8'}),'');
       assert.throws(()=>writeFileSync('/app/runtime-write-canary','forbidden'));
       const native=SqliteSaver.fromConnString(':memory:'); native.db.close();

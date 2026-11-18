@@ -22,7 +22,7 @@ service's `files` list and required build/schema assets. Changed runtime inputs,
 symlinks and existing destinations reject. Untracked files, environment files,
 developer node_modules and source Git metadata never enter the build context.
 A fresh local-only shallow fetch supplies the public fixture commit. The store
-has no remote, alternate object store, source config or hooks; its shallow
+has no remote, alternate object store, local reflogs, source config or hooks; its shallow
 boundary and object identities are verified before packaging.
 
 The build installs from the frozen workspace lock for the target platform and

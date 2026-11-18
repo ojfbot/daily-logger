@@ -30,6 +30,7 @@ test('committed runtime context excludes ambient credentials and includes a self
     assert.equal(existsSync(join(destination, '.git')), false)
     assert.equal(existsSync(join(destination, 'apps/service/test')), false)
     assert.equal(existsSync(join(destination, 'fixture-git/objects/info/alternates')), false)
+    assert.equal(existsSync(join(destination, 'fixture-git/logs')), false)
     assert.ok(existsSync(join(destination, 'Dockerfile')))
     assert.ok(existsSync(join(destination, 'docs/agent-service/editorial-api-responses.schema.json')))
     const files = readdirSync(destination, { recursive: true, withFileTypes: true }).filter(entry => entry.isFile())
