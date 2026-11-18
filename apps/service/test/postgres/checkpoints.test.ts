@@ -9,7 +9,7 @@ import { after, before, test } from 'node:test'
 import pg from 'pg'
 import { ACTIONS_PATH, ARTICLE_PATH, CANDIDATE_IDS, REPO_ROOT, approvalDigest, digest, json, readFixture, reviewFixture } from '../../src/fixture.js'
 import { readPostgresFixture, POSTGRES_WORKFLOW_VERSION } from '../../src/postgres-fixture.js'
-import { admitRun } from '../../src/postgres-runner.js'
+import { admitRun, admitRunInTransaction, AdmissionConflictError } from '../../src/postgres-runner.js'
 import { checkedRunDir, initializeRun } from '../../src/storage.js'
 import { RESERVATION_FILE, reserveDestination } from '../../src/postgres-destination.js'
 
@@ -71,6 +71,15 @@ function forRun(runId: string) { return ['--run-id', runId] }
 function resumeArgs(started: { runId: string; approvalDigest: string }) { return [...forRun(started.runId), '--approval-digest', started.approvalDigest] }
 function nodes(directory: string): string[] {
   return readFileSync(join(directory, 'attempts.jsonl'), 'utf8').trim().split('\n').map(line => JSON.parse(line).node)
+}
+async function requireBlockedBy(blocker: number, contender: number): Promise<void> {
+  const deadline = Date.now() + 4000
+  while (Date.now() < deadline) {
+    const observation = await db.query('SELECT $1::integer = ANY(pg_blocking_pids($2::integer)) AS blocked', [blocker, contender])
+    if (observation.rows[0].blocked) return
+    await new Promise(resolve => setTimeout(resolve, 20))
+  }
+  assert.fail('Contender must be observed waiting for the held admission transaction')
 }
 function assertOutput(directory: string, runId: string) {
   const fixture = readFixture()
@@ -205,6 +214,10 @@ test('physical aliases never create a second admission; case-sensitive distinct 
     const second = await db.query('SELECT run_id FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['alias-other'])
     assert.equal(second.rows.length, 0)
     assert.equal(success(command('start', ['--request-key', 'alias-owner', '--run-dir', lower])).runId, first.runId)
+    const nestedAlias = join(lower, 'nested')
+    failure(command('start', ['--request-key', 'nested-case-alias', '--run-dir', nestedAlias]), /overlaps/)
+    assert.equal(existsSync(nestedAlias), false)
+    assert.equal((await db.query('SELECT 1 FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['nested-case-alias'])).rows.length, 0)
   } else assert.notEqual(success(alias).runId, first.runId)
   const raced = await Promise.all([
     concurrentResult('start', ['--request-key', 'race-alias-one', '--run-dir', join(sandbox, 'ConcurrentAlias')]),
@@ -222,17 +235,143 @@ test('rolled-back admission retains a reusable reservation and lost new markers 
   let reservedId: string
   try {
     await client.query('BEGIN')
-    reservedId = (await admitRun(client, 'rollback-reservation', directory)).run_id
+    reservedId = (await admitRunInTransaction(client, 'rollback-reservation', directory)).run_id
     await client.query('ROLLBACK')
   } finally { client.release() }
   assert.equal((await db.query('SELECT 1 FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['rollback-reservation'])).rows.length, 0)
   assert.equal(existsSync(join(directory, RESERVATION_FILE)), true)
+  const nested = join(directory, 'nested')
+  await assert.rejects(admitRun(db, 'rollback-reservation-child', nested), /overlaps an ancestor reservation/)
+  assert.equal(existsSync(nested), false, 'An uncommitted reservation protects its complete tree')
+  assert.equal((await db.query('SELECT 1 FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['rollback-reservation-child'])).rows.length, 0)
   const started = start('rollback-reservation')
   assert.equal(started.runId, reservedId!)
   rmSync(join(directory, RESERVATION_FILE))
   failure(command('status', forRun(started.runId)), /marker is missing/)
   failure(command('start', ['--request-key', 'rollback-reservation', '--run-dir', directory]), /marker is missing/)
   assert.equal(existsSync(join(directory, RESERVATION_FILE)), false)
+})
+
+test('transactional admission refuses autocommit and stale isolation before filesystem writes', async () => {
+  const client = await db.connect()
+  const directory = join(sandbox, 'no-admission-transaction')
+  try {
+    await assert.rejects(admitRunInTransaction(client, 'no-transaction', directory), (error: unknown) => (error as { code?: string }).code === '25P01')
+    assert.equal(existsSync(directory), false)
+    await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ')
+    await assert.rejects(admitRunInTransaction(client, 'stale-transaction', directory), /READ COMMITTED/)
+    assert.equal(existsSync(directory), false)
+  } finally {
+    await client.query('ROLLBACK')
+    client.release()
+  }
+})
+
+test('same request with different directories arbitrates before leaving a losing reservation', { timeout: 30_000 }, async () => {
+  const winner = await db.connect()
+  const contender = new pg.Pool({ connectionString: testUrl.toString(), max: 1, connectionTimeoutMillis: 5000 })
+  const winnerDirectory = join(sandbox, 'arbitration-winner')
+  const loserDirectory = join(sandbox, 'arbitration-loser')
+  let pending: Promise<unknown> | undefined
+  try {
+    const winnerPid = (await winner.query('SELECT pg_backend_pid() AS pid')).rows[0].pid
+    const contenderPid = (await contender.query('SELECT pg_backend_pid() AS pid')).rows[0].pid
+    await winner.query('BEGIN')
+    const admitted = await admitRunInTransaction(winner, 'held-request-key', winnerDirectory)
+    pending = admitRun(contender, 'held-request-key', loserDirectory).then(() => assert.fail('Conflicting request unexpectedly admitted'), error => {
+      assert.ok(error instanceof AdmissionConflictError)
+      assert.match(error.message, /different immutable inputs or run directory/)
+    })
+    void pending.catch(() => {}) // retain rejection for await without early unhandled rejection on regression
+    await requireBlockedBy(winnerPid, contenderPid)
+    assert.equal(existsSync(loserDirectory), false, 'Blocked contender must not create a directory or marker')
+    await winner.query('COMMIT')
+    await pending
+    assert.equal(existsSync(loserDirectory), false, 'Losing binding must leave no stranded reservation')
+    assert.deepEqual((await db.query('SELECT run_id FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['held-request-key'])).rows, [{ run_id: admitted.run_id }])
+    const retry = await admitRun(db, 'held-request-key', winnerDirectory)
+    assert.equal(retry.run_id, admitted.run_id)
+    assert.ok((await admitRun(db, 'unrelated-new-key', loserDirectory)).run_id, 'Unmodified losing destination remains usable')
+  } finally {
+    await winner.query('ROLLBACK').catch(() => {})
+    winner.release()
+    await pending?.catch(() => {})
+    await contender.end()
+  }
+})
+
+test('nested admissions cannot mutate completed artifacts or bypass a missing ancestor marker', async () => {
+  const started = start('protected-bundle')
+  const completed = success(command('resume', resumeArgs(started)))
+  const nested = join(started.runDir, 'artifacts/nested')
+  const receiptBytes = readFileSync(join(started.runDir, 'artifacts/receipt.json'))
+  failure(command('start', ['--request-key', 'nested-artifact', '--run-dir', nested]), /overlaps/)
+  assert.equal(existsSync(nested), false)
+  assert.equal((await db.query('SELECT 1 FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['nested-artifact'])).rows.length, 0)
+  assert.deepEqual(readFileSync(join(started.runDir, 'artifacts/receipt.json')), receiptBytes)
+  assert.equal(success(command('status', forRun(started.runId))).checkpointId, completed.checkpointId)
+  assertOutput(started.runDir, started.runId)
+  const markerPath = join(started.runDir, RESERVATION_FILE)
+  const marker = readFileSync(markerPath)
+  rmSync(markerPath)
+  try {
+    failure(command('start', ['--request-key', 'nested-without-marker', '--run-dir', nested]), /overlaps an existing run directory/)
+    assert.equal(existsSync(nested), false, 'Canonical DB binding protects a marker-damaged ancestor')
+  } finally { writeFileSync(markerPath, marker, { flag: 'wx', mode: 0o600 }) }
+  assert.equal(success(command('status', forRun(started.runId))).status, 'complete')
+})
+
+test('a missing admitted directory cannot be recreated by a different request key', async () => {
+  const directory = join(sandbox, 'missing-admitted-directory')
+  const admitted = await admitRun(db, 'missing-directory-owner', directory)
+  rmSync(directory, { recursive: true })
+  await assert.rejects(admitRun(db, 'missing-directory-contender', directory), /already bound to another request key/)
+  assert.equal(existsSync(directory), false, 'A conflicting key must not recreate the missing directory or marker')
+  assert.equal((await db.query('SELECT 1 FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['missing-directory-contender'])).rows.length, 0)
+  await assert.rejects(admitRun(db, 'missing-directory-owner', directory), /Reserved destination is missing/)
+  assert.equal(existsSync(directory), false, 'The existing key also stays held instead of repairing missing ownership')
+  assert.deepEqual((await db.query('SELECT run_id,status FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['missing-directory-owner'])).rows, [{ run_id: admitted.run_id, status: 'admitted' }])
+})
+
+test('concurrent ancestor and descendant admission serialize without creating a losing marker', { timeout: 30_000 }, async () => {
+  for (const ancestorWins of [true, false]) {
+    const ancestor = join(sandbox, `overlap-race-${ancestorWins}`)
+    if (!ancestorWins) mkdirSync(ancestor)
+    const descendant = join(ancestor, 'nested')
+    const winnerDirectory = ancestorWins ? ancestor : descendant
+    const loserDirectory = ancestorWins ? descendant : ancestor
+    const winnerKey = `overlap-winner-${ancestorWins}`, loserKey = `overlap-loser-${ancestorWins}`
+    const winner = await db.connect()
+    const contender = new pg.Pool({ connectionString: testUrl.toString(), max: 1, connectionTimeoutMillis: 5000 })
+    let pending: Promise<unknown> | undefined
+    try {
+      const winnerPid = (await winner.query('SELECT pg_backend_pid() AS pid')).rows[0].pid
+      const contenderPid = (await contender.query('SELECT pg_backend_pid() AS pid')).rows[0].pid
+      await winner.query('BEGIN')
+      const admitted = await admitRunInTransaction(winner, winnerKey, winnerDirectory)
+      pending = admitRun(contender, loserKey, loserDirectory).then(() => assert.fail('Overlapping admission unexpectedly succeeded'), error => {
+        assert.ok(error instanceof AdmissionConflictError)
+        assert.match(error.message, /overlaps/)
+      })
+      void pending.catch(() => {})
+      await requireBlockedBy(winnerPid, contenderPid)
+      assert.equal(existsSync(join(loserDirectory, RESERVATION_FILE)), false)
+      if (ancestorWins) assert.equal(existsSync(loserDirectory), false)
+      await winner.query('COMMIT')
+      await pending
+      assert.equal(existsSync(join(loserDirectory, RESERVATION_FILE)), false)
+      if (ancestorWins) assert.equal(existsSync(loserDirectory), false)
+      assert.equal((await db.query('SELECT 1 FROM dailylogger_service.fixture_runs WHERE request_key=$1', [loserKey])).rows.length, 0)
+      const started = success(command('start', ['--request-key', winnerKey, '--run-dir', winnerDirectory]))
+      assert.equal(started.runId, admitted.run_id)
+      assert.equal(started.status, 'awaiting-approval')
+    } finally {
+      await winner.query('ROLLBACK').catch(() => {})
+      winner.release()
+      await pending?.catch(() => {})
+      await contender.end()
+    }
+  }
 })
 
 test('admission resolves a forced concurrent directory conflict; old targeted arbitration fails the positive control', { timeout: 30_000 }, async () => {

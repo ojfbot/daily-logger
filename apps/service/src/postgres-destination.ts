@@ -15,6 +15,23 @@ export interface DestinationReservation {
   physicalIdentity: string
 }
 
+/** Resolve real parent/case spelling without creating any filesystem entry. */
+export function canonicalDestination(directory: string): string {
+  const checked = checkedRunDir(directory)
+  return exists(checked) ? realpathSync.native(checked) : checked
+}
+
+/** A reservation protects its whole tree, even before its DB transaction commits. */
+export function requireNoReservedAncestor(directory: string): void {
+  let ancestor = dirname(directory)
+  for (;;) {
+    requireAdmission(!exists(join(ancestor, RESERVATION_FILE)), 'Run directory overlaps an ancestor reservation')
+    const parent = dirname(ancestor)
+    if (parent === ancestor) return
+    ancestor = parent
+  }
+}
+
 function exists(path: string): boolean {
   try { lstatSync(path); return true } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false
@@ -51,7 +68,8 @@ export function validateDestination(expected: DestinationReservation): void {
 
 /** Atomic filesystem reservation, not database admission. Never deletes/reassigns ownership. */
 export function reserveDestination(directory: string, requestKey: string, proposedRunId: string, requestDigest: (canonicalDirectory: string) => string, options: { existingBinding?: boolean; legacyFixture?: Fixture } = {}): DestinationReservation {
-  const checked = checkedRunDir(directory)
+  const checked = canonicalDestination(directory)
+  requireNoReservedAncestor(checked)
   if (options.existingBinding) requireAdmission(exists(checked), 'Reserved destination is missing; refusing to recreate it')
   else {
     try { mkdirSync(checked, { mode: 0o700 }) } catch (error) {

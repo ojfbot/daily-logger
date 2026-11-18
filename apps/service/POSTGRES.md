@@ -42,8 +42,9 @@ fails. Admission arbitrates every unique constraint, then reads and validates
 the committed request binding; a concurrent duplicate directory conflict is not
 mistaken for a different request. This follows PostgreSQL's
 [untargeted `ON CONFLICT DO NOTHING` semantics](https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT).
-Another run requires another key and directory. First, an atomic filesystem
-reservation binds the physical directory to one request and run UUID. Database
+Another run requires another key and a nonoverlapping directory. Admission first
+serializes database arbitration, then an atomic filesystem reservation binds the
+physical directory to one request and run UUID. Database
 admission then precedes frozen-input initialization and graph execution. Repeating
 the identical request reuses a reservation left by a crash or rolled-back DB
 transaction; the marker itself is not database admission or execution authority.
@@ -57,6 +58,18 @@ link may also leave a staging file in its parent. A published marker is never
 reassigned or automatically deleted. Foreign nonempty directories and partial,
 missing or changed ownership markers fail closed. Concurrent requests either
 link once or read the complete winner; there is no unbounded marker-write wait.
+
+Before any directory or marker is created, admission checks ancestor reservation
+markers and canonical database directory bindings in both directions. An artifact
+subdirectory cannot become another run, including through a physical case alias;
+an existing child run also prevents admission of its ancestor. Ancestor markers
+protect reservations without committed database rows, while database bindings
+protect legacy or marker-damaged runs. A rejected overlapping destination leaves
+no new directory, marker or binding and does not alter the original artifact bundle.
+An exact database directory binding also prevents a different request key from
+recreating a missing destination; the original key remains held on missing ownership.
+These guarantees cover cooperating admissions using one database and its shared
+artifact filesystem; they are not a cross-database or hostile-filesystem fence.
 
 New manifests contain `destinationReservation: 1`, a storage-format distinction
 that does not change graph computation. Older S03a binaries cannot operate these
@@ -116,7 +129,17 @@ the stored admission digest against its canonical directory/source/version and
 the marker's physical identity/run UUID. Known binding conflicts expose
 `AdmissionConflictError` (`code: ADMISSION_CONFLICT`); infrastructure exceptions
 remain distinct so a caller-owned transaction can roll back rather than accept
-a command. `admitRun` accepts a query-capable PostgreSQL pool or transaction client.
+a command. `admitRun(pool, ...)` owns its transaction.
+`admitRunInTransaction(client, ...)` requires a caller-owned active
+`READ COMMITTED` transaction, checked with a savepoint probe before filesystem
+writes. Both acquire transaction advisory locks in the same order: the short
+directory-admission namespace lock, then the request key lock, before reading
+bindings or creating reservations. The namespace lock serializes
+ancestor/descendant admissions across keys. Request arbitration ensures a
+concurrent same-key request for a different directory fails before leaving a
+stranded marker. Locks release at caller commit/rollback or process death, with
+a ten-second lock timeout. Keep this transaction short and execute graph work
+only after commit; S03b may include command/job admission in it.
 
 Application updates, saver checkpoints and artifact filesystem writes **are not
 one transaction**. Retry validates the actual graph state and immutable artifact
@@ -158,6 +181,9 @@ and a forced directory-conflict interleaving with the former targeted SQL as a
 positive control (it must raise the old unique-index error while the fixed path
 returns the immutable winner). It also covers
 admission before initialization, stale inputs and application identity,
+held-transaction conflicts with untouched losing directories, both orders of
+concurrent ancestor/descendant admission, completed-bundle overlap rejection,
+caller transaction/isolation guards, reservation reuse after rollback,
 initial-input checkpoint recovery before pending writes, later missing-state
 rejection, successful-step reuse, both sides of the final-checkpoint crash boundary, and
 termination on lock-session loss. Positive PostgreSQL qualification must come
