@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261118-5f5b7c213b18",
+  "article": {
+    "date": "2026-11-18",
+    "sourceCommitSha": "5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9",
+    "blobSha": "4994ea360be0ea37ed13c4c25f0a011a2676171e"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-18T14:51:38Z",
+  "scope": "Final visible Draft; exact source/article/action/deployed bytes; core #600/#602/#619/#621/#622; daily-logger #543/#548/#552/#554-#557; BookcaseDiscovery #104; pinned service comparison plan; all-state same-source review searches; current review schema/discovery; and held-candidate custody. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "fa937a7dcf6b9ce2bef7a0ec9133c3a4cfd0b531",
+  "fullRecordPath": "reviews/articles/2026-11-18-5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The no-code section contradicts the reporting window",
+      "location": "Lines 6, 11, 15 and 66 say three PRs merged, name core #621 and daily-logger #554, then say no code committed and the day is only an audit of in-flight work.",
+      "explanation": "Core #621 merged FleetRunner source and tests as 0.2.1. Daily-logger #554 merged 23 files and 2,089 additions for the service fixture and plan. The retained context also lists merged article PR #552.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9/_articles/2026-11-18.md#L6",
+        "https://github.com/ojfbot/core/pull/621",
+        "https://github.com/ojfbot/daily-logger/pull/554",
+        "https://github.com/ojfbot/daily-logger/pull/552"
+      ],
+      "correction": "Describe the merged core #621 and daily-logger #554 code, plus the article publication PR separately; do not label the interval an audit-only/no-code day.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "PR #556 already defines evaluation criteria and owner review",
+      "location": "Lines 45, 65 and 66 say #556 lacks evaluation criteria and human review and retain an action to define both.",
+      "explanation": "The pinned comparison plan defines five judge criteria, a 0-4 rubric, deterministic blockers, swapped-order judgments, daily owner review, owner preference before identity reveal, and explicit owner decisions at day one or day three.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9/_articles/2026-11-18.md#L45",
+        "https://github.com/ojfbot/daily-logger/pull/556",
+        "https://github.com/ojfbot/daily-logger/blob/43ea6996dfd844078e93a67fdc159ebe4d6e3c52/docs/agent-service/shadow-comparison.md"
+      ],
+      "correction": "Report the existing rubric, deterministic gates, blinded/order-swapped judge and owner review/decision; describe the protocol as proposed and unimplemented rather than missing.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "PR #555 has explicit recorded test results",
+      "location": "Line 45 says neither #555 nor #556 has test results.",
+      "explanation": "PR #555 records current PostgreSQL CI with 12 SQLite/boundary tests and 11 real PostgreSQL tests per job, no skips, plus passing full PR, security, crash and concurrency coverage before the article run.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9/_articles/2026-11-18.md#L45",
+        "https://github.com/ojfbot/daily-logger/pull/555",
+        "https://github.com/ojfbot/daily-logger/actions/runs/44242535574"
+      ],
+      "correction": "Distinguish #555's recorded test receipts from #556's documentation-only validation; historical counts are attributed receipts, not reruns by this review.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The November 13 review is omitted from the six-day sequence",
+      "location": "Line 51 says five review Drafts span November 12-17 and lists #541, #545, #547, #551 and #553.",
+      "explanation": "Open Draft review PR #543 is the November 13 record between #541 and #545. The November 12-17 sequence contains six records: #541, #543, #545, #547, #551 and #553.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9/_articles/2026-11-18.md#L51",
+        "https://github.com/ojfbot/daily-logger/pull/543"
+      ],
+      "correction": "Include #543 and report six consecutive review-data Drafts for November 12-17 while preserving their proposed/open lifecycle.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Core #600 is implemented verification, not parked planning",
+      "location": "Line 55 groups core #600 with parked planning and infrastructure work.",
+      "explanation": "PR #600 adds an operator-run verification command, reports an author-run live request and duplicate plus a separate Yojimbo replay with fresh state, and says no blocking findings remain. It remains Draft/unmerged with no deployment or authority change.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9/_articles/2026-11-18.md#L55",
+        "https://github.com/ojfbot/core/pull/600"
+      ],
+      "correction": "Describe #600 as implemented Draft verification with completed author-reported and separate replay evidence, no blocking findings, and no deployment or delegated-authority change.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Core #622 is assigned the wrong root cause and failure boundary",
+      "location": "Lines 27, 47 and 65 say #622 handles an idle-worker restart failure between proof confirmation and run-window opening and makes a server lease degrade rather than be dropped.",
+      "explanation": "PR #622 says scripted sleep let the primary keep renewing while fallback readiness was checked before claim eligibility. The patch stops renewals before sleep, checks readiness at claim time and retains the server lease through natural expiry if the sleep helper fails.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9/_articles/2026-11-18.md#L27",
+        "https://github.com/ojfbot/core/pull/622"
+      ],
+      "correction": "State the repeated-renewal and premature-readiness defects, natural-expiry behavior on helper failure, and isolated/no-runtime-activation limit; do not recast it as a restart failure or immediately dropped lease.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "A direct #555-to-#556 prerequisite is not established",
+      "location": "Lines 33, 45 and 66 assert an explicit four-step chain and say #555 is a prerequisite for #556.",
+      "explanation": "PR #556 says it is kept separate from PostgreSQL PR #555. Its plan places live comparison at the M2-to-M3 transition after deployed-generation and operational controls, but does not name #555 or PostgreSQL as the direct prerequisite.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9/_articles/2026-11-18.md#L33",
+        "https://github.com/ojfbot/daily-logger/pull/556",
+        "https://github.com/ojfbot/daily-logger/blob/43ea6996dfd844078e93a67fdc159ebe4d6e3c52/docs/agent-service/shadow-comparison.md"
+      ],
+      "correction": "Distinguish separate PR delivery from runtime entrance criteria and attribute a PostgreSQL prerequisite only if a pinned owner or plan source explicitly binds it.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "The specific #621 stale-worker resource-leak story is not established",
+      "location": "Lines 21 and 27 add lid-open/display-attach timing, stale downstream data, a stale worker holding the wrong cleanup handle and a machine remaining awake with no scheduled return to sleep.",
+      "explanation": "PR #621 supports exact wake filtering, the full authorization window, binding the verified wake and cleanup helper to the later plan, and preserving the wake through idle restart. It does not establish those example events or the stated causal chain; the attended Mac wake remained the live proof.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9/_articles/2026-11-18.md#L21",
+        "https://github.com/ojfbot/core/pull/621"
+      ],
+      "correction": "Retain exact filtering, binding, preserved-wake behavior, offline test scope and the outstanding attended proof; label the added failure narrative as a hypothesis unless primary evidence establishes it.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U3",
+      "classification": "unverified_claim",
+      "title": "The held #548 merge candidate lacks public merge authorization",
+      "location": "Lines 49 and 65 say an owner decision is overdue while the held action proposes merging #548.",
+      "explanation": "PR #548 is open, non-Draft and mergeable, but has no public human review or merge authorization. Its body records that the disclosure rule is prompt-only and unenforced. Status and elapsed time establish neither readiness nor approval.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9/_articles/2026-11-18.md#L49",
+        "https://github.com/ojfbot/daily-logger/pull/548"
+      ],
+      "correction": "Report the actual lifecycle, checks and disclosure-enforcement limit, then request an owner decision without treating merge as authorized; keep the candidate held and non-dispatchable.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
