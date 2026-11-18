@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `81aa07a09e5c6be932d36beb1a03ebc0e87e34f0563670ce48af38b220e0e9c2`.
+> Source SHA-256: `2fc749b91aa0a2d6844208088c6b74cc2d050f3874a045a8f6dd0a9cab529f19`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1359,35 +1359,41 @@ flowchart TD
   n253["Physical Destination Reservation"]
   n234["Pinned Local Git Artifacts"]
   n254("PostgreSQL Run Admitting")
-  n255["Fixture Run Binding"]
-  n256["Run UUID"]
-  n257["Request Key"]
-  n258["Canonical Run Directory"]
-  n259("PostgreSQL Fixture Executing")
-  n260["Run Advisory Lock"]
-  n261("PostgreSQL Input Initializing")
+  n255["Admission Namespace Lock"]
+  n256["Request Key Lock"]
+  n257["PostgreSQL Admission Transaction"]
+  n258["Fixture Run Binding"]
+  n259["Run UUID"]
+  n260["Request Key"]
+  n261["Canonical Run Directory"]
+  n262("PostgreSQL Fixture Executing")
+  n263["Run Advisory Lock"]
+  n264("PostgreSQL Input Initializing")
   n236["Frozen Fixture Inputs"]
   n237("Fixture Replaying")
-  n262["Operation Attempt — states: running, succeeded, failed, abandoned"]
+  n265["Operation Attempt — states: running, succeeded, failed, abandoned"]
   n238["Graph Checkpoints"]
-  n263("Run Projection Reconciling")
+  n266("Run Projection Reconciling")
   n252 -->|"yields"| n253
   n234 -->|"requires (instrument)"| n254
   n253 -->|"requires (instrument)"| n254
-  n254 -->|"yields"| n255
-  n255 -->|"exhibits"| n256
-  n255 -->|"exhibits"| n257
-  n255 -->|"exhibits"| n258
-  n255 -->|"requires (instrument)"| n259
-  n260 -->|"requires (instrument)"| n259
-  n259 -->|"invokes"| n261
-  n255 -->|"requires (instrument)"| n261
-  n253 -->|"requires (instrument)"| n261
-  n261 -->|"yields"| n236
-  n259 -->|"invokes"| n237
-  n259 -->|"yields"| n262
-  n238 -->|"requires (instrument)"| n263
-  n263 <-->|"affects"| n255
+  n255 -->|"requires (instrument)"| n254
+  n256 -->|"requires (instrument)"| n254
+  n257 -->|"requires (instrument)"| n254
+  n254 -->|"yields"| n258
+  n258 -->|"exhibits"| n259
+  n258 -->|"exhibits"| n260
+  n258 -->|"exhibits"| n261
+  n258 -->|"requires (instrument)"| n262
+  n263 -->|"requires (instrument)"| n262
+  n262 -->|"invokes"| n264
+  n258 -->|"requires (instrument)"| n264
+  n253 -->|"requires (instrument)"| n264
+  n264 -->|"yields"| n236
+  n262 -->|"invokes"| n237
+  n262 -->|"yields"| n265
+  n238 -->|"requires (instrument)"| n266
+  n266 <-->|"affects"| n258
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1396,6 +1402,9 @@ flowchart TD
 Destination Reserving yields Physical Destination Reservation. [src: apps/service/src/postgres-destination.ts]
 PostgreSQL Run Admitting requires Pinned Local Git Artifacts. [src: apps/service/src/postgres-runner.ts]
 PostgreSQL Run Admitting requires Physical Destination Reservation. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires Admission Namespace Lock. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires Request Key Lock. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires PostgreSQL Admission Transaction. [src: apps/service/src/postgres-runner.ts]
 PostgreSQL Run Admitting yields Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
 Fixture Run Binding exhibits Run UUID. [src: apps/service/src/postgres-fixture.ts]
 Fixture Run Binding exhibits Request Key. [src: apps/service/migrations/001_fixture_runs.sql]
