@@ -537,3 +537,21 @@ Run Cancellation can be requested, effective, or already_completed. [src: apps/s
 Fixture Cancellation Reconciling requires Graph Checkpoints. [src: apps/service/src/delivery-worker.ts]
 Fixture Cancellation Reconciling affects Run Cancellation. [src: apps/service/src/delivery-worker.ts]
 # Cancellation admission does not wait for the execution lock. An executing segment may finish; subsequent segments check the separate cancellation record. Shutdown is not cancellation. [src: apps/service/src/delivery-worker.ts]
+
+## SD2.3 — Authenticated fixture HTTP
+
+Owner Authenticating requires GitHub OAuth Identity. [src: apps/service/src/http-sessions.ts]
+Owner Authenticating requires OAuth Login Challenge. [src: apps/service/src/http-sessions.ts]
+Owner Authenticating yields Private Owner Session. [src: apps/service/src/http-sessions.ts]
+Private Owner Session can be active, revoked, or expired. [src: apps/service/migrations/003_fixture_http.sql]
+Owner Session Revoking changes Private Owner Session from active to revoked. [src: apps/service/src/http-server.ts]
+Fixture HTTP Admitting requires Private Owner Session. [src: apps/service/src/http-sessions.ts]
+Fixture HTTP Admitting requires Same Origin CSRF Proof. [src: apps/service/src/http-sessions.ts]
+Fixture HTTP Admitting requires PostgreSQL Admission Transaction. [src: apps/service/src/http-server.ts]
+Fixture HTTP Admitting invokes Fixture Command Admitting. [src: apps/service/src/http-fixtures.ts]
+Fixture HTTP Admitting yields Browser Intent Binding. [src: apps/service/src/http-fixtures.ts]
+Browser Intent Binding exhibits Command UUID. [src: apps/service/migrations/003_fixture_http.sql]
+Fixture Projection Reading requires Private Owner Session. [src: apps/service/src/http-sessions.ts]
+Fixture Projection Reading requires Read Only Database Snapshot. [src: apps/service/src/http-db.ts]
+Fixture Projection Reading yields Browser Fixture View. [src: apps/service/src/http-projections.ts]
+# Projection reading retains command/run/attempt identity, reports application observation times, and suppresses resume availability after a recorded cancellation. [src: apps/service/src/http-projections.ts]

@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `1d115fb05a4d26727398055e68d2dec7b15bcad166a36931aadcfc0c3ea463d0`.
+> Source SHA-256: `79895520e19514c9e537efc706ba65604d24a5f66edd236da00ecf56502d3915`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -72,18 +72,18 @@ flowchart TD
   n47["Candidate Record Binding, Provider Action Proposal, and Source Evidence"]
   n48["Draft Action Candidate — states: awaiting-review, promoted, mapped-existing, rejected, verified-closure"]
   n157["Candidate Review History"]
-  n216["Candidate Review Transition"]
-  n217["Historical Source Metadata"]
+  n271["Candidate Review Transition"]
+  n272["Historical Source Metadata"]
   n49["Source Identity, Source Kind, Source Locator, and Full Content Digest"]
   n50["Draft Candidate Evidence Association — states: required, context"]
-  n218["Background Evidence Reference"]
-  n219["Candidate Action Relation"]
-  n220["Candidate Input View"]
+  n273["Background Evidence Reference"]
+  n274["Candidate Action Relation"]
+  n275["Candidate Input View"]
   n51["Action Registry, Draft Action Candidates, Action Review Cycle, Operator Feedback, and Article Status"]
   n52("Candidate Evidence Preparing")
-  n221["Canonical Action Index"]
-  n222["Held Suggestion Memory"]
-  n223["Rejection Memory"]
+  n276["Canonical Action Index"]
+  n277["Held Suggestion Memory"]
+  n278["Rejection Memory"]
   n53["Action Review Snapshot"]
   n54("Candidate Evidence Refreshing")
   n55["unchanged Draft Candidate Evidence Association"]
@@ -92,8 +92,8 @@ flowchart TD
   n58["Action Review Snapshot and Accepted Outcome Stamp"]
   n59("Acceptance Status Evidence Refreshing")
   n60["current-binding Draft Candidate Evidence Requirements"]
-  n224["Ranked Recommendations"]
-  n225["Handled Suggestions"]
+  n279["Ranked Recommendations"]
+  n280["Handled Suggestions"]
   n61("Editorial Revising")
   n62["Editorial Revision Request"]
   n63["Draft Suggestion — states: proposed, open, done, dismissed, superseded, deferred"]
@@ -101,7 +101,7 @@ flowchart TD
   n113["Article Action Files — states: pending, verified"]
   n64("Inclusion Choosing")
   n65["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
-  n226["Canonical Actions"]
+  n281["Canonical Actions"]
   n66["JSON API"]
   n67("Frontend Rendering")
   n68["Rendered Site"]
@@ -112,8 +112,8 @@ flowchart TD
   n73["Revision Request"]
   n74("Conversation Saving")
   n75["Saved Message"]
-  n227["Review Records"]
-  n228["Correspondence"]
+  n282["Review Records"]
+  n283["Correspondence"]
   n76["Time Record Pointer"]
   n77("Time Recording")
   n78["Commit Context"]
@@ -210,18 +210,18 @@ flowchart TD
   n28 -->|"yields"| n31
   n28 -->|"changes: transient to retained"| n27
   n48 -->|"part of"| n18
-  n216 -->|"part of"| n157
-  n217 -->|"part of"| n157
-  n217 -->|"exhibits"| n49
+  n271 -->|"part of"| n157
+  n272 -->|"part of"| n157
+  n272 -->|"exhibits"| n49
   n50 -->|"part of"| n32
-  n218 -->|"part of"| n32
-  n219 -->|"part of"| n32
-  n220 -->|"part of"| n32
+  n273 -->|"part of"| n32
+  n274 -->|"part of"| n32
+  n275 -->|"part of"| n32
   n51 -->|"requires (instrument)"| n52
   n52 -->|"yields"| n32
-  n221 -->|"part of"| n220
-  n222 -->|"part of"| n220
-  n223 -->|"part of"| n220
+  n276 -->|"part of"| n275
+  n277 -->|"part of"| n275
+  n278 -->|"part of"| n275
   n53 -->|"requires (instrument)"| n54
   n55 -->|"requires (instrument)"| n54
   n56 -->|"requires (instrument)"| n54
@@ -230,10 +230,10 @@ flowchart TD
   n58 -->|"requires (instrument)"| n59
   n0 -->|"condition: accepted"| n59
   n59 -->|"yields"| n60
-  n224 -->|"part of"| n26
+  n279 -->|"part of"| n26
   n18 -->|"part of"| n26
   n27 -->|"part of"| n26
-  n225 -->|"part of"| n26
+  n280 -->|"part of"| n26
   n7 -->|"yields"| n29
   n7 -->|"invokes"| n28
   n61 -->|"yields"| n29
@@ -249,7 +249,7 @@ flowchart TD
   n4 -->|"requires (instrument)"| n64
   n64 <-->|"affects"| n23
   n19 -->|"handles (human)"| n64
-  n226 -->|"part of"| n13
+  n281 -->|"part of"| n13
   n65 -->|"part of"| n13
   n21 -->|"invokes"| n22
   n13 -->|"requires (instrument)"| n21
@@ -271,8 +271,8 @@ flowchart TD
   n71 -->|"requires (instrument)"| n74
   n74 -->|"yields"| n75
   n74 <-->|"affects"| n4
-  n227 -->|"part of"| n71
-  n228 -->|"part of"| n71
+  n282 -->|"part of"| n71
+  n283 -->|"part of"| n71
   n0 -->|"exhibits"| n76
   n0 -->|"requires (instrument)"| n77
   n13 -->|"requires (instrument)"| n77
@@ -772,9 +772,9 @@ flowchart TD
   n43["Lossless Action Model View"]
   n188["Evidence Resolution Intent"]
   n189["Action Review Output Provenance"]
-  n229["Created Action Record Binding"]
-  n230["Updated Action Record Binding"]
-  n231["Rejection Memory Binding"]
+  n284["Created Action Record Binding"]
+  n285["Updated Action Record Binding"]
+  n286["Rejection Memory Binding"]
   n190("Evidence Resolution Recording")
   n7("Article Generating")
   n61("Editorial Revising")
@@ -904,9 +904,9 @@ flowchart TD
   n168 -->|"requires (instrument)"| n35
   n28 -->|"yields"| n188
   n28 -->|"yields"| n189
-  n229 -->|"part of"| n189
-  n230 -->|"part of"| n189
-  n231 -->|"part of"| n189
+  n284 -->|"part of"| n189
+  n285 -->|"part of"| n189
+  n286 -->|"part of"| n189
   n189 -->|"part of"| n113
   n188 -->|"requires (instrument)"| n190
   n113 -->|"requires (instrument)"| n190
@@ -1134,15 +1134,15 @@ flowchart TD
   n39["Canonical Action Proposal"]
   n28("Action Reconciling")
   n198["Captured Invocation Birth Output"]
-  n229["Created Action Record Binding"]
-  n216["Candidate Review Transition"]
+  n284["Created Action Record Binding"]
+  n271["Candidate Review Transition"]
   n113["Article Action Files — states: pending, verified"]
   n199["valid Captured Invocation Birth Output"]
   n160("Action Registry Writing")
   n39 -->|"exhibits"| n197
   n28 -->|"yields"| n198
-  n229 -->|"part of"| n198
-  n216 -->|"part of"| n198
+  n284 -->|"part of"| n198
+  n271 -->|"part of"| n198
   n198 -->|"part of"| n113
   n199 -->|"requires (instrument)"| n160
 ```
@@ -1231,8 +1231,8 @@ flowchart TD
   n211["Operation Reservation"]
   n212["Unmerged Dated Proposal"]
   n213["Bounded Operation Receipt"]
-  n232["Proposed Article Card"]
-  n233["Proposed Article Action File"]
+  n287["Proposed Article Card"]
+  n288["Proposed Article Action File"]
   n169["Evidence Coverage"]
   n214("Coverage Storage Packing")
   n215["Packed Coverage Representation"]
@@ -1243,8 +1243,8 @@ flowchart TD
   n211 -->|"requires (instrument)"| n208
   n208 -->|"yields"| n212
   n208 -->|"yields"| n213
-  n232 -->|"part of"| n212
-  n233 -->|"part of"| n212
+  n287 -->|"part of"| n212
+  n288 -->|"part of"| n212
   n169 -->|"requires (instrument)"| n214
   n214 -->|"yields"| n215
 ```
@@ -1278,48 +1278,45 @@ title: "SD2 — Isolated recorded fixture service"
 flowchart TD
   accTitle: SD2 — Isolated recorded fixture service
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n234["Pinned Local Git Artifacts"]
-  n235("Fixture Input Freezing")
-  n236["Frozen Fixture Inputs"]
-  n237("Fixture Replaying")
-  n238["Graph Checkpoints"]
-  n239["Isolated Fixture Bundle"]
-  n240("Fixture Collecting")
-  n241("Fixture Drafting")
-  n242("Fixture Reviewing")
-  n243("Fixture Approving")
-  n244("Fixture Bundle Writing")
-  n245["Recorded Source Identity"]
-  n246["Recorded Article Digests"]
-  n247["Invariant Review"]
+  n216["Pinned Local Git Artifacts"]
+  n217("Fixture Input Freezing")
+  n218["Frozen Fixture Inputs"]
+  n219("Fixture Replaying")
+  n220["Graph Checkpoints"]
+  n221["Isolated Fixture Bundle"]
+  n222("Fixture Collecting")
+  n223("Fixture Drafting")
+  n224("Fixture Reviewing")
+  n225("Fixture Approving")
+  n226("Fixture Bundle Writing")
+  n227["Recorded Source Identity"]
+  n228["Recorded Article Digests"]
+  n229["Invariant Review"]
   n19["Jim"]
-  n248["Local Fixture Approval"]
-  n249["Recorded Article"]
-  n250["Pending Action Candidates"]
-  n251["Fixture Receipt"]
-  n234 -->|"requires (instrument)"| n235
-  n235 -->|"yields"| n236
-  n236 -->|"requires (instrument)"| n237
-  n238 -->|"requires (instrument)"| n237
-  n237 -->|"yields"| n239
-  n240 -->|"subprocess of"| n237
-  n241 -->|"subprocess of"| n237
-  n242 -->|"subprocess of"| n237
-  n243 -->|"subprocess of"| n237
-  n244 -->|"subprocess of"| n237
-  n240 -->|"yields"| n245
-  n241 -->|"yields"| n246
-  n242 -->|"yields"| n247
-  n19 -->|"handles (agent)"| n243
-  n247 -->|"requires (instrument)"| n243
-  n243 -->|"yields"| n248
-  n248 -->|"requires (instrument)"| n244
-  n244 -->|"yields"| n239
-  n249 -->|"part of"| n239
-  n250 -->|"part of"| n239
-  n247 -->|"part of"| n239
-  n251 -->|"part of"| n239
+  n230["Local Fixture Approval"]
+  n289["Recorded Article"]
+  n290["Pending Action Candidates"]
+  n291["Fixture Receipt"]
+  n216 -->|"requires (instrument)"| n217
+  n217 -->|"yields"| n218
+  n218 -->|"requires (instrument)"| n219
+  n220 -->|"requires (instrument)"| n219
+  n219 -->|"yields"| n221
+  n222 -->|"yields"| n227
+  n223 -->|"yields"| n228
+  n224 -->|"yields"| n229
+  n19 -->|"handles (human)"| n225
+  n229 -->|"requires (instrument)"| n225
+  n225 -->|"yields"| n230
+  n230 -->|"requires (instrument)"| n226
+  n226 -->|"yields"| n221
+  n289 -->|"part of"| n221
+  n290 -->|"part of"| n221
+  n229 -->|"part of"| n221
+  n291 -->|"part of"| n221
 ```
+
+In-zoom membership: Fixture Replaying contains Fixture Collecting, Fixture Drafting, Fixture Reviewing, Fixture Approving, and Fixture Bundle Writing. No execution order is inferred.
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
 
@@ -1355,45 +1352,45 @@ title: "SD2.1 — PostgreSQL fixture persistence"
 flowchart TD
   accTitle: SD2.1 — PostgreSQL fixture persistence
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n252("Destination Reserving")
-  n253["Physical Destination Reservation"]
-  n234["Pinned Local Git Artifacts"]
-  n254("PostgreSQL Run Admitting")
-  n255["Admission Namespace Lock"]
-  n256["Request Key Lock"]
-  n257["PostgreSQL Admission Transaction"]
-  n258["Fixture Run Binding"]
-  n259["Run UUID"]
-  n260["Request Key"]
-  n261["Canonical Run Directory"]
-  n262("PostgreSQL Fixture Executing")
-  n263["Run Advisory Lock"]
-  n264("PostgreSQL Input Initializing")
-  n236["Frozen Fixture Inputs"]
-  n237("Fixture Replaying")
-  n265["Operation Attempt — states: running, succeeded, failed, abandoned"]
-  n238["Graph Checkpoints"]
-  n266("Run Projection Reconciling")
-  n252 -->|"yields"| n253
-  n234 -->|"requires (instrument)"| n254
-  n253 -->|"requires (instrument)"| n254
-  n255 -->|"requires (instrument)"| n254
-  n256 -->|"requires (instrument)"| n254
-  n257 -->|"requires (instrument)"| n254
-  n254 -->|"yields"| n258
-  n258 -->|"exhibits"| n259
-  n258 -->|"exhibits"| n260
-  n258 -->|"exhibits"| n261
-  n258 -->|"requires (instrument)"| n262
-  n263 -->|"requires (instrument)"| n262
-  n262 -->|"invokes"| n264
-  n258 -->|"requires (instrument)"| n264
-  n253 -->|"requires (instrument)"| n264
-  n264 -->|"yields"| n236
-  n262 -->|"invokes"| n237
-  n262 -->|"yields"| n265
-  n238 -->|"requires (instrument)"| n266
-  n266 <-->|"affects"| n258
+  n231("Destination Reserving")
+  n232["Physical Destination Reservation"]
+  n216["Pinned Local Git Artifacts"]
+  n233("PostgreSQL Run Admitting")
+  n234["Admission Namespace Lock"]
+  n235["Request Key Lock"]
+  n236["PostgreSQL Admission Transaction"]
+  n237["Fixture Run Binding"]
+  n238["Run UUID"]
+  n239["Request Key"]
+  n240["Canonical Run Directory"]
+  n241("PostgreSQL Fixture Executing")
+  n242["Run Advisory Lock"]
+  n243("PostgreSQL Input Initializing")
+  n218["Frozen Fixture Inputs"]
+  n219("Fixture Replaying")
+  n244["Operation Attempt — states: running, succeeded, failed, abandoned"]
+  n220["Graph Checkpoints"]
+  n245("Run Projection Reconciling")
+  n231 -->|"yields"| n232
+  n216 -->|"requires (instrument)"| n233
+  n232 -->|"requires (instrument)"| n233
+  n234 -->|"requires (instrument)"| n233
+  n235 -->|"requires (instrument)"| n233
+  n236 -->|"requires (instrument)"| n233
+  n233 -->|"yields"| n237
+  n237 -->|"exhibits"| n238
+  n237 -->|"exhibits"| n239
+  n237 -->|"exhibits"| n240
+  n237 -->|"requires (instrument)"| n241
+  n242 -->|"requires (instrument)"| n241
+  n241 -->|"invokes"| n243
+  n237 -->|"requires (instrument)"| n243
+  n232 -->|"requires (instrument)"| n243
+  n243 -->|"yields"| n218
+  n241 -->|"invokes"| n219
+  n241 -->|"yields"| n244
+  n220 -->|"requires (instrument)"| n245
+  n245 <-->|"affects"| n237
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1436,40 +1433,40 @@ title: "SD2.2 — Durable fixture command delivery"
 flowchart TD
   accTitle: SD2.2 — Durable fixture command delivery
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n267["Fixture Command Request"]
-  n268("Fixture Command Admitting")
-  n269["Immutable Command Admission — states: admitted, rejected"]
-  n270("Fixture Job Enqueuing")
-  n271["Fixture Delivery Job"]
-  n272("Fixture Delivery Executing")
-  n263["Run Advisory Lock"]
-  n262("PostgreSQL Fixture Executing")
-  n273["Command Result"]
-  n238["Graph Checkpoints"]
-  n274("Resume Target Recording")
-  n275["Exact Resume Target"]
-  n276("Resume Target Consuming")
-  n277("Fixture Cancellation Requesting")
-  n278["Run Cancellation — states: requested, effective, already_completed"]
-  n279("Fixture Cancellation Reconciling")
-  n267 -->|"requires (instrument)"| n268
-  n268 -->|"yields"| n269
-  n268 -->|"invokes"| n270
-  n269 -->|"requires (instrument)"| n270
-  n270 -->|"yields"| n271
-  n271 -->|"requires (instrument)"| n272
-  n269 -->|"requires (instrument)"| n272
-  n263 -->|"requires (instrument)"| n272
-  n272 -->|"invokes"| n262
-  n272 -->|"yields"| n273
-  n238 -->|"requires (instrument)"| n274
-  n274 -->|"yields"| n275
-  n275 -->|"requires (instrument)"| n276
-  n269 -->|"requires (instrument)"| n276
-  n276 <-->|"affects"| n275
-  n277 -->|"yields"| n278
-  n238 -->|"requires (instrument)"| n279
-  n279 <-->|"affects"| n278
+  n246["Fixture Command Request"]
+  n247("Fixture Command Admitting")
+  n248["Immutable Command Admission — states: admitted, rejected"]
+  n249("Fixture Job Enqueuing")
+  n250["Fixture Delivery Job"]
+  n251("Fixture Delivery Executing")
+  n242["Run Advisory Lock"]
+  n241("PostgreSQL Fixture Executing")
+  n252["Command Result"]
+  n220["Graph Checkpoints"]
+  n253("Resume Target Recording")
+  n254["Exact Resume Target"]
+  n255("Resume Target Consuming")
+  n256("Fixture Cancellation Requesting")
+  n257["Run Cancellation — states: requested, effective, already_completed"]
+  n258("Fixture Cancellation Reconciling")
+  n246 -->|"requires (instrument)"| n247
+  n247 -->|"yields"| n248
+  n247 -->|"invokes"| n249
+  n248 -->|"requires (instrument)"| n249
+  n249 -->|"yields"| n250
+  n250 -->|"requires (instrument)"| n251
+  n248 -->|"requires (instrument)"| n251
+  n242 -->|"requires (instrument)"| n251
+  n251 -->|"invokes"| n241
+  n251 -->|"yields"| n252
+  n220 -->|"requires (instrument)"| n253
+  n253 -->|"yields"| n254
+  n254 -->|"requires (instrument)"| n255
+  n248 -->|"requires (instrument)"| n255
+  n255 <-->|"affects"| n254
+  n256 -->|"yields"| n257
+  n220 -->|"requires (instrument)"| n258
+  n258 <-->|"affects"| n257
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1495,4 +1492,66 @@ Fixture Cancellation Requesting yields Run Cancellation. [src: apps/service/src/
 Run Cancellation can be requested, effective, or already_completed. [src: apps/service/migrations/002_delivery_commands.sql]
 Fixture Cancellation Reconciling requires Graph Checkpoints. [src: apps/service/src/delivery-worker.ts]
 Fixture Cancellation Reconciling affects Run Cancellation. [src: apps/service/src/delivery-worker.ts]
+```
+
+## SD2.3 — Authenticated fixture HTTP
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.3 — Authenticated fixture HTTP"
+---
+flowchart TD
+  accTitle: SD2.3 — Authenticated fixture HTTP
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n259["GitHub OAuth Identity"]
+  n260("Owner Authenticating")
+  n261["OAuth Login Challenge"]
+  n262["Private Owner Session — states: active, revoked, expired"]
+  n263("Owner Session Revoking")
+  n264("Fixture HTTP Admitting")
+  n265["Same Origin CSRF Proof"]
+  n236["PostgreSQL Admission Transaction"]
+  n247("Fixture Command Admitting")
+  n266["Browser Intent Binding"]
+  n267["Command UUID"]
+  n268("Fixture Projection Reading")
+  n269["Read Only Database Snapshot"]
+  n270["Browser Fixture View"]
+  n259 -->|"requires (instrument)"| n260
+  n261 -->|"requires (instrument)"| n260
+  n260 -->|"yields"| n262
+  n263 -->|"changes: active to revoked"| n262
+  n262 -->|"requires (instrument)"| n264
+  n265 -->|"requires (instrument)"| n264
+  n236 -->|"requires (instrument)"| n264
+  n264 -->|"invokes"| n247
+  n264 -->|"yields"| n266
+  n266 -->|"exhibits"| n267
+  n262 -->|"requires (instrument)"| n268
+  n269 -->|"requires (instrument)"| n268
+  n268 -->|"yields"| n270
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Owner Authenticating requires GitHub OAuth Identity. [src: apps/service/src/http-sessions.ts]
+Owner Authenticating requires OAuth Login Challenge. [src: apps/service/src/http-sessions.ts]
+Owner Authenticating yields Private Owner Session. [src: apps/service/src/http-sessions.ts]
+Private Owner Session can be active, revoked, or expired. [src: apps/service/migrations/003_fixture_http.sql]
+Owner Session Revoking changes Private Owner Session from active to revoked. [src: apps/service/src/http-server.ts]
+Fixture HTTP Admitting requires Private Owner Session. [src: apps/service/src/http-sessions.ts]
+Fixture HTTP Admitting requires Same Origin CSRF Proof. [src: apps/service/src/http-sessions.ts]
+Fixture HTTP Admitting requires PostgreSQL Admission Transaction. [src: apps/service/src/http-server.ts]
+Fixture HTTP Admitting invokes Fixture Command Admitting. [src: apps/service/src/http-fixtures.ts]
+Fixture HTTP Admitting yields Browser Intent Binding. [src: apps/service/src/http-fixtures.ts]
+Browser Intent Binding exhibits Command UUID. [src: apps/service/migrations/003_fixture_http.sql]
+Fixture Projection Reading requires Private Owner Session. [src: apps/service/src/http-sessions.ts]
+Fixture Projection Reading requires Read Only Database Snapshot. [src: apps/service/src/http-db.ts]
+Fixture Projection Reading yields Browser Fixture View. [src: apps/service/src/http-projections.ts]
 ```
