@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawn, spawnSync, type SpawnSyncReturns } from 'node:child_process'
 import { once } from 'node:events'
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, test } from 'node:test'
@@ -156,7 +156,8 @@ test('repository paths and symlinked inputs/output are rejected', () => {
   symlinkSync(join(sandbox, 'must-not-create.sqlite'), join(runDir, 'checkpoints.sqlite-wal'))
   failure(command(runDir, 'resume', start.approvalDigest), /Expected a regular file/)
   assert.equal(existsSync(join(sandbox, 'must-not-create.sqlite')), false)
-  rmSync(join(runDir, 'checkpoints.sqlite-wal'))
+  unlinkSync(join(runDir, 'checkpoints.sqlite-wal'))
+  assert.throws(() => lstatSync(join(runDir, 'checkpoints.sqlite-wal')), { code: 'ENOENT' })
   symlinkSync(REPO_ROOT, join(runDir, 'artifacts'))
   failure(command(runDir, 'resume', start.approvalDigest), /Expected a plain directory/)
 })

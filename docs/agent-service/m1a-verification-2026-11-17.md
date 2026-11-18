@@ -62,3 +62,11 @@ This independently reproduces Yuri's reported baseline and verifies the actual s
 SQLite proves process restart and the tested process-crash boundaries on one development machine. It does not qualify host power loss, production backup/restore, PostgreSQL concurrency, a durable job queue, authenticated controls, or distributed publication ownership. No live collection, model quality, Langfuse export, public delivery deadline, signed-in acceptance, or protected-content isolation was tested.
 
 M1B supplies authenticated controls, production-target persistence and Langfuse. M2 adds real collection and bounded model/reviewer execution. M3 qualifies exact displayed-revision acceptance, shared publication authority and manual failover, live public readback, and Publisher-before-Cleaner activation. See the [roadmap](delivery-roadmap.md) and [review reconciliation](review-reconciliation.md).
+
+## Review remediation
+
+Yuri's follow-up found that the initial Git subprocesses could lazily fetch missing promisor objects and could apply local replacement refs. The initial Node fetch guard did not prevent either behavior. The repaired reader disables lazy fetch, all Git transports, and replacement objects for every Git subprocess; clears ambient Git overrides; and independently hashes returned bytes against the two pinned Git blob identities.
+
+The service suite now has **12 passing tests** on Node 24.22.1 / Git 2.56.0. The five additional boundary cases prove missing-object reads start no fetch subprocess/helper (with a harmless local positive control), replacement refs cannot alter replay, corrupt loose-object bytes fail identity checks, ordinary/bare/separate/linked Git metadata cannot be an output destination, and malformed JSON receives fixture diagnostics. The dangling WAL test now uses `unlinkSync` and asserts the directory entry is gone before checking the output symlink. A dedicated Node 24.11.1 CI job covers Yuri's reported runtime separately.
+
+The previous completed run still reads successfully through the repaired code; its manifest, approval, checkpoint and artifact identities remain unchanged. The workflow implementation and artifact bytes did not change, so the earlier independent reader playback remains applicable. These checks do not expand the process-crash proof into a hostile-user security boundary or production qualification.
