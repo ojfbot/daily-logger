@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -40,4 +40,16 @@ test('private configuration is written outside Git without replacing prior outpu
     assert.deepEqual(readFileSync(join(output, 'Caddyfile')), original)
     assert.equal(existsSync(join(output, 'privkey.pem')), false)
   } finally { rmSync(root, { recursive: true, force: true }) }
+})
+
+test('a restrictive operator umask keeps private output protected and the mounted public config readable', () => {
+  const root = mkdtempSync(join(tmpdir(), 'dailylogger-ingress-mode-'))
+  const previous = process.umask(0o077)
+  try {
+    const output = join(root, 'private')
+    preparePrivateIngress(configuration, output)
+    assert.equal(statSync(output).mode & 0o777, 0o700)
+    assert.equal(statSync(join(output, 'Caddyfile')).mode & 0o777, 0o644)
+    assert.equal(statSync(join(output, 'compose.json')).mode & 0o777, 0o600)
+  } finally { process.umask(previous); rmSync(root, { recursive: true, force: true }) }
 })

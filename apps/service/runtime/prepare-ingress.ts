@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { isIP } from 'node:net'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -110,6 +110,7 @@ export function preparePrivateIngress(value: unknown, destination: string) {
   mkdirSync(target, { mode: 0o700 })
   try {
     writeFileSync(join(target, 'Caddyfile'), rendered.caddyfile, { mode: 0o644 })
+    chmodSync(join(target, 'Caddyfile'), 0o644)
     writeFileSync(join(target, 'compose.json'), `${JSON.stringify(rendered.overlay, null, 2)}\n`, { mode: 0o600 })
     return { schemaVersion: 1, configurationSha256: createHash('sha256').update(rendered.caddyfile).digest('hex'),
       files: ['Caddyfile', 'compose.json'], liveDeployment: false }

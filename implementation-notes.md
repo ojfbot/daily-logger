@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-11-18. The image exporter intentionally uses umask 077, but inherited fixture setup assumed create-mode arguments produced exact public readability. Actual Caddy startup reported permission denied. Set only public config/certificate and disposable leaf-directory modes explicitly, preserving private output/key modes and testing the real restrictive-umask preparation path.
+
 - 2026-11-18. Artifact cleanup assumed a created pathname remained owned, but independent review replaced it before failure and reproduced deletion of the replacement. Hold the created directory descriptor, perform relative file I/O, and check device/inode before cleanup; retain an ownership-changed stage for reconciliation instead of deleting another directory.
 - 2026-11-18. A nonzero Git probe and post-parse tar member limits were assumed sufficient, but independent review reproduced a bare-repository probe error and oversized PAX allocation. Accept only the recognized outside-repository result under a deadline and preflight raw tar extension/header budgets before invoking tarfile.
 

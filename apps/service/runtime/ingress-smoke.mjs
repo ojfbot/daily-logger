@@ -61,12 +61,15 @@ async function waitFor(read, timeout = 20000) {
 function createLeaf(generation, serial) {
   const directory = join(root, 'leaf/generations', generation)
   mkdirSync(directory, { recursive: true, mode: 0o755 })
+  chmodSync(join(root, 'leaf/generations'), 0o755)
+  chmodSync(directory, 0o755)
   openssl(['req', '-new', '-newkey', 'ec', '-pkeyopt', 'ec_paramgen_curve:P-256', '-nodes',
     '-keyout', join(directory, 'privkey.pem'), '-out', join(root, 'leaf.csr'), '-subj', '/CN=dailylogger.test'])
   writeFileSync(join(root, 'leaf.ext'), 'subjectAltName=DNS:dailylogger.test\nextendedKeyUsage=serverAuth\nbasicConstraints=critical,CA:FALSE\n')
   openssl(['x509', '-req', '-in', join(root, 'leaf.csr'), '-CA', join(root, 'issuer/root.crt'),
     '-CAkey', join(root, 'issuer/root.key'), '-set_serial', String(serial), '-days', '2',
     '-extfile', join(root, 'leaf.ext'), '-out', join(directory, 'fullchain.pem')])
+  chmodSync(join(directory, 'fullchain.pem'), 0o644)
   chmodSync(join(directory, 'privkey.pem'), 0o600)
   const certificate = new X509Certificate(readFileSync(join(directory, 'fullchain.pem')))
   const issuance = { scope: 'disposable-CI', serialNumber: certificate.serialNumber,
@@ -107,6 +110,7 @@ function cannotConnect(name, host, port) {
 try {
   mkdirSync(join(root, 'issuer'), { mode: 0o700 })
   mkdirSync(join(root, 'leaf'), { mode: 0o755 })
+  chmodSync(join(root, 'leaf'), 0o755)
   openssl(['req', '-x509', '-newkey', 'ec', '-pkeyopt', 'ec_paramgen_curve:P-256', '-nodes',
     '-keyout', join(root, 'issuer/root.key'), '-out', join(root, 'issuer/root.crt'), '-days', '2',
     '-subj', '/CN=DailyLogger disposable CI CA', '-addext', 'basicConstraints=critical,CA:TRUE', '-addext', 'keyUsage=critical,keyCertSign,cRLSign'])
