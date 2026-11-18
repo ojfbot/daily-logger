@@ -7,6 +7,7 @@ const [image, ...extra] = process.argv.slice(2)
 assert.ok(image && extra.length === 0, 'Usage: pnpm service:runtime:smoke IMAGE')
 const composeFile = fileURLToPath(new URL('./compose.yaml', import.meta.url))
 const httpTests = fileURLToPath(new URL('../test/http', import.meta.url))
+const deliveryTests = fileURLToPath(new URL('../test/delivery', import.meta.url))
 const project = `dailylogger-runtime-${randomUUID().slice(0, 8)}`
 const password = randomUUID()
 const environment = { ...process.env, DAILYLOGGER_RUNTIME_IMAGE: image,
@@ -19,7 +20,7 @@ const environment = { ...process.env, DAILYLOGGER_RUNTIME_IMAGE: image,
 function docker(args, { input, acceptFailure = false, timeout = 30000 } = {}) {
   const result = spawnSync('docker', args, { env: environment, input, encoding: 'utf8', timeout, maxBuffer: 4 * 1024 * 1024 })
   if (!acceptFailure && (result.error || result.status !== 0)) {
-    throw new Error(`Runtime proof Docker command failed: ${args[0]}; exit ${result.status}; ${result.stderr || result.error?.message || ''}`)
+    throw new Error(`Runtime proof Docker command failed: ${args[0]}; exit ${result.status}; ${result.stderr.slice(-4000) || result.error?.message || ''}\n${result.stdout.slice(-6000)}`)
   }
   return result
 }
@@ -50,6 +51,7 @@ async function waitFor(read, timeout = 20000) {
   throw new Error('Runtime image did not reach expected state', { cause: lastError })
 }
 
+let failed = false
 try {
   const offline = docker(['run', '--rm', '-i', '--network', 'none', '--read-only', '--cap-drop', 'ALL',
     '--security-opt', 'no-new-privileges', '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,mode=1777,size=64m', image,
@@ -127,9 +129,15 @@ try {
   }
   console.log(JSON.stringify({ proof: 'production-entrypoints-and-cross-container-storage', migration: 'explicit-and-repeatable', fixture: 'complete', shutdown: 'clean', publishedPorts: 0 }))
   const http = compose(['run', '--rm', '--no-deps', '-T', '-e', 'DAILYLOGGER_TEST_DATABASE_URL',
-    '-v', `${httpTests}:/app/apps/service/test/http:ro`, 'api', '--import', './test/http/faults.mjs', '--test', 'test/http/http.test.ts'], { timeout: 120000 })
+    '-v', `${httpTests}:/app/apps/service/test/http:ro`, '-v', `${deliveryTests}:/app/apps/service/test/delivery:ro`,
+    'api', '--import', './test/http/faults.mjs', '--test', 'test/http/http.test.ts'], { timeout: 120000 })
   process.stdout.write(http.stdout)
   console.log(JSON.stringify({ proof: 'production-runtime-with-external-http-tests', result: 'passed', realGithubLogin: 'not-qualified' }))
-} finally {
-  compose(['down', '--volumes', '--remove-orphans'], { timeout: 45000 })
+} catch (error) { failed = true; throw error }
+finally {
+  const cleanup = compose(['down', '--volumes', '--remove-orphans'], { timeout: 45000, acceptFailure: true })
+  if (cleanup.error || cleanup.status !== 0) {
+    process.stderr.write(`Disposable runtime cleanup failed: ${cleanup.stderr.slice(-2000)}\n`)
+    if (!failed) throw new Error('Disposable runtime cleanup failed')
+  }
 }
