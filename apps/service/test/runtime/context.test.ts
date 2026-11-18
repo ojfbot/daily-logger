@@ -6,12 +6,15 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { prepareRuntimeContext } from '../../runtime/prepare-context.js'
-import { REPO_ROOT } from '../../src/fixture.js'
+import { REPO_ROOT, SOURCE_COMMIT } from '../../src/fixture.js'
 
 function sandbox() {
   const root = mkdtempSync(join(tmpdir(), 'dailylogger-runtime-context-'))
   const source = join(root, 'source')
-  execFileSync('git', ['clone', '--quiet', '--shared', REPO_ROOT, source])
+  try {
+    execFileSync('git', ['clone', '--quiet', '--no-local', '--depth=1', REPO_ROOT, source])
+    execFileSync('git', ['-C', source, 'fetch', '--quiet', '--depth=1', '--no-tags', REPO_ROOT, SOURCE_COMMIT])
+  } catch (error) { rmSync(root, { recursive: true, force: true }); throw error }
   return { root, source }
 }
 
