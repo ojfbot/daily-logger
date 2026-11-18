@@ -55,6 +55,8 @@ run lock, blocked SQL, hard cutoff, disconnect, late checkout, inter-query abort
 prior CLI records, worker operations, and the normal HTTP executable's shutdown.
 Raw router errors for malformed URL encoding and overlong parameters return the
 closed error schema with `no-store` and suppress the raw-path canary.
+Suite teardown verifies PostgreSQL has no remaining database sessions before an
+unforced database drop. This makes connection cleanup part of the qualification.
 
 The initial cleanup probe showed that socket destruction could leave SQL active.
 The final regression requires a ten-second sleep query to disappear within the
