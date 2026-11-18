@@ -190,6 +190,60 @@ for (const fault of ['after-consume', 'after-output', 'after-checkpoint']) {
   })
 }
 
+test('natural expiration redelivers a mid-progress start and recovers to human wait without rerunning collection', { timeout: 100_000 }, async () => {
+  const run = await admitted(startRequest('natural-expiry-start'))
+  const child = await worker('after-start-checkpoint')
+  const exited = child.signalCode ? [null, child.signalCode] : await once(child, 'exit')
+  assert.equal(exited[1], 'SIGKILL'); children.delete(child)
+  const interrupted = await row(run.commandId)
+  assert.equal(interrupted.disposition, 'running')
+  const job = await boss.getJobById(QUEUE, interrupted.job_id)
+  assert.ok(job); assert.equal(job.state, 'active'); assert.equal(job.expireInSeconds, 60)
+  assert.equal(job.retryCount, 0)
+  assert.deepEqual(nodes(join(sandbox, 'natural-expiry-start')), ['collect_fixture'])
+  const latest = await pool.query('SELECT checkpoint_id,checkpoint FROM dailylogger_checkpoints.checkpoints WHERE thread_id=$1 ORDER BY checkpoint_id DESC LIMIT 1', [run.runId])
+  assert.ok(latest.rows[0]?.checkpoint.channel_versions.collected, 'Collection has a durable checkpoint before worker death')
+  const began = Date.now()
+  const recovered = await worker()
+  // No boss.fail/retry/cancel, job timestamp edits, shortened expiry, or direct
+  // graph invocation: the actual supervisor must expire and redeliver this job.
+  await waitFor(async () => (await row(run.commandId)).disposition === 'succeeded' ? true : false, 90_000)
+  await stop(recovered)
+  const elapsed = Date.now() - began
+  console.log(`Natural worker-death expiration/redelivery completed in ${elapsed}ms with configured expireInSeconds=60`)
+  assert.ok(elapsed >= 50_000, 'Recovery must wait for the real expiration boundary')
+  const completed = await boss.getJobById(QUEUE, interrupted.job_id)
+  assert.equal(completed?.state, 'completed'); assert.equal(completed?.retryCount, 1)
+  const state = await runStatus(pool, connectionString, run.runId)
+  assert.equal(state.status, 'awaiting-approval'); assert.ok(state.resumeTargetId)
+  assert.notEqual(state.checkpointId, latest.rows[0].checkpoint_id)
+  assert.deepEqual(nodes(state.runDir), ['collect_fixture', 'draft_fixture', 'review_fixture'])
+  assert.equal(existsSync(join(state.runDir, 'artifacts')), false, 'Start retry cannot approve output')
+})
+
+test('a succeeded command redelivered after death before queue acknowledgement is a no-op', async () => {
+  const run = await admitted(startRequest('settled-before-ack'))
+  const child = await worker('after-command-settlement')
+  const exited = child.signalCode ? [null, child.signalCode] : await once(child, 'exit')
+  assert.equal(exited[1], 'SIGKILL'); children.delete(child)
+  const original = await row(run.commandId)
+  assert.equal(original.disposition, 'succeeded')
+  assert.equal((await boss.getJobById(QUEUE, original.job_id))?.state, 'active')
+  const targets = (await pool.query('SELECT target_id FROM dailylogger_service.resume_targets WHERE run_id=$1', [run.runId])).rows
+  const attemptCount = (await pool.query('SELECT count(*)::integer AS count FROM dailylogger_service.operation_attempts WHERE command_id=$1', [run.commandId])).rows[0].count
+  await retryKilled(run.commandId)
+  const retry = await worker()
+  await waitFor(async () => (await boss.getJobById(QUEUE, original.job_id))?.state === 'completed' ? true : false)
+  await stop(retry)
+  const final = await row(run.commandId)
+  assert.equal(final.result_text, original.result_text)
+  assert.equal(final.response_text, original.response_text)
+  assert.equal(final.disposition, 'succeeded')
+  assert.equal((await pool.query('SELECT count(*)::integer AS count FROM dailylogger_service.operation_attempts WHERE command_id=$1', [run.commandId])).rows[0].count, attemptCount)
+  assert.deepEqual((await pool.query('SELECT target_id FROM dailylogger_service.resume_targets WHERE run_id=$1', [run.runId])).rows, targets)
+  assert.deepEqual(nodes(join(sandbox, 'settled-before-ack')), ['collect_fixture', 'draft_fixture', 'review_fixture'])
+})
+
 test('cancellation before delivery blocks all segments and stays separate from graph state', async () => {
   const run = await admitted(startRequest('cancel-before'))
   const cancellation = await admitted(request('cancel', 'cancel-before-command', { runId: run.runId }))
@@ -216,6 +270,32 @@ test('cancellation can be requested during a locked segment and takes effect at 
   assert.equal(existsSync(join(state.runDir, 'artifacts')), false)
 })
 
+test('cancellation at owner wait is effective and cancellation after completion preserves completed output', async () => {
+  const waitingRun = await waiting('cancel-at-wait')
+  const cancelled = await admitted(request('cancel', 'cancel-at-wait-command', { runId: waitingRun.runId }))
+  const first = await worker(); await settled(cancelled.commandId); await stop(first)
+  const waitingState = await runStatus(pool, connectionString, waitingRun.runId)
+  assert.equal(waitingState.status, 'awaiting-approval')
+  assert.equal(waitingState.cancellations[0].state, 'effective')
+  assert.deepEqual(nodes(waitingState.runDir), ['collect_fixture', 'draft_fixture', 'review_fixture'])
+  assert.equal((await admitCommand(pool, boss, request('resume', 'resume-cancelled-wait', { runId: waitingRun.runId, resumeTargetId: waitingRun.state.resumeTargetId! }))).status, 409)
+  assert.equal(existsSync(join(waitingState.runDir, 'artifacts')), false)
+
+  const completedRun = await waiting('cancel-after-complete')
+  const resumed = await admitted(request('resume', 'complete-before-cancel', { runId: completedRun.runId, resumeTargetId: completedRun.state.resumeTargetId! }))
+  const second = await worker(); await settled(resumed.commandId); await stop(second)
+  output(completedRun.state.runDir)
+  const artifact = join(completedRun.state.runDir, 'artifacts/receipt.json')
+  const bytes = readFileSync(artifact), timestamp = statSync(artifact).mtimeMs
+  const late = await admitted(request('cancel', 'cancel-already-completed-command', { runId: completedRun.runId }))
+  const third = await worker(); await settled(late.commandId); await stop(third)
+  const completedState = await runStatus(pool, connectionString, completedRun.runId)
+  assert.equal(completedState.status, 'complete')
+  assert.equal(completedState.cancellations[0].state, 'already_completed')
+  assert.deepEqual(readFileSync(artifact), bytes); assert.equal(statSync(artifact).mtimeMs, timestamp)
+  assert.equal((await row(resumed.commandId)).disposition, 'succeeded')
+})
+
 test('bounded transient retries and missing delivery remain visible without resetting graph', async () => {
   const run = await admitted(startRequest('exhaustion'))
   const child = await worker('transient-node')
@@ -227,6 +307,26 @@ test('bounded transient retries and missing delivery remain visible without rese
   const missing = await admitted(startRequest('missing-delivery'))
   await boss.deleteJob(QUEUE, (await row(missing.commandId)).job_id)
   assert.equal((await commandStatus(pool, boss, missing.commandId)).failure, 'delivery_missing')
+})
+
+test('graceful shutdown lets an already executing segment finish within its drain budget', async () => {
+  const run = await admitted(startRequest('graceful-active'))
+  const marker = join(sandbox, 'graceful-paused'), release = join(sandbox, 'graceful-release')
+  const child = await worker('pause-node', { DELIVERY_TEST_MARKER: marker, DELIVERY_TEST_RELEASE: release })
+  await waitFor(async () => existsSync(marker) ? true : false)
+  const exited = once(child, 'exit')
+  const began = Date.now(); child.kill('SIGTERM')
+  const releaseTimer = setTimeout(() => writeFileSync(release, 'continue during drain'), 300)
+  try {
+    const [code] = await exited; children.delete(child)
+    assert.equal(code, 0)
+    assert.ok(Date.now() - began < 5000)
+  } finally { clearTimeout(releaseTimer) }
+  assert.equal((await row(run.commandId)).disposition, 'succeeded')
+  const state = await runStatus(pool, connectionString, run.runId)
+  assert.equal(state.status, 'awaiting-approval'); assert.equal(state.cancellations.length, 0)
+  assert.deepEqual(nodes(state.runDir), ['collect_fixture', 'draft_fixture', 'review_fixture'])
+  assert.equal(existsSync(join(state.runDir, 'artifacts')), false)
 })
 
 test('shutdown drains normally and forces a stuck segment to stop without inventing cancellation', async () => {
