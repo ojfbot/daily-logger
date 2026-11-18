@@ -1,12 +1,15 @@
 import type pg from 'pg'
 import { randomUUID } from 'node:crypto'
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs'
 import { join } from 'node:path'
 import { digest, json, requireCondition } from './fixture.js'
 import { readPostgresFixture, POSTGRES_WORKFLOW_VERSION } from './postgres-fixture.js'
-import { openCheckpointer, withRunLock } from './postgres-db.js'
-import { checkedRunDir, initializeRun, recordAttempt, validateInputs } from './storage.js'
+import { canonicalRunId, openCheckpointer, withRunLock } from './postgres-db.js'
+import { checkedRunDir, recordAttempt, validateInputs } from './storage.js'
 import { createWorkflow } from './workflow.js'
+import { RESERVATION_FILE, initializeReservedRun, reserveDestination, validateDestination } from './postgres-destination.js'
+import { AdmissionConflictError, requireAdmission } from './admission-conflict.js'
+export { AdmissionConflictError } from './admission-conflict.js'
 
 type Operation = 'start' | 'status' | 'resume' | 'recover'
 interface RunRow {
@@ -16,13 +19,43 @@ interface RunRow {
 }
 type Snapshot = Awaited<ReturnType<ReturnType<typeof createWorkflow>['snapshot']>>
 
-/** Application admission is durable before filesystem/graph execution begins. */
-export async function admitRun(pool: pg.Pool, requestKey: string, directory: string): Promise<RunRow> {
+export type AdmissionDatabase = Pick<pg.Pool, 'query'>
+
+function admittedFixture(row: RunRow) {
+  let parsed: { destinationReservation?: unknown }
+  try { parsed = JSON.parse(row.manifest_text) } catch { throw new Error('Application manifest is invalid') }
+  requireCondition(parsed && (parsed.destinationReservation === undefined || parsed.destinationReservation === 1), 'Unsupported destination reservation manifest format')
+  const fixture = readPostgresFixture(row.run_id, parsed.destinationReservation === 1)
+  requireCondition(row.workflow_version === POSTGRES_WORKFLOW_VERSION && row.manifest_digest === fixture.manifestDigest && row.manifest_text === fixture.manifestBytes, 'Application run is bound to a different immutable manifest or workflow version')
+  return { fixture, legacy: parsed.destinationReservation === undefined }
+}
+
+/** Filesystem ownership is reserved first; DB admission precedes graph execution. */
+export async function admitRun(pool: AdmissionDatabase, requestKey: string, directory: string): Promise<RunRow> {
   requireCondition(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(requestKey), 'Request key must be 1–128 letters, digits, dots, underscores, colons or hyphens')
-  const runDir = checkedRunDir(directory)
-  const runId = randomUUID()
+  const proposedRunId = randomUUID()
+  const source = readPostgresFixture(proposedRunId).manifest.source
+  const requestDigestFor = (runDir: string) => digest(json({ runDir, source, workflowVersion: POSTGRES_WORKFLOW_VERSION }))
+  const existing = await pool.query<RunRow>('SELECT * FROM dailylogger_service.fixture_runs WHERE request_key=$1', [requestKey])
+  if (existing.rows.length) {
+    const row = existing.rows[0]
+    const path = checkedRunDir(directory)
+    const canonical = existsSync(path) ? realpathSync.native(path) : path
+    requireAdmission(row.run_dir === canonical && row.request_digest === requestDigestFor(canonical), 'Request key already exists with different immutable inputs or run directory')
+    const { fixture, legacy } = admittedFixture(row)
+    reserveDestination(canonical, requestKey, row.run_id, requestDigestFor, { existingBinding: true, ...(legacy ? { legacyFixture: fixture } : {}) })
+    return row
+  }
+  const reservation = reserveDestination(directory, requestKey, proposedRunId, requestDigestFor)
+  const { runDir, runId, requestDigest } = reservation
   const fixture = readPostgresFixture(runId)
-  const requestDigest = digest(json({ runDir, source: fixture.manifest.source, workflowVersion: POSTGRES_WORKFLOW_VERSION }))
+  if (readdirSync(runDir).some(name => name !== RESERVATION_FILE)) {
+    // A rolled-back/uncommitted reservation may contain only its marker. A
+    // concurrent winner can already be initializing inputs, but it must have
+    // committed the same binding before doing so. Never admit foreign contents.
+    const owner = await pool.query<RunRow>('SELECT * FROM dailylogger_service.fixture_runs WHERE run_id=$1 AND request_key=$2', [runId, requestKey])
+    requireAdmission(owner.rows.length === 1 && owner.rows[0].run_dir === runDir && owner.rows[0].request_digest === requestDigest, 'Unadmitted destination contains unexpected files; refusing admission')
+  }
   // Both request_key and run_dir are unique. Targeting only request_key can
   // still raise a run_dir violation when equivalent admissions race. Let all
   // unique constraints arbitrate, then resolve the committed immutable binding
@@ -34,10 +67,13 @@ export async function admitRun(pool: pg.Pool, requestKey: string, directory: str
   const bindings = await pool.query<RunRow>('SELECT * FROM dailylogger_service.fixture_runs WHERE request_key=$1 OR run_dir=$2', [requestKey, runDir])
   const row = bindings.rows.find(candidate => candidate.request_key === requestKey)
   if (!row) {
-    requireCondition(!bindings.rows.some(candidate => candidate.run_dir === runDir), 'Run directory is already bound to another request key')
-    throw new Error('Admission conflict has no matching committed request; refusing to execute')
+    requireAdmission(!bindings.rows.some(candidate => candidate.run_dir === runDir), 'Run directory is already bound to another request key')
+    throw new AdmissionConflictError('Admission conflict has no matching committed request; refusing to execute')
   }
-  requireCondition(row.request_digest === requestDigest && row.run_dir === runDir, 'Request key already exists with different immutable inputs or run directory')
+  requireAdmission(row.request_digest === requestDigest && row.run_dir === runDir, 'Request key already exists with different immutable inputs or run directory')
+  requireAdmission(row.run_id === reservation.runId, 'Committed run differs from its physical destination reservation')
+  admittedFixture(row)
+  validateDestination(reservation)
   return row
 }
 
@@ -61,43 +97,85 @@ function projection(snapshot: Snapshot) {
   }
 }
 
+async function hasExecutionEvidence(client: pg.PoolClient, row: RunRow): Promise<boolean> {
+  const attempts = await client.query(`SELECT 1 FROM dailylogger_service.operation_attempts WHERE run_id=$1
+    AND (nodes <> '[]'::jsonb OR before_checkpoint_id IS NOT NULL OR after_checkpoint_id IS NOT NULL) LIMIT 1`, [row.run_id])
+  const files = existsSync(row.run_dir) ? readdirSync(row.run_dir) : []
+  return attempts.rows.length > 0 || files.some(name => name === 'artifacts' || name.startsWith('.staging-'))
+    || (files.includes('attempts.jsonl') && readFileSync(join(row.run_dir, 'attempts.jsonl')).length > 0)
+}
+
+/** Never replace an acknowledged checkpoint with older or unrelated history. */
+async function validateHistory(client: pg.PoolClient, row: RunRow, snapshot: Snapshot): Promise<void> {
+  const state = projection(snapshot)
+  const history = await client.query<{ checkpoint_id: string; parent_checkpoint_id: string | null }>(
+    "SELECT checkpoint_id,parent_checkpoint_id FROM dailylogger_checkpoints.checkpoints WHERE thread_id=$1 AND checkpoint_ns=''", [row.run_id])
+  const parents = new Map(history.rows.map(checkpoint => [checkpoint.checkpoint_id, checkpoint.parent_checkpoint_id]))
+  if (!state.hasCheckpoint) {
+    requireCondition(!row.checkpoint_id && parents.size === 0 && row.status === 'admitted' && !row.receipt_sha256
+      && !await hasExecutionEvidence(client, row), 'Checkpoint history is missing after recorded execution; refusing to restart')
+    return
+  }
+  requireCondition(parents.has(state.checkpointId), 'Observed graph checkpoint is missing from persisted history')
+  if (row.checkpoint_id) {
+    requireCondition(parents.has(row.checkpoint_id), 'Acknowledged checkpoint is missing; preserving the application pointer')
+    const visited = new Set<string>()
+    let cursor: string | null = state.checkpointId
+    while (cursor !== row.checkpoint_id) {
+      requireCondition(cursor && parents.has(cursor) && !visited.has(cursor), 'Observed checkpoint is not a descendant of the acknowledged checkpoint')
+      visited.add(cursor)
+      cursor = parents.get(cursor) ?? null
+    }
+  }
+  const attempts = await client.query<{ checkpoint_id: string }>(`SELECT before_checkpoint_id AS checkpoint_id FROM dailylogger_service.operation_attempts WHERE run_id=$1 AND before_checkpoint_id IS NOT NULL
+    UNION SELECT after_checkpoint_id FROM dailylogger_service.operation_attempts WHERE run_id=$1 AND after_checkpoint_id IS NOT NULL`, [row.run_id])
+  for (const anchor of attempts.rows) {
+    requireCondition(parents.has(anchor.checkpoint_id), 'Recorded operation checkpoint is missing; refusing replay of older history')
+    const visited = new Set<string>()
+    let cursor: string | null = state.checkpointId
+    while (cursor !== anchor.checkpoint_id) {
+      requireCondition(cursor && parents.has(cursor) && !visited.has(cursor), 'Observed checkpoint is not a descendant of recorded operation history')
+      visited.add(cursor)
+      cursor = parents.get(cursor) ?? null
+    }
+  }
+}
+
 /** This projection follows durable graph state; it does not commit atomically with it. */
 async function reconcile(client: pg.PoolClient, row: RunRow, snapshot: Snapshot): Promise<void> {
   const state = projection(snapshot)
-  requireCondition(!row.checkpoint_id || state.hasCheckpoint, 'Application run references a missing graph checkpoint; refusing to restart it')
+  await validateHistory(client, row, snapshot)
   requireCondition(row.status !== 'complete' || state.status === 'complete', 'Completed application run has an incomplete graph; reconciliation required')
   requireCondition(!row.receipt_sha256 || row.receipt_sha256 === state.receiptSha256, 'Application receipt identity conflicts with the graph')
   await client.query(`UPDATE dailylogger_service.fixture_runs SET status=$2, checkpoint_id=$3, receipt_sha256=$4, updated_at=now() WHERE run_id=$1`,
     [row.run_id, state.status, state.checkpointId, state.receiptSha256])
+  row.status = state.status
+  row.checkpoint_id = state.checkpointId
+  row.receipt_sha256 = state.receiptSha256
 }
 
 export async function runOperation(pool: pg.Pool, connectionString: string, operation: Operation, runId: string, approval?: string) {
-  requireCondition(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(runId), 'Run ID must be a UUID')
+  runId = canonicalRunId(runId)
   return withRunLock(pool, runId, async (client, assertActive) => {
     const row = await readRun(client, 'run_id', runId)
-    const fixture = readPostgresFixture(runId)
-    requireCondition(row.workflow_version === POSTGRES_WORKFLOW_VERSION && row.manifest_digest === fixture.manifestDigest && row.manifest_text === fixture.manifestBytes, 'Application run is bound to a different immutable manifest or workflow version')
+    const { fixture, legacy } = admittedFixture(row)
     const runDir = checkedRunDir(row.run_dir)
     const requestDigest = digest(json({ runDir, source: fixture.manifest.source, workflowVersion: POSTGRES_WORKFLOW_VERSION }))
     requireCondition(row.run_dir === runDir && row.request_digest === requestDigest, 'Application admission digest or canonical run directory differs')
-    // A process can die after admission but before creating frozen inputs.
-    // A repeated start uses the already-admitted UUID, not a new workflow.
-    if (!existsSync(runDir)) {
-      requireCondition(operation === 'start' && !row.checkpoint_id, 'Frozen run directory is missing; only an unstarted admission can initialize it')
-      initializeRun(runDir, fixture)
-    }
-    validateInputs(runDir, fixture)
+    const reservation = reserveDestination(runDir, row.request_key, runId, () => requestDigest, { existingBinding: true, ...(legacy ? { legacyFixture: fixture } : {}) })
     const checkpointer = openCheckpointer(connectionString)
     let attemptId: string | null = null
-    const workflow = createWorkflow(runDir, fixture, {
+    let workflow: ReturnType<typeof createWorkflow>
+    workflow = createWorkflow(runDir, fixture, {
       checkpointer,
       threadId: runId,
-      assertActive,
+      assertActive: () => { assertActive(); validateDestination(reservation) },
       receiptIdentity: { milestone: 'S03a PostgreSQL fixture checkpoint parity', runId },
       recordNode: async node => {
         assertActive()
         requireCondition(attemptId, 'Graph execution requires an operation attempt')
-        await client.query(`UPDATE dailylogger_service.operation_attempts SET nodes = nodes || jsonb_build_array($2::text) WHERE attempt_id=$1`, [attemptId, node])
+        const observed = await workflow.snapshot()
+        await client.query(`UPDATE dailylogger_service.operation_attempts SET nodes = nodes || jsonb_build_array($2::text), after_checkpoint_id=COALESCE($3,after_checkpoint_id) WHERE attempt_id=$1`, [attemptId, node, projection(observed).checkpointId])
         recordAttempt(runDir, node)
       },
     })
@@ -137,6 +215,12 @@ export async function runOperation(pool: pg.Pool, connectionString: string, oper
     }
     try {
       let snapshot = await workflow.snapshot()
+      await validateHistory(client, row, snapshot)
+      if (!existsSync(join(runDir, 'manifest.json'))) {
+        requireCondition(operation === 'start' && !projection(snapshot).hasCheckpoint, 'Frozen inputs are missing; only an unstarted admission can initialize them')
+        initializeReservedRun(reservation, fixture)
+      }
+      validateInputs(runDir, fixture)
       await validateSnapshot(snapshot)
       await reconcile(client, row, snapshot)
       // Acquiring the session lock proves no prior command still owns this run.
