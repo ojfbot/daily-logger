@@ -1,0 +1,41 @@
+name: Private fixture runtime image proof
+
+on:
+  pull_request:
+    paths:
+      - apps/service/**
+      - docs/agent-service/editorial-api-responses.schema.json
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - packages/frontend/package.json
+      - .github/workflows/service-runtime.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm type-check:service
+      - run: pnpm test:service:runtime
+      - name: Prepare credential-free committed build context
+        run: pnpm service:runtime:context "$RUNNER_TEMP/dailylogger-runtime-context"
+      - name: Build without publishing
+        run: docker build -t dailylogger-runtime:proof "$RUNNER_TEMP/dailylogger-runtime-context"
+      - name: Offline image, production entrypoints and private shared-volume proof
+        run: pnpm service:runtime:smoke dailylogger-runtime:proof

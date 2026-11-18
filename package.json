@@ -40,7 +40,10 @@
     "test:service:delivery": "pnpm --filter @ojfbot/daily-logger-service test:delivery",
     "test:service:postgres": "pnpm --filter @ojfbot/daily-logger-service test:postgres",
     "service:http": "node --import tsx apps/service/src/http-cli.ts",
-    "test:service:http": "pnpm --filter @ojfbot/daily-logger-service test:http"
+    "test:service:http": "pnpm --filter @ojfbot/daily-logger-service test:http",
+    "service:runtime:context": "node --import tsx apps/service/runtime/prepare-context.ts",
+    "test:service:runtime": "node --import tsx --test apps/service/test/runtime/*.test.ts",
+    "service:runtime:smoke": "node apps/service/runtime/smoke.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
