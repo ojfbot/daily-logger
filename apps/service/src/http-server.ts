@@ -1,6 +1,7 @@
 import Fastify, { type FastifyRequest, type FastifyReply } from 'fastify'
 import pg from 'pg'
 import { readFileSync, realpathSync } from 'node:fs'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { z } from 'zod'
 import { Ajv } from 'ajv'
 import addFormats from 'ajv-formats'
@@ -53,7 +54,12 @@ export async function createHttpServer(config: HttpConfig, fetcher: typeof fetch
   let boss: Awaited<ReturnType<typeof startDelivery>>
   try { await requireMigrated(pool, { http: true }); boss = await startDelivery(pool, config.connectionString) }
   catch (error) { await Promise.all([pool.end(), readPool.end(), cancellations.end()]); throw error }
-  const app = Fastify({ logger: false, trustProxy: false, bodyLimit: 4096 })
+  const rejectRouterRequest = (_path: string, _request: IncomingMessage, response: ServerResponse) => {
+    response.writeHead(400, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+    response.end(JSON.stringify({ schemaVersion: 1, error: 'invalid_request' }))
+  }
+  const app = Fastify({ logger: false, trustProxy: false, bodyLimit: 4096,
+    routerOptions: { onBadUrl: rejectRouterRequest, onMaxParamLength: rejectRouterRequest } })
   const responses = z.record(z.string(), z.unknown()).parse(JSON.parse(readFileSync(new URL('../../../docs/agent-service/editorial-api-responses.schema.json', import.meta.url), 'utf8')))
   app.addSchema({ ...responses, $id: 'dailylogger-fixture-responses' })
   const validator = new Ajv({ strict: false })

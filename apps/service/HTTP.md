@@ -86,6 +86,8 @@ original key and frozen request. An exact retry resolves the stored admission.
 `503 authentication_unavailable` indicates an unavailable or invalid upstream
 identity exchange. `503 integrity_rejected` identifies inconsistent stored
 records. Error responses expose an allowlisted code.
+Malformed and overlong router paths return a fixed `400 invalid_request` with
+`no-store` before normal request hooks run.
 
 ## Polling and fixture state
 
