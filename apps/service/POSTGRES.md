@@ -68,6 +68,12 @@ protect legacy or marker-damaged runs. A rejected overlapping destination leaves
 no new directory, marker or binding and does not alter the original artifact bundle.
 An exact database directory binding also prevents a different request key from
 recreating a missing destination; the original key remains held on missing ownership.
+Because an absent directory has no resolvable physical spelling, any missing
+admitted destination holds all new admissions in this database. This deliberately
+sacrifices new-run availability until the original ownership is restored; it does
+not guess absent-path identity by lowercasing or filesystem probe writes. Intact
+existing requests and run operations remain available. The guard also applies to
+unrelated new paths on case-sensitive filesystems. No automatic repair is attempted.
 These guarantees cover cooperating admissions using one database and its shared
 artifact filesystem; they are not a cross-database or hostile-filesystem fence.
 
