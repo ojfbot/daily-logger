@@ -170,12 +170,18 @@ before(async () => {
 after(async () => {
   try { await stopWorker() }
   finally {
-    for (const server of apps) await server.close()
-    provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve()))
-    await pool.end()
-    if (created) await admin.query(`DROP DATABASE ${database} WITH (FORCE)`)
-    await admin.end()
-    rmSync(root, { recursive: true, force: true })
+    try {
+      for (const server of apps) await server.close()
+      provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve()))
+      await pool.end()
+      if (created) {
+        await waitFor(async () => (await admin.query('SELECT 1 FROM pg_stat_activity WHERE datname=$1', [database])).rowCount === 0, 2000)
+        await admin.query(`DROP DATABASE ${database}`)
+      }
+    } finally {
+      await admin.end()
+      rmSync(root, { recursive: true, force: true })
+    }
   }
 })
 
