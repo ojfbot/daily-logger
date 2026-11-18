@@ -51,7 +51,7 @@ def tar_bytes(entries):
     return output.getvalue()
 
 
-def pax_header_bytes(attributes):
+def pax_header_bytes(attributes, kind=tarfile.XHDTYPE):
     records = []
     for key, value in attributes.items():
         content = f'{key}={value}\n'.encode()
@@ -61,7 +61,7 @@ def pax_header_bytes(attributes):
         records.append(str(length).encode() + b' ' + content)
     payload = b''.join(records)
     header = tarfile.TarInfo('././@PaxHeader')
-    header.type = tarfile.XHDTYPE
+    header.type = kind
     header.size = len(payload)
     return header.tobuf(format=tarfile.USTAR_FORMAT) + payload + b'\0' * (-len(payload) % 512)
 
@@ -83,7 +83,7 @@ def image_tar(*, user='1000:1000', architecture='amd64', system='linux',
 
 
 def oci_image_tar(*, compressed=False, attestation=False, wrong_diff=False, crossed_config=False,
-                  root_first=False, descriptor_platform=None):
+                  root_first=False, descriptor_platform=None, cached_reference=None):
     """Docker/containerd save layout with independently hashed OCI graph nodes."""
     blobs = {}
     index_type = 'application/vnd.oci.image.index.v1+json'
@@ -127,6 +127,18 @@ def oci_image_tar(*, compressed=False, attestation=False, wrong_diff=False, cros
                 'vnd.docker.reference.digest': runtime['digest']})
         descriptors.append(attestation_manifest)
         identities['attestationId'] = attestation_manifest['digest']
+    warm_reference = None
+    if cached_reference and cached_reference.startswith('runtime-'):
+        warm_reference = copy.deepcopy(runtime)
+        if cached_reference == 'runtime-platform':
+            descriptors[0] = {**runtime, 'platform': {'architecture': 'arm64', 'os': 'linux'}}
+    elif cached_reference:
+        warm_reference = copy.deepcopy(attestation_manifest)
+        descriptors[-1] = copy.deepcopy(attestation_manifest)
+        if cached_reference == 'attestation-marker':
+            del descriptors[-1]['annotations']
+        elif cached_reference == 'attestation-platform':
+            descriptors[-1]['platform'] = {'architecture': 'amd64', 'os': 'linux'}
     image_index = blob(encoded({'schemaVersion': 2, 'mediaType': index_type,
                                'manifests': descriptors}), index_type)
     identities['indexId'] = image_index['digest']
@@ -134,7 +146,8 @@ def oci_image_tar(*, compressed=False, attestation=False, wrong_diff=False, cros
     if crossed_config:
         compatibility_config = blob(encoded({**config, 'created': '2026-01-01T00:00:00Z'}), config_type)
         identities['configId'] = compatibility_config['digest']
-    root_index = {'schemaVersion': 2, 'mediaType': index_type, 'manifests': [image_index]}
+    root_index = {'schemaVersion': 2, 'mediaType': index_type,
+                  'manifests': [warm_reference, image_index] if warm_reference else [image_index]}
     compatibility = [{'Config': 'blobs/sha256/' + compatibility_config['digest'][7:],
                       'RepoTags': ['dailylogger-runtime:proof'],
                       'Layers': ['blobs/sha256/' + layer_descriptor['digest'][7:]]}]
@@ -494,6 +507,33 @@ class ArtifactBoundaryTests(unittest.TestCase):
         receipt = self.verify(positive)
         self.assertFalse(receipt['imageLoaded'])
 
+    def test_solaris_pax_override_and_nonempty_directory_reject_before_tarfile_parser(self):
+        gnu = tarfile.TarInfo('././@LongLink')
+        gnu.type = tarfile.GNUTYPE_LONGNAME
+        gnu.size = 2 * 1024 * 1024
+        hidden = gnu.tobuf(format=tarfile.USTAR_FORMAT) + b'x' * (gnu.size - 1) + b'\0'
+        carrier = tarfile.TarInfo('carrier')
+        carrier.size = len(hidden)
+        # A raw scanner sees ordinary carrier data, while tarfile's Solaris PAX
+        # size override makes the embedded GNU extension the next parsed header.
+        solaris = pax_header_bytes({'size': '0'}, kind=b'X') \
+            + carrier.tobuf(format=tarfile.USTAR_FORMAT) + hidden + b'\0' * 1024
+        directory = tarfile.TarInfo('directory/')
+        directory.type = tarfile.DIRTYPE
+        directory.size = 512
+        nonempty_directory = directory.tobuf(format=tarfile.USTAR_FORMAT) + b'\0' * 512 + self.fixture.image
+        directory.type = tarfile.AREGTYPE
+        legacy_directory = directory.tobuf(format=tarfile.USTAR_FORMAT) + b'\0' * 512 + self.fixture.image
+        for case, raw in (('solaris-hidden-gnu', solaris), ('nonempty-directory', nonempty_directory),
+                          ('legacy-directory-framing', legacy_directory)):
+            with self.subTest(case=case):
+                fixture = GithubFixture()
+                fixture.image = raw
+                fixture.manifest['archive'].update(size=len(raw), sha256=hashed(raw))
+                fixture.repack()
+                with patch.object(artifact.tarfile, 'open', side_effect=AssertionError('Unsafe raw framing reached tarfile parser')):
+                    self.rejected(fixture)
+
     def test_missing_or_malformed_authenticated_digest_rejects_before_download(self):
         for digest in (None, 'f' * 64, 'sha256:not-a-digest'):
             with self.subTest(digest=digest):
@@ -695,6 +735,24 @@ class ArtifactBoundaryTests(unittest.TestCase):
                 fixture.replace_oci_image(descriptor_platform=platform)
                 self.rejected(fixture)
 
+    def test_cached_runtime_descriptor_revalidates_each_reference_platform(self):
+        positive = GithubFixture()
+        positive.replace_oci_image(cached_reference='runtime-valid')
+        self.assertFalse(self.verify(positive)['imageLoaded'])
+        invalid = GithubFixture()
+        invalid.replace_oci_image(cached_reference='runtime-platform')
+        self.rejected(invalid)
+
+    def test_cached_attestation_descriptor_revalidates_marker_and_platform(self):
+        positive = GithubFixture()
+        positive.replace_oci_image(attestation=True, cached_reference='attestation-valid')
+        self.assertFalse(self.verify(positive)['imageLoaded'])
+        for case in ('attestation-marker', 'attestation-platform'):
+            with self.subTest(case=case):
+                fixture = GithubFixture()
+                fixture.replace_oci_image(attestation=True, cached_reference=case)
+                self.rejected(fixture)
+
     def test_oci_wrong_engine_kind_unrelated_digest_attestation_or_crossed_config_reject(self):
         for target in ('kind', 'absent-engine', 'attestation', 'crossed-config'):
             with self.subTest(target=target):
@@ -782,7 +840,7 @@ class ArtifactBoundaryTests(unittest.TestCase):
                 fixture.repack()
                 self.rejected(fixture)
 
-    def test_download_failures_are_bounded_and_remove_only_owned_output(self):
+    def test_download_failures_are_bounded_and_retain_owned_staging(self):
         self.fixture.download_error = OSError('synthetic interrupted download')
         self.rejected()
         binaries = self.root / 'bin'
@@ -803,6 +861,33 @@ class ArtifactBoundaryTests(unittest.TestCase):
                 artifact.Github().download(700, destination, len(payload))
             self.assertEqual(destination.read_bytes(), payload)
         self.assertEqual(self.sentinel.read_bytes(), b'Unrelated data must survive failures')
+
+    def test_download_allows_slow_progress_but_kills_its_child_at_the_total_deadline(self):
+        binaries = self.root / 'deadline-bin'
+        binaries.mkdir()
+        gh = binaries / 'gh'
+        gh.write_text(f'#!{sys.executable}\nimport os\nos.write(1,b"bounded-progress")\n')
+        gh.chmod(0o755)
+        environment = {'PATH': str(binaries) + os.pathsep + os.environ.get('PATH', '')}
+        clock = iter((0, 181))
+        with patch.dict(os.environ, environment), patch.object(artifact.time, 'monotonic', side_effect=lambda: next(clock, 181)):
+            destination = self.root / 'slow-progress.zip'
+            artifact.Github().download(700, destination, 32)
+            self.assertEqual(destination.read_bytes(), b'bounded-progress')
+        gh.write_text(f'#!{sys.executable}\nimport time\ntime.sleep(30)\n')
+        actual_popen = subprocess.Popen
+        children = []
+        def capture(*args, **kwargs):
+            child = actual_popen(*args, **kwargs)
+            children.append(child)
+            return child
+        clock = iter((0, 601))
+        with patch.dict(os.environ, environment), patch.object(artifact.subprocess, 'Popen', side_effect=capture), \
+                patch.object(artifact.time, 'monotonic', side_effect=lambda: next(clock, 601)):
+            with self.assertRaisesRegex(ValueError, 'deadline'):
+                artifact.Github().download(700, self.root / 'expired-download.zip', 32)
+        self.assertEqual(len(children), 1)
+        self.assertIsNotNone(children[0].poll(), 'The owned downloader must be stopped at the total deadline')
 
     def test_tap_proof_rejects_missing_duplicate_failed_skipped_and_cancelled_tests(self):
         valid = '# tests 3\n# pass 3\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n'

@@ -2,6 +2,10 @@
 
 ## Deviations
 
+- 2026-11-18. A real second-controller transfer was still progressing when the 180-second total deadline expired. Retain the exact authenticated byte ceiling and child termination, but allow a bounded 600-second total, with regressions for slow progress and hard expiry.
+
+- 2026-11-18. A follow-up reproduction used Solaris uppercase PAX and warmed descriptor content to bypass per-reference policy. Allow only the explicitly supported raw tar record types with zero-body directories, and validate platform/attestation metadata on every descriptor edge before using cached content.
+
 - 2026-11-18. The synthetic GitHub fixture accepted a repository-root trailing slash, but the authenticated live API returned 404. Use the canonical root route and align the fixture with the real API before accepting controller verification.
 
 - 2026-11-18. Re-review bypassed raw tar framing with PAX size overrides, raced the final pathname cleanup, and supplied two Linux/amd64 OCI candidates. Reject framing-changing extensions, retain failed private stages without recursive pathname deletion, and require an unambiguous runtime platform beneath accepted indexes.
