@@ -76,7 +76,9 @@ lock. Caller-owned-client run admission, the command/response record, pg-boss
 `send({db})`, cancellation request when applicable, and job linkage commit or
 roll back together. A null job ID aborts admission. The pg-boss queue is installed
 and committed before this transaction; graph execution never occurs inside it.
-Admission lock wait is limited to 5 seconds and each SQL statement to 10 seconds.
+The actor/idempotency-key lock wait is limited to 5 seconds. Start admission then
+uses the S03a namespace and request-key locks, each bounded at 10 seconds; each
+SQL statement is also bounded at 10 seconds. All release with the transaction.
 
 The filesystem identity reservation from S03a can outlive a DB rollback. It is
 not an admitted run, command or job, and it contains no generated article.
