@@ -2,7 +2,7 @@
 
 Draft for review. The first implementation uses recorded fixtures and prepares the private owner interface. GitHub and Vercel remain the public journal path. S03b provides durable command admission for operations that need a worker. See [delivery roadmap](delivery-roadmap.md) and [existing editorial continuation](../editorial-continuation.txt).
 
-Contract v3, reviewed against S03b `d0a7b5dd2d6be0169c5e3bc24716b3984cf44751` on November 18, 2026. The [fixture response schemas](editorial-api-responses.schema.json) define the proposed browser boundary. HTTP handlers, authenticated sessions, and durable editorial records require implementation and qualification.
+Contract v3, implemented for the fixture HTTP slice against S03b `c1024559e04bf5e19c1c96526fccd68b2ed12d7d` on November 18, 2026. HTTP handlers, owner sessions, and database projections are described in the service guide. Durable editorial records and frontend integration are the next S04 work. [Fixture response schemas](editorial-api-responses.schema.json), [HTTP service guide](../../apps/service/HTTP.md).
 
 ## S03b integration baseline
 
@@ -18,7 +18,7 @@ S03b supports `start`, `resume`, `recover`, and `cancel` for a recorded fixture.
 
 The internal route recorded in the request digest is `fixture/runs` for start and `fixture/runs/{runId}/{operation}` for the other fixture operations. Preserve that identity when adding HTTP paths. The shared actor/key namespace also covers operation changes. A deliberate editorial operation requires a defined operation and schema version before admission.
 
-Source references pin the [command implementation](https://github.com/ojfbot/daily-logger/blob/d0a7b5dd2d6be0169c5e3bc24716b3984cf44751/apps/service/src/delivery-commands.ts), [worker](https://github.com/ojfbot/daily-logger/blob/d0a7b5dd2d6be0169c5e3bc24716b3984cf44751/apps/service/src/delivery-worker.ts), and [delivery guide](https://github.com/ojfbot/daily-logger/blob/d0a7b5dd2d6be0169c5e3bc24716b3984cf44751/apps/service/DELIVERY.md).
+Source references pin the [command implementation](https://github.com/ojfbot/daily-logger/blob/c1024559e04bf5e19c1c96526fccd68b2ed12d7d/apps/service/src/delivery-commands.ts), [worker](https://github.com/ojfbot/daily-logger/blob/c1024559e04bf5e19c1c96526fccd68b2ed12d7d/apps/service/src/delivery-worker.ts), and [delivery guide](https://github.com/ojfbot/daily-logger/blob/c1024559e04bf5e19c1c96526fccd68b2ed12d7d/apps/service/DELIVERY.md).
 
 ## Article and revision identities
 
@@ -65,6 +65,8 @@ The browser creates one `Idempotency-Key` per mutation and retains the frozen re
 
 The service records an authorized, well-formed stale proposal or feedback conflict as a rejected command with no delivery and a null `runId`. A stale proposal response carries `observedProposalVersion` and `observedAt`. Fetch current state before creating a deliberate new request with a new key. A feedback conflict carries the observed saved feedback ID. A retry of either original rejection returns the same response.
 
+Admission infrastructure failure or an uncertain COMMIT response returns `503 operation_unavailable` with `Retry-After: 2`. The response leaves the transaction outcome unresolved. Retain the original frozen request and key, then retry through original admission lookup. The HTTP binding and original command share one transaction, including a recorded semantic rejection.
+
 Commit each inline feedback or restore effect with its admission record and response in one database transaction. For a worker command, return `202` once S03b commits the command and delivery together. The response records admission. The owner reads current progress through GET. After a lost response the editor can fetch a known command or send the exact frozen request. Page load, refresh, and polling issue reads only.
 
 For S03b admissions, the serialized body already contains JSON. HTTP sends those bytes once with `Content-Type: application/json`. A retry preserves whitespace, property order, status, and IDs. The `admission.body` field in a subsequent command GET contains the parsed, schema-validated object. Current progress belongs in that GET response. An idempotency conflict returns the original command ID and preserves its original admission.
@@ -90,6 +92,7 @@ The JSON Schema file uses Draft 7 and closes every object with `additionalProper
 | `fixtureRunView` | Include the application run projection, linked command summaries, flattened attempts, effective resume availability, all cancellation records, and read metadata. |
 | `attempt` | Map database field names to camel case. Attach the enclosing command's ID when adapting `commandStatus().attempts`. Preserve null command identity for legacy direct-CLI attempts in a run view. |
 | `apiError` | Return an allowlisted error code. Resolve missing sessions and forbidden requests before admission. Use `503 read_unavailable` with `Retry-After: 2` for bounded read failures. |
+| `ownerSessionView` | Return the verified numeric GitHub ID, session CSRF token, and expiry through the authenticated session endpoint. |
 
 The handler validates database and CLI-derived data before constructing the response. The browser contract permits run, command, attempt, and resume-target IDs. Local paths, request keys, actor labels, queue IDs, approval digests, raw interrupt subjects, and database error text stay in trusted service records. A target response carries the fixture scope and safe run identity. A command with rejected admission exposes a null target.
 
@@ -153,8 +156,8 @@ The proposed three-day quality comparison can reuse the side-by-side article vie
 
 ## Qualification gaps and next checkpoint
 
-The existing prototype keeps editorial changes in browser memory and simulates rewrites and publication with timers. S03b provides CLI delivery evidence. The next S04 implementation checkpoint is an authenticated fixture HTTP adapter with the response schemas and read-only projection queries, followed by the polling, retry, cancellation, and redaction proofs above. Durable editorial revisions and feedback then support the existing prototype's repeat-rewrite and restore interactions.
+The existing prototype keeps editorial changes in browser memory and simulates rewrites and publication with timers. S04 now implements authenticated fixture HTTP and read-only projections, with a local OAuth protocol fixture and real PostgreSQL/HTTP/worker tests. Real GitHub login through the owner's HTTPS ingress and browser requires deployment qualification. Durable editorial revisions and feedback then support the prototype's repeat-rewrite and restore interactions.
 
-The independent S03a review remains changes-requested at `92769b8d138ce190c2644d5668edd3cced50ca29`. Its 25 PostgreSQL cases and 17 boundary cases pass locally. An additional macOS reproduction admits an absent nested destination through a case-aliased parent when the completed ancestor's reservation marker is missing. The nested run then invalidates the completed bundle. The repair requires an exact regression, green supported-platform CI, and independent re-review. S03b includes the same admission code at the pinned integration revision.
+The independent S03a re-review approves `29567def6f0da0ba9858112057dad6e5e93c64cc`. Its 26 PostgreSQL cases and 18 boundary cases pass locally and in supported-platform CI. The missing-marker/case-alias/absent-leaf reproduction now rejects before writes and preserves the completed bundle. HelpDesk sequence 14377 records the independent disposition. The pinned S03b integration includes that repaired base.
 
 The delivery contract retains the 04:00 America/Chicago public readback deadline, exact displayed-revision acceptance through the existing editor, and separate 07:00 independent review. Manual Actions failover transfers a single publication authority. Publisher qualification precedes Cleaner automation. The private editorial workspace proceeds in parallel, with production changes subject to owner approval.

@@ -38,7 +38,9 @@
     "service:postgres": "node --import tsx apps/service/src/postgres-cli.ts",
     "service:delivery": "node --import tsx apps/service/src/delivery-cli.ts",
     "test:service:delivery": "pnpm --filter @ojfbot/daily-logger-service test:delivery",
-    "test:service:postgres": "pnpm --filter @ojfbot/daily-logger-service test:postgres"
+    "test:service:postgres": "pnpm --filter @ojfbot/daily-logger-service test:postgres",
+    "service:http": "node --import tsx apps/service/src/http-cli.ts",
+    "test:service:http": "pnpm --filter @ojfbot/daily-logger-service test:http"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
