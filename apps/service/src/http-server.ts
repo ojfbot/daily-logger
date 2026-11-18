@@ -20,6 +20,10 @@ const configSchema = z.strictObject({
 })
 export type HttpConfig = z.infer<typeof configSchema>
 
+export function httpListenHost(env: NodeJS.ProcessEnv) {
+  return z.enum(['127.0.0.1', '0.0.0.0']).parse(env.DAILYLOGGER_HTTP_HOST ?? '127.0.0.1')
+}
+
 export function httpConfig(env: NodeJS.ProcessEnv): HttpConfig {
   const parsed = configSchema.safeParse({ connectionString: env.DAILYLOGGER_DATABASE_URL,
     origin: env.DAILYLOGGER_PRIVATE_ORIGIN, ownerGithubId: env.DAILYLOGGER_OWNER_GITHUB_ID,
@@ -28,7 +32,7 @@ export function httpConfig(env: NodeJS.ProcessEnv): HttpConfig {
   if (!parsed.success) throw new Error('Invalid private HTTP configuration')
   databaseUrl(parsed.data.connectionString)
   const origin = new URL(parsed.data.origin)
-  if (origin.protocol !== 'https:' || origin.origin !== parsed.data.origin) throw new Error('Private HTTP origin must be an HTTPS origin')
+  if (origin.protocol !== 'https:' || origin.origin !== parsed.data.origin || origin.port === '0') throw new Error('Private HTTP origin must be an HTTPS origin')
   return { ...parsed.data, fixtureRoot: realpathSync.native(checkedRunDir(parsed.data.fixtureRoot)) }
 }
 

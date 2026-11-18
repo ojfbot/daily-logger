@@ -15,8 +15,9 @@ async function main() {
     console.log(JSON.stringify({ status: 'http_migrated' }))
     return
   }
-  const { createHttpServer, httpConfig } = await import('./http-server.js')
+  const { createHttpServer, httpConfig, httpListenHost } = await import('./http-server.js')
   const config = httpConfig(process.env)
+  const host = httpListenHost(process.env)
   const port = Number(process.env.DAILYLOGGER_HTTP_PORT ?? 4300)
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid private HTTP port')
   const app = await createHttpServer(config)
@@ -27,7 +28,7 @@ async function main() {
   }
   process.once('SIGTERM', () => { void stop() })
   process.once('SIGINT', () => { void stop() })
-  try { await app.listen({ host: '127.0.0.1', port }) }
+  try { await app.listen({ host, port }) }
   catch (error) { await app.close(); throw error }
   console.log(JSON.stringify({ status: 'http_ready', port }))
 }
