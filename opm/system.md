@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `9ca690a37f778edc752ace3534e386f8372ee2b256b763c57e92c1a9495bceba`.
+> Source SHA-256: `21da1b789ba10953e82fc3a7d960cbb8dc75a6a017831ab37c0d88244493a6a2`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1601,6 +1601,7 @@ flowchart TD
   n307("Offline Observation Exporting")
   n308["Trusted Nonblocking Test Sinks"]
   n309["Telemetry Diagnostics"]
+  n310("Exporter Process Admitting")
   n264 -->|"invokes"| n298
   n299 -->|"requires (instrument)"| n298
   n298 -->|"invokes"| n300
@@ -1616,6 +1617,7 @@ flowchart TD
   n303 -->|"requires (instrument)"| n307
   n308 -->|"requires (instrument)"| n307
   n307 -->|"yields"| n309
+  n307 -->|"invokes"| n310
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1634,6 +1636,7 @@ Projected Fixture Observations consists of Correlation Metadata, Fixed Lifecycle
 Offline Observation Exporting requires Projected Fixture Observations. [src: apps/service/src/telemetry.ts]
 Offline Observation Exporting requires Trusted Nonblocking Test Sinks. [src: apps/service/src/telemetry.ts]
 Offline Observation Exporting yields Telemetry Diagnostics. [src: apps/service/src/telemetry.ts]
+Offline Observation Exporting invokes Exporter Process Admitting. [src: apps/service/src/telemetry-export-process.ts]
 ```
 
 ## SD2.5 — Private fixture HTTPS ingress
@@ -1650,27 +1653,27 @@ title: "SD2.5 — Private fixture HTTPS ingress"
 flowchart TD
   accTitle: SD2.5 — Private fixture HTTPS ingress
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n310("Private Ingress Preparing")
-  n311["Private Ingress Configuration"]
-  n312["Private Proxy Configuration"]
-  n313["Exact Private Authority"]
-  n314["Private IPv4 Publication"]
-  n315["Approved Peer CIDRs"]
-  n316("Private HTTPS Forwarding")
-  n317["Private Leaf Generation"]
-  n318["Approved Socket Peer"]
-  n319["Explicit IPv4 Bridge Listener"]
-  n320["Forwarded Fixture HTTP Request"]
-  n311 -->|"requires (instrument)"| n310
-  n310 -->|"yields"| n312
-  n313 -->|"part of"| n312
-  n314 -->|"part of"| n312
-  n315 -->|"part of"| n312
-  n312 -->|"requires (instrument)"| n316
-  n317 -->|"requires (instrument)"| n316
-  n318 -->|"requires (instrument)"| n316
-  n319 -->|"requires (instrument)"| n316
-  n316 -->|"yields"| n320
+  n311("Private Ingress Preparing")
+  n312["Private Ingress Configuration"]
+  n313["Private Proxy Configuration"]
+  n314["Exact Private Authority"]
+  n315["Private IPv4 Publication"]
+  n316["Approved Peer CIDRs"]
+  n317("Private HTTPS Forwarding")
+  n318["Private Leaf Generation"]
+  n319["Approved Socket Peer"]
+  n320["Explicit IPv4 Bridge Listener"]
+  n321["Forwarded Fixture HTTP Request"]
+  n312 -->|"requires (instrument)"| n311
+  n311 -->|"yields"| n313
+  n314 -->|"part of"| n313
+  n315 -->|"part of"| n313
+  n316 -->|"part of"| n313
+  n313 -->|"requires (instrument)"| n317
+  n318 -->|"requires (instrument)"| n317
+  n319 -->|"requires (instrument)"| n317
+  n320 -->|"requires (instrument)"| n317
+  n317 -->|"yields"| n321
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1684,4 +1687,74 @@ Private HTTPS Forwarding requires Private Leaf Generation. [src: apps/service/ru
 Private HTTPS Forwarding requires Approved Socket Peer. [src: apps/service/runtime/prepare-ingress.ts]
 Private HTTPS Forwarding requires Explicit IPv4 Bridge Listener. [src: apps/service/src/http-cli.ts] [src: apps/service/runtime/prepare-ingress.ts]
 Private HTTPS Forwarding yields Forwarded Fixture HTTP Request. [src: apps/service/runtime/prepare-ingress.ts]
+```
+
+## SD2.5 — Opt-in metadata exporter process
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.5 — Opt-in metadata exporter process"
+---
+flowchart TD
+  accTitle: SD2.5 — Opt-in metadata exporter process
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n322["Explicit Exporter Configuration"]
+  n310("Exporter Process Admitting")
+  n303["Projected Fixture Observations"]
+  n323["Compiled Exporter Entry Points"]
+  n324["Bounded IPC Batches"]
+  n325("Exporter Thread Assembling")
+  n326["Completed Metadata Segments"]
+  n327("Wire Span Projecting")
+  n328["Pinned Langfuse SDK"]
+  n329["Closed OTLP Spans"]
+  n330("OTLP Serializing")
+  n331["Official OTLP JSON Serializer"]
+  n332["Bounded OTLP Request"]
+  n333("Private HTTPS Exporting")
+  n334["Explicit Endpoint Trust"]
+  n335["Child Secret File References"]
+  n336["Transport Outcome"]
+  n322 -->|"condition: enabled"| n310
+  n303 -->|"requires (instrument)"| n310
+  n323 -->|"requires (instrument)"| n310
+  n310 -->|"yields"| n324
+  n324 -->|"requires (instrument)"| n325
+  n325 -->|"yields"| n326
+  n326 -->|"requires (instrument)"| n327
+  n328 -->|"requires (instrument)"| n327
+  n327 -->|"yields"| n329
+  n329 -->|"requires (instrument)"| n330
+  n331 -->|"requires (instrument)"| n330
+  n330 -->|"yields"| n332
+  n332 -->|"requires (instrument)"| n333
+  n334 -->|"requires (instrument)"| n333
+  n335 -->|"requires (instrument)"| n333
+  n333 -->|"yields"| n336
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Exporter Process Admitting occurs if Explicit Exporter Configuration is enabled. [src: apps/service/src/telemetry-export-config.ts]
+Exporter Process Admitting requires Projected Fixture Observations. [src: apps/service/src/telemetry-export-process.ts]
+Exporter Process Admitting requires Compiled Exporter Entry Points. [src: apps/service/scripts/build-telemetry.mjs]
+Exporter Process Admitting yields Bounded IPC Batches. [src: apps/service/src/telemetry-export-process.ts]
+Exporter Thread Assembling requires Bounded IPC Batches. [src: apps/service/src/telemetry-export-child.ts]
+Exporter Thread Assembling yields Completed Metadata Segments. [src: apps/service/src/telemetry-langfuse.ts]
+Wire Span Projecting requires Completed Metadata Segments. [src: apps/service/src/telemetry-langfuse.ts]
+Wire Span Projecting requires Pinned Langfuse SDK. [src: apps/service/package.json]
+Wire Span Projecting yields Closed OTLP Spans. [src: apps/service/src/telemetry-wire.ts]
+OTLP Serializing requires Closed OTLP Spans. [src: apps/service/src/telemetry-transport.ts]
+OTLP Serializing requires Official OTLP JSON Serializer. [src: apps/service/src/telemetry-transport.ts]
+OTLP Serializing yields Bounded OTLP Request. [src: apps/service/src/telemetry-transport.ts]
+Private HTTPS Exporting requires Bounded OTLP Request. [src: apps/service/src/telemetry-transport.ts]
+Private HTTPS Exporting requires Explicit Endpoint Trust. [src: apps/service/src/telemetry-export-config.ts]
+Private HTTPS Exporting requires Child Secret File References. [src: apps/service/src/telemetry-langfuse.ts]
+Private HTTPS Exporting yields Transport Outcome. [src: apps/service/src/telemetry-transport.ts]
 ```
