@@ -146,7 +146,11 @@ try {
     environment[key] = missing
     try {
       const rejected = compose(['run', '--rm', '--no-deps', 'proxy', 'validate', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile'], { acceptFailure: true })
-      assert.notEqual(rejected.status, 0)
+      assert.equal(rejected.error, undefined)
+      assert.ok(Number.isInteger(rejected.status) && rejected.status > 0)
+      assert.ok(rejected.stderr.includes(missing))
+      assert.match(rejected.stderr, /bind|mount/i)
+      assert.match(rejected.stderr, /does not exist|no such file or directory/i)
       assert.equal(existsSync(missing), false, 'Missing bind sources must not be created')
     } finally { environment[key] = original }
   }
