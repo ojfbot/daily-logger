@@ -163,9 +163,16 @@ try {
   console.log(JSON.stringify({ proof: 'production-entrypoints-and-cross-container-storage', migration: 'explicit-and-repeatable', fixture: 'complete', shutdown: 'clean', publishedPorts: 0 }))
   const http = compose(['run', '--rm', '--no-deps', '-T', '-e', 'DAILYLOGGER_TEST_DATABASE_URL',
     '-v', `${httpTests}:/app/apps/service/test/http:ro`, '-v', `${deliveryTests}:/app/apps/service/test/delivery:ro`,
-    'api', '--import', './test/http/faults.mjs', '--test', 'test/http/http.test.ts'], { timeout: 120000 })
+    'api', '--import', './test/http/faults.mjs', '--test', '--test-reporter=tap', 'test/http/http.test.ts'], { timeout: 120000 })
   process.stdout.write(http.stdout)
-  console.log(JSON.stringify({ proof: 'production-runtime-with-external-http-tests', result: 'passed', realGithubLogin: 'not-qualified' }))
+  const counts = Object.fromEntries([...http.stdout.matchAll(/^# (tests|pass|fail|cancelled|skipped|todo) (\d+)\s*$/gm)]
+    .map(([, key, value]) => [key, Number(value)]))
+  assert.deepEqual(Object.keys(counts).sort(), ['cancelled', 'fail', 'pass', 'skipped', 'tests', 'todo'])
+  assert.ok(counts.tests > 0)
+  assert.equal(counts.pass, counts.tests)
+  for (const key of ['fail', 'cancelled', 'skipped', 'todo']) assert.equal(counts[key], 0)
+  console.log(JSON.stringify({ proof: 'production-runtime-with-external-http-tests', result: 'passed', realGithubLogin: 'not-qualified',
+    counts: { tests: counts.tests, passed: counts.pass, failed: counts.fail, skipped: counts.skipped } }))
 } catch (error) { failed = true; throw error }
 finally {
   const cleanup = compose(['down', '--volumes', '--remove-orphans'], { timeout: 45000, acceptFailure: true })

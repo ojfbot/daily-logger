@@ -91,8 +91,8 @@ https://:8443 {
           '/config:rw,nosuid,nodev,noexec,uid=1000,gid=1000,mode=700,size=16m',
           '/data:rw,nosuid,nodev,noexec,uid=1000,gid=1000,mode=700,size=16m'],
         volumes: [
-          { type: 'bind', source: '${DAILYLOGGER_INGRESS_CONFIG_DIR:?Set private ingress configuration directory}/Caddyfile', target: '/etc/caddy/Caddyfile', read_only: true },
-          { type: 'bind', source: '${DAILYLOGGER_TLS_DIRECTORY:?Set protected parent TLS directory}', target: '/tls', read_only: true },
+          { type: 'bind', source: '${DAILYLOGGER_INGRESS_CONFIG_DIR:?Set private ingress configuration directory}/Caddyfile', target: '/etc/caddy/Caddyfile', read_only: true, bind: { create_host_path: false } },
+          { type: 'bind', source: '${DAILYLOGGER_TLS_DIRECTORY:?Set protected parent TLS directory}', target: '/tls', read_only: true, bind: { create_host_path: false } },
         ],
         ports: [{ host_ip: config.bindIpv4, published: origin.port || '443', target: 8443, protocol: 'tcp' }],
         networks: ['oauth-outbound'], depends_on: { api: { condition: 'service_started' } }, stop_grace_period: '10s',

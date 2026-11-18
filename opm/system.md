@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `6d50cd6f78f94329fd3c9006c9093d14cf6fe877d905c8be3a3709a483ca107b`.
+> Source SHA-256: `7ca23c60b2b68adf5cc25f002edef9a9a0f23a2b7c2450021c81cadf5d0851ea`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1601,7 +1601,6 @@ flowchart TD
   n307("Offline Observation Exporting")
   n308["Trusted Nonblocking Test Sinks"]
   n309["Telemetry Diagnostics"]
-  n310("Exporter Process Admitting")
   n264 -->|"invokes"| n298
   n299 -->|"requires (instrument)"| n298
   n298 -->|"invokes"| n300
@@ -1617,7 +1616,6 @@ flowchart TD
   n303 -->|"requires (instrument)"| n307
   n308 -->|"requires (instrument)"| n307
   n307 -->|"yields"| n309
-  n307 -->|"invokes"| n310
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1636,7 +1634,6 @@ Projected Fixture Observations consists of Correlation Metadata, Fixed Lifecycle
 Offline Observation Exporting requires Projected Fixture Observations. [src: apps/service/src/telemetry.ts]
 Offline Observation Exporting requires Trusted Nonblocking Test Sinks. [src: apps/service/src/telemetry.ts]
 Offline Observation Exporting yields Telemetry Diagnostics. [src: apps/service/src/telemetry.ts]
-Offline Observation Exporting invokes Exporter Process Admitting. [src: apps/service/src/telemetry-export-process.ts]
 ```
 
 ## SD2.5 — Private fixture HTTPS ingress
@@ -1653,27 +1650,27 @@ title: "SD2.5 — Private fixture HTTPS ingress"
 flowchart TD
   accTitle: SD2.5 — Private fixture HTTPS ingress
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n311("Private Ingress Preparing")
-  n312["Private Ingress Configuration"]
-  n313["Private Proxy Configuration"]
-  n314["Exact Private Authority"]
-  n315["Private IPv4 Publication"]
-  n316["Approved Peer CIDRs"]
-  n317("Private HTTPS Forwarding")
-  n318["Private Leaf Generation"]
-  n319["Approved Socket Peer"]
-  n320["Explicit IPv4 Bridge Listener"]
-  n321["Forwarded Fixture HTTP Request"]
-  n312 -->|"requires (instrument)"| n311
-  n311 -->|"yields"| n313
-  n314 -->|"part of"| n313
-  n315 -->|"part of"| n313
-  n316 -->|"part of"| n313
-  n313 -->|"requires (instrument)"| n317
-  n318 -->|"requires (instrument)"| n317
-  n319 -->|"requires (instrument)"| n317
-  n320 -->|"requires (instrument)"| n317
-  n317 -->|"yields"| n321
+  n310("Private Ingress Preparing")
+  n311["Private Ingress Configuration"]
+  n312["Private Proxy Configuration"]
+  n313["Exact Private Authority"]
+  n314["Private IPv4 Publication"]
+  n315["Approved Peer CIDRs"]
+  n316("Private HTTPS Forwarding")
+  n317["Private Leaf Generation"]
+  n318["Approved Socket Peer"]
+  n319["Explicit IPv4 Bridge Listener"]
+  n320["Forwarded Fixture HTTP Request"]
+  n311 -->|"requires (instrument)"| n310
+  n310 -->|"yields"| n312
+  n313 -->|"part of"| n312
+  n314 -->|"part of"| n312
+  n315 -->|"part of"| n312
+  n312 -->|"requires (instrument)"| n316
+  n317 -->|"requires (instrument)"| n316
+  n318 -->|"requires (instrument)"| n316
+  n319 -->|"requires (instrument)"| n316
+  n316 -->|"yields"| n320
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1689,7 +1686,7 @@ Private HTTPS Forwarding requires Explicit IPv4 Bridge Listener. [src: apps/serv
 Private HTTPS Forwarding yields Forwarded Fixture HTTP Request. [src: apps/service/runtime/prepare-ingress.ts]
 ```
 
-## SD2.6 — Opt-in metadata exporter process
+## SD2.7 — Disposable fixture image delivery
 
 **Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
 rounded nodes identify processes. Labeled solid arrows distinguish human participation,
@@ -1698,81 +1695,55 @@ Use the source facts below for properties, state detail, and decomposition membe
 
 ```mermaid
 ---
-title: "SD2.6 — Opt-in metadata exporter process"
+title: "SD2.7 — Disposable fixture image delivery"
 ---
 flowchart TD
-  accTitle: SD2.6 — Opt-in metadata exporter process
+  accTitle: SD2.7 — Disposable fixture image delivery
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n322["Explicit Exporter Configuration"]
-  n310("Exporter Process Admitting")
-  n303["Projected Fixture Observations"]
-  n323["Compiled Exporter Entry Points"]
-  n324["Bounded IPC Batches"]
-  n325("Exporter Thread Assembling")
-  n326["Completed Metadata Segments"]
-  n327("Wire Span Projecting")
-  n328["Pinned Langfuse SDK"]
-  n329["Closed OTLP Spans"]
-  n330("OTLP Serializing")
-  n331["Official OTLP JSON Serializer"]
-  n332["Bounded OTLP Request"]
-  n333("Private HTTPS Exporting")
-  n334["Explicit Endpoint Trust"]
-  n335["Child Secret File References"]
-  n336["Transport Outcome"]
-  n337("Exporter Compiling")
-  n338["Committed Exporter Sources"]
-  n339["Pinned Build Toolchain"]
-  n340("Runtime Image Packaging")
-  n341["Production Service Dependencies"]
-  n342["Offline Capable Service Image"]
-  n322 -->|"condition: enabled"| n310
-  n303 -->|"requires (instrument)"| n310
-  n323 -->|"requires (instrument)"| n310
-  n310 -->|"yields"| n324
-  n324 -->|"requires (instrument)"| n325
-  n325 -->|"yields"| n326
-  n326 -->|"requires (instrument)"| n327
-  n328 -->|"requires (instrument)"| n327
-  n327 -->|"yields"| n329
-  n329 -->|"requires (instrument)"| n330
-  n331 -->|"requires (instrument)"| n330
-  n330 -->|"yields"| n332
-  n332 -->|"requires (instrument)"| n333
-  n334 -->|"requires (instrument)"| n333
-  n335 -->|"requires (instrument)"| n333
-  n333 -->|"yields"| n336
-  n338 -->|"requires (instrument)"| n337
-  n339 -->|"requires (instrument)"| n337
-  n337 -->|"yields"| n323
-  n323 -->|"requires (instrument)"| n340
-  n341 -->|"requires (instrument)"| n340
-  n340 -->|"yields"| n342
+  n321("Fixture Artifact Exporting")
+  n322["Committed Runtime Context"]
+  n323["CI Run Identity"]
+  n324["Runtime Image"]
+  n325["Exported Fixture Image"]
+  n326("Fixture Image Qualifying")
+  n327["Fixture Qualification Receipts"]
+  n328["Closed Fixture Manifest"]
+  n329("Fixture Artifact Verifying")
+  n330["Authenticated GitHub Artifact Evidence"]
+  n331["Independently Pinned Build Identity"]
+  n332["Verified Fixture Candidate"]
+  n333["Private Verification Receipt"]
+  n322 -->|"requires (instrument)"| n321
+  n323 -->|"requires (instrument)"| n321
+  n324 -->|"requires (instrument)"| n321
+  n321 -->|"yields"| n325
+  n321 -->|"invokes"| n326
+  n325 -->|"requires (instrument)"| n326
+  n326 -->|"yields"| n327
+  n321 -->|"yields"| n328
+  n330 -->|"requires (instrument)"| n329
+  n331 -->|"requires (instrument)"| n329
+  n325 -->|"requires (instrument)"| n329
+  n328 -->|"requires (instrument)"| n329
+  n329 -->|"yields"| n332
+  n329 -->|"yields"| n333
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
 
 ```text
-Exporter Process Admitting occurs if Explicit Exporter Configuration is enabled. [src: apps/service/src/telemetry-export-config.ts]
-Exporter Process Admitting requires Projected Fixture Observations. [src: apps/service/src/telemetry-export-process.ts]
-Exporter Process Admitting requires Compiled Exporter Entry Points. [src: apps/service/scripts/build-telemetry.mjs]
-Exporter Process Admitting yields Bounded IPC Batches. [src: apps/service/src/telemetry-export-process.ts]
-Exporter Thread Assembling requires Bounded IPC Batches. [src: apps/service/src/telemetry-export-child.ts]
-Exporter Thread Assembling yields Completed Metadata Segments. [src: apps/service/src/telemetry-langfuse.ts]
-Wire Span Projecting requires Completed Metadata Segments. [src: apps/service/src/telemetry-langfuse.ts]
-Wire Span Projecting requires Pinned Langfuse SDK. [src: apps/service/package.json]
-Wire Span Projecting yields Closed OTLP Spans. [src: apps/service/src/telemetry-wire.ts]
-OTLP Serializing requires Closed OTLP Spans. [src: apps/service/src/telemetry-transport.ts]
-OTLP Serializing requires Official OTLP JSON Serializer. [src: apps/service/src/telemetry-transport.ts]
-OTLP Serializing yields Bounded OTLP Request. [src: apps/service/src/telemetry-transport.ts]
-Private HTTPS Exporting requires Bounded OTLP Request. [src: apps/service/src/telemetry-transport.ts]
-Private HTTPS Exporting requires Explicit Endpoint Trust. [src: apps/service/src/telemetry-export-config.ts]
-Private HTTPS Exporting requires Child Secret File References. [src: apps/service/src/telemetry-langfuse.ts]
-Private HTTPS Exporting yields Transport Outcome. [src: apps/service/src/telemetry-transport.ts]
-Exporter Compiling requires Committed Exporter Sources. [src: apps/service/runtime/prepare-context.ts]
-Exporter Compiling requires Pinned Build Toolchain. [src: apps/service/package.json]
-Exporter Compiling yields Compiled Exporter Entry Points. [src: apps/service/scripts/build-telemetry.mjs]
-Runtime Image Packaging requires Compiled Exporter Entry Points. [src: apps/service/runtime/Dockerfile]
-Runtime Image Packaging requires Production Service Dependencies. [src: apps/service/package.json]
-Runtime Image Packaging yields Offline Capable Service Image. [src: apps/service/runtime/Dockerfile]
+Fixture Artifact Exporting requires Committed Runtime Context. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting requires CI Run Identity. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting requires Runtime Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting yields Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting invokes Fixture Image Qualifying. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying yields Fixture Qualification Receipts. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting yields Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Authenticated GitHub Artifact Evidence. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Independently Pinned Build Identity. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying yields Verified Fixture Candidate. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
 ```
