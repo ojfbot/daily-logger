@@ -44,10 +44,44 @@ async function waitFor<T>(read: () => Promise<T | false>, timeout = 20000): Prom
 async function worker(fault?: string, extra: NodeJS.ProcessEnv = {}) {
   const child = spawn(process.execPath, args(['work'], fault), { cwd: REPO_ROOT, env: { ...env, DELIVERY_TEST_FAULT: fault, ...extra }, stdio: ['pipe', 'pipe', 'pipe'] })
   children.add(child)
-  let stdout = '', stderr = ''
-  child.stdout.on('data', value => { stdout += value }); child.stderr.on('data', value => { stderr += value })
-  await waitFor(async () => { assert.equal(child.exitCode, null, stderr); return stdout.includes('"worker":"ready"') ? true : false })
-  return child
+  let stdout = '', stderr = '', ready = false
+  let spawnError: Error | undefined
+  child.on('error', error => { spawnError = error })
+  child.stdout.on('data', value => {
+    stdout = (stdout + value).slice(-16_384)
+    try {
+      const message: unknown = JSON.parse(stdout)
+      ready = typeof message === 'object' && message !== null && !Array.isArray(message)
+        && 'worker' in message && message.worker === 'ready'
+        && 'queue' in message && message.queue === QUEUE
+        && 'concurrency' in message && message.concurrency === 1
+    } catch { /* Wait for the remaining chunks of the complete readiness JSON. */ }
+  })
+  child.stderr.on('data', value => { stderr = (stderr + value).slice(-4096) })
+  const diagnostics = () => `exitCode=${child.exitCode}, signalCode=${child.signalCode}, spawnError=${spawnError?.message ?? 'none'}\nstdout (tail): ${stdout.slice(-4096)}\nstderr (tail): ${stderr}`
+  try {
+    await waitFor(async () => {
+      // A crash-injection worker can exit just after emitting readiness. Keep
+      // that complete message so the caller can inspect its intentional exit.
+      if (ready) return true
+      assert.equal(spawnError, undefined)
+      assert.equal(child.exitCode, null)
+      assert.equal(child.signalCode, null)
+      return false
+    }, 20_000)
+    return child
+  } catch (error) {
+    if (child.pid && child.exitCode === null && child.signalCode === null) {
+      await new Promise<void>(resolve => {
+        const cleanup = () => { clearTimeout(deadline); child.removeListener('exit', cleanup); resolve() }
+        const deadline = setTimeout(cleanup, 2000)
+        child.once('exit', cleanup)
+        child.kill('SIGKILL')
+      })
+    }
+    children.delete(child)
+    throw new Error(`Worker startup failed within 20 seconds; ${diagnostics()}`, { cause: error })
+  }
 }
 async function stop(child: ChildProcessWithoutNullStreams) {
   if (child.exitCode !== null || child.signalCode !== null) { children.delete(child); return }
@@ -111,6 +145,32 @@ test('explicit installation pins both ledgers and queue settings; runtime cannot
   await assert.rejects(migrateDelivery(pool, connectionString), /separately reviewed migration/)
   assert.equal((await pool.query('SELECT version FROM dailylogger_delivery.version')).rows[0].version, BOSS_SCHEMA_VERSION + 1)
   await pool.query('UPDATE dailylogger_delivery.version SET version=$1', [BOSS_SCHEMA_VERSION])
+})
+
+test('a nonempty vendor schema without its version ledger cannot be reinstalled', async () => {
+  const damagedName = `dailylogger_damaged_${randomUUID().replaceAll('-', '')}`
+  const damagedUrl = new URL(adminUrl); damagedUrl.pathname = `/${damagedName}`
+  const damagedConnection = damagedUrl.toString()
+  const damagedPool = new pg.Pool({ connectionString: damagedConnection, connectionTimeoutMillis: 5000 })
+  let damagedCreated = false
+  try {
+    await admin.query(`CREATE DATABASE "${damagedName}"`); damagedCreated = true
+    await migrateDelivery(damagedPool, damagedConnection)
+    await damagedPool.query('DROP TABLE dailylogger_delivery.version')
+    const objectsSql = `SELECT c.relname,c.oid::text FROM pg_catalog.pg_class c
+      JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+      WHERE n.nspname='dailylogger_delivery' ORDER BY c.relname`
+    const objects = (await damagedPool.query(objectsSql)).rows
+    assert.ok(objects.some(object => object.relname === 'job'), 'Actual vendor tables survive ledger loss')
+    const receipt = (await damagedPool.query('SELECT * FROM dailylogger_service.delivery_installation')).rows
+    await assert.rejects(migrateDelivery(damagedPool, damagedConnection), /objects have no version ledger; refusing installation/)
+    assert.equal((await damagedPool.query("SELECT to_regclass('dailylogger_delivery.version') AS ledger")).rows[0].ledger, null)
+    assert.deepEqual((await damagedPool.query(objectsSql)).rows, objects, 'Rejected migration must not recreate or replace vendor objects')
+    assert.deepEqual((await damagedPool.query('SELECT * FROM dailylogger_service.delivery_installation')).rows, receipt)
+  } finally {
+    await damagedPool.end()
+    if (damagedCreated) await admin.query(`DROP DATABASE "${damagedName}" WITH (FORCE)`)
+  }
 })
 
 test('caller transaction rollback leaves no admitted run, command or job; operational admission errors are not sticky', async () => {
