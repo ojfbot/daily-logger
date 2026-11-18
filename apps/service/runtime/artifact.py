@@ -27,6 +27,7 @@ SOURCE_FILES = ('pnpm-lock.yaml', 'apps/service/runtime/Dockerfile',
                 'apps/service/runtime/compose.yaml', 'apps/service/runtime/prepare-ingress.ts', WORKFLOW)
 MAX_ARCHIVE = 2 * 1024 ** 3
 MAX_MANIFEST = 128 * 1024
+DOWNLOAD_TIMEOUT_SECONDS = 600
 SHA = re.compile(r'[0-9a-f]{40}\Z')
 HASH = re.compile(r'[0-9a-f]{64}\Z')
 
@@ -210,7 +211,7 @@ class Github:
             f'repos/{REPOSITORY}/actions/artifacts/{artifact_id}/zip'],
             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         try:
-            deadline = time.monotonic() + 180
+            deadline = time.monotonic() + DOWNLOAD_TIMEOUT_SECONDS
             remaining = maximum
             with selectors.DefaultSelector() as selector:
                 selector.register(process.stdout, selectors.EVENT_READ)
