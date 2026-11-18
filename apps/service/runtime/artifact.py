@@ -332,7 +332,8 @@ def preflight_tar(stream):
         headers += 1
         require(headers <= 20000, 'Too many tar headers')
         kind = header[156:157]
-        require(kind not in (b'L', b'K', b'S'), 'GNU longname/link/sparse framing is unsupported')
+        require(kind in (b'0', b'5', b'x', b'g'), 'Unsupported outer tar record type')
+        require(kind != b'5' or size == 0, 'Directory tar records must have no body')
         if kind in (b'x', b'g'):
             extensions += size
             require(size <= 64 * 1024 and extensions <= 1024 * 1024, 'Tar extension metadata exceeds budget')
@@ -405,6 +406,26 @@ def inspect_image_archive(stream):
             require(exact(json_bytes(read('oci-layout', MAX_MANIFEST)), {'imageLayoutVersion': '1.0.0'}), 'Unsupported OCI layout')
             verified = {}
             runtime_manifests = {}
+            manifest_platforms = {}
+            indexes = ('application/vnd.oci.image.index.v1+json', 'application/vnd.docker.distribution.manifest.list.v2+json')
+            manifests = ('application/vnd.oci.image.manifest.v1+json', 'application/vnd.docker.distribution.manifest.v2+json')
+            def reference_policy(item, media, runtime_members):
+                annotations = item.get('annotations', {})
+                require(type(annotations) is dict, 'Invalid descriptor annotations')
+                marker = annotations.get('vnd.docker.reference.type')
+                declared = item.get('platform')
+                if media in manifests:
+                    platform = manifest_platforms[item['digest']]
+                    require(declared is None or (type(declared) is dict
+                            and (declared.get('os'), declared.get('architecture')) == platform), 'Descriptor platform disagrees with config')
+                    require(marker == 'attestation-manifest' if platform == ('unknown', 'unknown') else marker is None,
+                            'Attestation metadata disagrees with manifest content')
+                else:
+                    require(marker is None, 'Attestations must reference a manifest')
+                    if declared is not None:
+                        require(media in indexes and type(declared) is dict
+                                and {runtime_manifests[member]['platform'] for member in runtime_members}
+                                == {(declared.get('os'), declared.get('architecture'))}, 'Index reference platform disagrees with content')
             def descriptor(item, depth=0):
                 require(type(item) is dict and depth < 12, 'Invalid image descriptor graph')
                 identity = item.get('digest')
@@ -417,6 +438,7 @@ def inspect_image_archive(stream):
                 if identity in verified:
                     previous_media, configs, runtime_members = verified[identity]
                     require(previous_media == media, 'Conflicting descriptor media type')
+                    reference_policy(item, media, runtime_members)
                     return configs, runtime_members
                 content_hash = hashlib.sha256()
                 with archive.extractfile(members[name]) as stream:
@@ -425,7 +447,7 @@ def inspect_image_archive(stream):
                 require('sha256:' + content_hash.hexdigest() == identity, 'Descriptor content digest mismatch')
                 configs = set()
                 runtime_members = set()
-                if media in ('application/vnd.oci.image.index.v1+json', 'application/vnd.docker.distribution.manifest.list.v2+json'):
+                if media in indexes:
                     node = json_bytes(read(name, MAX_MANIFEST))
                     require(node.get('schemaVersion') == 2 and type(node.get('manifests')) is list
                             and 0 < len(node['manifests']) < 100, 'Unsupported image index')
@@ -438,7 +460,7 @@ def inspect_image_archive(stream):
                                     if runtime_manifests[member]['platform'] == ('linux', 'amd64')]
                         require(len(eligible) == 1 and eligible[0]['config'] == config_id, 'Ambiguous runtime platform selection')
                         engine_kinds[identity] = 'index-sha256'
-                elif media in ('application/vnd.oci.image.manifest.v1+json', 'application/vnd.docker.distribution.manifest.v2+json'):
+                elif media in manifests:
                     node = json_bytes(read(name, MAX_MANIFEST))
                     require(node.get('schemaVersion') == 2 and type(node.get('config')) is dict
                             and type(node.get('layers')) is list and len(node['layers']) < 200, 'Unsupported image manifest')
@@ -449,13 +471,8 @@ def inspect_image_archive(stream):
                     config_name = 'blobs/sha256/' + node['config']['digest'][7:]
                     config_value = json_bytes(read(config_name, 4 * 1024 * 1024))
                     platform = (config_value.get('os'), config_value.get('architecture'))
-                    declared = item.get('platform')
-                    require(declared is None or (type(declared) is dict
-                            and (declared.get('os'), declared.get('architecture')) == platform), 'Descriptor platform disagrees with config')
-                    if platform == ('unknown', 'unknown'):
-                        require(item.get('annotations', {}).get('vnd.docker.reference.type') == 'attestation-manifest',
-                                'Unknown-platform manifest must be a separate attestation')
-                    else:
+                    manifest_platforms[identity] = platform
+                    if platform != ('unknown', 'unknown'):
                         require(all(type(part) is str and part for part in platform), 'Missing runnable platform')
                         runtime_members.add(identity)
                         runtime_manifests[identity] = {'platform': platform, 'config': node['config']['digest']}
@@ -465,6 +482,7 @@ def inspect_image_archive(stream):
                             require(layer_diff('blobs/sha256/' + child['digest'][7:]) == diff_id,
                                     'Docker and OCI layer content disagree')
                         engine_kinds[identity] = 'manifest-sha256'
+                reference_policy(item, media, runtime_members)
                 verified[identity] = (media, configs, runtime_members)
                 return configs, runtime_members
             root = json_bytes(read('index.json', MAX_MANIFEST))
