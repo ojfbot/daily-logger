@@ -2,6 +2,11 @@
 
 ## Deviations
 
+- 2026-11-18. The reviewed private mount paths were assumed to exist, but independent host-permission review found Compose could create missing bind sources. Disabled host-path creation for both proxy mounts and added actual missing-source startup failures that assert no host directory was created.
+
+- 2026-11-18. Artifact output exclusion initially used Git's worktree-root probe, but independent review reproduced writes beneath `.git` and a `GIT_DIR` override. Strip Git overrides, reject metadata/ancestor markers, and use the repository-directory probe so bare repositories also stay excluded.
+- 2026-11-18. Download size was initially checked after the CLI finished writing, but a bounded fake response proved that could exceed its budget. Stream through a deadline and authenticated-size cap, terminating the owned downloader before writing excess bytes.
+
 - 2026-11-18. The installed OPM renderer was assumed to match the checked-in view, but it collapsed existing compound requirements and changed unrelated rendering. Preserved the prior generated view while obtaining compatible rendering through the existing reviewer.
 
 - 2026-11-18. The published-socket test client reused the runtime image without its writable temporary mount, so tsx could not initialize its private cache. Added the same bounded tmpfs used by the other disposable clients while keeping its root filesystem read-only.
