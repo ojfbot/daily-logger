@@ -2,14 +2,14 @@ import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { once } from 'node:events'
 import { randomUUID } from 'node:crypto'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, test } from 'node:test'
 import { digest, REPO_ROOT } from '../src/fixture.js'
 import { readPostgresFixture } from '../src/postgres-fixture.js'
-import { RESERVATION_FILE, reserveDestination, validateDestination } from '../src/postgres-destination.js'
-import { initializeRun } from '../src/storage.js'
+import { RESERVATION_FILE, canonicalDestination, reserveDestination, validateDestination } from '../src/postgres-destination.js'
+import { checkedRunDir, initializeRun } from '../src/storage.js'
 
 const root = mkdtempSync(join(tmpdir(), 'dailylogger-destination-'))
 after(() => rmSync(root, { recursive: true, force: true }))
@@ -75,6 +75,20 @@ test('ancestor reservations reject nested destinations before creating directori
   assert.equal(existsSync(nested), false)
   writeFileSync(join(reserved.runDir, RESERVATION_FILE), markerBytes)
   validateDestination(reserved)
+})
+
+test('absent destination leaves use the native physical spelling of existing parents', t => {
+  const physical = join(root, 'PhysicalParent')
+  const alias = join(root, 'physicalparent')
+  mkdirSync(join(physical, 'artifacts'), { recursive: true })
+  const insensitive = existsSync(alias)
+  t.diagnostic(`Absent-leaf physical parent filesystem case-insensitive: ${insensitive}`)
+  if (process.env.DAILYLOGGER_REQUIRE_CASE_INSENSITIVE === '1') assert.equal(insensitive, true)
+  const candidate = join(insensitive ? alias : physical, 'artifacts/nested-alias')
+  const expected = join(realpathSync.native(physical), 'artifacts/nested-alias')
+  assert.equal(checkedRunDir(candidate), expected)
+  assert.equal(canonicalDestination(candidate), expected)
+  assert.equal(existsSync(candidate), false, 'Canonicalization must never create the absent destination')
 })
 
 test('foreign contents, partial/lost markers and changed inode fail closed', () => {

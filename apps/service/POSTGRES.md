@@ -60,7 +60,10 @@ missing or changed ownership markers fail closed. Concurrent requests either
 link once or read the complete winner; there is no unbounded marker-write wait.
 
 Before any directory or marker is created, admission checks ancestor reservation
-markers and canonical database directory bindings in both directions. An artifact
+markers and canonical database directory bindings in both directions. Existing
+parents and bound directories use the same native physical-path resolver, including
+when the proposed leaf is absent and an ancestor's ownership marker is missing.
+An artifact
 subdirectory cannot become another run, including through a physical case alias;
 an existing child run also prevents admission of its ancestor. Ancestor markers
 protect reservations without committed database rows, while database bindings

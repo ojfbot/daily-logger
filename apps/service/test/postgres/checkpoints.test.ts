@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { spawn, spawnSync, type SpawnSyncReturns } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { once } from 'node:events'
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, before, test } from 'node:test'
@@ -72,6 +72,13 @@ function resumeArgs(started: { runId: string; approvalDigest: string }) { return
 function nodes(directory: string): string[] {
   return readFileSync(join(directory, 'attempts.jsonl'), 'utf8').trim().split('\n').map(line => JSON.parse(line).node)
 }
+function treeBytes(directory: string): unknown[] {
+  return readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name)).map(entry => {
+    assert.equal(entry.isSymbolicLink(), false)
+    return [entry.name, entry.isDirectory() ? treeBytes(join(directory, entry.name)) : readFileSync(join(directory, entry.name))]
+  })
+}
+
 async function requireBlockedBy(blocker: number, contender: number): Promise<void> {
   const deadline = Date.now() + 4000
   while (Date.now() < deadline) {
@@ -319,6 +326,34 @@ test('nested admissions cannot mutate completed artifacts or bypass a missing an
     assert.equal(existsSync(nested), false, 'Canonical DB binding protects a marker-damaged ancestor')
   } finally { writeFileSync(markerPath, marker, { flag: 'wx', mode: 0o600 }) }
   assert.equal(success(command('status', forRun(started.runId))).status, 'complete')
+})
+
+test('completed artifact case aliases stay protected when the owner marker is missing and the new leaf is absent', async t => {
+  const started = start('CompletedParent')
+  const completed = success(command('resume', resumeArgs(started)))
+  const alias = join(sandbox, 'completedparent')
+  const insensitive = existsSync(alias)
+  t.diagnostic(`Completed artifact alias qualification filesystem case-insensitive: ${insensitive}`)
+  if (process.env.DAILYLOGGER_REQUIRE_CASE_INSENSITIVE === '1') assert.equal(insensitive, true)
+  const candidate = join(insensitive ? alias : started.runDir, 'artifacts/nested-alias')
+  const artifactDirectory = join(started.runDir, 'artifacts')
+  const before = treeBytes(artifactDirectory)
+  const ownerMarkerPath = join(started.runDir, RESERVATION_FILE)
+  const ownerMarker = readFileSync(ownerMarkerPath)
+  rmSync(ownerMarkerPath)
+  try {
+    assert.equal(existsSync(candidate), false)
+    await assert.rejects(admitRun(db, 'completed-parent-nested-alias', candidate), /overlaps an existing run directory/)
+    assert.equal(existsSync(candidate), false, 'Rejected nested alias must create no directory or marker')
+    assert.equal(existsSync(join(candidate, RESERVATION_FILE)), false)
+    assert.equal((await db.query('SELECT 1 FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['completed-parent-nested-alias'])).rows.length, 0)
+    assert.deepEqual(treeBytes(artifactDirectory), before, 'Every artifact entry and byte must remain unchanged')
+  } finally { writeFileSync(ownerMarkerPath, ownerMarker, { flag: 'wx', mode: 0o600 }) }
+  const observed = success(command('status', forRun(started.runId)))
+  assert.equal(observed.status, 'complete')
+  assert.equal(observed.checkpointId, completed.checkpointId)
+  assert.deepEqual(treeBytes(artifactDirectory), before)
+  assertOutput(started.runDir, started.runId)
 })
 
 test('missing destinations hold new admissions without guessing absent case aliases; intact existing runs remain usable', async t => {
