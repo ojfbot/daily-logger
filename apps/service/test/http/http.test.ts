@@ -201,6 +201,16 @@ test('real OAuth exchange binds state, PKCE and immutable owner identity to a re
   assert.equal(me.text.includes('fixture-token'), false)
 })
 
+test('router failures return closed no-store errors without reflecting raw paths', async () => {
+  const canary = 'private-path-canary'
+  for (const path of [`/v1/runs/${canary}%ZZ`, `/v1/runs/${canary}${'x'.repeat(200)}`]) {
+    const response = await call(path, { headers: { Host: 'foreign.test' } })
+    assert.equal(response.status, 400)
+    assert.deepEqual(JSON.parse(response.text), { schemaVersion: 1, error: 'invalid_request' })
+    assert.equal(response.text.includes(canary), false)
+  }
+})
+
 test('Origin, session CSRF and strict payload checks run before admission or idempotency replay', async () => {
   const rejected = mutation('csrf-rejected')
   assert.equal((await call('/v1/fixture/runs', { ...rejected, headers: { ...rejected.headers, Origin: 'https://foreign.test' } })).status, 403)
