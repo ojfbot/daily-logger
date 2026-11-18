@@ -158,7 +158,7 @@ try {
   try { await waitFor(() => request(clients.allowed).status === 401) }
   catch (error) {
     const states = Object.fromEntries(['api', 'proxy'].map(service => {
-      const info = inspect(container(service))
+      const info = inspect(`${project}-${service}-1`)
       return [service, { status: info.State.Status, exitCode: info.State.ExitCode,
         addresses: Object.values(info.NetworkSettings.Networks).map(network => network.IPAddress) }]
     }))
