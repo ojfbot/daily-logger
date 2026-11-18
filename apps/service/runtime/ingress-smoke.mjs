@@ -155,7 +155,23 @@ try {
     } finally { environment[key] = original }
   }
   compose(['up', '-d', 'api', 'worker', 'proxy'])
-  await waitFor(() => request(clients.allowed).status === 401)
+  try { await waitFor(() => request(clients.allowed).status === 401) }
+  catch (error) {
+    const states = Object.fromEntries(['api', 'proxy'].map(service => {
+      const info = inspect(container(service))
+      return [service, { status: info.State.Status, exitCode: info.State.ExitCode,
+        addresses: Object.values(info.NetworkSettings.Networks).map(network => network.IPAddress) }]
+    }))
+    const dns = readJson(node(clients.allowed, "import{lookup}from'node:dns/promises';console.log(JSON.stringify(await lookup('proxy',{all:true}).catch(error=>({code:error.code}))))"))
+    const messages = compose(['logs', '--no-color', 'proxy', 'api']).stdout.split('\n').flatMap(line => {
+      try {
+        const record = JSON.parse(line.slice(line.indexOf('{')))
+        return typeof record.msg === 'string' ? [{ level: record.level, message: record.msg.slice(0, 300), error: String(record.error ?? '').slice(0, 300) }] : []
+      } catch { return [] }
+    })
+    console.log(JSON.stringify({ startupDiagnostic: { states, dns, messages } }))
+    throw error
+  }
   const published = docker(['run', '--rm', '-i', '--network', 'host', '--read-only',
     '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,mode=1777,size=16m',
     '-v', `${join(root, 'issuer/root.crt')}:/trust/root.crt:ro`, image, '--input-type=module'], { input: `
