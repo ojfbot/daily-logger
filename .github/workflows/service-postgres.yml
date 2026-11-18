@@ -1,0 +1,58 @@
+name: Service PostgreSQL checkpoint proof
+
+on:
+  pull_request:
+    branches: [main, codex/dailylogger-service-m1]
+    paths:
+      - apps/service/**
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - .github/workflows/service-postgres.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-checkpoints:
+    name: S03a PostgreSQL recovery (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['24.11.1', '24']
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: dailylogger_test
+          POSTGRES_PASSWORD: local-ci-fixture-only
+          POSTGRES_DB: dailylogger_test_admin
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dailylogger_test -d dailylogger_test_admin"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DAILYLOGGER_TEST_DATABASE_URL: postgresql://dailylogger_test:local-ci-fixture-only@127.0.0.1:5432/dailylogger_test_admin
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm type-check:service
+      - run: pnpm test:service
+      - name: Real PostgreSQL subprocess crash and concurrency tests
+        run: pnpm test:service:postgres
