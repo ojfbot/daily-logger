@@ -7,7 +7,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, before, test } from 'node:test'
 import pg from 'pg'
-import { ACTIONS_PATH, ARTICLE_PATH, CANDIDATE_IDS, REPO_ROOT, readFixture } from '../../src/fixture.js'
+import { ACTIONS_PATH, ARTICLE_PATH, CANDIDATE_IDS, REPO_ROOT, digest, json, readFixture } from '../../src/fixture.js'
+import { readPostgresFixture, POSTGRES_WORKFLOW_VERSION } from '../../src/postgres-fixture.js'
+import { admitRun } from '../../src/postgres-runner.js'
+import { checkedRunDir } from '../../src/storage.js'
 
 // Deliberately fail, rather than skip-green, when the explicit PG suite lacks a DB.
 const configured = process.env.DAILYLOGGER_TEST_DATABASE_URL
@@ -150,6 +153,98 @@ test('duplicate start is stable, conflicting reuse rejects, and identical inputs
   assert.equal(a.status, 'complete')
   assert.equal(a.checkpointId, b.checkpointId)
   assert.deepEqual(nodes(directory), ['collect_fixture', 'draft_fixture', 'review_fixture', 'write_shadow_artifacts'])
+})
+
+test('admission resolves a forced concurrent directory conflict; old targeted arbitration fails the positive control', { timeout: 30_000 }, async () => {
+  // This suite owns a newly created database. Recreate the request-key index
+  // after the directory index to force the contender to reach the directory
+  // conflict before reserving its final request key. Constraint names and
+  // definitions are unchanged; restore the original index order afterward.
+  await db.query(`ALTER TABLE dailylogger_service.fixture_runs
+    DROP CONSTRAINT fixture_runs_request_key_key,
+    ADD CONSTRAINT fixture_runs_request_key_key UNIQUE (request_key)`)
+  try {
+    for (const targeted of [true, false]) {
+      const requestKey = targeted ? 'forced-targeted-control' : 'forced-all-constraints'
+      const directory = checkedRunDir(join(sandbox, requestKey))
+      const winnerRunId = randomUUID()
+      const winnerFixture = readPostgresFixture(winnerRunId)
+      const requestDigest = digest(json({ runDir: directory, source: winnerFixture.manifest.source, workflowVersion: POSTGRES_WORKFLOW_VERSION }))
+      const winner = await db.connect()
+      const contender = new pg.Pool({ connectionString: testUrl.toString(), max: 1, connectionTimeoutMillis: 5000 })
+      let pending: Promise<{ ok: true; value: Awaited<ReturnType<typeof admitRun>> | null } | { ok: false; error: unknown }> | undefined
+      try {
+        await winner.query("SET statement_timeout = '8s'")
+        await contender.query("SET statement_timeout = '8s'")
+        const winnerPid = (await winner.query('SELECT pg_backend_pid() AS pid')).rows[0].pid
+        const contenderPid = (await contender.query('SELECT pg_backend_pid() AS pid')).rows[0].pid
+        await winner.query('BEGIN')
+        // Reserve the directory in an uncommitted row; finalize its key only
+        // after the contender has passed its request-key conflict precheck.
+        await winner.query(`INSERT INTO dailylogger_service.fixture_runs
+          (run_id,request_key,request_digest,run_dir,manifest_digest,manifest_text,workflow_version)
+          VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [winnerRunId, `${requestKey}-provisional`, requestDigest, directory, winnerFixture.manifestDigest, winnerFixture.manifestBytes, POSTGRES_WORKFLOW_VERSION])
+        const contenderRunId = randomUUID()
+        const contenderFixture = readPostgresFixture(contenderRunId)
+        const operation = targeted
+          // Positive control: the exact former target allows the other unique
+          // index to raise 23505 even though both requests ultimately match.
+          ? contender.query(`INSERT INTO dailylogger_service.fixture_runs
+              (run_id,request_key,request_digest,run_dir,manifest_digest,manifest_text,workflow_version)
+              VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (request_key) DO NOTHING`,
+            [contenderRunId, requestKey, requestDigest, directory, contenderFixture.manifestDigest, contenderFixture.manifestBytes, POSTGRES_WORKFLOW_VERSION]).then(() => null)
+          : admitRun(contender, requestKey, directory)
+        pending = operation.then(value => ({ ok: true as const, value }), error => ({ ok: false as const, error }))
+        let blocked = false
+        const deadline = Date.now() + 4000
+        while (Date.now() < deadline) {
+          const observation = await db.query('SELECT $1::integer = ANY(pg_blocking_pids($2::integer)) AS blocked', [winnerPid, contenderPid])
+          if (observation.rows[0].blocked) { blocked = true; break }
+          await new Promise(resolve => setTimeout(resolve, 20))
+        }
+        assert.equal(blocked, true, 'Contender must be observed waiting for the held winner transaction')
+        await winner.query('UPDATE dailylogger_service.fixture_runs SET request_key=$2 WHERE run_id=$1', [winnerRunId, requestKey])
+        await winner.query('COMMIT')
+        const outcome = await pending
+        if (targeted) {
+          assert.equal(outcome.ok, false, 'Positive control must expose the former unique-index race')
+          if (outcome.ok) assert.fail('Former targeted admission unexpectedly succeeded')
+          assert.equal((outcome.error as { code?: string }).code, '23505')
+          assert.equal((outcome.error as { constraint?: string }).constraint, 'fixture_runs_run_dir_key')
+        } else {
+          if (!outcome.ok) throw outcome.error
+          assert.ok(outcome.value)
+          assert.equal(outcome.value.run_id, winnerRunId)
+          assert.equal(outcome.value.request_digest, requestDigest)
+          assert.equal(outcome.value.manifest_digest, winnerFixture.manifestDigest)
+          assert.equal(outcome.value.run_dir, directory)
+        }
+        const persisted = await db.query('SELECT run_id FROM dailylogger_service.fixture_runs WHERE request_key=$1 OR run_dir=$2', [requestKey, directory])
+        assert.deepEqual(persisted.rows, [{ run_id: winnerRunId }])
+        assert.equal(existsSync(directory), false, 'Admission alone must not initialize or execute a graph')
+      } finally {
+        // Releasing the transaction unblocks a contender even when an assertion
+        // fails. Its server-side timeout bounds settlement before pool cleanup.
+        await winner.query('ROLLBACK').catch(() => {})
+        await winner.query('RESET statement_timeout').catch(() => {})
+        winner.release()
+        await pending
+        await contender.end()
+      }
+    }
+  } finally {
+    await db.query(`ALTER TABLE dailylogger_service.fixture_runs
+      DROP CONSTRAINT fixture_runs_run_dir_key,
+      ADD CONSTRAINT fixture_runs_run_dir_key UNIQUE (run_dir)`)
+    const constraints = await db.query(`SELECT conname, pg_get_constraintdef(oid) AS definition
+      FROM pg_constraint WHERE conrelid='dailylogger_service.fixture_runs'::regclass
+      AND conname IN ('fixture_runs_request_key_key','fixture_runs_run_dir_key') ORDER BY conname`)
+    assert.deepEqual(constraints.rows, [
+      { conname: 'fixture_runs_request_key_key', definition: 'UNIQUE (request_key)' },
+      { conname: 'fixture_runs_run_dir_key', definition: 'UNIQUE (run_dir)' },
+    ])
+  }
 })
 
 test('a durable admission survives process exit before input initialization and retry reuses its UUID', async () => {

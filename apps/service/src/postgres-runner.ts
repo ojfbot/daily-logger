@@ -23,16 +23,20 @@ export async function admitRun(pool: pg.Pool, requestKey: string, directory: str
   const runId = randomUUID()
   const fixture = readPostgresFixture(runId)
   const requestDigest = digest(json({ runDir, source: fixture.manifest.source, workflowVersion: POSTGRES_WORKFLOW_VERSION }))
-  try {
-    await pool.query(`INSERT INTO dailylogger_service.fixture_runs
-      (run_id, request_key, request_digest, run_dir, manifest_digest, manifest_text, workflow_version)
-      VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (request_key) DO NOTHING`,
-    [runId, requestKey, requestDigest, runDir, fixture.manifestDigest, fixture.manifestBytes, POSTGRES_WORKFLOW_VERSION])
-  } catch (error) {
-    if ((error as { code?: string }).code === '23505') throw new Error('Run directory is already bound to another request key')
-    throw error
+  // Both request_key and run_dir are unique. Targeting only request_key can
+  // still raise a run_dir violation when equivalent admissions race. Let all
+  // unique constraints arbitrate, then resolve the committed immutable binding
+  // in a fresh READ COMMITTED statement (not the INSERT's earlier snapshot).
+  await pool.query(`INSERT INTO dailylogger_service.fixture_runs
+    (run_id, request_key, request_digest, run_dir, manifest_digest, manifest_text, workflow_version)
+    VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING`,
+  [runId, requestKey, requestDigest, runDir, fixture.manifestDigest, fixture.manifestBytes, POSTGRES_WORKFLOW_VERSION])
+  const bindings = await pool.query<RunRow>('SELECT * FROM dailylogger_service.fixture_runs WHERE request_key=$1 OR run_dir=$2', [requestKey, runDir])
+  const row = bindings.rows.find(candidate => candidate.request_key === requestKey)
+  if (!row) {
+    requireCondition(!bindings.rows.some(candidate => candidate.run_dir === runDir), 'Run directory is already bound to another request key')
+    throw new Error('Admission conflict has no matching committed request; refusing to execute')
   }
-  const row = await readRun(pool, 'request_key', requestKey)
   requireCondition(row.request_digest === requestDigest && row.run_dir === runDir, 'Request key already exists with different immutable inputs or run directory')
   return row
 }
