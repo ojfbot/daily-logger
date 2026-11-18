@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-11-18. HTTP teardown assumed ending pools made a forced database drop safe, but the minimum-Node CI run passed every case and then emitted an asynchronous connection-termination error. Teardown now requires PostgreSQL to report no remaining database sessions before an unforced drop, so a connection leak fails verification instead of being forcibly hidden.
+
 - The initial weekday rewrite assumed a leading weekday named the reporting day, but independent review found it can be content such as “Friday Night”; rewrite only an explicit separated label and preserve other weekday prose under a workday prefix.
 
 - The title rollout assumed browser fixtures asserted article behavior independently of the displayed heading, but the grouped-time fixture expected its raw title; update that exact heading assertion to the new reporting-workday display and rerun all browser journeys before merge.
