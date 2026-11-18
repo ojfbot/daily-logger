@@ -6,6 +6,9 @@ import { runLocalContextExperiment } from './local-context.js'
 
 const reportIndex = process.argv.indexOf('--report')
 const report = reportIndex >= 0 ? process.argv[reportIndex + 1] : undefined
+const caseIndex = process.argv.indexOf('--case')
+const caseVersion = caseIndex >= 0 ? process.argv[caseIndex + 1] : 'v2'
+if (caseVersion !== 'v1' && caseVersion !== 'v2') throw new Error('--case must be v1 or v2')
 if (reportIndex >= 0 && !report) throw new Error('--report requires a new output file')
 if (report && existsSync(resolve(report))) throw new Error('Report already exists; refusing to spend a model run before an overwrite failure')
 const gates: { command: string; exitCode: number }[] = []
@@ -13,6 +16,7 @@ let result: Awaited<ReturnType<typeof runLocalContextExperiment>> | { pass: fals
 try { result = await runLocalContextExperiment({
   optIn: process.env.DAILYLOGGER_LOCAL_MODEL_EVAL === '1',
   model: process.env.DAILYLOGGER_LOCAL_MODEL ?? '',
+  caseVersion,
   verifyOffline() {
     for (const script of ['type-check', 'test']) {
       const args = ['--filter', '@ojfbot/daily-logger-service', script]

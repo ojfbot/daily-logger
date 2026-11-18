@@ -48,12 +48,15 @@ const Inventory = z.object({ models: z.array(z.object({ name: z.string(), digest
 const Reply = z.object({ model: z.string(), done: z.literal(true), done_reason: z.literal('stop'), message: z.object({ content: z.string() }), prompt_eval_count: z.number().int().nonnegative(), eval_count: z.number().int().nonnegative() })
 
 export async function runLocalContextExperiment(options: {
-  optIn: boolean; model: string; verifyOffline: () => void | Promise<void>; fetcher?: typeof fetch
+  optIn: boolean; model: string; verifyOffline: () => void | Promise<void>; fetcher?: typeof fetch; caseVersion?: 'v1' | 'v2'
 }) {
   if (!options.optIn) throw new Error('Set DAILYLOGGER_LOCAL_MODEL_EVAL=1 to opt in; no model request made')
   if (!options.model || /cloud/i.test(options.model)) throw new Error('An explicitly selected installed local model is required')
   await options.verifyOffline() // All gates precede even the model inventory request.
-  const fixture = contextCase(), fetcher = options.fetcher ?? fetch
+  const permission = options.caseVersion === 'v2' ? await import('./permission-case.js') : undefined
+  const fixture = permission ? permission.permissionCase() : contextCase(), fetcher = options.fetcher ?? fetch
+  const answerSchema = permission ? permission.PermissionAnswer : Answer
+  const requiredFields = permission ? 5 : 4
   const request = async (path: string, init?: RequestInit) => {
     const response = await fetcher(`${LOCAL_OLLAMA}${path}`, { ...init, redirect: 'error', signal: AbortSignal.timeout(120_000) })
     if (!response.ok) throw new Error(`Local Ollama request failed: ${response.status}`)
@@ -69,18 +72,19 @@ export async function runLocalContextExperiment(options: {
     const started = performance.now()
     const reply = Reply.parse(await request('/api/chat', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
-        model: model.name, stream: false, think: false, keep_alive: 0, format: z.toJSONSchema(Answer), options: LOCAL_OPTIONS,
+        model: model.name, stream: false, think: false, keep_alive: 0, format: z.toJSONSchema(answerSchema), options: LOCAL_OPTIONS,
         messages: [{ role: 'system', content: fixture.prompt }, { role: 'user', content: fixture[mode] }],
       }),
     }))
     let answer: unknown
     try { answer = JSON.parse(reply.message.content) } catch { answer = null }
-    results.push({ mode, answer, score: scoreAnswer(answer, mode), latencyMs: Math.round(performance.now() - started), promptTokens: reply.prompt_eval_count, outputTokens: reply.eval_count })
+    const score = permission ? permission.scorePermissionAnswer(answer, mode === 'baseline' ? permission.UNKNOWN_PERMISSION : permission.SHADOW_APPROVAL) : scoreAnswer(answer, mode)
+    results.push({ mode, answer, score, latencyMs: Math.round(performance.now() - started), promptTokens: reply.prompt_eval_count, outputTokens: reply.eval_count })
   }
   return {
     schemaVersion: 1, case: fixture, model: { name: model.name, digest: model.digest }, options: LOCAL_OPTIONS,
     endpoint: LOCAL_OLLAMA, offlineGates: 'passed' as const, calls: results.length, results,
-    pass: results.every(result => result.score.correct === 4),
+    pass: results.every(result => result.score.correct === requiredFields),
     limits: ['One paired local context-reading case, not evidence of general agent improvement', 'No retrieval, tool use, training, publication or hosted telemetry exercised', 'Baseline abstention is correct; grounded-answer gain is measured separately'],
   }
 }

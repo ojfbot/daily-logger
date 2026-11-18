@@ -42,7 +42,7 @@ pulls no model, performs no retry and selects no fallback.
 
 ```sh
 DAILYLOGGER_LOCAL_MODEL_EVAL=1 DAILYLOGGER_LOCAL_MODEL=qwen2.5:7b \
-  pnpm --filter @ojfbot/daily-logger-service eval:local --report /absolute/new/report.json
+  pnpm --filter @ojfbot/daily-logger-service eval:local --case v2 --report /absolute/new/report.json
 ```
 
 Use a new report path. The runner writes the scorecard with exclusive creation,
@@ -55,7 +55,8 @@ traces, or data to LangSmith. Local inference still consumes machine resources.
 
 One experiment is **two calls**, one per context mode, with the same model,
 instruction, JSON schema, seed and temperature. Each is capped at 192 generated
-tokens and a 2,048-token context, with a 120-second request deadline. The baseline
+tokens and a 2,048-token context, with a 120-second request deadline. In the original
+v1 case, the baseline
 lacks the snapshot and approval contract and must return four nulls. The candidate
 receives that evidence and must report Draft, three candidates, zero admissions,
 and no publication permission. A deterministic evaluator requires **4/4 fields**
@@ -69,6 +70,46 @@ quality, general agent reliability, or a population-level improvement. Frozen
 holdouts and a second task family are still needed before promotion. Keep S05b's
 live ingestion/readback, exporter, PostgreSQL, privacy, overhead and retention
 qualification gates separate.
+
+## v2: approval-specific authorization and unknown outside permission
+
+The CLI defaults to v2; use `--case v1` only to explicitly reproduce the historical
+case. V1's case, scorer, 4/4 criterion, failed output and scorecard remain intact.
+V2 is `fixture-context-authorization-v2`, with a new schema and a frozen **5/5**
+criterion for each of the two answers. The three article/candidate/admission facts
+remain the same. The ambiguous `publicationAllowed` field is replaced by:
+
+| Evidence | `thisApprovalAuthorizesPublication` | `publicationPermissionOutsideThisApproval` |
+|---|---|---|
+| Approval absent, scope incomplete or contradictory; no other evidence | null | null |
+| Explicit denial or exhaustive shadow-only scope; no other evidence | false | null |
+| Explicit `publish-article` grant; no other evidence | true | null |
+| Shadow-only approval and separate explicit publication grant | false | true |
+| Publication approval and separate explicit denial | true | false |
+
+The second field answers only what separate sources establish; these fields do
+not adjudicate overall permission or authorize an application action. Completion
+and an unscoped approved flag establish neither field. An explicit denial is a
+known fact, while missing evidence is unknown. The prompt defines these meanings
+and the complete operation name. The candidate packet carries an exhaustive
+`authorizedOperations` list containing only `write-isolated-shadow-artifacts`;
+there is no separate publication authority evidence.
+
+The paired model run contains only the missing-evidence baseline and that
+shadow-only candidate. Baseline must return five nulls. Candidate must return
+Draft, three candidates, zero admissions, false for this approval and null for
+outside permission. Correct grounded-answer coverage is 0 then 4; the fifth
+correct answer is explicit recognition that outside permission is unknown.
+All other permission scenarios are offline verifier controls, not additional
+model calls. Twelve independently labeled controls exercise the test-only
+reference semantics and the code scorer, including malformed/missing lists,
+positive grants, negative scope, contradictory scope and independent authority.
+Mutations prove false, true and null cannot silently substitute for each other.
+
+The v1 scorecard's SHA-256 remains
+`e7c4f78660654f38cfc5c6ac758547d17b5df5632fd083726d62ac30717b3d4b`.
+An offline check binds that identity and rejects its old answer shape under v2.
+No production permission evaluator, enforcement rule or export schema changes.
 
 ## Evidence
 
@@ -85,8 +126,8 @@ re-scores this recorded result, keeping the failed field visible.
 The failure is conservative abstention, not an unsafe grant. The broad field name
 `publicationAllowed` may conflate global permission with what this approval
 authorizes; the case intended the latter. Root cause remains unresolved between
-question ambiguity and model interpretation. A follow-up case should explicitly
-ask whether the supplied approval authorizes publication, declare the evidence
-scope, and retain both explicit-denial and unknown controls. Freeze that new case
-as a new version before another model run. No weights work is justified by this
+question ambiguity and model interpretation. The separately versioned v2 case
+above explicitly asks what the supplied approval authorizes, declares the
+evidence scope, and retains explicit-denial and unknown controls. Its score is
+separate evidence; it does not revise v1's result. No weights work is justified by this
 single result. None of the hosted S05b gates is satisfied by these local tests.
