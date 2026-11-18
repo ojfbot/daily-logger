@@ -12,7 +12,7 @@ remain unchanged. Durable command admissions and results are separate records.
 
 ## Run
 
-Use Node24 and pnpm9.15.4, with `DAILYLOGGER_DATABASE_URL` privately configured
+Use Node 24 and pnpm 9.15.4, with `DAILYLOGGER_DATABASE_URL` privately configured
 for a dedicated development database. Never pass credentials in CLI arguments.
 
 ```sh
@@ -61,9 +61,9 @@ fail before key lookup. Command and run reads show current progress separately.
 
 ## Transaction and recovery contract
 
-Migration002 preserves001 and adds commands, resume targets, cancellation
+Migration 002 preserves 001 and adds commands, resume targets, cancellation
 records, a delivery installation receipt, queue ownership and attempt links.
-`service:delivery migrate` explicitly installs application migration002 and
+`service:delivery migrate` explicitly installs application migration 002 and
 pg-boss **12.38.2**, schema **46**, in `dailylogger_delivery`, then creates
 `fixture-command-v1`. Existing unknown vendor versions are rejected before
 installation, and actual vendor version/configuration are checked afterward.
@@ -75,7 +75,7 @@ lock. Caller-owned-client run admission, the command/response record, pg-boss
 `send({db})`, cancellation request when applicable, and job linkage commit or
 roll back together. A null job ID aborts admission. The pg-boss queue is installed
 and committed before this transaction; graph execution never occurs inside it.
-Admission lock wait is limited to5seconds and each SQL statement to10seconds.
+Admission lock wait is limited to 5 seconds and each SQL statement to 10 seconds.
 
 The filesystem identity reservation from S03a can outlive a DB rollback. It is
 not an admitted run, command or job, and it contains no generated article.
@@ -83,7 +83,7 @@ The deterministic internal run key binds actor/key and request digest so an exac
 retry can reuse that reservation. A rollback still leaves no accepted database
 run/command/job. Missing or changed reservations remain integrity failures.
 
-Each worker uses batch size1, local concurrency1 and the existing per-run
+Each worker uses batch size 1, local concurrency 1 and the existing per-run
 advisory lock. Command validation, target consumption, operation attempt and
 continuation share that one lock owner. The original direct CLI rejects
 modification of queue-owned runs; read-only status remains available. Duplicate
@@ -106,14 +106,14 @@ Future resumes/recoveries reject after cancellation. Shutdown is not cancellatio
 
 | Bound | Value |
 | --- | --- |
-| Run lock wait | 10seconds |
-| Worker segment hard process deadline | 45seconds |
-| Active job expiration | 60seconds |
-| Retries | 2, exponential delay from1second, cap30seconds |
-| Pending/retry retention | 1day |
-| Completed delivery retention | 7days |
-| Graceful shutdown drain | 5seconds |
-| Outer shutdown process deadline | 8seconds |
+| Run lock wait | 10 seconds |
+| Worker segment hard process deadline | 45 seconds |
+| Active job expiration | 60 seconds |
+| Retries | 2, exponential delay from 1 second, cap 30 seconds |
+| Pending/retry retention | 1 day |
+| Completed delivery retention | 7 days |
+| Graceful shutdown drain | 5 seconds |
+| Outer shutdown process deadline | 8 seconds |
 
 Claim abort, lock connection loss or the segment deadline stops the CLI process;
 the worker cannot keep running after merely ignoring a cancellation signal.
@@ -142,7 +142,7 @@ checkpoint before acknowledgement, cancellation before and during a segment,
 bounded retry exhaustion, missing delivery, and graceful/forced shutdown. Crash
 and pause injection exist only in test preloads. Existing PostgreSQL tests also
 exercise lock-connection loss. The dedicated CI workflow runs the real database
-suites on Node24.11.1 and current24. Passing TypeScript or SQLite tests is not
+suites on Node 24.11.1 and current Node 24. Passing TypeScript or SQLite tests is not
 PostgreSQL delivery qualification.
 
 API/lifecycle choices follow the pinned release and official
