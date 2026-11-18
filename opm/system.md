@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `bc03d4a6e6971881eec3686076b0c6331043e6b090446950ad52f7f875a7af7b`.
+> Source SHA-256: `048e9aafbf360ad2f997f54e8b3b1878e4c8cfe281f12455cd6ead39df42707b`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1639,7 +1639,7 @@ Offline Observation Exporting yields Telemetry Diagnostics. [src: apps/service/s
 Offline Observation Exporting invokes Exporter Process Admitting. [src: apps/service/src/telemetry-export-process.ts]
 ```
 
-## SD2.5 — Opt-in metadata exporter process
+## SD2.6 — Opt-in metadata exporter process
 
 **Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
 rounded nodes identify processes. Labeled solid arrows distinguish human participation,
@@ -1648,10 +1648,10 @@ Use the source facts below for properties, state detail, and decomposition membe
 
 ```mermaid
 ---
-title: "SD2.5 — Opt-in metadata exporter process"
+title: "SD2.6 — Opt-in metadata exporter process"
 ---
 flowchart TD
-  accTitle: SD2.5 — Opt-in metadata exporter process
+  accTitle: SD2.6 — Opt-in metadata exporter process
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
   n311["Explicit Exporter Configuration"]
   n310("Exporter Process Admitting")

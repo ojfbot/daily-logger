@@ -577,7 +577,7 @@ Offline Observation Exporting invokes Exporter Process Admitting. [src: apps/ser
 # Attempt identity is attached only after its durable insert. Node observations end at a human interrupt; no span remains open for the owner's decision. Missing observations after process death do not establish success or queue acknowledgment. [src: apps/service/src/postgres-runner.ts] [src: apps/service/src/workflow.ts] [src: apps/service/src/delivery-worker.ts]
 # Direct in-process test sinks cannot be synchronously preempted. The opt-in process adapter below is implemented separately; default CLIs remain no-op. [src: apps/service/src/telemetry.ts] [src: apps/service/src/telemetry-export-process.ts]
 
-## SD2.5 — Opt-in metadata exporter process
+## SD2.6 — Opt-in metadata exporter process
 
 Exporter Process Admitting occurs if Explicit Exporter Configuration is enabled. [src: apps/service/src/telemetry-export-config.ts]
 Exporter Process Admitting requires Projected Fixture Observations. [src: apps/service/src/telemetry-export-process.ts]
