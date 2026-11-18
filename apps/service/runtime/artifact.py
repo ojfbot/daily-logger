@@ -184,6 +184,9 @@ def run(args, *, binary=False, env=None, timeout=60, allow_failure=False, input_
         locations = sorted(set(re.findall(r'apps/service/(?:runtime|test)/[A-Za-z0-9_./-]+\.(?:mjs|ts|py):\d+(?::\d+)?',
                                            result.stderr.decode(errors='replace'))))
         print('Fixture proof source locations: ' + ', '.join(locations[:12]), file=sys.stderr)
+        for line in result.stdout.decode(errors='replace').splitlines():
+            if line.startswith('{"startupDiagnostic":'):
+                print(line, file=sys.stderr)
     require(allow_failure or result.returncode == 0, 'Fixture command failed: ' + ' '.join(args[:2]))
     if output_file is not None:
         return None
