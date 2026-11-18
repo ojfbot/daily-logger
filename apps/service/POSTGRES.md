@@ -37,7 +37,11 @@ receipt. Identical source bytes can therefore have independent runs.
 `start` requires a request key and a directory outside every Git checkout. A
 duplicate key with the same canonical directory, source and workflow version
 returns the same run without rerunning checkpointed work; conflicting reuse
-fails. Another run requires another key and directory. Admission commits before
+fails. Admission arbitrates every unique constraint, then reads and validates
+the committed request binding; a concurrent duplicate directory conflict is not
+mistaken for a different request. This follows PostgreSQL's
+[untargeted `ON CONFLICT DO NOTHING` semantics](https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT).
+Another run requires another key and directory. Admission commits before
 filesystem/graph work, so repeating the original start recovers an admission
 that exited before input initialization. Partial input initialization fails
 closed; it is not silently repaired or overwritten.
@@ -117,6 +121,9 @@ crash flag.
 a temporary `postgres:18` service on Node 24.11.1 and current Node 24. It prints the actual server
 version and checks explicit/repeated migrations, separate-process restart,
 concurrent duplicate starts/resumes, conflicting reuse, distinct run UUIDs,
+and a forced directory-conflict interleaving with the former targeted SQL as a
+positive control (it must raise the old unique-index error while the fixed path
+returns the immutable winner). It also covers
 admission before initialization, stale inputs and application identity,
 initial-input checkpoint recovery before pending writes, later missing-state
 rejection, successful-step reuse, both sides of the final-checkpoint crash boundary, and
