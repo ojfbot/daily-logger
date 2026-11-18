@@ -3,6 +3,7 @@ import argparse
 import base64
 from datetime import datetime, timezone
 import hashlib
+import gzip
 import json
 import os
 from pathlib import Path
@@ -150,12 +151,15 @@ def parse_manifest(value):
     require(ci['workflowPath'] == WORKFLOW and ci['jobKey'] == JOB, 'Wrong workflow policy')
     for key in ('workflowId', 'runId', 'attempt', 'jobId'):
         positive(ci[key], 10 ** 16)
-    image = object_keys(value['image'], ('identityKind', 'configId', 'platform', 'uid', 'gid'))
+    image = object_keys(value['image'], ('identityKind', 'configId', 'engineId', 'engineIdentityKind', 'platform', 'uid', 'gid'))
     require(image['identityKind'] == 'docker-config-sha256' and image['platform'] == 'linux/amd64'
             and type(image['uid']) is int and type(image['gid']) is int
             and image['uid'] == image['gid'] == 1000, 'Unsupported image identity')
     require(type(image['configId']) is str and image['configId'].startswith('sha256:'), 'Invalid image ID')
     digest(image['configId'][7:])
+    require(type(image['engineId']) is str and image['engineId'].startswith('sha256:')
+            and image['engineIdentityKind'] in ('config-sha256', 'manifest-sha256', 'index-sha256'), 'Invalid engine identity')
+    digest(image['engineId'][7:])
     archive = object_keys(value['archive'], ('name', 'size', 'sha256'))
     require(archive['name'] == 'runtime-image.tar', 'Unexpected archive name')
     positive(archive['size']); digest(archive['sha256'])
@@ -299,7 +303,7 @@ def safe_name(name):
         and all(part not in ('', '.', '..') for part in name.rstrip('/').split('/'))
 
 
-def inspect_image_archive(path, image):
+def inspect_image_archive(path):
     with tarfile.open(path, 'r:') as archive:
         members = {}
         for member in archive:
@@ -316,20 +320,90 @@ def inspect_image_archive(path, image):
         require(type(record) is dict and type(record.get('Layers')) is list and 0 < len(record['Layers']) < 200,
                 'Unsupported Docker-save manifest')
         config = read(record.get('Config'), 4 * 1024 * 1024)
-        require('sha256:' + hashlib.sha256(config).hexdigest() == image['configId'], 'Image config digest mismatch')
+        config_id = 'sha256:' + hashlib.sha256(config).hexdigest()
         value = json_bytes(config)
         require(value.get('os') == 'linux' and value.get('architecture') == 'amd64'
                 and value.get('config', {}).get('User') == '1000:1000', 'Wrong image platform/user')
         layers = value.get('rootfs', {}).get('diff_ids')
         require(type(layers) is list and len(layers) == len(record['Layers']), 'Incomplete layer closure')
-        for name, identity in zip(record['Layers'], layers):
-            require(safe_name(name) and name in members and members[name].isfile()
-                    and type(identity) is str and re.fullmatch(r'sha256:[0-9a-f]{64}', identity) is not None, 'Missing image layer')
+        decompressed = 0
+        layer_hashes = {}
+        def layer_diff(name):
+            nonlocal decompressed
+            require(safe_name(name) and name in members and members[name].isfile(), 'Missing image layer')
+            if name in layer_hashes:
+                return layer_hashes[name]
             result = hashlib.sha256()
-            with archive.extractfile(members[name]) as stream:
+            with archive.extractfile(members[name]) as raw:
+                magic = raw.read(2)
+                raw.seek(0)
+                stream = gzip.GzipFile(fileobj=raw) if magic == b'\x1f\x8b' else raw
                 for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                    decompressed += len(chunk)
+                    require(decompressed <= MAX_ARCHIVE * 2, 'Layer expansion exceeds verification budget')
                     result.update(chunk)
-            require('sha256:' + result.hexdigest() == identity, 'Image layer digest mismatch')
+                if stream is not raw:
+                    stream.close()
+            layer_hashes[name] = 'sha256:' + result.hexdigest()
+            return layer_hashes[name]
+        for name, identity in zip(record['Layers'], layers):
+            require(type(identity) is str and re.fullmatch(r'sha256:[0-9a-f]{64}', identity) is not None
+                    and layer_diff(name) == identity, 'Image layer digest mismatch')
+        engine_kinds = {config_id: 'config-sha256'}
+        if 'index.json' in members:
+            require(exact(json_bytes(read('oci-layout', MAX_MANIFEST)), {'imageLayoutVersion': '1.0.0'}), 'Unsupported OCI layout')
+            verified = {}
+            def descriptor(item, depth=0):
+                require(type(item) is dict and depth < 12, 'Invalid image descriptor graph')
+                identity = item.get('digest')
+                require(type(identity) is str and re.fullmatch(r'sha256:[0-9a-f]{64}', identity) is not None,
+                        'Unsupported image descriptor digest')
+                name = 'blobs/sha256/' + identity[7:]
+                require(name in members and members[name].isfile() and type(item.get('size')) is int
+                        and members[name].size == item['size'], 'Incomplete descriptor closure')
+                media = item.get('mediaType')
+                if identity in verified:
+                    previous_media, configs = verified[identity]
+                    require(previous_media == media, 'Conflicting descriptor media type')
+                    return configs
+                content_hash = hashlib.sha256()
+                with archive.extractfile(members[name]) as stream:
+                    for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                        content_hash.update(chunk)
+                require('sha256:' + content_hash.hexdigest() == identity, 'Descriptor content digest mismatch')
+                configs = set()
+                if media in ('application/vnd.oci.image.index.v1+json', 'application/vnd.docker.distribution.manifest.list.v2+json'):
+                    node = json_bytes(read(name, MAX_MANIFEST))
+                    require(node.get('schemaVersion') == 2 and type(node.get('manifests')) is list
+                            and 0 < len(node['manifests']) < 100, 'Unsupported image index')
+                    for child in node['manifests']:
+                        configs.update(descriptor(child, depth + 1))
+                    if config_id in configs:
+                        engine_kinds[identity] = 'index-sha256'
+                elif media in ('application/vnd.oci.image.manifest.v1+json', 'application/vnd.docker.distribution.manifest.v2+json'):
+                    node = json_bytes(read(name, MAX_MANIFEST))
+                    require(node.get('schemaVersion') == 2 and type(node.get('config')) is dict
+                            and type(node.get('layers')) is list and len(node['layers']) < 200, 'Unsupported image manifest')
+                    descriptor(node['config'], depth + 1)
+                    for child in node['layers']:
+                        descriptor(child, depth + 1)
+                    configs.add(node['config']['digest'])
+                    if config_id in configs:
+                        require(len(node['layers']) == len(layers), 'Docker and OCI layer counts disagree')
+                        for child, diff_id in zip(node['layers'], layers):
+                            require(layer_diff('blobs/sha256/' + child['digest'][7:]) == diff_id,
+                                    'Docker and OCI layer content disagree')
+                        engine_kinds[identity] = 'manifest-sha256'
+                verified[identity] = (media, configs)
+                return configs
+            root = json_bytes(read('index.json', MAX_MANIFEST))
+            require(root.get('schemaVersion') == 2 and type(root.get('manifests')) is list
+                    and 0 < len(root['manifests']) < 100, 'Unsupported OCI archive index')
+            reachable = set()
+            for item in root['manifests']:
+                reachable.update(descriptor(item))
+            require(config_id in reachable, 'Config is absent from OCI descriptor graph')
+        return {'configId': config_id, 'engineKinds': engine_kinds}
 
 
 def private_output(path):
@@ -381,12 +455,16 @@ def verify_fixture(expected, output, github=None):
             image_archive = output / 'runtime-image.tar'
             require(image_archive.stat().st_size == manifest['archive']['size']
                     and sha256(image_archive) == manifest['archive']['sha256'], 'Inner archive bytes mismatch')
-            inspect_image_archive(image_archive, manifest['image'])
+            identities = inspect_image_archive(image_archive)
+            require(identities['configId'] == manifest['image']['configId']
+                    and identities['engineKinds'].get(manifest['image']['engineId']) == manifest['image']['engineIdentityKind'],
+                    'Image config/engine identity mismatch')
             (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
         receipt = {'schemaVersion': 1, 'purpose': 'verified-disposable-fixture-candidate', 'artifactId': expected['artifactId'],
             'outerSha256': metadata['digest'][7:], 'runId': expected['runId'], 'attempt': expected['attempt'],
             'jobId': evidence['job']['id'], 'source': expected['source'], 'archiveSha256': manifest['archive']['sha256'],
-            'imageConfigId': manifest['image']['configId'], 'productionEligible': False, 'imageLoaded': False}
+            'imageConfigId': manifest['image']['configId'], 'imageEngineId': manifest['image']['engineId'],
+            'engineIdentityKind': manifest['image']['engineIdentityKind'], 'productionEligible': False, 'imageLoaded': False}
         (output / 'verification.json').write_text(json.dumps(receipt, indent=2) + '\n')
         outer.unlink()
         return receipt
@@ -439,7 +517,6 @@ def export_fixture(image, context, output, github=None):
     require(inspected.get('RepoTags') == [OWNED_IMAGE] and inspected.get('Config', {}).get('User') == '1000:1000'
             and inspected.get('Os') == 'linux' and inspected.get('Architecture') == 'amd64', 'Unexpected owned image')
     image_id = inspected['Id']; require(re.fullmatch(r'sha256:[0-9a-f]{64}', image_id) is not None, 'Invalid config ID')
-    image_identity = {'identityKind': 'docker-config-sha256', 'configId': image_id, 'platform': 'linux/amd64', 'uid': 1000, 'gid': 1000}
     require(json_bytes(run(['docker', 'run', '--rm', '--network', 'none', '--read-only', '--entrypoint', 'cat',
                 image_id, '/app/runtime-context.json'])) == receipt, 'Image context mismatch')
     private_output(output)
@@ -447,7 +524,10 @@ def export_fixture(image, context, output, github=None):
         archive = output / 'runtime-image.tar'
         run(['docker', 'image', 'save', '--output', str(archive), image], timeout=180)
         require(0 < archive.stat().st_size <= MAX_ARCHIVE, 'Oversized image export')
-        inspect_image_archive(archive, image_identity)
+        identities = inspect_image_archive(archive)
+        require(image_id in identities['engineKinds'], 'Engine identity is absent from saved image graph')
+        image_identity = {'identityKind': 'docker-config-sha256', 'configId': identities['configId'],
+            'engineId': image_id, 'engineIdentityKind': identities['engineKinds'][image_id], 'platform': 'linux/amd64', 'uid': 1000, 'gid': 1000}
         run(['docker', 'image', 'rm', image])
         absent = run(['docker', 'image', 'inspect', image_id], allow_failure=True)
         require(absent.returncode != 0, 'Owned image record still exists; no force removal allowed')
@@ -487,7 +567,8 @@ def export_fixture(image, context, output, github=None):
                 tail = data[-max([len(needle) for needle in needles] + [1]):]
         require(not any(needle in serialized.encode() for needle in needles), 'Credential canary found in manifest')
         (output / 'manifest.json').write_text(serialized)
-        return {'purpose': manifest['purpose'], 'imageConfigId': image_id, 'artifactName': artifact_name(run_id, attempt),
+        return {'purpose': manifest['purpose'], 'imageConfigId': image_identity['configId'], 'imageEngineId': image_id,
+                'engineIdentityKind': image_identity['engineIdentityKind'], 'artifactName': artifact_name(run_id, attempt),
                 'builtRevision': revision, 'productionEligible': False}
     except BaseException:
         shutil.rmtree(output)

@@ -20,9 +20,12 @@ run/attempt/job, Docker config ID, archive bytes, build-context receipt, source-
 digests, pinned PostgreSQL/Caddy images and named qualification receipts.
 
 The actual PR checkout is a synthetic merge, distinct from the PR head. Docker
-config IDs, upstream OCI digests, inner tar hashes and GitHub's outer artifact ZIP
+config IDs, engine index/manifest identities, upstream OCI digests, inner tar hashes and GitHub's outer artifact ZIP
 digest are separate identities. The final outer ID/digest is recorded by the
 receiver; including it inside its own artifact would create a circular dependency.
+The manifest records both config and engine identities. For an OCI archive, every
+referenced index/manifest/config/layer blob is hash-checked and the executing
+engine target must lead to the recorded runtime config. Layer expansion is bounded.
 
 The workflow has one reviewed producer/uploader job. GitHub's artifact metadata
 binds an artifact to a run, rather than independently attesting its numeric job.
