@@ -118,12 +118,16 @@ def parse_counts(value):
 def parse_proofs(value):
     object_keys(value, ('preparation', 'offline', 'entrypoints', 'http', 'ingress', 'exportReload'))
     parse_counts(value['preparation'])
-    offline = object_keys(value['offline'], ('proof', 'node', 'git', 'uid', 'fixtureCommit', 'nativeSqlite'))
+    offline = object_keys(value['offline'], ('proof', 'node', 'git', 'uid', 'fixtureCommit', 'nativeSqlite',
+                                             'compiledExporterChild', 'exporterBatches', 'defaultTelemetry'))
     require(offline['proof'] == 'offline-final-image' and type(offline['node']) is str
             and re.fullmatch(r'v24\.\d+\.\d+', offline['node']) is not None
             and type(offline['git']) is str and len(offline['git']) < 100
             and type(offline['uid']) is int and offline['uid'] == 1000
-            and offline['nativeSqlite'] == 'passed', 'Invalid offline proof')
+            and offline['nativeSqlite'] == 'passed'
+            and offline['compiledExporterChild'] == 'ready-then-closed'
+            and type(offline['exporterBatches']) is int and offline['exporterBatches'] == 0
+            and offline['defaultTelemetry'] == 'disabled', 'Invalid offline proof')
     digest(offline['fixtureCommit'], SHA)
     require(exact(value['entrypoints'], {'proof': 'production-entrypoints-and-cross-container-storage',
             'migration': 'explicit-and-repeatable', 'fixture': 'complete', 'shutdown': 'clean', 'publishedPorts': 0}),

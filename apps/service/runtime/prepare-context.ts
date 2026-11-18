@@ -6,8 +6,9 @@ import { z } from 'zod'
 import { REPO_ROOT, SOURCE_COMMIT, readFixture, reviewFixture } from '../src/fixture.js'
 import { offlineGitEnvironment } from '../src/offline-git.js'
 
+const exporterBuild = 'apps/service/scripts/build-telemetry.mjs'
 const metadata = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'packages/frontend/package.json',
-  'apps/service/package.json', 'apps/service/runtime/Dockerfile', 'docs/agent-service/editorial-api-responses.schema.json']
+  'apps/service/package.json', exporterBuild, 'apps/service/runtime/Dockerfile', 'docs/agent-service/editorial-api-responses.schema.json']
 const environment = { ...offlineGitEnvironment(), GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' }
 const git = (root: string, args: string[], localFetch = false) => execFileSync('git', ['-C', root, ...args], {
   env: { ...environment, GIT_ALLOW_PROTOCOL: localFetch ? 'file' : '' }, maxBuffer: 32 * 1024 * 1024,
@@ -24,7 +25,9 @@ export function prepareRuntimeContext(destination: string, sourceRoot = REPO_ROO
   const revision = z.string().regex(/^[0-9a-f]{40}$/).parse(git(source, ['rev-parse', '--verify', 'HEAD']).toString('utf8').trim())
   const service = z.object({ files: z.array(z.string().regex(/^[a-z][a-z0-9-]*$/)).min(1) }).parse(
     JSON.parse(git(source, ['show', `${revision}:apps/service/package.json`]).toString('utf8')))
-  const allowed = [...metadata, ...service.files.map(path => `apps/service/${path}`)]
+  // dist is a production-deploy asset generated inside the image build. Never
+  // import host output, even if someone force-committed it past .gitignore.
+  const allowed = [...metadata, ...service.files.filter(path => path !== 'dist').map(path => `apps/service/${path}`)]
   if (git(source, ['status', '--porcelain', '--untracked-files=no', '--', ...allowed, 'apps/service/runtime']).length) {
     throw new Error('Commit runtime inputs before preparing their context')
   }
@@ -33,7 +36,7 @@ export function prepareRuntimeContext(destination: string, sourceRoot = REPO_ROO
       const match = /^(100644|100755) blob ([0-9a-f]{40})\t(.+)$/.exec(entry)
       if (!match) throw new Error('Runtime input must be an ordinary versioned file')
       const [, mode, object, path] = match
-      if (path.split('/').some(part => part.startsWith('.') || part === 'node_modules') || !/\.(?:json|yaml|ts|sql)$/.test(path) && !path.endsWith('/Dockerfile')) {
+      if (path.split('/').some(part => part.startsWith('.') || part === 'node_modules') || !/\.(?:json|yaml|ts|sql)$/.test(path) && !path.endsWith('/Dockerfile') && path !== exporterBuild) {
         throw new Error('Unsupported runtime input path')
       }
       return { mode, object, path }

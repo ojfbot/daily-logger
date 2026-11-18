@@ -571,10 +571,11 @@ Projected Fixture Observations consists of Correlation Metadata, Fixed Lifecycle
 Offline Observation Exporting requires Projected Fixture Observations. [src: apps/service/src/telemetry.ts]
 Offline Observation Exporting requires Trusted Nonblocking Test Sinks. [src: apps/service/src/telemetry.ts]
 Offline Observation Exporting yields Telemetry Diagnostics. [src: apps/service/src/telemetry.ts]
+Offline Observation Exporting invokes Exporter Process Admitting. [src: apps/service/src/telemetry-export-process.ts]
 # Observation capture is disabled by default; the optional hooks do not change graph state, approval subjects, canonical records, or artifact bytes. [src: apps/service/src/telemetry.ts] [src: apps/service/src/workflow.ts]
 # Admission observations describe a committed response, including an identical retry; they do not assert that a new admission was created. Caller-owned transaction helpers remain provisional until their caller confirms commit. [src: apps/service/src/delivery-commands.ts] [src: apps/service/src/telemetry.ts]
 # Attempt identity is attached only after its durable insert. Node observations end at a human interrupt; no span remains open for the owner's decision. Missing observations after process death do not establish success or queue acknowledgment. [src: apps/service/src/postgres-runner.ts] [src: apps/service/src/workflow.ts] [src: apps/service/src/delivery-worker.ts]
-# Export queues, batches, payloads, asynchronous waits and unresolved sink calls are bounded. JavaScript cannot preempt a synchronously blocking in-process sink; real SDK transport and Langfuse readback remain separately qualified work. [src: apps/service/src/telemetry.ts]
+# Direct in-process test sinks cannot be synchronously preempted. The opt-in process adapter below is implemented separately; default CLIs remain no-op. [src: apps/service/src/telemetry.ts] [src: apps/service/src/telemetry-export-process.ts]
 
 ## SD2.5 — Private fixture HTTPS ingress
 
@@ -589,6 +590,33 @@ Private HTTPS Forwarding yields Forwarded Fixture HTTP Request. [src: apps/servi
 # The separate proxy namespace preserves the original Host and port, admits immediate socket peers without trusting forwarding headers, and publishes no API/database port. Trusted application peers retain direct API reachability. [src: apps/service/runtime/prepare-ingress.ts] [src: apps/service/runtime/compose.yaml]
 # The proxy reads a read-only parent leaf directory, not a signing key. Certificate issuance, client trust, private DNS and real owner login remain separate live qualification. [src: apps/service/runtime/INGRESS.md]
 
+## SD2.6 — Opt-in metadata exporter process
+
+Exporter Process Admitting occurs if Explicit Exporter Configuration is enabled. [src: apps/service/src/telemetry-export-config.ts]
+Exporter Process Admitting requires Projected Fixture Observations. [src: apps/service/src/telemetry-export-process.ts]
+Exporter Process Admitting requires Compiled Exporter Entry Points. [src: apps/service/scripts/build-telemetry.mjs]
+Exporter Process Admitting yields Bounded IPC Batches. [src: apps/service/src/telemetry-export-process.ts]
+Exporter Thread Assembling requires Bounded IPC Batches. [src: apps/service/src/telemetry-export-child.ts]
+Exporter Thread Assembling yields Completed Metadata Segments. [src: apps/service/src/telemetry-langfuse.ts]
+Wire Span Projecting requires Completed Metadata Segments. [src: apps/service/src/telemetry-langfuse.ts]
+Wire Span Projecting requires Pinned Langfuse SDK. [src: apps/service/package.json]
+Wire Span Projecting yields Closed OTLP Spans. [src: apps/service/src/telemetry-wire.ts]
+OTLP Serializing requires Closed OTLP Spans. [src: apps/service/src/telemetry-transport.ts]
+OTLP Serializing requires Official OTLP JSON Serializer. [src: apps/service/src/telemetry-transport.ts]
+OTLP Serializing yields Bounded OTLP Request. [src: apps/service/src/telemetry-transport.ts]
+Private HTTPS Exporting requires Bounded OTLP Request. [src: apps/service/src/telemetry-transport.ts]
+Private HTTPS Exporting requires Explicit Endpoint Trust. [src: apps/service/src/telemetry-export-config.ts]
+Private HTTPS Exporting requires Child Secret File References. [src: apps/service/src/telemetry-langfuse.ts]
+Private HTTPS Exporting yields Transport Outcome. [src: apps/service/src/telemetry-transport.ts]
+Exporter Compiling requires Committed Exporter Sources. [src: apps/service/runtime/prepare-context.ts]
+Exporter Compiling requires Pinned Build Toolchain. [src: apps/service/package.json]
+Exporter Compiling yields Compiled Exporter Entry Points. [src: apps/service/scripts/build-telemetry.mjs]
+Runtime Image Packaging requires Compiled Exporter Entry Points. [src: apps/service/runtime/Dockerfile]
+Runtime Image Packaging requires Production Service Dependencies. [src: apps/service/package.json]
+Runtime Image Packaging yields Offline Capable Service Image. [src: apps/service/runtime/Dockerfile]
+# This injectable adapter is qualified with disposable local TLS receivers only. Existing CLI/runtime wiring remains no-op; transport success does not prove Langfuse indexing or queue acknowledgement. [src: apps/service/OBSERVABILITY.md]
+# One owned child contains a responsive supervisor and one SDK thread; shutdown, IPC and queue bounds do not constitute total RSS/CPU or arbitrary orphan-supervision guarantees. [src: apps/service/OBSERVABILITY.md]
+
 ## SD2.7 — Disposable fixture image delivery
 
 Fixture Artifact Exporting requires Committed Runtime Context. [src: apps/service/runtime/artifact.py]
@@ -598,11 +626,13 @@ Fixture Artifact Exporting yields Exported Fixture Image. [src: apps/service/run
 Fixture Artifact Exporting invokes Fixture Image Qualifying. [src: apps/service/runtime/artifact.py]
 Fixture Image Qualifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
 Fixture Image Qualifying yields Fixture Qualification Receipts. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying yields Offline Exporter Startup Proof. [src: apps/service/runtime/smoke.mjs]
 Fixture Artifact Exporting yields Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying requires Authenticated GitHub Artifact Evidence. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying requires Independently Pinned Build Identity. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying requires Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Offline Exporter Startup Proof. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying yields Verified Fixture Candidate. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
 # Archive verification stages bytes without loading an image or deploying. Fixture candidates do not establish production eligibility, real owner login or live network qualification. [src: apps/service/runtime/ARTIFACT.md]
