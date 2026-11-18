@@ -166,7 +166,15 @@ test('concurrent commands are rejected and a killed command releases its SQLite 
   const runDir = join(sandbox, 'lock')
   success(command(runDir, 'start'))
   const storage = join(REPO_ROOT, 'apps/service/src/storage.ts')
-  const child = spawn(process.execPath, ['--import', 'tsx', '--input-type=module', '-e', `import { acquireRunLock } from ${JSON.stringify(storage)}; acquireRunLock(${JSON.stringify(runDir)}); console.log('locked'); setInterval(() => {}, 1000)`], { cwd: REPO_ROOT, stdio: ['ignore', 'pipe', 'pipe'] })
+  // Retain the release closure: otherwise the saver can be garbage-collected
+  // and close its database before the parent tests contention on a slower host.
+  const child = spawn(process.execPath, ['--expose-gc', '--import', 'tsx', '--input-type=module', '-e', `
+    import { acquireRunLock } from ${JSON.stringify(storage)};
+    const unlock = acquireRunLock(${JSON.stringify(runDir)});
+    process.on('SIGTERM', () => { unlock(); process.exit(0) });
+    setImmediate(() => { global.gc(); setImmediate(() => { global.gc(); console.log('locked') }) });
+    setInterval(() => {}, 1000);
+  `], { cwd: REPO_ROOT, stdio: ['ignore', 'pipe', 'pipe'] })
   try {
     await once(child.stdout, 'data')
     failure(command(runDir, 'status'), /Run is busy/)
