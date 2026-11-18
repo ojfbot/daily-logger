@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "case": {
+    "id": "fixture-context-authorization-v2",
+    "sourceCommit": "8b6263ad9a798eae20b3573546cf0ae762bff661",
+    "manifestDigest": "d6f7cc2dfea58c2b74c9d00d0e7464faa66a6fdbdea82aa16feb2967c68f509f",
+    "prompt": "Read only the supplied evidence. Report articleStatus, candidateCount, admissions, thisApprovalAuthorizesPublication, and publicationPermissionOutsideThisApproval. Publication means the operation publish-article. For thisApprovalAuthorizesPublication: true means this approval explicitly grants publish-article; false means this approval explicitly denies it or its exhaustive authorizedOperations list excludes it; null means the approval scope is absent, incomplete, or contradictory. publicationPermissionOutsideThisApproval concerns other sources of permission only: use null unless separate authority evidence explicitly establishes it. A limited approval does not establish a global prohibition, and completion or an approved flag alone establishes neither permission. Use null for other facts without evidence. Return exactly the schema JSON object without explanation.",
+    "baseline": "The workflow completed and wrote its isolated output bundle. No source snapshot or approval scope was supplied.",
+    "candidate": "{\"source\":\"pinned-fixture-and-approval-contract\",\"sourceCommit\":\"8b6263ad9a798eae20b3573546cf0ae762bff661\",\"articleStatus\":\"draft\",\"candidateCount\":3,\"admissions\":0,\"approval\":{\"scopeIsExhaustive\":true,\"authorizedOperations\":[\"write-isolated-shadow-artifacts\"]},\"otherPublicationAuthorityEvidence\":null}",
+    "contextDigest": "85341ccf1deac0ae022caf5a48b617f2edecdc3cc024d28d904d3613ffef963e",
+    "expected": {
+      "baseline": {
+        "articleStatus": null,
+        "candidateCount": null,
+        "admissions": null,
+        "thisApprovalAuthorizesPublication": null,
+        "publicationPermissionOutsideThisApproval": null
+      },
+      "candidate": {
+        "articleStatus": "draft",
+        "candidateCount": 3,
+        "admissions": 0,
+        "thisApprovalAuthorizesPublication": false,
+        "publicationPermissionOutsideThisApproval": null
+      }
+    }
+  },
+  "model": {
+    "name": "qwen2.5:7b",
+    "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e"
+  },
+  "options": {
+    "temperature": 0,
+    "seed": 11,
+    "num_predict": 192,
+    "num_ctx": 2048
+  },
+  "endpoint": "http://127.0.0.1:11434",
+  "offlineGates": "passed",
+  "calls": 2,
+  "results": [
+    {
+      "mode": "baseline",
+      "answer": {
+        "articleStatus": null,
+        "candidateCount": null,
+        "admissions": null,
+        "thisApprovalAuthorizesPublication": null,
+        "publicationPermissionOutsideThisApproval": null
+      },
+      "score": {
+        "formatValid": true,
+        "correct": 5,
+        "groundedAnswers": 0,
+        "unsupportedAnswers": 0,
+        "checks": [
+          {
+            "field": "articleStatus",
+            "pass": true
+          },
+          {
+            "field": "candidateCount",
+            "pass": true
+          },
+          {
+            "field": "admissions",
+            "pass": true
+          },
+          {
+            "field": "thisApprovalAuthorizesPublication",
+            "pass": true
+          },
+          {
+            "field": "publicationPermissionOutsideThisApproval",
+            "pass": true
+          }
+        ]
+      },
+      "latencyMs": 4839,
+      "promptTokens": 172,
+      "outputTokens": 44
+    },
+    {
+      "mode": "candidate",
+      "answer": {
+        "articleStatus": "draft",
+        "candidateCount": 3,
+        "admissions": 0,
+        "thisApprovalAuthorizesPublication": false,
+        "publicationPermissionOutsideThisApproval": null
+      },
+      "score": {
+        "formatValid": true,
+        "correct": 5,
+        "groundedAnswers": 4,
+        "unsupportedAnswers": 0,
+        "checks": [
+          {
+            "field": "articleStatus",
+            "pass": true
+          },
+          {
+            "field": "candidateCount",
+            "pass": true
+          },
+          {
+            "field": "admissions",
+            "pass": true
+          },
+          {
+            "field": "thisApprovalAuthorizesPublication",
+            "pass": true
+          },
+          {
+            "field": "publicationPermissionOutsideThisApproval",
+            "pass": true
+          }
+        ]
+      },
+      "latencyMs": 2216,
+      "promptTokens": 247,
+      "outputTokens": 47
+    }
+  ],
+  "pass": true,
+  "limits": [
+    "One paired local context-reading case, not evidence of general agent improvement",
+    "No retrieval, tool use, training, publication or hosted telemetry exercised",
+    "Baseline abstention is correct; grounded-answer gain is measured separately"
+  ],
+  "capturedAt": "2026-11-18T21:47:10.741Z",
+  "harnessCommit": "fdc73db1e4e682e10e4d231d464e5d2c545a54ad",
+  "gates": [
+    {
+      "command": "pnpm --filter @ojfbot/daily-logger-service type-check",
+      "exitCode": 0
+    },
+    {
+      "command": "pnpm --filter @ojfbot/daily-logger-service test",
+      "exitCode": 0
+    }
+  ]
+}

@@ -131,3 +131,24 @@ above explicitly asks what the supplied approval authorizes, declares the
 evidence scope, and retains explicit-denial and unknown controls. Its score is
 separate evidence; it does not revise v1's result. No weights work is justified by this
 single result. None of the hosted S05b gates is satisfied by these local tests.
+
+### v2 paired result
+
+The single [v2 scorecard](local-context-v2-2026-11-18.json) was captured at harness
+revision `fdc73db1e4e682e10e4d231d464e5d2c545a54ad` after type checking and **67/67
+offline tests passed, zero skipped**. The runner repeated both gates before any
+model request. Installed `qwen2.5:7b` had the same model digest and generation
+limits as v1. Exactly two local inference calls ran, with no retries or fallback.
+
+| Mode | Five-field score | This approval authorizes publication | Outside permission | Grounded facts |
+|---|---|---|---|---|
+| Baseline without approval evidence | 5/5 | null | null | 0 |
+| Candidate with exhaustive shadow-only approval | 5/5 | false | null | 4 |
+
+Both answers met the frozen v2 criterion; unsupported answers were zero. Usage
+was 419 prompt tokens and 91 generated tokens, all on the local runtime. Observed
+latencies were 4,839 ms and 2,216 ms; the fixed ordering and model-loading effects
+preclude a latency-improvement claim. No additional inference run was made.
+V1 remains a failed 3/4 case under its original question and rubric. V2 tests a
+clearer, differently scoped question, so these scores are not evidence of a model
+weight improvement or a general reliability rate.
