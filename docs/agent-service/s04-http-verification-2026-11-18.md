@@ -42,7 +42,7 @@ HTTP requests cross a loopback listener with the configured private host.
 | `pnpm test:service` | 18 passed, zero skipped. |
 | `pnpm test:service:postgres` | 26 passed, zero skipped. |
 | `pnpm test:service:delivery` | 17 passed, zero skipped. Natural worker expiration/redelivery and shutdown cases passed. |
-| `pnpm test:service:http` | 13 passed, zero skipped. |
+| `pnpm test:service:http` | 14 passed, zero skipped. |
 | Root unit suite | 1,760 passed and two skipped on the initial run. Its socket peer test failed in the sandbox and passed on an isolated loopback-enabled rerun. |
 | OPM rendering, source anchors, local documentation links, whitespace | Passed. |
 
@@ -53,6 +53,8 @@ response, and a lost response after actual COMMIT. They also cover corrupted
 receipt identities, cancellation links, pre-initialization polling under a held
 run lock, blocked SQL, hard cutoff, disconnect, late checkout, inter-query abort,
 prior CLI records, worker operations, and the normal HTTP executable's shutdown.
+Raw router errors for malformed URL encoding and overlong parameters return the
+closed error schema with `no-store` and suppress the raw-path canary.
 
 The initial cleanup probe showed that socket destruction could leave SQL active.
 The final regression requires a ten-second sleep query to disappear within the
@@ -82,3 +84,15 @@ qualification govern the later cutover under the existing delivery roadmap.
 
 Runtime configuration, routes, and verification commands are in the service
 guide. [Authenticated fixture HTTP](../../apps/service/HTTP.md).
+
+## Real account qualification
+
+The owner requested real GitHub sign-in on the NAS using the established UniFi
+UDM and WireGuard setup. A focused Yojimbo session is recovering the earlier
+configuration and establishing the exact private HTTPS origin. That origin
+determines the private OAuth registration and certificate. The connected owner
+identity is `ojfbot`, numeric GitHub ID `151410806`.
+
+The next active checkpoint is browser-trusted TLS, a real owner login and
+logout, LAN and VPN access, and evidence of the public/private routing boundary.
+Deployment inputs and live configuration evidence belong in the private handoff.
