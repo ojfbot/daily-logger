@@ -35,6 +35,15 @@ async function requireVendorHistory(db: Pick<pg.Pool, 'query'>, allowPrefix: boo
     && (versions.length < 4 || tables.writes), 'Saver migration history references missing tables')
 }
 
+const deliveryMigration = readFileSync(new URL('../migrations/002_delivery_commands.sql', import.meta.url), 'utf8')
+const deliveryMigrationDigest = digest(deliveryMigration)
+
+function validateApplicationMigrations(rows: { version: number; digest: string; checkpointer_version: string | null }[]) {
+  requireCondition(rows.length >= 1 && rows.length <= 2 && rows[0].version === 1 && (rows.length === 1 || rows[1].version === 2), 'Database has unsupported application migrations; refusing downgrade')
+  requireCondition(rows[0].digest === migrationDigest && (rows.length === 1 || rows[1].digest === deliveryMigrationDigest), 'Application migration checksum differs; refusing to continue')
+  requireCondition(!rows[0].checkpointer_version || rows[0].checkpointer_version === POSTGRES_SAVER_VERSION, 'Checkpointer version change requires a reviewed migration')
+}
+
 export function databaseUrl(value: string | undefined): string {
   requireCondition(value, 'DAILYLOGGER_DATABASE_URL is required; no implicit database connection is used')
   let parsed: URL
@@ -58,7 +67,7 @@ export function openCheckpointer(connectionString: string): PostgresSaver {
 }
 
 /** Explicit migration command; runtime commands never call setup(). */
-export async function migrateDatabase(pool: pg.Pool, connectionString: string): Promise<void> {
+export async function migrateDatabase(pool: pg.Pool, connectionString: string, options: { delivery?: boolean } = {}): Promise<void> {
   const client = await pool.connect()
   const checkpointer = openCheckpointer(connectionString)
   let inTransaction = false
@@ -73,15 +82,17 @@ export async function migrateDatabase(pool: pg.Pool, connectionString: string): 
     )`)
     const existing = await client.query<{ version: number; digest: string; checkpointer_version: string | null }>('SELECT version, digest, checkpointer_version FROM dailylogger_service.schema_migrations ORDER BY version')
     if (existing.rows.length) {
-      requireCondition(existing.rows.length === 1 && existing.rows[0].version === 1, 'Database has unsupported application migrations; refusing downgrade')
-      requireCondition(existing.rows[0].digest === migrationDigest, 'Application migration checksum differs; refusing to continue')
-      requireCondition(!existing.rows[0].checkpointer_version || existing.rows[0].checkpointer_version === POSTGRES_SAVER_VERSION, 'Checkpointer version change requires a reviewed migration')
+      validateApplicationMigrations(existing.rows)
     }
     else {
       await client.query(migration)
       await client.query('INSERT INTO dailylogger_service.schema_migrations(version, digest) VALUES (1, $1)', [migrationDigest])
     }
     await requireVendorHistory(client, !existing.rows[0]?.checkpointer_version)
+    if (options.delivery && !existing.rows.some(row => row.version === 2)) {
+      await client.query(deliveryMigration)
+      await client.query('INSERT INTO dailylogger_service.schema_migrations(version, digest) VALUES (2, $1)', [deliveryMigrationDigest])
+    }
     await client.query('COMMIT')
     inTransaction = false
     // Saver migrations own their transactions; they are not inside our app transaction.
@@ -98,14 +109,16 @@ export async function migrateDatabase(pool: pg.Pool, connectionString: string): 
   }
 }
 
-export async function requireMigrated(pool: pg.Pool): Promise<void> {
+export async function requireMigrated(pool: pg.Pool, options: { delivery?: boolean } = {}): Promise<void> {
   const exists = await pool.query<{ application: string | null; checkpoints: string | null }>(
     `SELECT to_regclass('dailylogger_service.schema_migrations')::text AS application,
       to_regclass('dailylogger_checkpoints.checkpoint_migrations')::text AS checkpoints`,
   )
   requireCondition(exists.rows[0].application && exists.rows[0].checkpoints, 'Database is not initialized; run service:postgres migrate explicitly')
   const result = await pool.query<{ version: number; digest: string; checkpointer_version: string }>('SELECT version, digest, checkpointer_version FROM dailylogger_service.schema_migrations ORDER BY version')
-  requireCondition(result.rows.length === 1 && result.rows[0]?.version === 1 && result.rows[0]?.digest === migrationDigest && result.rows[0]?.checkpointer_version === POSTGRES_SAVER_VERSION, 'Database migration/version differs; run the reviewed migration before execution')
+  validateApplicationMigrations(result.rows)
+  requireCondition(!options.delivery || result.rows.length === 2, 'Delivery migration 002 is missing; migrate explicitly')
+  requireCondition(result.rows[0]?.checkpointer_version === POSTGRES_SAVER_VERSION, 'Database migration/version differs; run the reviewed migration before execution')
   await requireVendorHistory(pool, false)
 }
 

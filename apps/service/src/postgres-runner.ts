@@ -11,13 +11,23 @@ import { RESERVATION_FILE, canonicalDestination, requireNoReservedAncestor, init
 import { AdmissionConflictError, requireAdmission } from './admission-conflict.js'
 export { AdmissionConflictError } from './admission-conflict.js'
 
-type Operation = 'start' | 'status' | 'resume' | 'recover'
-interface RunRow {
+export type Operation = 'start' | 'status' | 'resume' | 'recover'
+export interface RunRow {
   run_id: string; request_key: string; request_digest: string; run_dir: string
   manifest_digest: string; manifest_text: string; workflow_version: string
   status: string; checkpoint_id: string | null; receipt_sha256: string | null
+  delivery_owner?: string | null
 }
-type Snapshot = Awaited<ReturnType<ReturnType<typeof createWorkflow>['snapshot']>>
+export type Snapshot = Awaited<ReturnType<ReturnType<typeof createWorkflow>['snapshot']>>
+export interface LockedRunContext {
+  client: pg.PoolClient; row: RunRow; snapshot: Snapshot; runDir: string
+  manifestDigest: string; expectedApproval: string
+}
+export interface DeliveryHooks {
+  commandId: string; jobId: string; retryCount: number
+  plan(context: LockedRunContext): Promise<{ operation: Operation; approval?: string }>
+  settled(context: LockedRunContext): Promise<void>
+}
 
 function admittedFixture(row: RunRow) {
   let parsed: { destinationReservation?: unknown }
@@ -188,10 +198,12 @@ async function reconcile(client: pg.PoolClient, row: RunRow, snapshot: Snapshot)
   row.receipt_sha256 = state.receiptSha256
 }
 
-export async function runOperation(pool: pg.Pool, connectionString: string, operation: Operation, runId: string, approval?: string) {
+export async function runOperation(pool: pg.Pool, connectionString: string, operation: Operation, runId: string, approval?: string, delivery?: DeliveryHooks) {
   runId = canonicalRunId(runId)
   return withRunLock(pool, runId, async (client, assertActive) => {
     const row = await readRun(client, 'run_id', runId)
+    requireCondition(!row.delivery_owner || delivery || operation === 'status', 'Queue-owned runs require durable delivery commands')
+    requireCondition(!delivery || row.delivery_owner === 's03b', 'Delivery command requires a queue-owned run')
     const { fixture, legacy } = admittedFixture(row)
     const runDir = checkedRunDir(row.run_dir)
     const requestDigest = digest(json({ runDir, source: fixture.manifest.source, workflowVersion: POSTGRES_WORKFLOW_VERSION }))
@@ -260,9 +272,16 @@ export async function runOperation(pool: pg.Pool, connectionString: string, oper
       // Acquiring the session lock proves no prior command still owns this run.
       // Its graph may have advanced after its last application-row update.
       await client.query(`UPDATE dailylogger_service.operation_attempts SET state='abandoned', after_checkpoint_id=$2, finished_at=now(), error_code='process-ended-before-settlement' WHERE run_id=$1 AND state='running'`, [runId, projection(snapshot).checkpointId])
+      const context = (): LockedRunContext => ({ client, row, snapshot, runDir, manifestDigest: fixture.manifestDigest, expectedApproval: workflow.expectedApproval })
+      if (delivery) {
+        const plan = await delivery.plan(context())
+        operation = plan.operation
+        approval = plan.approval
+      }
       if (operation !== 'status') {
         attemptId = randomUUID()
-        await client.query(`INSERT INTO dailylogger_service.operation_attempts (attempt_id,run_id,operation,state,before_checkpoint_id) VALUES ($1,$2,$3,'running',$4)`, [attemptId, runId, operation, projection(snapshot).checkpointId])
+        if (delivery) await client.query(`INSERT INTO dailylogger_service.operation_attempts (attempt_id,run_id,operation,state,before_checkpoint_id,command_id,job_id,delivery_retry) VALUES ($1,$2,$3,'running',$4,$5,$6,$7)`, [attemptId, runId, operation, projection(snapshot).checkpointId, delivery.commandId, delivery.jobId, delivery.retryCount])
+        else await client.query(`INSERT INTO dailylogger_service.operation_attempts (attempt_id,run_id,operation,state,before_checkpoint_id) VALUES ($1,$2,$3,'running',$4)`, [attemptId, runId, operation, projection(snapshot).checkpointId])
         const state = projection(snapshot)
         if (operation === 'start') {
           // Duplicate admission is an observation, not an implicit restart/recovery.
@@ -282,6 +301,7 @@ export async function runOperation(pool: pg.Pool, connectionString: string, oper
         await reconcile(client, row, snapshot)
         await client.query(`UPDATE dailylogger_service.operation_attempts SET state='succeeded', after_checkpoint_id=$2, finished_at=now() WHERE attempt_id=$1`, [attemptId, projection(snapshot).checkpointId])
       }
+      if (delivery) await delivery.settled(context())
       const state = projection(snapshot)
       return {
         status: state.status,
