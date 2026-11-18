@@ -20,6 +20,9 @@
     },
     {
       "$ref": "#/definitions/apiError"
+    },
+    {
+      "$ref": "#/definitions/ownerSessionView"
     }
   ],
   "definitions": {
@@ -787,8 +790,36 @@
             "not_found",
             "read_unavailable",
             "read_busy",
-            "integrity_rejected"
+            "integrity_rejected",
+            "operation_unavailable",
+            "authentication_unavailable"
           ]
+        }
+      }
+    },
+    "ownerSessionView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "githubId",
+        "csrfToken",
+        "expiresAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "githubId": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "csrfToken": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        },
+        "expiresAt": {
+          "$ref": "#/definitions/timestamp"
         }
       }
     }
