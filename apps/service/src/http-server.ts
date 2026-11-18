@@ -1,5 +1,6 @@
 import Fastify, { type FastifyRequest, type FastifyReply } from 'fastify'
 import pg from 'pg'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { readFileSync, realpathSync } from 'node:fs'
 import { z } from 'zod'
 import { Ajv } from 'ajv'
@@ -59,7 +60,12 @@ export async function createHttpServer(config: HttpConfig, fetcher: typeof fetch
     finally { await shutdownTelemetry(telemetry) }
     throw error
   }
-  const app = Fastify({ logger: false, trustProxy: false, bodyLimit: 4096 })
+  const rejectRouterRequest = (_path: string, _request: IncomingMessage, response: ServerResponse) => {
+    response.writeHead(400, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+    response.end(JSON.stringify({ schemaVersion: 1, error: 'invalid_request' }))
+  }
+  const app = Fastify({ logger: false, trustProxy: false, bodyLimit: 4096,
+    routerOptions: { onBadUrl: rejectRouterRequest, onMaxParamLength: rejectRouterRequest } })
   app.addHook('onClose', async () => {
     try { await boss.stop(); await Promise.all([pool.end(), readPool.end(), cancellations.end()]) }
     finally { await shutdownTelemetry(telemetry) }
