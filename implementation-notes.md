@@ -610,3 +610,7 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — S05b LangSmith fixture mapping (2026-11-18)
 
 - The new mapper test initially passed `mkdtemp`'s existing directory to `initializeRun`, but the fixture contract admits only a nonexistent run-directory leaf. Use a child `run` directory so the test exercises the existing admission invariant instead of weakening it.
+
+## Deviations — fixture oracles and local evaluation (2026-11-18)
+
+- The real-provider test was expected to use `sdk-trace-base`, but its current release is deprecated and excludes the fixture's OTel API 1.10 in its peer range; used the maintained `sdk-trace` 3.0 provider and regenerated from the original lockfile to avoid retaining the superseded optional SDK dependency.

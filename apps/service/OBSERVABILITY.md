@@ -92,6 +92,10 @@ production isolation.
 
 ## Qualification
 
+The SDK-backed fixture oracle and opt-in local context experiment are documented
+in [fixture evals](../../docs/agent-service/fixture-evals.md). The local model case
+runs only after the offline gates pass and does not export telemetry or content.
+
 ```sh
 pnpm type-check:service
 pnpm test:service
