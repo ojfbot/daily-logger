@@ -65,8 +65,9 @@ Migration 002 preserves 001 and adds commands, resume targets, cancellation
 records, a delivery installation receipt, queue ownership and attempt links.
 `service:delivery migrate` explicitly installs application migration 002 and
 pg-boss **12.38.2**, schema **46**, in `dailylogger_delivery`, then creates
-`fixture-command-v1`. Existing unknown vendor versions are rejected before
-installation, and actual vendor version/configuration are checked afterward.
+`fixture-command-v1`. Existing unknown vendor versions and nonempty vendor
+schemas without their version ledger are rejected before installation. Actual
+vendor version/configuration are checked afterward.
 Runtime has `migrate:false`, `createSchema:false`, and requires both verified
 application migrations and the exact vendor/configuration receipt.
 
@@ -109,6 +110,7 @@ Future resumes/recoveries reject after cancellation. Shutdown is not cancellatio
 | Run lock wait | 10 seconds |
 | Worker segment hard process deadline | 45 seconds |
 | Active job expiration | 60 seconds |
+| Supervisor / expiry monitor cadence | 1 second each |
 | Retries | 2, exponential delay from 1 second, cap 30 seconds |
 | Pending/retry retention | 1 day |
 | Completed delivery retention | 7 days |
@@ -135,7 +137,8 @@ pnpm test:service:delivery
 ```
 
 The explicit delivery suite fails when its database URL is absent. It creates
-a fresh random database and drops only that database. Tests cover rollback,
+fresh random databases and drops only those databases. Tests cover missing
+vendor ledger rejection without schema mutation, rollback,
 operational-error retry, lost producer response, immutable rejection replay,
 duplicate workers, exact target consumption, crashes after consumption/output/
 checkpoint before acknowledgement, cancellation before and during a segment,

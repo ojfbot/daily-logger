@@ -23,7 +23,7 @@ export function transactionAdapter(client: pg.PoolClient): Db {
 export function createBoss(connectionString: string, migrate = false, supervise = false) {
   const boss = new PgBoss({ connectionString, schema: BOSS_SCHEMA, migrate, createSchema: migrate,
     supervise, schedule: false, max: 4, connectionTimeoutMillis: 5000,
-    superviseIntervalSeconds: 1, maintenanceIntervalSeconds: 60,
+    superviseIntervalSeconds: 1, monitorIntervalSeconds: 1, maintenanceIntervalSeconds: 60,
     openTelemetry: { enabled: false },
   })
   boss.on('error', () => { process.stderr.write('Fixture delivery database error; stopping process\n'); process.exit(1) })
@@ -35,6 +35,14 @@ export async function migrateDelivery(pool: pg.Pool, connectionString: string) {
   if (installed.rows[0].vendor) {
     const version = await pool.query('SELECT version FROM dailylogger_delivery.version')
     requireCondition(version.rows.length === 1 && version.rows[0].version === BOSS_SCHEMA_VERSION, 'Existing pg-boss schema requires a separately reviewed migration')
+  } else {
+    // Namespace dependencies cover tables, sequences, types and functions, so
+    // a damaged installation cannot be mistaken for a fresh empty schema.
+    const objects = await pool.query<{ present: boolean }>(`SELECT EXISTS (
+      SELECT 1 FROM pg_catalog.pg_depend d JOIN pg_catalog.pg_namespace n ON n.oid=d.refobjid
+      WHERE d.refclassid='pg_catalog.pg_namespace'::regclass AND n.nspname=$1
+    ) AS present`, [BOSS_SCHEMA])
+    requireCondition(!objects.rows[0].present, 'Existing pg-boss objects have no version ledger; refusing installation')
   }
   if (installed.rows[0].receipt) {
     const version = await pool.query('SELECT library_version,schema_version FROM dailylogger_service.delivery_installation')
