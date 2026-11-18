@@ -331,9 +331,23 @@ def preflight_tar(stream):
         require(type(size) is int and 0 <= size <= MAX_ARCHIVE, 'Oversized tar member')
         headers += 1
         require(headers <= 20000, 'Too many tar headers')
-        if header[156:157] in (b'x', b'g', b'L', b'K'):
+        kind = header[156:157]
+        require(kind not in (b'L', b'K', b'S'), 'GNU longname/link/sparse framing is unsupported')
+        if kind in (b'x', b'g'):
             extensions += size
             require(size <= 64 * 1024 and extensions <= 1024 * 1024, 'Tar extension metadata exceeds budget')
+            payload = stream.read(size)
+            require(len(payload) == size, 'Truncated PAX metadata')
+            position = 0
+            while position < len(payload):
+                separator = payload.find(b' ', position, position + 8)
+                require(separator > position and payload[position:separator].isdigit(), 'Invalid PAX record length')
+                record_size = int(payload[position:separator])
+                end = position + record_size
+                require(end <= len(payload) and end > separator + 3 and payload[end - 1:end] == b'\n', 'Invalid PAX record framing')
+                key, equals, _value = payload[separator + 1:end - 1].partition(b'=')
+                require(equals == b'=' and key in (b'mtime', b'atime', b'ctime', b'comment'), 'Layout-changing PAX metadata is unsupported')
+                position = end
         offset += 512 + ((size + 511) // 512) * 512
         require(offset <= length, 'Truncated tar member')
     stream.seek(0)
@@ -390,6 +404,7 @@ def inspect_image_archive(stream):
         if 'index.json' in members:
             require(exact(json_bytes(read('oci-layout', MAX_MANIFEST)), {'imageLayoutVersion': '1.0.0'}), 'Unsupported OCI layout')
             verified = {}
+            runtime_manifests = {}
             def descriptor(item, depth=0):
                 require(type(item) is dict and depth < 12, 'Invalid image descriptor graph')
                 identity = item.get('digest')
@@ -400,22 +415,28 @@ def inspect_image_archive(stream):
                         and members[name].size == item['size'], 'Incomplete descriptor closure')
                 media = item.get('mediaType')
                 if identity in verified:
-                    previous_media, configs = verified[identity]
+                    previous_media, configs, runtime_members = verified[identity]
                     require(previous_media == media, 'Conflicting descriptor media type')
-                    return configs
+                    return configs, runtime_members
                 content_hash = hashlib.sha256()
                 with archive.extractfile(members[name]) as stream:
                     for chunk in iter(lambda: stream.read(1024 * 1024), b''):
                         content_hash.update(chunk)
                 require('sha256:' + content_hash.hexdigest() == identity, 'Descriptor content digest mismatch')
                 configs = set()
+                runtime_members = set()
                 if media in ('application/vnd.oci.image.index.v1+json', 'application/vnd.docker.distribution.manifest.list.v2+json'):
                     node = json_bytes(read(name, MAX_MANIFEST))
                     require(node.get('schemaVersion') == 2 and type(node.get('manifests')) is list
                             and 0 < len(node['manifests']) < 100, 'Unsupported image index')
                     for child in node['manifests']:
-                        configs.update(descriptor(child, depth + 1))
+                        child_configs, child_members = descriptor(child, depth + 1)
+                        configs.update(child_configs)
+                        runtime_members.update(child_members)
                     if config_id in configs:
+                        eligible = [runtime_manifests[member] for member in runtime_members
+                                    if runtime_manifests[member]['platform'] == ('linux', 'amd64')]
+                        require(len(eligible) == 1 and eligible[0]['config'] == config_id, 'Ambiguous runtime platform selection')
                         engine_kinds[identity] = 'index-sha256'
                 elif media in ('application/vnd.oci.image.manifest.v1+json', 'application/vnd.docker.distribution.manifest.v2+json'):
                     node = json_bytes(read(name, MAX_MANIFEST))
@@ -425,20 +446,34 @@ def inspect_image_archive(stream):
                     for child in node['layers']:
                         descriptor(child, depth + 1)
                     configs.add(node['config']['digest'])
+                    config_name = 'blobs/sha256/' + node['config']['digest'][7:]
+                    config_value = json_bytes(read(config_name, 4 * 1024 * 1024))
+                    platform = (config_value.get('os'), config_value.get('architecture'))
+                    declared = item.get('platform')
+                    require(declared is None or (type(declared) is dict
+                            and (declared.get('os'), declared.get('architecture')) == platform), 'Descriptor platform disagrees with config')
+                    if platform == ('unknown', 'unknown'):
+                        require(item.get('annotations', {}).get('vnd.docker.reference.type') == 'attestation-manifest',
+                                'Unknown-platform manifest must be a separate attestation')
+                    else:
+                        require(all(type(part) is str and part for part in platform), 'Missing runnable platform')
+                        runtime_members.add(identity)
+                        runtime_manifests[identity] = {'platform': platform, 'config': node['config']['digest']}
                     if config_id in configs:
                         require(len(node['layers']) == len(layers), 'Docker and OCI layer counts disagree')
                         for child, diff_id in zip(node['layers'], layers):
                             require(layer_diff('blobs/sha256/' + child['digest'][7:]) == diff_id,
                                     'Docker and OCI layer content disagree')
                         engine_kinds[identity] = 'manifest-sha256'
-                verified[identity] = (media, configs)
-                return configs
+                verified[identity] = (media, configs, runtime_members)
+                return configs, runtime_members
             root = json_bytes(read('index.json', MAX_MANIFEST))
             require(root.get('schemaVersion') == 2 and type(root.get('manifests')) is list
                     and 0 < len(root['manifests']) < 100, 'Unsupported OCI archive index')
             reachable = set()
             for item in root['manifests']:
-                reachable.update(descriptor(item))
+                configs, _runtime_members = descriptor(item)
+                reachable.update(configs)
             require(config_id in reachable, 'Config is absent from OCI descriptor graph')
         return {'configId': config_id, 'engineKinds': engine_kinds}
 
@@ -471,7 +506,10 @@ class OwnedOutput:
             raise
 
     def check(self):
-        current = self.path.lstat()
+        try:
+            current = self.path.lstat()
+        except OSError:
+            raise ValueError('Output directory ownership changed; retained for reconciliation') from None
         require(stat.S_ISDIR(current.st_mode) and (current.st_dev, current.st_ino) ==
                 (self.identity.st_dev, self.identity.st_ino), 'Output directory ownership changed; retained for reconciliation')
 
@@ -497,9 +535,16 @@ class OwnedOutput:
         with self.open(name, 'xb') as stream:
             stream.write((json.dumps(value, indent=2) + '\n').encode())
 
-    def cleanup(self):
+    def retain_failure(self):
+        try:
+            descriptor = os.open('UNQUALIFIED', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                                 0o600, dir_fd=self.fd)
+        except FileExistsError:
+            pass
+        else:
+            with os.fdopen(descriptor, 'wb') as stream:
+                stream.write(b'Artifact operation failed; private stage retained for explicit reconciliation.\n')
         self.check()
-        shutil.rmtree(self.path)
 
     def close(self):
         os.close(self.fd)
@@ -556,7 +601,7 @@ def verify_fixture(expected, output, github=None):
         os.unlink('download.zip', dir_fd=owned.fd)
         return receipt
     except BaseException:
-        owned.cleanup()
+        owned.retain_failure()
         raise
     finally:
         owned.close()
@@ -662,7 +707,7 @@ def export_fixture(image, context, output, github=None):
                 'engineIdentityKind': image_identity['engineIdentityKind'], 'artifactName': artifact_name(run_id, attempt),
                 'builtRevision': revision, 'productionEligible': False}
     except BaseException:
-        owned.cleanup()
+        owned.retain_failure()
         raise
     finally:
         owned.close()

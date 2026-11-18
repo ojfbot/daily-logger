@@ -51,6 +51,21 @@ def tar_bytes(entries):
     return output.getvalue()
 
 
+def pax_header_bytes(attributes):
+    records = []
+    for key, value in attributes.items():
+        content = f'{key}={value}\n'.encode()
+        length = len(content) + 2
+        while len(str(length)) + 1 + len(content) != length:
+            length = len(str(length)) + 1 + len(content)
+        records.append(str(length).encode() + b' ' + content)
+    payload = b''.join(records)
+    header = tarfile.TarInfo('././@PaxHeader')
+    header.type = tarfile.XHDTYPE
+    header.size = len(payload)
+    return header.tobuf(format=tarfile.USTAR_FORMAT) + payload + b'\0' * (-len(payload) % 512)
+
+
 def image_tar(*, user='1000:1000', architecture='amd64', system='linux',
               missing_layer=False, corrupt_layer=False, missing_diff=False):
     layer = tar_bytes([('etc/fixture-proof.txt', b'An actual disposable image layer\n')])
@@ -67,7 +82,8 @@ def image_tar(*, user='1000:1000', architecture='amd64', system='linux',
     return tar_bytes(entries), image_id
 
 
-def oci_image_tar(*, compressed=False, attestation=False, wrong_diff=False, crossed_config=False):
+def oci_image_tar(*, compressed=False, attestation=False, wrong_diff=False, crossed_config=False,
+                  root_first=False, descriptor_platform=None):
     """Docker/containerd save layout with independently hashed OCI graph nodes."""
     blobs = {}
     index_type = 'application/vnd.oci.image.index.v1+json'
@@ -88,10 +104,17 @@ def oci_image_tar(*, compressed=False, attestation=False, wrong_diff=False, cros
     config_descriptor = blob(encoded(config), config_type)
     runtime = blob(encoded({'schemaVersion': 2, 'mediaType': manifest_type,
                            'config': config_descriptor, 'layers': [layer_descriptor]}), manifest_type,
-                   platform={'architecture': 'amd64', 'os': 'linux'})
+                   platform=descriptor_platform or {'architecture': 'amd64', 'os': 'linux'})
     descriptors = [runtime]
     identities = {'configId': config_descriptor['digest'], 'manifestId': runtime['digest'],
                   'layerId': layer_descriptor['digest']}
+    if root_first:
+        root_config = blob(encoded({**config, 'config': {'User': '0:0'}}), config_type)
+        root_runtime = blob(encoded({'schemaVersion': 2, 'mediaType': manifest_type,
+            'config': root_config, 'layers': [layer_descriptor]}), manifest_type,
+            platform={'architecture': 'amd64', 'os': 'linux'})
+        descriptors.insert(0, root_runtime)
+        identities['rootRuntimeId'] = root_runtime['digest']
     if attestation:
         statement = blob(encoded({'_type': 'https://in-toto.io/Statement/v0.1', 'subject': []}),
                          'application/vnd.in-toto+json')
@@ -270,6 +293,7 @@ class ArtifactBoundaryTests(unittest.TestCase):
         self.sentinel.write_bytes(b'Unrelated data must survive failures')
         self.fixture = GithubFixture()
         self.processes = []
+        self.rejections = 0
 
     def verify(self, fixture=None, output=None, git_probe=None):
         fixture = fixture or self.fixture
@@ -289,9 +313,16 @@ class ArtifactBoundaryTests(unittest.TestCase):
 
     def rejected(self, fixture=None):
         fixture = fixture or self.fixture
+        self.rejections += 1
+        output = self.root / f'rejected-{self.rejections:03}'
         with self.assertRaises((ValueError, OSError, zipfile.BadZipFile, tarfile.TarError)):
-            self.verify(fixture)
-        self.assertFalse((self.root / 'verified').exists(), 'Rejected candidate staging must be removed')
+            self.verify(fixture, output)
+        if output.exists():
+            self.assertEqual(stat.S_IMODE(output.stat().st_mode), 0o700)
+            self.assertTrue((output / 'UNQUALIFIED').is_file(), 'Retained stage must carry a fixed rejection marker')
+            self.assertFalse((output / 'verification.json').exists(), 'Failed stage cannot carry a success receipt')
+        elif fixture.downloads:
+            self.fail('A failed owned download stage must be retained for reconciliation')
         self.assertEqual(self.sentinel.read_bytes(), b'Unrelated data must survive failures')
 
     def test_authenticated_candidate_stages_exact_bytes_without_loading_or_production_eligibility(self):
@@ -388,13 +419,27 @@ class ArtifactBoundaryTests(unittest.TestCase):
                     fixture.on_download = replace_path
                     if download_raises:
                         fixture.download_error = OSError('Synthetic failure after directory substitution')
-                    with self.assertRaises((ValueError, OSError)):
-                        self.verify(fixture, output)
+                    with patch.object(artifact.shutil, 'rmtree', side_effect=AssertionError('Failure must never recursively remove a pathname')) as recursive:
+                        with self.assertRaises((ValueError, OSError)):
+                            self.verify(fixture, output)
+                        recursive.assert_not_called()
                     self.assertEqual((target / 'keep').read_bytes(), b'Unowned replacement sentinel')
                     self.assertEqual({path.name for path in target.iterdir()}, {'keep'})
                     self.assertEqual(output.is_symlink(), replacement_kind == 'symlink')
                     self.assertFalse((target / 'verification.json').exists())
+                    self.assertTrue((moved / 'UNQUALIFIED').is_file(), 'Held directory must be marked without following replacement')
                     self.assertEqual(self.sentinel.read_bytes(), b'Unrelated data must survive failures')
+
+    def test_failed_owned_stage_is_retained_and_marked_without_recursive_cleanup(self):
+        self.fixture.manifest['unexpected'] = 'closed-schema rejection'
+        self.fixture.repack()
+        with patch.object(artifact.shutil, 'rmtree', side_effect=AssertionError('Failure must not delete a directory tree')) as recursive:
+            self.rejected()
+            recursive.assert_not_called()
+        output = self.root / 'rejected-001'
+        self.assertTrue((output / 'download.zip').is_file())
+        self.assertTrue((output / 'UNQUALIFIED').is_file())
+        self.assertFalse((output / 'verification.json').exists())
 
     def test_huge_raw_pax_or_gnu_metadata_rejects_before_tarfile_parser_allocation(self):
         content = b'comment=' + b'x' * (2 * 1024 * 1024) + b'\n'
@@ -418,6 +463,34 @@ class ArtifactBoundaryTests(unittest.TestCase):
                 fixture.repack()
                 with patch.object(artifact.tarfile, 'open', side_effect=AssertionError('Oversized metadata reached allocating tarfile parser')):
                     self.rejected(fixture)
+
+    def test_pax_framing_overrides_and_all_gnu_extensions_fail_before_allocating_parser(self):
+        gnu = tarfile.TarInfo('././@LongLink')
+        gnu.type = tarfile.GNUTYPE_LONGNAME
+        gnu.size = 2 * 1024 * 1024
+        hidden_extension = pax_header_bytes({'size': '0'}) + gnu.tobuf(format=tarfile.USTAR_FORMAT) \
+            + b'x' * gnu.size + b'\0' * 1024
+        cases = [('pax-size-hides-gnu', hidden_extension)]
+        for key in ('size', 'path', 'linkpath', 'GNU.sparse.size', 'GNU.sparse.map'):
+            cases.append((key, pax_header_bytes({key: '0'}) + self.fixture.image))
+        for kind in (tarfile.GNUTYPE_LONGNAME, tarfile.GNUTYPE_LONGLINK, tarfile.GNUTYPE_SPARSE):
+            header = tarfile.TarInfo('././@GnuExtension')
+            header.type = kind
+            cases.append((kind, header.tobuf(format=tarfile.USTAR_FORMAT) + self.fixture.image))
+        for case, raw in cases:
+            with self.subTest(case=case):
+                fixture = GithubFixture()
+                fixture.image = raw
+                fixture.manifest['archive'].update(size=len(raw), sha256=hashed(raw))
+                fixture.repack()
+                with patch.object(artifact.tarfile, 'open', side_effect=AssertionError('Unsafe semantic header reached tarfile parser')):
+                    self.rejected(fixture)
+        positive = GithubFixture()
+        positive.image = pax_header_bytes({'mtime': '0', 'atime': '0', 'ctime': '0', 'comment': 'framing-neutral'}) + positive.image
+        positive.manifest['archive'].update(size=len(positive.image), sha256=hashed(positive.image))
+        positive.repack()
+        receipt = self.verify(positive)
+        self.assertFalse(receipt['imageLoaded'])
 
     def test_missing_or_malformed_authenticated_digest_rejects_before_download(self):
         for digest in (None, 'f' * 64, 'sha256:not-a-digest'):
@@ -605,6 +678,20 @@ class ArtifactBoundaryTests(unittest.TestCase):
         staged = json.loads((self.root / 'verified/manifest.json').read_bytes())
         self.assertEqual(staged['image']['engineId'], identities['manifestId'])
         self.assertEqual(staged['image']['engineIdentityKind'], 'manifest-sha256')
+
+    def test_oci_index_with_root_runtime_before_good_runtime_is_ambiguous_and_rejected(self):
+        identities = self.fixture.replace_oci_image(root_first=True)
+        self.assertNotEqual(identities['rootRuntimeId'], identities['manifestId'])
+        self.rejected()
+
+    def test_oci_descriptor_platform_must_agree_with_runnable_config(self):
+        for platform in ({'architecture': 'arm64', 'os': 'linux'},
+                         {'architecture': 'amd64', 'os': 'windows'},
+                         {'architecture': 'unknown', 'os': 'unknown'}):
+            with self.subTest(platform=platform):
+                fixture = GithubFixture()
+                fixture.replace_oci_image(descriptor_platform=platform)
+                self.rejected(fixture)
 
     def test_oci_wrong_engine_kind_unrelated_digest_attestation_or_crossed_config_reject(self):
         for target in ('kind', 'absent-engine', 'attestation', 'crossed-config'):

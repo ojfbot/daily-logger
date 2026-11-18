@@ -75,9 +75,11 @@ layer hashes, and writes a private verification receipt in the new output direct
 Downloads are bounded by the authenticated artifact size, with a two-GiB ceiling.
 Existing destinations and Git metadata/worktrees are rejected.
 File operations use the created directory descriptor. If its pathname is replaced,
-verification fails and preserves the replacement; the original stage is retained
-for reconciliation. Raw tar headers and extension metadata are bounded before
-the tar parser runs.
+verification fails and preserves the replacement. Every failed private stage is
+retained with an `UNQUALIFIED` marker for explicit reconciliation; failure handling
+never recursively deletes a pathname. Raw tar headers are bounded before parsing;
+layout-changing PAX and GNU longname/link/sparse framing are rejected. An accepted
+index has exactly one runnable Linux/amd64 manifest; attestations remain separate.
 
 The output is always a disposable fixture candidate with `productionEligible:
 false`. Private origin/source ranges, TLS files and application credentials remain
