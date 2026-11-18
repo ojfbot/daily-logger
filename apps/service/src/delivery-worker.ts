@@ -4,6 +4,7 @@ import { json, requireCondition } from './fixture.js'
 import { runOperation, type LockedRunContext, type Operation } from './postgres-runner.js'
 import { currentResumeSubject, FINAL_DISPOSITIONS, installResumeTarget, isTransient, parseCommand, requestDigest, UUID, type CommandRow } from './delivery-commands.js'
 import { DRAIN_TIMEOUT_MS, QUEUE, QUEUE_OPTIONS, SEGMENT_TIMEOUT_MS, SHUTDOWN_TIMEOUT_MS } from './delivery-db.js'
+import { beginObservation, NOOP_TELEMETRY, shutdownTelemetry, type ObservationSpan, type Telemetry } from './telemetry.js'
 
 class CommandRejection extends Error {
   constructor(readonly reason: string) { super(reason) }
@@ -26,11 +27,22 @@ async function reconcileCancellation(context: LockedRunContext) {
     [context.row.run_id, context.snapshot.values.published ? 'already_completed' : 'effective'])
 }
 
-/** One delivery, one run lock. Checkpoint/file commits remain separate from settlement. */
-export async function executeDelivery(pool: pg.Pool, connectionString: string, job: Pick<Job<Payload>, 'id' | 'data' | 'retryCount'>) {
+/** One delivery/run lock and bounded observation segment; never a queue acknowledgement. */
+export async function executeDelivery(pool: pg.Pool, connectionString: string, job: Pick<Job<Payload>, 'id' | 'data' | 'retryCount'>, telemetry: Telemetry = NOOP_TELEMETRY) {
+  const observation = beginObservation(telemetry, 'delivery')
+  try {
+    const result = await executeObservedDelivery(pool, connectionString, job, observation)
+    if ('status' in result) observation.bind({ runState: result.status === 'awaiting-approval' ? 'awaiting_approval' : result.status })
+    observation.end('returned') // Call result is distinct from graph state and command disposition.
+    return result
+  } catch (error) { observation.end('failed'); throw error }
+}
+
+async function executeObservedDelivery(pool: pg.Pool, connectionString: string, job: Pick<Job<Payload>, 'id' | 'data' | 'retryCount'>, observation: ObservationSpan) {
   requireCondition(job.data && UUID.test(job.data.commandId), 'Invalid command reference in delivery')
   const admitted = await loadCommand(pool, job.data.commandId)
   requireCondition(admitted.run_id && admitted.admission === 'admitted' && admitted.job_id === job.id, 'Delivery does not match its admitted command')
+  observation.bind({ runId: admitted.run_id, commandId: admitted.command_id, retryCount: job.retryCount })
   let observed: CommandRow = admitted
   try {
     return await runOperation(pool, connectionString, 'start', admitted.run_id, undefined, {
@@ -38,6 +50,7 @@ export async function executeDelivery(pool: pg.Pool, connectionString: string, j
       plan: async context => {
         observed = await loadCommand(context.client, admitted.command_id)
         const original = parseCommand(JSON.parse(observed.request_text) as unknown)
+        observation.bind({ operation: original.operation })
         const bound = JSON.parse(observed.target_text) as { runId: string; manifestDigest: string; workflowVersion: string; resumeTargetId?: string; subject?: unknown }
         requireCondition(requestDigest(original) === observed.request_digest && original.actorId === observed.actor_id && original.key === observed.idempotency_key && original.operation === observed.operation, 'Stored command identity differs')
         requireCondition(bound.runId === context.row.run_id && bound.manifestDigest === context.manifestDigest && bound.workflowVersion === context.row.workflow_version, 'Command is bound to different immutable run inputs')
@@ -82,7 +95,7 @@ export async function executeDelivery(pool: pg.Pool, connectionString: string, j
         await context.client.query(`UPDATE dailylogger_service.fixture_commands SET disposition='succeeded',result_text=$2,error_code=NULL,settled_at=now()
           WHERE command_id=$1 AND disposition NOT IN ('succeeded','failed','stale','cancelled','rejected')`, [observed.command_id, json(result)])
       },
-    })
+    }, observation)
   } catch (error) {
     const transient = isTransient(error)
     const exhausted = job.retryCount >= QUEUE_OPTIONS.retryLimit
@@ -96,7 +109,7 @@ export async function executeDelivery(pool: pg.Pool, connectionString: string, j
 }
 
 /** The executable owns process lifetime: timeout/claim loss cannot leave a live handler. */
-export async function runWorker(pool: pg.Pool, connectionString: string, boss: PgBoss) {
+export async function runWorker(pool: pg.Pool, connectionString: string, boss: PgBoss, telemetry: Telemetry = NOOP_TELEMETRY) {
   let active = false
   let stopping = false
   const stop = async () => {
@@ -107,6 +120,7 @@ export async function runWorker(pool: pg.Pool, connectionString: string, boss: P
       await boss.stop({ graceful: true, timeout: DRAIN_TIMEOUT_MS })
       if (active) { process.stderr.write('Fixture segment exceeded shutdown drain\n'); process.exit(1) }
       await pool.end()
+      await shutdownTelemetry(telemetry)
       clearTimeout(deadline)
       process.exit(0)
     } catch { process.stderr.write('Fixture worker shutdown failed\n'); process.exit(1) }
@@ -121,7 +135,7 @@ export async function runWorker(pool: pg.Pool, connectionString: string, boss: P
     job.signal.addEventListener('abort', abort, { once: true })
     try {
       if (job.signal.aborted) abort()
-      return await executeDelivery(pool, connectionString, job)
+      return await executeDelivery(pool, connectionString, job, telemetry)
     } finally { clearTimeout(deadline); job.signal.removeEventListener('abort', abort); active = false }
   })
   console.log(json({ worker: 'ready', queue: QUEUE, concurrency: 1, segmentTimeoutMs: SEGMENT_TIMEOUT_MS, drainTimeoutMs: DRAIN_TIMEOUT_MS, shutdownTimeoutMs: SHUTDOWN_TIMEOUT_MS }).trim())

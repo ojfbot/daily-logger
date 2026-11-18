@@ -11,13 +11,15 @@ import pg from 'pg'
 import { z } from 'zod'
 import { Ajv } from 'ajv'
 import formats from 'ajv-formats'
-import { REPO_ROOT } from '../../src/fixture.js'
+import { ACTIONS_PATH, ARTICLE_PATH, REPO_ROOT, readFixture } from '../../src/fixture.js'
 import { migrateDatabase, requireMigrated } from '../../src/postgres-db.js'
 import { migrateDelivery } from '../../src/delivery-db.js'
 import { startDelivery } from '../../src/delivery-db.js'
 import { admitCommand } from '../../src/delivery-commands.js'
 import { createHttpServer, httpConfig, type HttpConfig } from '../../src/http-server.js'
 import { readSnapshot } from '../../src/http-db.js'
+import { createOfflineTelemetry, type Telemetry } from '../../src/telemetry.js'
+import type { Observation } from '../../src/telemetry-schema.js'
 
 const configured = process.env.DAILYLOGGER_TEST_DATABASE_URL
 assert.ok(configured, 'DAILYLOGGER_TEST_DATABASE_URL is required for HTTP integration tests')
@@ -71,8 +73,8 @@ const githubFetch: typeof fetch = (resource, options) => {
   return fetch(`${providerBase}${target.pathname}`, options)
 }
 
-async function serve(fixtureRoot = firstRoot) {
-  const server = await createHttpServer({ ...config, fixtureRoot }, githubFetch)
+async function serve(fixtureRoot = firstRoot, telemetry?: Telemetry) {
+  const server = await createHttpServer({ ...config, fixtureRoot }, githubFetch, telemetry)
   apps.add(server)
   const address = await server.listen({ host: '127.0.0.1', port: 0 })
   return { server, address }
@@ -123,6 +125,38 @@ async function waitFor<T>(read: () => Promise<T | false>, timeout = 20000): Prom
   while (Date.now() < end) { const value = await read(); if (value !== false) return value; await new Promise(resolve => setTimeout(resolve, 100)) }
   throw new Error('HTTP fixture did not reach expected state')
 }
+function assertPrivateObservations(records: readonly Readonly<Observation>[], extra: string[] = []) {
+  const encoded = JSON.stringify(records)
+  for (const canary of [config.ownerGithubId, `github:${config.ownerGithubId}`, config.githubClientId, config.githubClientSecret,
+    config.connectionString, config.origin, firstRoot, secondRoot, ownerCookie, csrf, 'SECRET-http-observation', ...extra]) {
+    assert.ok(canary && !encoded.includes(canary), 'Private HTTP context must not enter observations')
+  }
+  assert.equal(/csrfToken|sessionHash|runDir|approvalDigest|response_text/.test(encoded), false)
+}
+function waitForExit(child: ChildProcess, timeoutMs = 8500): Promise<[number | null, NodeJS.Signals | null]> {
+  if (child.exitCode !== null || child.signalCode !== null) return Promise.resolve([child.exitCode, child.signalCode])
+  return new Promise((resolve, reject) => {
+    const exited = (code: number | null, signal: NodeJS.Signals | null) => { clearTimeout(timer); resolve([code, signal]) }
+    const timer = setTimeout(() => { child.removeListener('exit', exited); reject(new Error('HTTP test worker exceeded its exit allowance')) }, timeoutMs)
+    child.once('exit', exited)
+  })
+}
+async function stopWorker() {
+  if (!worker) return
+  const child = worker
+  try {
+    const stopped = waitForExit(child)
+    child.kill('SIGTERM')
+    assert.deepEqual(await stopped, [0, null])
+  } finally {
+    if (child.exitCode === null && child.signalCode === null) {
+      const stopped = waitForExit(child, 2500)
+      child.kill('SIGKILL')
+      await stopped
+    }
+    worker = undefined
+  }
+}
 
 before(async () => {
   await admin.query(`CREATE DATABASE ${database}`); created = true
@@ -134,13 +168,15 @@ before(async () => {
   const started = await serve(); app = started.server; base = started.address
 })
 after(async () => {
-  if (worker && worker.exitCode === null && worker.signalCode === null) { const stopped = once(worker, 'exit'); worker.kill('SIGTERM'); await stopped }
-  for (const server of apps) await server.close()
-  provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve()))
-  await pool.end()
-  if (created) await admin.query(`DROP DATABASE ${database} WITH (FORCE)`)
-  await admin.end()
-  rmSync(root, { recursive: true, force: true })
+  try { await stopWorker() }
+  finally {
+    for (const server of apps) await server.close()
+    provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve()))
+    await pool.end()
+    if (created) await admin.query(`DROP DATABASE ${database} WITH (FORCE)`)
+    await admin.end()
+    rmSync(root, { recursive: true, force: true })
+  }
 })
 
 test('real OAuth exchange binds state, PKCE and immutable owner identity to a revocable host session', async () => {
@@ -192,6 +228,98 @@ test('every private request rechecks expiry, configured owner and session-specif
   assert.ok(secondCookie)
   assert.equal((await call('/v1/fixture/runs', { ...mutation('wrong-session-csrf'), cookie: secondCookie })).status, 403)
   assert.equal((await pool.query("SELECT 1 FROM dailylogger_service.fixture_commands WHERE idempotency_key IN ('expired-owner','foreign-session','wrong-session-csrf')")).rowCount, 0)
+})
+
+test('HTTP setup failure closes its producer, database connections and owned observation adapter', async () => {
+  const connections = async () => (await pool.query('SELECT count(*)::int AS count FROM pg_stat_activity WHERE datname=current_database()')).rows[0].count
+  const before = await connections()
+  const telemetry = createOfflineTelemetry([])
+  process.env.HTTP_TEST_FAULT = 'response_schema_read'
+  try {
+    await assert.rejects(createHttpServer(config, githubFetch, telemetry), /response schema setup failure/)
+    assert.equal(telemetry.diagnostics().closed, true)
+    await waitFor(async () => await connections() === before, 1000)
+  } finally { delete process.env.HTTP_TEST_FAULT }
+})
+
+test('HTTP observations require confirmed commit and exclude authentication and provisional transactions', async () => {
+  const records: Readonly<Observation>[] = []
+  const telemetry = createOfflineTelemetry([{ export: batch => { records.push(...batch) } }])
+  const observed = await serve(firstRoot, telemetry)
+  const key = 'SECRET-http-observation-committed'
+  try {
+    assert.equal((await call('/v1/fixture/runs', { ...mutation(key, {}, observed.address), cookie: '' })).status, 401)
+    assert.equal((await call('/v1/fixture/runs', mutation(key, { runDir: 'SECRET-http-observation-path' }, observed.address))).status, 400)
+    process.env.HTTP_TEST_FAULT = 'rollback_admission'
+    assert.equal((await call('/v1/fixture/runs', mutation('observed-rollback', {}, observed.address))).status, 503)
+    assert.equal((await pool.query("SELECT 1 FROM dailylogger_service.fixture_commands WHERE idempotency_key='observed-rollback'")).rowCount, 0)
+    assert.equal((await pool.query("SELECT 1 FROM dailylogger_service.fixture_http_requests WHERE idempotency_key='observed-rollback'")).rowCount, 0)
+    process.env.HTTP_TEST_FAULT = 'lost_commit_response'
+    assert.equal((await call('/v1/fixture/runs', mutation('observed-uncertain', {}, observed.address))).status, 503)
+    await telemetry.flush()
+    assert.equal(records.length, 0)
+
+    const committed = z.object({ command_id: z.uuid(), response_text: z.string() }).parse((await pool.query(
+      "SELECT command_id,response_text FROM dailylogger_service.fixture_commands WHERE idempotency_key='observed-uncertain'")).rows[0])
+    const retry = await call('/v1/fixture/runs', mutation('observed-uncertain', {}, observed.address))
+    assert.equal(retry.status, 202); assert.equal(retry.text, committed.response_text)
+    const admitted = await call('/v1/fixture/runs', mutation(key, {}, observed.address))
+    assert.equal(admitted.status, 202)
+    const rejected = await call(`/v1/fixture/runs/${randomUUID()}/recoveries`, mutation('observed-rejection', {}, observed.address))
+    assert.equal(rejected.status, 409)
+    const identity = receipt(admitted.text)
+    assert.equal((await call(`/v1/runs/${identity.runId}`, { cookie: ownerCookie, address: observed.address })).status, 200)
+    assert.equal((await call(`/v1/commands/${identity.commandId}`, { cookie: ownerCookie, address: observed.address })).status, 200)
+    await telemetry.flush()
+    assert.deepEqual(records.map(record => record.outcome), ['admitted_response', 'admitted_response', 'rejected_response'])
+    assert.equal(records[0].commandId, committed.command_id)
+    assert.equal(records[1].commandId, identity.commandId); assert.equal(records[1].runId, identity.runId)
+    assert.ok(records.every(record => record.kind === 'admission_response_observed' && record.phase === 'event' && !record.attemptId))
+    assertPrivateObservations(records, [key])
+  } finally {
+    delete process.env.HTTP_TEST_FAULT
+    await observed.server.close(); apps.delete(observed.server)
+  }
+  assert.equal(telemetry.diagnostics().closed, true)
+})
+
+test('HTTP replay bytes and bounded close survive captured, throwing and stuck observation sinks', async () => {
+  for (const mode of ['capture', 'throw', 'stuck'] as const) {
+    let calls = 0
+    const records: Readonly<Observation>[] = []
+    const telemetry = createOfflineTelemetry([{ export(batch) {
+      calls++
+      if (mode === 'throw') throw new Error('SECRET-http-observation-export-error')
+      if (mode === 'stuck') return new Promise<void>(() => {})
+      records.push(...batch)
+    } }])
+    const observed = await serve(secondRoot, telemetry)
+    const key = `SECRET-http-observation-${mode}`
+    try {
+      const entries = readdirSync(firstRoot).length + readdirSync(secondRoot).length
+      const [normal, captured] = await Promise.all([
+        call('/v1/fixture/runs', mutation(key)), call('/v1/fixture/runs', mutation(key, {}, observed.address)),
+      ])
+      assert.equal(normal.status, 202); assert.equal(captured.status, normal.status); assert.equal(captured.text, normal.text)
+      assert.equal(readdirSync(firstRoot).length + readdirSync(secondRoot).length, entries + 1)
+      assert.equal((await call('/v1/fixture/runs', mutation(key, {}, observed.address))).text, normal.text)
+      const route = `/v1/fixture/runs/${receipt(normal.text).runId}/recoveries`
+      const conflict = await call(route, mutation(key))
+      const observedConflict = await call(route, mutation(key, {}, observed.address))
+      assert.equal(conflict.status, 409); assert.equal(observedConflict.status, conflict.status); assert.equal(observedConflict.text, conflict.text)
+      await telemetry.flush()
+      if (mode === 'capture') {
+        assert.deepEqual(records.map(record => record.outcome), ['admitted_response', 'admitted_response', 'idempotency_conflict_response'])
+        assertPrivateObservations(records, [key])
+      } else assert.equal(calls, 1, 'A failed sink must not accumulate replacement exports')
+    } finally {
+      const started = performance.now()
+      await observed.server.close(); apps.delete(observed.server)
+      assert.ok(performance.now() - started < 1000, 'Optional telemetry must fit inside the existing HTTP shutdown deadline')
+    }
+    assert.equal(telemetry.diagnostics().closed, true)
+    assert.ok(telemetry.diagnostics().pendingExports <= 1)
+  }
 })
 
 test('concurrent empty starts with changing server destinations retain one command, run, job and response', async () => {
@@ -345,39 +473,71 @@ test('the configured owner can inspect prior direct and trusted-CLI fixtures wit
   } finally { await producer.stop() }
 })
 
-test('all fixture operations use the real worker and cancellation hides an existing target immediately', async () => {
-  worker = spawn(process.execPath, ['--import', 'tsx', join(REPO_ROOT, 'apps/service/src/delivery-cli.ts'), 'work'],
+test('schema 003 HTTP admissions correlate with instrumented worker attempts and preserve fixture operations', async () => {
+  const records: Readonly<Observation>[] = []
+  const telemetry = createOfflineTelemetry([{ export: batch => { records.push(...batch) } }])
+  const observed = await serve(firstRoot, telemetry)
+  const observedCall: typeof call = (path, options = {}) => call(path, { ...options, address: observed.address })
+  const capture = join(root, 'http-worker-observations.jsonl')
+  assert.equal((await pool.query('SELECT max(version)::int AS version FROM dailylogger_service.schema_migrations')).rows[0].version, 3)
+  worker = spawn(process.execPath, ['--import', 'tsx', join(REPO_ROOT, 'apps/service/test/delivery/observability-worker.ts'), capture, 'capture'],
     { cwd: REPO_ROOT, env: { ...process.env, DAILYLOGGER_DATABASE_URL: connectionString }, stdio: ['ignore', 'pipe', 'pipe'] })
-  let stdout = ''
-  worker.stdout?.on('data', bytes => { stdout += String(bytes) })
-  await waitFor(async () => stdout.includes('"worker": "ready"') || stdout.includes('"worker":"ready"'))
-  const started = receipt((await call('/v1/fixture/runs', mutation('worker-run'))).text)
+  let stdout = '', stderr = ''
+  worker.stdout?.on('data', bytes => { stdout = (stdout + String(bytes)).slice(-4096) })
+  worker.stderr?.on('data', bytes => { stderr = (stderr + String(bytes)).slice(-4096) })
+  const healthy = () => { assert.equal(worker?.exitCode, null, stderr); assert.equal(worker?.signalCode, null, stderr) }
+  await waitFor(async () => { healthy(); return stdout.includes('"worker": "ready"') || stdout.includes('"worker":"ready"') })
+  const started = receipt((await observedCall('/v1/fixture/runs', mutation('worker-run'))).text)
   const waiting = await waitFor(async () => {
-    const view = runView((await call(`/v1/runs/${started.runId}`, { cookie: ownerCookie })).text)
+    healthy()
+    const view = runView((await observedCall(`/v1/runs/${started.runId}`, { cookie: ownerCookie })).text)
     return view.resumeTarget ? view : false
   })
-  const recovered = receipt((await call(`/v1/fixture/runs/${started.runId}/recoveries`, mutation('worker-recover'))).text)
-  await waitFor(async () => JSON.parse((await call(`/v1/commands/${recovered.commandId}`, { cookie: ownerCookie })).text).disposition === 'succeeded')
-  const resumed = await call(`/v1/fixture/runs/${started.runId}/resumes`, mutation('worker-resume', { resumeTargetId: waiting.resumeTarget?.resumeTargetId }))
+  const recovered = receipt((await observedCall(`/v1/fixture/runs/${started.runId}/recoveries`, mutation('worker-recover'))).text)
+  await waitFor(async () => { healthy(); return JSON.parse((await observedCall(`/v1/commands/${recovered.commandId}`, { cookie: ownerCookie })).text).disposition === 'succeeded' })
+  const resumed = await observedCall(`/v1/fixture/runs/${started.runId}/resumes`, mutation('worker-resume', { resumeTargetId: waiting.resumeTarget?.resumeTargetId }))
   assert.equal(resumed.status, 202)
   const complete = await waitFor(async () => {
-    const view = runView((await call(`/v1/runs/${started.runId}`, { cookie: ownerCookie })).text)
+    healthy()
+    const view = runView((await observedCall(`/v1/runs/${started.runId}`, { cookie: ownerCookie })).text)
     return view.state === 'fixture_complete' ? view : false
   })
   assert.ok(complete.receiptSha256); assert.ok(complete.attempts.every(attempt => attempt.commandId !== null))
   const direct = spawnSync(process.execPath, ['--import', 'tsx', join(REPO_ROOT, 'apps/service/src/postgres-cli.ts'), 'status', '--run-id', started.runId],
     { cwd: REPO_ROOT, env: { ...process.env, DAILYLOGGER_DATABASE_URL: connectionString }, encoding: 'utf8', timeout: 10000 })
   assert.equal(direct.status, 0, direct.stderr)
-  const cancellableResponse = await call('/v1/fixture/runs', mutation('cancel-run'))
+  const cancellableResponse = await observedCall('/v1/fixture/runs', mutation('cancel-run'))
   const cancellable = receipt(cancellableResponse.text)
-  const target = await waitFor(async () => runView((await call(`/v1/runs/${cancellable.runId}`, { cookie: ownerCookie })).text).resumeTarget || false)
-  assert.equal((await call(`/v1/fixture/runs/${cancellable.runId}/cancellations`, mutation('cancel-request'))).status, 202)
-  const cancelled = runView((await call(`/v1/runs/${cancellable.runId}`, { cookie: ownerCookie })).text)
+  const target = await waitFor(async () => { healthy(); return runView((await observedCall(`/v1/runs/${cancellable.runId}`, { cookie: ownerCookie })).text).resumeTarget || false })
+  assert.equal((await observedCall(`/v1/fixture/runs/${cancellable.runId}/cancellations`, mutation('cancel-request'))).status, 202)
+  const cancelled = runView((await observedCall(`/v1/runs/${cancellable.runId}`, { cookie: ownerCookie })).text)
   assert.equal(cancelled.resumeTarget, null); assert.ok(cancelled.cancellations.length)
-  const rejected = await call(`/v1/fixture/runs/${cancellable.runId}/resumes`, mutation('after-cancel', { resumeTargetId: target.resumeTargetId }))
+  const rejected = await observedCall(`/v1/fixture/runs/${cancellable.runId}/resumes`, mutation('after-cancel', { resumeTargetId: target.resumeTargetId }))
   assert.equal(rejected.status, 409); assert.equal(JSON.parse(rejected.text).error, 'run_cancelled')
-  assert.equal((await call(`/v1/fixture/runs/${cancellable.runId}/resumes`, mutation('after-cancel', { resumeTargetId: target.resumeTargetId }))).text, rejected.text)
-  assert.equal((await call('/v1/fixture/runs', mutation('cancel-run'))).text, cancellableResponse.text)
+  assert.equal((await observedCall(`/v1/fixture/runs/${cancellable.runId}/resumes`, mutation('after-cancel', { resumeTargetId: target.resumeTargetId }))).text, rejected.text)
+  assert.equal((await observedCall('/v1/fixture/runs', mutation('cancel-run'))).text, cancellableResponse.text)
+  await stopWorker()
+  await observed.server.close(); apps.delete(observed.server)
+  const workerRecords: Observation[] = readFileSync(capture, 'utf8').trim().split('\n').map(line => JSON.parse(line))
+  const attempts = (await pool.query('SELECT attempt_id,command_id,state FROM dailylogger_service.operation_attempts WHERE run_id=$1', [started.runId])).rows
+  for (const [commandId, outcome] of [[started.commandId, 'paused'], [receipt(resumed.text).commandId, 'succeeded']]) {
+    const admitted = records.find(record => record.commandId === commandId && record.outcome === 'admitted_response')
+    assert.equal(admitted?.runId, started.runId)
+    const attempt = attempts.find(row => row.command_id === commandId)
+    assert.ok(attempt); assert.equal(attempt.state, 'succeeded')
+    const segment = workerRecords.filter(record => record.commandId === commandId)
+    const ended = segment.find(record => record.kind === 'operation' && record.phase === 'end')
+    assert.equal(ended?.attemptId, attempt.attempt_id); assert.equal(ended?.outcome, outcome)
+    assert.equal(ended?.runId, started.runId); assert.notEqual(ended?.traceId, admitted?.traceId)
+    assert.ok(segment.some(record => record.kind === 'node' && record.attemptId === attempt.attempt_id))
+  }
+  assertPrivateObservations([...records, ...workerRecords], ['worker-run', 'worker-resume'])
+  const directory = z.object({ run_dir: z.string() }).parse((await pool.query('SELECT run_dir FROM dailylogger_service.fixture_runs WHERE run_id=$1', [started.runId])).rows[0]).run_dir
+  const fixture = readFixture()
+  assert.deepEqual(readFileSync(join(directory, 'artifacts', ARTICLE_PATH)), fixture.article)
+  assert.deepEqual(readFileSync(join(directory, 'artifacts', ACTIONS_PATH)), fixture.actions)
+  assert.equal(/traceId|observationId|instrumentationVersion/.test(readFileSync(join(directory, 'artifacts/receipt.json'), 'utf8')), false)
+  assert.equal(stderr, '')
 })
 
 test('migration 003 is explicit, checksum-checked and compatible with the current worker and CLI', async () => {
@@ -385,7 +545,11 @@ test('migration 003 is explicit, checksum-checked and compatible with the curren
   await requireMigrated(pool); await requireMigrated(pool, { delivery: true }); await requireMigrated(pool, { http: true })
   const migration = z.object({ digest: z.string() }).parse((await pool.query('SELECT digest FROM dailylogger_service.schema_migrations WHERE version=3')).rows[0])
   await pool.query("UPDATE dailylogger_service.schema_migrations SET digest='wrong' WHERE version=3")
-  try { await assert.rejects(createHttpServer(config, githubFetch), /checksum/) }
+  const telemetry = createOfflineTelemetry([])
+  try {
+    await assert.rejects(createHttpServer(config, githubFetch, telemetry), /checksum/)
+    assert.equal(telemetry.diagnostics().closed, true, 'Database startup failure must close the owned adapter')
+  }
   finally { await pool.query('UPDATE dailylogger_service.schema_migrations SET digest=$1 WHERE version=3', [migration.digest]) }
   assert.throws(() => httpConfig({ ...process.env, DAILYLOGGER_DATABASE_URL: connectionString, DAILYLOGGER_PRIVATE_ORIGIN: 'http://insecure.test' }))
 })

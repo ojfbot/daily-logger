@@ -49,6 +49,13 @@ pnpm service:delivery work
 SIGTERM closes the HTTP listener, producer, and database pools. The executable
 has an eight-second shutdown deadline.
 
+The HTTP executable selects the no-op observation adapter. Tests can pass a
+separate adapter to `createHttpServer(config, fetcher, telemetry)`. The server
+owns that adapter and closes it after its application resources, with the same
+250 ms optional allowance as the worker and inside the existing executable
+deadline. A migration/startup rejection also closes the supplied adapter.
+There is no telemetry endpoint, credential, SDK, or exporter configuration here.
+
 ## Owner session and requests
 
 `GET /v1/auth/login` starts a ten-minute GitHub OAuth challenge with state and
@@ -80,6 +87,16 @@ the same transaction as S03b admission and delivery. Identical retries return
 the original status and JSON bytes across restart, root configuration changes,
 run progress, and cancellation. A different intent under the key returns
 `409 idempotency_conflict` with the original command ID.
+
+Optional [offline observations](OBSERVABILITY.md) receive only the closed
+admission-response metadata after this HTTP transaction confirms COMMIT. The
+hook is outside the transaction catch, awaits no sink, and leaves response bytes
+unchanged. Identical retries can repeat the same response observation; it does
+not claim a new command. Authentication failures, rollback and uncertain COMMIT
+emit no admission observation. A later successful retry can observe the stored
+response. Session identity, cookies, CSRF tokens, idempotency keys and selected
+directories never enter the adapter. Read-only polling does not run or observe
+graph reconciliation.
 
 `503 operation_unavailable` can follow an unknown COMMIT outcome. Retain the
 original key and frozen request. An exact retry resolves the stored admission.
@@ -127,8 +144,12 @@ The HTTP suite uses real loopback HTTP, a local OAuth protocol fixture, real
 PostgreSQL, and the fixture worker. It exercises session and CSRF rejection,
 concurrent destination selection, response loss, unknown COMMIT, record identity
 corruption, read-only polling, timeout cleanup, disconnects, cancellation, and
-the CLI entrypoint. Its preload injects the lost COMMIT response after the
-database commits. The executable has its regular database and OAuth configuration.
+the CLI entrypoint. Its preload injects rollback after provisional HTTP binding
+and response loss after the database commits. Observation integration tests cover
+commit gating, exact replay with captured/throwing/stuck sinks, privacy canaries,
+bounded close, and HTTP-to-instrumented-worker correlation on migration 003.
+The worker's real durable attempts and unchanged artifact bytes remain the
+authority. The executable has its regular database and OAuth configuration.
 
 Real registered GitHub login, the owner's HTTPS ingress and browser, host
 operation, and production cutover require deployment qualification. The agreed

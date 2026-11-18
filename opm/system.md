@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `79895520e19514c9e537efc706ba65604d24a5f66edd236da00ecf56502d3915`.
+> Source SHA-256: `dd0fdb7da3b2fb2b7da92d9952722f1074d5ecf9abc0375e2164e378ed6781e8`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -22,9 +22,7 @@ flowchart TD
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
   n19["Jim"]
   n4["GitHub"]
-  style n4 stroke-dasharray: 5 5
   n36["Claude API"]
-  style n36 stroke-dasharray: 5 5
   n0["Article — states: draft, accepted, rejected"]
   n1["Run Admission — states: generate, recover, complete"]
   n2["Cron Firing"]
@@ -60,7 +58,6 @@ flowchart TD
   n34("Candidate Reference Resolving")
   n35("Suggestion Verifying")
   n37["Provider Action Proposal"]
-  n38["Provider Action Proposal and Draft Action Candidates"]
   n39["Canonical Action Proposal"]
   n40["Malformed Output Repair Budget — states: available, spent"]
   n41("Action Output Repairing")
@@ -69,17 +66,14 @@ flowchart TD
   n44["Candidate Record Binding — states: available, unavailable"]
   n45("Candidate Record Isolating")
   n46("Candidate Record Repairing")
-  n47["Candidate Record Binding, Provider Action Proposal, and Source Evidence"]
   n48["Draft Action Candidate — states: awaiting-review, promoted, mapped-existing, rejected, verified-closure"]
   n157["Candidate Review History"]
   n271["Candidate Review Transition"]
   n272["Historical Source Metadata"]
-  n49["Source Identity, Source Kind, Source Locator, and Full Content Digest"]
   n50["Draft Candidate Evidence Association — states: required, context"]
   n273["Background Evidence Reference"]
   n274["Candidate Action Relation"]
   n275["Candidate Input View"]
-  n51["Action Registry, Draft Action Candidates, Action Review Cycle, Operator Feedback, and Article Status"]
   n52("Candidate Evidence Preparing")
   n276["Canonical Action Index"]
   n277["Held Suggestion Memory"]
@@ -89,7 +83,6 @@ flowchart TD
   n55["unchanged Draft Candidate Evidence Association"]
   n56["unchanged prior Candidate Input View"]
   n57["Accepted Outcome Stamp"]
-  n58["Action Review Snapshot and Accepted Outcome Stamp"]
   n59("Acceptance Status Evidence Refreshing")
   n60["current-binding Draft Candidate Evidence Requirements"]
   n279["Ranked Recommendations"]
@@ -138,7 +131,13 @@ flowchart TD
   n97["Device Timezone"]
   n98["Time Popover"]
   n99("Time Metadata Preserving")
-  n2 -->|"object event"| n3
+  n292["Source Identity"]
+  n293["Source Kind"]
+  n294["Source Locator"]
+  n295["Full Content Digest"]
+  n296["Operator Feedback"]
+  n297["Article Status"]
+  n2 -->|"triggers"| n3
   n4 -->|"requires (instrument)"| n3
   n3 -->|"yields"| n1
   n3 -->|"invokes"| n5
@@ -153,13 +152,13 @@ flowchart TD
   n10 -->|"yields"| n11
   n11 -->|"condition: run"| n12
   n13 -->|"requires (instrument)"| n12
-  n12 <-->|"affects"| n4
+  n12 -->|"affects"| n4
   n4 -->|"requires (instrument)"| n14
   n14 -->|"yields"| n15
   n15 -->|"condition: missing"| n16
   n4 -->|"requires (instrument)"| n16
   n16 -->|"yields"| n17
-  n17 -->|"object event"| n3
+  n17 -->|"triggers"| n3
   n7 -->|"yields"| n0
   n7 -->|"yields"| n18
   n19 -->|"handles (human)"| n20
@@ -187,7 +186,8 @@ flowchart TD
   n31 -->|"requires (instrument)"| n35
   n18 -->|"requires (instrument)"| n33
   n33 -->|"yields"| n37
-  n38 -->|"requires (instrument)"| n34
+  n37 -->|"requires (instrument)"| n34
+  n18 -->|"requires (instrument)"| n34
   n34 -->|"yields"| n39
   n39 -->|"requires (instrument)"| n35
   n28 -->|"invokes"| n41
@@ -195,29 +195,39 @@ flowchart TD
   n41 -->|"changes: available to spent"| n40
   n42 -->|"requires (instrument)"| n41
   n43 -->|"requires (instrument)"| n41
-  n38 -->|"requires (instrument)"| n45
+  n37 -->|"requires (instrument)"| n45
+  n18 -->|"requires (instrument)"| n45
   n45 -->|"yields"| n44
   n33 -->|"invokes"| n45
   n44 -->|"condition: available"| n46
   n41 -->|"invokes"| n46
-  n47 -->|"requires (instrument)"| n46
+  n44 -->|"requires (instrument)"| n46
+  n37 -->|"requires (instrument)"| n46
+  n30 -->|"requires (instrument)"| n46
   n36 -->|"requires (instrument)"| n46
   n46 -->|"yields"| n37
   n18 -->|"requires (instrument)"| n35
-  n28 <-->|"affects"| n23
-  n28 <-->|"affects"| n0
+  n28 -->|"affects"| n23
+  n28 -->|"affects"| n0
   n28 -->|"yields"| n24
   n28 -->|"yields"| n31
   n28 -->|"changes: transient to retained"| n27
   n48 -->|"part of"| n18
   n271 -->|"part of"| n157
   n272 -->|"part of"| n157
-  n272 -->|"exhibits"| n49
+  n272 -->|"exhibits"| n292
+  n272 -->|"exhibits"| n293
+  n272 -->|"exhibits"| n294
+  n272 -->|"exhibits"| n295
   n50 -->|"part of"| n32
   n273 -->|"part of"| n32
   n274 -->|"part of"| n32
   n275 -->|"part of"| n32
-  n51 -->|"requires (instrument)"| n52
+  n23 -->|"requires (instrument)"| n52
+  n18 -->|"requires (instrument)"| n52
+  n29 -->|"requires (instrument)"| n52
+  n296 -->|"requires (instrument)"| n52
+  n297 -->|"requires (instrument)"| n52
   n52 -->|"yields"| n32
   n276 -->|"part of"| n275
   n277 -->|"part of"| n275
@@ -227,7 +237,8 @@ flowchart TD
   n56 -->|"requires (instrument)"| n54
   n54 -->|"changes: prior-binding to current-binding"| n32
   n20 -->|"yields"| n57
-  n58 -->|"requires (instrument)"| n59
+  n53 -->|"requires (instrument)"| n59
+  n57 -->|"requires (instrument)"| n59
   n0 -->|"condition: accepted"| n59
   n59 -->|"yields"| n60
   n279 -->|"part of"| n26
@@ -247,7 +258,7 @@ flowchart TD
   n113 -->|"part of"| n23
   n23 -->|"requires (instrument)"| n64
   n4 -->|"requires (instrument)"| n64
-  n64 <-->|"affects"| n23
+  n64 -->|"affects"| n23
   n19 -->|"handles (human)"| n64
   n281 -->|"part of"| n13
   n65 -->|"part of"| n13
@@ -265,12 +276,12 @@ flowchart TD
   n19 -->|"handles (human)"| n72
   n71 -->|"requires (instrument)"| n72
   n72 -->|"yields"| n73
-  n72 <-->|"affects"| n4
+  n72 -->|"affects"| n4
   n4 -->|"requires (instrument)"| n74
   n69 -->|"requires (instrument)"| n74
   n71 -->|"requires (instrument)"| n74
   n74 -->|"yields"| n75
-  n74 <-->|"affects"| n4
+  n74 -->|"affects"| n4
   n282 -->|"part of"| n71
   n283 -->|"part of"| n71
   n0 -->|"exhibits"| n76
@@ -279,7 +290,7 @@ flowchart TD
   n78 -->|"requires (instrument)"| n77
   n79 -->|"requires (instrument)"| n77
   n77 -->|"yields"| n80
-  n77 <-->|"affects"| n0
+  n77 -->|"affects"| n0
   n0 -->|"requires (instrument)"| n81
   n4 -->|"requires (instrument)"| n81
   n81 -->|"yields"| n80
@@ -324,10 +335,12 @@ flowchart TD
   n19 -->|"handles (human)"| n61
   n61 -->|"invokes"| n99
   n0 -->|"requires (instrument)"| n99
-  n99 <-->|"affects"| n0
+  n99 -->|"affects"| n0
+  style n4 stroke-dasharray: 5 5
+  style n36 stroke-dasharray: 5 5
 ```
 
-Initial-state shorthand: Draft. Object scope must be checked in the source model.
+Initial state: Draft.
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
 
@@ -559,7 +572,6 @@ flowchart TD
   n109("Provenance Attaching")
   n77("Time Recording")
   n4["GitHub"]
-  style n4 stroke-dasharray: 5 5
   n13["Canonical Action Projection"]
   n110("Closing Continuity Projecting")
   n111("Telemetry Collecting")
@@ -569,7 +581,6 @@ flowchart TD
   n113["Article Action Files — states: pending, verified"]
   n114["Telemetry Digest"]
   n36["Claude API"]
-  style n36 stroke-dasharray: 5 5
   n115["Credit Status"]
   n27["Draft Continuation Context — states: transient, retained"]
   n116["Council Critiques"]
@@ -603,21 +614,23 @@ flowchart TD
   n106 -->|"yields"| n116
   n36 -->|"requires (instrument)"| n107
   n116 -->|"consumes"| n107
-  n107 <-->|"affects"| n0
+  n107 -->|"affects"| n0
   n0 -->|"requires (instrument)"| n108
   n78 -->|"requires (instrument)"| n108
   n108 -->|"yields"| n117
-  n108 <-->|"affects"| n0
+  n108 -->|"affects"| n0
   n0 -->|"requires (instrument)"| n109
   n6 -->|"requires (instrument)"| n109
-  n109 <-->|"affects"| n0
+  n109 -->|"affects"| n0
   n78 -->|"requires (instrument)"| n77
   n0 -->|"requires (instrument)"| n77
   n77 -->|"yields"| n80
-  n77 <-->|"affects"| n0
+  n77 -->|"affects"| n0
+  style n4 stroke-dasharray: 5 5
+  style n36 stroke-dasharray: 5 5
 ```
 
-In-zoom membership: Article Generating contains Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, Provenance Attaching, and Time Recording. No execution order is inferred.
+In-zoom membership: Article Generating contains Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, Provenance Attaching, and Time Recording. No execution order is inferred from this compatibility view.
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
 
@@ -683,7 +696,6 @@ flowchart TD
   accTitle: SD1.2 — Continued Editorial Revising in-zoom
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
   n4["GitHub"]
-  style n4 stroke-dasharray: 5 5
   n118("Feedback Version Saving")
   n69["Article Fingerprint"]
   n119["Feedback Version"]
@@ -713,7 +725,6 @@ flowchart TD
   n143("Continued Article Revising")
   n144("Continued Clean Accepting")
   n36["Claude API"]
-  style n36 stroke-dasharray: 5 5
   n23["Action Registry"]
   n0["Article — states: draft, accepted, rejected"]
   n145["Revision Outcome"]
@@ -721,7 +732,6 @@ flowchart TD
   n146["Clean Acceptance Outcome"]
   n147["Incomplete Action Review"]
   n148["Verified Action Output Storage Limit Failure"]
-  n149["Incomplete Action Review and Action Registry"]
   n150("Article Completing")
   n20("Editorial Accepting")
   n151["Article Only Acceptance"]
@@ -784,12 +794,12 @@ flowchart TD
   n119 -->|"requires (instrument)"| n120
   n121 -->|"requires (instrument)"| n120
   n120 -->|"yields"| n122
-  n122 -->|"object event"| n123
+  n122 -->|"triggers"| n123
   n121 -->|"requires (instrument)"| n124
   n125 -->|"requires (instrument)"| n124
   n126 -->|"requires (instrument)"| n124
   n124 -->|"yields"| n127
-  n127 -->|"object event"| n128
+  n127 -->|"triggers"| n128
   n4 -->|"requires (instrument)"| n130
   n131 -->|"requires (instrument)"| n130
   n132 -->|"requires (instrument)"| n130
@@ -803,33 +813,34 @@ flowchart TD
   n4 -->|"requires (instrument)"| n128
   n137 -->|"requires (instrument)"| n128
   n128 -->|"yields"| n138
-  n136 -->|"object event"| n139
-  n138 -->|"object event"| n139
+  n136 -->|"triggers"| n139
+  n138 -->|"triggers"| n139
   n4 -->|"requires (instrument)"| n139
   n139 -->|"yields"| n140
-  n140 -->|"object event"| n141
+  n140 -->|"triggers"| n141
   n4 -->|"requires (instrument)"| n141
   n126 -->|"requires (instrument)"| n141
   n127 -->|"requires (instrument)"| n141
   n141 -->|"yields"| n142
-  n140 -->|"object event"| n143
-  n142 -->|"object event"| n144
+  n140 -->|"triggers"| n143
+  n142 -->|"triggers"| n144
   n36 -->|"requires (instrument)"| n143
   n23 -->|"requires (instrument)"| n143
-  n143 <-->|"affects"| n0
-  n143 <-->|"affects"| n23
+  n143 -->|"affects"| n0
+  n143 -->|"affects"| n23
   n143 -->|"yields"| n145
   n23 -->|"requires (instrument)"| n144
   n144 -->|"invokes"| n28
-  n144 <-->|"affects"| n0
-  n144 <-->|"affects"| n23
+  n144 -->|"affects"| n0
+  n144 -->|"affects"| n23
   n144 -->|"yields"| n146
   n28 -->|"yields"| n147
   n28 -->|"yields"| n148
   n148 -->|"is a"| n147
-  n149 -->|"requires (instrument)"| n150
+  n147 -->|"requires (instrument)"| n150
+  n23 -->|"requires (instrument)"| n150
   n20 -->|"invokes"| n150
-  n150 <-->|"affects"| n0
+  n150 -->|"affects"| n0
   n150 -->|"yields"| n151
   n151 -->|"exhibits"| n152
   n151 -->|"exhibits"| n153
@@ -857,7 +868,7 @@ flowchart TD
   n164 -->|"requires (instrument)"| n123
   n164 -->|"requires (instrument)"| n165
   n0 -->|"requires (instrument)"| n166
-  n166 <-->|"affects"| n113
+  n166 -->|"affects"| n113
   n28 -->|"invokes"| n167
   n0 -->|"requires (instrument)"| n167
   n23 -->|"requires (instrument)"| n167
@@ -914,13 +925,15 @@ flowchart TD
   n7 -->|"invokes"| n190
   n61 -->|"invokes"| n190
   n20 -->|"invokes"| n190
+  style n4 stroke-dasharray: 5 5
+  style n36 stroke-dasharray: 5 5
 ```
 
-In-zoom membership: Action Model View Serializing contains Lossless Metadata Factoring. No execution order is inferred.
+In-zoom membership: Action Model View Serializing contains Lossless Metadata Factoring. No execution order is inferred from this compatibility view.
 
-In-zoom membership: Action Model View Serializing contains Coverage Model Packing. No execution order is inferred.
+In-zoom membership: Action Model View Serializing contains Coverage Model Packing. No execution order is inferred from this compatibility view.
 
-In-zoom membership: Action Model View Serializing contains Generated Metadata Compacting. No execution order is inferred.
+In-zoom membership: Action Model View Serializing contains Generated Metadata Compacting. No execution order is inferred from this compatibility view.
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
 
@@ -1178,21 +1191,23 @@ flowchart TD
   n202["Validation Rule"]
   n203["Validation Stage"]
   n204["Review Attempt"]
-  n205["Candidate Association Diagnostic, Provider Action Proposal, and Draft Action Candidates"]
   n206("Candidate Association Correcting")
   n36["Claude API"]
-  style n36 stroke-dasharray: 5 5
   n37["Provider Action Proposal"]
   n41("Action Output Repairing")
+  n18["Draft Action Candidates"]
   n39 -->|"exhibits"| n200
   n34 -->|"yields"| n201
   n201 -->|"exhibits"| n202
   n201 -->|"exhibits"| n203
   n201 -->|"exhibits"| n204
-  n205 -->|"requires (instrument)"| n206
+  n201 -->|"requires (instrument)"| n206
+  n37 -->|"requires (instrument)"| n206
+  n18 -->|"requires (instrument)"| n206
   n36 -->|"requires (instrument)"| n206
   n206 -->|"yields"| n37
   n41 -->|"invokes"| n206
+  style n36 stroke-dasharray: 5 5
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1316,7 +1331,7 @@ flowchart TD
   n291 -->|"part of"| n221
 ```
 
-In-zoom membership: Fixture Replaying contains Fixture Collecting, Fixture Drafting, Fixture Reviewing, Fixture Approving, and Fixture Bundle Writing. No execution order is inferred.
+In-zoom membership: Fixture Replaying contains Fixture Collecting, Fixture Drafting, Fixture Reviewing, Fixture Approving, and Fixture Bundle Writing. No execution order is inferred from this compatibility view.
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
 
@@ -1390,7 +1405,7 @@ flowchart TD
   n241 -->|"invokes"| n219
   n241 -->|"yields"| n244
   n220 -->|"requires (instrument)"| n245
-  n245 <-->|"affects"| n237
+  n245 -->|"affects"| n237
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1463,10 +1478,10 @@ flowchart TD
   n253 -->|"yields"| n254
   n254 -->|"requires (instrument)"| n255
   n248 -->|"requires (instrument)"| n255
-  n255 <-->|"affects"| n254
+  n255 -->|"affects"| n254
   n256 -->|"yields"| n257
   n220 -->|"requires (instrument)"| n258
-  n258 <-->|"affects"| n257
+  n258 -->|"affects"| n257
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1554,4 +1569,69 @@ Browser Intent Binding exhibits Command UUID. [src: apps/service/migrations/003_
 Fixture Projection Reading requires Private Owner Session. [src: apps/service/src/http-sessions.ts]
 Fixture Projection Reading requires Read Only Database Snapshot. [src: apps/service/src/http-db.ts]
 Fixture Projection Reading yields Browser Fixture View. [src: apps/service/src/http-projections.ts]
+```
+
+## SD2.4 — Offline fixture metadata observations
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.4 — Offline fixture metadata observations"
+---
+flowchart TD
+  accTitle: SD2.4 — Offline fixture metadata observations
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n264("Fixture HTTP Admitting")
+  n298("Admission Response Observing")
+  n299["Committed Admission Response"]
+  n300("Offline Observation Recording")
+  n251("Fixture Delivery Executing")
+  n241("PostgreSQL Fixture Executing")
+  n219("Fixture Replaying")
+  n301["Explicit Offline Observation Configuration"]
+  n302["Closed Observation Policy"]
+  n303["Projected Fixture Observations"]
+  n304["Correlation Metadata"]
+  n305["Fixed Lifecycle Labels"]
+  n306["Bounded Timing"]
+  n307("Offline Observation Exporting")
+  n308["Trusted Nonblocking Test Sinks"]
+  n309["Telemetry Diagnostics"]
+  n264 -->|"invokes"| n298
+  n299 -->|"requires (instrument)"| n298
+  n298 -->|"invokes"| n300
+  n251 -->|"invokes"| n300
+  n241 -->|"invokes"| n300
+  n219 -->|"invokes"| n300
+  n301 -->|"requires (instrument)"| n300
+  n302 -->|"requires (instrument)"| n300
+  n300 -->|"yields"| n303
+  n304 -->|"part of"| n303
+  n305 -->|"part of"| n303
+  n306 -->|"part of"| n303
+  n303 -->|"requires (instrument)"| n307
+  n308 -->|"requires (instrument)"| n307
+  n307 -->|"yields"| n309
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Fixture HTTP Admitting invokes Admission Response Observing. [src: apps/service/src/http-server.ts]
+Admission Response Observing requires Committed Admission Response. [src: apps/service/src/delivery-commands.ts] [src: apps/service/src/http-server.ts]
+Admission Response Observing invokes Offline Observation Recording. [src: apps/service/src/telemetry.ts]
+Fixture Delivery Executing invokes Offline Observation Recording. [src: apps/service/src/delivery-worker.ts]
+PostgreSQL Fixture Executing invokes Offline Observation Recording. [src: apps/service/src/postgres-runner.ts]
+Fixture Replaying invokes Offline Observation Recording. [src: apps/service/src/workflow.ts]
+Offline Observation Recording requires Explicit Offline Observation Configuration. [src: apps/service/src/telemetry.ts]
+Offline Observation Recording requires Closed Observation Policy. [src: apps/service/src/telemetry-schema.ts]
+Offline Observation Recording yields Projected Fixture Observations. [src: apps/service/src/telemetry-schema.ts]
+Projected Fixture Observations consists of Correlation Metadata, Fixed Lifecycle Labels, and Bounded Timing. [src: apps/service/src/telemetry-schema.ts]
+Offline Observation Exporting requires Projected Fixture Observations. [src: apps/service/src/telemetry.ts]
+Offline Observation Exporting requires Trusted Nonblocking Test Sinks. [src: apps/service/src/telemetry.ts]
+Offline Observation Exporting yields Telemetry Diagnostics. [src: apps/service/src/telemetry.ts]
 ```
