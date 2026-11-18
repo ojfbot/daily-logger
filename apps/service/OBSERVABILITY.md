@@ -106,8 +106,9 @@ the adapter resolves `apps/service/dist/telemetry/telemetry-export-child.mjs`.
 The runtime Dockerfile now builds these artifacts from committed source before
 production deploy. Its offline final-image smoke requires an actual child-ready
 signal under UID 1000 with a read-only root filesystem and networking disabled;
-it does not emit observations or require an endpoint. See the runtime packaging
-receipt for which platform checks have actually run. Missing artifacts fail open
+it does not emit observations or require an endpoint. See the [runtime packaging
+receipt](../../docs/agent-service/s05b1-runtime-packaging-2026-11-18.md) for which
+platform checks have actually run. Missing artifacts fail open
 by closing the optional child. API/worker CLI injection remains disabled.
 
 `createLangfuseTelemetry(config?)` returns the existing no-op adapter unless
