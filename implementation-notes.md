@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-11-18. A fresh credential-free Git store still created reflogs carrying builder identity. Disabled reference logging before fetching or creating refs and added context/image assertions that no local reflogs are packaged.
+
 - 2026-11-18. Runtime CI initially mounted only the HTTP test directory, but the combined suite launches its observation worker from the delivery test directory. Added that read-only external helper mount while keeping both test directories out of the shipped image and retaining the earlier unmounted production-entrypoint proof.
 
 - 2026-11-18. Packaging tests assumed another shared clone was safe, but the long-running session already had enough alternate object stores to hit Git's nesting limit. Tests now create a self-contained shallow local-transfer clone and explicitly fetch the pinned fixture commit; production context assembly already uses independent objects.
