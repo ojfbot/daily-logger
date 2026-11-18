@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-11-18. The synthetic GitHub fixture accepted a repository-root trailing slash, but the authenticated live API returned 404. Use the canonical root route and align the fixture with the real API before accepting controller verification.
+
 - 2026-11-18. Re-review bypassed raw tar framing with PAX size overrides, raced the final pathname cleanup, and supplied two Linux/amd64 OCI candidates. Reject framing-changing extensions, retain failed private stages without recursive pathname deletion, and require an unambiguous runtime platform beneath accepted indexes.
 
 - 2026-11-18. The image exporter intentionally uses umask 077, but inherited fixture setup assumed create-mode arguments produced exact public readability. Actual Caddy startup reported permission denied. Set only public config/certificate and disposable leaf-directory modes explicitly, preserving private output/key modes and testing the real restrictive-umask preparation path.

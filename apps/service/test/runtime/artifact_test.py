@@ -198,7 +198,7 @@ class GithubFixture:
         self.jobs_route = self.run_route + '/jobs?per_page=100&page=1'
         self.commit_route = root + f'commits/{BUILT}'
         self.records = {
-            root: {'id': 42, 'full_name': REPOSITORY},
+            root.rstrip('/'): {'id': 42, 'full_name': REPOSITORY},
             self.artifact_route: {'id': 700, 'name': 'dailylogger-fixture-100-2', 'expired': False,
                 'expires_at': (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
                 'workflow_run': {'id': 100, 'repository_id': 42, 'head_repository_id': 42, 'head_sha': HEAD}},
@@ -514,7 +514,7 @@ class ArtifactBoundaryTests(unittest.TestCase):
                 fixture = GithubFixture()
                 fixture.records[fixture.artifact_route]['workflow_run'][field] = value
                 self.rejected(fixture)
-        self.fixture.records[f'repos/{REPOSITORY}/']['full_name'] = 'other/repository'
+        self.fixture.records[f'repos/{REPOSITORY}']['full_name'] = 'other/repository'
         self.rejected()
 
     def test_wrong_or_unsuccessful_workflow_attempt_rejects(self):
