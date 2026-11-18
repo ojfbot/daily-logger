@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { test } from 'node:test'
+import { z } from 'zod'
+import { REPO_ROOT } from '../src/fixture.js'
 import { LOCAL_OLLAMA, runLocalContextExperiment, scoreAnswer } from './evals/local-context.js'
 
 test('local model remains unreachable without opt-in and successful offline gates', async () => {
@@ -55,4 +59,19 @@ test('missing installed model and a truncated local response never trigger a pul
     return Response.json(String(url).endsWith('/tags') ? { models: [{ name: 'local:7b', digest: 'a'.repeat(64), size: 1, details: { format: 'gguf' } }] } : { model: 'local:7b', done: true, done_reason: 'length', message: { content: '{}' }, prompt_eval_count: 10, eval_count: 192 })
   } }), /stop/)
   assert.equal(calls, 2)
+})
+
+test('saved first local pair remains a failed completeness case with correct baseline abstention', () => {
+  const record = z.object({
+    pass: z.literal(false), calls: z.literal(2), offlineGates: z.literal('passed'),
+    results: z.array(z.object({ mode: z.enum(['baseline', 'candidate']), answer: z.unknown() })).length(2),
+  }).parse(JSON.parse(readFileSync(join(REPO_ROOT, 'docs/agent-service/local-context-2026-11-18.json'), 'utf8')))
+  const baseline = record.results.find(result => result.mode === 'baseline')
+  const candidate = record.results.find(result => result.mode === 'candidate')
+  assert.ok(baseline); assert.ok(candidate)
+  assert.equal(scoreAnswer(baseline.answer, 'baseline').correct, 4)
+  const score = scoreAnswer(candidate.answer, 'candidate')
+  assert.equal(score.correct, 3)
+  assert.equal(score.groundedAnswers, 3)
+  assert.deepEqual(score.checks.filter(check => !check.pass).map(check => check.field), ['publicationAllowed'])
 })

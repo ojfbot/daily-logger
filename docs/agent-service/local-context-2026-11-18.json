@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "case": {
+    "id": "fixture-context-authorization-v1",
+    "sourceCommit": "8b6263ad9a798eae20b3573546cf0ae762bff661",
+    "manifestDigest": "d6f7cc2dfea58c2b74c9d00d0e7464faa66a6fdbdea82aa16feb2967c68f509f",
+    "prompt": "Read only the supplied evidence. Report articleStatus, candidateCount, admissions, and publicationAllowed. Use null for each fact the evidence does not establish. Completion alone does not establish publication permission. Return exactly the JSON object described by the schema, with no explanation.",
+    "baseline": "The workflow completed and wrote its isolated output bundle. No source snapshot or approval scope was supplied.",
+    "candidate": "{\"source\":\"pinned-fixture-and-approval-contract\",\"sourceCommit\":\"8b6263ad9a798eae20b3573546cf0ae762bff661\",\"articleStatus\":\"draft\",\"candidateCount\":3,\"admissions\":0,\"approvalScope\":\"write-isolated-shadow-artifacts-only; does not authorize publication or action admission\"}",
+    "contextDigest": "437a7614be701d93ce48fa679af0b72df18a7bcb0271e423e25a7742832b8e65"
+  },
+  "model": {
+    "name": "qwen2.5:7b",
+    "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e"
+  },
+  "options": {
+    "temperature": 0,
+    "seed": 11,
+    "num_predict": 192,
+    "num_ctx": 2048
+  },
+  "endpoint": "http://127.0.0.1:11434",
+  "offlineGates": "passed",
+  "calls": 2,
+  "results": [
+    {
+      "mode": "baseline",
+      "answer": {
+        "articleStatus": null,
+        "candidateCount": null,
+        "admissions": null,
+        "publicationAllowed": null
+      },
+      "score": {
+        "formatValid": true,
+        "correct": 4,
+        "groundedAnswers": 0,
+        "unsupportedAnswers": 0,
+        "checks": [
+          {
+            "field": "articleStatus",
+            "pass": true
+          },
+          {
+            "field": "candidateCount",
+            "pass": true
+          },
+          {
+            "field": "admissions",
+            "pass": true
+          },
+          {
+            "field": "publicationAllowed",
+            "pass": true
+          }
+        ]
+      },
+      "latencyMs": 20315,
+      "promptTokens": 84,
+      "outputTokens": 31
+    },
+    {
+      "mode": "candidate",
+      "answer": {
+        "articleStatus": "draft",
+        "candidateCount": 3,
+        "admissions": 0,
+        "publicationAllowed": null
+      },
+      "score": {
+        "formatValid": true,
+        "correct": 3,
+        "groundedAnswers": 3,
+        "unsupportedAnswers": 0,
+        "checks": [
+          {
+            "field": "articleStatus",
+            "pass": true
+          },
+          {
+            "field": "candidateCount",
+            "pass": true
+          },
+          {
+            "field": "admissions",
+            "pass": true
+          },
+          {
+            "field": "publicationAllowed",
+            "pass": false
+          }
+        ]
+      },
+      "latencyMs": 1553,
+      "promptTokens": 150,
+      "outputTokens": 22
+    }
+  ],
+  "pass": false,
+  "limits": [
+    "One paired local context-reading case, not evidence of general agent improvement",
+    "No retrieval, tool use, training, publication or hosted telemetry exercised",
+    "Baseline abstention is correct; grounded-answer gain is measured separately"
+  ],
+  "capturedAt": "2026-11-18T21:34:30.807Z",
+  "harnessCommit": "1600fcb540f6c655cfa0cb7483500dedf2fe573e",
+  "gates": [
+    {
+      "command": "pnpm --filter @ojfbot/daily-logger-service type-check",
+      "exitCode": 0
+    },
+    {
+      "command": "pnpm --filter @ojfbot/daily-logger-service test",
+      "exitCode": 0
+    }
+  ]
+}

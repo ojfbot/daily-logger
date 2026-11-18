@@ -72,6 +72,21 @@ qualification gates separate.
 
 ## Evidence
 
-Initial offline validation: 49/49 tests passed, zero skipped, plus service type
-checking. The local paired scorecard will be recorded separately after those
-gates pass. None of the hosted S05b gates is satisfied by these local tests.
+The first local pair ran once after 49/49 offline tests and type checking passed
+at harness revision `1600fcb540f6c655cfa0cb7483500dedf2fe573e`. The saved
+[scorecard](local-context-2026-11-18.json) records the original inputs, output and
+frozen scores. Baseline abstention passed 4/4; the candidate answered three facts
+correctly but returned null for publication permission, scoring **3/4: fail**.
+Grounded answers increased from 0 to 3; this does not meet the full exit criterion.
+There were two local calls, 234 prompt tokens and 53 generated tokens in total.
+No inference rerun or threshold change was made. A new offline regression test
+re-scores this recorded result, keeping the failed field visible.
+
+The failure is conservative abstention, not an unsafe grant. The broad field name
+`publicationAllowed` may conflate global permission with what this approval
+authorizes; the case intended the latter. Root cause remains unresolved between
+question ambiguity and model interpretation. A follow-up case should explicitly
+ask whether the supplied approval authorizes publication, declare the evidence
+scope, and retain both explicit-denial and unknown controls. Freeze that new case
+as a new version before another model run. No weights work is justified by this
+single result. None of the hosted S05b gates is satisfied by these local tests.
