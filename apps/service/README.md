@@ -13,7 +13,8 @@ API, provider adapters, deployment, and protected journal content are deferred.
 
 ## Run the proof
 
-Use Node 24 and the repository's pnpm version. Install from the repository root:
+Use Node 24, Git with `--no-lazy-fetch` support, and the repository's pnpm version.
+Install from the repository root:
 
 ```sh
 pnpm install --frozen-lockfile
@@ -23,7 +24,8 @@ pnpm service:shadow start --run-dir /private/tmp/dailylogger-shadow-example
 ```
 
 The run directory must be a new absolute path whose parent exists, outside every
-Git checkout. Its files are local development state and must not be committed or
+Git checkout or metadata directory, including bare and linked-worktree Git
+directories. Its files are local development state and must not be committed or
 copied to a public static host. The command reports `awaiting-approval`, a
 checkpoint ID, the completed steps, the invariant review, and an `approvalDigest`.
 Inspect `manifest.json`, `inputs/article.md`, and `inputs/actions.json` before
@@ -87,8 +89,14 @@ The source is fixed at Git commit
 - `actions/articles/2026-11-17.json`, blob `1cc773a7a7b88081dbca299fab89e89bc185be91`
 
 **This commit and its blobs must exist in the local Git object database.** A
-shallow clone missing that history cannot run the fixture. The runner reads
-`git show COMMIT:path`, never the current working article and never the network.
+shallow or partial clone missing an object cannot run the fixture. The runner
+reads raw objects with `git cat-file`, with lazy fetch and all Git transports
+disabled for every Git subprocess, independently of the Node fetch guard.
+It disables Git replacement refs on both object-ID and byte reads, verifies
+the resolved IDs against the two constants above, and recomputes each Git blob
+hash from the returned bytes before accepting provenance. Ambient Git repository
+and config environment overrides cannot redirect these reads or hide a Git
+directory from the output-path check. Unsupported Git versions fail closed.
 It does not have the original raw collector context; this proves replay and
 persistence of recorded artifacts, not reproducibility of the original model
 generation. Manifest and receipt carry the source commit, Git blobs, SHA-256
@@ -120,7 +128,12 @@ existing-reader compatibility test.
 - `SIGKILL` after output becomes visible but before the final checkpoint, followed
   by recovery that reuses the bundle;
 - output conflict/tamper rejection, repository path/symlink rejection, and
-  command serialization with lock release after process death.
+  command serialization with lock release after process death;
+- missing promisor objects rejected before a fetch subprocess starts, with an
+  independent deny-all Git transport check and a harmless local-helper control;
+- replacement refs ignored and corrupt bytes rejected against pinned Git IDs;
+- bare, ordinary, separate, and linked-worktree metadata rejected as destinations;
+- malformed action JSON and nested values reported as fixture diagnostics.
 
 The test-only crash preload patches the checkpointer in its subprocess. The
 production CLI has no crash-injection flag. Root Vitest uses explicit include
@@ -136,6 +149,8 @@ transactional outbox require a later production design.
 
 The CLI disables ambient LangSmith tracing and rejects `fetch` calls before
 loading the graph; no exporter, live collector, provider, or publisher is wired.
+Git subprocesses separately enforce [`GIT_NO_LAZY_FETCH`, `GIT_NO_REPLACE_OBJECTS`,
+and an empty `GIT_ALLOW_PROTOCOL`](https://git-scm.com/docs/git).
 The fetch guard is an application guard, **not an operating-system network
 sandbox** and not protection against arbitrary future Node networking code.
 Do not add live integrations without a separate capability and egress design.

@@ -1,9 +1,9 @@
 import { appendFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
-import { execFileSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite'
 import { ACTIONS_PATH, ARTICLE_PATH, DATE, REPO_ROOT, digest, json, requireCondition, type Fixture, type Review } from './fixture.js'
+import { offlineGit } from './offline-git.js'
 
 function entryExists(path: string): boolean {
   try { lstatSync(path); return true } catch (error) {
@@ -21,10 +21,14 @@ export function checkedRunDir(input: string): string {
   if (entryExists(canonical)) requireCondition(lstatSync(canonical).isDirectory() && !lstatSync(canonical).isSymbolicLink(), 'Run directory cannot be a symlink or file')
   const repo = realpathSync(REPO_ROOT)
   requireCondition(canonical !== repo && !canonical.startsWith(`${repo}/`), 'Run directory cannot be inside the source repository')
-  // A separate playback checkout is also not a valid checkpoint/output directory.
-  let gitRoot: string | undefined
-  try { gitRoot = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: existsSync(canonical) ? canonical : parent, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() } catch { /* not a Git checkout */ }
-  requireCondition(!gitRoot, 'Run directory must be outside every Git checkout')
+  // --show-toplevel fails inside .git and bare repositories. Git-directory
+  // discovery also recognizes their metadata and linked-worktree Git dirs.
+  let gitDirectory: string | undefined
+  try { gitDirectory = offlineGit(['rev-parse', '--absolute-git-dir'], existsSync(canonical) ? canonical : parent).toString('utf8').trim() } catch (error) {
+    const stderr = typeof error === 'object' && error !== null && 'stderr' in error ? String(error.stderr) : ''
+    requireCondition(/^fatal: not a git repository \(or any of the parent directories\): \.git$/m.test(stderr), 'Cannot establish that run directory is outside Git metadata')
+  }
+  requireCondition(!gitDirectory, 'Run directory must be outside every Git checkout and Git metadata directory')
   return canonical
 }
 
