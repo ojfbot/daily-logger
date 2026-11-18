@@ -819,7 +819,7 @@ class ArtifactBoundaryTests(unittest.TestCase):
                 fixture.repack()
                 self.rejected(fixture)
 
-    def test_download_failures_are_bounded_and_remove_only_owned_output(self):
+    def test_download_failures_are_bounded_and_retain_owned_staging(self):
         self.fixture.download_error = OSError('synthetic interrupted download')
         self.rejected()
         binaries = self.root / 'bin'
@@ -840,6 +840,33 @@ class ArtifactBoundaryTests(unittest.TestCase):
                 artifact.Github().download(700, destination, len(payload))
             self.assertEqual(destination.read_bytes(), payload)
         self.assertEqual(self.sentinel.read_bytes(), b'Unrelated data must survive failures')
+
+    def test_download_allows_slow_progress_but_kills_its_child_at_the_total_deadline(self):
+        binaries = self.root / 'deadline-bin'
+        binaries.mkdir()
+        gh = binaries / 'gh'
+        gh.write_text(f'#!{sys.executable}\nimport os\nos.write(1,b"bounded-progress")\n')
+        gh.chmod(0o755)
+        environment = {'PATH': str(binaries) + os.pathsep + os.environ.get('PATH', '')}
+        clock = iter((0, 181))
+        with patch.dict(os.environ, environment), patch.object(artifact.time, 'monotonic', side_effect=lambda: next(clock, 181)):
+            destination = self.root / 'slow-progress.zip'
+            artifact.Github().download(700, destination, 32)
+            self.assertEqual(destination.read_bytes(), b'bounded-progress')
+        gh.write_text(f'#!{sys.executable}\nimport time\ntime.sleep(30)\n')
+        actual_popen = subprocess.Popen
+        children = []
+        def capture(*args, **kwargs):
+            child = actual_popen(*args, **kwargs)
+            children.append(child)
+            return child
+        clock = iter((0, 601))
+        with patch.dict(os.environ, environment), patch.object(artifact.subprocess, 'Popen', side_effect=capture), \
+                patch.object(artifact.time, 'monotonic', side_effect=lambda: next(clock, 601)):
+            with self.assertRaisesRegex(ValueError, 'deadline'):
+                artifact.Github().download(700, self.root / 'expired-download.zip', 32)
+        self.assertEqual(len(children), 1)
+        self.assertIsNotNone(children[0].poll(), 'The owned downloader must be stopped at the total deadline')
 
     def test_tap_proof_rejects_missing_duplicate_failed_skipped_and_cancelled_tests(self):
         valid = '# tests 3\n# pass 3\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n'
