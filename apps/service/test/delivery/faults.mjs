@@ -13,6 +13,7 @@ pg.Client.prototype.query = async function (...args) {
   const result = await original.apply(this, args)
   if (text.includes('INSERT INTO dailylogger_service.fixture_commands')) commandInserted = true
   if (fault === 'after-command-commit' && commandInserted && text === 'COMMIT') process.kill(process.pid, 'SIGKILL')
+  if (fault === 'after-command-settlement' && text.includes("SET disposition='succeeded'")) process.kill(process.pid, 'SIGKILL')
   if (fault === 'after-consume' && text.includes('SET consumed_by=')) process.kill(process.pid, 'SIGKILL')
   if (fault === 'pause-node' && text.includes('SET nodes = nodes')) {
     writeFileSync(process.env.DELIVERY_TEST_MARKER, 'paused')
@@ -28,6 +29,7 @@ const originalPut = PostgresSaver.prototype.put
 PostgresSaver.prototype.put = async function (...args) {
   if (fault === 'after-output' && args[1].channel_values.published) process.kill(process.pid, 'SIGKILL')
   const saved = await originalPut.apply(this, args)
+  if (fault === 'after-start-checkpoint' && args[1].channel_values.collected && !args[1].channel_values.draft) process.kill(process.pid, 'SIGKILL')
   if (fault === 'after-checkpoint' && args[1].channel_values.published) process.kill(process.pid, 'SIGKILL')
   return saved
 }

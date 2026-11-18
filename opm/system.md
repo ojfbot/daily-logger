@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `2fc749b91aa0a2d6844208088c6b74cc2d050f3874a045a8f6dd0a9cab529f19`.
+> Source SHA-256: `1d115fb05a4d26727398055e68d2dec7b15bcad166a36931aadcfc0c3ea463d0`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1420,4 +1420,79 @@ PostgreSQL Fixture Executing yields Operation Attempt. [src: apps/service/src/po
 Operation Attempt can be running, succeeded, failed, or abandoned. [src: apps/service/migrations/001_fixture_runs.sql]
 Run Projection Reconciling requires Graph Checkpoints. [src: apps/service/src/postgres-runner.ts]
 Run Projection Reconciling affects Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
+```
+
+## SD2.2 — Durable fixture command delivery
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.2 — Durable fixture command delivery"
+---
+flowchart TD
+  accTitle: SD2.2 — Durable fixture command delivery
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n267["Fixture Command Request"]
+  n268("Fixture Command Admitting")
+  n269["Immutable Command Admission — states: admitted, rejected"]
+  n270("Fixture Job Enqueuing")
+  n271["Fixture Delivery Job"]
+  n272("Fixture Delivery Executing")
+  n263["Run Advisory Lock"]
+  n262("PostgreSQL Fixture Executing")
+  n273["Command Result"]
+  n238["Graph Checkpoints"]
+  n274("Resume Target Recording")
+  n275["Exact Resume Target"]
+  n276("Resume Target Consuming")
+  n277("Fixture Cancellation Requesting")
+  n278["Run Cancellation — states: requested, effective, already_completed"]
+  n279("Fixture Cancellation Reconciling")
+  n267 -->|"requires (instrument)"| n268
+  n268 -->|"yields"| n269
+  n268 -->|"invokes"| n270
+  n269 -->|"requires (instrument)"| n270
+  n270 -->|"yields"| n271
+  n271 -->|"requires (instrument)"| n272
+  n269 -->|"requires (instrument)"| n272
+  n263 -->|"requires (instrument)"| n272
+  n272 -->|"invokes"| n262
+  n272 -->|"yields"| n273
+  n238 -->|"requires (instrument)"| n274
+  n274 -->|"yields"| n275
+  n275 -->|"requires (instrument)"| n276
+  n269 -->|"requires (instrument)"| n276
+  n276 <-->|"affects"| n275
+  n277 -->|"yields"| n278
+  n238 -->|"requires (instrument)"| n279
+  n279 <-->|"affects"| n278
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Fixture Command Admitting requires Fixture Command Request. [src: apps/service/src/delivery-commands.ts]
+Fixture Command Admitting yields Immutable Command Admission. [src: apps/service/src/delivery-commands.ts]
+Immutable Command Admission can be admitted or rejected. [src: apps/service/migrations/002_delivery_commands.sql]
+Fixture Command Admitting invokes Fixture Job Enqueuing. [src: apps/service/src/delivery-commands.ts]
+Fixture Job Enqueuing requires Immutable Command Admission. [src: apps/service/src/delivery-commands.ts]
+Fixture Job Enqueuing yields Fixture Delivery Job. [src: apps/service/src/delivery-commands.ts]
+Fixture Delivery Executing requires Fixture Delivery Job. [src: apps/service/src/delivery-worker.ts]
+Fixture Delivery Executing requires Immutable Command Admission. [src: apps/service/src/delivery-worker.ts]
+Fixture Delivery Executing requires Run Advisory Lock. [src: apps/service/src/postgres-runner.ts]
+Fixture Delivery Executing invokes PostgreSQL Fixture Executing. [src: apps/service/src/delivery-worker.ts]
+Fixture Delivery Executing yields Command Result. [src: apps/service/src/delivery-worker.ts]
+Resume Target Recording requires Graph Checkpoints. [src: apps/service/src/delivery-commands.ts]
+Resume Target Recording yields Exact Resume Target. [src: apps/service/src/delivery-commands.ts]
+Resume Target Consuming requires Exact Resume Target. [src: apps/service/src/delivery-worker.ts]
+Resume Target Consuming requires Immutable Command Admission. [src: apps/service/src/delivery-worker.ts]
+Resume Target Consuming affects Exact Resume Target. [src: apps/service/src/delivery-worker.ts]
+Fixture Cancellation Requesting yields Run Cancellation. [src: apps/service/src/delivery-commands.ts]
+Run Cancellation can be requested, effective, or already_completed. [src: apps/service/migrations/002_delivery_commands.sql]
+Fixture Cancellation Reconciling requires Graph Checkpoints. [src: apps/service/src/delivery-worker.ts]
+Fixture Cancellation Reconciling affects Run Cancellation. [src: apps/service/src/delivery-worker.ts]
 ```
