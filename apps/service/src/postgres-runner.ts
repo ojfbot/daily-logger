@@ -1,13 +1,13 @@
 import type pg from 'pg'
 import { randomUUID } from 'node:crypto'
 import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, sep } from 'node:path'
 import { digest, json, requireCondition } from './fixture.js'
 import { readPostgresFixture, POSTGRES_WORKFLOW_VERSION } from './postgres-fixture.js'
 import { canonicalRunId, openCheckpointer, withRunLock } from './postgres-db.js'
 import { checkedRunDir, recordAttempt, validateInputs } from './storage.js'
 import { createWorkflow } from './workflow.js'
-import { RESERVATION_FILE, initializeReservedRun, reserveDestination, validateDestination } from './postgres-destination.js'
+import { RESERVATION_FILE, canonicalDestination, requireNoReservedAncestor, initializeReservedRun, reserveDestination, validateDestination } from './postgres-destination.js'
 import { AdmissionConflictError, requireAdmission } from './admission-conflict.js'
 export { AdmissionConflictError } from './admission-conflict.js'
 
@@ -19,8 +19,6 @@ interface RunRow {
 }
 type Snapshot = Awaited<ReturnType<ReturnType<typeof createWorkflow>['snapshot']>>
 
-export type AdmissionDatabase = Pick<pg.Pool, 'query'>
-
 function admittedFixture(row: RunRow) {
   let parsed: { destinationReservation?: unknown }
   try { parsed = JSON.parse(row.manifest_text) } catch { throw new Error('Application manifest is invalid') }
@@ -30,41 +28,73 @@ function admittedFixture(row: RunRow) {
   return { fixture, legacy: parsed.destinationReservation === undefined }
 }
 
-/** Filesystem ownership is reserved first; DB admission precedes graph execution. */
-export async function admitRun(pool: AdmissionDatabase, requestKey: string, directory: string): Promise<RunRow> {
+/** Own the admission transaction; never execute graph work while holding it. */
+export async function admitRun(pool: pg.Pool, requestKey: string, directory: string): Promise<RunRow> {
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const row = await admitRunInTransaction(client, requestKey, directory)
+    await client.query('COMMIT')
+    return row
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {})
+    throw error
+  } finally { client.release() }
+}
+
+/** Caller owns commit/rollback; locks and DB admission remain in that transaction. */
+export async function admitRunInTransaction(client: pg.PoolClient, requestKey: string, directory: string): Promise<RunRow> {
   requireCondition(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(requestKey), 'Request key must be 1–128 letters, digits, dots, underscores, colons or hyphens')
+  // SAVEPOINT fails outside an explicit transaction, before any reservation.
+  await client.query('SAVEPOINT dailylogger_admission_transaction_guard')
+  await client.query('RELEASE SAVEPOINT dailylogger_admission_transaction_guard')
+  const isolation = await client.query('SHOW transaction_isolation')
+  requireCondition(isolation.rows[0].transaction_isolation === 'read committed', 'Admission requires a READ COMMITTED transaction')
+  await client.query("SET LOCAL lock_timeout = '10s'")
+  // The short global admission lock makes ancestor/descendant checks atomic
+  // across request keys. Acquire it first, consistently, to avoid lock inversion.
+  await client.query('SELECT pg_advisory_xact_lock(830031, 1)')
+  await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`dailylogger-admission:${requestKey}`])
   const proposedRunId = randomUUID()
   const source = readPostgresFixture(proposedRunId).manifest.source
   const requestDigestFor = (runDir: string) => digest(json({ runDir, source, workflowVersion: POSTGRES_WORKFLOW_VERSION }))
-  const existing = await pool.query<RunRow>('SELECT * FROM dailylogger_service.fixture_runs WHERE request_key=$1', [requestKey])
+  const canonical = canonicalDestination(directory)
+  const existing = await client.query<RunRow>('SELECT * FROM dailylogger_service.fixture_runs WHERE request_key=$1', [requestKey])
+  if (existing.rows.length) requireAdmission(existing.rows[0].run_dir === canonical && existing.rows[0].request_digest === requestDigestFor(canonical), 'Request key already exists with different immutable inputs or run directory')
+  requireNoReservedAncestor(canonical)
+  const destinations = await client.query<{ run_dir: string; request_key: string }>('SELECT run_dir,request_key FROM dailylogger_service.fixture_runs')
+  for (const destination of destinations.rows) {
+    // Resolve physical aliases for existing bindings without case-folding paths
+    // on case-sensitive filesystems. Retain absent bindings as protected paths.
+    const bound = existsSync(destination.run_dir) ? realpathSync.native(destination.run_dir) : destination.run_dir
+    requireAdmission(bound !== canonical || destination.request_key === existing.rows[0]?.request_key, 'Run directory is already bound to another request key')
+    requireAdmission(!canonical.startsWith(`${bound}${sep}`) && !bound.startsWith(`${canonical}${sep}`), 'Run directory overlaps an existing run directory')
+  }
   if (existing.rows.length) {
     const row = existing.rows[0]
-    const path = checkedRunDir(directory)
-    const canonical = existsSync(path) ? realpathSync.native(path) : path
-    requireAdmission(row.run_dir === canonical && row.request_digest === requestDigestFor(canonical), 'Request key already exists with different immutable inputs or run directory')
     const { fixture, legacy } = admittedFixture(row)
     reserveDestination(canonical, requestKey, row.run_id, requestDigestFor, { existingBinding: true, ...(legacy ? { legacyFixture: fixture } : {}) })
     return row
   }
-  const reservation = reserveDestination(directory, requestKey, proposedRunId, requestDigestFor)
+  const reservation = reserveDestination(canonical, requestKey, proposedRunId, requestDigestFor)
   const { runDir, runId, requestDigest } = reservation
   const fixture = readPostgresFixture(runId)
   if (readdirSync(runDir).some(name => name !== RESERVATION_FILE)) {
     // A rolled-back/uncommitted reservation may contain only its marker. A
     // concurrent winner can already be initializing inputs, but it must have
     // committed the same binding before doing so. Never admit foreign contents.
-    const owner = await pool.query<RunRow>('SELECT * FROM dailylogger_service.fixture_runs WHERE run_id=$1 AND request_key=$2', [runId, requestKey])
+    const owner = await client.query<RunRow>('SELECT * FROM dailylogger_service.fixture_runs WHERE run_id=$1 AND request_key=$2', [runId, requestKey])
     requireAdmission(owner.rows.length === 1 && owner.rows[0].run_dir === runDir && owner.rows[0].request_digest === requestDigest, 'Unadmitted destination contains unexpected files; refusing admission')
   }
   // Both request_key and run_dir are unique. Targeting only request_key can
   // still raise a run_dir violation when equivalent admissions race. Let all
   // unique constraints arbitrate, then resolve the committed immutable binding
   // in a fresh READ COMMITTED statement (not the INSERT's earlier snapshot).
-  await pool.query(`INSERT INTO dailylogger_service.fixture_runs
+  await client.query(`INSERT INTO dailylogger_service.fixture_runs
     (run_id, request_key, request_digest, run_dir, manifest_digest, manifest_text, workflow_version)
     VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING`,
   [runId, requestKey, requestDigest, runDir, fixture.manifestDigest, fixture.manifestBytes, POSTGRES_WORKFLOW_VERSION])
-  const bindings = await pool.query<RunRow>('SELECT * FROM dailylogger_service.fixture_runs WHERE request_key=$1 OR run_dir=$2', [requestKey, runDir])
+  const bindings = await client.query<RunRow>('SELECT * FROM dailylogger_service.fixture_runs WHERE request_key=$1 OR run_dir=$2', [requestKey, runDir])
   const row = bindings.rows.find(candidate => candidate.request_key === requestKey)
   if (!row) {
     requireAdmission(!bindings.rows.some(candidate => candidate.run_dir === runDir), 'Run directory is already bound to another request key')

@@ -57,6 +57,26 @@ test('concurrent identical reservations reuse one UUID and an empty pre-marker c
   validateDestination(recovered)
 })
 
+test('ancestor reservations reject nested destinations before creating directories or markers', () => {
+  const reserved = reserveDestination(join(root, 'ReservedParent'), 'ancestor', randomUUID(), requestDigest)
+  const nested = join(reserved.runDir, 'nested')
+  const markerBytes = readFileSync(join(reserved.runDir, RESERVATION_FILE))
+  assert.throws(() => reserveDestination(nested, 'nested', randomUUID(), requestDigest), /overlaps an ancestor reservation/)
+  assert.equal(existsSync(nested), false)
+  if (existsSync(join(root, 'reservedparent'))) {
+    const aliasNested = join(root, 'reservedparent/nested')
+    assert.throws(() => reserveDestination(aliasNested, 'alias-nested', randomUUID(), requestDigest), /overlaps an ancestor reservation/)
+    assert.equal(existsSync(aliasNested), false)
+  }
+  // Even a damaged/foreign ancestor marker protects the tree; never repair it
+  // or create a descendant while trying to parse the ancestor's ownership.
+  writeFileSync(join(reserved.runDir, RESERVATION_FILE), '{')
+  assert.throws(() => reserveDestination(nested, 'damaged-nested', randomUUID(), requestDigest), /overlaps an ancestor reservation/)
+  assert.equal(existsSync(nested), false)
+  writeFileSync(join(reserved.runDir, RESERVATION_FILE), markerBytes)
+  validateDestination(reserved)
+})
+
 test('foreign contents, partial/lost markers and changed inode fail closed', () => {
   const foreign = join(root, 'foreign')
   mkdirSync(foreign); writeFileSync(join(foreign, 'keep'), 'owned by user')

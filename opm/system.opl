@@ -489,6 +489,9 @@ Isolated Fixture Bundle consists of Recorded Article, Pending Action Candidates,
 Destination Reserving yields Physical Destination Reservation. [src: apps/service/src/postgres-destination.ts]
 PostgreSQL Run Admitting requires Pinned Local Git Artifacts. [src: apps/service/src/postgres-runner.ts]
 PostgreSQL Run Admitting requires Physical Destination Reservation. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires Admission Namespace Lock. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires Request Key Lock. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires PostgreSQL Admission Transaction. [src: apps/service/src/postgres-runner.ts]
 PostgreSQL Run Admitting yields Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
 Fixture Run Binding exhibits Run UUID. [src: apps/service/src/postgres-fixture.ts]
 Fixture Run Binding exhibits Request Key. [src: apps/service/migrations/001_fixture_runs.sql]
@@ -506,3 +509,5 @@ Run Projection Reconciling requires Graph Checkpoints. [src: apps/service/src/po
 Run Projection Reconciling affects Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
 # Application rows, graph checkpoints, and artifact files commit separately. Status reconciles their observed evidence; it does not execute graph steps. [src: apps/service/src/postgres-runner.ts]
 # The reservation precedes database admission and is not an admission receipt. PostgreSQL Input Initializing is restricted to an unstarted bound run under its advisory lock and history guard. [src: apps/service/src/postgres-runner.ts]
+
+# Admission acquires the namespace lock before the request key lock and checks canonical directory bindings and ancestor reservations before filesystem writes. Graph execution starts after admission commits. [src: apps/service/src/postgres-runner.ts]
