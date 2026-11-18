@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-11-18. The exporter assumed Docker inspect's ID was the config digest, but real containerd-backed CI returned an index/manifest target. Record the engine target and config digest separately, verify their archive descriptor graph and layer closure, and execute/reload by the actual engine identity.
+
 - 2026-11-18. The reviewed private mount paths were assumed to exist, but independent host-permission review found Compose could create missing bind sources. Disabled host-path creation for both proxy mounts and added actual missing-source startup failures that assert no host directory was created.
 
 - 2026-11-18. Artifact output exclusion initially used Git's worktree-root probe, but independent review reproduced writes beneath `.git` and a `GIT_DIR` override. Strip Git overrides, reject metadata/ancestor markers, and use the repository-directory probe so bare repositories also stay excluded.

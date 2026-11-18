@@ -2,6 +2,7 @@
 import base64
 import copy
 from datetime import datetime, timedelta, timezone
+import gzip
 import hashlib
 import importlib.util
 import io
@@ -66,6 +67,59 @@ def image_tar(*, user='1000:1000', architecture='amd64', system='linux',
     return tar_bytes(entries), image_id
 
 
+def oci_image_tar(*, compressed=False, attestation=False, wrong_diff=False, crossed_config=False):
+    """Docker/containerd save layout with independently hashed OCI graph nodes."""
+    blobs = {}
+    index_type = 'application/vnd.oci.image.index.v1+json'
+    manifest_type = 'application/vnd.oci.image.manifest.v1+json'
+    config_type = 'application/vnd.oci.image.config.v1+json'
+
+    def blob(data, media_type, **extra):
+        identity = 'sha256:' + hashed(data)
+        blobs['blobs/sha256/' + identity[7:]] = data
+        return {'mediaType': media_type, 'digest': identity, 'size': len(data), **extra}
+
+    layer = tar_bytes([('etc/oci-fixture.txt', b'An actual OCI runtime layer\n')])
+    stored_layer = gzip.compress(layer, mtime=0) if compressed else layer
+    layer_type = 'application/vnd.oci.image.layer.v1.tar' + ('+gzip' if compressed else '')
+    layer_descriptor = blob(stored_layer, layer_type)
+    config = {'architecture': 'amd64', 'os': 'linux', 'config': {'User': '1000:1000'},
+              'rootfs': {'type': 'layers', 'diff_ids': ['sha256:' + hashed(stored_layer if wrong_diff else layer)]}}
+    config_descriptor = blob(encoded(config), config_type)
+    runtime = blob(encoded({'schemaVersion': 2, 'mediaType': manifest_type,
+                           'config': config_descriptor, 'layers': [layer_descriptor]}), manifest_type,
+                   platform={'architecture': 'amd64', 'os': 'linux'})
+    descriptors = [runtime]
+    identities = {'configId': config_descriptor['digest'], 'manifestId': runtime['digest'],
+                  'layerId': layer_descriptor['digest']}
+    if attestation:
+        statement = blob(encoded({'_type': 'https://in-toto.io/Statement/v0.1', 'subject': []}),
+                         'application/vnd.in-toto+json')
+        attestation_config = blob(encoded({'architecture': 'unknown', 'os': 'unknown', 'config': {},
+            'rootfs': {'type': 'layers', 'diff_ids': [statement['digest']]}}), config_type)
+        attestation_manifest = blob(encoded({'schemaVersion': 2, 'mediaType': manifest_type,
+            'config': attestation_config, 'layers': [statement]}), manifest_type,
+            platform={'architecture': 'unknown', 'os': 'unknown'}, annotations={
+                'vnd.docker.reference.type': 'attestation-manifest',
+                'vnd.docker.reference.digest': runtime['digest']})
+        descriptors.append(attestation_manifest)
+        identities['attestationId'] = attestation_manifest['digest']
+    image_index = blob(encoded({'schemaVersion': 2, 'mediaType': index_type,
+                               'manifests': descriptors}), index_type)
+    identities['indexId'] = image_index['digest']
+    compatibility_config = config_descriptor
+    if crossed_config:
+        compatibility_config = blob(encoded({**config, 'created': '2026-01-01T00:00:00Z'}), config_type)
+        identities['configId'] = compatibility_config['digest']
+    root_index = {'schemaVersion': 2, 'mediaType': index_type, 'manifests': [image_index]}
+    compatibility = [{'Config': 'blobs/sha256/' + compatibility_config['digest'][7:],
+                      'RepoTags': ['dailylogger-runtime:proof'],
+                      'Layers': ['blobs/sha256/' + layer_descriptor['digest'][7:]]}]
+    entries = [('oci-layout', encoded({'imageLayoutVersion': '1.0.0'})),
+               ('index.json', encoded(root_index)), ('manifest.json', encoded(compatibility)), *blobs.items()]
+    return tar_bytes(entries), identities
+
+
 class GithubFixture:
     """Trusted API records and downloaded bytes are independently mutable."""
     def __init__(self):
@@ -88,6 +142,7 @@ class GithubFixture:
             'ci': {'workflowPath': WORKFLOW, 'workflowId': 50, 'runId': 100,
                    'attempt': 2, 'jobId': 110, 'jobKey': 'runtime-image'},
             'image': {'identityKind': 'docker-config-sha256', 'configId': image_id,
+                      'engineId': image_id, 'engineIdentityKind': 'config-sha256',
                       'platform': 'linux/amd64', 'uid': 1000, 'gid': 1000},
             'archive': {'name': 'runtime-image.tar', 'size': len(self.image), 'sha256': hashed(self.image)},
             'context': {'schemaVersion': 1, 'sourceRevision': BUILT, 'fixtureCommit': '4' * 40,
@@ -178,6 +233,23 @@ class GithubFixture:
     def replace_image(self, **options):
         self.image, image_id = image_tar(**options)
         self.manifest['image']['configId'] = image_id
+        self.manifest['image']['engineId'] = image_id
+        self.manifest['image']['engineIdentityKind'] = 'config-sha256'
+        self.manifest['archive'].update(size=len(self.image), sha256=hashed(self.image))
+        self.repack()
+
+    def replace_oci_image(self, engine_kind='index-sha256', **options):
+        self.image, identities = oci_image_tar(**options)
+        self.manifest['image'].update(configId=identities['configId'], engineIdentityKind=engine_kind,
+            engineId=identities['indexId'] if engine_kind == 'index-sha256' else identities['manifestId'])
+        self.manifest['archive'].update(size=len(self.image), sha256=hashed(self.image))
+        self.repack()
+        return identities
+
+    def rewrite_image_members(self, transform):
+        with tarfile.open(fileobj=io.BytesIO(self.image), mode='r:') as source:
+            entries = [(member.name, source.extractfile(member).read()) for member in source]
+        self.image = tar_bytes(transform(entries))
         self.manifest['archive'].update(size=len(self.image), sha256=hashed(self.image))
         self.repack()
 
@@ -433,6 +505,61 @@ class ArtifactBoundaryTests(unittest.TestCase):
                 fixture = GithubFixture()
                 fixture.replace_image(**{option: True})
                 self.rejected(fixture)
+
+    def test_oci_index_engine_identity_accepts_attestation_and_gzip_without_conflating_config(self):
+        for compressed in (False, True):
+            with self.subTest(compressed=compressed):
+                fixture = GithubFixture()
+                identities = fixture.replace_oci_image(attestation=True, compressed=compressed)
+                self.assertNotEqual(identities['indexId'], identities['configId'])
+                self.assertNotEqual(identities['manifestId'], identities['configId'])
+                output = self.root / ('oci-gzip' if compressed else 'oci-plain')
+                receipt = self.verify(fixture, output)
+                self.assertEqual(receipt['imageConfigId'], identities['configId'])
+                staged = json.loads((output / 'manifest.json').read_bytes())
+                self.assertEqual(staged['image']['engineId'], identities['indexId'])
+                self.assertEqual(staged['image']['engineIdentityKind'], 'index-sha256')
+                self.assertEqual((output / 'runtime-image.tar').read_bytes(), fixture.image)
+
+    def test_oci_platform_manifest_engine_identity_is_bound_to_its_actual_config(self):
+        identities = self.fixture.replace_oci_image(engine_kind='manifest-sha256')
+        receipt = self.verify()
+        self.assertNotEqual(identities['manifestId'], identities['configId'])
+        self.assertEqual(receipt['imageConfigId'], identities['configId'])
+        staged = json.loads((self.root / 'verified/manifest.json').read_bytes())
+        self.assertEqual(staged['image']['engineId'], identities['manifestId'])
+        self.assertEqual(staged['image']['engineIdentityKind'], 'manifest-sha256')
+
+    def test_oci_wrong_engine_kind_unrelated_digest_attestation_or_crossed_config_reject(self):
+        for target in ('kind', 'absent-engine', 'attestation', 'crossed-config'):
+            with self.subTest(target=target):
+                fixture = GithubFixture()
+                identities = fixture.replace_oci_image(attestation=True, crossed_config=target == 'crossed-config')
+                if target == 'kind':
+                    fixture.manifest['image']['engineIdentityKind'] = 'manifest-sha256'
+                elif target == 'absent-engine':
+                    fixture.manifest['image']['engineId'] = 'sha256:' + 'f' * 64
+                elif target == 'attestation':
+                    fixture.manifest['image'].update(engineId=identities['attestationId'], engineIdentityKind='manifest-sha256')
+                fixture.repack()
+                self.rejected(fixture)
+
+    def test_oci_missing_or_corrupt_referenced_graph_nodes_reject(self):
+        for key, corruption in (('indexId', False), ('manifestId', False), ('configId', False),
+                                ('layerId', False), ('attestationId', False), ('manifestId', True), ('layerId', True)):
+            with self.subTest(key=key, corruption=corruption):
+                fixture = GithubFixture()
+                identities = fixture.replace_oci_image(attestation=True)
+                path = 'blobs/sha256/' + identities[key][7:]
+                def damage(entries):
+                    return [(name, data + b'corruption' if name == path else data) for name, data in entries
+                            if corruption or name != path]
+                fixture.rewrite_image_members(damage)
+                self.rejected(fixture)
+
+    def test_oci_compressed_layer_diff_id_must_hash_decompressed_content(self):
+        self.fixture.replace_oci_image(compressed=True, wrong_diff=True)
+        self.rejected()
 
     def test_missing_failed_skipped_or_false_qualification_receipts_reject(self):
         for target in ('missing', 'failed', 'skipped', 'zero-tests', 'http-failure', 'ingress-failure', 'reload-failure'):
