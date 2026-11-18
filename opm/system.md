@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `6cb205a587f925dca1acaa199f90e5c3ea76a5ef8119ca30446e15346a90ee2d`.
+> Source SHA-256: `6d50cd6f78f94329fd3c9006c9093d14cf6fe877d905c8be3a3709a483ca107b`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1720,6 +1720,12 @@ flowchart TD
   n334["Explicit Endpoint Trust"]
   n335["Child Secret File References"]
   n336["Transport Outcome"]
+  n337("Exporter Compiling")
+  n338["Committed Exporter Sources"]
+  n339["Pinned Build Toolchain"]
+  n340("Runtime Image Packaging")
+  n341["Production Service Dependencies"]
+  n342["Offline Capable Service Image"]
   n322 -->|"condition: enabled"| n310
   n303 -->|"requires (instrument)"| n310
   n323 -->|"requires (instrument)"| n310
@@ -1736,6 +1742,12 @@ flowchart TD
   n334 -->|"requires (instrument)"| n333
   n335 -->|"requires (instrument)"| n333
   n333 -->|"yields"| n336
+  n338 -->|"requires (instrument)"| n337
+  n339 -->|"requires (instrument)"| n337
+  n337 -->|"yields"| n323
+  n323 -->|"requires (instrument)"| n340
+  n341 -->|"requires (instrument)"| n340
+  n340 -->|"yields"| n342
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1757,4 +1769,10 @@ Private HTTPS Exporting requires Bounded OTLP Request. [src: apps/service/src/te
 Private HTTPS Exporting requires Explicit Endpoint Trust. [src: apps/service/src/telemetry-export-config.ts]
 Private HTTPS Exporting requires Child Secret File References. [src: apps/service/src/telemetry-langfuse.ts]
 Private HTTPS Exporting yields Transport Outcome. [src: apps/service/src/telemetry-transport.ts]
+Exporter Compiling requires Committed Exporter Sources. [src: apps/service/runtime/prepare-context.ts]
+Exporter Compiling requires Pinned Build Toolchain. [src: apps/service/package.json]
+Exporter Compiling yields Compiled Exporter Entry Points. [src: apps/service/scripts/build-telemetry.mjs]
+Runtime Image Packaging requires Compiled Exporter Entry Points. [src: apps/service/runtime/Dockerfile]
+Runtime Image Packaging requires Production Service Dependencies. [src: apps/service/package.json]
+Runtime Image Packaging yields Offline Capable Service Image. [src: apps/service/runtime/Dockerfile]
 ```

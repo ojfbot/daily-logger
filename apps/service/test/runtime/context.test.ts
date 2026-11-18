@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -24,11 +24,19 @@ test('committed runtime context excludes ambient credentials and includes a self
     const canary = `private-context-canary-${randomUUID()}`
     writeFileSync(join(source, '.env'), canary)
     execFileSync('git', ['-C', source, 'config', 'runtime.privateCanary', canary])
+    mkdirSync(join(source, 'apps/service/dist'), { recursive: true })
+    writeFileSync(join(source, 'apps/service/dist/prebuilt-canary.mjs'), canary)
+    writeFileSync(join(source, 'apps/service/scripts/unrelated-canary.mjs'), canary)
+    execFileSync('git', ['-C', source, 'add', '-f', 'apps/service/dist/prebuilt-canary.mjs'])
+    execFileSync('git', ['-C', source, '-c', 'core.hooksPath=/dev/null', '-c', 'user.name=Runtime Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet', '-m', 'Synthetic prebuilt negative control'])
     const destination = join(root, 'context')
     const receipt = prepareRuntimeContext(destination, source)
     assert.equal(receipt.configuredRemotes, 0)
     assert.equal(existsSync(join(destination, '.git')), false)
     assert.equal(existsSync(join(destination, 'apps/service/test')), false)
+    assert.equal(existsSync(join(destination, 'apps/service/dist')), false)
+    assert.deepEqual(readdirSync(join(destination, 'apps/service/scripts')), ['build-telemetry.mjs'])
+    assert.equal(readFileSync(join(destination, 'apps/service/scripts/build-telemetry.mjs'), 'utf8'), readFileSync(join(source, 'apps/service/scripts/build-telemetry.mjs'), 'utf8'))
     assert.equal(existsSync(join(destination, 'fixture-git/objects/info/alternates')), false)
     assert.equal(existsSync(join(destination, 'fixture-git/logs')), false)
     assert.ok(existsSync(join(destination, 'Dockerfile')))
@@ -36,6 +44,26 @@ test('committed runtime context excludes ambient credentials and includes a self
     const files = readdirSync(destination, { recursive: true, withFileTypes: true }).filter(entry => entry.isFile())
     for (const entry of files) assert.equal(readFileSync(join(entry.parentPath, entry.name)).includes(Buffer.from(canary)), false)
     execFileSync('git', ['--git-dir', join(destination, 'fixture-git'), 'fsck', '--full', '--no-reflogs'])
+  } finally { rmSync(root, { recursive: true, force: true }) }
+})
+
+test('context rejects dirty or missing exporter build input and unrelated committed modules', () => {
+  const { root, source } = sandbox()
+  const buildScript = join(source, 'apps/service/scripts/build-telemetry.mjs')
+  try {
+    const original = readFileSync(buildScript, 'utf8')
+    writeFileSync(buildScript, original + '\n')
+    assert.throws(() => prepareRuntimeContext(join(root, 'dirty'), source), /Commit runtime inputs/)
+    writeFileSync(buildScript, original)
+    rmSync(buildScript)
+    execFileSync('git', ['-C', source, 'add', '-u'])
+    execFileSync('git', ['-C', source, '-c', 'core.hooksPath=/dev/null', '-c', 'user.name=Runtime Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet', '-m', 'Synthetic missing build input'])
+    assert.throws(() => prepareRuntimeContext(join(root, 'missing'), source), /Required runtime build asset/)
+    writeFileSync(buildScript, original)
+    writeFileSync(join(source, 'apps/service/src/unrelated.mjs'), '// synthetic invalid context module\n')
+    execFileSync('git', ['-C', source, 'add', 'apps/service/scripts/build-telemetry.mjs', 'apps/service/src/unrelated.mjs'])
+    execFileSync('git', ['-C', source, '-c', 'core.hooksPath=/dev/null', '-c', 'user.name=Runtime Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet', '-m', 'Synthetic unsupported source module'])
+    assert.throws(() => prepareRuntimeContext(join(root, 'unsupported'), source), /Unsupported runtime input path/)
   } finally { rmSync(root, { recursive: true, force: true }) }
 })
 
