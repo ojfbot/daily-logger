@@ -73,6 +73,7 @@ ZIP bytes before parsing. It then rejects unsafe/extra members, duplicate JSON,
 unsupported identities and incomplete qualification, checks inner archive/config/
 layer hashes, and writes a private verification receipt in the new output directory.
 Downloads are bounded by the authenticated artifact size, with a two-GiB ceiling.
+They also have a 600-second total deadline; expiry terminates the owned downloader.
 Existing destinations and Git metadata/worktrees are rejected.
 File operations use the created directory descriptor. If its pathname is replaced,
 verification fails and preserves the replacement. Every failed private stage is
