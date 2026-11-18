@@ -32,7 +32,8 @@ Inspect the frozen manifest, input files and invariant review before resuming.
 The digest authorizes only the isolated local fixture bundle. It is neither an
 authenticated approval nor action admission/publication authority. Each run's
 UUID is included in its manifest, approval digest, graph `thread_id`, and replay
-receipt. Identical source bytes can therefore have independent runs.
+receipt. UUID input spelling is normalized to lowercase before deriving locks,
+manifests or lookups. Identical source bytes can therefore have independent runs.
 
 `start` requires a request key and a directory outside every Git checkout. A
 duplicate key with the same canonical directory, source and workflow version
@@ -41,10 +42,30 @@ fails. Admission arbitrates every unique constraint, then reads and validates
 the committed request binding; a concurrent duplicate directory conflict is not
 mistaken for a different request. This follows PostgreSQL's
 [untargeted `ON CONFLICT DO NOTHING` semantics](https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT).
-Another run requires another key and directory. Admission commits before
-filesystem/graph work, so repeating the original start recovers an admission
-that exited before input initialization. Partial input initialization fails
-closed; it is not silently repaired or overwritten.
+Another run requires another key and directory. First, an atomic filesystem
+reservation binds the physical directory to one request and run UUID. Database
+admission then precedes frozen-input initialization and graph execution. Repeating
+the identical request reuses a reservation left by a crash or rolled-back DB
+transaction; the marker itself is not database admission or execution authority.
+Partial input initialization fails closed and is never silently overwritten.
+
+The reservation uses actual `realpath` spelling and device/inode identity, not
+global lowercasing. Atomic directory creation followed by linking a fully written
+marker prevents competing aliases from obtaining different owners. A crash before
+the marker leaves an empty, unowned directory that can be reserved; a crash before
+link may also leave a staging file in its parent. A published marker is never
+reassigned or automatically deleted. Foreign nonempty directories and partial,
+missing or changed ownership markers fail closed. Concurrent requests either
+link once or read the complete winner; there is no unbounded marker-write wait.
+
+New manifests contain `destinationReservation: 1`, a storage-format distinction
+that does not change graph computation. Older S03a binaries cannot operate these
+new runs. The updated binary reconstructs only the two explicitly supported
+manifest formats. Existing initialized legacy runs can adopt a marker only after
+their DB binding and frozen inputs validate; their manifest and approval bytes
+remain unchanged. Legacy admission-only rows without initialized directories are
+held rather than silently migrated. New-format runs with lost markers or changed
+physical destinations are always held, including after copy/restore.
 
 An initial LangGraph input checkpoint can have empty public values before its
 input writes commit. It still has a checkpoint ID and an internal `__start__`
@@ -60,7 +81,11 @@ attempt abandoned. `resume` requires this run's exact approval digest. `recover`
 continues a failed step, preserving successful checkpoints; it cannot bypass the
 human interrupt. Repeating resume/recover after completion validates and reuses
 the existing bundle. Changed inputs, conflicting outputs, missing recorded
-checkpoints, and conflicting application metadata fail closed.
+checkpoints, and conflicting application metadata fail closed. Reconciliation
+requires the acknowledged checkpoint and every checkpoint observed by operation
+attempts to exist in the observed checkpoint's ancestry. It never moves a pointer
+backward or onto another branch. Empty history with recorded node/attempt/artifact
+effects cannot restart a run, even if its first application projection was lost.
 
 ## Storage and ownership
 
@@ -70,12 +95,16 @@ checkpoints, and conflicting application metadata fail closed.
 | `dailylogger_service.fixture_runs` | Run UUID, request identity, canonical directory, exact manifest, workflow version, and checkpoint-derived status/receipt projection. |
 | `dailylogger_service.operation_attempts` | Separate UUID per modifying CLI invocation; before/after checkpoints, attempted nodes and succeeded/failed/abandoned status. |
 | `dailylogger_checkpoints` | LangGraph execution cursor/state and vendor migration ledger. |
-| Run directory | Frozen inputs, diagnostic `attempts.jsonl`, and the create-once artifact bundle; no SQLite checkpoint or mutex. |
+| Run directory | Physical ownership marker `.dailylogger-reservation.json`, frozen inputs, diagnostic `attempts.jsonl`, and the create-once artifact bundle; no SQLite checkpoint or mutex. |
 
 `migrate` applies the checked SQL migration under a migration advisory lock, then
 calls the pinned PostgreSQL saver's `setup()`. These are separate operations;
 an interrupted setup can be repeated explicitly. Unsupported application/saver
-versions fail instead of silently downgrading. Both schemas belong exclusively
+versions fail instead of silently downgrading. Compatibility checks read the
+actual vendor ledger, not only the application stamp: pinned saver 1.1.4 requires
+the contiguous versions 0–5 and their tables. Only an unstamped setup may resume
+a compatible prefix; unknown versions, gaps or missing required tables are held.
+Both schemas belong exclusively
 to DailyLogger. Use a dedicated development database.
 
 A dedicated PostgreSQL session holds an advisory lock for each run throughout
@@ -83,7 +112,11 @@ each command. Other commands wait up to ten seconds before failing as busy.
 Process death releases the lock. Losing its connection terminates the fixture
 process; the saver pool cannot reconnect and continue without ownership. Idle
 pool failures also terminate with a sanitized diagnostic. Each command rechecks
-the stored admission digest against its canonical directory/source/version.
+the stored admission digest against its canonical directory/source/version and
+the marker's physical identity/run UUID. Known binding conflicts expose
+`AdmissionConflictError` (`code: ADMISSION_CONFLICT`); infrastructure exceptions
+remain distinct so a caller-owned transaction can roll back rather than accept
+a command. `admitRun` accepts a query-capable PostgreSQL pool or transaction client.
 
 Application updates, saver checkpoints and artifact filesystem writes **are not
 one transaction**. Retry validates the actual graph state and immutable artifact
@@ -128,7 +161,12 @@ admission before initialization, stale inputs and application identity,
 initial-input checkpoint recovery before pending writes, later missing-state
 rejection, successful-step reuse, both sides of the final-checkpoint crash boundary, and
 termination on lock-session loss. Positive PostgreSQL qualification must come
-from that job, not the SQLite suite or missing-environment failure.
+from that job, not the SQLite suite or missing-environment failure. A separate
+macOS job starts disposable PostgreSQL 18 and mounts an actual case-insensitive
+APFS image. It requires measured case-insensitive behavior and checks existing
+and concurrent aliases leave only one admitted row. Linux tests also verify that
+distinct case-sensitive paths are not incorrectly merged. Local filesystem-only
+tests exercise reservation races without claiming PostgreSQL qualification.
 
 ## Package and API evidence
 

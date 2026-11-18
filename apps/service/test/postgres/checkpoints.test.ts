@@ -2,15 +2,16 @@ import assert from 'node:assert/strict'
 import { spawn, spawnSync, type SpawnSyncReturns } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { once } from 'node:events'
-import { appendFileSync, existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, before, test } from 'node:test'
 import pg from 'pg'
-import { ACTIONS_PATH, ARTICLE_PATH, CANDIDATE_IDS, REPO_ROOT, digest, json, readFixture } from '../../src/fixture.js'
+import { ACTIONS_PATH, ARTICLE_PATH, CANDIDATE_IDS, REPO_ROOT, approvalDigest, digest, json, readFixture, reviewFixture } from '../../src/fixture.js'
 import { readPostgresFixture, POSTGRES_WORKFLOW_VERSION } from '../../src/postgres-fixture.js'
 import { admitRun } from '../../src/postgres-runner.js'
-import { checkedRunDir } from '../../src/storage.js'
+import { checkedRunDir, initializeRun } from '../../src/storage.js'
+import { RESERVATION_FILE, reserveDestination } from '../../src/postgres-destination.js'
 
 // Deliberately fail, rather than skip-green, when the explicit PG suite lacks a DB.
 const configured = process.env.DAILYLOGGER_TEST_DATABASE_URL
@@ -39,12 +40,15 @@ function args(operation: string, values: string[] = [], preload?: string) {
 function command(operation: string, values: string[] = [], preload?: string) {
   return spawnSync(process.execPath, args(operation, values, preload), { cwd: REPO_ROOT, env, encoding: 'utf8', timeout: 30_000 })
 }
-function concurrentCommand(operation: string, values: string[]) {
+function concurrentResult(operation: string, values: string[]) {
   const child = spawn(process.execPath, args(operation, values), { cwd: REPO_ROOT, env, stdio: ['ignore', 'pipe', 'pipe'] })
   let stdout = '', stderr = ''
   child.stdout.on('data', value => { stdout += value })
   child.stderr.on('data', value => { stderr += value })
-  return once(child, 'exit').then(([status]) => {
+  return once(child, 'exit').then(([status]) => ({ status, stdout, stderr }))
+}
+function concurrentCommand(operation: string, values: string[]) {
+  return concurrentResult(operation, values).then(({ status, stdout, stderr }) => {
     assert.equal(status, 0, stderr)
     assert.equal(stderr, '')
     return JSON.parse(stdout)
@@ -114,6 +118,22 @@ test('runtime requires explicit migrations; migration is repeatable and checks i
   await db.query('UPDATE dailylogger_service.schema_migrations SET digest=$1 WHERE version=1', [saved.rows[0].digest])
 })
 
+test('actual saver migration history rejects unknown versions and gaps before stamping or runtime', async () => {
+  await db.query('INSERT INTO dailylogger_checkpoints.checkpoint_migrations(v) VALUES (999)')
+  await db.query('UPDATE dailylogger_service.schema_migrations SET checkpointer_version=NULL WHERE version=1')
+  failure(command('migrate'), /Saver migration history is incompatible/)
+  const marker = await db.query('SELECT checkpointer_version FROM dailylogger_service.schema_migrations WHERE version=1')
+  assert.equal(marker.rows[0].checkpointer_version, null, 'Failed migration must not stamp compatibility')
+  await db.query("UPDATE dailylogger_service.schema_migrations SET checkpointer_version='1.1.4' WHERE version=1")
+  failure(command('status', forRun(randomUUID())), /Saver migration history is incompatible/)
+  await db.query('DELETE FROM dailylogger_checkpoints.checkpoint_migrations WHERE v=999')
+  await db.query('DELETE FROM dailylogger_checkpoints.checkpoint_migrations WHERE v=2')
+  failure(command('migrate'), /Saver migration history is incompatible/)
+  failure(command('status', forRun(randomUUID())), /Saver migration history is incompatible/)
+  await db.query('INSERT INTO dailylogger_checkpoints.checkpoint_migrations(v) VALUES (2)')
+  assert.equal(success(command('migrate')).status, 'migrated')
+})
+
 test('separate-process restart/resume preserves identity, frozen bytes and successful steps', async () => {
   const started = start('restart')
   assert.equal(started.status, 'awaiting-approval')
@@ -155,6 +175,66 @@ test('duplicate start is stable, conflicting reuse rejects, and identical inputs
   assert.deepEqual(nodes(directory), ['collect_fixture', 'draft_fixture', 'review_fixture', 'write_shadow_artifacts'])
 })
 
+test('uppercase UUID spelling uses the same run, manifest and lock identity', async () => {
+  const started = start('uuid-spelling')
+  const upper = started.runId.toUpperCase()
+  assert.notEqual(upper, started.runId)
+  const observed = success(command('status', forRun(upper)))
+  assert.equal(observed.runId, started.runId)
+  assert.equal(observed.checkpointId, started.checkpointId)
+  const [a, b] = await Promise.all([
+    concurrentCommand('resume', [...forRun(upper), '--approval-digest', started.approvalDigest]),
+    concurrentCommand('resume', resumeArgs(started)),
+  ])
+  assert.equal(a.runId, b.runId)
+  assert.equal(a.checkpointId, b.checkpointId)
+  assert.deepEqual(nodes(started.runDir), ['collect_fixture', 'draft_fixture', 'review_fixture', 'write_shadow_artifacts'])
+})
+
+test('physical aliases never create a second admission; case-sensitive distinct directories remain valid', async t => {
+  const probe = join(sandbox, 'CaseProbe')
+  mkdirSync(probe)
+  const insensitive = existsSync(join(sandbox, 'caseprobe'))
+  t.diagnostic(`Real PostgreSQL artifact filesystem case-insensitive: ${insensitive}`)
+  if (process.env.DAILYLOGGER_REQUIRE_CASE_INSENSITIVE === '1') assert.equal(insensitive, true, 'macOS qualification requires a real case-insensitive filesystem')
+  const upper = join(sandbox, 'FixtureAlias'), lower = join(sandbox, 'fixturealias')
+  const first = success(command('start', ['--request-key', 'alias-owner', '--run-dir', upper]))
+  const alias = command('start', ['--request-key', 'alias-other', '--run-dir', lower])
+  if (insensitive) {
+    failure(alias, /already bound/)
+    const second = await db.query('SELECT run_id FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['alias-other'])
+    assert.equal(second.rows.length, 0)
+    assert.equal(success(command('start', ['--request-key', 'alias-owner', '--run-dir', lower])).runId, first.runId)
+  } else assert.notEqual(success(alias).runId, first.runId)
+  const raced = await Promise.all([
+    concurrentResult('start', ['--request-key', 'race-alias-one', '--run-dir', join(sandbox, 'ConcurrentAlias')]),
+    concurrentResult('start', ['--request-key', 'race-alias-two', '--run-dir', join(sandbox, 'concurrentalias')]),
+  ])
+  assert.equal(raced.filter(result => result.status === 0).length, insensitive ? 1 : 2, JSON.stringify(raced))
+  if (insensitive) assert.match(raced.find(result => result.status !== 0)!.stderr, /already bound/)
+  const rows = await db.query("SELECT run_id FROM dailylogger_service.fixture_runs WHERE request_key IN ('race-alias-one','race-alias-two')")
+  assert.equal(rows.rows.length, insensitive ? 1 : 2, 'No losing alias may leave an admitted row')
+})
+
+test('rolled-back admission retains a reusable reservation and lost new markers fail closed', async () => {
+  const client = await db.connect()
+  const directory = join(sandbox, 'rollback-reservation')
+  let reservedId: string
+  try {
+    await client.query('BEGIN')
+    reservedId = (await admitRun(client, 'rollback-reservation', directory)).run_id
+    await client.query('ROLLBACK')
+  } finally { client.release() }
+  assert.equal((await db.query('SELECT 1 FROM dailylogger_service.fixture_runs WHERE request_key=$1', ['rollback-reservation'])).rows.length, 0)
+  assert.equal(existsSync(join(directory, RESERVATION_FILE)), true)
+  const started = start('rollback-reservation')
+  assert.equal(started.runId, reservedId!)
+  rmSync(join(directory, RESERVATION_FILE))
+  failure(command('status', forRun(started.runId)), /marker is missing/)
+  failure(command('start', ['--request-key', 'rollback-reservation', '--run-dir', directory]), /marker is missing/)
+  assert.equal(existsSync(join(directory, RESERVATION_FILE)), false)
+})
+
 test('admission resolves a forced concurrent directory conflict; old targeted arbitration fails the positive control', { timeout: 30_000 }, async () => {
   // This suite owns a newly created database. Recreate the request-key index
   // after the directory index to force the contender to reach the directory
@@ -170,6 +250,7 @@ test('admission resolves a forced concurrent directory conflict; old targeted ar
       const winnerRunId = randomUUID()
       const winnerFixture = readPostgresFixture(winnerRunId)
       const requestDigest = digest(json({ runDir: directory, source: winnerFixture.manifest.source, workflowVersion: POSTGRES_WORKFLOW_VERSION }))
+      reserveDestination(directory, requestKey, winnerRunId, () => requestDigest)
       const winner = await db.connect()
       const contender = new pg.Pool({ connectionString: testUrl.toString(), max: 1, connectionTimeoutMillis: 5000 })
       let pending: Promise<{ ok: true; value: Awaited<ReturnType<typeof admitRun>> | null } | { ok: false; error: unknown }> | undefined
@@ -222,7 +303,8 @@ test('admission resolves a forced concurrent directory conflict; old targeted ar
         }
         const persisted = await db.query('SELECT run_id FROM dailylogger_service.fixture_runs WHERE request_key=$1 OR run_dir=$2', [requestKey, directory])
         assert.deepEqual(persisted.rows, [{ run_id: winnerRunId }])
-        assert.equal(existsSync(directory), false, 'Admission alone must not initialize or execute a graph')
+        assert.equal(existsSync(join(directory, RESERVATION_FILE)), true, 'Filesystem reservation precedes database admission')
+        assert.equal(existsSync(join(directory, 'manifest.json')), false, 'Admission alone must not initialize or execute a graph')
       } finally {
         // Releasing the transaction unblocks a contender even when an assertion
         // fails. Its server-side timeout bounds settlement before pool cleanup.
@@ -259,13 +341,30 @@ test('a durable admission survives process exit before input initialization and 
     console.log(JSON.stringify({ runId: row.run_id }));
     await db.end();
   `], { cwd: REPO_ROOT, env, encoding: 'utf8', timeout: 30_000 }))
-  assert.equal(existsSync(directory), false)
+  assert.equal(existsSync(join(directory, RESERVATION_FILE)), true)
+  assert.equal(existsSync(join(directory, 'manifest.json')), false)
   const before = await db.query('SELECT status,checkpoint_id FROM dailylogger_service.fixture_runs WHERE run_id=$1', [admitted.runId])
   assert.deepEqual(before.rows[0], { status: 'admitted', checkpoint_id: null })
   const started = start('admission-only')
   assert.equal(started.runId, admitted.runId)
   assert.equal(started.status, 'awaiting-approval')
   assert.deepEqual(nodes(directory), ['collect_fixture', 'draft_fixture', 'review_fixture'])
+})
+
+test('initialized legacy admissions adopt ownership without changing manifest or approval bytes', async () => {
+  const runId = randomUUID()
+  const fixture = readPostgresFixture(runId, false)
+  const directory = checkedRunDir(join(sandbox, 'legacy-adoption'))
+  initializeRun(directory, fixture)
+  const requestDigest = digest(json({ runDir: directory, source: fixture.manifest.source, workflowVersion: POSTGRES_WORKFLOW_VERSION }))
+  await db.query(`INSERT INTO dailylogger_service.fixture_runs
+    (run_id,request_key,request_digest,run_dir,manifest_digest,manifest_text,workflow_version) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+  [runId, 'legacy-adoption', requestDigest, directory, fixture.manifestDigest, fixture.manifestBytes, POSTGRES_WORKFLOW_VERSION])
+  const started = success(command('start', ['--request-key', 'legacy-adoption', '--run-dir', directory]))
+  assert.equal(started.runId, runId)
+  assert.equal(started.approvalDigest, approvalDigest(fixture, reviewFixture(fixture)))
+  assert.equal(readFileSync(join(directory, 'manifest.json'), 'utf8'), fixture.manifestBytes)
+  assert.equal(JSON.parse(readFileSync(join(directory, RESERVATION_FILE), 'utf8')).runId, runId)
 })
 
 test('initial empty input checkpoint survives process death before pending writes and recovers normally', async () => {
@@ -306,6 +405,59 @@ test('later missing manifest state is rejected instead of being reconstructed as
   failure(command('status', forRun(started.runId)), /Missing initialized manifest outside the initial input checkpoint/)
   failure(command('recover', forRun(started.runId)), /Missing initialized manifest outside the initial input checkpoint/)
   assert.equal(existsSync(join(started.runDir, 'artifacts')), false)
+  assert.deepEqual(nodes(started.runDir), ['collect_fixture', 'draft_fixture', 'review_fixture'])
+})
+
+test('loss of an acknowledged checkpoint never moves the application pointer backward', async () => {
+  const started = start('lost-acknowledged')
+  await db.query("DELETE FROM dailylogger_checkpoints.checkpoints WHERE thread_id=$1 AND checkpoint_ns='' AND checkpoint_id=$2", [started.runId, started.checkpointId])
+  assert.ok((await db.query('SELECT 1 FROM dailylogger_checkpoints.checkpoints WHERE thread_id=$1', [started.runId])).rows.length > 0, 'Older checkpoints remain')
+  failure(command('status', forRun(started.runId)), /Acknowledged checkpoint is missing/)
+  failure(command('recover', forRun(started.runId)), /Acknowledged checkpoint is missing/)
+  failure(command('start', ['--request-key', 'lost-acknowledged', '--run-dir', started.runDir]), /Acknowledged checkpoint is missing/)
+  const row = await db.query('SELECT checkpoint_id,status FROM dailylogger_service.fixture_runs WHERE run_id=$1', [started.runId])
+  assert.deepEqual(row.rows[0], { checkpoint_id: started.checkpointId, status: 'awaiting-approval' })
+  assert.deepEqual(nodes(started.runDir), ['collect_fixture', 'draft_fixture', 'review_fixture'])
+})
+
+test('empty checkpoint history cannot restart prior node or artifact effects even before app acknowledgment', async () => {
+  const started = start('empty-after-execution')
+  await db.query('DELETE FROM dailylogger_checkpoints.checkpoints WHERE thread_id=$1', [started.runId])
+  await db.query("UPDATE dailylogger_service.fixture_runs SET checkpoint_id=NULL,status='admitted' WHERE run_id=$1", [started.runId])
+  failure(command('start', ['--request-key', 'empty-after-execution', '--run-dir', started.runDir]), /Checkpoint history is missing after recorded execution/)
+  failure(command('status', forRun(started.runId)), /Checkpoint history is missing after recorded execution/)
+  assert.deepEqual(nodes(started.runDir), ['collect_fixture', 'draft_fixture', 'review_fixture'])
+  // Isolate filesystem evidence from the DB attempt ledger in this test DB.
+  await db.query("UPDATE dailylogger_service.operation_attempts SET nodes='[]'::jsonb,before_checkpoint_id=NULL,after_checkpoint_id=NULL WHERE run_id=$1", [started.runId])
+  rmSync(join(started.runDir, 'attempts.jsonl'))
+  mkdirSync(join(started.runDir, 'artifacts'))
+  writeFileSync(join(started.runDir, 'artifacts/retained-effect'), 'do not replace')
+  failure(command('start', ['--request-key', 'empty-after-execution', '--run-dir', started.runDir]), /Checkpoint history is missing after recorded execution/)
+  assert.equal(readFileSync(join(started.runDir, 'artifacts/retained-effect'), 'utf8'), 'do not replace')
+  assert.equal(existsSync(join(started.runDir, 'attempts.jsonl')), false)
+})
+
+test('attempt checkpoint anchors reject partial history loss before first application acknowledgment', async () => {
+  const started = start('lost-attempt-anchor')
+  const earliest = await db.query("SELECT checkpoint_id FROM dailylogger_checkpoints.checkpoints WHERE thread_id=$1 AND metadata->>'step'='0'", [started.runId])
+  assert.equal(earliest.rows.length, 1)
+  await db.query('DELETE FROM dailylogger_checkpoints.checkpoints WHERE thread_id=$1 AND checkpoint_id<>$2', [started.runId, earliest.rows[0].checkpoint_id])
+  await db.query("UPDATE dailylogger_service.fixture_runs SET checkpoint_id=NULL,status='admitted' WHERE run_id=$1", [started.runId])
+  failure(command('recover', forRun(started.runId)), /Recorded operation checkpoint is missing/)
+  failure(command('start', ['--request-key', 'lost-attempt-anchor', '--run-dir', started.runDir]), /Recorded operation checkpoint is missing/)
+  assert.deepEqual(nodes(started.runDir), ['collect_fixture', 'draft_fixture', 'review_fixture'])
+  assert.equal((await db.query('SELECT checkpoint_id FROM dailylogger_service.fixture_runs WHERE run_id=$1', [started.runId])).rows[0].checkpoint_id, null)
+})
+
+test('an unrelated surviving checkpoint is not accepted as forward reconciliation', async () => {
+  const started = start('unrelated-history')
+  const unrelatedId = 'ffffffff-ffff-ffff-ffff-ffffffffffff'
+  await db.query(`INSERT INTO dailylogger_checkpoints.checkpoints (thread_id,checkpoint_ns,checkpoint_id,parent_checkpoint_id,type,checkpoint,metadata)
+    SELECT thread_id,checkpoint_ns,$3,NULL,type,checkpoint,metadata FROM dailylogger_checkpoints.checkpoints
+    WHERE thread_id=$1 AND checkpoint_id=$2`, [started.runId, started.checkpointId, unrelatedId])
+  failure(command('status', forRun(started.runId)), /not a descendant/)
+  const row = await db.query('SELECT checkpoint_id FROM dailylogger_service.fixture_runs WHERE run_id=$1', [started.runId])
+  assert.equal(row.rows[0].checkpoint_id, started.checkpointId)
   assert.deepEqual(nodes(started.runDir), ['collect_fixture', 'draft_fixture', 'review_fixture'])
 })
 
