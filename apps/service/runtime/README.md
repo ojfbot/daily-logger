@@ -44,8 +44,12 @@ index digest. Each built image still requires target-platform proof; rebuilding
 later can resolve newer distribution packages. Do not equate the macOS object
 preparation proof with a Linux image build.
 
-The smoke command owns a unique disposable Compose project and removes only its
-containers, networks and volumes. It tests the actual image offline and with a
+The smoke command owns a unique disposable Compose project and a separately named
+offline container. Standalone cleanup checks its exact name and random ownership
+label, then removes only the verified container ID, including after Docker-client
+timeout. Each lookup/removal has a five-second limit; a failure is reported while
+project-only Compose cleanup still runs. The synthetic OpenSSL subprocess also
+has a five-second limit. It tests the actual image offline and with a
 read-only filesystem, opens native SQLite, runs production entrypoints before
 mounting test code, requires explicit repeatable migration, and completes a
 cross-container fixture start/restart/resume with canonical artifact bytes.

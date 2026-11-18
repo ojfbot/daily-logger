@@ -39,6 +39,14 @@ returning the no-op factory would fail. No observations are emitted, so this
 startup proof needs no telemetry endpoint. The generated synthetic CA is never
 installed into a trust store and its temporary files are removed.
 
+The standalone offline container has its own unique name and ownership nonce.
+Outer cleanup lists only that name/label, verifies exact ID/name/owner metadata,
+then removes by immutable container ID. An existing name or label collision is
+never removed. Docker-client timeouts use SIGKILL and still enter this cleanup;
+each cleanup operation has a five-second bound. Project-only Compose teardown
+still runs if standalone cleanup fails. OpenSSL also has a five-second SIGKILL
+timeout. No global container/image/volume cleanup is used.
+
 This extends the existing runtime-image workflow through its existing smoke
 command; no workflow or artifact contract was changed. Target-image execution is
 still required before treating restricted-UID/read-only startup as qualified.
@@ -56,6 +64,7 @@ was run locally for this slice.
 | Service typecheck | Passed. |
 | Complete local service suite | 44 passed, zero skipped. |
 | Runtime/context suite | 6 passed, zero skipped. Includes rejection of missing/dirty build input, unrelated committed `.mjs`, and exclusion of force-committed prebuilt output. |
+| Focused standalone cleanup tests | 3 passed, zero skipped: timed-out client with owned-ID removal, name/label collision rejection, and already-removed/auto-removal race. Docker is stubbed for these lifecycle cases. |
 | Committed context preparation | Passed for implementation commit `cd1bf356535b0a3d1492536ae9c17de5ae44c9aa`; fixture store has zero remotes/alternates. |
 | Filtered install/build/deploy from only that context | Passed offline; both ESM entry points were built inside the isolated context and copied by production deploy. |
 | Real child startup from that deployed production tree | Passed under local UID 501: child ready then closed, zero batches, default factory still no-op; tests/build script/direct dev esbuild absent. This is not a UID-1000 image result. |
