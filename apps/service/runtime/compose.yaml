@@ -63,7 +63,9 @@ services:
 networks:
   application:
     internal: true
-  oauth-outbound: {}
+    enable_ipv6: false
+  oauth-outbound:
+    enable_ipv6: false
 
 volumes:
   application-database: {}
