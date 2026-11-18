@@ -74,6 +74,10 @@ unsupported identities and incomplete qualification, checks inner archive/config
 layer hashes, and writes a private verification receipt in the new output directory.
 Downloads are bounded by the authenticated artifact size, with a two-GiB ceiling.
 Existing destinations and Git metadata/worktrees are rejected.
+File operations use the created directory descriptor. If its pathname is replaced,
+verification fails and preserves the replacement; the original stage is retained
+for reconciliation. Raw tar headers and extension metadata are bounded before
+the tar parser runs.
 
 The output is always a disposable fixture candidate with `productionEligible:
 false`. Private origin/source ranges, TLS files and application credentials remain
