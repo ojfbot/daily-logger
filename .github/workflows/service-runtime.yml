@@ -39,3 +39,5 @@ jobs:
         run: docker build -t dailylogger-runtime:proof "$RUNNER_TEMP/dailylogger-runtime-context"
       - name: Offline image, production entrypoints and private shared-volume proof
         run: pnpm service:runtime:smoke dailylogger-runtime:proof
+      - name: Strict private TLS, source policy and independent container replacement
+        run: pnpm service:ingress:smoke dailylogger-runtime:proof
