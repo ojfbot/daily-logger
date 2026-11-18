@@ -2,6 +2,10 @@
 
 ## Deviations
 
+- 2026-11-18. Runtime CI initially mounted only the HTTP test directory, but the combined suite launches its observation worker from the delivery test directory. Added that read-only external helper mount while keeping both test directories out of the shipped image and retaining the earlier unmounted production-entrypoint proof.
+
+- 2026-11-18. Packaging tests assumed another shared clone was safe, but the long-running session already had enough alternate object stores to hit Git's nesting limit. Tests now create a self-contained shallow local-transfer clone and explicitly fetch the pinned fixture commit; production context assembly already uses independent objects.
+
 - 2026-11-18. Portable runtime packaging initially assumed every CLI subprocess used the service directory, but the existing HTTP suite starts real CLI entrypoints from the repository root. Kept one service-owned production dependency tree and added a root node_modules link to that same tree, preserving loader resolution without shipping root development dependencies.
 
 - 2026-11-18. HTTP teardown assumed ending pools made a forced database drop safe, but the minimum-Node CI run passed every case and then emitted an asynchronous connection-termination error. Teardown now requires PostgreSQL to report no remaining database sessions before an unforced drop, so a connection leak fails verification instead of being forcibly hidden.
