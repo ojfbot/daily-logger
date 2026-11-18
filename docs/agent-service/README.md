@@ -8,6 +8,7 @@ The owner selected Langfuse on 2026-11-17. The target is a TypeScript LangGraph 
 
 - [Delivery roadmap](delivery-roadmap.md) defines milestones, implementation slices, acceptance evidence, dependencies, and rollback.
 - [Application architecture](architecture.md) defines package boundaries, deployment, persistence, workflow behavior, observability, and fleet interfaces.
+- [Runtime qualification](runtime-qualification.md) separates image proof, a supervised private fixture and production release/recovery, including the owner-selected private CA and public journal access.
 - [Review reconciliation](review-reconciliation.md) records Yuri's findings, attributed delivery choices, and the corrections to initial acceptance, failover, timing, and Cleaner admission.
 - [M1A verification](m1a-verification-2026-11-17.md) records the offline checkpoint and existing-reader proof, with its limits.
 

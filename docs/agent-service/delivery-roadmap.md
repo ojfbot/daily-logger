@@ -47,6 +47,8 @@ Deliver **M1A** first: an offline persisted LangGraph job using recorded inputs 
 3. **Owner API and UI.** Add private-origin authentication, owner authorization, CSRF protection, request validation, idempotent admission, run detail, cancel, and revision-bound review controls. Do not assume a public-site session or VPN membership is sufficient approval identity.
 4. **Langfuse and local operations.** Add OTel instrumentation, source redaction, a configured Langfuse endpoint, and reproducible local compose setup. Test API, worker, database, artifact volume, and Langfuse lifecycles independently. Record proposed production storage and backup requirements.
 
+Apply the [runtime qualification contract](runtime-qualification.md) to the private fixture. Qualify trusted private TLS, actual-peer ingress restrictions, exact Host forwarding, owner login/CSRF/logout, and proxy restart/recreation without losing API sessions or durable commands. Keep API/database ports unpublished and test direct, IPv6 and public-path bypass. A supervised Main-LAN fixture need not wait for the entire fleet firewall rollout; VPN access requires its own observed-source and reachability proof. Public journal access remains independent and uses normal public HTTPS.
+
 **Exit evidence:** a clean checkout boots the documented local application with fixture providers and no paid API calls. Browser and integration tests prove unauthorized requests fail, repeated start/resume does not create another logical run, restart preserves the human wait, stale approval is rejected, and Langfuse outage leaves durable state intact. Canary secret strings are absent from exported traces and public output.
 
 M1A has a narrower receipt: source pin and input manifest, separate start/resume processes, persisted reviewer/checkpoint state, output artifact identity, deterministic repeat-resume behavior, and an existing-reader playback showing the date, Draft label, expected source blob, and original action state. The Nov 17 baseline has three pending candidates and zero admissions. Signed-out playback must not show Accept Draft. A fixture receipt cannot establish model quality, authentication, live Langfuse delivery, production timing, or M3 cutover.
@@ -164,7 +166,9 @@ Use fixture providers in default CI and an explicitly configured budget for live
 
 Update `opm/system.opl` and regenerate `opm/system.md` in each implementation PR that changes actual pipeline inputs, outputs, requirements, or steps. The current OPM model remains an as-built description while this architecture is proposed. Keep accepted policy, implementation status, and deployment evidence separate.
 
-Maintain independent pause controls for generation, model spend, action review, publication, and external adapter effects. Deployment, publication, and migration go through PR review, CI, merge, and automated release. A production host pull of a reviewed immutable image is an automated deployment path; an ad hoc local production CLI command is not.
+Maintain independent pause controls for generation, model spend, action review, publication, and external adapter effects. Deployment, publication, and migration go through PR review, CI, merge, and automated release. Select and qualify the production invoker, including any permitted `workflow_dispatch` entry point. A reviewed image or script invoked directly over SSH does not by itself establish the automated deployment path. Preserve the distinction between a disposable fixture rehearsal and production activation.
+
+Before a production upgrade, close admission and quiesce old API/worker writes within bounded deadlines, then capture a consistent database/filesystem recovery point. Application, saver and delivery migration phases commit separately; reconcile their ledgers and rerun the same qualified migrator after interruption. Current fixture reservations bind a canonical path and physical device/inode. Qualify restoration into an isolated destination with a deliberate ownership reconciliation procedure; a database dump and copied directory alone do not prove recoverability. These upgrade/restore requirements do not block a fresh disposable fixture.
 
 ## Decisions to close during implementation
 
@@ -173,6 +177,7 @@ Maintain independent pause controls for generation, model spend, action review, 
 | Host and storage | Dedicated application identity on an owner-controlled Linux host/VM; private volumes and a separate backup destination | M1 development profile; actual production qualification in M3 |
 | Langfuse placement | Separate self-hosted fleet service, private ingress, per-app/environment projects; verify edition, retention and capacity | S05 |
 | Owner login | Reviewed GitHub OAuth owner allowlist on the private origin; future fleet identity adoption through an adapter | S04 |
+| Private TLS | Owner-selected private fleet CA; device enrollment plus application auth; supervised leaf rotation first, unattended renewal separately qualified; public journal retains public HTTPS | Private fixture before real login |
 | Production schedule owner | DailyLogger recurrence until a qualified FleetRunner trigger replaces it; one active owner | S08 |
 | Model routes and budget | Existing provider first; explicit per-role routes, allowed egress, and per-run/period ceilings | S06 before paid qualification |
 | Publication policy | Bounded overnight Draft review; 04:00 verified public readback; exact-version Accept Draft through current editor; shared fenced manual failover; preserve 07:00 independent review | S07–S08 |

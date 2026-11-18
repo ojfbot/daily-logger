@@ -1,0 +1,29 @@
+# Private runtime qualification
+
+This contract separates implementation evidence from operating a service. It records the owner-selected public/private TLS boundary and findings from the 2026-11-18 runtime, PKI and release reviews. It does not claim that a private service, CA, deployment controller or production restore procedure is already installed.
+
+## Source and image evidence
+
+Build only committed allowlisted inputs and run the actual image entry points, explicit migration, worker restart/resume and shared-volume checks. Record the exact built checkout revision. A default `pull_request` checkout builds GitHub's synthetic merge revision, which is distinct from the PR head and base; preserve those identities separately in qualification receipts.
+
+For transferable release artifacts, bind received bytes to the immutable artifact ID, repository/run association and outer digest obtained through authenticated GitHub API readback. Verify the outer download before trusting its manifest, then verify the inner Docker archive digest and loaded image identity, platform and runtime user. A self-consistent manifest naming a successful run is insufficient. Keep Docker config-image identities distinct from OCI manifest/index digests. See the [GitHub artifact API](https://docs.github.com/en/rest/actions/artifacts) and [PR checkout semantics](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request).
+
+Production-eligible artifacts identify the reviewed merged revision actually built by a successful main/manual workflow. PR artifacts remain qualification candidates. Keep origins, private topology, host paths, TLS material and credentials outside public artifacts and build contexts. Use redacted structured inspection instead of environment or full Compose dumps.
+
+## Supervised private fixture
+
+The public journal at `log.jim.software` retains browser-trusted HTTPS and remains available independently of the NAS. The separate private operator origin uses the owner-selected fleet CA, intended-device trust enrollment, owner authentication and CSRF protection.
+
+The fixture needs one exact private host publication and no API/database host ports. Verify actual network membership, peer-address restrictions, spoofed forwarded-header rejection, exact Host including any explicit port, and denied direct-backend, IPv6, Internet and vendor-relay bypass. Main-LAN success is not VPN evidence: verify the source identity visible at ingress rather than widening an allowlist to compensate for shared source translation. Full fleet firewall activation remains separately owned.
+
+The initial certificate consumer mounts a protected parent read-only on the proxy only. Validate complete immutable generations before atomically changing `current`; restart only the proxy with its admin interface disabled and read back the served certificate using strict CA/hostname verification. Prove proxy restart and recreation preserve API process/session and durable command state. Keep CA signing keys outside the proxy and application. Unattended renewal and activation remain a separate increment.
+
+## Production release and recovery
+
+The production invoker must belong to the reviewed automated deployment pipeline, including any permitted manual CI trigger. A merged artifact plus direct SSH invocation does not itself satisfy the repository's production deployment rule. A fresh disposable fixture is a distinct test mode with no publication authority.
+
+For upgrades, close admission and quiesce API/worker writes before backup and migration. Bound drain, migration and readback deadlines; a deployer lock does not stop application writes. The [database migrator](../../apps/service/src/postgres-db.ts) commits application schema before saver setup, and [delivery installation](../../apps/service/src/delivery-db.ts) has additional phases. After interruption, inspect the recorded state, rerun the same qualified migrator and verify all final histories/digests/configuration before starting services. Do not assume a single all-or-nothing migration or automatically downgrade through changed schemas.
+
+A production recovery point must consistently cover database and fixture files. The [destination ownership checks](../../apps/service/src/postgres-destination.ts) bind canonical path and physical device/inode. A copied directory may therefore fail ownership validation even when its bytes match. Qualify a reviewed restoration and ownership-reconciliation procedure in an isolated destination without weakening live ownership checks or reviving consumed authority. Record measured recovery results before production upgrade eligibility; a conventional dump/copy recipe alone is not that evidence.
+
+A release operates only on its named application project and owned resources, preserves existing fleet services, records failures without dumping secrets, and retains data when recovery is unresolved. Publication ownership, real model execution and live Langfuse export remain governed by their own roadmap milestones.
