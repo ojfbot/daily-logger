@@ -590,7 +590,7 @@ Private HTTPS Forwarding yields Forwarded Fixture HTTP Request. [src: apps/servi
 # The separate proxy namespace preserves the original Host and port, admits immediate socket peers without trusting forwarding headers, and publishes no API/database port. Trusted application peers retain direct API reachability. [src: apps/service/runtime/prepare-ingress.ts] [src: apps/service/runtime/compose.yaml]
 # The proxy reads a read-only parent leaf directory, not a signing key. Certificate issuance, client trust, private DNS and real owner login remain separate live qualification. [src: apps/service/runtime/INGRESS.md]
 
-## SD2.5 — Opt-in metadata exporter process
+## SD2.6 — Opt-in metadata exporter process
 
 Exporter Process Admitting occurs if Explicit Exporter Configuration is enabled. [src: apps/service/src/telemetry-export-config.ts]
 Exporter Process Admitting requires Projected Fixture Observations. [src: apps/service/src/telemetry-export-process.ts]
