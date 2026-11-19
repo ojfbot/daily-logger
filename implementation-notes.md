@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-11-19, #549 continuation: the initiative snapshot alone left both the writer introduction and council reviewer evaluating the whole fleet as Frame OS. Aligned those prompts with core's current fleet goal, separated HelpDesk transport from agent consumption and FleetRunner qualification from deployed capability, and removed synthesis's contradictory per-section action quota. Preserved the roadmap-first structure and existing independent action review; prompt versions advance to article-v8 and council-synthesis-v3. Static orientation is not a live status ledger or approved weekly priority record. Model-output date/telemetry adaptation and evidence-aware council review remain separate service work.
+
 - The initial weekday rewrite assumed a leading weekday named the reporting day, but independent review found it can be content such as “Friday Night”; rewrite only an explicit separated label and preserve other weekday prose under a workday prefix.
 
 - The title rollout assumed browser fixtures asserted article behavior independently of the displayed heading, but the grouped-time fixture expected its raw title; update that exact heading assertion to the new reporting-workday display and rerun all browser journeys before merge.
