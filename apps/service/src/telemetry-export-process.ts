@@ -67,7 +67,7 @@ export function createProcessSink(config: Readonly<ExportConfig>, launch: Launch
   }
 }
 
-/** Explicit injectable adapter. No CLI/env auto-enable and no SDK import in this process. */
+/** Explicit injectable adapter. No ambient auto-enable and no SDK import in this process. */
 export function createLangfuseTelemetry(input?: unknown): Telemetry & { exporterDiagnostics?: ReturnType<typeof createProcessSink>['diagnostics'] } {
   const config = projectExportConfig(input)
   if (!config) return NOOP_TELEMETRY
