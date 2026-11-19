@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261119-1c8c95128d26",
+  "article": {
+    "date": "2026-11-19",
+    "sourceCommitSha": "1c8c95128d26190fcb0631ac8ac197892f3f0e0d",
+    "blobSha": "3f12e03551ef55ae7bf29a0f0b5d60eb5b76de61"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-19T16:09:43Z",
+  "scope": "Final visible Draft; exact source/article/action/deployed bytes; core #510/#622-#629 and pinned #627 map; daily-logger #555-#577 and pinned #566 plan; core #625/#626; exact packaging workflow/scripts; public rendering; all-state same-source review searches; current review schema/discovery; and held-candidate custody. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "1075afc00a1604dc2cb7d37c3b037db92ca79a0f",
+  "fullRecordPath": "reviews/articles/2026-11-19-1c8c95128d26190fcb0631ac8ac197892f3f0e0d.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The service-slice counts and composition conflict",
+      "location": "Lines 3, 6, 11, 57, 59 and 73 say fifteen new service Drafts, then say nineteen simultaneous Drafts include prior #555 and review-data PR #558.",
+      "explanation": "PRs #559-#577 are nineteen service Drafts created before the cutoff. Prior service Drafts #555 and #556 make twenty-one service Drafts. PR #558 is an independent review-data record, not a service slice.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/1c8c95128d26190fcb0631ac8ac197892f3f0e0d/_articles/2026-11-19.md#L3",
+        "https://github.com/ojfbot/daily-logger/pull/559",
+        "https://github.com/ojfbot/daily-logger/pull/577",
+        "https://github.com/ojfbot/daily-logger/pull/558"
+      ],
+      "correction": "Report nineteen new service Drafts and twenty-one open service Drafts when #555/#556 are included; keep review-data PR #558 outside the service-stack count.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Docker did not rerun the 33 proof tests",
+      "location": "Lines 17 and 53 say the Docker clean-consumer build installs the tarball and reruns the full 33-test suite plus bin invocations.",
+      "explanation": "Core #629 separates the required proof:local:test CI step from Docker packaging. The Dockerfile builds, packs, installs and imports the tarball; the packaging script runs package checks, negative probes and a synthetic lifecycle, not the 33 node:test cases.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/1c8c95128d26190fcb0631ac8ac197892f3f0e0d/_articles/2026-11-19.md#L17",
+        "https://github.com/ojfbot/core/pull/629",
+        "https://github.com/ojfbot/core/blob/d616510a394eda5ce6aca1f585a8027f4651e5ee/packages/fleet-runner/Dockerfile",
+        "https://github.com/ojfbot/core/blob/d616510a394eda5ce6aca1f585a8027f4651e5ee/packages/fleet-runner/scripts/proof-packaging.sh"
+      ],
+      "correction": "Distinguish the required 33-test source/CI step from the Docker package/install and synthetic lifecycle proof; do not say Docker reran the 33 tests.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Core #627 already records the M3 hold and next decision",
+      "location": "Lines 71, 83 and 84 say the M3 unblocking action is absent and propose extracting it from core #627.",
+      "explanation": "Core #627 head fc5f01e was recorded before article capture and names the signed-readiness practice, teardown HELD result, generic terminal error, owners, required teardown/native-terminal resolution and next owner decision.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/1c8c95128d26190fcb0631ac8ac197892f3f0e0d/_articles/2026-11-19.md#L71",
+        "https://github.com/ojfbot/core/pull/627",
+        "https://github.com/ojfbot/core/blob/fc5f01ed1fb74812ba43d80e93a5a7b6159c34c5/decisions/wayfinder/control-plane-conductor.md"
+      ],
+      "correction": "Report the recorded M3 hold, owners, retired practice ID and next owner decision; do not create a duplicate extraction task.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The service plan contradicts the claimed unblocked slices",
+      "location": "Lines 59, 73, 83 and 84 say the order was not fully visible, call #559/#567 independently unblocked and propose extracting the sequence from #566.",
+      "explanation": "The pinned #566 roadmap already had its dependency table and current qualification sequence. PR #559 depends on #555; PR #567 is stacked on #564.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/1c8c95128d26190fcb0631ac8ac197892f3f0e0d/_articles/2026-11-19.md#L59",
+        "https://github.com/ojfbot/daily-logger/blob/c2d13bb1504628df66ba3f9102049e602385fdfc/docs/agent-service/delivery-roadmap.md#L134",
+        "https://github.com/ojfbot/daily-logger/pull/559",
+        "https://github.com/ojfbot/daily-logger/pull/567"
+      ],
+      "correction": "Use #566's existing sequence and the PR dependency records; do not call #559/#567 independently unblocked or propose duplicate extraction work.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "PR #571 proves inactive packaging, not trace delivery",
+      "location": "Lines 65 and 84 say #571 is the first nominal or happy-path Langfuse delivery qualification.",
+      "explanation": "PR #571 requires disabled telemetry and zero batches. #573/#574 later qualify enabled transport only against a synthetic receiver. All leave real Langfuse ingestion/readback, capacity and retention open.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/1c8c95128d26190fcb0631ac8ac197892f3f0e0d/_articles/2026-11-19.md#L65",
+        "https://github.com/ojfbot/daily-logger/pull/571",
+        "https://github.com/ojfbot/daily-logger/pull/573",
+        "https://github.com/ojfbot/daily-logger/pull/574"
+      ],
+      "correction": "Describe #571 as inactive/default-off packaging, #573/#574 as synthetic enabled transport, and actual Langfuse readback as unqualified.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "PR #563 is offline mapping, not live LangSmith evidence",
+      "location": "Lines 73 and 84 call #563 the first live evidence or vendor-lock-in event for the LangSmith selection.",
+      "explanation": "PR #563 adds no endpoint, credentials, ambient resource, baggage or network configuration and does not qualify LangSmith ingestion/readback, region, overhead, recovery, retention or evaluation quality.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/1c8c95128d26190fcb0631ac8ac197892f3f0e0d/_articles/2026-11-19.md#L73",
+        "https://github.com/ojfbot/daily-logger/pull/563"
+      ],
+      "correction": "Describe #563 as bounded offline OTel mapping; reserve live-evidence language for authenticated LangSmith readback and qualification.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Core #510 already records rationale, alternatives and gates",
+      "location": "Lines 73, 83 and 84 say alternatives and written rationale are absent and propose a new LangSmith-selection ADR.",
+      "explanation": "Core #510 records the operator selection, historic alternatives, OTel portability boundary, resource-cost measures, qualification gates, privacy/recovery requirements and unresolved thresholds.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/1c8c95128d26190fcb0631ac8ac197892f3f0e0d/_articles/2026-11-19.md#L73",
+        "https://github.com/ojfbot/core/issues/510"
+      ],
+      "correction": "Point to #510 and state which measured values remain unknown; amend or consume that decision record instead of presenting its rationale as absent or duplicating it.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "Core #626 has acceptance criteria through issue #625",
+      "location": "Line 71 says #626 has no recorded acceptance criteria while separately noting active issue #625.",
+      "explanation": "PR #626 tracks issue #625. The issue defines ordered decision reviews, retained invariants, required sources and a first review checkpoint with a concrete target-repo setup contract.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/1c8c95128d26190fcb0631ac8ac197892f3f0e0d/_articles/2026-11-19.md#L71",
+        "https://github.com/ojfbot/core/pull/626",
+        "https://github.com/ojfbot/core/issues/625"
+      ],
+      "correction": "Report #626 as the roadmap link for #625's explicit checklist and first checkpoint; separate missing assignee from missing acceptance criteria.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The asserted second-person review is not attributable",
+      "location": "Line 71 defines independent review as a second-person review and treats M2 as complete through packaging.",
+      "explanation": "Core #629 says M2 required independent reviews, but its public history has no submitted reviews and only an automated skill-audit comment. #627 reports an exact-head review without naming its reviewer or exposing the receipt. Shared-account publication does not authenticate a second person, human, provider or machine.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/1c8c95128d26190fcb0631ac8ac197892f3f0e0d/_articles/2026-11-19.md#L71",
+        "https://github.com/ojfbot/core/pull/629",
+        "https://github.com/ojfbot/core/pull/627"
+      ],
+      "correction": "Retain packaging and merge evidence, but identify the review receipt and reviewer basis or leave independence and second-person identity unverified; keep human merge authority separate.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
