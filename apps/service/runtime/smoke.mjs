@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { ownedContainer } from './owned-container.mjs'
 
@@ -9,6 +10,9 @@ assert.ok(image && extra.length === 0, 'Usage: pnpm service:runtime:smoke IMAGE'
 const composeFile = fileURLToPath(new URL('./compose.yaml', import.meta.url))
 const httpTests = fileURLToPath(new URL('../test/http', import.meta.url))
 const deliveryTests = fileURLToPath(new URL('../test/delivery', import.meta.url))
+// Reviewed synthetic input is injected as data; test files and legacy source are absent in the image.
+const recordedFixture = readFileSync(new URL('../test/fixtures/recorded-article-v2.json', import.meta.url))
+const recordedFixtureSha256 = createHash('sha256').update(recordedFixture).digest('hex')
 const project = `dailylogger-runtime-${randomUUID().slice(0, 8)}`
 const password = randomUUID()
 const environment = { ...process.env, DAILYLOGGER_RUNTIME_IMAGE: image,
@@ -64,6 +68,9 @@ try {
       import { fileURLToPath,pathToFileURL } from 'node:url';
       import { activityWindow } from '@ojfbot/daily-logger-journal/activity-window';
       import { shouldSkipRun } from '@ojfbot/daily-logger-journal/eligibility';
+      import { ArticleDataSchema } from '@ojfbot/daily-logger-journal/article-schema';
+      import { openRecordedEvidence } from './src/recorded-evidence.ts';
+      import { validateRecordedDraft } from './src/recorded-article.ts';
       import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
       import { readFixture,reviewFixture } from './src/fixture.ts';
       import { createLangfuseTelemetry } from './src/telemetry-export-process.ts';
@@ -72,14 +79,15 @@ try {
       assert.equal(existsSync('test'),false);
       assert.equal(existsSync('/app/src'),false);
       assert.equal(existsSync('/build'),false);
-      for(const entry of ['activity-window','eligibility']) {
+      for(const entry of ['activity-window','eligibility','article-schema','action-item-schema','shipment-reference']) {
         const resolved=import.meta.resolve('@ojfbot/daily-logger-journal/'+entry);
         const path=realpathSync(fileURLToPath(resolved));
         assert.ok(path.startsWith('/app/'));
         assert.ok(!path.includes('/build/'));
         const manifest=JSON.parse(readFileSync(new URL('../package.json',pathToFileURL(path)),'utf8'));
         assert.equal(manifest.name,'@ojfbot/daily-logger-journal');
-        for(const field of ['dependencies','optionalDependencies','peerDependencies']) assert.deepEqual(manifest[field]??{},{});
+        assert.deepEqual(manifest.dependencies,{zod:'4.3.6'});
+        for(const field of ['optionalDependencies','peerDependencies']) assert.deepEqual(manifest[field]??{},{});
       }
       for(const [date,hours] of [['2026-03-08',23],['2026-11-01',25],['2026-11-17',24]]) {
         const window=activityWindow(date);
@@ -87,6 +95,13 @@ try {
       }
       assert.deepEqual(shouldSkipRun({date:'2026-11-17',commits:[],recentPRs:[],openIssues:[],closedIssues:[]}),
         {skip:true,reason:'no activity in reporting window'});
+      const recordedBytes=Buffer.from(${JSON.stringify(recordedFixture.toString('base64'))},'base64');
+      const recorded=openRecordedEvidence(recordedBytes,${JSON.stringify(recordedFixtureSha256)});
+      const draft=validateRecordedDraft(recorded,${JSON.stringify(JSON.parse(recordedFixture.toString()).requests[0].binding)});
+      assert.equal(draft.status,'validated');
+      assert.equal(draft.article.title,'Recorded draft');
+      assert.equal(draft.publicationAuthority,'none');
+      assert.equal(ArticleDataSchema.safeParse({}).success,false);
       assert.equal(existsSync('/app/.git/objects/info/alternates'),false);
       assert.equal(existsSync('/app/.git/logs'),false);
       assert.equal(execFileSync('git',['-C','/app','remote'],{encoding:'utf8'}),'');

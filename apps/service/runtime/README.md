@@ -21,7 +21,7 @@ Context preparation copies only committed runtime inputs selected by the
 service's `files` list and required build/schema assets. The `dist` deploy tree
 is excluded even if force-committed: the image rebuilds it from source. Only the
 explicit exporter build script is admitted as an `.mjs` build input; arbitrary
-scripts and host output remain excluded. The shared journal manifest and its two
+scripts and host output remain excluded. The shared journal manifest and its five
 explicitly named source files are also required build inputs. Journal tests,
 unrelated source, environment files and host build output
 are excluded even when committed. Changed runtime inputs,
@@ -42,14 +42,16 @@ The exporter build script, source tests and fault preloads are excluded from the
 runtime. The existing production `tsx` loader retains its own transitive compiler;
 the compiled exporter child does not launch that loader or a compiler helper.
 
-The dependency-free shared journal package is installed through the workspace
-lock and included by production deploy. Its two TypeScript entry points use the
+The shared journal package is installed through the workspace
+lock and included by production deploy. Its five TypeScript entry points use the
 same `tsx` loader. Offline smoke imports the installed package, verifies resolved
 files remain inside `/app`, checks representative DST windows and the empty
-eligibility result, and checks that the installed journal manifest declares no
-runtime, optional or peer dependencies. Root CLI source and build-stage paths
-are absent. This qualifies package closure, not a journal graph or
-semantic validation of recorded evidence.
+eligibility result, and checks that the installed journal manifest declares
+exactly Zod 4.3.6 with no optional or peer dependencies. It also validates a sealed
+synthetic V2 draft through the installed service adapter. The test input is
+injected as data; test files, root CLI source and build-stage paths are absent.
+This qualifies package closure and original-response shape validation, not a
+persisted journal graph, a real captured draft or source authenticity.
 
 Node24.22.3 and PostgreSQL18.7 base images are pinned by official multi-platform
 index digest. Each built image still requires target-platform proof; rebuilding
