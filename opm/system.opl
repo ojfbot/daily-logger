@@ -766,3 +766,14 @@ Journal Serialization Qualifying requires Installed Journal Package Exports. [sr
 Journal Serialization Qualifying requires Synthetic Draft Values. [src: apps/service/runtime/smoke.mjs]
 Journal Serialization Qualifying yields Serialization Compatibility Evidence. [src: src/__tests__/journal-serialization.test.ts]
 # Existing provenance covers local and GitHub Actions runs, not durable service run identities. Serialization preserves supplied values and existing escaping; neither parsing nor hashing authenticates claims or grants publication authority. API capture, schedule timing and diagnostic output stay in the CLI. [src: packages/journal/README.md] [src: src/run-provenance.ts]
+
+## SD2.14 — Shared draft prompt definitions
+
+Drafting requires Shared Journal Prompt Definitions. [src: packages/journal/src/article-prompts.ts]
+Drafting requires Shared Draft Tool Definition. [src: packages/journal/src/article-prompts.ts]
+Draft Prompt Selecting requires Telemetry Presence Flag. [src: packages/journal/src/article-prompts.ts]
+Draft Prompt Selecting requires Shared Journal Prompt Definitions. [src: packages/journal/src/article-prompts.ts]
+Draft Prompt Selecting yields Selected Draft System Prompt. [src: packages/journal/src/article-prompts.ts]
+Journal Prompt Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
+Journal Prompt Qualifying yields Prompt Compatibility Evidence. [src: src/__tests__/fleet-prompt-contract.test.ts]
+# Shared definitions preserve reviewed prompt bytes and legacy tool values. Provider calls, user-context construction, response adaptation and council prompts remain in root adapters; this does not qualify real model output, priority approval or a persisted journal graph. [src: packages/journal/README.md] [src: src/generate-article.ts]

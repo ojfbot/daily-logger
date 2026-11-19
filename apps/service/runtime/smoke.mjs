@@ -75,6 +75,7 @@ try {
       import { draftRecommendationContextMarker,extractDraftRecommendationContext } from '@ojfbot/daily-logger-journal/recommendation-prose';
       import { titleWithReportingWeekday } from '@ojfbot/daily-logger-journal/article-title';
       import { toMarkdown } from '@ojfbot/daily-logger-journal/article-markdown';
+      import { ARTICLE_PROMPT_VERSION,SYSTEM_PROMPT,articleSystemPrompt,ARTICLE_TOOL_V2 } from '@ojfbot/daily-logger-journal/article-prompts';
       import { buildArticleProvenance,parseArticleProvenance,promptSha256,appendAuthoringStage } from '@ojfbot/daily-logger-journal/article-provenance';
       import { openRecordedEvidence } from './src/recorded-evidence.ts';
       import { validateRecordedDraft } from './src/recorded-article.ts';
@@ -86,7 +87,7 @@ try {
       assert.equal(existsSync('test'),false);
       assert.equal(existsSync('/app/src'),false);
       assert.equal(existsSync('/build'),false);
-      for(const entry of ['activity-window','eligibility','article-schema','action-item-schema','shipment-reference','article-body','article-references','article-title','normalize-article-markdown','render-article','recommendation-prose','article-provenance','article-markdown']) {
+      for(const entry of ['activity-window','eligibility','article-schema','action-item-schema','shipment-reference','article-body','article-references','article-title','normalize-article-markdown','render-article','recommendation-prose','article-provenance','article-markdown','article-prompts']) {
         const resolved=import.meta.resolve('@ojfbot/daily-logger-journal/'+entry);
         const path=realpathSync(fileURLToPath(resolved));
         assert.ok(path.startsWith('/app/'));
@@ -131,6 +132,13 @@ try {
       assert.deepEqual(parseArticleProvenance(revisedRaw).authoring,[draftStage,revision]);
       assert.equal(parseArticleProvenance('{'),undefined);
       assert.equal(appendAuthoringStage(markdown,{...revision,model:''}),markdown);
+      assert.equal(ARTICLE_PROMPT_VERSION,'article-v8-2026-11-19-fleet-roadmap-pulse');
+      assert.equal(articleSystemPrompt(false),SYSTEM_PROMPT);
+      assert.ok(SYSTEM_PROMPT.startsWith('You are the technical writer and educational narrator for the CircusGreen / ojfbot fleet'));
+      assert.ok(articleSystemPrompt(true).includes('## Claude Code skill telemetry'));
+      assert.equal(ARTICLE_TOOL_V2.name,'write_article');
+      assert.equal(ARTICLE_TOOL_V2.input_schema.type,'object');
+      assert.ok(ARTICLE_TOOL_V2.input_schema.properties.roadmapPulse.description.includes('Also in flight'));
       assert.equal(ArticleDataSchema.safeParse({}).success,false);
       assert.equal(existsSync('/app/.git/objects/info/alternates'),false);
       assert.equal(existsSync('/app/.git/logs'),false);
