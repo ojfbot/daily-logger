@@ -13,6 +13,8 @@ const deliveryTests = fileURLToPath(new URL('../test/delivery', import.meta.url)
 // Reviewed synthetic input is injected as data; test files and legacy source are absent in the image.
 const recordedFixture = readFileSync(new URL('../test/fixtures/recorded-article-v2.json', import.meta.url))
 const recordedFixtureSha256 = createHash('sha256').update(recordedFixture).digest('hex')
+const serviceDraftFixture = readFileSync(new URL('../test/fixtures/recorded-service-draft-v1.json', import.meta.url))
+const serviceDraftFixtureSha256 = createHash('sha256').update(serviceDraftFixture).digest('hex')
 const project = `dailylogger-runtime-${randomUUID().slice(0, 8)}`
 const password = randomUUID()
 const environment = { ...process.env, DAILYLOGGER_RUNTIME_IMAGE: image,
@@ -79,6 +81,7 @@ try {
       import { buildArticleProvenance,parseArticleProvenance,promptSha256,appendAuthoringStage } from '@ojfbot/daily-logger-journal/article-provenance';
       import { openRecordedEvidence } from './src/recorded-evidence.ts';
       import { validateRecordedDraft } from './src/recorded-article.ts';
+      import { validateRecordedServiceDraft } from './src/recorded-service-draft.ts';
       import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
       import { readFixture,reviewFixture } from './src/fixture.ts';
       import { createLangfuseTelemetry } from './src/telemetry-export-process.ts';
@@ -109,6 +112,16 @@ try {
       assert.equal(draft.status,'validated');
       assert.equal(draft.article.title,'Recorded draft');
       assert.equal(draft.publicationAuthority,'none');
+      const serviceDraftBytes=Buffer.from(${JSON.stringify(serviceDraftFixture.toString('base64'))},'base64');
+      const serviceRecording=openRecordedEvidence(serviceDraftBytes,${JSON.stringify(serviceDraftFixtureSha256)});
+      const serviceDraft=validateRecordedServiceDraft(serviceRecording,${JSON.stringify(JSON.parse(serviceDraftFixture.toString()).requests[0].binding)});
+      assert.equal(serviceDraft.status,'validated');
+      assert.equal(serviceDraft.payloadValidation,'dailylogger-service-draft-v1');
+      assert.equal(serviceDraft.requestValidation,'dailylogger-service-draft-request-v1');
+      assert.equal(serviceDraft.article.title,'Synthetic service draft');
+      assert.equal('status' in serviceDraft.article,false);
+      assert.equal(serviceDraft.actionAuthority,'none');
+      assert.equal(serviceDraft.publicationAuthority,'none');
       const kinds=githubReferenceKinds({openIssues:[],closedIssues:[],mergedPRs:[],openPRs:[],recentPRs:[]});
       const body=assembleBody(draft.article,kinds);
       assert.ok(renderArticle(body).includes('<h2>What shipped</h2>'));
