@@ -4,6 +4,12 @@ on:
   pull_request:
     paths:
       - apps/service/**
+      - packages/journal/**
+      - src/activity-window.ts
+      - src/should-skip-run.ts
+      - src/__tests__/activity-window.test.ts
+      - src/__tests__/should-skip-run.test.ts
+      - eslint.config.js
       - package.json
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
@@ -53,6 +59,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm type-check:service
+      - run: pnpm type-check
+      - run: pnpm type-check:journal
+      - run: pnpm lint:journal
+      - run: pnpm test:journal
       - run: pnpm test:service
       - run: pnpm test:service:postgres
       - run: pnpm test:service:delivery
