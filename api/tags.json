@@ -2,27 +2,27 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 118
+    "count": 119
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 94
+    "count": 95
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 88
+    "count": 89
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 77
+    "count": 78
   },
   {
     "name": "hardening",
     "type": "practice",
-    "count": 51
+    "count": 52
   },
   {
     "name": "model-behavior-as-design",
@@ -62,7 +62,7 @@
   {
     "name": "security-as-emergent-ux",
     "type": "concept",
-    "count": 28
+    "count": 29
   },
   {
     "name": "cv-builder",
@@ -95,14 +95,14 @@
     "count": 17
   },
   {
-    "name": "asset-foundry",
-    "type": "repo",
+    "name": "fleet-runner",
+    "type": "concept",
     "count": 15
   },
   {
-    "name": "fleet-runner",
-    "type": "concept",
-    "count": 14
+    "name": "asset-foundry",
+    "type": "repo",
+    "count": 15
   },
   {
     "name": "purefoy",
@@ -315,6 +315,11 @@
     "count": 4
   },
   {
+    "name": "langgraph",
+    "type": "concept",
+    "count": 3
+  },
+  {
     "name": "nas-backup",
     "type": "concept",
     "count": 3
@@ -378,11 +383,6 @@
     "name": "frame-os",
     "type": "arch",
     "count": 3
-  },
-  {
-    "name": "langgraph",
-    "type": "concept",
-    "count": 2
   },
   {
     "name": "native-dispatch",
