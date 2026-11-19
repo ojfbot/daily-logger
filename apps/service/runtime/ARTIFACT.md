@@ -19,6 +19,20 @@ qualifications pass. The manifest binds the actual checkout, PR head/base, workf
 run/attempt/job, Docker config ID, archive bytes, build-context receipt, source-file
 digests, pinned PostgreSQL/Caddy images and named qualification receipts.
 
+The combined inactive-exporter image requires three additional closed fields in
+the offline receipt: `compiledExporterChild: "ready-then-closed"`, integer
+`exporterBatches: 0`, and `defaultTelemetry: "disabled"`. The final-image smoke
+starts the real compiled child with synthetic file references and closes it
+without sending a batch. Missing fields, a no-op-only startup, nonzero/boolean
+batch counts or an enabled default reject; older offline receipts are not silently
+accepted as proof of this combined image. This remains fixture qualification,
+not live Langfuse ingestion or permission to enable the API/worker adapter.
+
+The exporter command owns one export/reload followed by one runtime and one
+ingress smoke pass. Preparation counts are read from TAP (the union currently
+has ten cases); HTTP counts remain a separate required receipt. The workflow does
+not add a second runtime/ingress pass around the exporter.
+
 The actual PR checkout is a synthetic merge, distinct from the PR head. Docker
 config IDs, engine index/manifest identities, upstream OCI digests, inner tar hashes and GitHub's outer artifact ZIP
 digest are separate identities. The final outer ID/digest is recorded by the

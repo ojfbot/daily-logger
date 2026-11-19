@@ -188,9 +188,11 @@ class GithubFixture:
             'upstreamImages': {'postgres': 'postgres:18.7-trixie@sha256:' + 'a' * 64,
                                'caddy': 'caddy:2.11.9-alpine@sha256:' + 'b' * 64},
             'qualifications': {
-                'preparation': {'tests': 8, 'passed': 8, 'failed': 0, 'skipped': 0},
+                'preparation': {'tests': 10, 'passed': 10, 'failed': 0, 'skipped': 0},
                 'offline': {'proof': 'offline-final-image', 'node': 'v24.22.3', 'git': 'git version 2.47.3',
-                            'uid': 1000, 'fixtureCommit': '4' * 40, 'nativeSqlite': 'passed'},
+                            'uid': 1000, 'fixtureCommit': '4' * 40, 'nativeSqlite': 'passed',
+                            'compiledExporterChild': 'ready-then-closed', 'exporterBatches': 0,
+                            'defaultTelemetry': 'disabled'},
                 'entrypoints': {'proof': 'production-entrypoints-and-cross-container-storage',
                                 'migration': 'explicit-and-repeatable', 'fixture': 'complete',
                                 'shutdown': 'clean', 'publishedPorts': 0},
@@ -801,6 +803,25 @@ class ArtifactBoundaryTests(unittest.TestCase):
                     proof['ingress']['strictTls'] = False
                 else:
                     proof['exportReload']['imageRecordRemoved'] = False
+                fixture.repack()
+                self.rejected(fixture)
+
+    def test_offline_exporter_proof_requires_actual_startup_zero_integer_batches_and_disabled_default(self):
+        fields = ('compiledExporterChild', 'exporterBatches', 'defaultTelemetry')
+        for missing in fields:
+            with self.subTest(missing=missing):
+                fixture = GithubFixture()
+                del fixture.manifest['qualifications']['offline'][missing]
+                fixture.repack()
+                self.rejected(fixture)
+        for field, value in (('compiledExporterChild', 'noop'), ('compiledExporterChild', 'ready'),
+                             ('compiledExporterChild', None), ('exporterBatches', False),
+                             ('exporterBatches', 0.0), ('exporterBatches', '0'), ('exporterBatches', 1),
+                             ('exporterBatches', -1), ('defaultTelemetry', 'enabled'),
+                             ('defaultTelemetry', False), ('exporterEndpoint', 'https://fixture.invalid')):
+            with self.subTest(field=field, value=value):
+                fixture = GithubFixture()
+                fixture.manifest['qualifications']['offline'][field] = value
                 fixture.repack()
                 self.rejected(fixture)
 

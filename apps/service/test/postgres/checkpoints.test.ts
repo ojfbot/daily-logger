@@ -12,6 +12,7 @@ import { readPostgresFixture, POSTGRES_WORKFLOW_VERSION } from '../../src/postgr
 import { admitRun, admitRunInTransaction, AdmissionConflictError } from '../../src/postgres-runner.js'
 import { checkedRunDir, initializeRun } from '../../src/storage.js'
 import { RESERVATION_FILE, reserveDestination } from '../../src/postgres-destination.js'
+import { dropIdleTestDatabase } from '../database-cleanup.js'
 
 // Deliberately fail, rather than skip-green, when the explicit PG suite lacks a DB.
 const configured = process.env.DAILYLOGGER_TEST_DATABASE_URL
@@ -116,10 +117,13 @@ before(async () => {
   databaseCreated = true
 })
 after(async () => {
-  await db.end()
-  if (databaseCreated) await admin.query(`DROP DATABASE "${databaseName}" WITH (FORCE)`)
-  await admin.end()
-  rmSync(sandbox, { recursive: true, force: true })
+  try {
+    await db.end()
+    if (databaseCreated) await dropIdleTestDatabase(admin, databaseName)
+  } finally {
+    await admin.end()
+    rmSync(sandbox, { recursive: true, force: true })
+  }
 })
 
 test('runtime requires explicit migrations; migration is repeatable and checks its checksum', async () => {
