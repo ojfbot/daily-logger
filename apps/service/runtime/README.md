@@ -63,7 +63,9 @@ then constructs an explicitly configured adapter with disposable synthetic key/C
 files under `/tmp`, waits for the real SDK child to report ready, and closes it.
 No observations are emitted and the container has no network: this proves the
 production dependency/path/UID startup closure, not TLS transport or Langfuse
-ingestion. The ordinary API/worker commands still do not inject the adapter.
+ingestion. API/worker commands use the no-op adapter unless their explicit
+`--telemetry-config` argument is supplied. Enabled CLI integration against a
+synthetic receiver is a separate test from this final-image offline startup proof.
 
 ## Deployment inputs
 
@@ -90,8 +92,10 @@ API and worker share `/var/lib/dailylogger/fixtures` at the same absolute path.
 PostgreSQL stores that path, so a different worker mount is invalid. Named-volume
 ownership is verified in CI; actual NAS bind-mount ownership needs separate proof.
 Application PostgreSQL and fixture files use separate persistent volumes.
-Telemetry stays no-op by default. The exporter code/dependencies are packaged but
-the CLI does not enable them; no telemetry database, credentials or disk spool is configured.
+Telemetry stays no-op by default. The exporter code/dependencies are packaged;
+explicit opt-in CLI configuration is described in [OBSERVABILITY.md](../OBSERVABILITY.md).
+The supplied Compose profile does not enable it or mount telemetry credentials.
+No telemetry database or disk spool is configured.
 Any later telemetry storage, retention and backups remain independent.
 
 The worker, migration and database use an internal container network. Only the
