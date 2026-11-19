@@ -17,7 +17,9 @@
     "./article-title": "./src/article-title.ts",
     "./normalize-article-markdown": "./src/normalize-article-markdown.ts",
     "./render-article": "./src/render-article.ts",
-    "./recommendation-prose": "./src/recommendation-prose.ts"
+    "./recommendation-prose": "./src/recommendation-prose.ts",
+    "./article-provenance": "./src/article-provenance.ts",
+    "./article-markdown": "./src/article-markdown.ts"
   },
   "scripts": {
     "type-check": "tsc --noEmit"

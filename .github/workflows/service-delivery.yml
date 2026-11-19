@@ -18,6 +18,7 @@ on:
       - src/article-title.ts
       - src/recommendation-prose.ts
       - src/types.ts
+      - src/run-provenance.ts
       - src/__tests__/schema.test.ts
       - src/__tests__/journal-schema.test.ts
       - src/__tests__/article-references.test.ts
@@ -28,6 +29,10 @@ on:
       - src/__tests__/renderArticle.test.ts
       - src/__tests__/closing-options.test.ts
       - src/__tests__/journal-render.test.ts
+      - src/__tests__/run-provenance.test.ts
+      - src/__tests__/toMarkdown.test.ts
+      - src/__tests__/model-time-output.test.ts
+      - src/__tests__/journal-serialization.test.ts
       - eslint.config.js
       - package.json
       - pnpm-lock.yaml
