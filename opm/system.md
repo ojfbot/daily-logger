@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `03ce72396d279c8ab165fc6907ebd30031295e6efe980b554064e7bc81508325`.
+> Source SHA-256: `4a651d9420f61a54485d7f7d5820d7c9e3b1a045edb40240e9c4dc44ada1e6dc`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -2049,4 +2049,60 @@ Enabled Image Exporter Qualifying requires Enabled Image Test Results. [src: app
 Enabled Image Exporter Qualifying requires Verified Image Proof Cleanup. [src: apps/service/runtime/exporter-smoke.mjs]
 Enabled Image Exporter Qualifying yields Enabled Image Exporter Receipt. [src: apps/service/runtime/exporter-smoke.mjs]
 Fixture Artifact Retaining requires Enabled Image Exporter Receipt. [src: .github/workflows/service-runtime.yml]
+```
+
+## SD2.11 — Sealed recorded evidence protocol
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.11 — Sealed recorded evidence protocol"
+---
+flowchart TD
+  accTitle: SD2.11 — Sealed recorded evidence protocol
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n401("Recorded Evidence Opening")
+  n402["Bounded Canonical Envelope Bytes"]
+  n403["Independently Expected Bundle Digest"]
+  n404["Exact Artifact And Reference Bindings"]
+  n405["Opaque Recorded Evidence Handle"]
+  n406("Recorded Artifact Reading")
+  n407["Defensive Artifact Bytes"]
+  n408("Recorded Response Looking Up")
+  n409["Exact Request Binding"]
+  n410["Recorded Response Outcome"]
+  n411("Recorded Protocol Qualifying")
+  n412["Synthetic Binding And Boundary Cases"]
+  n413["Replay Protocol Evidence"]
+  n402 -->|"requires (instrument)"| n401
+  n403 -->|"requires (instrument)"| n401
+  n404 -->|"requires (instrument)"| n401
+  n401 -->|"yields"| n405
+  n405 -->|"requires (instrument)"| n406
+  n406 -->|"yields"| n407
+  n405 -->|"requires (instrument)"| n408
+  n409 -->|"requires (instrument)"| n408
+  n408 -->|"yields"| n410
+  n412 -->|"requires (instrument)"| n411
+  n411 -->|"yields"| n413
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Recorded Evidence Opening requires Bounded Canonical Envelope Bytes. [src: apps/service/src/recorded-evidence.ts]
+Recorded Evidence Opening requires Independently Expected Bundle Digest. [src: apps/service/src/recorded-evidence.ts]
+Recorded Evidence Opening requires Exact Artifact And Reference Bindings. [src: apps/service/src/recorded-evidence.ts]
+Recorded Evidence Opening yields Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-evidence.ts]
+Recorded Artifact Reading requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-evidence.ts]
+Recorded Artifact Reading yields Defensive Artifact Bytes. [src: apps/service/src/recorded-evidence.ts]
+Recorded Response Looking Up requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-response.ts]
+Recorded Response Looking Up requires Exact Request Binding. [src: apps/service/src/recorded-response.ts]
+Recorded Response Looking Up yields Recorded Response Outcome. [src: apps/service/src/recorded-response.ts]
+Recorded Protocol Qualifying requires Synthetic Binding And Boundary Cases. [src: apps/service/test/recorded-evidence.test.ts]
+Recorded Protocol Qualifying yields Replay Protocol Evidence. [src: apps/service/test/recorded-evidence.test.ts]
 ```

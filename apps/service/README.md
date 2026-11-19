@@ -7,6 +7,10 @@ command admission and a pg-boss worker for that same fixture.
 database projections. The SQLite commands below document the original proof.
 Model providers, publication, and Langfuse have separate delivery slices.
 
+The [S06a recorded-evidence protocol](RECORDED-EVIDENCE.md) adds a bounded,
+offline byte-consistency and exact-response adapter for the later journal graph.
+It does not extend the fixture API or qualify a real generated draft.
+
 This package is the first executable slice of the proposed persistent backend.
 It runs a real TypeScript LangGraph with the official SQLite checkpointer. It
 replays two **recorded artifacts**, pauses for an explicit local review decision,

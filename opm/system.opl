@@ -696,3 +696,19 @@ Enabled Image Exporter Qualifying yields Enabled Image Exporter Receipt. [src: a
 Fixture Artifact Retaining requires Enabled Image Exporter Receipt. [src: .github/workflows/service-runtime.yml]
 # The image supplies application source, production dependencies and compiled exporter entry points. Only test code and helpers are mounted; no host credentials or production endpoint are required. [src: apps/service/runtime/exporter-smoke.mjs]
 # This disposable combined-CLI container proof does not qualify actual host topology, capacity, real owner login or Langfuse indexing/retention. [src: apps/service/runtime/README.md]
+
+## SD2.11 — Sealed recorded evidence protocol
+
+Recorded Evidence Opening requires Bounded Canonical Envelope Bytes. [src: apps/service/src/recorded-evidence.ts]
+Recorded Evidence Opening requires Independently Expected Bundle Digest. [src: apps/service/src/recorded-evidence.ts]
+Recorded Evidence Opening requires Exact Artifact And Reference Bindings. [src: apps/service/src/recorded-evidence.ts]
+Recorded Evidence Opening yields Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-evidence.ts]
+Recorded Artifact Reading requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-evidence.ts]
+Recorded Artifact Reading yields Defensive Artifact Bytes. [src: apps/service/src/recorded-evidence.ts]
+Recorded Response Looking Up requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-response.ts]
+Recorded Response Looking Up requires Exact Request Binding. [src: apps/service/src/recorded-response.ts]
+Recorded Response Looking Up yields Recorded Response Outcome. [src: apps/service/src/recorded-response.ts]
+Recorded Protocol Qualifying requires Synthetic Binding And Boundary Cases. [src: apps/service/test/recorded-evidence.test.ts]
+Recorded Protocol Qualifying yields Replay Protocol Evidence. [src: apps/service/test/recorded-evidence.test.ts]
+# Capture declarations, opaque payload semantics and priority approval assertions remain unverified. No provider call, graph admission, publication, action admission or execution authority is supplied by this protocol. [src: apps/service/RECORDED-EVIDENCE.md]
+# Byte consistency and repeatable response lookup do not prove real drafting, editorial quality or durable provider deduplication. [src: apps/service/RECORDED-EVIDENCE.md]
