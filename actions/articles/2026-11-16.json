@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-16",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-16",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked"
+    },
+    "articleDigest": "3bd6fa6bda9b62d76da8b2aef6e441bf6f2ef53d421a305ae49db8c4580c80e1",
+    "roundId": "3ad01665717ef7713afb5fc5655c01d2db5dab18094627614375bec8fa0a5fea",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "bf0df5bd868ec1aca1d0e34eb975727ed5e93fd16986581ce642653df20d2cb7",
+        "payload": {
+          "command": "/merge daily-logger#548 daily-logger#549",
+          "description": "Both PRs are open non-drafts fixing live blind spots in the article drafter: #548 surfaces ~30 invisible HelpDesk PRs, #549 fixes prompt rules traced to readability problems in the Nov 9–15 review cycle. Neither is a draft. Document the specific merge gate if one exists, or merge.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-16"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "59824ad387f1f34f460c3980974adcc3a01554d8b28b98fec5c7a29f1cec96a7",
+        "payload": {
+          "command": "/triage daily-logger#535 daily-logger#537 daily-logger#539 daily-logger#541 daily-logger#543 daily-logger#545 daily-logger#547",
+          "description": "Seven independent audit draft PRs covering Nov 9–15 have no resolution plan. Decide: batch merge, batch close with a staleness rationale (e.g. auditing articles older than 5 days has diminishing value), or establish a sequencing rule. The queue will grow every day without a named policy.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-16"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "64f0e4df120ec54a4cd36a48a51048106a656dc4b3d80f773a13f7beb57ad9eb",
+        "payload": {
+          "command": "/capture-billing-rate BookcaseDiscovery sf-store-003",
+          "description": "The 20-frame sample projects to 284 s/frame but no dollar-per-frame cost was captured because the GPU billing rate for the compute used is unknown. Retrieve and log the billing rate so the owner has a full cost estimate before sizing the next run.",
+          "repo": "BookcaseDiscovery",
+          "status": "open",
+          "sourceDate": "2026-11-16"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-16",
+      "articleDigest": "3bd6fa6bda9b62d76da8b2aef6e441bf6f2ef53d421a305ae49db8c4580c80e1",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "3eb128d9d4be9e7a5d4e036e0e219e1c32647b85294e596127ed498a648886d4",
+      "candidatePayloadsSha256": "a5dfeb9c9c3af5159831a28ad329be7cc23ecc94e554ac1e105e7f45e0deaacf",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "dc31e4d2add21adccffe09beb8b6d4a868bbda2b798be7b0830f61b4ec543694",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "bf0df5bd868ec1aca1d0e34eb975727ed5e93fd16986581ce642653df20d2cb7",
+          "payloadSha256": "da1401d49134ec011ddab71e06988936f8783b4a525e2af233688d370213c55f",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#548",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#549",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "59824ad387f1f34f460c3980974adcc3a01554d8b28b98fec5c7a29f1cec96a7",
+          "payloadSha256": "2de48573959df9b0828cb0c16e734c174f543a912a73d0fc8770c7a25d09dab3",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#535",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#537",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#539",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#541",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#543",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#545",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#547",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "64f0e4df120ec54a4cd36a48a51048106a656dc4b3d80f773a13f7beb57ad9eb",
+          "payloadSha256": "af2f952f7d40a598324f6ff8fb5a26daf469c12f6cd304b5773f1e7d05159697",
+          "references": [],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#602",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#609",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Repo-sync loop (core #609) is committed but not installed on either Mac; per-Mac install is an explicit owner gate with no tracking item in this window. BookcaseDiscovery next-run sizing requires the owner to supply a decision on run scope; the dollar-per-frame cost is not available because the GPU billing rate for the compute used was not captured in this window — that number is a prerequisite for a full cost estimate. Daily-logger #548 and #549 are open non-drafts with no documented merge gate; the specific blocker is unknown and should be named before the next reporting window. The seven independent audit draft PRs (#535, #537, #539, #541, #543, #545, #547) have no resolution plan; a named disposition (batch merge, batch close with staleness rationale, or sequencing rule) is overdue. Core #602 is listed as \"awaiting merge\" with no named blocking condition; the owner should either merge or document the hold. The per-review-tool attribution for the five repo-sync fix commits (which tool caught which class of bug) was not captured and is not recoverable. Dollar-per-frame cost for BookcaseDiscovery compute is not in this window. Machine-agreement rate target threshold does not yet exist for this project phase; 0.047 and 0.087 are baseline, not pass/fail figures. Telemetry stream frozen since 2026-05-12; root cause unknown and no investigation is in flight."
+    },
+    "stateDigest": "72b16952e9fdefc9d6cee6981288329dc26b4d4593be5f1462e6e21e173d53cb",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

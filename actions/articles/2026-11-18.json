@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-18",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-18",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked"
+    },
+    "articleDigest": "494768a38da21d9f0321807baf0ba1434332172dfcde481dcce92593dd9ea2a0",
+    "roundId": "f334472a712cb82f9c85d0aed8e13f6a0da2fd6338818229adae40534c8f49ed",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "4ca57c46e98abf6680035b1ac74f9a1f29023322fa9604e394967cd43bcbf928",
+        "payload": {
+          "command": "/review core#622",
+          "description": "Review and merge the scripted lease handoff correction — the direct follow-on to 0.2.1 that closes the fallback readiness gap at the proof-wake boundary.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-18"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "c22bf7e2b569d4905f9f3504d47d90474445c8af97511b8e9fb918aef5c5716d",
+        "payload": {
+          "command": "/merge daily-logger#548",
+          "description": "Merge the LocalHelp sweep registration to restore complete source coverage to the drafter — 30+ HelpDesk PRs have been invisible since November 1st, retroactively affecting every article in that window.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-18"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "8efd557c4eed71fcbafcd4bb3904defc07a57f4ff29ad9c761f254ba78dfefd9",
+        "payload": {
+          "command": "/review daily-logger#556",
+          "description": "Before #555 (PostgreSQL) merges, define the blinded comparison evaluation criteria and confirm whether a human reviews the third agent's output before journal cutover — an undefined gate is not a gate.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-18"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-18",
+      "articleDigest": "494768a38da21d9f0321807baf0ba1434332172dfcde481dcce92593dd9ea2a0",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "bea993c50210ab86ee6362c6faf22262c6e16a810fcaa43d76175d2d1cdf69a8",
+      "candidatePayloadsSha256": "41c6389b2034cea171972a4528a241ec5377cff2196923581f558d91a3e201e6",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "6b05a6f70aae1929adfa9e6fac8b08ac22540b78b30f385e00ce771db1ed8efd",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "4ca57c46e98abf6680035b1ac74f9a1f29023322fa9604e394967cd43bcbf928",
+          "payloadSha256": "a6561a5ee8c850e8e2d884731752262df04148a3ea4530f695bdac6304878e1f",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#622",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "c22bf7e2b569d4905f9f3504d47d90474445c8af97511b8e9fb918aef5c5716d",
+          "payloadSha256": "658b004b061e0c2083ce76b184336c10a0372b441c5218812985336d0eefa796",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#548",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "8efd557c4eed71fcbafcd4bb3904defc07a57f4ff29ad9c761f254ba78dfefd9",
+          "payloadSha256": "155faff8ae680764e628bd775c485fc4d98dfe3339829347eae043b7d4e72354",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#556",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#602",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#621",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "daily-logger#552",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "daily-logger#554",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "daily-logger#555",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Three PRs merged this interval: core #621 (FleetRunner 0.2.1), daily-logger #554 (LangGraph SQLite fixture + delivery plan), daily-logger #552 (blog 2026-11-17). Core #622 (DRAFT, lease handoff correction) opened at 05:49Z within this interval and is the immediate continuation of the wake-proof arc — likely the next operator review target in core. Daily-logger #555 (PostgreSQL checkpoint parity, DRAFT) and #556 (blinded comparison plan, DRAFT) also opened this interval and together sketch the two milestones between the landed SQLite fixture and production cutover; neither has test results or a merge event in this window. #555 is a dependency for #556. Daily-logger #548 (LocalHelp sweep registration, non-draft, opened 2026-11-16) has no merge event; owner decision on merge priority is needed — 30+ HelpDesk PRs have been invisible to the drafter since November 1st. Core #602 (stale-docs cleanup 2026-11-14, non-draft) has been open four days with no documented blocker; disposition needed. The five independent audit DRAFTs (#541, #545, #547, #551, #553) are record-keeping artifacts by design and are not blocking downstream work. The blinded comparison PR (#556) does not yet specify evaluation criteria or human-in-the-loop requirements for the third agent; that gap needs to be closed before the comparison phase is actionable. Core DRAFTs #619, #600, #598, #597, #596, #595 are parked planning and infrastructure work; merge-conflict status on long-lived DRAFTs is unknown from available evidence. BookcaseDiscovery #104 (stale-docs cleanup 2026-11-17) is open non-draft with no merge event."
+    },
+    "stateDigest": "a7b9ee67947f2f57e125e9cf65ba1e82f607aeda1b054f2365b1a5b29638ff57",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-19",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-19",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked"
+    },
+    "articleDigest": "b8144f7aeaa3a18647be19dbe24ab8e61fee496e8e2ca8fdab4e2c8fb9b46ca3",
+    "roundId": "4ee6443f262cddacfb308fb1fb8d4a7a98b8b3121016728f31faffc2ea908477",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "d1b3dbff59c407185fb847e294e7f5a5d1d823bd4d284c6a3c2ed4f1a4cf2e1b",
+        "payload": {
+          "command": "/review core#627 --extract-m3-criteria",
+          "description": "Extract the specific acceptance criteria and named reviewer requirement for M3 (live job) from the burn-down tracking PR, so the unblocking action for next interval is explicit, not implied.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-19"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "b71271b88a29459978474ec43b0a0f3e07564f786566d38a8978786898b44553",
+        "payload": {
+          "command": "/review daily-logger#566 --extract-merge-sequence",
+          "description": "Read the qualification and delivery plan PR to extract the intended merge sequence for the 19 draft slices and identify the two independently unblocked leading-edge PRs. This is the re-entry point for the daily-logger stack.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-19"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "12548e44dac67c60723c9954d9e40be476883084f09d575adfccbc897fbb8722",
+        "payload": {
+          "command": "/draft adr --subject langsmith-platform-selection --references core#510,daily-logger#563",
+          "description": "Write the LangSmith platform selection ADR before #563 merges. Record cost-per-trace, alternatives considered, and exit criteria. The operator decision was made 2026-11-18; the first live span should not ship without a written rationale.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-19"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-19",
+      "articleDigest": "b8144f7aeaa3a18647be19dbe24ab8e61fee496e8e2ca8fdab4e2c8fb9b46ca3",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "7007cb4101e9c744c76703dbf74059de85d611a315ced914f28546869034c2b2",
+      "candidatePayloadsSha256": "d8831df63a7231645ef0480d71cf0e54b9542f69895a76c5a51bd857675f99ff",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "67877fcc0ef8608cf08b6906b79108ae1cfd96c3224e50047206830a7db3a489",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [
+        "act-2026-04-30-roadmap-640008",
+        "act-2026-05-10-investigate-d5cfb2",
+        "act-2026-10-02-validate-473596"
+      ],
+      "actionStateSha256": "67abe32b550ee0543df8ee4e34ed744edc0b1d6699bae2e933bcd0f29f391526",
+      "candidates": [
+        {
+          "candidateId": "d1b3dbff59c407185fb847e294e7f5a5d1d823bd4d284c6a3c2ed4f1a4cf2e1b",
+          "payloadSha256": "7b5a107a0ee5db08cbe124af67e880f103da2142bd1d9eb12874cbfa1e4eee92",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#627",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "b71271b88a29459978474ec43b0a0f3e07564f786566d38a8978786898b44553",
+          "payloadSha256": "e2a56f17b306f415b30a4064b8d8e75fd50554f2bb92a66339ca795b48a2e75b",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#566",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "12548e44dac67c60723c9954d9e40be476883084f09d575adfccbc897fbb8722",
+          "payloadSha256": "de86f9425a5d07f25464a2211ddc91a96dd3b0bda2c84eea0f56f636d0b3c086",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#510",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            },
+            {
+              "classification": "required",
+              "reference": "daily-logger#563",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#619",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "M3 unblocking action is not recorded in the interval evidence — the specific criteria for clearing M3 (live job run) must be extracted from core #627 before the next interval begins. The independent reviewer for M3/M4/M5 is not named in any visible evidence. Core #619, #620, and #626 have no named reviewer, no acceptance criteria, and no recorded in-window activity — their disposition (actively worked, waiting on something, or stalled) is not resolvable from this evidence. The LangSmith platform selection (core #510) has no written ADR, no cost-per-trace analysis, and no alternatives-considered record visible in the evidence; this should be resolved before #563 merges, as that PR would be the first live vendor lock-in event. The daily-logger slice dependency order is partially resolvable via #566 but not fully verified in PR evidence. The frame.jim.software localhost-origin posture validation (act-2026-10-02-validate-473596) remains unresolved with no named owner in the evidence — this is a security finding, not a footnote, and needs a named owner and resolution target. The :3035 port collision (act-2026-04-30-roadmap-640008 and descendants) and ADR-0068 telemetry audit (act-2026-05-10-investigate-d5cfb2 and descendants) remain unresolved with no recorded progress this interval. The 83 accumulated open actions have no visible triage or deferral rationale in the evidence; handoff readiness is blocked on this. BookcaseDiscovery #104 has no blocking dependency stated and no review activity; it is a candidate for merge or close without further sequencing work. Happy-path trace delivery for the Langfuse child-process exporter is not yet verified — that qualification is the responsibility of #571 and is not available until that draft merges."
+    },
+    "stateDigest": "5d3269517a89b7e1352f81f4f41751041e23fc7697babb53b967a2d0fac3a301",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

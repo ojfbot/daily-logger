@@ -15,6 +15,28 @@ on:
     branches: [main]
 
 jobs:
+  service-portability:
+    name: Service checkpoint portability (Node 24.11.1)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.11.1'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm type-check:service
+      - run: pnpm test:service
+
   browser:
     name: Editorial browser regression
     runs-on: ubuntu-latest
@@ -98,6 +120,9 @@ jobs:
       - name: Type-check
         run: pnpm type-check
 
+      - name: Service fixture type-check
+        run: pnpm type-check:service
+
       - name: Lint
         run: pnpm lint
 
@@ -115,6 +140,9 @@ jobs:
 
       - name: Unit tests
         run: pnpm test
+
+      - name: Offline service checkpoint tests
+        run: pnpm test:service
 
       - name: Validate changed article references
         env:

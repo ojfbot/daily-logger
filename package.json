@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "generate": "tsx src/index.ts",
+    "service:shadow": "node --import tsx apps/service/src/cli.ts",
+    "test:service": "pnpm --filter @ojfbot/daily-logger-service test",
+    "type-check:service": "pnpm --filter @ojfbot/daily-logger-service type-check",
     "generate:dry": "DRY_RUN=true tsx src/index.ts",
     "report": "tsx src/report.ts",
     "report:dry": "DRY_RUN=true tsx src/report.ts",
