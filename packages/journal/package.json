@@ -3,18 +3,28 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "exports": {
     "./activity-window": "./src/activity-window.ts",
     "./eligibility": "./src/eligibility.ts",
     "./article-schema": "./src/article-schema.ts",
     "./action-item-schema": "./src/action-item-schema.ts",
-    "./shipment-reference": "./src/shipment-reference.ts"
+    "./shipment-reference": "./src/shipment-reference.ts",
+    "./article-body": "./src/article-body.ts",
+    "./article-references": "./src/article-references.ts",
+    "./article-title": "./src/article-title.ts",
+    "./normalize-article-markdown": "./src/normalize-article-markdown.ts",
+    "./render-article": "./src/render-article.ts",
+    "./recommendation-prose": "./src/recommendation-prose.ts"
   },
   "scripts": {
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "marked": "17.0.5",
+    "parse5": "7.3.0",
     "zod": "4.3.6"
   }
 }
