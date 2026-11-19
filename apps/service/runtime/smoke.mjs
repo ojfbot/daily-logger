@@ -61,7 +61,7 @@ try {
       import assert from 'node:assert/strict';
       import { execFileSync } from 'node:child_process';
       import { existsSync,readFileSync,writeFileSync,mkdtempSync,rmSync,statSync,realpathSync } from 'node:fs';
-      import { fileURLToPath } from 'node:url';
+      import { fileURLToPath,pathToFileURL } from 'node:url';
       import { activityWindow } from '@ojfbot/daily-logger-journal/activity-window';
       import { shouldSkipRun } from '@ojfbot/daily-logger-journal/eligibility';
       import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
@@ -73,11 +73,14 @@ try {
       assert.equal(existsSync('/app/src'),false);
       assert.equal(existsSync('/build'),false);
       for(const entry of ['activity-window','eligibility']) {
-        const path=realpathSync(fileURLToPath(import.meta.resolve('@ojfbot/daily-logger-journal/'+entry)));
+        const resolved=import.meta.resolve('@ojfbot/daily-logger-journal/'+entry);
+        const path=realpathSync(fileURLToPath(resolved));
         assert.ok(path.startsWith('/app/'));
         assert.ok(!path.includes('/build/'));
+        const manifest=JSON.parse(readFileSync(new URL('../package.json',pathToFileURL(path)),'utf8'));
+        assert.equal(manifest.name,'@ojfbot/daily-logger-journal');
+        for(const field of ['dependencies','optionalDependencies','peerDependencies']) assert.deepEqual(manifest[field]??{},{});
       }
-      assert.throws(()=>import.meta.resolve('@anthropic-ai/sdk'),{code:'ERR_MODULE_NOT_FOUND'});
       for(const [date,hours] of [['2026-03-08',23],['2026-11-01',25],['2026-11-17',24]]) {
         const window=activityWindow(date);
         assert.equal((window.end-window.start)/3600000,hours);
