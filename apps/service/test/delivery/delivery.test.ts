@@ -10,6 +10,7 @@ import pg from 'pg'
 import { ACTIONS_PATH, ARTICLE_PATH, REPO_ROOT, readFixture } from '../../src/fixture.js'
 import { admitCommand, admitCommandInTransaction, commandStatus, runStatus, type CommandRequest } from '../../src/delivery-commands.js'
 import { BOSS_SCHEMA_VERSION, migrateDelivery, QUEUE, startDelivery } from '../../src/delivery-db.js'
+import { dropIdleTestDatabase } from '../database-cleanup.js'
 
 const configured = process.env.DAILYLOGGER_TEST_DATABASE_URL
 assert.ok(configured, 'DAILYLOGGER_TEST_DATABASE_URL is required; real delivery tests never skip without PostgreSQL')
@@ -126,10 +127,13 @@ before(async () => {
   await admin.query(`CREATE DATABASE "${name}"`); created = true
 })
 after(async () => {
-  for (const child of children) if (child.exitCode === null && child.signalCode === null) { const exited = once(child, 'exit'); child.kill('SIGKILL'); await exited }
-  await boss?.stop(); await pool.end()
-  if (created) await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`)
-  await admin.end(); rmSync(sandbox, { recursive: true, force: true })
+  try {
+    for (const child of children) if (child.exitCode === null && child.signalCode === null) { const exited = once(child, 'exit'); child.kill('SIGKILL'); await exited }
+    await boss?.stop(); await pool.end()
+    if (created) await dropIdleTestDatabase(admin, name)
+  } finally {
+    await admin.end(); rmSync(sandbox, { recursive: true, force: true })
+  }
 })
 
 test('explicit installation pins both ledgers and queue settings; runtime cannot skip migration002', async () => {
@@ -169,7 +173,55 @@ test('a nonempty vendor schema without its version ledger cannot be reinstalled'
     assert.deepEqual((await damagedPool.query('SELECT * FROM dailylogger_service.delivery_installation')).rows, receipt)
   } finally {
     await damagedPool.end()
-    if (damagedCreated) await admin.query(`DROP DATABASE "${damagedName}" WITH (FORCE)`)
+    if (damagedCreated) await dropIdleTestDatabase(admin, damagedName)
+  }
+})
+
+test('owned database cleanup waits for server sessions after pool.end resolves', { timeout: 10_000 }, async () => {
+  const closingName = `dailylogger_cleanup_test_${randomUUID().replaceAll('-', '')}`
+  const closingUrl = new URL(adminUrl); closingUrl.pathname = `/${closingName}`
+  const closingPool = new pg.Pool({ connectionString: closingUrl.toString(), connectionTimeoutMillis: 5000 })
+  const errors: Error[] = []
+  closingPool.on('error', error => { errors.push(error) })
+  let closingCreated = false, closeObserved = false, clientEnded = false
+  let releaseClose: (() => void) | undefined
+  let outcome: Promise<{ error?: unknown }> | undefined
+  try {
+    await admin.query(`CREATE DATABASE "${closingName}"`); closingCreated = true
+    const client = await closingPool.connect()
+    client.once('end', () => { clientEnded = true })
+    const originalEnd = client.end.bind(client)
+    client.end = ((callback?: () => void) => {
+      assert.equal(typeof callback, 'function', 'Pinned pg-pool closes clients with a callback')
+      releaseClose = () => { client.end = originalEnd; originalEnd(callback!) }
+    }) as typeof client.end
+    client.release()
+    await closingPool.end()
+    assert.ok(releaseClose, 'Pool shutdown requested the deliberately held client close')
+    assert.equal(clientEnded, false, 'The regression must exercise pool.end before socket closure')
+    const statements: string[] = []
+    outcome = dropIdleTestDatabase({ query: async (text, values) => {
+      statements.push(text)
+      const result = await admin.query(text, values)
+      if (text.startsWith('SELECT 1 FROM pg_stat_activity') && result.rowCount !== 0) closeObserved = true
+      return result
+    } }, closingName).then(() => ({}), error => ({ error }))
+    await waitFor(async () => closeObserved, 2000)
+    assert.equal((await admin.query('SELECT 1 FROM pg_database WHERE datname=$1', [closingName])).rowCount, 1)
+    assert.equal(statements.some(text => text.startsWith('DROP DATABASE')), false, 'No drop while the held server session exists')
+    releaseClose(); releaseClose = undefined
+    const result = await outcome
+    assert.equal(result.error, undefined)
+    closingCreated = false
+    await waitFor(async () => clientEnded, 2000)
+    assert.deepEqual(errors, [], 'Graceful closure must not receive administrator termination')
+    assert.deepEqual(statements.filter(text => text.startsWith('DROP DATABASE')), [`DROP DATABASE "${closingName}"`])
+    assert.equal((await admin.query('SELECT 1 FROM pg_database WHERE datname=$1', [closingName])).rowCount, 0)
+  } finally {
+    releaseClose?.()
+    if (!closingPool.ending) await closingPool.end()
+    if (outcome) await outcome
+    else if (closingCreated) await dropIdleTestDatabase(admin, closingName)
   }
 })
 
