@@ -1,5 +1,202 @@
 [
   {
+    "date": "2026-11-19",
+    "title": "Wednesday — FleetRunner Bookcase Proof Packaged; Daily-Logger Service Stack Expands to 15 Draft PRs",
+    "summary": "Wednesday merged five core PRs completing and packaging the FleetRunner Bookcase worker-takeover proof, while daily-logger opened fifteen draft service slices advancing the LangGraph persistent backend.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "langgraph",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core"
+    ],
+    "commitCount": 12,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Require both Macs to report fresh readiness before the supervisor admits Bookcase work",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Allow proof arming up to ten minutes early inside the approved window",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Package the FleetRunner proof operator as an installable tarball with CI-enforced proof tests",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Decompose the daily-logger persistent service into 15 individually reviewable draft slices",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Isolate the Langfuse exporter behind a child-process boundary",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "10:09Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-18T10:09:39.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "557",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/557"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "622",
+          "url": "https://github.com/ojfbot/core/pull/622"
+        },
+        "at": "2026-11-18T16:03:19.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "623",
+          "url": "https://github.com/ojfbot/core/pull/623"
+        },
+        "at": "2026-11-18T16:14:18.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "624",
+          "url": "https://github.com/ojfbot/core/pull/624"
+        },
+        "at": "2026-11-18T18:24:39.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "628",
+          "url": "https://github.com/ojfbot/core/pull/628"
+        },
+        "at": "2026-11-19T02:45:54.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "629",
+          "url": "https://github.com/ojfbot/core/pull/629"
+        },
+        "at": "2026-11-19T05:46:17.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "557",
+          "url": "https://github.com/ojfbot/daily-logger/pull/557"
+        },
+        "at": "2026-11-18T10:09:39.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-19T09:58:22.200Z",
+        "runId": "44501056382",
+        "runNumber": 319,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/44501056382",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "5f5b7c213b1806a71dbfcb74ac6499ed1d2d7fa9",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-19T09:56:53.000Z",
+          "startedAt": "2026-11-19T09:56:53.000Z",
+          "expectedAt": "2026-11-19T09:30:00.000Z",
+          "dispatchDelaySeconds": 1613,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "0595dc466fc133e076b8132066541c2981c592f3e18fbb20f9e97308e40cf4fe"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-18",
     "title": "Tuesday — FleetRunner Wake Verification Hardens to 0.2.1; Daily-Logger Gains Persistent LangGraph Fixture",
     "summary": "Tuesday's window merged three PRs across core and daily-logger: FleetRunner's wake proof tightens to 0.2.1, and daily-logger lands its first SQLite-backed LangGraph fixture with a service delivery roadmap.",
