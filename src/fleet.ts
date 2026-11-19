@@ -9,7 +9,7 @@
  *
  * Now `discoverRepos()` asks GitHub for the org's live repo set, so surface 2 of
  * the fleet-onboard surface matrix is AUTO. Surfaces 3–4 (KNOWN_REPOS below and
- * the "Additional repos" prose in generate-article.ts) stay explicit because
+ * the "Additional repos" prose in packages/journal/src/article-prompts.ts) stay explicit because
  * they carry hand-written meaning; `reportSurfaceDrift()` turns a swept repo
  * that is missing from them into a loud run-log warning instead of a silent gap.
  */
@@ -223,7 +223,7 @@ export function reportSurfaceDrift(repos: string[], systemPrompt: string): strin
   for (const repo of repos) {
     const gaps: string[] = []
     if (!Object.prototype.hasOwnProperty.call(REPO_NOTES, repo)) gaps.push('src/fleet.ts REPO_NOTES (surface 3)')
-    if (!systemPrompt.includes(`**${repo}**`)) gaps.push('generate-article.ts "Additional repos" (surface 4)')
+    if (!systemPrompt.includes(`**${repo}**`)) gaps.push('packages/journal/src/article-prompts.ts "Additional repos" (surface 4)')
     if (gaps.length > 0) {
       warnings.push(`fleet drift: ${repo} is swept but missing from ${gaps.join(' and ')} — run /fleet-onboard ${repo}`)
     }
