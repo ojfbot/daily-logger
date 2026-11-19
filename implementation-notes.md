@@ -668,3 +668,8 @@ must establish the candidate's actual fit before a new model-run decision.
 
 - Full-root lint during prompt extraction found two unused imports left in the legacy generator by the earlier shared-renderer move. Removed those imports and expanded the journal lint boundary to include the generator, council and prompt contract test; full-root lint passes.
 - The journal suite initially exceeded the existing closing-options timeout while competing with parallel compiler work. The unchanged suite passed with two test workers; no timeout, assertion or production behavior was relaxed.
+
+## Deviations — service draft output contract (2026-11-19)
+
+- The first service tool name differed from the shared prompt's explicit `write_article` instruction. Independent review caught the contradiction; retain that tool name under the separate versioned service schema and assert instruction/selection agreement.
+- Removing per-date schemas from a long-lived AJV instance did not release its generated-code scope. Pinned-library reproduction showed retained validators; use a short-lived compiler per validation instead of claiming bounded retention from `removeSchema`.

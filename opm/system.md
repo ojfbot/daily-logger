@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `8a44c3aba0bdd076cab247b727bcd2041e4e6b07f1143330d7f7ec78a3884109`.
+> Source SHA-256: `c979a3a482a08f814bfdfbfec993a3900447c5f020d61fe60042f583c526d4da`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -2326,4 +2326,75 @@ Draft Prompt Selecting requires Shared Journal Prompt Definitions. [src: package
 Draft Prompt Selecting yields Selected Draft System Prompt. [src: packages/journal/src/article-prompts.ts]
 Journal Prompt Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
 Journal Prompt Qualifying yields Prompt Compatibility Evidence. [src: src/__tests__/fleet-prompt-contract.test.ts]
+```
+
+## SD2.15 — Request-bound service draft output
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.15 — Request-bound service draft output"
+---
+flowchart TD
+  accTitle: SD2.15 — Request-bound service draft output
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n461("Service Draft Tool Building")
+  n462["Sealed Reporting Date"]
+  n455["Shared Draft Tool Definition"]
+  n463["Complete Service Draft Tool"]
+  n464("Recorded Request Reading")
+  n408["Opaque Recorded Evidence Handle"]
+  n412["Exact Request Binding"]
+  n465["Defensive Request And Report Values"]
+  n466("Service Draft Request Validating")
+  n467["Request Contract Result"]
+  n468("Service Draft Output Validating")
+  n418["Bounded Original Draft JSON"]
+  n419["Shared Article Schema Definitions"]
+  n469["Original Service Draft Shape Result"]
+  n470("Service Draft Contract Qualifying")
+  n471["Synthetic Request And Output Boundary Cases"]
+  n472["Installed Service Runtime"]
+  n473["Request Bound Draft Compatibility Evidence"]
+  n462 -->|"requires (instrument)"| n461
+  n455 -->|"requires (instrument)"| n461
+  n461 -->|"yields"| n463
+  n408 -->|"requires (instrument)"| n464
+  n412 -->|"requires (instrument)"| n464
+  n464 -->|"yields"| n465
+  n465 -->|"requires (instrument)"| n466
+  n463 -->|"requires (instrument)"| n466
+  n466 -->|"yields"| n467
+  n467 -->|"requires (instrument)"| n468
+  n418 -->|"requires (instrument)"| n468
+  n419 -->|"requires (instrument)"| n468
+  n468 -->|"yields"| n469
+  n471 -->|"requires (instrument)"| n470
+  n472 -->|"requires (instrument)"| n470
+  n470 -->|"yields"| n473
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Service Draft Tool Building requires Sealed Reporting Date. [src: apps/service/src/article-output-contract.ts]
+Service Draft Tool Building requires Shared Draft Tool Definition. [src: apps/service/src/article-output-contract.ts]
+Service Draft Tool Building yields Complete Service Draft Tool. [src: apps/service/src/article-output-contract.ts]
+Recorded Request Reading requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-evidence.ts]
+Recorded Request Reading requires Exact Request Binding. [src: apps/service/src/recorded-evidence.ts]
+Recorded Request Reading yields Defensive Request And Report Values. [src: apps/service/src/recorded-evidence.ts]
+Service Draft Request Validating requires Defensive Request And Report Values. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Request Validating requires Complete Service Draft Tool. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Request Validating yields Request Contract Result. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Output Validating requires Request Contract Result. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Output Validating requires Bounded Original Draft JSON. [src: apps/service/src/recorded-json.ts]
+Service Draft Output Validating requires Shared Article Schema Definitions. [src: packages/journal/src/article-schema.ts]
+Service Draft Output Validating yields Original Service Draft Shape Result. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Contract Qualifying requires Synthetic Request And Output Boundary Cases. [src: apps/service/test/recorded-service-draft.test.ts]
+Service Draft Contract Qualifying requires Installed Service Runtime. [src: apps/service/runtime/smoke.mjs]
+Service Draft Contract Qualifying yields Request Bound Draft Compatibility Evidence. [src: apps/service/test/recorded-service-draft.test.ts]
 ```
