@@ -78,9 +78,33 @@ admission or execution.
 
 ## Qualification and next integration
 
-Synthetic protocol tests exercise changed evidence/action/priority bindings,
+`validateRecordedDraft(handle, binding)` in `recorded-article.ts` is the first
+semantic adapter. It selects only an exactly matched `draft` recording whose
+output schema is `dailylogger-article-v2`, using the stored binding snapshot.
+Missing, failed, unknown and mismatched recordings retain their replay states.
+Unsupported roles or schemas return fixed rejection codes. Returned artifact
+text is independently bounded for nested JSON depth, nodes and collection size
+before applying the shared `ArticleDataSchema` to the original parsed value.
+Ordinary JSON whitespace is allowed; this adapter uses JavaScript JSON parsing
+semantics, unlike the envelope's canonical encoding. Invalid syntax, lossy
+Unicode scalars, nonfinite numbers, limit violations and schema failures return
+fixed codes without raw payloads, diagnostics or causes.
+
+The adapter does not try V1, fill missing fields, salvage partial output or
+invoke a provider. A valid result is a fresh parsed article plus recorded usage
+and finish metadata; truncated or unknown finish states remain visible. The
+unchanged shared schema strips unknown fields and retains defaults and optional
+status/outcome assertions. Therefore `validated` means original V2 shape only:
+it is not a closed wire contract, source verification, completion, reporting-date
+admission, a human verdict or permission to publish/admit/execute actions. Every
+returned article explicitly retains unverified provenance and no authority.
+The future graph must separately enforce service-owned status/outcome and
+approval policy. The existing CLI keeps its original salvage behavior.
+
+Synthetic protocol and article tests exercise changed evidence/action/priority bindings,
 wrong model or prompt, absent or uncertain responses, malformed references,
-byte limits, mutation isolation and private-payload canaries. They run through
+byte and nested JSON limits, mutation isolation, original-response rejection and
+private-payload canaries. They run through
 the ordinary `pnpm test:service` suite. They do not establish a captured real
 draft, editorial quality or successful model operation.
 

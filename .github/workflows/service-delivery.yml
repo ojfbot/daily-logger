@@ -9,6 +9,17 @@ on:
       - src/should-skip-run.ts
       - src/__tests__/activity-window.test.ts
       - src/__tests__/should-skip-run.test.ts
+      - src/schema.ts
+      - src/action-item-schema.ts
+      - src/article-references.ts
+      - src/generate-article.ts
+      - src/normalize-article-markdown.ts
+      - src/__tests__/schema.test.ts
+      - src/__tests__/journal-schema.test.ts
+      - src/__tests__/article-references.test.ts
+      - src/__tests__/article-markdown-normalization.test.ts
+      - src/__tests__/generate-article-provenance.test.ts
+      - src/__tests__/article-completion.test.ts
       - eslint.config.js
       - package.json
       - pnpm-lock.yaml

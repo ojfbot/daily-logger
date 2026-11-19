@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `a71683dd499a4bbe14f46f7d334eb560b6dd5002828581fddcafbf1413965deb`.
+> Source SHA-256: `f13e0a1bca091c178d9b6698c4ab9485f72996e1b2cc217a04a1d726afc706f1`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -2087,6 +2087,14 @@ flowchart TD
   n414("Recorded Protocol Qualifying")
   n415["Synthetic Binding And Boundary Cases"]
   n416["Replay Protocol Evidence"]
+  n417("Recorded Draft Validating")
+  n418["Bounded Original Draft JSON"]
+  n419["Shared Article Schema Definitions"]
+  n420["Original Draft Shape Result"]
+  n421("Original Draft Qualifying")
+  n422["Synthetic Original Response Cases"]
+  n423["Installed Journal Package Exports"]
+  n424["Original Response Validation Evidence"]
   n405 -->|"requires (instrument)"| n404
   n406 -->|"requires (instrument)"| n404
   n407 -->|"requires (instrument)"| n404
@@ -2098,6 +2106,14 @@ flowchart TD
   n411 -->|"yields"| n413
   n415 -->|"requires (instrument)"| n414
   n414 -->|"yields"| n416
+  n408 -->|"requires (instrument)"| n417
+  n412 -->|"requires (instrument)"| n417
+  n418 -->|"requires (instrument)"| n417
+  n419 -->|"requires (instrument)"| n417
+  n417 -->|"yields"| n420
+  n422 -->|"requires (instrument)"| n421
+  n423 -->|"requires (instrument)"| n421
+  n421 -->|"yields"| n424
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -2114,4 +2130,12 @@ Recorded Response Looking Up requires Exact Request Binding. [src: apps/service/
 Recorded Response Looking Up yields Recorded Response Outcome. [src: apps/service/src/recorded-response.ts]
 Recorded Protocol Qualifying requires Synthetic Binding And Boundary Cases. [src: apps/service/test/recorded-evidence.test.ts]
 Recorded Protocol Qualifying yields Replay Protocol Evidence. [src: apps/service/test/recorded-evidence.test.ts]
+Recorded Draft Validating requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-article.ts]
+Recorded Draft Validating requires Exact Request Binding. [src: apps/service/src/recorded-article.ts]
+Recorded Draft Validating requires Bounded Original Draft JSON. [src: apps/service/src/recorded-article.ts]
+Recorded Draft Validating requires Shared Article Schema Definitions. [src: packages/journal/src/article-schema.ts]
+Recorded Draft Validating yields Original Draft Shape Result. [src: apps/service/src/recorded-article.ts]
+Original Draft Qualifying requires Synthetic Original Response Cases. [src: apps/service/test/recorded-article.test.ts]
+Original Draft Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
+Original Draft Qualifying yields Original Response Validation Evidence. [src: apps/service/test/recorded-article.test.ts]
 ```

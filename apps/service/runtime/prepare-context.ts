@@ -7,7 +7,8 @@ import { REPO_ROOT, SOURCE_COMMIT, readFixture, reviewFixture } from '../src/fix
 import { offlineGitEnvironment } from '../src/offline-git.js'
 
 const exporterBuild = 'apps/service/scripts/build-telemetry.mjs'
-const journalSources = ['packages/journal/src/activity-window.ts', 'packages/journal/src/eligibility.ts']
+const journalSources = ['packages/journal/src/activity-window.ts', 'packages/journal/src/eligibility.ts',
+  'packages/journal/src/article-schema.ts', 'packages/journal/src/action-item-schema.ts', 'packages/journal/src/shipment-reference.ts']
 const metadata = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'packages/frontend/package.json',
   'packages/journal/package.json', 'apps/service/package.json', exporterBuild, 'apps/service/runtime/Dockerfile', 'docs/agent-service/editorial-api-responses.schema.json']
 const environment = { ...offlineGitEnvironment(), GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' }
