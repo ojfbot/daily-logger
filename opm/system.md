@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `91c640f07391583082b9f0f36ced43dadeb1fa3f93eadabc8a9369f3a8ad5f29`.
+> Source SHA-256: `71fa4117e1ad0d02e8ad33af09e7c49b9328af24d75916c9f3fa24ce0dfc1a0c`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -2211,4 +2211,75 @@ Article HTML Rendering yields Escaped Article HTML. [src: packages/journal/src/r
 Journal Rendering Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
 Journal Rendering Qualifying requires Synthetic Draft Values. [src: apps/service/runtime/smoke.mjs]
 Journal Rendering Qualifying yields Rendering Compatibility Evidence. [src: src/__tests__/journal-render.test.ts]
+```
+
+## SD2.13 — Shared article serialization and provenance
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.13 — Shared article serialization and provenance"
+---
+flowchart TD
+  accTitle: SD2.13 — Shared article serialization and provenance
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n440("Article Markdown Serializing")
+  n441["Generated Article Values"]
+  n428("Article Markdown Normalizing")
+  n442("Article Footer Formatting")
+  n443["Draft Article Markdown"]
+  n444("Article Provenance Building")
+  n445["Supplied Run Evidence"]
+  n446["Supplied Authoring Stages"]
+  n447["Supplied Runtime Metadata"]
+  n448["Optional Article Provenance"]
+  n449["Article Attribution Footer"]
+  n450("Authoring Stage Appending")
+  n435["Article Markdown"]
+  n451["Supplied Authoring Stage"]
+  n452("Journal Serialization Qualifying")
+  n423["Installed Journal Package Exports"]
+  n438["Synthetic Draft Values"]
+  n453["Serialization Compatibility Evidence"]
+  n441 -->|"requires (instrument)"| n440
+  n440 -->|"invokes"| n428
+  n440 -->|"invokes"| n442
+  n440 -->|"yields"| n443
+  n445 -->|"requires (instrument)"| n444
+  n446 -->|"requires (instrument)"| n444
+  n447 -->|"requires (instrument)"| n444
+  n444 -->|"yields"| n448
+  n448 -->|"requires (instrument)"| n442
+  n442 -->|"yields"| n449
+  n435 -->|"requires (instrument)"| n450
+  n451 -->|"requires (instrument)"| n450
+  n450 -->|"yields"| n435
+  n423 -->|"requires (instrument)"| n452
+  n438 -->|"requires (instrument)"| n452
+  n452 -->|"yields"| n453
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Article Markdown Serializing requires Generated Article Values. [src: packages/journal/src/article-markdown.ts]
+Article Markdown Serializing invokes Article Markdown Normalizing. [src: packages/journal/src/article-markdown.ts]
+Article Markdown Serializing invokes Article Footer Formatting. [src: packages/journal/src/article-markdown.ts]
+Article Markdown Serializing yields Draft Article Markdown. [src: packages/journal/src/article-markdown.ts]
+Article Provenance Building requires Supplied Run Evidence. [src: packages/journal/src/article-provenance.ts]
+Article Provenance Building requires Supplied Authoring Stages. [src: packages/journal/src/article-provenance.ts]
+Article Provenance Building requires Supplied Runtime Metadata. [src: packages/journal/src/article-provenance.ts]
+Article Provenance Building yields Optional Article Provenance. [src: packages/journal/src/article-provenance.ts]
+Article Footer Formatting requires Optional Article Provenance. [src: packages/journal/src/article-provenance.ts]
+Article Footer Formatting yields Article Attribution Footer. [src: packages/journal/src/article-provenance.ts]
+Authoring Stage Appending requires Article Markdown. [src: packages/journal/src/article-provenance.ts]
+Authoring Stage Appending requires Supplied Authoring Stage. [src: packages/journal/src/article-provenance.ts]
+Authoring Stage Appending yields Article Markdown. [src: packages/journal/src/article-provenance.ts]
+Journal Serialization Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
+Journal Serialization Qualifying requires Synthetic Draft Values. [src: apps/service/runtime/smoke.mjs]
+Journal Serialization Qualifying yields Serialization Compatibility Evidence. [src: src/__tests__/journal-serialization.test.ts]
 ```

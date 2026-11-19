@@ -11,7 +11,8 @@ const journalSources = ['packages/journal/src/activity-window.ts', 'packages/jou
   'packages/journal/src/article-schema.ts', 'packages/journal/src/action-item-schema.ts', 'packages/journal/src/shipment-reference.ts',
   'packages/journal/src/article-body.ts', 'packages/journal/src/article-references.ts',
   'packages/journal/src/article-title.ts', 'packages/journal/src/normalize-article-markdown.ts',
-  'packages/journal/src/render-article.ts', 'packages/journal/src/recommendation-prose.ts']
+  'packages/journal/src/render-article.ts', 'packages/journal/src/recommendation-prose.ts',
+  'packages/journal/src/article-provenance.ts', 'packages/journal/src/article-markdown.ts']
 const metadata = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'packages/frontend/package.json',
   'packages/journal/package.json', 'apps/service/package.json', exporterBuild, 'apps/service/runtime/Dockerfile', 'docs/agent-service/editorial-api-responses.schema.json']
 const environment = { ...offlineGitEnvironment(), GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' }
