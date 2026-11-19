@@ -47,6 +47,12 @@ jobs:
           pnpm service:artifact:export --image dailylogger-runtime:proof
           --context "$RUNNER_TEMP/dailylogger-runtime-context"
           --output "$RUNNER_TEMP/dailylogger-fixture-artifact"
+      - name: Prove isolated matched database and fixture-file restoration
+        run: |
+          DAILYLOGGER_RESTORE_IMAGE="$(python3 -c 'import json, re, sys; image=json.load(open(sys.argv[1]))["image"]["engineId"]; assert re.fullmatch(r"sha256:[0-9a-f]{64}", image); print(image)' "$RUNNER_TEMP/dailylogger-fixture-artifact/manifest.json")"
+          DAILYLOGGER_RESTORE_CONFIG_ID="$(python3 -c 'import json, re, sys; image=json.load(open(sys.argv[1]))["image"]["configId"]; assert re.fullmatch(r"sha256:[0-9a-f]{64}", image); print(image)' "$RUNNER_TEMP/dailylogger-fixture-artifact/manifest.json")"
+          export DAILYLOGGER_RESTORE_IMAGE DAILYLOGGER_RESTORE_CONFIG_ID
+          pnpm test:service:restore
       - name: Retain fixture candidate without publishing or deploying
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
