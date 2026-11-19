@@ -8,6 +8,8 @@ import { test } from 'node:test'
 import { prepareRuntimeContext } from '../../runtime/prepare-context.js'
 import { REPO_ROOT, SOURCE_COMMIT } from '../../src/fixture.js'
 
+const journalSources = ['action-item-schema.ts', 'activity-window.ts', 'article-schema.ts', 'eligibility.ts', 'shipment-reference.ts']
+
 function sandbox() {
   const root = mkdtempSync(join(tmpdir(), 'dailylogger-runtime-context-'))
   const source = join(root, 'source')
@@ -41,8 +43,8 @@ test('committed runtime context excludes ambient credentials and includes a self
     assert.equal(existsSync(join(destination, 'apps/service/test')), false)
     assert.equal(existsSync(join(destination, 'apps/service/dist')), false)
     assert.deepEqual(readdirSync(join(destination, 'packages/journal')).sort(), ['package.json', 'src'])
-    assert.deepEqual(readdirSync(join(destination, 'packages/journal/src')).sort(), ['activity-window.ts', 'eligibility.ts'])
-    for (const path of ['package.json', 'src/activity-window.ts', 'src/eligibility.ts']) {
+    assert.deepEqual(readdirSync(join(destination, 'packages/journal/src')).sort(), journalSources)
+    for (const path of ['package.json', ...journalSources.map(path => `src/${path}`)]) {
       assert.deepEqual(readFileSync(join(destination, 'packages/journal', path)), readFileSync(join(source, 'packages/journal', path)))
     }
     assert.deepEqual(readdirSync(join(destination, 'apps/service/scripts')), ['build-telemetry.mjs'])
@@ -92,8 +94,8 @@ test('context assembly rejects changed runtime inputs and preserves an existing 
   } finally { rmSync(root, { recursive: true, force: true }) }
 })
 
-test('journal manifest and both exact source inputs must be clean and committed', () => {
-  for (const path of ['packages/journal/package.json', 'packages/journal/src/activity-window.ts', 'packages/journal/src/eligibility.ts']) {
+test('journal manifest and every exact source input must be clean and committed', () => {
+  for (const path of ['packages/journal/package.json', ...journalSources.map(path => `packages/journal/src/${path}`)]) {
     const { root, source } = sandbox()
     try {
       const input = join(source, path), original = readFileSync(input, 'utf8')

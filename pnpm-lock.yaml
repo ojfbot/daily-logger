@@ -174,7 +174,11 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0(vite@6.4.1(@types/node@22.19.11)(tsx@4.21.0))
 
-  packages/journal: {}
+  packages/journal:
+    dependencies:
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
 
 packages:
 

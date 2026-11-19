@@ -6,9 +6,15 @@
   "files": ["src"],
   "exports": {
     "./activity-window": "./src/activity-window.ts",
-    "./eligibility": "./src/eligibility.ts"
+    "./eligibility": "./src/eligibility.ts",
+    "./article-schema": "./src/article-schema.ts",
+    "./action-item-schema": "./src/action-item-schema.ts",
+    "./shipment-reference": "./src/shipment-reference.ts"
   },
   "scripts": {
     "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "4.3.6"
   }
 }

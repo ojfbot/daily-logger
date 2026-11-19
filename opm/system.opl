@@ -715,3 +715,13 @@ Recorded Protocol Qualifying requires Synthetic Binding And Boundary Cases. [src
 Recorded Protocol Qualifying yields Replay Protocol Evidence. [src: apps/service/test/recorded-evidence.test.ts]
 # Capture declarations, opaque payload semantics and priority approval assertions remain unverified. No provider call, graph admission, publication, action admission or execution authority is supplied by this protocol. [src: apps/service/RECORDED-EVIDENCE.md]
 # Byte consistency and repeatable response lookup do not prove real drafting, editorial quality or durable provider deduplication. [src: apps/service/RECORDED-EVIDENCE.md]
+
+Recorded Draft Validating requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-article.ts]
+Recorded Draft Validating requires Exact Request Binding. [src: apps/service/src/recorded-article.ts]
+Recorded Draft Validating requires Bounded Original Draft JSON. [src: apps/service/src/recorded-article.ts]
+Recorded Draft Validating requires Shared Article Schema Definitions. [src: packages/journal/src/article-schema.ts]
+Recorded Draft Validating yields Original Draft Shape Result. [src: apps/service/src/recorded-article.ts]
+Original Draft Qualifying requires Synthetic Original Response Cases. [src: apps/service/test/recorded-article.test.ts]
+Original Draft Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
+Original Draft Qualifying yields Original Response Validation Evidence. [src: apps/service/test/recorded-article.test.ts]
+# Original draft validation does not salvage partial output or infer completion, factual accuracy, human verdict, reporting eligibility or publication/action authority. Legacy CLI fallback remains unchanged. [src: apps/service/RECORDED-EVIDENCE.md] [src: src/schema.ts]

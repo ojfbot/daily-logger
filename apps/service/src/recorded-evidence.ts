@@ -245,7 +245,8 @@ export function recordedExchange(handle: RecordedEvidence, requested: RecordedBi
     if (!item) return { status: 'missing' as const, reason: 'request' as const }
     if (canonical(item.binding) !== canonical(validated.data)) return { status: 'binding-mismatch' as const }
     const recorded = value.responses.find(response => response.requestSha256 === item.requestSha256)
-    return recorded ? { status: 'matched' as const, requestSha256: item.requestSha256, response: structuredClone(recorded) }
+    return recorded ? { status: 'matched' as const, requestSha256: item.requestSha256,
+      binding: structuredClone(item.binding), response: structuredClone(recorded) }
       : { status: 'missing' as const, reason: 'response' as const }
   } catch (error) { throw closedError(error, 'INVALID_BINDING') }
 }
