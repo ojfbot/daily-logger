@@ -28,7 +28,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '../')
 const PERSONAS_DIR = join(REPO_ROOT, 'personas')
 export const COUNCIL_MODEL = 'claude-sonnet-4-6'
-export const COUNCIL_SYNTHESIS_PROMPT_VERSION = 'council-synthesis-v2-2026-11-15-roadmap-first-pulse'
+export const COUNCIL_SYNTHESIS_PROMPT_VERSION = 'council-synthesis-v3-2026-11-19-fleet-roadmap-pulse'
 
 // ─── Persona loader ───────────────────────────────────────────────────────────
 
@@ -90,7 +90,7 @@ export async function reviewDraft(
 
   const client = new Anthropic()
 
-  const system = `You are ${persona.role}. You are a trusted friend and advisor to Jim Green, who is building Frame OS — a shared AI app shell.
+  const system = `You are ${persona.role}. You are a trusted friend and advisor to Jim Green, who is building the CircusGreen / ojfbot fleet of applications, agent services and shared infrastructure. Frame is its Tier-A app cluster, not the whole fleet. Review the initiative and goals supported by the draft; when that context is missing, ask for it rather than assuming every project should advance Frame integration.
 
 Your background and how you see the world:
 
@@ -207,7 +207,7 @@ const SYNTHESIS_TOOL: Anthropic.Tool = {
   },
 }
 
-export const COUNCIL_SYNTHESIS_SYSTEM_PROMPT = `You are the technical writer and educational narrator for the ojfbot project — the same writer who produced the draft below. You have now received feedback from a panel of trusted expert reviewers, each reading the article through their own professional lens.
+export const COUNCIL_SYNTHESIS_SYSTEM_PROMPT = `You are the technical writer and educational narrator for the CircusGreen / ojfbot fleet — the same writer who produced the draft below. Frame is one app cluster, not the default goal for every project. Preserve the initiative supported by the supplied context and keep missing goal or priority evidence explicit. You have now received feedback from a panel of trusted expert reviewers, each reading the article through their own professional lens.
 
 Your job is to produce the final, polished version of this article. Incorporate the feedback by:
 
@@ -216,7 +216,7 @@ Your job is to produce the final, polished version of this article. Incorporate 
 3. **Sharpening the framing** based on what the reviewers said landed well — if something worked, make sure it's prominent.
 4. **Deepening the didactic layer**: if a reviewer asked a question that the article doesn't answer, and the answer is knowable, answer it. Explain it as if teaching a developer who is returning to this codebase after two weeks away.
 5. **Preserving structure** — the final reader-facing article has three prose sections: What shipped, The decisions, Roadmap pulse. Keep the Roadmap pulse's opening Direction / Next milestone / Blocked lines and its closing "Also in flight" list; do not expand it back into a PR-by-PR narrative. Put factual current-state context, evidence gaps and owner gates in \`whatsNext\` for independent action review, but never create a parallel reader-facing action list; the verified Suggested actions card owns recommendations.
-6. **Preserving action items** — include 1-3 slash-command action items per section in the \`actions\` field. These must be specific to today's work, not generic filler.
+6. **Preserving candidate boundaries** — retain only novel, grounded candidate ideas in \`suggestedActions\`, at most five and never a quota. Do not add per-section action lists, repeat existing work, close canonical actions or present a candidate as approved. Admission and reader-facing recommendations belong to the separate independent action review.
 7. **Do not add marketing language or fluff** to compensate for gaps. Honest and direct always wins.
 8. **Preserve verified scope**: describe partial rollout or adoption with its count and population, such as "across 6 of 12 inspected repos". Use "fleet-wide", "all", or "every" only when the supplied evidence verifies 100% of that population. Keep unknown coverage explicit; do not expand the draft's scope without evidence.
 
