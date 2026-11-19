@@ -1,76 +1,10 @@
-import { createHash } from 'node:crypto'
 import { appendFileSync } from 'node:fs'
 import { z } from 'zod'
-
-const AvailableTimingSchema = z.object({
-  status: z.literal('available'),
-  createdAt: z.string().datetime(),
-  startedAt: z.string().datetime().optional(),
-  expectedAt: z.string().datetime().optional(),
-  dispatchDelaySeconds: z.number().int().optional(),
-  startDelaySeconds: z.number().int().optional(),
-})
-
-const UnavailableTimingSchema = z.object({
-  status: z.literal('unavailable'),
-  reason: z.string().min(1),
-})
-
-export const RunTimingSchema = z.discriminatedUnion('status', [
-  AvailableTimingSchema,
-  UnavailableTimingSchema,
-])
-
-const LocalRunEvidenceSchema = z.object({
-  kind: z.literal('local'),
-  capturedAt: z.string().datetime(),
-})
-
-const GitHubRunEvidenceSchema = z.object({
-  kind: z.literal('github-actions'),
-  capturedAt: z.string().datetime(),
-  runId: z.string().min(1),
-  runNumber: z.number().int().nonnegative(),
-  runAttempt: z.number().int().positive(),
-  event: z.string().min(1),
-  url: z.string().url(),
-  workflowRef: z.string().min(1),
-  sourceSha: z.string().min(7),
-  actor: z.string().min(1),
-  scheduleExpression: z.string().min(1).optional(),
-  timezone: z.string().min(1).optional(),
-  timing: RunTimingSchema,
-})
-
-export const RunEvidenceSchema = z.discriminatedUnion('kind', [
-  LocalRunEvidenceSchema,
-  GitHubRunEvidenceSchema,
-])
-
-export const AuthoringStageSchema = z.object({
-  role: z.enum(['draft', 'synthesis', 'revision']),
-  model: z.string().min(1),
-  promptVersion: z.string().min(1),
-  promptSha256: z.string().regex(/^[a-f0-9]{64}$/),
-})
-
-export const ArticleProvenanceSchema = z.object({
-  schemaVersion: z.literal(1),
-  run: RunEvidenceSchema,
-  authoring: z.array(AuthoringStageSchema).min(1),
-  runtime: z.object({
-    nodeVersion: z.string().min(1),
-    packageVersion: z.string().min(1),
-    runnerOs: z.string().min(1).optional(),
-    runnerArch: z.string().min(1).optional(),
-    job: z.string().min(1).optional(),
-  }),
-})
-
-export type RunTiming = z.infer<typeof RunTimingSchema>
-export type RunEvidence = z.infer<typeof RunEvidenceSchema>
-export type AuthoringStage = z.infer<typeof AuthoringStageSchema>
-export type ArticleProvenance = z.infer<typeof ArticleProvenanceSchema>
+import type { ArticleProvenance, RunEvidence, RunTiming } from '@ojfbot/daily-logger-journal/article-provenance'
+export { RunTimingSchema, RunEvidenceSchema, AuthoringStageSchema, ArticleProvenanceSchema,
+  promptSha256, buildArticleProvenance, parseArticleProvenance, preserveProvenanceFrontmatter,
+  formatArticleFooter, appendAuthoringStage } from '@ojfbot/daily-logger-journal/article-provenance'
+export type { RunTiming, RunEvidence, AuthoringStage, ArticleProvenance } from '@ojfbot/daily-logger-journal/article-provenance'
 
 interface ScheduleTimingInput {
   articleDate: string
@@ -84,16 +18,6 @@ interface CaptureOptions {
   env?: Record<string, string | undefined>
   fetchImpl?: typeof fetch
   capturedAt?: Date
-}
-
-interface BuildProvenanceInput {
-  run: RunEvidence
-  stages: AuthoringStage[]
-  nodeVersion: string
-  packageVersion?: string
-  runnerOs?: string
-  runnerArch?: string
-  job?: string
 }
 
 const WorkflowRunResponseSchema = z.object({
@@ -301,77 +225,6 @@ export async function captureRunEvidence(
   } catch {
     return { ...base, timing: { status: 'unavailable', reason: 'run-api-unavailable' } }
   }
-}
-
-export function promptSha256(prompt: string): string {
-  return createHash('sha256').update(prompt).digest('hex')
-}
-
-export function buildArticleProvenance(input: BuildProvenanceInput): ArticleProvenance | undefined {
-  const result = ArticleProvenanceSchema.safeParse({
-    schemaVersion: 1,
-    run: input.run,
-    authoring: input.stages,
-    runtime: {
-      nodeVersion: input.nodeVersion,
-      packageVersion: input.packageVersion,
-      ...(input.runnerOs ? { runnerOs: input.runnerOs } : {}),
-      ...(input.runnerArch ? { runnerArch: input.runnerArch } : {}),
-      ...(input.job ? { job: input.job } : {}),
-    },
-  })
-  return result.success ? result.data : undefined
-}
-
-export function parseArticleProvenance(raw: string): ArticleProvenance | undefined {
-  try {
-    const result = ArticleProvenanceSchema.safeParse(JSON.parse(raw))
-    return result.success ? result.data : undefined
-  } catch {
-    return undefined
-  }
-}
-
-export function preserveProvenanceFrontmatter(original: string, revised: string): string {
-  const originalLine = original.match(/^provenance:\s*(.+)$/m)?.[0]
-  if (!originalLine) return revised
-  if (/^provenance:.*$/m.test(revised)) {
-    return revised.replace(/^provenance:.*$/m, () => originalLine)
-  }
-  const closingFrontmatter = revised.indexOf('\n---', 4)
-  if (!revised.startsWith('---\n') || closingFrontmatter < 0) return revised
-  return `${revised.slice(0, closingFrontmatter)}\n${originalLine}${revised.slice(closingFrontmatter)}`
-}
-
-export function formatArticleFooter(provenance?: ArticleProvenance): string {
-  const responsible = provenance?.authoring.at(-1)
-  const run = provenance?.run
-  const runLink = run?.kind === 'github-actions'
-    ? ` · [GitHub Actions run #${run.runNumber}](${run.url})`
-    : ''
-  const authoring = responsible
-    ? ` · Authoring model \`${responsible.model}\` · prompt \`${responsible.promptVersion}\``
-    : ''
-  return `*Generated by [daily-logger](https://github.com/ojfbot/daily-logger)${authoring}${runLink}.*`
-}
-
-export function appendAuthoringStage(markdown: string, stage: AuthoringStage): string {
-  const raw = markdown.match(/^provenance:\s*(.+)$/m)?.[1]
-  if (!raw) return markdown
-  const provenance = parseArticleProvenance(raw)
-  if (!provenance) return markdown
-  const updated = ArticleProvenanceSchema.safeParse({
-    ...provenance,
-    authoring: [...provenance.authoring, stage],
-  })
-  if (!updated.success) return markdown
-
-  const provenanceLine = `provenance: ${JSON.stringify(updated.data)}`
-  const withStage = markdown.replace(/^provenance:.*$/m, () => provenanceLine)
-  const footer = formatArticleFooter(updated.data)
-  return /^\*Generated by \[daily-logger\].*\*$/m.test(withStage)
-    ? withStage.replace(/^\*Generated by \[daily-logger\].*\*$/m, () => footer)
-    : `${withStage.trimEnd()}\n\n---\n\n${footer}\n`
 }
 
 function formatDelay(seconds: number): string {

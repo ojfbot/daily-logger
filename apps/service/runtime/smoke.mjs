@@ -74,6 +74,8 @@ try {
       import { githubReferenceKinds,assertArticleReferenceContract } from '@ojfbot/daily-logger-journal/article-references';
       import { draftRecommendationContextMarker,extractDraftRecommendationContext } from '@ojfbot/daily-logger-journal/recommendation-prose';
       import { titleWithReportingWeekday } from '@ojfbot/daily-logger-journal/article-title';
+      import { toMarkdown } from '@ojfbot/daily-logger-journal/article-markdown';
+      import { buildArticleProvenance,parseArticleProvenance,promptSha256,appendAuthoringStage } from '@ojfbot/daily-logger-journal/article-provenance';
       import { openRecordedEvidence } from './src/recorded-evidence.ts';
       import { validateRecordedDraft } from './src/recorded-article.ts';
       import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
@@ -84,7 +86,7 @@ try {
       assert.equal(existsSync('test'),false);
       assert.equal(existsSync('/app/src'),false);
       assert.equal(existsSync('/build'),false);
-      for(const entry of ['activity-window','eligibility','article-schema','action-item-schema','shipment-reference','article-body','article-references','article-title','normalize-article-markdown','render-article','recommendation-prose']) {
+      for(const entry of ['activity-window','eligibility','article-schema','action-item-schema','shipment-reference','article-body','article-references','article-title','normalize-article-markdown','render-article','recommendation-prose','article-provenance','article-markdown']) {
         const resolved=import.meta.resolve('@ojfbot/daily-logger-journal/'+entry);
         const path=realpathSync(fileURLToPath(resolved));
         assert.ok(path.startsWith('/app/'));
@@ -114,6 +116,21 @@ try {
       assert.equal(renderArticle(marker),'');
       assert.deepEqual(extractDraftRecommendationContext(marker).context,{kind:'retained',markdown:'Unreviewed synthetic continuation'});
       assert.equal(titleWithReportingWeekday('2026-11-19','Shared body'),'Wednesday — Shared body');
+      const draftStage={role:'draft',model:'synthetic',promptVersion:'runtime-fixture-v1',promptSha256:promptSha256('synthetic')};
+      const provenanceInput={run:{kind:'local',capturedAt:'2026-11-19T00:00:00.000Z'},stages:[draftStage],nodeVersion:process.version};
+      assert.equal(buildArticleProvenance(provenanceInput),undefined);
+      const provenance=buildArticleProvenance({...provenanceInput,packageVersion:'0.1.0'});
+      const markdown=toMarkdown({...draft.article,tags:[],body,provenance});
+      assert.ok(markdown.includes('status: "draft"'));
+      assert.ok(markdown.endsWith('.*\\n'));
+      const raw=markdown.split('\\n').find(line=>line.startsWith('provenance: ')).slice('provenance: '.length);
+      assert.deepEqual(parseArticleProvenance(raw),provenance);
+      const revision={...draftStage,role:'revision',model:'synthetic-revision'};
+      const revised=appendAuthoringStage(markdown,revision);
+      const revisedRaw=revised.split('\\n').find(line=>line.startsWith('provenance: ')).slice('provenance: '.length);
+      assert.deepEqual(parseArticleProvenance(revisedRaw).authoring,[draftStage,revision]);
+      assert.equal(parseArticleProvenance('{'),undefined);
+      assert.equal(appendAuthoringStage(markdown,{...revision,model:''}),markdown);
       assert.equal(ArticleDataSchema.safeParse({}).success,false);
       assert.equal(existsSync('/app/.git/objects/info/alternates'),false);
       assert.equal(existsSync('/app/.git/logs'),false);

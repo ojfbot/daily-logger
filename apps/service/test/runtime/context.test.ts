@@ -8,7 +8,7 @@ import { test } from 'node:test'
 import { prepareRuntimeContext } from '../../runtime/prepare-context.js'
 import { REPO_ROOT, SOURCE_COMMIT } from '../../src/fixture.js'
 
-const journalSources = ['action-item-schema.ts', 'activity-window.ts', 'article-body.ts', 'article-references.ts', 'article-schema.ts', 'article-title.ts', 'eligibility.ts', 'normalize-article-markdown.ts', 'recommendation-prose.ts', 'render-article.ts', 'shipment-reference.ts']
+const journalSources = ['action-item-schema.ts', 'activity-window.ts', 'article-body.ts', 'article-markdown.ts', 'article-provenance.ts', 'article-references.ts', 'article-schema.ts', 'article-title.ts', 'eligibility.ts', 'normalize-article-markdown.ts', 'recommendation-prose.ts', 'render-article.ts', 'shipment-reference.ts']
 
 function sandbox() {
   const root = mkdtempSync(join(tmpdir(), 'dailylogger-runtime-context-'))
