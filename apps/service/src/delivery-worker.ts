@@ -120,23 +120,31 @@ export async function runWorker(pool: pg.Pool, connectionString: string, boss: P
       await boss.stop({ graceful: true, timeout: DRAIN_TIMEOUT_MS })
       if (active) { process.stderr.write('Fixture segment exceeded shutdown drain\n'); process.exit(1) }
       await pool.end()
-      await shutdownTelemetry(telemetry)
+      await closeTelemetry()
       clearTimeout(deadline)
       process.exit(0)
-    } catch { process.stderr.write('Fixture worker shutdown failed\n'); process.exit(1) }
+    } catch { await closeTelemetry(); process.stderr.write('Fixture worker shutdown failed\n'); process.exit(1) }
   }
+  let telemetryClose: Promise<void> | undefined
+  const closeTelemetry = () => telemetryClose ??= shutdownTelemetry(telemetry)
   process.on('SIGTERM', stop)
   process.on('SIGINT', stop)
-  await boss.work<Payload>(QUEUE, { batchSize: 1, localConcurrency: 1, pollingIntervalSeconds: 0.5, includeMetadata: true }, async jobs => {
-    const [job] = jobs
-    active = true
-    const abort = () => { process.stderr.write('Fixture delivery claim ended; stopping process\n'); process.exit(1) }
-    const deadline = setTimeout(() => { process.stderr.write('Fixture segment deadline reached\n'); process.exit(1) }, SEGMENT_TIMEOUT_MS)
-    job.signal.addEventListener('abort', abort, { once: true })
-    try {
-      if (job.signal.aborted) abort()
-      return await executeDelivery(pool, connectionString, job, telemetry)
-    } finally { clearTimeout(deadline); job.signal.removeEventListener('abort', abort); active = false }
-  })
+  try {
+    await boss.work<Payload>(QUEUE, { batchSize: 1, localConcurrency: 1, pollingIntervalSeconds: 0.5, includeMetadata: true }, async jobs => {
+      const [job] = jobs
+      active = true
+      const abort = () => { process.stderr.write('Fixture delivery claim ended; stopping process\n'); process.exit(1) }
+      const deadline = setTimeout(() => { process.stderr.write('Fixture segment deadline reached\n'); process.exit(1) }, SEGMENT_TIMEOUT_MS)
+      job.signal.addEventListener('abort', abort, { once: true })
+      try {
+        if (job.signal.aborted) abort()
+        return await executeDelivery(pool, connectionString, job, telemetry)
+      } finally { clearTimeout(deadline); job.signal.removeEventListener('abort', abort); active = false }
+    })
+  } catch (error) {
+    process.off('SIGTERM', stop); process.off('SIGINT', stop)
+    await closeTelemetry()
+    throw error
+  }
   console.log(json({ worker: 'ready', queue: QUEUE, concurrency: 1, segmentTimeoutMs: SEGMENT_TIMEOUT_MS, drainTimeoutMs: DRAIN_TIMEOUT_MS, shutdownTimeoutMs: SHUTDOWN_TIMEOUT_MS }).trim())
 }

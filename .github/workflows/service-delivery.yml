@@ -57,3 +57,4 @@ jobs:
       - run: pnpm test:service:postgres
       - run: pnpm test:service:delivery
       - run: pnpm test:service:http
+      - run: pnpm test:service:exporter
