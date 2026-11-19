@@ -46,8 +46,9 @@ The dependency-free shared journal package is installed through the workspace
 lock and included by production deploy. Its two TypeScript entry points use the
 same `tsx` loader. Offline smoke imports the installed package, verifies resolved
 files remain inside `/app`, checks representative DST windows and the empty
-eligibility result, and rejects reliance on root CLI source, build-stage paths
-or the Anthropic SDK. This qualifies package closure, not a journal graph or
+eligibility result, and checks that the installed journal manifest declares no
+runtime, optional or peer dependencies. Root CLI source and build-stage paths
+are absent. This qualifies package closure, not a journal graph or
 semantic validation of recorded evidence.
 
 Node24.22.3 and PostgreSQL18.7 base images are pinned by official multi-platform
