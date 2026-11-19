@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `e62a5e2b83bc8c8117d642001bb99d0f0d9c5e0a0caef0f16a1066cc264b9321`.
+> Source SHA-256: `38ce97aed9ea98c1d3018cc0b2f8dd39b5c1f7dcb823d43366e299ccd362b095`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1920,4 +1920,72 @@ Fixture Artifact Retaining requires Isolated Matched Restore Receipt. [src: .git
 Fixture Artifact Retaining requires Exported Fixture Image. [src: .github/workflows/service-runtime.yml]
 Fixture Artifact Retaining requires Closed Fixture Manifest. [src: .github/workflows/service-runtime.yml]
 Fixture Artifact Retaining yields Retained Fixture Artifact. [src: .github/workflows/service-runtime.yml]
+```
+
+## SD2.9 — Explicit CLI observation lifecycle
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.9 — Explicit CLI observation lifecycle"
+---
+flowchart TD
+  accTitle: SD2.9 — Explicit CLI observation lifecycle
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n374["Explicit Telemetry Argument"]
+  n375("Runtime Telemetry Configuring")
+  n376["Protected Telemetry Configuration File"]
+  n377["Closed Exporter Configuration Policy"]
+  n378["Admitted Exporter Configuration"]
+  n379("Runtime Observation Attaching")
+  n380["Process Owned Observation Adapter"]
+  n381("Fixture API Starting")
+  n382("Fixture Worker Starting")
+  n383("Runtime Observation Closing")
+  n384["Existing Shutdown Deadline"]
+  n385["Closed Observation Adapter"]
+  n386("Enabled CLI Exporter Qualifying")
+  n387["Disposable PostgreSQL Database"]
+  n388["Synthetic Private TLS Receiver"]
+  n323["Compiled Exporter Entry Points"]
+  n389["CLI Exporter Lifecycle Evidence"]
+  n374 -->|"condition: supplied"| n375
+  n376 -->|"requires (instrument)"| n375
+  n377 -->|"requires (instrument)"| n375
+  n375 -->|"yields"| n378
+  n378 -->|"requires (instrument)"| n379
+  n379 -->|"yields"| n380
+  n381 -->|"invokes"| n379
+  n382 -->|"invokes"| n379
+  n380 -->|"requires (instrument)"| n383
+  n384 -->|"requires (instrument)"| n383
+  n383 -->|"yields"| n385
+  n387 -->|"requires (instrument)"| n386
+  n388 -->|"requires (instrument)"| n386
+  n323 -->|"requires (instrument)"| n386
+  n386 -->|"yields"| n389
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Runtime Telemetry Configuring occurs if Explicit Telemetry Argument is supplied. [src: apps/service/src/telemetry-runtime.ts]
+Runtime Telemetry Configuring requires Protected Telemetry Configuration File. [src: apps/service/src/telemetry-runtime.ts]
+Runtime Telemetry Configuring requires Closed Exporter Configuration Policy. [src: apps/service/src/telemetry-export-config.ts]
+Runtime Telemetry Configuring yields Admitted Exporter Configuration. [src: apps/service/src/telemetry-runtime.ts]
+Runtime Observation Attaching requires Admitted Exporter Configuration. [src: apps/service/src/telemetry-runtime.ts]
+Runtime Observation Attaching yields Process Owned Observation Adapter. [src: apps/service/src/telemetry-runtime.ts]
+Fixture API Starting invokes Runtime Observation Attaching. [src: apps/service/src/http-cli.ts]
+Fixture Worker Starting invokes Runtime Observation Attaching. [src: apps/service/src/delivery-cli.ts]
+Runtime Observation Closing requires Process Owned Observation Adapter. [src: apps/service/src/http-cli.ts] [src: apps/service/src/delivery-worker.ts]
+Runtime Observation Closing requires Existing Shutdown Deadline. [src: apps/service/src/telemetry.ts]
+Runtime Observation Closing yields Closed Observation Adapter. [src: apps/service/src/telemetry-export-process.ts]
+Enabled CLI Exporter Qualifying requires Disposable PostgreSQL Database. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
+Enabled CLI Exporter Qualifying requires Synthetic Private TLS Receiver. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
+Enabled CLI Exporter Qualifying requires Compiled Exporter Entry Points. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
+Enabled CLI Exporter Qualifying yields CLI Exporter Lifecycle Evidence. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
 ```
