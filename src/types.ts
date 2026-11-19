@@ -206,22 +206,7 @@ export interface GeneratedReport {
 
 // ─── Structured article (what Claude returns from the write_article tool) ──────
 
-export interface StructuredArticle {
-  title: string
-  tags: string[]
-  summary: string
-  lede?: string
-  whatShipped: string
-  theDecisions: string
-  roadmapPulse: string
-  whatsNext: string
-  actions?: {
-    whatShipped?: string[]
-    theDecisions?: string[]
-    roadmapPulse?: string[]
-    whatsNext?: string[]
-  }
-}
+export type { StructuredArticle } from '@ojfbot/daily-logger-journal/article-body'
 
 // ─── v2 structured article types (re-exported from schema.ts) ────────────────
 
