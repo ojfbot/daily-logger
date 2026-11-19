@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `38ce97aed9ea98c1d3018cc0b2f8dd39b5c1f7dcb823d43366e299ccd362b095`.
+> Source SHA-256: `03ce72396d279c8ab165fc6907ebd30031295e6efe980b554064e7bc81508325`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1988,4 +1988,65 @@ Enabled CLI Exporter Qualifying requires Disposable PostgreSQL Database. [src: a
 Enabled CLI Exporter Qualifying requires Synthetic Private TLS Receiver. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
 Enabled CLI Exporter Qualifying requires Compiled Exporter Entry Points. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
 Enabled CLI Exporter Qualifying yields CLI Exporter Lifecycle Evidence. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
+```
+
+## SD2.10 — Enabled exporter image qualification
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.10 — Enabled exporter image qualification"
+---
+flowchart TD
+  accTitle: SD2.10 — Enabled exporter image qualification
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n390("Enabled Image Test Running")
+  n346["Runtime Image"]
+  n391["Qualified Image Identity Pair"]
+  n392["Pinned PostgreSQL Image"]
+  n393["Read Only Integration Test Mounts"]
+  n394["Isolated Internal Network"]
+  n388["Synthetic Private TLS Receiver"]
+  n395["Enabled Image Test Results"]
+  n396("Image Proof Resource Cleaning")
+  n397["Nonce Bound Fixture Resources"]
+  n398["Verified Image Proof Cleanup"]
+  n399("Enabled Image Exporter Qualifying")
+  n400["Enabled Image Exporter Receipt"]
+  n372("Fixture Artifact Retaining")
+  n346 -->|"requires (instrument)"| n390
+  n391 -->|"requires (instrument)"| n390
+  n392 -->|"requires (instrument)"| n390
+  n393 -->|"requires (instrument)"| n390
+  n394 -->|"requires (instrument)"| n390
+  n388 -->|"requires (instrument)"| n390
+  n390 -->|"yields"| n395
+  n397 -->|"requires (instrument)"| n396
+  n396 -->|"yields"| n398
+  n395 -->|"requires (instrument)"| n399
+  n398 -->|"requires (instrument)"| n399
+  n399 -->|"yields"| n400
+  n400 -->|"requires (instrument)"| n372
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Enabled Image Test Running requires Runtime Image. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Test Running requires Qualified Image Identity Pair. [src: .github/workflows/service-runtime.yml]
+Enabled Image Test Running requires Pinned PostgreSQL Image. [src: apps/service/runtime/compose.yaml]
+Enabled Image Test Running requires Read Only Integration Test Mounts. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Test Running requires Isolated Internal Network. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Test Running requires Synthetic Private TLS Receiver. [src: apps/service/test/fixtures/telemetry-tls.ts]
+Enabled Image Test Running yields Enabled Image Test Results. [src: apps/service/runtime/exporter-smoke.mjs]
+Image Proof Resource Cleaning requires Nonce Bound Fixture Resources. [src: apps/service/runtime/exporter-smoke.mjs]
+Image Proof Resource Cleaning yields Verified Image Proof Cleanup. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Exporter Qualifying requires Enabled Image Test Results. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Exporter Qualifying requires Verified Image Proof Cleanup. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Exporter Qualifying yields Enabled Image Exporter Receipt. [src: apps/service/runtime/exporter-smoke.mjs]
+Fixture Artifact Retaining requires Enabled Image Exporter Receipt. [src: .github/workflows/service-runtime.yml]
 ```

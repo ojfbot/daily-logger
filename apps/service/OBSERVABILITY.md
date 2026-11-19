@@ -174,6 +174,12 @@ still requires reviewed protected mounts, endpoint trust, resource capacity and
 enabled final-image lifecycle qualification. The default Compose profile supplies
 neither this argument nor telemetry mounts.
 
+The separate [enabled image proof](runtime/README.md#enabled-exporter-image-qualification)
+runs the same four mandatory integration cases with application code and the
+compiled exporter supplied by the exact final image. Its synthetic receiver and
+disposable PostgreSQL qualify that image boundary only; actual Langfuse indexing
+and target-host deployment remain separate evidence.
+
 The bounded topology is one application-owned child process containing one
 responsive IPC supervisor and one SDK worker thread. No SDK is imported into the
 application process by this adapter. The compiled child needs no runtime TypeScript
