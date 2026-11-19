@@ -1,11 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { normalizeArticleMarkdown } from './normalize-article-markdown.js'
-import { reportingWorkdayWeekday, titleWithReportingWeekday } from './article-title.js'
+import { reportingWorkdayWeekday } from './article-title.js'
 import type { BlogContext, GeneratedArticle, StructuredArticle } from './types.js'
 import type { ArticleDataV2 } from './schema.js'
 import { validateArticleOutput, getValidationErrors, actionId } from './schema.js'
 import { allocateMergedPREvidence, mergedEvidenceKey, PROMPT_PR_PREVIEW_CHARS } from './pr-body.js'
-import { formatArticleFooter } from './run-provenance.js'
+export { toMarkdown } from '@ojfbot/daily-logger-journal/article-markdown'
 import { isReviewedAction } from './action-model.js'
 import { assertArticleReferenceContract, githubReferenceKinds } from './article-references.js'
 import { assembleBody } from '@ojfbot/daily-logger-journal/article-body'
@@ -982,37 +981,4 @@ async function callClaudeForArticle(
     console.error('  ✗ Claude API call failed:', (err as Error).message)
     return null
   }
-}
-
-export function toMarkdown(article: GeneratedArticle & { schemaVersion?: number }): string {
-  const esc = (s: string) => s.replace(/"/g, '\\"')
-
-  const persistedBody = ['', normalizeArticleMarkdown(article.body), '', '---', '', formatArticleFooter(article.provenance), ''].join('\n')
-  const lines = [
-    '---',
-    `title: "${esc(titleWithReportingWeekday(article.date, article.title))}"`,
-    `date: ${article.date}`,
-    `tags: [${article.tags.map((t) => `"${t}"`).join(', ')}]`,
-    `summary: "${esc(article.summary)}"`,
-  ]
-
-  lines.push(`status: "draft"`)
-
-  if (article.schemaVersion) {
-    lines.push(`schemaVersion: ${article.schemaVersion}`)
-  }
-
-  if (article.commitCount !== undefined) {
-    lines.push(`commitCount: ${article.commitCount}`)
-  }
-  if (article.reposActive?.length) {
-    lines.push(`reposActive: [${article.reposActive.map((r) => `"${r}"`).join(', ')}]`)
-  }
-  if (article.provenance) {
-    lines.push(`provenance: ${JSON.stringify(article.provenance)}`)
-  }
-
-  lines.push('---', persistedBody)
-
-  return lines.join('\n')
 }

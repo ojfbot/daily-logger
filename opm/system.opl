@@ -746,3 +746,23 @@ Journal Rendering Qualifying requires Installed Journal Package Exports. [src: a
 Journal Rendering Qualifying requires Synthetic Draft Values. [src: apps/service/runtime/smoke.mjs]
 Journal Rendering Qualifying yields Rendering Compatibility Evidence. [src: src/__tests__/journal-render.test.ts]
 # Rendering preserves existing V1/V2 behavior and transient context encoding. It does not supply source admission, canonical action settlement, provider execution, persisted graph recovery or publication authority. [src: packages/journal/README.md]
+
+## SD2.13 — Shared article serialization and provenance
+
+Article Markdown Serializing requires Generated Article Values. [src: packages/journal/src/article-markdown.ts]
+Article Markdown Serializing invokes Article Markdown Normalizing. [src: packages/journal/src/article-markdown.ts]
+Article Markdown Serializing invokes Article Footer Formatting. [src: packages/journal/src/article-markdown.ts]
+Article Markdown Serializing yields Draft Article Markdown. [src: packages/journal/src/article-markdown.ts]
+Article Provenance Building requires Supplied Run Evidence. [src: packages/journal/src/article-provenance.ts]
+Article Provenance Building requires Supplied Authoring Stages. [src: packages/journal/src/article-provenance.ts]
+Article Provenance Building requires Supplied Runtime Metadata. [src: packages/journal/src/article-provenance.ts]
+Article Provenance Building yields Optional Article Provenance. [src: packages/journal/src/article-provenance.ts]
+Article Footer Formatting requires Optional Article Provenance. [src: packages/journal/src/article-provenance.ts]
+Article Footer Formatting yields Article Attribution Footer. [src: packages/journal/src/article-provenance.ts]
+Authoring Stage Appending requires Article Markdown. [src: packages/journal/src/article-provenance.ts]
+Authoring Stage Appending requires Supplied Authoring Stage. [src: packages/journal/src/article-provenance.ts]
+Authoring Stage Appending yields Article Markdown. [src: packages/journal/src/article-provenance.ts]
+Journal Serialization Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
+Journal Serialization Qualifying requires Synthetic Draft Values. [src: apps/service/runtime/smoke.mjs]
+Journal Serialization Qualifying yields Serialization Compatibility Evidence. [src: src/__tests__/journal-serialization.test.ts]
+# Existing provenance covers local and GitHub Actions runs, not durable service run identities. Serialization preserves supplied values and existing escaping; neither parsing nor hashing authenticates claims or grants publication authority. API capture, schedule timing and diagnostic output stay in the CLI. [src: packages/journal/README.md] [src: src/run-provenance.ts]
