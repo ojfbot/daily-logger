@@ -67,6 +67,30 @@ ingestion. API/worker commands use the no-op adapter unless their explicit
 `--telemetry-config` argument is supplied. Enabled CLI integration against a
 synthetic receiver is a separate test from this final-image offline startup proof.
 
+## Enabled exporter image qualification
+
+After export/reload qualification, run the same four enabled-exporter integration
+tests against the exact loaded image and its matching config identity:
+
+```sh
+pnpm service:runtime:exporter sha256:<qualified-engine-id> sha256:<qualified-config-id>
+```
+
+The pinned PostgreSQL image must already be present. The proof neither builds nor
+pulls images. It creates an internal network and disposable PostgreSQL storage,
+then mounts only the test harness and helpers read-only. Application source,
+production dependencies and compiled exporter entry points come from the image.
+API and worker CLIs run against the synthetic strict-TLS receiver inside the
+restricted test container; database connections stay on the internal network.
+No host ports, real credentials, model calls or public endpoints are used.
+
+CI requires four passing tests with no skips, verifies owned-resource cleanup,
+and records a separate closed receipt before retaining the artifact. The existing
+artifact manifest contract remains unchanged. This tests enabled image behavior
+with both CLIs inside one disposable test container; it does not qualify actual
+deployment topology, target-host capacity, real owner login or Langfuse indexing,
+retention and backup recovery.
+
 ## Deployment inputs
 
 Keep real values outside Git and build contexts. Compose requires these runtime
