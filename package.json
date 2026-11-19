@@ -48,7 +48,8 @@
     "service:ingress:smoke": "node --import tsx apps/service/runtime/ingress-smoke.mjs",
     "service:artifact:export": "python3 apps/service/runtime/artifact.py export",
     "service:artifact:verify": "python3 apps/service/runtime/artifact.py verify",
-    "test:service:artifact": "python3 -m unittest discover -s apps/service/test/runtime -p '*_test.py'"
+    "test:service:artifact": "python3 -m unittest discover -s apps/service/test/runtime -p '*_test.py'",
+    "test:service:restore": "node --test --test-concurrency=1 apps/service/test/restore/*.test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",

@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `a98639e0add6994d9708065385898eee1419b3f7c7e527996bac7228ce292d6b`.
+> Source SHA-256: `e62a5e2b83bc8c8117d642001bb99d0f0d9c5e0a0caef0f16a1066cc264b9321`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1842,4 +1842,82 @@ Fixture Artifact Verifying requires Closed Fixture Manifest. [src: apps/service/
 Fixture Artifact Verifying requires Offline Exporter Startup Proof. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying yields Verified Fixture Candidate. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
+```
+
+## SD2.8 — Isolated matched fixture restoration
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.8 — Isolated matched fixture restoration"
+---
+flowchart TD
+  accTitle: SD2.8 — Isolated matched fixture restoration
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n357("Matched Fixture Restore Qualifying")
+  n346["Runtime Image"]
+  n349["Fixture Qualification Receipts"]
+  n358["Quiesced Source Fixture"]
+  n359("Matched Fixture Recovery Capturing")
+  n360["Complete Fixture Database"]
+  n361["Complete Fixture File Tree"]
+  n362["Matched Fixture Recovery Point"]
+  n363("Isolated Fixture Restoring")
+  n364["Raw Restored Fixture State"]
+  n365("Fixture Ownership Reconciling")
+  n366["Validated Matched Fixture Bindings"]
+  n367["Measured Destination Identity"]
+  n368["Reconciled Fixture Reservation Markers"]
+  n369("Restored Fixture Continuing")
+  n370["Explicit Fixture Resume Release"]
+  n371["Isolated Matched Restore Receipt"]
+  n372("Fixture Artifact Retaining")
+  n347["Exported Fixture Image"]
+  n351["Closed Fixture Manifest"]
+  n373["Retained Fixture Artifact"]
+  n346 -->|"requires (instrument)"| n357
+  n349 -->|"requires (instrument)"| n357
+  n358 -->|"requires (instrument)"| n357
+  n360 -->|"requires (instrument)"| n359
+  n361 -->|"requires (instrument)"| n359
+  n359 -->|"yields"| n362
+  n362 -->|"requires (instrument)"| n363
+  n363 -->|"yields"| n364
+  n366 -->|"requires (instrument)"| n365
+  n367 -->|"requires (instrument)"| n365
+  n365 -->|"yields"| n368
+  n368 -->|"requires (instrument)"| n369
+  n370 -->|"requires (instrument)"| n369
+  n357 -->|"yields"| n371
+  n371 -->|"requires (instrument)"| n372
+  n347 -->|"requires (instrument)"| n372
+  n351 -->|"requires (instrument)"| n372
+  n372 -->|"yields"| n373
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Matched Fixture Restore Qualifying requires Runtime Image. [src: apps/service/test/restore/matched-restore.test.mjs]
+Matched Fixture Restore Qualifying requires Fixture Qualification Receipts. [src: apps/service/test/restore/matched-restore.test.mjs]
+Matched Fixture Restore Qualifying requires Quiesced Source Fixture. [src: apps/service/test/restore/matched-restore.test.mjs]
+Matched Fixture Recovery Capturing requires Complete Fixture Database. [src: apps/service/test/restore/matched-restore.test.mjs]
+Matched Fixture Recovery Capturing requires Complete Fixture File Tree. [src: apps/service/test/restore/archive.mjs]
+Matched Fixture Recovery Capturing yields Matched Fixture Recovery Point. [src: apps/service/test/restore/matched-restore.test.mjs]
+Isolated Fixture Restoring requires Matched Fixture Recovery Point. [src: apps/service/test/restore/matched-restore.test.mjs]
+Isolated Fixture Restoring yields Raw Restored Fixture State. [src: apps/service/test/restore/matched-restore.test.mjs]
+Fixture Ownership Reconciling requires Validated Matched Fixture Bindings. [src: apps/service/test/restore/archive.mjs]
+Fixture Ownership Reconciling requires Measured Destination Identity. [src: apps/service/test/restore/archive.mjs]
+Fixture Ownership Reconciling yields Reconciled Fixture Reservation Markers. [src: apps/service/test/restore/archive.mjs]
+Restored Fixture Continuing requires Reconciled Fixture Reservation Markers. [src: apps/service/test/restore/matched-restore.test.mjs]
+Restored Fixture Continuing requires Explicit Fixture Resume Release. [src: apps/service/test/restore/matched-restore.test.mjs]
+Matched Fixture Restore Qualifying yields Isolated Matched Restore Receipt. [src: apps/service/test/restore/matched-restore.test.mjs]
+Fixture Artifact Retaining requires Isolated Matched Restore Receipt. [src: .github/workflows/service-runtime.yml]
+Fixture Artifact Retaining requires Exported Fixture Image. [src: .github/workflows/service-runtime.yml]
+Fixture Artifact Retaining requires Closed Fixture Manifest. [src: .github/workflows/service-runtime.yml]
+Fixture Artifact Retaining yields Retained Fixture Artifact. [src: .github/workflows/service-runtime.yml]
 ```
