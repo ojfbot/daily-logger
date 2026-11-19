@@ -8,6 +8,9 @@
     "service:shadow": "node --import tsx apps/service/src/cli.ts",
     "test:service": "pnpm --filter @ojfbot/daily-logger-service test",
     "type-check:service": "pnpm --filter @ojfbot/daily-logger-service type-check",
+    "type-check:journal": "pnpm --filter @ojfbot/daily-logger-journal type-check",
+    "test:journal": "vitest run src/__tests__/activity-window.test.ts src/__tests__/should-skip-run.test.ts",
+    "lint:journal": "eslint 'packages/journal/src/**/*.ts' src/activity-window.ts src/should-skip-run.ts",
     "generate:dry": "DRY_RUN=true tsx src/index.ts",
     "report": "tsx src/report.ts",
     "report:dry": "DRY_RUN=true tsx src/report.ts",
@@ -26,7 +29,7 @@
     "actions:check-review": "tsx scripts/check-action-review.ts",
     "dev": "tsx src/build-api.ts && cd packages/frontend && pnpm dev",
     "type-check": "tsc --noEmit",
-    "lint": "eslint 'src/**/*.ts'",
+    "lint": "eslint 'src/**/*.ts' 'packages/journal/src/**/*.ts'",
     "test": "vitest run",
     "test:browser": "pnpm build:api && playwright test",
     "test:watch": "vitest",
@@ -55,6 +58,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
+    "@ojfbot/daily-logger-journal": "workspace:*",
     "@vercel/node": "^5.6.22",
     "parse5": "^7.3.0",
     "zod": "^4.3.6"
