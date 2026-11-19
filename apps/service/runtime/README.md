@@ -21,7 +21,10 @@ Context preparation copies only committed runtime inputs selected by the
 service's `files` list and required build/schema assets. The `dist` deploy tree
 is excluded even if force-committed: the image rebuilds it from source. Only the
 explicit exporter build script is admitted as an `.mjs` build input; arbitrary
-scripts and host output remain excluded. Changed runtime inputs,
+scripts and host output remain excluded. The shared journal manifest and its fourteen
+explicitly named source files are also required build inputs. Journal tests,
+unrelated source, environment files and host build output
+are excluded even when committed. Changed runtime inputs,
 symlinks and existing destinations reject. Untracked files, environment files,
 developer node_modules and source Git metadata never enter the build context.
 A fresh local-only shallow fetch supplies the public fixture commit. The store
@@ -38,6 +41,23 @@ production dependency tree so root-directory CLI subprocesses resolve the loader
 The exporter build script, source tests and fault preloads are excluded from the
 runtime. The existing production `tsx` loader retains its own transitive compiler;
 the compiled exporter child does not launch that loader or a compiler helper.
+
+The shared journal package is installed through the workspace
+lock and included by production deploy. Its fourteen TypeScript entry points use the
+same `tsx` loader. Offline smoke imports the installed package, verifies resolved
+files remain inside `/app`, checks representative DST windows and the empty
+eligibility result, and checks that the installed journal manifest declares
+exactly Zod 4.3.6, Marked 17.0.5 and parse5 7.3.0 with no optional or peer
+dependencies. It also validates a sealed synthetic V2 draft through the installed
+service adapter and exercises shared body assembly, reference checks, rendering,
+continuation-marker roundtrip and reporting-day title behavior. It serializes the
+synthetic draft with existing local provenance, round-trips that provenance and
+appends a synthetic revision stage while preserving invalid-input behavior. Installed
+prompt checks cover the reviewed fleet version, telemetry selection and legacy tool
+data without importing a provider SDK or making a model call. The test input is
+injected as data; test files, root CLI source and build-stage paths are absent.
+This qualifies package closure, rendering/serialization compatibility and original-response shape validation, not a
+persisted journal graph, a real captured draft or source authenticity.
 
 Node24.22.3 and PostgreSQL18.7 base images are pinned by official multi-platform
 index digest. Each built image still requires target-platform proof; rebuilding
@@ -63,7 +83,33 @@ then constructs an explicitly configured adapter with disposable synthetic key/C
 files under `/tmp`, waits for the real SDK child to report ready, and closes it.
 No observations are emitted and the container has no network: this proves the
 production dependency/path/UID startup closure, not TLS transport or Langfuse
-ingestion. The ordinary API/worker commands still do not inject the adapter.
+ingestion. API/worker commands use the no-op adapter unless their explicit
+`--telemetry-config` argument is supplied. Enabled CLI integration against a
+synthetic receiver is a separate test from this final-image offline startup proof.
+
+## Enabled exporter image qualification
+
+After export/reload qualification, run the same four enabled-exporter integration
+tests against the exact loaded image and its matching config identity:
+
+```sh
+pnpm service:runtime:exporter sha256:<qualified-engine-id> sha256:<qualified-config-id>
+```
+
+The pinned PostgreSQL image must already be present. The proof neither builds nor
+pulls images. It creates an internal network and disposable PostgreSQL storage,
+then mounts only the test harness and helpers read-only. Application source,
+production dependencies and compiled exporter entry points come from the image.
+API and worker CLIs run against the synthetic strict-TLS receiver inside the
+restricted test container; database connections stay on the internal network.
+No host ports, real credentials, model calls or public endpoints are used.
+
+CI requires four passing tests with no skips, verifies owned-resource cleanup,
+and records a separate closed receipt before retaining the artifact. The existing
+artifact manifest contract remains unchanged. This tests enabled image behavior
+with both CLIs inside one disposable test container; it does not qualify actual
+deployment topology, target-host capacity, real owner login or Langfuse indexing,
+retention and backup recovery.
 
 ## Deployment inputs
 
@@ -90,8 +136,10 @@ API and worker share `/var/lib/dailylogger/fixtures` at the same absolute path.
 PostgreSQL stores that path, so a different worker mount is invalid. Named-volume
 ownership is verified in CI; actual NAS bind-mount ownership needs separate proof.
 Application PostgreSQL and fixture files use separate persistent volumes.
-Telemetry stays no-op by default. The exporter code/dependencies are packaged but
-the CLI does not enable them; no telemetry database, credentials or disk spool is configured.
+Telemetry stays no-op by default. The exporter code/dependencies are packaged;
+explicit opt-in CLI configuration is described in [OBSERVABILITY.md](../OBSERVABILITY.md).
+The supplied Compose profile does not enable it or mount telemetry credentials.
+No telemetry database or disk spool is configured.
 Any later telemetry storage, retention and backups remain independent.
 
 The worker, migration and database use an internal container network. Only the

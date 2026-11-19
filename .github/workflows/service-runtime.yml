@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - apps/service/**
+      - packages/journal/**
       - docs/agent-service/editorial-api-responses.schema.json
       - package.json
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
       - packages/frontend/package.json
       - .github/workflows/service-runtime.yml
+      - .github/workflows/service-release-candidate.yml
   workflow_dispatch:
 
 permissions:
@@ -19,7 +21,7 @@ permissions:
 jobs:
   runtime-image:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,13 +35,14 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm type-check:service
+      - run: pnpm type-check:journal
       - run: pnpm test:service:runtime
       - run: pnpm test:service:artifact
       - name: Prepare credential-free committed build context
         run: pnpm service:runtime:context "$RUNNER_TEMP/dailylogger-runtime-context"
       - name: Build without publishing
         run: docker build -t dailylogger-runtime:proof "$RUNNER_TEMP/dailylogger-runtime-context"
-      - name: Export, reload and qualify disposable fixture image
+      - name: Export, reload and qualify fixture including exporter and matched restore
         env:
           GH_TOKEN: ${{ github.token }}
           DAILYLOGGER_ARTIFACT_CREDENTIAL_CANARY: fixture-credential-canary-${{ github.run_id }}-${{ github.run_attempt }}

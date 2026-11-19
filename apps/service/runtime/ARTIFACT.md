@@ -1,4 +1,4 @@
-# Disposable fixture image delivery
+# Fixture and release-candidate image delivery
 
 The image proof now retains the image it tested. CI saves the owned runtime image,
 checks every referenced config/layer object, removes only that image record without
@@ -6,7 +6,7 @@ force, reloads the archive and runs the existing runtime and TLS proofs once.
 The Docker layer store may retain build content; this is export/reload qualification,
 not a claim of recovery into an empty store.
 
-One Python standard-library module owns the closed manifest and both delivery
+One Python standard-library module owns the closed manifest and export/verify
 commands. A TypeScript/Zod domain plus a separate ZIP adapter was considered; one
 owner keeps the source, API and archive identity rules together without another
 dependency. The verifier performs no image load, container execution, SSH or deploy.
@@ -28,10 +28,23 @@ batch counts or an enabled default reject; older offline receipts are not silent
 accepted as proof of this combined image. This remains fixture qualification,
 not live Langfuse ingestion or permission to enable the API/worker adapter.
 
-The exporter command owns one export/reload followed by one runtime and one
-ingress smoke pass. Preparation counts are read from TAP (the union currently
-has ten cases); HTTP counts remain a separate required receipt. The workflow does
-not add a second runtime/ingress pass around the exporter.
+Artifact manifest version 2 additionally requires `enabledExporter` and
+`matchedRestore` summaries. Both contain the same engine ID, config ID and pinned
+PostgreSQL image as the exported archive. Exporter qualification requires all four
+tests, successful cleanup and explicit absence of real Langfuse/host qualification.
+Restore qualification requires its complete non-skipped TAP run, all recovery
+checks, successful cleanup and no production recovery-authority claim. These
+closed summaries omit resource names, paths, connection strings and private data.
+Version 1 manifests remain historical fixture evidence; the current receiver
+rejects them rather than interpreting missing gates as passed. The independent
+receiver expectation and receipt retain their own version 1 schemas.
+
+The shared export command owns one export/reload, runtime smoke, ingress smoke,
+enabled-exporter pass and matched-restore pass, in that order. Preparation and
+restore counts are read from TAP; HTTP counts remain a separate required receipt.
+Both profiles use this producer. A failed process, missing/duplicate receipt,
+identity mismatch, skipped suite or cleanup failure prevents manifest creation.
+The workflows upload only after this command succeeds and do not repeat its gates.
 
 The actual PR checkout is a synthetic merge, distinct from the PR head. Docker
 config IDs, engine index/manifest identities, upstream OCI digests, inner tar hashes and GitHub's outer artifact ZIP
@@ -44,18 +57,24 @@ engine target must lead to the recorded runtime config. Layer expansion is bound
 The workflow has one reviewed producer/uploader job. GitHub's artifact metadata
 binds an artifact to a run, rather than independently attesting its numeric job.
 The verifier authenticates the reviewed workflow source and its single-uploader
-shape, successful attempt/job and matching enclosed job identity. Preserve that
-review invariant when changing the workflow.
+shape, successful attempt/job and matching enclosed job identity. These shape
+checks are not a general YAML semantic validator; preserve reviewed-source trust
+and the single-uploader invariant when changing the workflow.
 
 ## Release candidates from merged source
 
 `service-release-candidate.yml` is a separate, manual workflow. It runs only when
 dispatched from `main`, accepts a service-scoped version in
 `vMAJOR.MINOR.PATCH-rc.N` form, and repeats the same build, export/reload, runtime,
-HTTP and private-TLS qualification. Its sealed manifest and receiver expectation
+HTTP, private-TLS, enabled-exporter and matched-restore qualification. Its sealed manifest and receiver expectation
 contain the version, `main` source revision, release workflow path and release job.
 The workflow retains `manifest.json` and `runtime-image.tar` for 90 days under
 `dailylogger-release-candidate-VERSION-RUN-ATTEMPT`.
+
+Both workflows type-check the shared journal and exercise artifact-policy tests
+before building. Release-workflow-only changes trigger the PR runtime workflow,
+which exercises the same producer and gates using its fixture profile. This is not
+an actual main-dispatched release-candidate run; record that separately after merge.
 
 GitHub's 90-day artifact retention is an evidence window, not the durable private
 release store. A later slice must copy only a verified candidate into the chosen

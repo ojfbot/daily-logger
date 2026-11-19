@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { ownedContainer } from './owned-container.mjs'
 
@@ -9,6 +10,11 @@ assert.ok(image && extra.length === 0, 'Usage: pnpm service:runtime:smoke IMAGE'
 const composeFile = fileURLToPath(new URL('./compose.yaml', import.meta.url))
 const httpTests = fileURLToPath(new URL('../test/http', import.meta.url))
 const deliveryTests = fileURLToPath(new URL('../test/delivery', import.meta.url))
+// Reviewed synthetic input is injected as data; test files and legacy source are absent in the image.
+const recordedFixture = readFileSync(new URL('../test/fixtures/recorded-article-v2.json', import.meta.url))
+const recordedFixtureSha256 = createHash('sha256').update(recordedFixture).digest('hex')
+const serviceDraftFixture = readFileSync(new URL('../test/fixtures/recorded-service-draft-v1.json', import.meta.url))
+const serviceDraftFixtureSha256 = createHash('sha256').update(serviceDraftFixture).digest('hex')
 const project = `dailylogger-runtime-${randomUUID().slice(0, 8)}`
 const password = randomUUID()
 const environment = { ...process.env, DAILYLOGGER_RUNTIME_IMAGE: image,
@@ -60,13 +66,93 @@ try {
     '--input-type=module'], { input: `
       import assert from 'node:assert/strict';
       import { execFileSync } from 'node:child_process';
-      import { existsSync,readFileSync,writeFileSync,mkdtempSync,rmSync,statSync } from 'node:fs';
+      import { existsSync,readFileSync,writeFileSync,mkdtempSync,rmSync,statSync,realpathSync } from 'node:fs';
+      import { fileURLToPath,pathToFileURL } from 'node:url';
+      import { activityWindow } from '@ojfbot/daily-logger-journal/activity-window';
+      import { shouldSkipRun } from '@ojfbot/daily-logger-journal/eligibility';
+      import { ArticleDataSchema } from '@ojfbot/daily-logger-journal/article-schema';
+      import { assembleBody } from '@ojfbot/daily-logger-journal/article-body';
+      import { renderArticle } from '@ojfbot/daily-logger-journal/render-article';
+      import { githubReferenceKinds,assertArticleReferenceContract } from '@ojfbot/daily-logger-journal/article-references';
+      import { draftRecommendationContextMarker,extractDraftRecommendationContext } from '@ojfbot/daily-logger-journal/recommendation-prose';
+      import { titleWithReportingWeekday } from '@ojfbot/daily-logger-journal/article-title';
+      import { toMarkdown } from '@ojfbot/daily-logger-journal/article-markdown';
+      import { ARTICLE_PROMPT_VERSION,SYSTEM_PROMPT,articleSystemPrompt,ARTICLE_TOOL_V2 } from '@ojfbot/daily-logger-journal/article-prompts';
+      import { buildArticleProvenance,parseArticleProvenance,promptSha256,appendAuthoringStage } from '@ojfbot/daily-logger-journal/article-provenance';
+      import { openRecordedEvidence } from './src/recorded-evidence.ts';
+      import { validateRecordedDraft } from './src/recorded-article.ts';
+      import { validateRecordedServiceDraft } from './src/recorded-service-draft.ts';
       import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
       import { readFixture,reviewFixture } from './src/fixture.ts';
       import { createLangfuseTelemetry } from './src/telemetry-export-process.ts';
       import { NOOP_TELEMETRY } from './src/telemetry.ts';
       assert.equal(process.getuid(),1000);
       assert.equal(existsSync('test'),false);
+      assert.equal(existsSync('/app/src'),false);
+      assert.equal(existsSync('/build'),false);
+      for(const entry of ['activity-window','eligibility','article-schema','action-item-schema','shipment-reference','article-body','article-references','article-title','normalize-article-markdown','render-article','recommendation-prose','article-provenance','article-markdown','article-prompts']) {
+        const resolved=import.meta.resolve('@ojfbot/daily-logger-journal/'+entry);
+        const path=realpathSync(fileURLToPath(resolved));
+        assert.ok(path.startsWith('/app/'));
+        assert.ok(!path.includes('/build/'));
+        const manifest=JSON.parse(readFileSync(new URL('../package.json',pathToFileURL(path)),'utf8'));
+        assert.equal(manifest.name,'@ojfbot/daily-logger-journal');
+        assert.deepEqual(manifest.dependencies,{marked:'17.0.5',parse5:'7.3.0',zod:'4.3.6'});
+        for(const field of ['optionalDependencies','peerDependencies']) assert.deepEqual(manifest[field]??{},{});
+      }
+      for(const [date,hours] of [['2026-03-08',23],['2026-11-01',25],['2026-11-17',24]]) {
+        const window=activityWindow(date);
+        assert.equal((window.end-window.start)/3600000,hours);
+      }
+      assert.deepEqual(shouldSkipRun({date:'2026-11-17',commits:[],recentPRs:[],openIssues:[],closedIssues:[]}),
+        {skip:true,reason:'no activity in reporting window'});
+      const recordedBytes=Buffer.from(${JSON.stringify(recordedFixture.toString('base64'))},'base64');
+      const recorded=openRecordedEvidence(recordedBytes,${JSON.stringify(recordedFixtureSha256)});
+      const draft=validateRecordedDraft(recorded,${JSON.stringify(JSON.parse(recordedFixture.toString()).requests[0].binding)});
+      assert.equal(draft.status,'validated');
+      assert.equal(draft.article.title,'Recorded draft');
+      assert.equal(draft.publicationAuthority,'none');
+      const serviceDraftBytes=Buffer.from(${JSON.stringify(serviceDraftFixture.toString('base64'))},'base64');
+      const serviceRecording=openRecordedEvidence(serviceDraftBytes,${JSON.stringify(serviceDraftFixtureSha256)});
+      const serviceDraft=validateRecordedServiceDraft(serviceRecording,${JSON.stringify(JSON.parse(serviceDraftFixture.toString()).requests[0].binding)});
+      assert.equal(serviceDraft.status,'validated');
+      assert.equal(serviceDraft.payloadValidation,'dailylogger-service-draft-v1');
+      assert.equal(serviceDraft.requestValidation,'dailylogger-service-draft-request-v1');
+      assert.equal(serviceDraft.article.title,'Synthetic service draft');
+      assert.equal('status' in serviceDraft.article,false);
+      assert.equal(serviceDraft.actionAuthority,'none');
+      assert.equal(serviceDraft.publicationAuthority,'none');
+      const kinds=githubReferenceKinds({openIssues:[],closedIssues:[],mergedPRs:[],openPRs:[],recentPRs:[]});
+      const body=assembleBody(draft.article,kinds);
+      assert.ok(renderArticle(body).includes('<h2>What shipped</h2>'));
+      assert.deepEqual(assertArticleReferenceContract(body,kinds),{verified:0,unknown:0});
+      const marker=draftRecommendationContextMarker('Unreviewed synthetic continuation');
+      assert.equal(renderArticle(marker),'');
+      assert.deepEqual(extractDraftRecommendationContext(marker).context,{kind:'retained',markdown:'Unreviewed synthetic continuation'});
+      assert.equal(titleWithReportingWeekday('2026-11-19','Shared body'),'Wednesday — Shared body');
+      const draftStage={role:'draft',model:'synthetic',promptVersion:'runtime-fixture-v1',promptSha256:promptSha256('synthetic')};
+      const provenanceInput={run:{kind:'local',capturedAt:'2026-11-19T00:00:00.000Z'},stages:[draftStage],nodeVersion:process.version};
+      assert.equal(buildArticleProvenance(provenanceInput),undefined);
+      const provenance=buildArticleProvenance({...provenanceInput,packageVersion:'0.1.0'});
+      const markdown=toMarkdown({...draft.article,tags:[],body,provenance});
+      assert.ok(markdown.includes('status: "draft"'));
+      assert.ok(markdown.endsWith('.*\\n'));
+      const raw=markdown.split('\\n').find(line=>line.startsWith('provenance: ')).slice('provenance: '.length);
+      assert.deepEqual(parseArticleProvenance(raw),provenance);
+      const revision={...draftStage,role:'revision',model:'synthetic-revision'};
+      const revised=appendAuthoringStage(markdown,revision);
+      const revisedRaw=revised.split('\\n').find(line=>line.startsWith('provenance: ')).slice('provenance: '.length);
+      assert.deepEqual(parseArticleProvenance(revisedRaw).authoring,[draftStage,revision]);
+      assert.equal(parseArticleProvenance('{'),undefined);
+      assert.equal(appendAuthoringStage(markdown,{...revision,model:''}),markdown);
+      assert.equal(ARTICLE_PROMPT_VERSION,'article-v8-2026-11-19-fleet-roadmap-pulse');
+      assert.equal(articleSystemPrompt(false),SYSTEM_PROMPT);
+      assert.ok(SYSTEM_PROMPT.startsWith('You are the technical writer and educational narrator for the CircusGreen / ojfbot fleet'));
+      assert.ok(articleSystemPrompt(true).includes('## Claude Code skill telemetry'));
+      assert.equal(ARTICLE_TOOL_V2.name,'write_article');
+      assert.equal(ARTICLE_TOOL_V2.input_schema.type,'object');
+      assert.ok(ARTICLE_TOOL_V2.input_schema.properties.roadmapPulse.description.includes('Also in flight'));
+      assert.equal(ArticleDataSchema.safeParse({}).success,false);
       assert.equal(existsSync('/app/.git/objects/info/alternates'),false);
       assert.equal(existsSync('/app/.git/logs'),false);
       assert.equal(execFileSync('git',['-C','/app','remote'],{encoding:'utf8'}),'');

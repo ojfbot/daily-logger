@@ -142,7 +142,8 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 |---|---|
 | [`src/index.ts`](src/index.ts) | Entry point — orchestrates collect → generate → write |
 | [`src/collect-context.ts`](src/collect-context.ts) | GitHub API sweep via `gh` CLI; reads `ROADMAP.md` for prompt context |
-| [`src/generate-article.ts`](src/generate-article.ts) | Claude API call + system prompt, JSON → markdown |
+| [`src/generate-article.ts`](src/generate-article.ts) | Claude API adapter with shared journal prompt/render compatibility exports |
+| [`packages/journal/src/article-prompts.ts`](packages/journal/src/article-prompts.ts) | Draft prompt, telemetry addendum, version and provider-independent tool data |
 | [`src/types.ts`](src/types.ts) | Shared TypeScript types |
 | [`ROADMAP.md`](ROADMAP.md) | Living roadmap — first ~2500 chars injected into every generation prompt |
 | [`.github/scripts/build_pr_body.py`](.github/scripts/build_pr_body.py) | Builds the deterministic draft PR body from article frontmatter |
@@ -184,7 +185,7 @@ instruction separately from open follow-up issues and human gates.
 
 **Repos are discovered automatically** — `src/fleet.ts` selects eligible repositories from the live `ojfbot` org list at generation time. Public repositories are included unless excluded by policy; private and internal repositories require a `REPO_NOTES` opt-in. There is no manual `REPOS` array.
 
-**Update project context** — edit [`ROADMAP.md`](ROADMAP.md). The "Where we are now" section should be updated weekly. The system prompt lives in [`src/generate-article.ts`](src/generate-article.ts).
+**Update project context** — edit [`ROADMAP.md`](ROADMAP.md). The "Where we are now" section should be updated weekly. The system prompt lives in [`packages/journal/src/article-prompts.ts`](packages/journal/src/article-prompts.ts); the root generator preserves its compatibility export.
 
 ---
 

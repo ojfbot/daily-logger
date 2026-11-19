@@ -43,6 +43,8 @@
 
 - 2026-11-18. HTTP teardown assumed ending pools made a forced database drop safe, but the minimum-Node CI run passed every case and then emitted an asynchronous connection-termination error. Teardown now requires PostgreSQL to report no remaining database sessions before an unforced drop, so a connection leak fails verification instead of being forcibly hidden.
 
+- 2026-11-19, #549 continuation: the initiative snapshot alone left both the writer introduction and council reviewer evaluating the whole fleet as Frame OS. Aligned those prompts with core's current fleet goal, separated HelpDesk transport from agent consumption and FleetRunner qualification from deployed capability, and removed synthesis's contradictory per-section action quota. Preserved the roadmap-first structure and existing independent action review; prompt versions advance to article-v8 and council-synthesis-v3. Static orientation is not a live status ledger or approved weekly priority record. Model-output date/telemetry adaptation and evidence-aware council review remain separate service work.
+
 - The initial weekday rewrite assumed a leading weekday named the reporting day, but independent review found it can be content such as “Friday Night”; rewrite only an explicit separated label and preserve other weekday prose under a workday prefix.
 
 - The title rollout assumed browser fixtures asserted article behavior independently of the displayed heading, but the grouped-time fixture expected its raw title; update that exact heading assertion to the new reporting-workday display and rerun all browser journeys before merge.
@@ -656,3 +658,23 @@ must establish the candidate's actual fit before a new model-run decision.
 - 2026-11-18. The read deadline design assumed destroying a PostgreSQL socket stopped active SQL, but forced cutoff and disconnect probes showed the backend could keep executing. Added a separately bounded cancellation connection to cancel the owned backend before destroying its client, with real-query cleanup regressions.
 - 2026-11-18. Command GET initially filtered by the HTTP actor, but run summaries also link prior trusted-CLI commands with older actor labels. Made configured-owner inspection cover those fixture records while preserving the authenticated actor namespace for new admissions, and verified legacy direct attempts retain null command IDs.
 - 2026-11-18. The HTTP error contract assumed normal hooks covered router failures, but independent Fastify reproduction showed bad URL encoding and overlong parameters bypassed those hooks and reflected raw paths. Added raw router sanitizers and exact error/no-store canary regressions.
+
+## Deviations — roadmap-first pulse and current initiatives (2026-11-15)
+
+- The plan was to change only the drafter's `roadmapPulse` rule and replace its Frame OS-era "Architecture snapshot". The council synthesis pass rewrites every section and had no instruction about the pulse, so it could expand the pulse back into a PR-by-PR narrative. Added one clause to synthesis rule 5 to keep the Direction / Next milestone / Blocked lines and the "Also in flight" list. Bumped both prompt versions so article provenance shows the change.
+- The conservative choice was to keep "reference every open PR by [repo] #number" and move it into the closing "Also in flight" list, rather than drop it.
+
+## Deviations — shared journal prompts (2026-11-19)
+
+- Full-root lint during prompt extraction found two unused imports left in the legacy generator by the earlier shared-renderer move. Removed those imports and expanded the journal lint boundary to include the generator, council and prompt contract test; full-root lint passes.
+- The journal suite initially exceeded the existing closing-options timeout while competing with parallel compiler work. The unchanged suite passed with two test workers; no timeout, assertion or production behavior was relaxed.
+
+## Deviations — service draft output contract (2026-11-19)
+
+- The first service tool name differed from the shared prompt's explicit `write_article` instruction. Independent review caught the contradiction; retain that tool name under the separate versioned service schema and assert instruction/selection agreement.
+- Removing per-date schemas from a long-lived AJV instance did not release its generated-code scope. Pinned-library reproduction showed retained validators; use a short-lived compiler per validation instead of claiming bounded retention from `removeSchema`.
+
+## Deviations — release-candidate integration (2026-11-19)
+
+- The first release workflow retained its image before the newer enabled-exporter and matched-restore gates. Combining the qualified journal stack with the candidate now moves those gates into the shared export producer, before manifest creation. Manifest version 2 requires their exact image/config identities, pinned PostgreSQL image, complete test outcomes and cleanup; the receiver rejects historical version 1 manifests rather than silently promoting their narrower proof.
+- The existing smoke parser expected JSON to start with `proof`. Exporter JSON begins with `schemaVersion`, and restore emits its summary inside TAP. Parse those gate records separately, reject duplicates/missing records, and add the restore config identity and upstream pin to its content-free summary.

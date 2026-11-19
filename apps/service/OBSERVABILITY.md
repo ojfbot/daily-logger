@@ -1,9 +1,10 @@
-# Application observations and opt-in S05b.1 exporter
+# Application observations and opt-in exporter
 
 S05a supplies explicit application hooks, a closed metadata projector and bounded
 offline test sinks. S05b.1 adds an injectable Langfuse process adapter, tested with
-synthetic local TLS receivers. Instrumentation is **disabled by default**. Existing
-CLIs still select the no-op adapter; no environment variable enables export. The
+synthetic local TLS receivers. Instrumentation is **disabled by default**. API
+`serve` and delivery `work` can explicitly select it with `--telemetry-config`;
+omitting that argument selects the exact no-op adapter, and no environment variable enables export. The
 fixture worker's HTTP blockade and ambient LangSmith suppression remain unchanged.
 The owner API separately permits its configured OAuth exchange; no generic HTTP
 instrumentation or capture is added.
@@ -109,7 +110,8 @@ signal under UID 1000 with a read-only root filesystem and networking disabled;
 it does not emit observations or require an endpoint. See the [runtime packaging
 receipt](../../docs/agent-service/s05b1-runtime-packaging-2026-11-18.md) for which
 platform checks have actually run. Missing artifacts fail open
-by closing the optional child. API/worker CLI injection remains disabled.
+by closing the optional child. API/worker CLI injection requires the explicit
+protected configuration described below.
 
 `createLangfuseTelemetry(config?)` returns the existing no-op adapter unless
 explicit configuration passes the closed validator. The only enabled shape is:
@@ -142,6 +144,41 @@ effective owner and have no group/other permissions; public/secret keys are
 printable ASCII, at most 4,096 bytes each. CA files are at most 128 KiB. Deployment
 must protect parent directories and mounts against replacement. JavaScript does
 not provide a guarantee of zeroing every in-memory credential copy.
+
+## Explicit API and worker configuration
+
+Only long-running API and worker operations accept this optional argument:
+
+```sh
+pnpm service:http serve --telemetry-config /absolute/private/api-telemetry.json
+pnpm service:delivery work --telemetry-config /absolute/private/worker-telemetry.json
+```
+
+Each file contains exactly the six fields in the configuration example above,
+encoded as JSON. It must be an absolute path to a regular file owned by the
+effective application user with no group or other permissions. Reading is bounded
+to 16 KiB and rejects final-component symlinks and special files. Protect parent
+directories and mounts as well. The file contains references to credentials,
+never inline keys; each process constructs and owns its own adapter.
+
+Malformed explicit configuration rejects startup with a fixed error before
+database or serving resources are acquired. Once configuration is admitted,
+missing compiled exporter files, rejected key files, or an unavailable receiver
+quarantine the optional exporter without replacing the business result or
+making durable execution wait for telemetry delivery. Omission of the argument returns the exact no-op
+adapter. Migration, enqueue and read-only CLI operations do not accept it.
+
+The application closes its owned adapter during setup failure and normal
+shutdown within the existing deadlines. Enabling this option on a deployed host
+still requires reviewed protected mounts, endpoint trust, resource capacity and
+enabled final-image lifecycle qualification. The default Compose profile supplies
+neither this argument nor telemetry mounts.
+
+The separate [enabled image proof](runtime/README.md#enabled-exporter-image-qualification)
+runs the same four mandatory integration cases with application code and the
+compiled exporter supplied by the exact final image. Its synthetic receiver and
+disposable PostgreSQL qualify that image boundary only; actual Langfuse indexing
+and target-host deployment remain separate evidence.
 
 The bounded topology is one application-owned child process containing one
 responsive IPC supervisor and one SDK worker thread. No SDK is imported into the
@@ -204,12 +241,12 @@ supervision remains a separate gate. V8 limits (96 MiB child old space; worker
 64 MiB old/16 MiB young/4 MiB stack) are **not total RSS or CPU quotas**. No new
 container memory/process limit or production capacity claim is made here.
 
-Integration still required: qualify the built image on its target platform,
-choose protected secret/CA mounts and endpoint, construct one owned adapter per API/worker, and
-inject it into their existing optional telemetry arguments. Preserve current
-HTTP blockade/LangSmith suppression, existing deadlines and no-op defaults.
-Run the real PostgreSQL HTTP-to-instrumented-worker suite with this actual adapter
-and requalify runtime restart/termination behavior before enabling it. Langfuse
+Deployment integration still required: qualify enabled behavior in the built image
+on its target platform, and choose protected secret/CA mounts and endpoint.
+Explicit source CLI wiring preserves the HTTP blockade/LangSmith suppression,
+existing deadlines and no-op defaults. The dedicated real PostgreSQL exporter
+suite exercises those CLIs against a synthetic TLS receiver; its actual results
+must pass before claiming that boundary qualified. Langfuse
 stack deployment, authenticated readback, retention/deletion and backup recovery
 are later gates; an HTTP success alone is not proof of indexed observations.
 
@@ -222,6 +259,7 @@ pnpm test:service
 pnpm test:service:postgres
 pnpm test:service:delivery
 pnpm test:service:http
+pnpm test:service:exporter
 ```
 
 Offline tests cover secret canaries across unsupported capture surfaces, multiple
