@@ -172,6 +172,8 @@ Maintain independent pause controls for generation, model spend, action review, 
 
 Before a production upgrade, close admission and quiesce old API/worker writes within bounded deadlines, then capture a consistent database/filesystem recovery point. Application, saver and delivery migration phases commit separately; reconcile their ledgers and rerun the same qualified migrator after interruption. Current fixture reservations bind a canonical path and physical device/inode. Qualify restoration into an isolated destination with a deliberate ownership reconciliation procedure; a database dump and copied directory alone do not prove recoverability. These upgrade/restore requirements do not block a fresh disposable fixture.
 
+The first [matched restore fixture](https://github.com/ojfbot/daily-logger/pull/572) assumes the original source stays stopped with no later effects. Production recovery additionally requires an authority epoch outside restored state, effective old/new writer fencing, invalidation of restored login/session and execution grants, and reconciliation of effects after capture before fresh exact-version approval. Matching backup bytes alone cannot show that a restored approval or session is still valid. Track this control plane as an S08 release gate; preserve the fixture's narrower evidence in the [runtime qualification contract](runtime-qualification.md#production-release-and-recovery).
+
 ## Decisions to close during implementation
 
 | Decision | Proposed default | Needed by |
