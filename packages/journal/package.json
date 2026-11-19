@@ -19,7 +19,8 @@
     "./render-article": "./src/render-article.ts",
     "./recommendation-prose": "./src/recommendation-prose.ts",
     "./article-provenance": "./src/article-provenance.ts",
-    "./article-markdown": "./src/article-markdown.ts"
+    "./article-markdown": "./src/article-markdown.ts",
+    "./article-prompts": "./src/article-prompts.ts"
   },
   "scripts": {
     "type-check": "tsc --noEmit"

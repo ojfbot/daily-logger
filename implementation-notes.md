@@ -663,3 +663,8 @@ must establish the candidate's actual fit before a new model-run decision.
 
 - The plan was to change only the drafter's `roadmapPulse` rule and replace its Frame OS-era "Architecture snapshot". The council synthesis pass rewrites every section and had no instruction about the pulse, so it could expand the pulse back into a PR-by-PR narrative. Added one clause to synthesis rule 5 to keep the Direction / Next milestone / Blocked lines and the "Also in flight" list. Bumped both prompt versions so article provenance shows the change.
 - The conservative choice was to keep "reference every open PR by [repo] #number" and move it into the closing "Also in flight" list, rather than drop it.
+
+## Deviations — shared journal prompts (2026-11-19)
+
+- Full-root lint during prompt extraction found two unused imports left in the legacy generator by the earlier shared-renderer move. Removed those imports and expanded the journal lint boundary to include the generator, council and prompt contract test; full-root lint passes.
+- The journal suite initially exceeded the existing closing-options timeout while competing with parallel compiler work. The unchanged suite passed with two test workers; no timeout, assertion or production behavior was relaxed.

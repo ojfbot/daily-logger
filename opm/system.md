@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `71fa4117e1ad0d02e8ad33af09e7c49b9328af24d75916c9f3fa24ce0dfc1a0c`.
+> Source SHA-256: `8a44c3aba0bdd076cab247b727bcd2041e4e6b07f1143330d7f7ec78a3884109`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -2282,4 +2282,48 @@ Authoring Stage Appending yields Article Markdown. [src: packages/journal/src/ar
 Journal Serialization Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
 Journal Serialization Qualifying requires Synthetic Draft Values. [src: apps/service/runtime/smoke.mjs]
 Journal Serialization Qualifying yields Serialization Compatibility Evidence. [src: src/__tests__/journal-serialization.test.ts]
+```
+
+## SD2.14 — Shared draft prompt definitions
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.14 — Shared draft prompt definitions"
+---
+flowchart TD
+  accTitle: SD2.14 — Shared draft prompt definitions
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n105("Drafting")
+  n454["Shared Journal Prompt Definitions"]
+  n455["Shared Draft Tool Definition"]
+  n456("Draft Prompt Selecting")
+  n457["Telemetry Presence Flag"]
+  n458["Selected Draft System Prompt"]
+  n459("Journal Prompt Qualifying")
+  n423["Installed Journal Package Exports"]
+  n460["Prompt Compatibility Evidence"]
+  n454 -->|"requires (instrument)"| n105
+  n455 -->|"requires (instrument)"| n105
+  n457 -->|"requires (instrument)"| n456
+  n454 -->|"requires (instrument)"| n456
+  n456 -->|"yields"| n458
+  n423 -->|"requires (instrument)"| n459
+  n459 -->|"yields"| n460
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Drafting requires Shared Journal Prompt Definitions. [src: packages/journal/src/article-prompts.ts]
+Drafting requires Shared Draft Tool Definition. [src: packages/journal/src/article-prompts.ts]
+Draft Prompt Selecting requires Telemetry Presence Flag. [src: packages/journal/src/article-prompts.ts]
+Draft Prompt Selecting requires Shared Journal Prompt Definitions. [src: packages/journal/src/article-prompts.ts]
+Draft Prompt Selecting yields Selected Draft System Prompt. [src: packages/journal/src/article-prompts.ts]
+Journal Prompt Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
+Journal Prompt Qualifying yields Prompt Compatibility Evidence. [src: src/__tests__/fleet-prompt-contract.test.ts]
 ```

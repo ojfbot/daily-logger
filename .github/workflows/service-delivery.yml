@@ -13,6 +13,7 @@ on:
       - src/action-item-schema.ts
       - src/article-references.ts
       - src/generate-article.ts
+      - src/council.ts
       - src/normalize-article-markdown.ts
       - src/render-article.ts
       - src/article-title.ts
@@ -33,6 +34,7 @@ on:
       - src/__tests__/toMarkdown.test.ts
       - src/__tests__/model-time-output.test.ts
       - src/__tests__/journal-serialization.test.ts
+      - src/__tests__/fleet-prompt-contract.test.ts
       - eslint.config.js
       - package.json
       - pnpm-lock.yaml

@@ -21,7 +21,7 @@ Context preparation copies only committed runtime inputs selected by the
 service's `files` list and required build/schema assets. The `dist` deploy tree
 is excluded even if force-committed: the image rebuilds it from source. Only the
 explicit exporter build script is admitted as an `.mjs` build input; arbitrary
-scripts and host output remain excluded. The shared journal manifest and its thirteen
+scripts and host output remain excluded. The shared journal manifest and its fourteen
 explicitly named source files are also required build inputs. Journal tests,
 unrelated source, environment files and host build output
 are excluded even when committed. Changed runtime inputs,
@@ -43,7 +43,7 @@ runtime. The existing production `tsx` loader retains its own transitive compile
 the compiled exporter child does not launch that loader or a compiler helper.
 
 The shared journal package is installed through the workspace
-lock and included by production deploy. Its thirteen TypeScript entry points use the
+lock and included by production deploy. Its fourteen TypeScript entry points use the
 same `tsx` loader. Offline smoke imports the installed package, verifies resolved
 files remain inside `/app`, checks representative DST windows and the empty
 eligibility result, and checks that the installed journal manifest declares
@@ -52,7 +52,9 @@ dependencies. It also validates a sealed synthetic V2 draft through the installe
 service adapter and exercises shared body assembly, reference checks, rendering,
 continuation-marker roundtrip and reporting-day title behavior. It serializes the
 synthetic draft with existing local provenance, round-trips that provenance and
-appends a synthetic revision stage while preserving invalid-input behavior. The test input is
+appends a synthetic revision stage while preserving invalid-input behavior. Installed
+prompt checks cover the reviewed fleet version, telemetry selection and legacy tool
+data without importing a provider SDK or making a model call. The test input is
 injected as data; test files, root CLI source and build-stage paths are absent.
 This qualifies package closure, rendering/serialization compatibility and original-response shape validation, not a
 persisted journal graph, a real captured draft or source authenticity.
