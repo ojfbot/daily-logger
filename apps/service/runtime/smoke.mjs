@@ -69,6 +69,11 @@ try {
       import { activityWindow } from '@ojfbot/daily-logger-journal/activity-window';
       import { shouldSkipRun } from '@ojfbot/daily-logger-journal/eligibility';
       import { ArticleDataSchema } from '@ojfbot/daily-logger-journal/article-schema';
+      import { assembleBody } from '@ojfbot/daily-logger-journal/article-body';
+      import { renderArticle } from '@ojfbot/daily-logger-journal/render-article';
+      import { githubReferenceKinds,assertArticleReferenceContract } from '@ojfbot/daily-logger-journal/article-references';
+      import { draftRecommendationContextMarker,extractDraftRecommendationContext } from '@ojfbot/daily-logger-journal/recommendation-prose';
+      import { titleWithReportingWeekday } from '@ojfbot/daily-logger-journal/article-title';
       import { openRecordedEvidence } from './src/recorded-evidence.ts';
       import { validateRecordedDraft } from './src/recorded-article.ts';
       import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
@@ -79,14 +84,14 @@ try {
       assert.equal(existsSync('test'),false);
       assert.equal(existsSync('/app/src'),false);
       assert.equal(existsSync('/build'),false);
-      for(const entry of ['activity-window','eligibility','article-schema','action-item-schema','shipment-reference']) {
+      for(const entry of ['activity-window','eligibility','article-schema','action-item-schema','shipment-reference','article-body','article-references','article-title','normalize-article-markdown','render-article','recommendation-prose']) {
         const resolved=import.meta.resolve('@ojfbot/daily-logger-journal/'+entry);
         const path=realpathSync(fileURLToPath(resolved));
         assert.ok(path.startsWith('/app/'));
         assert.ok(!path.includes('/build/'));
         const manifest=JSON.parse(readFileSync(new URL('../package.json',pathToFileURL(path)),'utf8'));
         assert.equal(manifest.name,'@ojfbot/daily-logger-journal');
-        assert.deepEqual(manifest.dependencies,{zod:'4.3.6'});
+        assert.deepEqual(manifest.dependencies,{marked:'17.0.5',parse5:'7.3.0',zod:'4.3.6'});
         for(const field of ['optionalDependencies','peerDependencies']) assert.deepEqual(manifest[field]??{},{});
       }
       for(const [date,hours] of [['2026-03-08',23],['2026-11-01',25],['2026-11-17',24]]) {
@@ -101,6 +106,14 @@ try {
       assert.equal(draft.status,'validated');
       assert.equal(draft.article.title,'Recorded draft');
       assert.equal(draft.publicationAuthority,'none');
+      const kinds=githubReferenceKinds({openIssues:[],closedIssues:[],mergedPRs:[],openPRs:[],recentPRs:[]});
+      const body=assembleBody(draft.article,kinds);
+      assert.ok(renderArticle(body).includes('<h2>What shipped</h2>'));
+      assert.deepEqual(assertArticleReferenceContract(body,kinds),{verified:0,unknown:0});
+      const marker=draftRecommendationContextMarker('Unreviewed synthetic continuation');
+      assert.equal(renderArticle(marker),'');
+      assert.deepEqual(extractDraftRecommendationContext(marker).context,{kind:'retained',markdown:'Unreviewed synthetic continuation'});
+      assert.equal(titleWithReportingWeekday('2026-11-19','Shared body'),'Wednesday — Shared body');
       assert.equal(ArticleDataSchema.safeParse({}).success,false);
       assert.equal(existsSync('/app/.git/objects/info/alternates'),false);
       assert.equal(existsSync('/app/.git/logs'),false);

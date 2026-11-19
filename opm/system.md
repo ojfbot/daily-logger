@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `f13e0a1bca091c178d9b6698c4ab9485f72996e1b2cc217a04a1d726afc706f1`.
+> Source SHA-256: `91c640f07391583082b9f0f36ced43dadeb1fa3f93eadabc8a9369f3a8ad5f29`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -386,7 +386,7 @@ Action Projecting yields Canonical Action Projection. [src: src/action-registry.
 Suggested Action Card Rendering requires Closing Prompt. [src: src/action-registry.ts]
 Suggested Action Card Rendering requires Action Registry. [src: src/action-registry.ts]
 Suggested Action Card Rendering yields Suggested Actions Card. [src: src/action-registry.ts]
-Draft Continuation Context can be transient or retained. [src: src/recommendation-prose.ts]
+Draft Continuation Context can be transient or retained. [src: packages/journal/src/recommendation-prose.ts]
 Action Reconciling requires Article. [src: src/review-actions.ts]
 Action Reconciling requires Action Registry. [src: src/review-actions.ts]
 Action Review Cycle can be generation or revision. [src: src/action-review-cycle.ts]
@@ -427,7 +427,7 @@ Action Reconciling affects Action Registry. [src: src/review-actions.ts]
 Action Reconciling affects Article. [src: src/action-registry.ts]
 Action Reconciling yields Closing Prompt. [src: src/review-actions.ts]
 Action Reconciling yields Recommendation Maintenance Memory. [src: src/review-actions.ts]
-Action Reconciling changes Draft Continuation Context from transient to retained. [src: src/recommendation-prose.ts]
+Action Reconciling changes Draft Continuation Context from transient to retained. [src: packages/journal/src/recommendation-prose.ts]
 Closing Prompt can be legacy-options, ranked-shortlist, or needs-evidence. [src: src/action-registry-schema.ts]
 Draft Action Candidate can be awaiting-review, promoted, mapped-existing, rejected, or verified-closure. [src: src/action-registry-schema.ts]
 Draft Action Candidates consists of Draft Action Candidate. [src: src/action-registry-schema.ts]
@@ -586,6 +586,7 @@ flowchart TD
   n116["Council Critiques"]
   n117["Claim Report"]
   n80["Time Evidence"]
+  n425("Article Body Assembling")
   n101 -->|"part of"| n6
   n4 -->|"requires (instrument)"| n102
   n13 -->|"requires (instrument)"| n102
@@ -609,6 +610,7 @@ flowchart TD
   n100 -->|"condition: run"| n105
   n105 -->|"yields"| n0
   n105 -->|"yields"| n27
+  n105 -->|"invokes"| n425
   n36 -->|"requires (instrument)"| n106
   n0 -->|"requires (instrument)"| n106
   n106 -->|"yields"| n116
@@ -662,6 +664,7 @@ Drafting requires Closing Continuity Projection. [src: src/generate-article.ts]
 Drafting occurs if Activity Decision is run. [src: src/index.ts]
 Drafting yields Article.
 Drafting yields Draft Continuation Context. [src: src/generate-article.ts]
+Drafting invokes Article Body Assembling. [src: src/generate-article.ts]
 Council Reviewing requires Claude API. [src: src/index.ts]
 Council Reviewing requires Article.
 Council Reviewing yields Council Critiques.
@@ -2138,4 +2141,74 @@ Recorded Draft Validating yields Original Draft Shape Result. [src: apps/service
 Original Draft Qualifying requires Synthetic Original Response Cases. [src: apps/service/test/recorded-article.test.ts]
 Original Draft Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
 Original Draft Qualifying yields Original Response Validation Evidence. [src: apps/service/test/recorded-article.test.ts]
+```
+
+## SD2.12 — Shared journal rendering
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.12 — Shared journal rendering"
+---
+flowchart TD
+  accTitle: SD2.12 — Shared journal rendering
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n425("Article Body Assembling")
+  n426["Structured Article Values"]
+  n427["GitHub Resource Kind Index"]
+  n428("Article Markdown Normalizing")
+  n429("Article Reference Checking")
+  n430["Draft Article Body"]
+  n27["Draft Continuation Context — states: transient, retained"]
+  n431["Generated Prose"]
+  n432["Normalized Markdown"]
+  n433["Reference Verification Counts"]
+  n434("Article HTML Rendering")
+  n435["Article Markdown"]
+  n436["Escaped Article HTML"]
+  n437("Journal Rendering Qualifying")
+  n423["Installed Journal Package Exports"]
+  n438["Synthetic Draft Values"]
+  n439["Rendering Compatibility Evidence"]
+  n426 -->|"requires (instrument)"| n425
+  n427 -->|"requires (instrument)"| n425
+  n425 -->|"invokes"| n428
+  n425 -->|"invokes"| n429
+  n425 -->|"yields"| n430
+  n425 -->|"yields"| n27
+  n431 -->|"requires (instrument)"| n428
+  n428 -->|"yields"| n432
+  n432 -->|"requires (instrument)"| n429
+  n427 -->|"requires (instrument)"| n429
+  n429 -->|"yields"| n433
+  n435 -->|"requires (instrument)"| n434
+  n434 -->|"yields"| n436
+  n423 -->|"requires (instrument)"| n437
+  n438 -->|"requires (instrument)"| n437
+  n437 -->|"yields"| n439
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Article Body Assembling requires Structured Article Values. [src: packages/journal/src/article-body.ts]
+Article Body Assembling requires GitHub Resource Kind Index. [src: packages/journal/src/article-references.ts]
+Article Body Assembling invokes Article Markdown Normalizing. [src: packages/journal/src/article-body.ts]
+Article Body Assembling invokes Article Reference Checking. [src: packages/journal/src/article-body.ts]
+Article Body Assembling yields Draft Article Body. [src: packages/journal/src/article-body.ts]
+Article Body Assembling yields Draft Continuation Context. [src: packages/journal/src/recommendation-prose.ts]
+Article Markdown Normalizing requires Generated Prose. [src: packages/journal/src/normalize-article-markdown.ts]
+Article Markdown Normalizing yields Normalized Markdown. [src: packages/journal/src/normalize-article-markdown.ts]
+Article Reference Checking requires Normalized Markdown. [src: packages/journal/src/article-references.ts]
+Article Reference Checking requires GitHub Resource Kind Index. [src: packages/journal/src/article-references.ts]
+Article Reference Checking yields Reference Verification Counts. [src: packages/journal/src/article-references.ts]
+Article HTML Rendering requires Article Markdown. [src: packages/journal/src/render-article.ts]
+Article HTML Rendering yields Escaped Article HTML. [src: packages/journal/src/render-article.ts]
+Journal Rendering Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
+Journal Rendering Qualifying requires Synthetic Draft Values. [src: apps/service/runtime/smoke.mjs]
+Journal Rendering Qualifying yields Rendering Compatibility Evidence. [src: src/__tests__/journal-render.test.ts]
 ```
