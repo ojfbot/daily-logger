@@ -9,9 +9,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 make g+
 WORKDIR /build
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/frontend/package.json ./packages/frontend/package.json
+COPY packages/journal/package.json ./packages/journal/package.json
 COPY apps/service/package.json ./apps/service/package.json
 RUN pnpm --filter @ojfbot/daily-logger-service... install --frozen-lockfile
 COPY apps/service/src ./apps/service/src
+COPY packages/journal/src ./packages/journal/src
 COPY apps/service/migrations ./apps/service/migrations
 COPY apps/service/scripts/build-telemetry.mjs ./apps/service/scripts/build-telemetry.mjs
 RUN pnpm --filter @ojfbot/daily-logger-service build:telemetry

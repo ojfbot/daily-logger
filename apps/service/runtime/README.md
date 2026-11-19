@@ -21,7 +21,10 @@ Context preparation copies only committed runtime inputs selected by the
 service's `files` list and required build/schema assets. The `dist` deploy tree
 is excluded even if force-committed: the image rebuilds it from source. Only the
 explicit exporter build script is admitted as an `.mjs` build input; arbitrary
-scripts and host output remain excluded. Changed runtime inputs,
+scripts and host output remain excluded. The shared journal manifest and its two
+explicitly named source files are also required build inputs. Journal tests,
+unrelated source, environment files and host build output
+are excluded even when committed. Changed runtime inputs,
 symlinks and existing destinations reject. Untracked files, environment files,
 developer node_modules and source Git metadata never enter the build context.
 A fresh local-only shallow fetch supplies the public fixture commit. The store
@@ -38,6 +41,14 @@ production dependency tree so root-directory CLI subprocesses resolve the loader
 The exporter build script, source tests and fault preloads are excluded from the
 runtime. The existing production `tsx` loader retains its own transitive compiler;
 the compiled exporter child does not launch that loader or a compiler helper.
+
+The dependency-free shared journal package is installed through the workspace
+lock and included by production deploy. Its two TypeScript entry points use the
+same `tsx` loader. Offline smoke imports the installed package, verifies resolved
+files remain inside `/app`, checks representative DST windows and the empty
+eligibility result, and rejects reliance on root CLI source, build-stage paths
+or the Anthropic SDK. This qualifies package closure, not a journal graph or
+semantic validation of recorded evidence.
 
 Node24.22.3 and PostgreSQL18.7 base images are pinned by official multi-platform
 index digest. Each built image still requires target-platform proof; rebuilding

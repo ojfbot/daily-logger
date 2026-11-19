@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `4a651d9420f61a54485d7f7d5820d7c9e3b1a045edb40240e9c4dc44ada1e6dc`.
+> Source SHA-256: `a71683dd499a4bbe14f46f7d334eb560b6dd5002828581fddcafbf1413965deb`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -649,8 +649,8 @@ Closing Continuity Projecting requires Article. [src: src/collect-context.ts]
 Closing Continuity Projecting requires Article Action Files. [src: src/collect-context.ts]
 Closing Continuity Projecting yields Closing Continuity Projection. [src: src/collect-context.ts]
 Telemetry Collecting yields Telemetry Digest. [src: src/collect-telemetry.ts]
-Activity Assessing requires Commit Context. [src: src/should-skip-run.ts]
-Activity Assessing yields Activity Decision. [src: src/should-skip-run.ts]
+Activity Assessing requires Commit Context. [src: src/should-skip-run.ts] [src: packages/journal/src/eligibility.ts]
+Activity Assessing yields Activity Decision. [src: src/should-skip-run.ts] [src: packages/journal/src/eligibility.ts]
 Credit Checking occurs if Activity Decision is run. [src: src/index.ts]
 Credit Checking requires Claude API. [src: src/check-anthropic-credits.ts]
 Credit Checking yields Credit Status. [src: src/check-anthropic-credits.ts]
@@ -1119,8 +1119,8 @@ flowchart TD
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
 
 ```text
-Activity Window Resolving requires Article Date. [src: src/activity-window.ts]
-Activity Window Resolving yields Activity Window. [src: src/activity-window.ts]
+Activity Window Resolving requires Article Date. [src: packages/journal/src/activity-window.ts]
+Activity Window Resolving yields Activity Window. [src: packages/journal/src/activity-window.ts]
 Context Collecting requires Activity Window. [src: src/collect-context.ts]
 Context Collecting invokes Activity Window Resolving. [src: src/collect-context.ts]
 Start Target Waiting requires Clock. [src: .github/scripts/daily_blog_schedule.py]
@@ -1725,7 +1725,9 @@ flowchart TD
   n339["Pinned Build Toolchain"]
   n340("Runtime Image Packaging")
   n341["Production Service Dependencies"]
-  n342["Offline Capable Service Image"]
+  n342["Committed Shared Journal Sources"]
+  n343["Explicit Journal Package Exports"]
+  n344["Offline Capable Service Image"]
   n322 -->|"condition: enabled"| n310
   n303 -->|"requires (instrument)"| n310
   n323 -->|"requires (instrument)"| n310
@@ -1747,7 +1749,9 @@ flowchart TD
   n337 -->|"yields"| n323
   n323 -->|"requires (instrument)"| n340
   n341 -->|"requires (instrument)"| n340
-  n340 -->|"yields"| n342
+  n342 -->|"requires (instrument)"| n340
+  n343 -->|"requires (instrument)"| n340
+  n340 -->|"yields"| n344
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1774,6 +1778,8 @@ Exporter Compiling requires Pinned Build Toolchain. [src: apps/service/package.j
 Exporter Compiling yields Compiled Exporter Entry Points. [src: apps/service/scripts/build-telemetry.mjs]
 Runtime Image Packaging requires Compiled Exporter Entry Points. [src: apps/service/runtime/Dockerfile]
 Runtime Image Packaging requires Production Service Dependencies. [src: apps/service/package.json]
+Runtime Image Packaging requires Committed Shared Journal Sources. [src: apps/service/runtime/prepare-context.ts]
+Runtime Image Packaging requires Explicit Journal Package Exports. [src: packages/journal/package.json]
 Runtime Image Packaging yields Offline Capable Service Image. [src: apps/service/runtime/Dockerfile]
 ```
 
@@ -1791,36 +1797,38 @@ title: "SD2.7 — Disposable fixture image delivery"
 flowchart TD
   accTitle: SD2.7 — Disposable fixture image delivery
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n343("Fixture Artifact Exporting")
-  n344["Committed Runtime Context"]
-  n345["CI Run Identity"]
-  n346["Runtime Image"]
-  n347["Exported Fixture Image"]
-  n348("Fixture Image Qualifying")
-  n349["Fixture Qualification Receipts"]
-  n350["Offline Exporter Startup Proof"]
-  n351["Closed Fixture Manifest"]
-  n352("Fixture Artifact Verifying")
-  n353["Authenticated GitHub Artifact Evidence"]
-  n354["Independently Pinned Build Identity"]
-  n355["Verified Fixture Candidate"]
-  n356["Private Verification Receipt"]
-  n344 -->|"requires (instrument)"| n343
-  n345 -->|"requires (instrument)"| n343
-  n346 -->|"requires (instrument)"| n343
-  n343 -->|"yields"| n347
-  n343 -->|"invokes"| n348
-  n347 -->|"requires (instrument)"| n348
-  n348 -->|"yields"| n349
-  n348 -->|"yields"| n350
-  n343 -->|"yields"| n351
-  n353 -->|"requires (instrument)"| n352
-  n354 -->|"requires (instrument)"| n352
-  n347 -->|"requires (instrument)"| n352
-  n351 -->|"requires (instrument)"| n352
-  n350 -->|"requires (instrument)"| n352
-  n352 -->|"yields"| n355
-  n352 -->|"yields"| n356
+  n345("Fixture Artifact Exporting")
+  n346["Committed Runtime Context"]
+  n347["CI Run Identity"]
+  n348["Runtime Image"]
+  n349["Exported Fixture Image"]
+  n350("Fixture Image Qualifying")
+  n351["Installed Shared Journal Package"]
+  n352["Fixture Qualification Receipts"]
+  n353["Offline Exporter Startup Proof"]
+  n354["Closed Fixture Manifest"]
+  n355("Fixture Artifact Verifying")
+  n356["Authenticated GitHub Artifact Evidence"]
+  n357["Independently Pinned Build Identity"]
+  n358["Verified Fixture Candidate"]
+  n359["Private Verification Receipt"]
+  n346 -->|"requires (instrument)"| n345
+  n347 -->|"requires (instrument)"| n345
+  n348 -->|"requires (instrument)"| n345
+  n345 -->|"yields"| n349
+  n345 -->|"invokes"| n350
+  n349 -->|"requires (instrument)"| n350
+  n351 -->|"requires (instrument)"| n350
+  n350 -->|"yields"| n352
+  n350 -->|"yields"| n353
+  n345 -->|"yields"| n354
+  n356 -->|"requires (instrument)"| n355
+  n357 -->|"requires (instrument)"| n355
+  n349 -->|"requires (instrument)"| n355
+  n354 -->|"requires (instrument)"| n355
+  n353 -->|"requires (instrument)"| n355
+  n355 -->|"yields"| n358
+  n355 -->|"yields"| n359
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1832,6 +1840,7 @@ Fixture Artifact Exporting requires Runtime Image. [src: apps/service/runtime/ar
 Fixture Artifact Exporting yields Exported Fixture Image. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Exporting invokes Fixture Image Qualifying. [src: apps/service/runtime/artifact.py]
 Fixture Image Qualifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying requires Installed Shared Journal Package. [src: apps/service/runtime/smoke.mjs]
 Fixture Image Qualifying yields Fixture Qualification Receipts. [src: apps/service/runtime/artifact.py]
 Fixture Image Qualifying yields Offline Exporter Startup Proof. [src: apps/service/runtime/smoke.mjs]
 Fixture Artifact Exporting yields Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
@@ -1858,45 +1867,45 @@ title: "SD2.8 — Isolated matched fixture restoration"
 flowchart TD
   accTitle: SD2.8 — Isolated matched fixture restoration
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n357("Matched Fixture Restore Qualifying")
-  n346["Runtime Image"]
-  n349["Fixture Qualification Receipts"]
-  n358["Quiesced Source Fixture"]
-  n359("Matched Fixture Recovery Capturing")
-  n360["Complete Fixture Database"]
-  n361["Complete Fixture File Tree"]
-  n362["Matched Fixture Recovery Point"]
-  n363("Isolated Fixture Restoring")
-  n364["Raw Restored Fixture State"]
-  n365("Fixture Ownership Reconciling")
-  n366["Validated Matched Fixture Bindings"]
-  n367["Measured Destination Identity"]
-  n368["Reconciled Fixture Reservation Markers"]
-  n369("Restored Fixture Continuing")
-  n370["Explicit Fixture Resume Release"]
-  n371["Isolated Matched Restore Receipt"]
-  n372("Fixture Artifact Retaining")
-  n347["Exported Fixture Image"]
-  n351["Closed Fixture Manifest"]
-  n373["Retained Fixture Artifact"]
-  n346 -->|"requires (instrument)"| n357
-  n349 -->|"requires (instrument)"| n357
-  n358 -->|"requires (instrument)"| n357
-  n360 -->|"requires (instrument)"| n359
-  n361 -->|"requires (instrument)"| n359
-  n359 -->|"yields"| n362
-  n362 -->|"requires (instrument)"| n363
-  n363 -->|"yields"| n364
-  n366 -->|"requires (instrument)"| n365
-  n367 -->|"requires (instrument)"| n365
-  n365 -->|"yields"| n368
-  n368 -->|"requires (instrument)"| n369
-  n370 -->|"requires (instrument)"| n369
-  n357 -->|"yields"| n371
+  n360("Matched Fixture Restore Qualifying")
+  n348["Runtime Image"]
+  n352["Fixture Qualification Receipts"]
+  n361["Quiesced Source Fixture"]
+  n362("Matched Fixture Recovery Capturing")
+  n363["Complete Fixture Database"]
+  n364["Complete Fixture File Tree"]
+  n365["Matched Fixture Recovery Point"]
+  n366("Isolated Fixture Restoring")
+  n367["Raw Restored Fixture State"]
+  n368("Fixture Ownership Reconciling")
+  n369["Validated Matched Fixture Bindings"]
+  n370["Measured Destination Identity"]
+  n371["Reconciled Fixture Reservation Markers"]
+  n372("Restored Fixture Continuing")
+  n373["Explicit Fixture Resume Release"]
+  n374["Isolated Matched Restore Receipt"]
+  n375("Fixture Artifact Retaining")
+  n349["Exported Fixture Image"]
+  n354["Closed Fixture Manifest"]
+  n376["Retained Fixture Artifact"]
+  n348 -->|"requires (instrument)"| n360
+  n352 -->|"requires (instrument)"| n360
+  n361 -->|"requires (instrument)"| n360
+  n363 -->|"requires (instrument)"| n362
+  n364 -->|"requires (instrument)"| n362
+  n362 -->|"yields"| n365
+  n365 -->|"requires (instrument)"| n366
+  n366 -->|"yields"| n367
+  n369 -->|"requires (instrument)"| n368
+  n370 -->|"requires (instrument)"| n368
+  n368 -->|"yields"| n371
   n371 -->|"requires (instrument)"| n372
-  n347 -->|"requires (instrument)"| n372
-  n351 -->|"requires (instrument)"| n372
-  n372 -->|"yields"| n373
+  n373 -->|"requires (instrument)"| n372
+  n360 -->|"yields"| n374
+  n374 -->|"requires (instrument)"| n375
+  n349 -->|"requires (instrument)"| n375
+  n354 -->|"requires (instrument)"| n375
+  n375 -->|"yields"| n376
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1936,38 +1945,38 @@ title: "SD2.9 — Explicit CLI observation lifecycle"
 flowchart TD
   accTitle: SD2.9 — Explicit CLI observation lifecycle
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n374["Explicit Telemetry Argument"]
-  n375("Runtime Telemetry Configuring")
-  n376["Protected Telemetry Configuration File"]
-  n377["Closed Exporter Configuration Policy"]
-  n378["Admitted Exporter Configuration"]
-  n379("Runtime Observation Attaching")
-  n380["Process Owned Observation Adapter"]
-  n381("Fixture API Starting")
-  n382("Fixture Worker Starting")
-  n383("Runtime Observation Closing")
-  n384["Existing Shutdown Deadline"]
-  n385["Closed Observation Adapter"]
-  n386("Enabled CLI Exporter Qualifying")
-  n387["Disposable PostgreSQL Database"]
-  n388["Synthetic Private TLS Receiver"]
+  n377["Explicit Telemetry Argument"]
+  n378("Runtime Telemetry Configuring")
+  n379["Protected Telemetry Configuration File"]
+  n380["Closed Exporter Configuration Policy"]
+  n381["Admitted Exporter Configuration"]
+  n382("Runtime Observation Attaching")
+  n383["Process Owned Observation Adapter"]
+  n384("Fixture API Starting")
+  n385("Fixture Worker Starting")
+  n386("Runtime Observation Closing")
+  n387["Existing Shutdown Deadline"]
+  n388["Closed Observation Adapter"]
+  n389("Enabled CLI Exporter Qualifying")
+  n390["Disposable PostgreSQL Database"]
+  n391["Synthetic Private TLS Receiver"]
   n323["Compiled Exporter Entry Points"]
-  n389["CLI Exporter Lifecycle Evidence"]
-  n374 -->|"condition: supplied"| n375
-  n376 -->|"requires (instrument)"| n375
-  n377 -->|"requires (instrument)"| n375
-  n375 -->|"yields"| n378
-  n378 -->|"requires (instrument)"| n379
-  n379 -->|"yields"| n380
-  n381 -->|"invokes"| n379
-  n382 -->|"invokes"| n379
-  n380 -->|"requires (instrument)"| n383
-  n384 -->|"requires (instrument)"| n383
-  n383 -->|"yields"| n385
+  n392["CLI Exporter Lifecycle Evidence"]
+  n377 -->|"condition: supplied"| n378
+  n379 -->|"requires (instrument)"| n378
+  n380 -->|"requires (instrument)"| n378
+  n378 -->|"yields"| n381
+  n381 -->|"requires (instrument)"| n382
+  n382 -->|"yields"| n383
+  n384 -->|"invokes"| n382
+  n385 -->|"invokes"| n382
+  n383 -->|"requires (instrument)"| n386
   n387 -->|"requires (instrument)"| n386
-  n388 -->|"requires (instrument)"| n386
-  n323 -->|"requires (instrument)"| n386
-  n386 -->|"yields"| n389
+  n386 -->|"yields"| n388
+  n390 -->|"requires (instrument)"| n389
+  n391 -->|"requires (instrument)"| n389
+  n323 -->|"requires (instrument)"| n389
+  n389 -->|"yields"| n392
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -2004,33 +2013,33 @@ title: "SD2.10 — Enabled exporter image qualification"
 flowchart TD
   accTitle: SD2.10 — Enabled exporter image qualification
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n390("Enabled Image Test Running")
-  n346["Runtime Image"]
-  n391["Qualified Image Identity Pair"]
-  n392["Pinned PostgreSQL Image"]
-  n393["Read Only Integration Test Mounts"]
-  n394["Isolated Internal Network"]
-  n388["Synthetic Private TLS Receiver"]
-  n395["Enabled Image Test Results"]
-  n396("Image Proof Resource Cleaning")
-  n397["Nonce Bound Fixture Resources"]
-  n398["Verified Image Proof Cleanup"]
-  n399("Enabled Image Exporter Qualifying")
-  n400["Enabled Image Exporter Receipt"]
-  n372("Fixture Artifact Retaining")
-  n346 -->|"requires (instrument)"| n390
-  n391 -->|"requires (instrument)"| n390
-  n392 -->|"requires (instrument)"| n390
-  n393 -->|"requires (instrument)"| n390
-  n394 -->|"requires (instrument)"| n390
-  n388 -->|"requires (instrument)"| n390
-  n390 -->|"yields"| n395
-  n397 -->|"requires (instrument)"| n396
-  n396 -->|"yields"| n398
-  n395 -->|"requires (instrument)"| n399
-  n398 -->|"requires (instrument)"| n399
-  n399 -->|"yields"| n400
-  n400 -->|"requires (instrument)"| n372
+  n393("Enabled Image Test Running")
+  n348["Runtime Image"]
+  n394["Qualified Image Identity Pair"]
+  n395["Pinned PostgreSQL Image"]
+  n396["Read Only Integration Test Mounts"]
+  n397["Isolated Internal Network"]
+  n391["Synthetic Private TLS Receiver"]
+  n398["Enabled Image Test Results"]
+  n399("Image Proof Resource Cleaning")
+  n400["Nonce Bound Fixture Resources"]
+  n401["Verified Image Proof Cleanup"]
+  n402("Enabled Image Exporter Qualifying")
+  n403["Enabled Image Exporter Receipt"]
+  n375("Fixture Artifact Retaining")
+  n348 -->|"requires (instrument)"| n393
+  n394 -->|"requires (instrument)"| n393
+  n395 -->|"requires (instrument)"| n393
+  n396 -->|"requires (instrument)"| n393
+  n397 -->|"requires (instrument)"| n393
+  n391 -->|"requires (instrument)"| n393
+  n393 -->|"yields"| n398
+  n400 -->|"requires (instrument)"| n399
+  n399 -->|"yields"| n401
+  n398 -->|"requires (instrument)"| n402
+  n401 -->|"requires (instrument)"| n402
+  n402 -->|"yields"| n403
+  n403 -->|"requires (instrument)"| n375
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -2065,30 +2074,30 @@ title: "SD2.11 — Sealed recorded evidence protocol"
 flowchart TD
   accTitle: SD2.11 — Sealed recorded evidence protocol
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
-  n401("Recorded Evidence Opening")
-  n402["Bounded Canonical Envelope Bytes"]
-  n403["Independently Expected Bundle Digest"]
-  n404["Exact Artifact And Reference Bindings"]
-  n405["Opaque Recorded Evidence Handle"]
-  n406("Recorded Artifact Reading")
-  n407["Defensive Artifact Bytes"]
-  n408("Recorded Response Looking Up")
-  n409["Exact Request Binding"]
-  n410["Recorded Response Outcome"]
-  n411("Recorded Protocol Qualifying")
-  n412["Synthetic Binding And Boundary Cases"]
-  n413["Replay Protocol Evidence"]
-  n402 -->|"requires (instrument)"| n401
-  n403 -->|"requires (instrument)"| n401
-  n404 -->|"requires (instrument)"| n401
-  n401 -->|"yields"| n405
-  n405 -->|"requires (instrument)"| n406
-  n406 -->|"yields"| n407
-  n405 -->|"requires (instrument)"| n408
-  n409 -->|"requires (instrument)"| n408
-  n408 -->|"yields"| n410
+  n404("Recorded Evidence Opening")
+  n405["Bounded Canonical Envelope Bytes"]
+  n406["Independently Expected Bundle Digest"]
+  n407["Exact Artifact And Reference Bindings"]
+  n408["Opaque Recorded Evidence Handle"]
+  n409("Recorded Artifact Reading")
+  n410["Defensive Artifact Bytes"]
+  n411("Recorded Response Looking Up")
+  n412["Exact Request Binding"]
+  n413["Recorded Response Outcome"]
+  n414("Recorded Protocol Qualifying")
+  n415["Synthetic Binding And Boundary Cases"]
+  n416["Replay Protocol Evidence"]
+  n405 -->|"requires (instrument)"| n404
+  n406 -->|"requires (instrument)"| n404
+  n407 -->|"requires (instrument)"| n404
+  n404 -->|"yields"| n408
+  n408 -->|"requires (instrument)"| n409
+  n409 -->|"yields"| n410
+  n408 -->|"requires (instrument)"| n411
   n412 -->|"requires (instrument)"| n411
   n411 -->|"yields"| n413
+  n415 -->|"requires (instrument)"| n414
+  n414 -->|"yields"| n416
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**

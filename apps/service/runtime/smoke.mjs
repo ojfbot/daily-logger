@@ -60,13 +60,30 @@ try {
     '--input-type=module'], { input: `
       import assert from 'node:assert/strict';
       import { execFileSync } from 'node:child_process';
-      import { existsSync,readFileSync,writeFileSync,mkdtempSync,rmSync,statSync } from 'node:fs';
+      import { existsSync,readFileSync,writeFileSync,mkdtempSync,rmSync,statSync,realpathSync } from 'node:fs';
+      import { fileURLToPath } from 'node:url';
+      import { activityWindow } from '@ojfbot/daily-logger-journal/activity-window';
+      import { shouldSkipRun } from '@ojfbot/daily-logger-journal/eligibility';
       import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
       import { readFixture,reviewFixture } from './src/fixture.ts';
       import { createLangfuseTelemetry } from './src/telemetry-export-process.ts';
       import { NOOP_TELEMETRY } from './src/telemetry.ts';
       assert.equal(process.getuid(),1000);
       assert.equal(existsSync('test'),false);
+      assert.equal(existsSync('/app/src'),false);
+      assert.equal(existsSync('/build'),false);
+      for(const entry of ['activity-window','eligibility']) {
+        const path=realpathSync(fileURLToPath(import.meta.resolve('@ojfbot/daily-logger-journal/'+entry)));
+        assert.ok(path.startsWith('/app/'));
+        assert.ok(!path.includes('/build/'));
+      }
+      assert.throws(()=>import.meta.resolve('@anthropic-ai/sdk'),{code:'ERR_MODULE_NOT_FOUND'});
+      for(const [date,hours] of [['2026-03-08',23],['2026-11-01',25],['2026-11-17',24]]) {
+        const window=activityWindow(date);
+        assert.equal((window.end-window.start)/3600000,hours);
+      }
+      assert.deepEqual(shouldSkipRun({date:'2026-11-17',commits:[],recentPRs:[],openIssues:[],closedIssues:[]}),
+        {skip:true,reason:'no activity in reporting window'});
       assert.equal(existsSync('/app/.git/objects/info/alternates'),false);
       assert.equal(existsSync('/app/.git/logs'),false);
       assert.equal(execFileSync('git',['-C','/app','remote'],{encoding:'utf8'}),'');

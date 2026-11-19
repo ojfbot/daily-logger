@@ -7,8 +7,9 @@ import { REPO_ROOT, SOURCE_COMMIT, readFixture, reviewFixture } from '../src/fix
 import { offlineGitEnvironment } from '../src/offline-git.js'
 
 const exporterBuild = 'apps/service/scripts/build-telemetry.mjs'
+const journalSources = ['packages/journal/src/activity-window.ts', 'packages/journal/src/eligibility.ts']
 const metadata = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'packages/frontend/package.json',
-  'apps/service/package.json', exporterBuild, 'apps/service/runtime/Dockerfile', 'docs/agent-service/editorial-api-responses.schema.json']
+  'packages/journal/package.json', 'apps/service/package.json', exporterBuild, 'apps/service/runtime/Dockerfile', 'docs/agent-service/editorial-api-responses.schema.json']
 const environment = { ...offlineGitEnvironment(), GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' }
 const git = (root: string, args: string[], localFetch = false) => execFileSync('git', ['-C', root, ...args], {
   env: { ...environment, GIT_ALLOW_PROTOCOL: localFetch ? 'file' : '' }, maxBuffer: 32 * 1024 * 1024,
@@ -27,7 +28,7 @@ export function prepareRuntimeContext(destination: string, sourceRoot = REPO_ROO
     JSON.parse(git(source, ['show', `${revision}:apps/service/package.json`]).toString('utf8')))
   // dist is a production-deploy asset generated inside the image build. Never
   // import host output, even if someone force-committed it past .gitignore.
-  const allowed = [...metadata, ...service.files.filter(path => path !== 'dist').map(path => `apps/service/${path}`)]
+  const allowed = [...metadata, ...journalSources, ...service.files.filter(path => path !== 'dist').map(path => `apps/service/${path}`)]
   if (git(source, ['status', '--porcelain', '--untracked-files=no', '--', ...allowed, 'apps/service/runtime']).length) {
     throw new Error('Commit runtime inputs before preparing their context')
   }
@@ -41,7 +42,7 @@ export function prepareRuntimeContext(destination: string, sourceRoot = REPO_ROO
       }
       return { mode, object, path }
     })
-  if (metadata.some(path => !entries.some(entry => entry.path === path))) throw new Error('Required runtime build asset is missing')
+  if ([...metadata, ...journalSources].some(path => !entries.some(entry => entry.path === path))) throw new Error('Required runtime build asset is missing')
   mkdirSync(target, { mode: 0o700 })
   try {
     for (const entry of entries) {

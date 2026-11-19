@@ -1,0 +1,14 @@
+{
+  "name": "@ojfbot/daily-logger-journal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": ["src"],
+  "exports": {
+    "./activity-window": "./src/activity-window.ts",
+    "./eligibility": "./src/eligibility.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  }
+}
