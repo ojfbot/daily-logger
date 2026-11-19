@@ -677,4 +677,22 @@ Enabled CLI Exporter Qualifying requires Synthetic Private TLS Receiver. [src: a
 Enabled CLI Exporter Qualifying requires Compiled Exporter Entry Points. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
 Enabled CLI Exporter Qualifying yields CLI Exporter Lifecycle Evidence. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
 # Without the explicit argument, serving and working retain the no-op adapter. Other CLI operations cannot enable export; ambient provider settings cannot enable it. [src: apps/service/src/http-cli.ts] [src: apps/service/src/delivery-cli.ts]
-# A synthetic receiver proves CLI transport and lifecycle behavior, not enabled final-image qualification, Langfuse indexing, host activation, capacity or retention. [src: apps/service/OBSERVABILITY.md]
+# The source CLI tests with a synthetic receiver prove CLI transport and lifecycle behavior; enabled final-image qualification has a separate boundary below. Neither proves Langfuse indexing, host activation, capacity or retention. [src: apps/service/OBSERVABILITY.md]
+
+## SD2.10 — Enabled exporter image qualification
+
+Enabled Image Test Running requires Runtime Image. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Test Running requires Qualified Image Identity Pair. [src: .github/workflows/service-runtime.yml]
+Enabled Image Test Running requires Pinned PostgreSQL Image. [src: apps/service/runtime/compose.yaml]
+Enabled Image Test Running requires Read Only Integration Test Mounts. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Test Running requires Isolated Internal Network. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Test Running requires Synthetic Private TLS Receiver. [src: apps/service/test/fixtures/telemetry-tls.ts]
+Enabled Image Test Running yields Enabled Image Test Results. [src: apps/service/runtime/exporter-smoke.mjs]
+Image Proof Resource Cleaning requires Nonce Bound Fixture Resources. [src: apps/service/runtime/exporter-smoke.mjs]
+Image Proof Resource Cleaning yields Verified Image Proof Cleanup. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Exporter Qualifying requires Enabled Image Test Results. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Exporter Qualifying requires Verified Image Proof Cleanup. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Exporter Qualifying yields Enabled Image Exporter Receipt. [src: apps/service/runtime/exporter-smoke.mjs]
+Fixture Artifact Retaining requires Enabled Image Exporter Receipt. [src: .github/workflows/service-runtime.yml]
+# The image supplies application source, production dependencies and compiled exporter entry points. Only test code and helpers are mounted; no host credentials or production endpoint are required. [src: apps/service/runtime/exporter-smoke.mjs]
+# This disposable combined-CLI container proof does not qualify actual host topology, capacity, real owner login or Langfuse indexing/retention. [src: apps/service/runtime/README.md]

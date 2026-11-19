@@ -42,6 +42,7 @@
     "service:http": "node --import tsx apps/service/src/http-cli.ts",
     "test:service:http": "pnpm --filter @ojfbot/daily-logger-service test:http",
     "test:service:exporter": "pnpm --filter @ojfbot/daily-logger-service test:exporter",
+    "service:runtime:exporter": "node apps/service/runtime/exporter-smoke.mjs",
     "service:runtime:context": "node --import tsx apps/service/runtime/prepare-context.ts",
     "test:service:runtime": "node --import tsx --test apps/service/test/runtime/*.test.ts",
     "service:runtime:smoke": "node apps/service/runtime/smoke.mjs",
