@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { createHash, randomBytes, randomUUID, X509Certificate } from 'node:crypto'
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -61,12 +61,15 @@ async function waitFor(read, timeout = 20000) {
 function createLeaf(generation, serial) {
   const directory = join(root, 'leaf/generations', generation)
   mkdirSync(directory, { recursive: true, mode: 0o755 })
+  chmodSync(join(root, 'leaf/generations'), 0o755)
+  chmodSync(directory, 0o755)
   openssl(['req', '-new', '-newkey', 'ec', '-pkeyopt', 'ec_paramgen_curve:P-256', '-nodes',
     '-keyout', join(directory, 'privkey.pem'), '-out', join(root, 'leaf.csr'), '-subj', '/CN=dailylogger.test'])
   writeFileSync(join(root, 'leaf.ext'), 'subjectAltName=DNS:dailylogger.test\nextendedKeyUsage=serverAuth\nbasicConstraints=critical,CA:FALSE\n')
   openssl(['x509', '-req', '-in', join(root, 'leaf.csr'), '-CA', join(root, 'issuer/root.crt'),
     '-CAkey', join(root, 'issuer/root.key'), '-set_serial', String(serial), '-days', '2',
     '-extfile', join(root, 'leaf.ext'), '-out', join(directory, 'fullchain.pem')])
+  chmodSync(join(directory, 'fullchain.pem'), 0o644)
   chmodSync(join(directory, 'privkey.pem'), 0o600)
   const certificate = new X509Certificate(readFileSync(join(directory, 'fullchain.pem')))
   const issuance = { scope: 'disposable-CI', serialNumber: certificate.serialNumber,
@@ -107,6 +110,7 @@ function cannotConnect(name, host, port) {
 try {
   mkdirSync(join(root, 'issuer'), { mode: 0o700 })
   mkdirSync(join(root, 'leaf'), { mode: 0o755 })
+  chmodSync(join(root, 'leaf'), 0o755)
   openssl(['req', '-x509', '-newkey', 'ec', '-pkeyopt', 'ec_paramgen_curve:P-256', '-nodes',
     '-keyout', join(root, 'issuer/root.key'), '-out', join(root, 'issuer/root.crt'), '-days', '2',
     '-subj', '/CN=DailyLogger disposable CI CA', '-addext', 'basicConstraints=critical,CA:TRUE', '-addext', 'keyUsage=critical,keyCertSign,cRLSign'])
@@ -140,8 +144,38 @@ try {
     '--entrypoint', 'caddy', PROXY_IMAGE, 'adapt', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile']).stdout)
   assert.ok(adapted.logging.logs.default.exclude.includes('http'))
   assert.equal(adapted.admin.disabled, true)
+  for (const key of ['DAILYLOGGER_TLS_DIRECTORY', 'DAILYLOGGER_INGRESS_CONFIG_DIR']) {
+    const original = environment[key]
+    const missing = join(root, `missing-${key}`)
+    environment[key] = missing
+    try {
+      const rejected = compose(['run', '--rm', '--no-deps', 'proxy', 'validate', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile'], { acceptFailure: true })
+      assert.equal(rejected.error, undefined)
+      assert.ok(Number.isInteger(rejected.status) && rejected.status > 0)
+      assert.ok(rejected.stderr.includes(missing))
+      assert.match(rejected.stderr, /bind|mount/i)
+      assert.match(rejected.stderr, /does not exist|no such file or directory/i)
+      assert.equal(existsSync(missing), false, 'Missing bind sources must not be created')
+    } finally { environment[key] = original }
+  }
   compose(['up', '-d', 'api', 'worker', 'proxy'])
-  await waitFor(() => request(clients.allowed).status === 401)
+  try { await waitFor(() => request(clients.allowed).status === 401) }
+  catch (error) {
+    const states = Object.fromEntries(['api', 'proxy'].map(service => {
+      const info = inspect(`${project}-${service}-1`)
+      return [service, { status: info.State.Status, exitCode: info.State.ExitCode,
+        addresses: Object.values(info.NetworkSettings.Networks).map(network => network.IPAddress) }]
+    }))
+    const dns = readJson(node(clients.allowed, "import{lookup}from'node:dns/promises';console.log(JSON.stringify(await lookup('proxy',{all:true}).catch(error=>({code:error.code}))))"))
+    const messages = compose(['logs', '--no-color', 'proxy', 'api']).stdout.split('\n').flatMap(line => {
+      try {
+        const record = JSON.parse(line.slice(line.indexOf('{')))
+        return typeof record.msg === 'string' ? [{ level: record.level, message: record.msg.slice(0, 300), error: String(record.error ?? '').slice(0, 300) }] : []
+      } catch { return [] }
+    })
+    console.log(JSON.stringify({ startupDiagnostic: { states, dns, messages } }))
+    throw error
+  }
   const published = docker(['run', '--rm', '-i', '--network', 'host', '--read-only',
     '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,mode=1777,size=16m',
     '-v', `${join(root, 'issuer/root.crt')}:/trust/root.crt:ro`, image, '--input-type=module'], { input: `

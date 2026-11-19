@@ -12,6 +12,7 @@ import { migrateDelivery, QUEUE, startDelivery } from '../../src/delivery-db.js'
 import { runOperation } from '../../src/postgres-runner.js'
 import { beginObservation, createOfflineTelemetry, observeAdmissionResponse } from '../../src/telemetry.js'
 import type { Observation } from '../../src/telemetry-schema.js'
+import { dropIdleTestDatabase } from '../database-cleanup.js'
 
 const configured = process.env.DAILYLOGGER_TEST_DATABASE_URL
 assert.ok(configured, 'DAILYLOGGER_TEST_DATABASE_URL is required; observability PostgreSQL tests never skip')
@@ -86,10 +87,13 @@ before(async () => {
   boss = await startDelivery(pool, connectionString)
 })
 after(async () => {
-  for (const child of children) await forceCleanup(child)
-  await boss?.stop(); await pool.end()
-  if (created) await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`)
-  await admin.end(); rmSync(sandbox, { recursive: true, force: true })
+  try {
+    for (const child of children) await forceCleanup(child)
+    await boss?.stop(); await pool.end()
+    if (created) await dropIdleTestDatabase(admin, name)
+  } finally {
+    await admin.end(); rmSync(sandbox, { recursive: true, force: true })
+  }
 })
 
 test('only committed admission responses are observed; replay and conflict retain exact response semantics', async () => {

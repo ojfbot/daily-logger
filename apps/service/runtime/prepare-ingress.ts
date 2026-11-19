@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { isIP } from 'node:net'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -91,8 +91,8 @@ https://:8443 {
           '/config:rw,nosuid,nodev,noexec,uid=1000,gid=1000,mode=700,size=16m',
           '/data:rw,nosuid,nodev,noexec,uid=1000,gid=1000,mode=700,size=16m'],
         volumes: [
-          { type: 'bind', source: '${DAILYLOGGER_INGRESS_CONFIG_DIR:?Set private ingress configuration directory}/Caddyfile', target: '/etc/caddy/Caddyfile', read_only: true },
-          { type: 'bind', source: '${DAILYLOGGER_TLS_DIRECTORY:?Set protected parent TLS directory}', target: '/tls', read_only: true },
+          { type: 'bind', source: '${DAILYLOGGER_INGRESS_CONFIG_DIR:?Set private ingress configuration directory}/Caddyfile', target: '/etc/caddy/Caddyfile', read_only: true, bind: { create_host_path: false } },
+          { type: 'bind', source: '${DAILYLOGGER_TLS_DIRECTORY:?Set protected parent TLS directory}', target: '/tls', read_only: true, bind: { create_host_path: false } },
         ],
         ports: [{ host_ip: config.bindIpv4, published: origin.port || '443', target: 8443, protocol: 'tcp' }],
         networks: ['oauth-outbound'], depends_on: { api: { condition: 'service_started' } }, stop_grace_period: '10s',
@@ -110,6 +110,7 @@ export function preparePrivateIngress(value: unknown, destination: string) {
   mkdirSync(target, { mode: 0o700 })
   try {
     writeFileSync(join(target, 'Caddyfile'), rendered.caddyfile, { mode: 0o644 })
+    chmodSync(join(target, 'Caddyfile'), 0o644)
     writeFileSync(join(target, 'compose.json'), `${JSON.stringify(rendered.overlay, null, 2)}\n`, { mode: 0o600 })
     return { schemaVersion: 1, configurationSha256: createHash('sha256').update(rendered.caddyfile).digest('hex'),
       files: ['Caddyfile', 'compose.json'], liveDeployment: false }

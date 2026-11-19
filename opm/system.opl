@@ -588,3 +588,21 @@ Private HTTPS Forwarding requires Explicit IPv4 Bridge Listener. [src: apps/serv
 Private HTTPS Forwarding yields Forwarded Fixture HTTP Request. [src: apps/service/runtime/prepare-ingress.ts]
 # The separate proxy namespace preserves the original Host and port, admits immediate socket peers without trusting forwarding headers, and publishes no API/database port. Trusted application peers retain direct API reachability. [src: apps/service/runtime/prepare-ingress.ts] [src: apps/service/runtime/compose.yaml]
 # The proxy reads a read-only parent leaf directory, not a signing key. Certificate issuance, client trust, private DNS and real owner login remain separate live qualification. [src: apps/service/runtime/INGRESS.md]
+
+## SD2.7 — Disposable fixture image delivery
+
+Fixture Artifact Exporting requires Committed Runtime Context. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting requires CI Run Identity. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting requires Runtime Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting yields Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting invokes Fixture Image Qualifying. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying yields Fixture Qualification Receipts. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting yields Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Authenticated GitHub Artifact Evidence. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Independently Pinned Build Identity. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying yields Verified Fixture Candidate. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
+# Archive verification stages bytes without loading an image or deploying. Fixture candidates do not establish production eligibility, real owner login or live network qualification. [src: apps/service/runtime/ARTIFACT.md]

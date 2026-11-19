@@ -2,6 +2,28 @@
 
 ## Deviations
 
+- 2026-11-18. The final delivery matrix assumed pg-pool shutdown had closed every server session, but a held-client reproduction showed its promise resolved before socket closure and a forced test-database drop raced that close. Adopted the reviewed unique-database zero-session barrier and unforced drop with a real PostgreSQL regression.
+
+- 2026-11-18. A real second-controller transfer was still progressing when the 180-second total deadline expired. Retain the exact authenticated byte ceiling and child termination, but allow a bounded 600-second total, with regressions for slow progress and hard expiry.
+
+- 2026-11-18. A follow-up reproduction used Solaris uppercase PAX and warmed descriptor content to bypass per-reference policy. Allow only the explicitly supported raw tar record types with zero-body directories, and validate platform/attestation metadata on every descriptor edge before using cached content.
+
+- 2026-11-18. The synthetic GitHub fixture accepted a repository-root trailing slash, but the authenticated live API returned 404. Use the canonical root route and align the fixture with the real API before accepting controller verification.
+
+- 2026-11-18. Re-review bypassed raw tar framing with PAX size overrides, raced the final pathname cleanup, and supplied two Linux/amd64 OCI candidates. Reject framing-changing extensions, retain failed private stages without recursive pathname deletion, and require an unambiguous runtime platform beneath accepted indexes.
+
+- 2026-11-18. The image exporter intentionally uses umask 077, but inherited fixture setup assumed create-mode arguments produced exact public readability. Actual Caddy startup reported permission denied. Set only public config/certificate and disposable leaf-directory modes explicitly, preserving private output/key modes and testing the real restrictive-umask preparation path.
+
+- 2026-11-18. Artifact cleanup assumed a created pathname remained owned, but independent review replaced it before failure and reproduced deletion of the replacement. Hold the created directory descriptor, perform relative file I/O, and check device/inode before cleanup; retain an ownership-changed stage for reconciliation instead of deleting another directory.
+- 2026-11-18. A nonzero Git probe and post-parse tar member limits were assumed sufficient, but independent review reproduced a bare-repository probe error and oversized PAX allocation. Accept only the recognized outside-repository result under a deadline and preflight raw tar extension/header budgets before invoking tarfile.
+
+- 2026-11-18. The exporter assumed Docker inspect's ID was the config digest, but real containerd-backed CI returned an index/manifest target. Record the engine target and config digest separately, verify their archive descriptor graph and layer closure, and execute/reload by the actual engine identity.
+
+- 2026-11-18. The reviewed private mount paths were assumed to exist, but independent host-permission review found Compose could create missing bind sources. Disabled host-path creation for both proxy mounts and added actual missing-source startup failures that assert no host directory was created.
+
+- 2026-11-18. Artifact output exclusion initially used Git's worktree-root probe, but independent review reproduced writes beneath `.git` and a `GIT_DIR` override. Strip Git overrides, reject metadata/ancestor markers, and use the repository-directory probe so bare repositories also stay excluded.
+- 2026-11-18. Download size was initially checked after the CLI finished writing, but a bounded fake response proved that could exceed its budget. Stream through a deadline and authenticated-size cap, terminating the owned downloader before writing excess bytes.
+
 - 2026-11-18. The installed OPM renderer was assumed to match the checked-in view, but it collapsed existing compound requirements and changed unrelated rendering. Preserved the prior generated view while obtaining compatible rendering through the existing reviewer.
 
 - 2026-11-18. The published-socket test client reused the runtime image without its writable temporary mount, so tsx could not initialize its private cache. Added the same bounded tmpfs used by the other disposable clients while keeping its root filesystem read-only.
