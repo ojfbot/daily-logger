@@ -126,7 +126,13 @@ test('matched database/files restore preserves authority and resumes only the fe
       '--env', 'POSTGRES_USER=dailylogger', '--env', 'POSTGRES_DB=dailylogger', '--env', `POSTGRES_PASSWORD=${password}`,
       '--mount', `type=volume,src=${data},dst=/var/lib/postgresql`, postgresImage])
     const sourceDb = database('source-database', sourceNet, sourceData), targetDb = database('target-database', targetNet, targetData)
-    for (const id of [sourceDb, targetDb]) await waitFor(() => docker(['exec', id, 'pg_isready', '-U', 'dailylogger', '-d', 'dailylogger'], { acceptFailure: true }).status === 0, 60_000)
+    // The image's initialization server accepts Unix sockets before it shuts down.
+    // An authenticated TCP query waits for the final server used by the fixture.
+    for (const id of [sourceDb, targetDb]) await waitFor(() => {
+      const result = docker(['exec', '--env', `PGPASSWORD=${password}`, id, 'psql', '-h', '127.0.0.1',
+        '-U', 'dailylogger', '-d', 'dailylogger', '-Atqc', 'SELECT 1'], { acceptFailure: true, timeout: 5_000 })
+      return result.status === 0 && result.stdout.toString('utf8').trim() === '1'
+    }, 60_000)
     const version = id => text(['exec', id, 'psql', '-U', 'dailylogger', '-d', 'dailylogger', '-Atqc', 'SHOW server_version'])
     assert.equal(version(sourceDb), version(targetDb)); receipt.postgresVersion = version(sourceDb)
     receipt.dumpVersion = text(['exec', sourceDb, 'pg_dump', '--version'])
