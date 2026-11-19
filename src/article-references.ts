@@ -3,23 +3,15 @@ import { parseFragment, type DefaultTreeAdapterMap } from 'parse5'
 import { Lexer, type Token } from 'marked'
 import { renderArticle } from './render-article.js'
 
+export { shipmentPrNumber } from '@ojfbot/daily-logger-journal/shipment-reference'
+
 export type GithubResourceKind = 'pull' | 'issues'
 export type GithubReferenceKinds = ReadonlyMap<string, GithubResourceKind>
 
-const REPO = /^[A-Za-z0-9_.-]+$/
 const LINK = /^\[([^\]\n]+)\]\((https:\/\/github\.com\/[^)\s]+)\)$/
 
 export function githubReferenceKey(repo: string, number: string): string {
   return `${repo.toLowerCase()}#${number}`
-}
-
-/** Model shipment references may be a number, #number, or that repo's canonical PR URL. */
-export function shipmentPrNumber(value: string, repo: string): string | undefined {
-  if (!REPO.test(repo)) return undefined
-  const bare = /^#?([1-9]\d*)$/.exec(value)
-  if (bare) return bare[1]
-  const url = /^https:\/\/github\.com\/ojfbot\/([A-Za-z0-9_.-]+)\/pull\/([1-9]\d*)$/.exec(value)
-  return url?.[1].toLowerCase() === repo.toLowerCase() ? url[2] : undefined
 }
 
 /** The collected source kind wins over model wording for identities in the sweep. */
