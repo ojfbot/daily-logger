@@ -10,6 +10,16 @@ For transferable release artifacts, bind received bytes to the immutable artifac
 
 Production-eligible artifacts identify the reviewed merged revision actually built by a successful main/manual workflow. PR artifacts remain qualification candidates. Keep origins, private topology, host paths, TLS material and credentials outside public artifacts and build contexts. Use redacted structured inspection instead of environment or full Compose dumps.
 
+### Delivery checkpoint — 2026-11-18
+
+[PR #562](https://github.com/ojfbot/daily-logger/pull/562) combines durable checkpoints, job delivery, the private owner API and offline observation hooks. [PR #567](https://github.com/ojfbot/daily-logger/pull/567) adds the tested private TLS proxy. [PR #571](https://github.com/ojfbot/daily-logger/pull/571) combines the retained-image delivery in [PR #569](https://github.com/ojfbot/daily-logger/pull/569) with the compiled, inactive Langfuse exporter from [PR #570](https://github.com/ojfbot/daily-logger/pull/570).
+
+The combined image has passed export/reload, UID1000 startup, explicit migration, restart/resume, HTTP and private-TLS checks. Its closed offline receipt requires the compiled exporter child to become ready and close, zero exported batches, and telemetry disabled by default. The preceding artifact-delivery candidate has independently passed authenticated download and source/archive verification on both controllers. Each receipt binds its own actual tested checkout; it cannot qualify a later image by inheritance.
+
+One delivery-matrix run exposed a test database teardown race: the pool shutdown promise can resolve before every connection finishes closing, so a forced database drop can terminate a still-closing client. The repair must wait within a deadline for zero sessions in the uniquely owned test database, then use ordinary deletion, with a real PostgreSQL held-close regression. Keep whole-branch qualification pending that repair and its required CI. The current PR receipts are authoritative for subsequent revisions.
+
+The next operational gates remain protected configuration and certificate custody, a supervised private fixture with real owner login, deliberate API/worker exporter injection, an actual Langfuse endpoint with readback and retention/capacity evidence, and the reviewed production release/restore path. No live service, telemetry export or publication cutover is established by these image receipts.
+
 ## Supervised private fixture
 
 The public journal at `log.jim.software` retains browser-trusted HTTPS and remains available independently of the NAS. The separate private operator origin uses the owner-selected fleet CA, intended-device trust enrollment, owner authentication and CSRF protection.
