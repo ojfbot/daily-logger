@@ -250,3 +250,15 @@ export function recordedExchange(handle: RecordedEvidence, requested: RecordedBi
       : { status: 'missing' as const, reason: 'response' as const }
   } catch (error) { throw closedError(error, 'INVALID_BINDING') }
 }
+
+/** Read the actual sealed request, not just its asserted schema label. Copies grant no authority. */
+export function recordedRequestExchange(handle: RecordedEvidence, requested: RecordedBinding) {
+  const exchange = recordedExchange(handle, requested)
+  if (exchange.status !== 'matched') return exchange
+  const value = state(handle)
+  const request = value.requests.find(item => item.requestSha256 === exchange.requestSha256)!
+  const artifact = value.artifacts.find(item => item.id === request.artifactRef)!
+  return { ...exchange, report: structuredClone(value.report), request: {
+    format: artifact.format, mediaType: artifact.mediaType, bytes: Buffer.from(artifact.text, 'utf8'),
+  } }
+}

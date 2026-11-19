@@ -777,3 +777,23 @@ Draft Prompt Selecting yields Selected Draft System Prompt. [src: packages/journ
 Journal Prompt Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
 Journal Prompt Qualifying yields Prompt Compatibility Evidence. [src: src/__tests__/fleet-prompt-contract.test.ts]
 # Shared definitions preserve reviewed prompt bytes and legacy tool values. Provider calls, user-context construction, response adaptation and council prompts remain in root adapters; this does not qualify real model output, priority approval or a persisted journal graph. [src: packages/journal/README.md] [src: src/generate-article.ts]
+
+## SD2.15 — Request-bound service draft output
+
+Service Draft Tool Building requires Sealed Reporting Date. [src: apps/service/src/article-output-contract.ts]
+Service Draft Tool Building requires Shared Draft Tool Definition. [src: apps/service/src/article-output-contract.ts]
+Service Draft Tool Building yields Complete Service Draft Tool. [src: apps/service/src/article-output-contract.ts]
+Recorded Request Reading requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-evidence.ts]
+Recorded Request Reading requires Exact Request Binding. [src: apps/service/src/recorded-evidence.ts]
+Recorded Request Reading yields Defensive Request And Report Values. [src: apps/service/src/recorded-evidence.ts]
+Service Draft Request Validating requires Defensive Request And Report Values. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Request Validating requires Complete Service Draft Tool. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Request Validating yields Request Contract Result. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Output Validating requires Request Contract Result. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Output Validating requires Bounded Original Draft JSON. [src: apps/service/src/recorded-json.ts]
+Service Draft Output Validating requires Shared Article Schema Definitions. [src: packages/journal/src/article-schema.ts]
+Service Draft Output Validating yields Original Service Draft Shape Result. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Contract Qualifying requires Synthetic Request And Output Boundary Cases. [src: apps/service/test/recorded-service-draft.test.ts]
+Service Draft Contract Qualifying requires Installed Service Runtime. [src: apps/service/runtime/smoke.mjs]
+Service Draft Contract Qualifying yields Request Bound Draft Compatibility Evidence. [src: apps/service/test/recorded-service-draft.test.ts]
+# Exact request/output validation is separate from captured SDK invocation, admitted context, reporting-window eligibility, known completion, approved priorities, safe publication serialization and durable journal-graph recovery. No status, closure or canonical action authority comes from model output. [src: apps/service/RECORDED-EVIDENCE.md]

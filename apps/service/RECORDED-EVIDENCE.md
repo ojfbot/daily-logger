@@ -101,6 +101,46 @@ returned article explicitly retains unverified provenance and no authority.
 The future graph must separately enforce service-owned status/outcome and
 approval policy. The existing CLI keeps its original salvage behavior.
 
+## Service draft request/output contract
+
+`validateRecordedServiceDraft` is a separate adapter for
+`dailylogger-service-draft-v1`. It does not change the legacy tool or the
+`dailylogger-article-v2` replay behavior above. The new tool explicitly requests
+the sealed report date, schemaVersion 2 and every ordinary authored field;
+telemetry remains optional, with all six fields required when present. Candidate
+ideas are limited to five open suggestions with the same report date. Article
+status/outcome, closure claims, canonical action IDs and undeclared fields reject.
+
+The bound `model_request` must be JSON with format
+`dailylogger-service-draft-request-v1`. `serviceDraftRequest` creates this
+normalized application request: route/model, report date, current prompt
+version/system bytes, user prompt, telemetry selector, output-token ceiling and
+the exact selected tool. The adapter checks those actual request contents against
+the stored binding and sealed report; changing an output-schema label alone is
+insufficient. This recording describes application intent, not a captured SDK
+invocation, provider execution, approved budget or validated context. The numeric
+request ceiling is a structural bound; durable spend admission remains separate.
+The standalone request/tool helpers take ordinary application values; they are
+not hostile-object admission APIs. The sealed adapter supplies bounded parsed
+JSON, snapshots stored bindings and reports closed failure codes.
+
+The response must pass the exact JSON schema supplied to the tool with coercion,
+defaults and property removal disabled, then the shared article validator's
+compatibility checks. The returned article copies the original parsed fields;
+it does not return the shared validator's potentially normalized/defaulted view.
+Both request and response JSON use the existing bounded parser and its documented
+JavaScript JSON semantics. Failed, missing, unknown and mismatched exchanges stay
+distinct; shape success retains truncation/unknown finish metadata and grants no
+authority. Invalid outcomes expose closed codes without raw request/response text.
+
+Tests cover the legacy mismatch, resealed wrong-tool recordings, date and route
+binding, forbidden authority fields, mutation isolation and closed failures. The
+final-image smoke consumes a separate synthetic service recording. No real
+provider call, captured real draft, semantic context admission or graph recovery
+is established. Reporting-window eligibility, approved priorities, grounding,
+independent review and safe serialization of untrusted article text remain
+separate boundaries; shape validation is not permission to publish.
+
 Synthetic protocol and article tests exercise changed evidence/action/priority bindings,
 wrong model or prompt, absent or uncertain responses, malformed references,
 byte and nested JSON limits, mutation isolation, original-response rejection and
