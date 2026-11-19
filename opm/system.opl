@@ -636,3 +636,21 @@ Fixture Artifact Verifying requires Offline Exporter Startup Proof. [src: apps/s
 Fixture Artifact Verifying yields Verified Fixture Candidate. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
 # Archive verification stages bytes without loading an image or deploying. Fixture candidates do not establish production eligibility, real owner login or live network qualification. [src: apps/service/runtime/ARTIFACT.md]
+
+## SD2.8 — Merged-source release candidate delivery
+
+Release Candidate Exporting requires Merged Main Source. [src: .github/workflows/service-release-candidate.yml]
+Release Candidate Exporting requires Release Candidate Version. [src: .github/workflows/service-release-candidate.yml]
+Release Candidate Exporting requires Committed Runtime Context. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting requires Runtime Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting yields Exported Release Candidate Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting invokes Release Candidate Image Qualifying. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying requires Exported Release Candidate Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying yields Release Candidate Qualification Receipts. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting yields Closed Release Candidate Manifest. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Authenticated GitHub Artifact Evidence. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Independently Pinned Build Identity. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Closed Release Candidate Manifest. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying yields Verified Release Candidate. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
+# Release candidate exporting accepts only manual main builds with a service-scoped release-candidate version. Candidate verification stages bytes without creating tags, deploying, or granting production eligibility. [src: apps/service/runtime/ARTIFACT.md]

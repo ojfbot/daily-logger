@@ -29,6 +29,8 @@ REAL_SUBPROCESS_RUN = subprocess.run
 BUILT, HEAD, BASE = '3' * 40, '1' * 40, '2' * 40
 REPOSITORY = 'ojfbot/daily-logger'
 WORKFLOW = '.github/workflows/service-runtime.yml'
+RELEASE_WORKFLOW = '.github/workflows/service-release-candidate.yml'
+RELEASE_VERSION = 'v0.1.0-rc.1'
 UPLOAD = 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02'
 
 
@@ -231,6 +233,30 @@ class GithubFixture:
         self.on_download = None
         self.repack()
 
+    def as_release_candidate(self):
+        self.expected = {'schemaVersion': 1, 'artifactId': 700, 'runId': 100,
+                         'attempt': 2, 'source': {'builtRevision': BUILT,
+                         'event': 'workflow_dispatch', 'ref': 'refs/heads/main', 'pullRequest': None},
+                         'release': {'version': RELEASE_VERSION, 'candidate': True}}
+        self.source_files.pop(WORKFLOW)
+        self.source_files[RELEASE_WORKFLOW] = ('name: Synthetic release producer\n'
+            'on:\n  workflow_dispatch:\n    inputs:\n      release_version:\n'
+            "jobs:\n  release-candidate:\n    if: github.ref == 'refs/heads/main'\n    steps:\n"
+            '      - uses: ' + UPLOAD + '\n').encode()
+        self.manifest['purpose'] = 'release-candidate'
+        self.manifest['source'] = copy.deepcopy(self.expected['source'])
+        self.manifest['release'] = copy.deepcopy(self.expected['release'])
+        self.manifest['ci'].update(workflowPath=RELEASE_WORKFLOW, jobKey='release-candidate')
+        self.manifest['sourceFileDigests'] = {name: hashed(data) for name, data in self.source_files.items()}
+        self.records[self.artifact_route]['name'] = artifact.artifact_name(
+            artifact.RELEASE_PROFILE, 100, 2, self.expected['release'])
+        self.records[self.artifact_route]['workflow_run']['head_sha'] = BUILT
+        self.records[self.run_route].update(path=RELEASE_WORKFLOW, event='workflow_dispatch',
+                                            head_sha=BUILT, head_branch='main')
+        self.records[self.jobs_route]['jobs'][0].update(name='release-candidate', head_sha=BUILT)
+        self.repack()
+        return self
+
     def get(self, route):
         self.calls.append(route)
         prefix = f'repos/{REPOSITORY}/contents/'
@@ -362,6 +388,62 @@ class ArtifactBoundaryTests(unittest.TestCase):
         self.assertEqual(json.loads((output / 'verification.json').read_bytes()), receipt)
         self.assertEqual(stat.S_IMODE(output.stat().st_mode), 0o700)
         self.assertEqual(self.fixture.downloads, [700])
+
+    def test_release_candidate_round_trip_binds_manual_main_source_and_version(self):
+        fixture = GithubFixture().as_release_candidate()
+        output = self.root / 'verified-release'
+        receipt = self.verify(fixture, output)
+        self.assertEqual(receipt['purpose'], 'verified-release-candidate')
+        self.assertEqual(receipt['release'], {'version': RELEASE_VERSION, 'candidate': True})
+        self.assertEqual(receipt['source']['event'], 'workflow_dispatch')
+        self.assertEqual(receipt['source']['ref'], 'refs/heads/main')
+        self.assertFalse(receipt['productionEligible'])
+        self.assertFalse(receipt['imageLoaded'])
+        self.assertEqual(json.loads((output / 'manifest.json').read_bytes())['release'], receipt['release'])
+
+    def test_release_candidate_rejects_wrong_version_source_workflow_and_inner_bytes(self):
+        for target in ('version', 'source', 'workflow', 'workflow-shape', 'inner-bytes'):
+            with self.subTest(target=target):
+                fixture = GithubFixture().as_release_candidate()
+                if target == 'version':
+                    fixture.records[fixture.artifact_route]['name'] = 'dailylogger-release-candidate-v0.1.0-rc.2-100-2'
+                elif target == 'source':
+                    fixture.expected['source']['ref'] = 'refs/heads/release'
+                elif target == 'workflow':
+                    fixture.records[fixture.run_route]['path'] = WORKFLOW
+                elif target == 'workflow-shape':
+                    fixture.source_files[RELEASE_WORKFLOW] += b'  pull_request:\n'
+                else:
+                    fixture.repack(image_bytes=fixture.image + b'changed release payload')
+                self.rejected(fixture)
+
+    def test_release_workflow_is_main_only_and_uses_the_reviewed_release_profile(self):
+        workflow = (MODULE.parents[3] / RELEASE_WORKFLOW).read_text()
+        self.assertIn('workflow_dispatch:', workflow)
+        self.assertNotIn('pull_request:', workflow)
+        self.assertIn("if: github.ref == 'refs/heads/main'", workflow)
+        self.assertIn('DAILYLOGGER_RELEASE_VERSION: ${{ inputs.release_version }}', workflow)
+        self.assertIn('--release-version "$DAILYLOGGER_RELEASE_VERSION"', workflow)
+        self.assertIn('retention-days: 90', workflow)
+        hashes, _ = artifact.input_files(artifact.RELEASE_PROFILE,
+                                         lambda path: (MODULE.parents[3] / path).read_bytes())
+        self.assertEqual(set(hashes), set(artifact.RELEASE_SOURCE_FILES))
+
+    def test_release_export_requires_owned_release_job_and_matching_version_environment(self):
+        environment = {'GITHUB_ACTIONS': 'true', 'GITHUB_REPOSITORY': REPOSITORY,
+                       'GITHUB_JOB': 'runtime-image', 'DAILYLOGGER_RELEASE_VERSION': RELEASE_VERSION}
+        with patch.dict(os.environ, environment, clear=True), \
+             patch.object(artifact, 'run', side_effect=AssertionError('Guard must precede command execution')):
+            with self.assertRaises(ValueError):
+                artifact.export_release_candidate(artifact.OWNED_IMAGE, self.root / 'context',
+                                                  self.root / 'exported', RELEASE_VERSION)
+        environment['GITHUB_JOB'] = 'release-candidate'
+        environment['DAILYLOGGER_RELEASE_VERSION'] = 'v0.1.0-rc.2'
+        with patch.dict(os.environ, environment, clear=True), \
+             patch.object(artifact, 'run', side_effect=AssertionError('Guard must precede command execution')):
+            with self.assertRaises(ValueError):
+                artifact.export_release_candidate(artifact.OWNED_IMAGE, self.root / 'context',
+                                                  self.root / 'exported', RELEASE_VERSION)
 
     def test_output_ownership_git_metadata_and_overrides_are_not_authorization(self):
         directory = self.root / 'existing'

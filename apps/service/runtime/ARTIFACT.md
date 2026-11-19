@@ -47,6 +47,27 @@ The verifier authenticates the reviewed workflow source and its single-uploader
 shape, successful attempt/job and matching enclosed job identity. Preserve that
 review invariant when changing the workflow.
 
+## Release candidates from merged source
+
+`service-release-candidate.yml` is a separate, manual workflow. It runs only when
+dispatched from `main`, accepts a service-scoped version in
+`vMAJOR.MINOR.PATCH-rc.N` form, and repeats the same build, export/reload, runtime,
+HTTP and private-TLS qualification. Its sealed manifest and receiver expectation
+contain the version, `main` source revision, release workflow path and release job.
+The workflow retains `manifest.json` and `runtime-image.tar` for 90 days under
+`dailylogger-release-candidate-VERSION-RUN-ATTEMPT`.
+
+GitHub's 90-day artifact retention is an evidence window, not the durable private
+release store. A later slice must copy only a verified candidate into the chosen
+private store before an operator can promote or recover it.
+
+The receiver authenticates this candidate exactly as it authenticates fixture
+output, then writes a `verified-release-candidate` receipt with the version and
+image identities. A wrong version, workflow, source ref, artifact bytes or image
+archive fails before an image is loaded. This is a release candidate for later
+private storage and deployment qualification. It does not create a Git tag,
+publish an image, activate the NAS or mark the candidate production eligible.
+
 ## Verify on the receiving controller
 
 Use the controller's existing authenticated `gh` installation with repository
@@ -96,8 +117,8 @@ never recursively deletes a pathname. Raw tar headers are bounded before parsing
 layout-changing PAX and GNU longname/link/sparse framing are rejected. An accepted
 index has exactly one runnable Linux/amd64 manifest; attestations remain separate.
 
-The output is always a disposable fixture candidate with `productionEligible:
-false`. Private origin/source ranges, TLS files and application credentials remain
+The output is always a non-production candidate with `productionEligible: false`.
+Private origin/source ranges, TLS files and application credentials remain
 separate operator inputs. This increment implements no NAS activation, production
 invoker, upgrade quiescence, restoration, real GitHub login or unattended renewal.
 See [ingress preparation](INGRESS.md) for the remaining live checks.

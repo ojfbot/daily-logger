@@ -20,11 +20,14 @@ import zipfile
 REPOSITORY = 'ojfbot/daily-logger'
 WORKFLOW = '.github/workflows/service-runtime.yml'
 JOB = 'runtime-image'
+RELEASE_WORKFLOW = '.github/workflows/service-release-candidate.yml'
+RELEASE_JOB = 'release-candidate'
 OWNED_IMAGE = 'dailylogger-runtime:proof'
 UPLOAD_ACTION = 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02'
 SOURCE_ROOT = Path(__file__).resolve().parents[3]
 SOURCE_FILES = ('pnpm-lock.yaml', 'apps/service/runtime/Dockerfile',
                 'apps/service/runtime/compose.yaml', 'apps/service/runtime/prepare-ingress.ts', WORKFLOW)
+RELEASE_SOURCE_FILES = SOURCE_FILES[:-1] + (RELEASE_WORKFLOW,)
 MAX_ARCHIVE = 2 * 1024 ** 3
 MAX_MANIFEST = 128 * 1024
 DOWNLOAD_TIMEOUT_SECONDS = 600
@@ -54,6 +57,50 @@ def digest(value, pattern=HASH):
 
 def exact(value, expected):
     return json.dumps(value, sort_keys=True) == json.dumps(expected, sort_keys=True)
+
+
+RELEASE_VERSION = re.compile(r'v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)-rc\.(?:0|[1-9][0-9]*)\Z')
+
+FIXTURE_PROFILE = {
+    'workflow': WORKFLOW,
+    'job': JOB,
+    'artifact_prefix': 'dailylogger-fixture',
+    'manifest_purpose': 'disposable-fixture-candidate',
+    'receipt_purpose': 'verified-disposable-fixture-candidate',
+    'source_files': SOURCE_FILES,
+}
+RELEASE_PROFILE = {
+    'workflow': RELEASE_WORKFLOW,
+    'job': RELEASE_JOB,
+    'artifact_prefix': 'dailylogger-release-candidate',
+    'manifest_purpose': 'release-candidate',
+    'receipt_purpose': 'verified-release-candidate',
+    'source_files': RELEASE_SOURCE_FILES,
+}
+
+
+def release_version(value):
+    require(type(value) is str and RELEASE_VERSION.fullmatch(value) is not None, 'Invalid release candidate version')
+    return value
+
+
+def release_claim(value):
+    object_keys(value, ('version', 'candidate'))
+    release_version(value['version'])
+    require(value['candidate'] is True, 'Release artifact must remain a candidate')
+    return value
+
+
+def profile_for_expected(value):
+    require(type(value) is dict, 'Unexpected expectation shape')
+    return RELEASE_PROFILE if 'release' in value else FIXTURE_PROFILE
+
+
+def validate_source(profile, source):
+    if profile is RELEASE_PROFILE:
+        require(source['event'] == 'workflow_dispatch' and source['ref'] == 'refs/heads/main'
+                and source['pullRequest'] is None, 'Release candidates require a manual main checkout')
+    return source
 
 
 def json_bytes(data):
@@ -89,11 +136,15 @@ def parse_source(value):
 
 
 def parse_expected(value):
-    object_keys(value, ('schemaVersion', 'artifactId', 'runId', 'attempt', 'source'))
+    profile = profile_for_expected(value)
+    keys = ('schemaVersion', 'artifactId', 'runId', 'attempt', 'source')
+    object_keys(value, keys + (('release',) if profile is RELEASE_PROFILE else ()))
     require(type(value['schemaVersion']) is int and value['schemaVersion'] == 1, 'Unsupported expectation schema')
     for key in ('artifactId', 'runId', 'attempt'):
         positive(value[key], 10 ** 16)
-    parse_source(value['source'])
+    validate_source(profile, parse_source(value['source']))
+    if profile is RELEASE_PROFILE:
+        release_claim(value['release'])
     return value
 
 
@@ -145,15 +196,18 @@ def parse_proofs(value):
             'archiveClosure': 'passed', 'emptyLayerStore': False}), 'Invalid export/reload proof')
 
 
-def parse_manifest(value):
-    object_keys(value, ('schemaVersion', 'purpose', 'repository', 'source', 'ci', 'image', 'archive',
-                        'context', 'sourceFileDigests', 'upstreamImages', 'qualifications'))
+def parse_manifest(value, profile):
+    keys = ('schemaVersion', 'purpose', 'repository', 'source', 'ci', 'image', 'archive',
+            'context', 'sourceFileDigests', 'upstreamImages', 'qualifications')
+    object_keys(value, keys + (('release',) if profile is RELEASE_PROFILE else ()))
     require(type(value['schemaVersion']) is int and value['schemaVersion'] == 1
-            and value['purpose'] == 'disposable-fixture-candidate' and value['repository'] == REPOSITORY,
-            'Unsupported fixture manifest')
-    source = parse_source(value['source'])
+            and value['purpose'] == profile['manifest_purpose'] and value['repository'] == REPOSITORY,
+            'Unsupported artifact manifest')
+    source = validate_source(profile, parse_source(value['source']))
+    if profile is RELEASE_PROFILE:
+        release_claim(value['release'])
     ci = object_keys(value['ci'], ('workflowPath', 'workflowId', 'runId', 'attempt', 'jobId', 'jobKey'))
-    require(ci['workflowPath'] == WORKFLOW and ci['jobKey'] == JOB, 'Wrong workflow policy')
+    require(ci['workflowPath'] == profile['workflow'] and ci['jobKey'] == profile['job'], 'Wrong workflow policy')
     for key in ('workflowId', 'runId', 'attempt', 'jobId'):
         positive(ci[key], 10 ** 16)
     image = object_keys(value['image'], ('identityKind', 'configId', 'engineId', 'engineIdentityKind', 'platform', 'uid', 'gid'))
@@ -170,7 +224,7 @@ def parse_manifest(value):
     positive(archive['size']); digest(archive['sha256'])
     context = parse_context(value['context'])
     require(context['sourceRevision'] == source['builtRevision'], 'Context source mismatch')
-    object_keys(value['sourceFileDigests'], SOURCE_FILES)
+    object_keys(value['sourceFileDigests'], profile['source_files'])
     for item in value['sourceFileDigests'].values():
         digest(item)
     object_keys(value['upstreamImages'], ('postgres', 'caddy'))
@@ -248,10 +302,10 @@ def jobs_for(github, run_id, attempt):
     raise ValueError('Too many workflow jobs')
 
 
-def selected_job(github, run_id, attempt, completed):
+def selected_job(github, run_id, attempt, completed, profile):
     jobs = jobs_for(github, run_id, attempt)
-    matches = [job for job in jobs if job.get('name') == JOB and job.get('run_id') == run_id]
-    require(len(jobs) == len(matches) == 1, 'Fixture workflow must have one producer job')
+    matches = [job for job in jobs if job.get('name') == profile['job'] and job.get('run_id') == run_id]
+    require(len(jobs) == len(matches) == 1, 'Artifact workflow must have one producer job')
     job = matches[0]
     positive(job.get('id'), 10 ** 16)
     if completed:
@@ -259,13 +313,17 @@ def selected_job(github, run_id, attempt, completed):
     return job
 
 
-def input_files(read):
-    values = {path: read(path) for path in SOURCE_FILES}
-    workflow = values[WORKFLOW].decode()
+def input_files(profile, read):
+    values = {path: read(path) for path in profile['source_files']}
+    workflow = values[profile['workflow']].decode()
     require(workflow.count('uses: ' + UPLOAD_ACTION) == 1
             and workflow.count('uses: actions/upload-artifact@') == 1, 'Single reviewed uploader required')
     jobs = workflow.split('\njobs:\n')
-    require(len(jobs) == 2 and re.findall(r'^  ([a-z0-9-]+):$', jobs[1], re.M) == [JOB], 'Unexpected uploader workflow shape')
+    require(len(jobs) == 2 and re.findall(r'^  ([a-z0-9-]+):$', jobs[1], re.M) == [profile['job']], 'Unexpected uploader workflow shape')
+    if profile is RELEASE_PROFILE:
+        require(workflow.count('workflow_dispatch:') == 1 and 'pull_request:' not in workflow and 'push:' not in workflow
+                and '      release_version:' in workflow and "if: github.ref == 'refs/heads/main'" in workflow,
+                'Release workflow must remain manual and main-only')
     postgres = re.findall(r'image: (postgres:[A-Za-z0-9._-]+@sha256:[0-9a-f]{64})', values[SOURCE_FILES[2]].decode())
     caddy = re.findall(r"PROXY_IMAGE = '(caddy:[A-Za-z0-9._-]+@sha256:[0-9a-f]{64})'", values[SOURCE_FILES[3]].decode())
     require(len(postgres) == len(caddy) == 1, 'Missing upstream pin')
@@ -274,12 +332,13 @@ def input_files(read):
 
 def github_evidence(expected, github):
     parse_expected(expected)
+    profile = profile_for_expected(expected)
     source = expected['source']; run_id = expected['runId']; attempt = expected['attempt']
     repo = github.get(f'repos/{REPOSITORY}')
     require(repo.get('full_name') == REPOSITORY, 'Wrong repository evidence')
     record = github.get(f'repos/{REPOSITORY}/actions/artifacts/{expected["artifactId"]}')
     require(record.get('id') == expected['artifactId'] and record.get('expired') is False
-            and record.get('name') == artifact_name(run_id, attempt), 'Wrong or expired artifact')
+            and record.get('name') == artifact_name(profile, run_id, attempt, expected.get('release')), 'Wrong or expired artifact')
     positive(record.get('size_in_bytes'))
     require(type(record.get('digest')) is str and record['digest'].startswith('sha256:'), 'Authenticated digest absent')
     digest(record['digest'][7:])
@@ -294,7 +353,7 @@ def github_evidence(expected, github):
     workflow = github.get(f'repos/{REPOSITORY}/actions/runs/{run_id}/attempts/{attempt}')
     require(workflow.get('id') == run_id and workflow.get('run_attempt') == attempt
             and workflow.get('status') == 'completed' and workflow.get('conclusion') == 'success'
-            and workflow.get('path') == WORKFLOW and workflow.get('event') == source['event']
+            and workflow.get('path') == profile['workflow'] and workflow.get('event') == source['event']
             and workflow.get('repository', {}).get('full_name') == REPOSITORY, 'Wrong or unsuccessful workflow attempt')
     if source['event'] == 'pull_request':
         pr = source['pullRequest']
@@ -306,13 +365,13 @@ def github_evidence(expected, github):
     else:
         require(workflow.get('head_sha') == association.get('head_sha') == source['builtRevision']
                 and source['ref'] == 'refs/heads/' + workflow.get('head_branch', ''), 'Wrong manual checkout/ref')
-    job = selected_job(github, run_id, attempt, True)
+    job = selected_job(github, run_id, attempt, True, profile)
     require(job.get('head_sha') == workflow.get('head_sha'), 'Wrong producer job source')
     def read(path):
         item = github.get(f'repos/{REPOSITORY}/contents/{path}?ref={source["builtRevision"]}')
         require(item.get('type') == 'file' and item.get('encoding') == 'base64', 'Missing committed source input')
         return base64.b64decode(item['content'], validate=False)
-    hashes, upstreams = input_files(read)
+    hashes, upstreams = input_files(profile, read)
     return {'artifact': record, 'workflow': workflow, 'job': job, 'sourceFileDigests': hashes, 'upstreamImages': upstreams}
 
 
@@ -573,13 +632,19 @@ class OwnedOutput:
         os.close(self.fd)
 
 
-def artifact_name(run_id, attempt):
-    return f'dailylogger-fixture-{run_id}-{attempt}'
+def artifact_name(profile, run_id, attempt, release=None):
+    if profile is RELEASE_PROFILE:
+        release_claim(release)
+        return f"{profile['artifact_prefix']}-{release['version']}-{run_id}-{attempt}"
+    require(release is None, 'Fixture artifact cannot carry a release version')
+    return f"{profile['artifact_prefix']}-{run_id}-{attempt}"
 
 
 def verify_fixture(expected, output, github=None):
     """Authenticate and stage a candidate. This function never invokes Docker or SSH."""
     github = github or Github()
+    parse_expected(expected)
+    profile = profile_for_expected(expected)
     require(not output.exists() and not output.is_symlink(), 'Output must be new')
     evidence = github_evidence(expected, github)
     owned = OwnedOutput(output)
@@ -598,10 +663,12 @@ def verify_fixture(expected, output, github=None):
                         and stat.S_IFMT(mode) in (0, stat.S_IFREG) and item.compress_type in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)
                         and 0 < item.file_size <= (MAX_MANIFEST if item.filename == 'manifest.json' else MAX_ARCHIVE)
                         and item.file_size <= max(item.compress_size, 1) * 100, 'Unsafe artifact framing')
-            manifest = parse_manifest(json_bytes(archive.read('manifest.json')))
+            manifest = parse_manifest(json_bytes(archive.read('manifest.json')), profile)
             require(manifest['source'] == expected['source'] and manifest['ci'] == {
-                'workflowPath': WORKFLOW, 'workflowId': evidence['workflow']['workflow_id'], 'runId': expected['runId'],
-                'attempt': expected['attempt'], 'jobId': evidence['job']['id'], 'jobKey': JOB}, 'Manifest producer identity mismatch')
+                'workflowPath': profile['workflow'], 'workflowId': evidence['workflow']['workflow_id'], 'runId': expected['runId'],
+                'attempt': expected['attempt'], 'jobId': evidence['job']['id'], 'jobKey': profile['job']}, 'Manifest producer identity mismatch')
+            if profile is RELEASE_PROFILE:
+                require(manifest['release'] == expected['release'], 'Release version mismatch')
             require(manifest['sourceFileDigests'] == evidence['sourceFileDigests']
                     and manifest['upstreamImages'] == evidence['upstreamImages'], 'Committed source digest mismatch')
             with archive.open('runtime-image.tar') as source, owned.open('runtime-image.tar', 'xb') as destination:
@@ -614,11 +681,13 @@ def verify_fixture(expected, output, github=None):
                     and identities['engineKinds'].get(manifest['image']['engineId']) == manifest['image']['engineIdentityKind'],
                     'Image config/engine identity mismatch')
             owned.write_json('manifest.json', manifest)
-        receipt = {'schemaVersion': 1, 'purpose': 'verified-disposable-fixture-candidate', 'artifactId': expected['artifactId'],
+        receipt = {'schemaVersion': 1, 'purpose': profile['receipt_purpose'], 'artifactId': expected['artifactId'],
             'outerSha256': metadata['digest'][7:], 'runId': expected['runId'], 'attempt': expected['attempt'],
             'jobId': evidence['job']['id'], 'source': expected['source'], 'archiveSha256': manifest['archive']['sha256'],
             'imageConfigId': manifest['image']['configId'], 'imageEngineId': manifest['image']['engineId'],
             'engineIdentityKind': manifest['image']['engineIdentityKind'], 'productionEligible': False, 'imageLoaded': False}
+        if profile is RELEASE_PROFILE:
+            receipt['release'] = expected['release']
         owned.write_json('verification.json', receipt)
         owned.check()
         os.unlink('download.zip', dir_fd=owned.fd)
@@ -628,6 +697,11 @@ def verify_fixture(expected, output, github=None):
         raise
     finally:
         owned.close()
+
+
+def export_release_candidate(image, context, output, version, github=None):
+    return export_fixture(image, context, output, github, RELEASE_PROFILE,
+                          {'version': release_version(version), 'candidate': True})
 
 
 def tap_counts(text):
@@ -652,24 +726,29 @@ def proof_records(text):
     return result
 
 
-def export_fixture(image, context, output, github=None):
+def export_fixture(image, context, output, github=None, profile=FIXTURE_PROFILE, release=None):
     require(os.environ.get('GITHUB_ACTIONS') == 'true' and os.environ.get('GITHUB_REPOSITORY') == REPOSITORY
-            and os.environ.get('GITHUB_JOB') == JOB and image == OWNED_IMAGE, 'Export requires the owned CI fixture image')
+            and os.environ.get('GITHUB_JOB') == profile['job'] and image == OWNED_IMAGE, 'Export requires the owned CI image')
+    if profile is RELEASE_PROFILE:
+        release_claim(release)
+        require(os.environ.get('DAILYLOGGER_RELEASE_VERSION') == release['version'], 'Release version environment mismatch')
+    else:
+        require(release is None, 'Fixture export cannot carry a release version')
     github = github or Github()
     revision = run(['git', 'rev-parse', 'HEAD']).strip(); digest(revision, SHA)
     require(revision == os.environ.get('GITHUB_SHA'), 'CI checkout mismatch')
     event = json_bytes(Path(os.environ['GITHUB_EVENT_PATH']).read_bytes())
     event_name = os.environ['GITHUB_EVENT_NAME']
     pr = event.get('pull_request') if event_name == 'pull_request' else None
-    source = parse_source({'builtRevision': revision, 'event': event_name, 'ref': os.environ['GITHUB_REF'],
-        'pullRequest': {'number': pr['number'], 'head': pr['head']['sha'], 'base': pr['base']['sha']} if pr else None})
+    source = validate_source(profile, parse_source({'builtRevision': revision, 'event': event_name, 'ref': os.environ['GITHUB_REF'],
+        'pullRequest': {'number': pr['number'], 'head': pr['head']['sha'], 'base': pr['base']['sha']} if pr else None}))
     receipt = parse_context(json_bytes((context / 'runtime-context.json').read_bytes()))
     require(receipt['sourceRevision'] == revision, 'Build context mismatch')
     run_id = int(os.environ['GITHUB_RUN_ID']); attempt = int(os.environ['GITHUB_RUN_ATTEMPT'])
     workflow = github.get(f'repos/{REPOSITORY}/actions/runs/{run_id}/attempts/{attempt}')
-    require(workflow.get('path') == WORKFLOW and workflow.get('run_attempt') == attempt, 'Wrong export workflow')
-    job = selected_job(github, run_id, attempt, False)
-    source_hashes, upstreams = input_files(lambda path: run(['git', 'show', revision + ':' + path], binary=True))
+    require(workflow.get('path') == profile['workflow'] and workflow.get('run_attempt') == attempt, 'Wrong export workflow')
+    job = selected_job(github, run_id, attempt, False, profile)
+    source_hashes, upstreams = input_files(profile, lambda path: run(['git', 'show', revision + ':' + path], binary=True))
     inspected = json_bytes(run(['docker', 'image', 'inspect', image]))[0]
     require(inspected.get('RepoTags') == [OWNED_IMAGE] and inspected.get('Config', {}).get('User') == '1000:1000'
             and inspected.get('Os') == 'linux' and inspected.get('Architecture') == 'amd64', 'Unexpected owned image')
@@ -710,11 +789,14 @@ def export_fixture(image, context, output, github=None):
             'entrypoints': records['production-entrypoints-and-cross-container-storage'],
             'http': records['production-runtime-with-external-http-tests'], 'ingress': records['private-tls-proxy'],
             'exportReload': {'status': 'passed', 'imageRecordRemoved': True, 'archiveClosure': 'passed', 'emptyLayerStore': False}}
-        manifest = parse_manifest({'schemaVersion': 1, 'purpose': 'disposable-fixture-candidate', 'repository': REPOSITORY,
-            'source': source, 'ci': {'workflowPath': WORKFLOW, 'workflowId': workflow['workflow_id'], 'runId': run_id,
-                'attempt': attempt, 'jobId': job['id'], 'jobKey': JOB}, 'image': image_identity,
+        manifest = {'schemaVersion': 1, 'purpose': profile['manifest_purpose'], 'repository': REPOSITORY,
+            'source': source, 'ci': {'workflowPath': profile['workflow'], 'workflowId': workflow['workflow_id'], 'runId': run_id,
+                'attempt': attempt, 'jobId': job['id'], 'jobKey': profile['job']}, 'image': image_identity,
             'archive': {'name': 'runtime-image.tar', 'size': owned.size('runtime-image.tar'), 'sha256': owned.hash('runtime-image.tar')},
-            'context': receipt, 'sourceFileDigests': source_hashes, 'upstreamImages': upstreams, 'qualifications': proofs})
+            'context': receipt, 'sourceFileDigests': source_hashes, 'upstreamImages': upstreams, 'qualifications': proofs}
+        if profile is RELEASE_PROFILE:
+            manifest['release'] = release
+        manifest = parse_manifest(manifest, profile)
         serialized = json.dumps(manifest, indent=2) + '\n'
         needles = [value.encode() for key in ('GH_TOKEN', 'GITHUB_TOKEN', 'DAILYLOGGER_ARTIFACT_CREDENTIAL_CANARY')
                    if (value := os.environ.get(key))]
@@ -726,9 +808,12 @@ def export_fixture(image, context, output, github=None):
                 tail = data[-max([len(needle) for needle in needles] + [1]):]
         require(not any(needle in serialized.encode() for needle in needles), 'Credential canary found in manifest')
         owned.write_json('manifest.json', manifest)
-        return {'purpose': manifest['purpose'], 'imageConfigId': image_identity['configId'], 'imageEngineId': image_id,
-                'engineIdentityKind': image_identity['engineIdentityKind'], 'artifactName': artifact_name(run_id, attempt),
+        result = {'purpose': manifest['purpose'], 'imageConfigId': image_identity['configId'], 'imageEngineId': image_id,
+                'engineIdentityKind': image_identity['engineIdentityKind'], 'artifactName': artifact_name(profile, run_id, attempt, release),
                 'builtRevision': revision, 'productionEligible': False}
+        if profile is RELEASE_PROFILE:
+            result['release'] = release
+        return result
     except BaseException:
         owned.retain_failure()
         raise
@@ -744,17 +829,20 @@ def main():
     export.add_argument('--image', required=True)
     export.add_argument('--context', required=True, type=Path)
     export.add_argument('--output', required=True, type=Path)
+    export.add_argument('--release-version')
     verify = commands.add_parser('verify')
     verify.add_argument('--expected', required=True, type=Path)
     verify.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     try:
-        value = export_fixture(args.image, args.context, args.output) if args.command == 'export' else \
+        value = export_release_candidate(args.image, args.context, args.output, args.release_version) \
+            if args.command == 'export' and args.release_version else \
+            export_fixture(args.image, args.context, args.output) if args.command == 'export' else \
             verify_fixture(parse_expected(json_bytes(args.expected.read_bytes())), args.output)
         print(json.dumps(value))
     except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError, zipfile.BadZipFile, tarfile.TarError) as error:
         detail = str(error) if type(error) is ValueError else type(error).__name__
-        parser.exit(1, f'Fixture artifact {args.command} failed: {detail}; no candidate qualified\n')
+        parser.exit(1, f'Artifact {args.command} failed: {detail}; no candidate qualified\n')
 
 
 if __name__ == '__main__':

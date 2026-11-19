@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `a98639e0add6994d9708065385898eee1419b3f7c7e527996bac7228ce292d6b`.
+> Source SHA-256: `b055d96aa400ccfe3698c81ef727160e602936855b1beec1ba7bace3bbf82b79`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1842,4 +1842,67 @@ Fixture Artifact Verifying requires Closed Fixture Manifest. [src: apps/service/
 Fixture Artifact Verifying requires Offline Exporter Startup Proof. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying yields Verified Fixture Candidate. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
+```
+
+## SD2.8 — Merged-source release candidate delivery
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.8 — Merged-source release candidate delivery"
+---
+flowchart TD
+  accTitle: SD2.8 — Merged-source release candidate delivery
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n357("Release Candidate Exporting")
+  n358["Merged Main Source"]
+  n359["Release Candidate Version"]
+  n344["Committed Runtime Context"]
+  n346["Runtime Image"]
+  n360["Exported Release Candidate Image"]
+  n361("Release Candidate Image Qualifying")
+  n362["Release Candidate Qualification Receipts"]
+  n363["Closed Release Candidate Manifest"]
+  n364("Release Candidate Verifying")
+  n353["Authenticated GitHub Artifact Evidence"]
+  n354["Independently Pinned Build Identity"]
+  n365["Verified Release Candidate"]
+  n356["Private Verification Receipt"]
+  n358 -->|"requires (instrument)"| n357
+  n359 -->|"requires (instrument)"| n357
+  n344 -->|"requires (instrument)"| n357
+  n346 -->|"requires (instrument)"| n357
+  n357 -->|"yields"| n360
+  n357 -->|"invokes"| n361
+  n360 -->|"requires (instrument)"| n361
+  n361 -->|"yields"| n362
+  n357 -->|"yields"| n363
+  n353 -->|"requires (instrument)"| n364
+  n354 -->|"requires (instrument)"| n364
+  n363 -->|"requires (instrument)"| n364
+  n364 -->|"yields"| n365
+  n364 -->|"yields"| n356
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Release Candidate Exporting requires Merged Main Source. [src: .github/workflows/service-release-candidate.yml]
+Release Candidate Exporting requires Release Candidate Version. [src: .github/workflows/service-release-candidate.yml]
+Release Candidate Exporting requires Committed Runtime Context. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting requires Runtime Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting yields Exported Release Candidate Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting invokes Release Candidate Image Qualifying. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying requires Exported Release Candidate Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying yields Release Candidate Qualification Receipts. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting yields Closed Release Candidate Manifest. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Authenticated GitHub Artifact Evidence. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Independently Pinned Build Identity. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Closed Release Candidate Manifest. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying yields Verified Release Candidate. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
 ```
