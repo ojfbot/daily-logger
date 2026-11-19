@@ -66,7 +66,8 @@ DATE_OVERRIDE=2026-02-20 pnpm generate:dry
 | `src/collect-context.ts` | GitHub API sweep via `gh` CLI (single page per call, 16 MB buffer) |
 | `src/fleet.ts` | Sweep membership: `discoverRepos()` (derived from `gh repo list`), `EXCLUDED_REPOS`, `REPO_NOTES` → `KNOWN_REPOS`, `reportSurfaceDrift()` |
 | `src/collect-telemetry.ts` | Aggregates skill usage from `~/selfco/tracking/skill-dispositions.jsonl` (live, ADR-0095; legacy `skill-telemetry.jsonl` fallback) plus tool/session/suggestion JSONL sources. **Note:** commit `4dd6765` fixed a silent no-op where skill-audit fetched telemetry from the wrong remote; telemetry collection now targets the correct source. |
-| `src/generate-article.ts` | Anthropic API call + prompt, JSON → markdown (includes dedicated skill telemetry section) |
+| `src/generate-article.ts` | Anthropic API adapter + compatibility exports for shared journal prompts, validation and rendering (includes dedicated skill telemetry section) |
+| `packages/journal/src/article-prompts.ts` | Shared draft system prompt, telemetry addendum, version and provider-independent tool data |
 | `src/run-provenance.ts` | Best-effort Actions run timing, article authoring provenance, frontmatter preservation, and diagnostic reporting |
 | `src/schema.ts` | Zod schemas + validation (ArticleDataSchema/ArticleDataV2, TypedTagSchema, ShipmentEntrySchema, DecisionEntrySchema, ActionItemSchema, ClosedActionSchema, CodeReferenceSchema, StructuredArticleSchema; `actionId`, `validateArticleOutput`, `getValidationErrors`) |
 | `src/types.ts` | Shared TypeScript types (BlogContext, GeneratedArticle, CommitInfo, PR/issue infos, Persona, cleaner types) |
@@ -109,7 +110,7 @@ log as `::warning::fleet drift: …` when a swept repo lacks it:
 
 - `REPO_NOTES` in `src/fleet.ts` — one-line role; also feeds `KNOWN_REPOS` for the API
   builder and tag classifier (surface 3).
-- The "Additional repos" bullet in `SYSTEM_PROMPT` (`src/generate-article.ts`) — the
+- The "Additional repos" bullet in `SYSTEM_PROMPT` (`packages/journal/src/article-prompts.ts`) — the
   drafter mischaracterizes activity without it (surface 4).
 
 Run core's `/fleet-onboard <repo>` to fill both. `FLEET_REPOS=a,b` pins the sweep set for local
@@ -119,7 +120,7 @@ went dark for up to five weeks under the old hand-listed `REPOS` array (see
 
 ## Updating the system prompt / project vision
 
-Edit the `SYSTEM_PROMPT` constant in `src/generate-article.ts`. The prompt contains the full ojfbot architectural context and should be kept in sync with the master roadmap.
+Edit the `SYSTEM_PROMPT` constant in `packages/journal/src/article-prompts.ts`; `src/generate-article.ts` retains its compatibility export. The prompt contains the full ojfbot architectural context and should be kept in sync with the master roadmap.
 
 For longer-lived context (roadmap phases, architectural decisions), add a `ROADMAP.md` to this repo root — `collect-context.ts` reads it preferentially over AGENTS.md.
 
