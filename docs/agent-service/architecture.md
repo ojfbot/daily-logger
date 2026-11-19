@@ -247,6 +247,10 @@ Initial API shape, subject to schema review:
 
 FleetRunner later invokes a scoped application command and receives run/receipt references. HelpDesk carries scoped questions and attributable responses; message text alone cannot grant authority. MorningCockpit consumes versioned projections with source watermarks and pending/unknown states. Add adapters to real, qualified endpoints rather than inventing new fleet APIs in this repository.
 
+Before implementing the FleetRunner adapter, name its cross-project owner and review venue in the existing core contract process. Define whether a FleetRunner job completes at durable DailyLogger command admission or at a later application outcome. An admission receipt cannot stand in for workflow completion or verified publication. The generic FleetRunner job qualification does not qualify this application adapter.
+
+Version the mapping between native FleetRunner job/generation/fence identities and DailyLogger run/command/attempt identities; retain source revisions and visibility. Keep those execution identities separate from owner approvals, publication authority and telemetry correlation. FleetRunner lease expiry or an offline device does not itself cancel an admitted DailyLogger workflow or settle an uncertain GitHub write. Qualify duplicate delivery, lost admission replies, stale generations, human waits and independent HelpDesk/telemetry outages before changing the single recurrence owner.
+
 ## Technical references
 
 - [LangGraph subgraphs](https://docs.langchain.com/oss/javascript/langgraph/use-subgraphs) support separate bounded reviewer workflows.
