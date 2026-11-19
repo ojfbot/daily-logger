@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-11-18. The final delivery matrix assumed pg-pool shutdown had closed every server session, but a held-client reproduction showed its promise resolved before socket closure and a forced test-database drop raced that close. Adopted the reviewed unique-database zero-session barrier and unforced drop with a real PostgreSQL regression.
+
 - 2026-11-18. A real second-controller transfer was still progressing when the 180-second total deadline expired. Retain the exact authenticated byte ceiling and child termination, but allow a bounded 600-second total, with regressions for slow progress and hard expiry.
 
 - 2026-11-18. A follow-up reproduction used Solaris uppercase PAX and warmed descriptor content to bypass per-reference policy. Allow only the explicitly supported raw tar record types with zero-body directories, and validate platform/attestation metadata on every descriptor edge before using cached content.
