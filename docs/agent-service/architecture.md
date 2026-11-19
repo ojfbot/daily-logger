@@ -98,7 +98,11 @@ Private access requires application authentication and owner authorization in ad
 
 The public site remains readable when the NAS is unavailable. No Vercel-to-VPN connection is assumed. A later unified public origin for protected journal routes requires M6's server authorization and deployment design.
 
+The owner selected a private fleet CA for the private operator surface on 2026-11-18. The public journal keeps its normal browser-trusted HTTPS; public readers need neither fleet CA enrollment nor VPN access. Intended operator devices must trust the private CA and still pass application authentication. Keep signing keys outside the application and proxy. The first supervised certificate-rotation proof uses a complete validated leaf/key generation, an atomic pointer switch, and a proxy-only restart; unattended issuance, renewal and activation require separate qualification. Protected journal sections may later use public HTTPS with server-side authorization under M6.
+
 Build an application image once per reviewed release and run API and worker processes separately from it. Begin with one worker and one publication owner. Use dedicated application storage and credentials, health/readiness checks, process restart supervision, resource limits, and graceful shutdown. Expose actionable alerts for missed eligible runs, stuck reviews, exhausted budgets, and unknown publication, delivered through an explicitly configured owner channel. An unattended single-host deployment needs tested backups and restore; Docker Compose alone supplies neither high availability nor a backup policy.
+
+Use the [runtime qualification contract](runtime-qualification.md) to distinguish source/image proof, a supervised private fixture, and production operation. It records authenticated artifact provenance, the actual built revision, upgrade quiescence, partial migration recovery and the fixture store's physical ownership requirements. A supervised fixture can qualify independently of the broader NAS firewall rollout when its own entry point and bypass tests pass. Main-LAN qualification does not imply WireGuard qualification; verify the source identity observed at ingress before admitting remote peers.
 
 Langfuse runs outside the application image. Its own web/worker services and PostgreSQL, ClickHouse, Redis/Valkey, and blob storage have separate data ownership and credentials. A physical database server may be shared only through separate databases and roles. Keep production Langfuse lifecycle under the fleet infrastructure owner; this repo owns its instrumentation and local development configuration. Its optional gateway is not part of this design.
 
@@ -242,6 +246,12 @@ Initial API shape, subject to schema review:
 - Health/readiness endpoints expose minimal operational state; sensitive diagnostics remain authenticated.
 
 FleetRunner later invokes a scoped application command and receives run/receipt references. HelpDesk carries scoped questions and attributable responses; message text alone cannot grant authority. MorningCockpit consumes versioned projections with source watermarks and pending/unknown states. Add adapters to real, qualified endpoints rather than inventing new fleet APIs in this repository.
+
+HelpDesk consumer qualification must cover addressed work across distinct correspondence threads, including a thread created after the consumer starts. Record the subscription scope and actual reader identity separately from a listener alias. A wait on one thread cannot establish coverage of another; receipt, agent pickup and work completion stay distinct. Reader replacement, lease expiry, replay and an uncovered route must produce attributable state rather than a false consumption claim. Watching an addressed request does not extend its execution authority.
+
+Before implementing the FleetRunner adapter, name its cross-project owner and review venue in the existing core contract process. Define whether a FleetRunner job completes at durable DailyLogger command admission or at a later application outcome. An admission receipt cannot stand in for workflow completion or verified publication. The generic FleetRunner job qualification does not qualify this application adapter.
+
+Version the mapping between native FleetRunner job/generation/fence identities and DailyLogger run/command/attempt identities; retain source revisions and visibility. Keep those execution identities separate from owner approvals, publication authority and telemetry correlation. FleetRunner lease expiry or an offline device does not itself cancel an admitted DailyLogger workflow or settle an uncertain GitHub write. Qualify duplicate delivery, lost admission replies, stale generations, human waits and independent HelpDesk/telemetry outages before changing the single recurrence owner.
 
 ## Technical references
 
