@@ -35,7 +35,8 @@ const children = new Set<Process>()
 const receivers = new Set<Awaited<ReturnType<ReturnType<typeof tlsFixture>['receiver']>>>()
 
 type Process = { child: ChildProcess; stdout: string; stderr: string; outputBound: boolean;
-  exporters: Map<number, { ready: boolean; exited: boolean }>; port?: number }
+  exporters: Map<number, { ready: boolean; exited: boolean }>; port?: number;
+  closeResult: [number | null, NodeJS.Signals | null] | null }
 type Span = { name: string; traceId: string; spanId: string; parentSpanId?: string;
   attributes: { key: string; value: { stringValue?: string } }[];
   events?: unknown[]; links?: unknown[]; status?: { message?: string } }
@@ -63,6 +64,10 @@ function exporterGone(pid: number) {
   try { process.kill(pid, 0); return false }
   catch (error) { return (error as NodeJS.ErrnoException).code === 'ESRCH' }
 }
+async function closed(process: Process, timeout = 8500) {
+  // 'exit' alone does not establish that the final stdout/stderr has drained.
+  return await waitFor(async () => process.closeResult ?? false, timeout)
+}
 async function exportersGone(process: Process) {
   // Worker process.exit() can outrun the probe's last IPC write. Check actual
   // process absence too; never send a mutating signal to a remembered PID.
@@ -74,12 +79,14 @@ async function terminate(process: Process, graceful = true) {
       const ending = exited(process.child)
       process.child.kill('SIGTERM')
       assert.deepEqual(await ending, [0, null])
+      assert.deepEqual(await closed(process), [0, null])
       assert.equal(process.outputBound, false)
     }
   } finally {
     if (process.child.exitCode === null && process.child.signalCode === null) {
       const ending = exited(process.child, 2500); process.child.kill('SIGKILL'); await ending
     }
+    await closed(process, 2500)
     await exportersGone(process)
     children.delete(process)
   }
@@ -106,8 +113,9 @@ async function launch(kind: 'api' | 'worker', configPath?: string, databaseUrl =
         OTEL_RESOURCE_ATTRIBUTES: `private=${CANARY}`, LANGSMITH_API_KEY: CANARY,
       }, stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     })
-  const result: Process = { child, stdout: '', stderr: '', outputBound: false, exporters: new Map(), port }
+  const result: Process = { child, stdout: '', stderr: '', outputBound: false, exporters: new Map(), port, closeResult: null }
   children.add(result)
+  child.once('close', (code, signal) => { result.closeResult = [code, signal] })
   for (const channel of ['stdout', 'stderr'] as const) child[channel]!.on('data', (chunk: Buffer) => {
     if (Buffer.byteLength(result[channel]) + chunk.length > 16_384) { result.outputBound = true; child.kill('SIGKILL'); return }
     result[channel] += chunk.toString('utf8')
@@ -319,8 +327,8 @@ test('enabled strict-TLS exports correlate real HTTP admission and restarted dur
       segments.push(field(delivery, 'traceId'))
     }
     assert.notEqual(segments[0], segments[1])
-    assert.ok(destination.bounded()); privateWire(destination.wires, processes, [destination.configPath])
     await terminate(worker); await terminate(api)
+    assert.ok(destination.bounded()); privateWire(destination.wires, processes, [destination.configPath])
     for (const process of processes) await exportersGone(process)
   } finally { for (const process of processes) if (children.has(process)) await terminate(process, false) }
 })
@@ -349,7 +357,7 @@ test('protected config rejection is fixed and enabled API startup failure reaps 
   for (const kind of ['api', 'worker'] as const) {
     const process = await launch(kind, invalidPath)
     try {
-      assert.deepEqual(await exited(process.child, 7000), [1, null])
+      assert.deepEqual(await closed(process, 7000), [1, null])
       assert.ok(process.stderr === 'Private fixture telemetry configuration invalid\n', 'Startup error must be fixed and sanitized')
       assert.equal(process.exporters.size, 0)
     } finally { await terminate(process, false) }
@@ -360,7 +368,7 @@ test('protected config rejection is fixed and enabled API startup failure reaps 
   try {
     const process = await launch('api', destination.configPath, emptyUrl.toString())
     try {
-      assert.deepEqual(await exited(process.child, 7000), [1, null])
+      assert.deepEqual(await closed(process, 7000), [1, null])
       assert.ok(process.stderr === 'Private fixture HTTP command failed\n', 'API setup error must remain sanitized')
       assert.equal(process.exporters.size, 1)
       await exportersGone(process)
