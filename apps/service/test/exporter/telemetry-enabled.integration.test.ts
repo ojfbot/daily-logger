@@ -160,6 +160,17 @@ function field(span: Span, name: string): unknown {
   const value = span.attributes.find(attribute => attribute.key === `langfuse.observation.metadata.dailylogger.${name}`)?.value.stringValue
   return value === undefined ? undefined : JSON.parse(value)
 }
+async function observedCommand(wires: Wire[], commandId: string, nodes: readonly string[]) {
+  await until(() => {
+    const observed = spans(wires).filter(span => field(span, 'commandId') === commandId)
+    // API admission and worker segments arrive from independent exporter processes.
+    // A worker-only count cannot establish that both sides have been received.
+    const kinds = new Set(observed.map(span => field(span, 'kind')))
+    const receivedNodes = new Set(observed.filter(span => field(span, 'kind') === 'node').map(span => field(span, 'node')))
+    return ['admission_response_observed', 'delivery', 'operation'].every(kind => kinds.has(kind))
+      && nodes.every(node => receivedNodes.has(node))
+  }, 6000)
+}
 async function call(api: Process, path: string, key?: string, body: unknown = {}) {
   return await new Promise<{ status: number; text: string }>((resolve, reject) => {
     const outgoing = request(`http://127.0.0.1:${api.port}${path}`, { method: key ? 'POST' : 'GET',
@@ -266,14 +277,14 @@ test('enabled strict-TLS exports correlate real HTTP admission and restarted dur
     await ready(api, 'api', true); await ready(worker, 'worker', true)
     const started = await admission(api, '/v1/fixture/runs', `${CANARY}-${randomUUID()}`)
     await settled(started.commandId)
-    await until(() => spans(destination.wires).filter(span => field(span, 'commandId') === started.commandId).length >= 7, 6000)
+    await observedCommand(destination.wires, started.commandId, ['collect_fixture', 'draft_fixture', 'review_fixture', 'human_gate'])
     const replay = await call(api, '/v1/fixture/runs', started.key)
     assert.deepEqual(replay, started.response)
     await terminate(worker)
     worker = await launch('worker', destination.configPath); processes.push(worker)
     await ready(worker, 'worker', true)
     const resumed = await complete(api, started)
-    await until(() => spans(destination.wires).filter(span => field(span, 'commandId') === resumed.commandId).length >= 5, 6000)
+    await observedCommand(destination.wires, resumed.commandId, ['human_gate', 'write_shadow_artifacts'])
     const attempts = (await pool.query('SELECT attempt_id,command_id,state FROM dailylogger_service.operation_attempts WHERE run_id=$1', [started.runId])).rows
     assert.equal(attempts.length, 2)
     const segments: unknown[] = []
