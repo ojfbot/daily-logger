@@ -10,6 +10,7 @@ The owner selected Langfuse on 2026-11-17. The target is a TypeScript LangGraph 
 - [Application architecture](architecture.md) defines package boundaries, deployment, persistence, workflow behavior, observability, and fleet interfaces.
 - [Review reconciliation](review-reconciliation.md) records Yuri's findings, attributed delivery choices, and the corrections to initial acceptance, failover, timing, and Cleaner admission.
 - [M1A verification](m1a-verification-2026-11-17.md) records the offline checkpoint and existing-reader proof, with its limits.
+- [Three-day shadow comparison](shadow-comparison.md) defines parallel Actions/service generation, an independent blinded judge, owner review and the optional day-one quality decision before cutover.
 
 This is an implementation proposal. Langfuse, the public-journal purpose, and keeping the web app and backend together are owner direction; package names and the supporting technology choices below are proposed implementation decisions. No service deployment, runtime migration, schedule change, or shared fleet contract acceptance is recorded by these documents.
 
