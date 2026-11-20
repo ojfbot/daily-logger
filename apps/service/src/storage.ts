@@ -16,10 +16,13 @@ export function checkedRunDir(input: string): string {
   requireCondition(isAbsolute(input), '--run-dir must be an absolute path outside every Git checkout')
   const path = resolve(input)
   requireCondition(existsSync(dirname(path)), 'The run directory parent must already exist')
-  const parent = realpathSync(dirname(path))
+  // Native resolution preserves the physical spelling on case-insensitive
+  // filesystems even when the final run-directory leaf does not exist yet.
+  // Use the same resolver as PostgreSQL's existing-directory binding checks.
+  const parent = realpathSync.native(dirname(path))
   const canonical = join(parent, path.split('/').at(-1)!)
   if (entryExists(canonical)) requireCondition(lstatSync(canonical).isDirectory() && !lstatSync(canonical).isSymbolicLink(), 'Run directory cannot be a symlink or file')
-  const repo = realpathSync(REPO_ROOT)
+  const repo = realpathSync.native(REPO_ROOT)
   requireCondition(canonical !== repo && !canonical.startsWith(`${repo}/`), 'Run directory cannot be inside the source repository')
   // --show-toplevel fails inside .git and bare repositories. Git-directory
   // discovery also recognizes their metadata and linked-worktree Git dirs.
