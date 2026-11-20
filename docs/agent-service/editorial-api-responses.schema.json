@@ -1,0 +1,827 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "S04 fixture HTTP responses v1",
+  "description": "Proposed browser responses for the fixture API at the S03b integration boundary. Cross-record identity and state invariants are specified in editorial-api-contract.md.",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/fixtureAdmitted"
+    },
+    {
+      "$ref": "#/definitions/fixtureRejected"
+    },
+    {
+      "$ref": "#/definitions/idempotencyConflict"
+    },
+    {
+      "$ref": "#/definitions/fixtureCommandView"
+    },
+    {
+      "$ref": "#/definitions/fixtureRunView"
+    },
+    {
+      "$ref": "#/definitions/apiError"
+    },
+    {
+      "$ref": "#/definitions/ownerSessionView"
+    }
+  ],
+  "definitions": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "nullableUuid": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nullableDigest": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "nullableTimestamp": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "operation": {
+      "enum": [
+        "start",
+        "resume",
+        "recover",
+        "cancel"
+      ]
+    },
+    "disposition": {
+      "enum": [
+        "queued",
+        "running",
+        "retrying",
+        "reconciliation_required",
+        "succeeded",
+        "failed",
+        "stale",
+        "cancelled",
+        "rejected"
+      ]
+    },
+    "fixtureAdmitted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admission",
+        "commandId",
+        "runId"
+      ],
+      "properties": {
+        "admission": {
+          "const": "admitted"
+        },
+        "commandId": {
+          "$ref": "#/definitions/uuid"
+        },
+        "runId": {
+          "$ref": "#/definitions/uuid"
+        }
+      }
+    },
+    "fixtureRejected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admission",
+        "commandId",
+        "runId",
+        "error"
+      ],
+      "properties": {
+        "admission": {
+          "const": "rejected"
+        },
+        "commandId": {
+          "$ref": "#/definitions/uuid"
+        },
+        "runId": {
+          "type": "null"
+        },
+        "error": {
+          "enum": [
+            "run_admission_conflict",
+            "queue_run_not_found",
+            "run_cancelled",
+            "resume_target_stale"
+          ]
+        }
+      }
+    },
+    "idempotencyConflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "error",
+        "commandId"
+      ],
+      "properties": {
+        "error": {
+          "const": "idempotency_conflict"
+        },
+        "commandId": {
+          "$ref": "#/definitions/uuid"
+        }
+      }
+    },
+    "recordedAdmission": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "body"
+          ],
+          "properties": {
+            "status": {
+              "const": 202
+            },
+            "body": {
+              "$ref": "#/definitions/fixtureAdmitted"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "body"
+          ],
+          "properties": {
+            "status": {
+              "const": 409
+            },
+            "body": {
+              "$ref": "#/definitions/fixtureRejected"
+            }
+          }
+        }
+      ]
+    },
+    "read": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "readAt",
+        "runUpdatedAt"
+      ],
+      "properties": {
+        "source": {
+          "const": "application_projection"
+        },
+        "readAt": {
+          "$ref": "#/definitions/timestamp"
+        },
+        "runUpdatedAt": {
+          "$ref": "#/definitions/nullableTimestamp"
+        }
+      }
+    },
+    "target": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "runId",
+            "workflowVersion",
+            "manifestDigest",
+            "resumeTargetId",
+            "scope"
+          ],
+          "properties": {
+            "runId": {
+              "$ref": "#/definitions/uuid"
+            },
+            "workflowVersion": {
+              "type": "string",
+              "minLength": 1
+            },
+            "manifestDigest": {
+              "$ref": "#/definitions/digest"
+            },
+            "resumeTargetId": {
+              "$ref": "#/definitions/nullableUuid"
+            },
+            "scope": {
+              "enum": [
+                "write-isolated-shadow-artifacts-only",
+                null
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attemptId",
+        "commandId",
+        "operation",
+        "state",
+        "startedAt",
+        "finishedAt",
+        "beforeCheckpointId",
+        "afterCheckpointId",
+        "retryNumber",
+        "failureCode"
+      ],
+      "properties": {
+        "attemptId": {
+          "$ref": "#/definitions/uuid"
+        },
+        "commandId": {
+          "$ref": "#/definitions/nullableUuid"
+        },
+        "operation": {
+          "enum": [
+            "start",
+            "resume",
+            "recover"
+          ]
+        },
+        "state": {
+          "enum": [
+            "running",
+            "succeeded",
+            "failed",
+            "abandoned"
+          ]
+        },
+        "startedAt": {
+          "$ref": "#/definitions/timestamp"
+        },
+        "finishedAt": {
+          "$ref": "#/definitions/nullableTimestamp"
+        },
+        "beforeCheckpointId": {
+          "$ref": "#/definitions/nullableUuid"
+        },
+        "afterCheckpointId": {
+          "$ref": "#/definitions/nullableUuid"
+        },
+        "retryNumber": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failureCode": {
+          "enum": [
+            "attempt_failed",
+            "process_ended_before_settlement",
+            "unknown_failure",
+            null
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "running"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "finishedAt": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "finishedAt": {
+                "$ref": "#/definitions/timestamp"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "outcome",
+            "checkpointId",
+            "receiptSha256"
+          ],
+          "properties": {
+            "outcome": {
+              "enum": [
+                "fixture_complete",
+                "awaiting_owner",
+                "no_segment_executed",
+                "cancelled_before_next_segment"
+              ]
+            },
+            "checkpointId": {
+              "$ref": "#/definitions/nullableUuid"
+            },
+            "receiptSha256": {
+              "$ref": "#/definitions/nullableDigest"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "outcome": {
+                    "const": "fixture_complete"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "checkpointId": {
+                    "$ref": "#/definitions/uuid"
+                  },
+                  "receiptSha256": {
+                    "$ref": "#/definitions/digest"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "failure": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code"
+          ],
+          "properties": {
+            "code": {
+              "enum": [
+                "run_admission_conflict",
+                "queue_run_not_found",
+                "run_cancelled",
+                "resume_target_stale",
+                "resume_successor_unproven",
+                "resume_interrupt_changed",
+                "fixture_integrity_rejected",
+                "transient_execution_failure",
+                "delivery_retries_exhausted",
+                "delivery_missing",
+                "delivery_failed",
+                "delivery_cancelled",
+                "delivery_completed",
+                "unknown_failure"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "fixtureCommandView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "commandId",
+        "runId",
+        "operation",
+        "admission",
+        "disposition",
+        "target",
+        "attempts",
+        "result",
+        "failure",
+        "read"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "commandId": {
+          "$ref": "#/definitions/uuid"
+        },
+        "runId": {
+          "$ref": "#/definitions/nullableUuid"
+        },
+        "operation": {
+          "$ref": "#/definitions/operation"
+        },
+        "admission": {
+          "$ref": "#/definitions/recordedAdmission"
+        },
+        "disposition": {
+          "$ref": "#/definitions/disposition"
+        },
+        "target": {
+          "$ref": "#/definitions/target"
+        },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/attempt"
+              },
+              {
+                "properties": {
+                  "commandId": {
+                    "$ref": "#/definitions/uuid"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "result": {
+          "$ref": "#/definitions/result"
+        },
+        "failure": {
+          "$ref": "#/definitions/failure"
+        },
+        "read": {
+          "$ref": "#/definitions/read"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "admission": {
+                "properties": {
+                  "status": {
+                    "const": 409
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "runId": {
+                "type": "null"
+              },
+              "disposition": {
+                "const": "rejected"
+              },
+              "target": {
+                "type": "null"
+              },
+              "attempts": {
+                "maxItems": 0
+              },
+              "result": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "runId": {
+                "$ref": "#/definitions/uuid"
+              },
+              "target": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "commandSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commandId",
+        "operation",
+        "disposition"
+      ],
+      "properties": {
+        "commandId": {
+          "$ref": "#/definitions/uuid"
+        },
+        "operation": {
+          "$ref": "#/definitions/operation"
+        },
+        "disposition": {
+          "$ref": "#/definitions/disposition"
+        }
+      }
+    },
+    "resumeTarget": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "resumeTargetId",
+            "scope"
+          ],
+          "properties": {
+            "resumeTargetId": {
+              "$ref": "#/definitions/uuid"
+            },
+            "scope": {
+              "const": "write-isolated-shadow-artifacts-only"
+            }
+          }
+        }
+      ]
+    },
+    "cancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commandId",
+        "state",
+        "requestedAt",
+        "reconciledAt"
+      ],
+      "properties": {
+        "commandId": {
+          "$ref": "#/definitions/uuid"
+        },
+        "state": {
+          "enum": [
+            "requested",
+            "effective",
+            "already_completed"
+          ]
+        },
+        "requestedAt": {
+          "$ref": "#/definitions/timestamp"
+        },
+        "reconciledAt": {
+          "$ref": "#/definitions/nullableTimestamp"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "requested"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reconciledAt": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "reconciledAt": {
+                "$ref": "#/definitions/timestamp"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "fixtureRunView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "runId",
+        "state",
+        "checkpointId",
+        "receiptSha256",
+        "commands",
+        "attempts",
+        "resumeTarget",
+        "cancellations",
+        "read"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "runId": {
+          "$ref": "#/definitions/uuid"
+        },
+        "state": {
+          "enum": [
+            "admitted",
+            "awaiting_owner",
+            "recoverable",
+            "fixture_complete"
+          ]
+        },
+        "checkpointId": {
+          "$ref": "#/definitions/nullableUuid"
+        },
+        "receiptSha256": {
+          "$ref": "#/definitions/nullableDigest"
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/commandSummary"
+          }
+        },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/attempt"
+          }
+        },
+        "resumeTarget": {
+          "$ref": "#/definitions/resumeTarget"
+        },
+        "cancellations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cancellation"
+          }
+        },
+        "read": {
+          "$ref": "#/definitions/read"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "cancellations": {
+                "minItems": 1
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "resumeTarget": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "resumeTarget": {
+                "type": "object"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "const": "awaiting_owner"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "fixture_complete"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checkpointId": {
+                "$ref": "#/definitions/uuid"
+              },
+              "receiptSha256": {
+                "$ref": "#/definitions/digest"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "awaiting_owner",
+                  "recoverable"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checkpointId": {
+                "$ref": "#/definitions/uuid"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "apiError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "error"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "error": {
+          "enum": [
+            "invalid_request",
+            "unauthenticated",
+            "forbidden",
+            "not_found",
+            "read_unavailable",
+            "read_busy",
+            "integrity_rejected",
+            "operation_unavailable",
+            "authentication_unavailable"
+          ]
+        }
+      }
+    },
+    "ownerSessionView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "githubId",
+        "csrfToken",
+        "expiresAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "githubId": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "csrfToken": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        },
+        "expiresAt": {
+          "$ref": "#/definitions/timestamp"
+        }
+      }
+    }
+  }
+}

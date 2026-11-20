@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-11-18. HTTP teardown assumed ending pools made a forced database drop safe, but the minimum-Node CI run passed every case and then emitted an asynchronous connection-termination error. Teardown now requires PostgreSQL to report no remaining database sessions before an unforced drop, so a connection leak fails verification instead of being forcibly hidden.
+
 - The initial weekday rewrite assumed a leading weekday named the reporting day, but independent review found it can be content such as “Friday Night”; rewrite only an explicit separated label and preserve other weekday prose under a workday prefix.
 
 - The title rollout assumed browser fixtures asserted article behavior independently of the displayed heading, but the grouped-time fixture expected its raw title; update that exact heading assertion to the new reporting-workday display and rerun all browser journeys before merge.
@@ -606,3 +608,12 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 30 historical backfill (2026-10-31)
 
 - The backfill plan assumed the repository action-review pause affected only generation, but job-level wiring also injected it into the unit suite and caused the first recovery run to fail before drafting. Scope the variable to the Generate article step, retain normal test fixtures, and rerun the same dated backfill with actions held.
+
+## Deviations
+
+- 2026-11-18. The S04 pickup assumed the reviewed S03a reservation repairs protected completed bundles, but an absent nested leaf through a case-aliased parent bypassed the database ancestry check when the ancestor marker was missing. Kept #555 changes-requested, sent the real PostgreSQL reproduction and regular/native realpath mismatch to Yojimbo in HelpDesk sequence 14164, and continued the fixture-only S04 contract mapping.
+- 2026-11-18. The HTTP test client assumed Node fetch preserved its supplied Host header, but the service observed the loopback host and correctly rejected it. Switched the loopback fixture client to node:http and retained exact configured-host checks.
+- 2026-11-18. Initial S04 receipt checks covered command GET, but independent review reproduced inconsistent admission identities accepted by POST replay and run summaries. Shared receipt identity validation across those paths, checked cancellation-command links, and added poisoned-record regressions.
+- 2026-11-18. The read deadline design assumed destroying a PostgreSQL socket stopped active SQL, but forced cutoff and disconnect probes showed the backend could keep executing. Added a separately bounded cancellation connection to cancel the owned backend before destroying its client, with real-query cleanup regressions.
+- 2026-11-18. Command GET initially filtered by the HTTP actor, but run summaries also link prior trusted-CLI commands with older actor labels. Made configured-owner inspection cover those fixture records while preserving the authenticated actor namespace for new admissions, and verified legacy direct attempts retain null command IDs.
+- 2026-11-18. The HTTP error contract assumed normal hooks covered router failures, but independent Fastify reproduction showed bad URL encoding and overlong parameters bypassed those hooks and reflected raw paths. Added raw router sanitizers and exact error/no-store canary regressions.
