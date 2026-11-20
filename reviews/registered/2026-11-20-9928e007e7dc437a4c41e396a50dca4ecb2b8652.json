@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261120-9928e007e7dc",
+  "article": {
+    "date": "2026-11-20",
+    "sourceCommitSha": "9928e007e7dc437a4c41e396a50dca4ecb2b8652",
+    "blobSha": "b6a173e508f0daea7645af5a993ea57548755bc1"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-20T16:39:02Z",
+  "scope": "Final visible Draft; exact source/article/action/deployed bytes; core #627/#630-#637; daily-logger #549/#572-#583 and stack declarations; BookcaseDiscovery #104; all-state same-source review searches; current review schema/discovery; and held-candidate custody. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "f3cc92bc9de231067a6bd55134b09c30bfdd9c05",
+  "fullRecordPath": "reviews/articles/2026-11-20-9928e007e7dc437a4c41e396a50dca4ecb2b8652.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The fourth merged PR did not harden FleetRunner",
+      "location": "Lines 6 and 15-26 say four PRs hardened FleetRunner, but identify only core #630/#632/#633 as FleetRunner changes; the fourth is daily-logger #578.",
+      "explanation": "Core #630, #632 and #633 are the three FleetRunner merges. Daily-logger #578 publishes the prior day's article and is not FleetRunner hardening.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/9928e007e7dc437a4c41e396a50dca4ecb2b8652/_articles/2026-11-20.md#L6",
+        "https://github.com/ojfbot/core/pull/630",
+        "https://github.com/ojfbot/core/pull/632",
+        "https://github.com/ojfbot/core/pull/633",
+        "https://github.com/ojfbot/daily-logger/pull/578"
+      ],
+      "correction": "Report three FleetRunner hardening PRs plus one daily-logger article-publication PR, not four FleetRunner-hardening PRs.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The merged practice path does not exercise takeover",
+      "location": "Lines 11, 34 and 60 say #630 exercises the full stop/takeover path and closes the isolated-takeover acceptance condition.",
+      "explanation": "Core #637 says the current scheduled practice is readiness-only and never exercises takeover; it proposes the separate synthetic-job/fence-2 path. Core #627 records that the existing M3 practice ended with both workers HELD and positive terminal evidence unresolved.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/9928e007e7dc437a4c41e396a50dca4ecb2b8652/_articles/2026-11-20.md#L11",
+        "https://github.com/ojfbot/core/pull/637",
+        "https://github.com/ojfbot/core/pull/627",
+        "https://github.com/ojfbot/core/pull/630"
+      ],
+      "correction": "Say #630 made scheduled stop/cleanup practice inspectable; do not claim it exercises takeover or closes an isolated-takeover gate, and retain #627's HELD result.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "PR #632 did not eliminate partial installs",
+      "location": "Line 42 says SemVer validation prevents a manifest-backed interrupted partial install from passing as clean and eliminates that partial-write class.",
+      "explanation": "Core #632 changes the version grammar and length bound so releases use a safe single folder name. Its source, reviews and tests do not change manifest-write ordering, interrupted-copy recovery or partial-install atomicity.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/9928e007e7dc437a4c41e396a50dca4ecb2b8652/_articles/2026-11-20.md#L42",
+        "https://github.com/ojfbot/core/pull/632"
+      ],
+      "correction": "Limit the decision to safe SemVer folder validation before filesystem effects; do not claim it fixes interrupted partial writes or manifest atomicity.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The journal and service dependency graph is reversed",
+      "location": "Lines 54, 66 and 80 call #576/#583 independently mergeable, put #572-#575 downstream of #577, and make #577 wait for all six smaller merges.",
+      "explanation": "The declared stack is #572→#573→#574→#575→#576→#580→#581→#582→#583. PR #577 is the consolidated integration candidate and says the smaller PRs remain review history rather than prerequisites that must merge separately.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/9928e007e7dc437a4c41e396a50dca4ecb2b8652/_articles/2026-11-20.md#L54",
+        "https://github.com/ojfbot/daily-logger/pull/572",
+        "https://github.com/ojfbot/daily-logger/pull/575",
+        "https://github.com/ojfbot/daily-logger/pull/576",
+        "https://github.com/ojfbot/daily-logger/pull/580",
+        "https://github.com/ojfbot/daily-logger/pull/583",
+        "https://github.com/ojfbot/daily-logger/pull/577"
+      ],
+      "correction": "Preserve the actual stack through #583 and treat #577 as the consolidated integration path, not a downstream PR waiting for separate merges of every smaller branch.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Daily-logger #583 does not block core #634",
+      "location": "Lines 54, 64 and 80 say #583 blocks core #634 and creates a cross-repo sequencing dependency.",
+      "explanation": "Core #634 is a documentation-only pointer update designed for either current legacy or proposed shared-module layouts. Daily-logger #583 calls it a separate documentation follow-up, not a blocked dependent change.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/9928e007e7dc437a4c41e396a50dca4ecb2b8652/_articles/2026-11-20.md#L54",
+        "https://github.com/ojfbot/core/pull/634",
+        "https://github.com/ojfbot/daily-logger/pull/583"
+      ],
+      "correction": "Describe #634 as a separate pointer update compatible with either layout; do not gate it on #583 without an explicit base or owner decision.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "The cpuSlot bug and fix are misstated",
+      "location": "Lines 62 and 78-79 say rmSync leaves residual active-slot state and propose replacing the call with rmSync({ force: true }).",
+      "explanation": "Core #631 says unlinkSync(config.cpuSlot) throws ENOENT when the file is already absent, replacing an otherwise clean stop. Its proposed correction is rmSync(config.cpuSlot, { force: true }); the article's replacement omits the required path.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/9928e007e7dc437a4c41e396a50dca4ecb2b8652/_articles/2026-11-20.md#L62",
+        "https://github.com/ojfbot/core/issues/631"
+      ],
+      "correction": "Record the ENOENT-on-an-already-absent-file mechanism and retain the required config.cpuSlot argument; keep the inaccurate held action non-dispatchable.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Core #627 retains technical and owner gates",
+      "location": "Lines 68, 78 and 79 say #627 has no technical dependency, is Draft only by prioritization, and should be promoted and merged.",
+      "explanation": "Core #627 records both workers HELD during M3 teardown, unresolved cause and positive terminal evidence, and retained #307 tickets and human holds; it grants no runtime or merge authority.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/9928e007e7dc437a4c41e396a50dca4ecb2b8652/_articles/2026-11-20.md#L68",
+        "https://github.com/ojfbot/core/pull/627"
+      ],
+      "correction": "Preserve the unresolved M3 evidence and existing human/owner gates; do not recommend readiness or merge without the recorded decision and evidence packet.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "Fixture PostgreSQL and authenticated controls are qualified",
+      "location": "Line 66 says no PostgreSQL or authenticated controls have been qualified.",
+      "explanation": "PR #572 records matched PostgreSQL restoration, #573 runs API/worker CLIs against a synthetic strict-TLS receiver, #574 qualifies that path inside the final image, and #577 integrates PostgreSQL command delivery and authenticated private HTTP controls while retaining later real-provider/deployment gates.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/9928e007e7dc437a4c41e396a50dca4ecb2b8652/_articles/2026-11-20.md#L66",
+        "https://github.com/ojfbot/daily-logger/pull/572",
+        "https://github.com/ojfbot/daily-logger/pull/573",
+        "https://github.com/ojfbot/daily-logger/pull/574",
+        "https://github.com/ojfbot/daily-logger/pull/577"
+      ],
+      "correction": "Separate qualified fixture PostgreSQL, private-TLS and authenticated-control paths from still-unqualified target-host deployment, real Langfuse readback, provider-backed drafting and public cutover.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
