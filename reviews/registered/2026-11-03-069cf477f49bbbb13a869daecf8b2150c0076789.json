@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261103-069cf477f49b",
+  "article": {
+    "date": "2026-11-03",
+    "sourceCommitSha": "069cf477f49bbbb13a869daecf8b2150c0076789",
+    "blobSha": "337a9a8fff9494ed44625cb5b1d80c1c5adcd0e1"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-04T11:36:11Z",
+  "scope": "Final visible Draft, exact source/article/action bytes, BookcaseDiscovery PR count and shipped detector/reader/data-path contracts, dynamic fleet discovery and registration surfaces, current C-4 and pipeline-alert state, and existing Workstation review and merge restrictions. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "41a6c36189c307b98e8723373a087509ed2d92b4",
+  "fullRecordPath": "reviews/articles/2026-11-03-069cf477f49bbbb13a869daecf8b2150c0076789.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The BookcaseDiscovery sprint merged 25 PRs, not 26",
+      "location": "Title, summary and lines 15–17 say 26 while listing PRs #1 through #25.",
+      "explanation": "Twenty-five unique BookcaseDiscovery PRs merged inside the reporting window. PR #26 merged after the 03:30 Chicago cutoff; the article's all-repo total of 30 is consistent with 25 BookcaseDiscovery, one core and four daily-logger PRs.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/069cf477f49bbbb13a869daecf8b2150c0076789/_articles/2026-11-03.md#L15-L17",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/26"
+      ],
+      "correction": "Report 25 BookcaseDiscovery PRs in the reporting window while retaining the supported 30-PR all-repo total.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Fleet registration is not a static manifest or atomic transaction",
+      "location": "Lines 11 and 88–92 call daily-logger a fleet manifest and the three registrations atomic.",
+      "explanation": "Public sweep membership is derived from the live GitHub org. PR #521 says BookcaseDiscovery was already swept and only added role/tag/prompt grounding; core path registration has a separate ordering constraint.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/069cf477f49bbbb13a869daecf8b2150c0076789/src/fleet.ts#L1-L31",
+        "https://github.com/ojfbot/daily-logger/pull/521"
+      ],
+      "correction": "Describe three coordinated registrations with distinct effects and keep automatic sweep membership separate from grounding drift and core path validation.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The detector and reader stack is misidentified",
+      "location": "Line 64 names SAM 3, Florence-2 and Qwen2.5-VL as the shipped two-reader path.",
+      "explanation": "F-0 shipped Grounding DINO base → SAM 2.1 as the default box arm and Apple Vision, PP-OCRv5 and Qwen3-VL-4B as readers. SAM 3 was an alternate box arm and Apple Vision is not open-weight.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/23"
+      ],
+      "correction": "Name the shipped B2 detector/segmenter and the three actual readers, and state the two-reader agreement plus catalog-bar rule without calling every reader open-weight.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "C-4 measures catalog coverage, not the unknown-spine rate",
+      "location": "Lines 68, 103, 108 and 129 call C-4 the answer to a false-negative or headline unknown-spine rate.",
+      "explanation": "C-4 measures ISFDB and alternate-catalog coverage over resolvable readable labels, with unresolved and match-miss shares kept separate. It does not produce a single accuracy-labelled false-negative rate for every unknown spine.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/27"
+      ],
+      "correction": "Report C-4 as the catalog-gap study and keep detection, reading, matching and catalog-coverage losses separate.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The held C-4 review and merge action is already complete",
+      "location": "Lines 128–129 propose reviewing and merging BookcaseDiscovery #27 as the active gate.",
+      "explanation": "PR #27 merged at 2026-11-03T20:07:17Z. It was still open at article capture, but by review time the proposed next step was stale and must not be duplicated.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/27"
+      ],
+      "correction": "Mark the candidate completed and use the landed C-4 result for subsequent R-2 scope decisions.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Issue 516 is not a generation precondition",
+      "location": "Lines 128 and 130 say resolving daily-logger #516 is a precondition for the next generation run.",
+      "explanation": "Issue #516 remained open while scheduled run #289 generated this article, and no pinned run gate requires the alert issue to close before generation.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/issues/516",
+        "https://github.com/ojfbot/daily-logger/actions/runs/41682280128"
+      ],
+      "correction": "Treat #516 as an unresolved operational alert, not a scheduler or generator admission condition.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Workstation PRs already record differentiated gates",
+      "location": "Lines 116, 128 and 133 say #4–#10 have no recorded merge, close or park disposition.",
+      "explanation": "PRs #5 and #7 record an ordered reconciliation gate. PRs #8–#10 explicitly say review-only and do not merge, and already carry substantive reviews.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/workstation-yuri/pull/5",
+        "https://github.com/ojfbot/workstation-yuri/pull/7",
+        "https://github.com/ojfbot/workstation-yuri/pull/8",
+        "https://github.com/ojfbot/workstation-yuri/pull/9",
+        "https://github.com/ojfbot/workstation-yuri/pull/10"
+      ],
+      "correction": "Preserve each recorded do-not-merge or sequencing condition and ask only for unresolved decisions left by the existing reviews.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "The onboarding note points private data at repository paths",
+      "location": "Line 110 says the ledger and catalog live in data/ and the pilot fixture set lives in fixtures/pilot-000/.",
+      "explanation": "The real ledger, image store, catalog, labels and model data live under the configured $BOOKCASE_DATA root outside git. The repository's fixtures/pilot-000 path contains a privacy-safe public manifest, not the owner photos.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/18",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/19",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/23"
+      ],
+      "correction": "Distinguish clone-local public manifests and aggregates from the external $BOOKCASE_DATA ledger, catalog, photos, labels and weights.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Backup-specific terms were not verified",
+      "location": "Line 74 says local indexing has no terms-of-service constraints.",
+      "explanation": "C-1 explicitly records the backup-specific terms as unverified because the downloads page was login-gated and bot-checked. The verified basis is the site's CC BY 4.0 footer, not proof of no other constraints.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/17"
+      ],
+      "correction": "State the verified CC BY 4.0 basis and retain the backup-specific terms as an evidence gap.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
