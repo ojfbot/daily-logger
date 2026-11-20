@@ -34,7 +34,11 @@
     "eval:test": "vitest run --config evals/vitest.config.ts",
     "actions:rebind": "tsx scripts/rebind-actions.ts",
     "check:action-size": "tsx scripts/check-action-size.ts",
-    "check:shipment-times": "tsx scripts/check-shipment-time-coverage.ts"
+    "check:shipment-times": "tsx scripts/check-shipment-time-coverage.ts",
+    "service:postgres": "node --import tsx apps/service/src/postgres-cli.ts",
+    "service:delivery": "node --import tsx apps/service/src/delivery-cli.ts",
+    "test:service:delivery": "pnpm --filter @ojfbot/daily-logger-service test:delivery",
+    "test:service:postgres": "pnpm --filter @ojfbot/daily-logger-service test:postgres"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",

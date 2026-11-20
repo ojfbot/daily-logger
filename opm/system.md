@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `6576f1efc2651c739831927e7944a39736d77653bd756970ad636c4f2d36f170`.
+> Source SHA-256: `1d115fb05a4d26727398055e68d2dec7b15bcad166a36931aadcfc0c3ea463d0`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1262,4 +1262,237 @@ Held Action Reviewing yields Bounded Operation Receipt. [src: scripts/review-hel
 Unmerged Dated Proposal consists of Proposed Article Card and Proposed Article Action File. [src: scripts/review-held-actions.ts]
 Coverage Storage Packing requires Evidence Coverage. [src: src/action-coverage-storage.ts]
 Coverage Storage Packing yields Packed Coverage Representation. [src: src/action-coverage-storage.ts]
+```
+
+## SD2 — Isolated recorded fixture service
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2 — Isolated recorded fixture service"
+---
+flowchart TD
+  accTitle: SD2 — Isolated recorded fixture service
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n234["Pinned Local Git Artifacts"]
+  n235("Fixture Input Freezing")
+  n236["Frozen Fixture Inputs"]
+  n237("Fixture Replaying")
+  n238["Graph Checkpoints"]
+  n239["Isolated Fixture Bundle"]
+  n240("Fixture Collecting")
+  n241("Fixture Drafting")
+  n242("Fixture Reviewing")
+  n243("Fixture Approving")
+  n244("Fixture Bundle Writing")
+  n245["Recorded Source Identity"]
+  n246["Recorded Article Digests"]
+  n247["Invariant Review"]
+  n19["Jim"]
+  n248["Local Fixture Approval"]
+  n249["Recorded Article"]
+  n250["Pending Action Candidates"]
+  n251["Fixture Receipt"]
+  n234 -->|"requires (instrument)"| n235
+  n235 -->|"yields"| n236
+  n236 -->|"requires (instrument)"| n237
+  n238 -->|"requires (instrument)"| n237
+  n237 -->|"yields"| n239
+  n240 -->|"subprocess of"| n237
+  n241 -->|"subprocess of"| n237
+  n242 -->|"subprocess of"| n237
+  n243 -->|"subprocess of"| n237
+  n244 -->|"subprocess of"| n237
+  n240 -->|"yields"| n245
+  n241 -->|"yields"| n246
+  n242 -->|"yields"| n247
+  n19 -->|"handles (agent)"| n243
+  n247 -->|"requires (instrument)"| n243
+  n243 -->|"yields"| n248
+  n248 -->|"requires (instrument)"| n244
+  n244 -->|"yields"| n239
+  n249 -->|"part of"| n239
+  n250 -->|"part of"| n239
+  n247 -->|"part of"| n239
+  n251 -->|"part of"| n239
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Fixture Input Freezing requires Pinned Local Git Artifacts. [src: apps/service/src/fixture.ts]
+Fixture Input Freezing yields Frozen Fixture Inputs. [src: apps/service/src/storage.ts]
+Fixture Replaying requires Frozen Fixture Inputs. [src: apps/service/src/workflow.ts]
+Fixture Replaying requires Graph Checkpoints. [src: apps/service/src/workflow.ts]
+Fixture Replaying yields Isolated Fixture Bundle. [src: apps/service/src/workflow.ts]
+Fixture Replaying zooms into Fixture Collecting, Fixture Drafting, Fixture Reviewing, Fixture Approving, and Fixture Bundle Writing. [src: apps/service/src/workflow.ts]
+Fixture Collecting yields Recorded Source Identity. [src: apps/service/src/workflow.ts]
+Fixture Drafting yields Recorded Article Digests. [src: apps/service/src/workflow.ts]
+Fixture Reviewing yields Invariant Review. [src: apps/service/src/fixture.ts]
+Jim handles Fixture Approving. [src: apps/service/src/workflow.ts]
+Fixture Approving requires Invariant Review. [src: apps/service/src/workflow.ts]
+Fixture Approving yields Local Fixture Approval. [src: apps/service/src/workflow.ts]
+Fixture Bundle Writing requires Local Fixture Approval. [src: apps/service/src/workflow.ts]
+Fixture Bundle Writing yields Isolated Fixture Bundle. [src: apps/service/src/storage.ts]
+Isolated Fixture Bundle consists of Recorded Article, Pending Action Candidates, Invariant Review, and Fixture Receipt. [src: apps/service/src/storage.ts]
+```
+
+## SD2.1 — PostgreSQL fixture persistence
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.1 — PostgreSQL fixture persistence"
+---
+flowchart TD
+  accTitle: SD2.1 — PostgreSQL fixture persistence
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n252("Destination Reserving")
+  n253["Physical Destination Reservation"]
+  n234["Pinned Local Git Artifacts"]
+  n254("PostgreSQL Run Admitting")
+  n255["Admission Namespace Lock"]
+  n256["Request Key Lock"]
+  n257["PostgreSQL Admission Transaction"]
+  n258["Fixture Run Binding"]
+  n259["Run UUID"]
+  n260["Request Key"]
+  n261["Canonical Run Directory"]
+  n262("PostgreSQL Fixture Executing")
+  n263["Run Advisory Lock"]
+  n264("PostgreSQL Input Initializing")
+  n236["Frozen Fixture Inputs"]
+  n237("Fixture Replaying")
+  n265["Operation Attempt — states: running, succeeded, failed, abandoned"]
+  n238["Graph Checkpoints"]
+  n266("Run Projection Reconciling")
+  n252 -->|"yields"| n253
+  n234 -->|"requires (instrument)"| n254
+  n253 -->|"requires (instrument)"| n254
+  n255 -->|"requires (instrument)"| n254
+  n256 -->|"requires (instrument)"| n254
+  n257 -->|"requires (instrument)"| n254
+  n254 -->|"yields"| n258
+  n258 -->|"exhibits"| n259
+  n258 -->|"exhibits"| n260
+  n258 -->|"exhibits"| n261
+  n258 -->|"requires (instrument)"| n262
+  n263 -->|"requires (instrument)"| n262
+  n262 -->|"invokes"| n264
+  n258 -->|"requires (instrument)"| n264
+  n253 -->|"requires (instrument)"| n264
+  n264 -->|"yields"| n236
+  n262 -->|"invokes"| n237
+  n262 -->|"yields"| n265
+  n238 -->|"requires (instrument)"| n266
+  n266 <-->|"affects"| n258
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Destination Reserving yields Physical Destination Reservation. [src: apps/service/src/postgres-destination.ts]
+PostgreSQL Run Admitting requires Pinned Local Git Artifacts. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires Physical Destination Reservation. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires Admission Namespace Lock. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires Request Key Lock. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires PostgreSQL Admission Transaction. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting yields Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
+Fixture Run Binding exhibits Run UUID. [src: apps/service/src/postgres-fixture.ts]
+Fixture Run Binding exhibits Request Key. [src: apps/service/migrations/001_fixture_runs.sql]
+Fixture Run Binding exhibits Canonical Run Directory. [src: apps/service/migrations/001_fixture_runs.sql]
+PostgreSQL Fixture Executing requires Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Fixture Executing requires Run Advisory Lock. [src: apps/service/src/postgres-db.ts]
+PostgreSQL Fixture Executing invokes PostgreSQL Input Initializing. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Input Initializing requires Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Input Initializing requires Physical Destination Reservation. [src: apps/service/src/postgres-destination.ts]
+PostgreSQL Input Initializing yields Frozen Fixture Inputs. [src: apps/service/src/postgres-destination.ts]
+PostgreSQL Fixture Executing invokes Fixture Replaying. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Fixture Executing yields Operation Attempt. [src: apps/service/src/postgres-runner.ts]
+Operation Attempt can be running, succeeded, failed, or abandoned. [src: apps/service/migrations/001_fixture_runs.sql]
+Run Projection Reconciling requires Graph Checkpoints. [src: apps/service/src/postgres-runner.ts]
+Run Projection Reconciling affects Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
+```
+
+## SD2.2 — Durable fixture command delivery
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.2 — Durable fixture command delivery"
+---
+flowchart TD
+  accTitle: SD2.2 — Durable fixture command delivery
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n267["Fixture Command Request"]
+  n268("Fixture Command Admitting")
+  n269["Immutable Command Admission — states: admitted, rejected"]
+  n270("Fixture Job Enqueuing")
+  n271["Fixture Delivery Job"]
+  n272("Fixture Delivery Executing")
+  n263["Run Advisory Lock"]
+  n262("PostgreSQL Fixture Executing")
+  n273["Command Result"]
+  n238["Graph Checkpoints"]
+  n274("Resume Target Recording")
+  n275["Exact Resume Target"]
+  n276("Resume Target Consuming")
+  n277("Fixture Cancellation Requesting")
+  n278["Run Cancellation — states: requested, effective, already_completed"]
+  n279("Fixture Cancellation Reconciling")
+  n267 -->|"requires (instrument)"| n268
+  n268 -->|"yields"| n269
+  n268 -->|"invokes"| n270
+  n269 -->|"requires (instrument)"| n270
+  n270 -->|"yields"| n271
+  n271 -->|"requires (instrument)"| n272
+  n269 -->|"requires (instrument)"| n272
+  n263 -->|"requires (instrument)"| n272
+  n272 -->|"invokes"| n262
+  n272 -->|"yields"| n273
+  n238 -->|"requires (instrument)"| n274
+  n274 -->|"yields"| n275
+  n275 -->|"requires (instrument)"| n276
+  n269 -->|"requires (instrument)"| n276
+  n276 <-->|"affects"| n275
+  n277 -->|"yields"| n278
+  n238 -->|"requires (instrument)"| n279
+  n279 <-->|"affects"| n278
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Fixture Command Admitting requires Fixture Command Request. [src: apps/service/src/delivery-commands.ts]
+Fixture Command Admitting yields Immutable Command Admission. [src: apps/service/src/delivery-commands.ts]
+Immutable Command Admission can be admitted or rejected. [src: apps/service/migrations/002_delivery_commands.sql]
+Fixture Command Admitting invokes Fixture Job Enqueuing. [src: apps/service/src/delivery-commands.ts]
+Fixture Job Enqueuing requires Immutable Command Admission. [src: apps/service/src/delivery-commands.ts]
+Fixture Job Enqueuing yields Fixture Delivery Job. [src: apps/service/src/delivery-commands.ts]
+Fixture Delivery Executing requires Fixture Delivery Job. [src: apps/service/src/delivery-worker.ts]
+Fixture Delivery Executing requires Immutable Command Admission. [src: apps/service/src/delivery-worker.ts]
+Fixture Delivery Executing requires Run Advisory Lock. [src: apps/service/src/postgres-runner.ts]
+Fixture Delivery Executing invokes PostgreSQL Fixture Executing. [src: apps/service/src/delivery-worker.ts]
+Fixture Delivery Executing yields Command Result. [src: apps/service/src/delivery-worker.ts]
+Resume Target Recording requires Graph Checkpoints. [src: apps/service/src/delivery-commands.ts]
+Resume Target Recording yields Exact Resume Target. [src: apps/service/src/delivery-commands.ts]
+Resume Target Consuming requires Exact Resume Target. [src: apps/service/src/delivery-worker.ts]
+Resume Target Consuming requires Immutable Command Admission. [src: apps/service/src/delivery-worker.ts]
+Resume Target Consuming affects Exact Resume Target. [src: apps/service/src/delivery-worker.ts]
+Fixture Cancellation Requesting yields Run Cancellation. [src: apps/service/src/delivery-commands.ts]
+Run Cancellation can be requested, effective, or already_completed. [src: apps/service/migrations/002_delivery_commands.sql]
+Fixture Cancellation Reconciling requires Graph Checkpoints. [src: apps/service/src/delivery-worker.ts]
+Fixture Cancellation Reconciling affects Run Cancellation. [src: apps/service/src/delivery-worker.ts]
 ```
