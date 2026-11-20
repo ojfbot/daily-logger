@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261117-8b6263ad9a79",
+  "article": {
+    "date": "2026-11-17",
+    "sourceCommitSha": "8b6263ad9a798eae20b3573546cf0ae762bff661",
+    "blobSha": "b9449c3db22b40fcc4970778504a1763ad2ffb08"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-17T11:37:39Z",
+  "scope": "Final visible Draft, exact source/article/action/deployed bytes, core native-dispatch 0.4.1-0.4.5 package and allowlist state, core #600/#608/#609/#612/#614-#619/#590/#597/#598/#602, BookcaseDiscovery #101-#103, daily-logger #548/#549/#550/#551/#552 and all open review-data PRs, workstation-yuri #11, current review schema/discovery, and held-candidate custody. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "b81ee4bbacb2327d3d022460d945077a4e9861d3",
+  "fullRecordPath": "reviews/articles/2026-11-17-8b6263ad9a798eae20b3573546cf0ae762bff661.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The repository and PR totals contradict the article inventory",
+      "location": "Lines 6, 11, 15-17 and 32-43 say twelve PRs across core and BookcaseDiscovery and seven core PRs while listing eight core, three BookcaseDiscovery and one daily-logger PR.",
+      "explanation": "Eight cited core PRs and three BookcaseDiscovery PRs merged in the window. Twelve is reached only by also including daily-logger #550 as a third repository.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8b6263ad9a798eae20b3573546cf0ae762bff661/_articles/2026-11-17.md#L6",
+        "https://github.com/ojfbot/core/pull/608",
+        "https://github.com/ojfbot/core/pull/618",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/101",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/103",
+        "https://github.com/ojfbot/daily-logger/pull/550"
+      ],
+      "correction": "Report eight core plus three BookcaseDiscovery merges, or twelve total only when daily-logger #550 is included as a third repository.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The native-dispatch release and active allowlist profile are stale",
+      "location": "Lines 3, 11, 17, 49-57 and 81 call the merged state 0.4.3 and say the active authority is the four-plugin 2.1.308 profile.",
+      "explanation": "Pinned core package state is 0.4.5. Its shipped allowlist contains only isolated 2.1.286 with empty built-in lists; the old nonempty 2.1.286 and 2.1.308 traces are historical and cannot authorize the changed invocation.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8b6263ad9a798eae20b3573546cf0ae762bff661/_articles/2026-11-17.md#L3",
+        "https://github.com/ojfbot/core/blob/13332ed6dbff37bd2e716dc99859c4cb237e4a24/packages/native-dispatch/package.json",
+        "https://github.com/ojfbot/core/blob/13332ed6dbff37bd2e716dc99859c4cb237e4a24/packages/native-dispatch/src/correspondence-allowlist.ts",
+        "https://github.com/ojfbot/core/blob/13332ed6dbff37bd2e716dc99859c4cb237e4a24/packages/native-dispatch/CORRESPONDENCE.md#allowlist",
+        "https://github.com/ojfbot/core/pull/616"
+      ],
+      "correction": "Distinguish historical 0.4.3 / 2.1.308 qualification from final merged 0.4.5 state and name isolated 2.1.286 as the only active profile at the reviewed pin.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The paired ledger links target the wrong repositories",
+      "location": "Line 17 sends BookcaseDiscovery #103 to core #103; line 34 sends core #618 to BookcaseDiscovery #618.",
+      "explanation": "The actual matched pair is core #618 and BookcaseDiscovery #103.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8b6263ad9a798eae20b3573546cf0ae762bff661/_articles/2026-11-17.md#L17",
+        "https://github.com/ojfbot/daily-logger/blob/8b6263ad9a798eae20b3573546cf0ae762bff661/_articles/2026-11-17.md#L34",
+        "https://github.com/ojfbot/core/pull/618",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/103"
+      ],
+      "correction": "Link core #618 to ojfbot/core and BookcaseDiscovery #103 to ojfbot/BookcaseDiscovery.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The catalog-v2 recovery range omits the highest measured set",
+      "location": "Lines 34 and 75 summarize v2 acceptance of v1 no-catalog-match boxes as 15-20% depending on set.",
+      "explanation": "BookcaseDiscovery #102 reports six point estimates from 15.8% through 23.9%; the held-out sf-store-005 every-10 set is 23.9% with a 21.6-26.3 interval. These remain machine-agreement measurements, not accuracy.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8b6263ad9a798eae20b3573546cf0ae762bff661/_articles/2026-11-17.md#L34",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/102"
+      ],
+      "correction": "Report 15.8-23.9% across the six sets, retain per-set intervals and the machine-agreement limitation, and do not omit the held-out high value.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Core #600 already records completed live replay evidence",
+      "location": "Line 91 labels core #600 source-review only and native-admission gated.",
+      "explanation": "PR #600 adds the operator-run command, reports an author-run live request plus duplicate and a separate Yojimbo replay, and states no blocking findings remain. It is still Draft/unmerged with no deployment or authority change, which are separate facts.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8b6263ad9a798eae20b3573546cf0ae762bff661/_articles/2026-11-17.md#L91",
+        "https://github.com/ojfbot/core/pull/600"
+      ],
+      "correction": "Describe #600 as an implemented Draft with completed author-reported and separate replay evidence, no blocking findings, and no deployment or delegated-authority change.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Core #590 retains an explicit owner and ADR-acceptance gate",
+      "location": "Line 97 says core #590 has no reported blockers.",
+      "explanation": "The PR keeps owner review unchecked and requires acceptance to number the Proposed ADR with /adr accept and apply glossary terms.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8b6263ad9a798eae20b3573546cf0ae762bff661/_articles/2026-11-17.md#L97",
+        "https://github.com/ojfbot/core/pull/590"
+      ],
+      "correction": "Retain the explicit owner review and ADR-acceptance gate; green CI and non-Draft PR state do not remove it.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The open review-data set and intended Draft lifecycle are misreported",
+      "location": "Line 101 says #551 plus nine earlier audits, lists only eight earlier PRs, omits five older open reviews and says none is designated for publication.",
+      "explanation": "Fourteen review-only Draft PRs were open: #515, #524, #526, #529, #530, #533, #535, #537, #539, #541, #543, #545, #547 and #551. The discovery service intentionally loads eligible open review-only PRs as proposed/current records pending supervised disposition.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8b6263ad9a798eae20b3573546cf0ae762bff661/_articles/2026-11-17.md#L101",
+        "https://github.com/ojfbot/daily-logger/pull/515",
+        "https://github.com/ojfbot/daily-logger/pull/524",
+        "https://github.com/ojfbot/daily-logger/pull/551",
+        "https://github.com/ojfbot/daily-logger/blob/8b6263ad9a798eae20b3573546cf0ae762bff661/api/_lib/article-review-service.ts"
+      ],
+      "correction": "Report all fourteen open review-data PRs and explain that Draft/open is their advisory proposed-publication state pending supervised finding disposition.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Open non-Draft status does not establish readiness or a hidden blocker for #548/#549",
+      "location": "Lines 99 and 113-114 say no blocker is stated and propose identifying what holds each before either merging or naming the dependency.",
+      "explanation": "Both PRs are open/non-Draft with green observed checks, but neither has a public GitHub review or human merge authorization. #548 records an unenforced prompt-only disclosure rule as a known security limit. Silence establishes neither readiness nor a hidden blocker.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8b6263ad9a798eae20b3573546cf0ae762bff661/_articles/2026-11-17.md#L99",
+        "https://github.com/ojfbot/daily-logger/pull/548",
+        "https://github.com/ojfbot/daily-logger/pull/549"
+      ],
+      "correction": "Report actual lifecycle, checks, absence of public review/merge authority and #548's known limit; request an owner decision without implying merge is the default.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "The combined three-step critical path to first live correspondence is not publicly established",
+      "location": "Lines 81-85 and retained draft context require #619 review-readiness, CG307-U1 admission and per-machine setup before any first live correspondence window.",
+      "explanation": "Core #619 is an unreleased standing-correspondence candidate. Core #618 and BookcaseDiscovery #103 record their own no-live-call and gated-admission boundaries, but do not publicly state that the ledger pair or standing candidate gates every one-off correspondence duty window. The retained context separately says #609 is not confirmed on the critical path.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8b6263ad9a798eae20b3573546cf0ae762bff661/_articles/2026-11-17.md#L81",
+        "https://github.com/ojfbot/core/pull/619",
+        "https://github.com/ojfbot/core/pull/618",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/103"
+      ],
+      "correction": "Attribute only the gates each PR records and label the combined dependency chain unverified until a public owner or charter source binds it to the first live correspondence window.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
