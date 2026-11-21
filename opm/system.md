@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `6576f1efc2651c739831927e7944a39736d77653bd756970ad636c4f2d36f170`.
+> Source SHA-256: `5b78f08deb2e06c125275fc84b412208f8d527a096d20ea0382eb342152a835b`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -22,9 +22,7 @@ flowchart TD
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
   n19["Jim"]
   n4["GitHub"]
-  style n4 stroke-dasharray: 5 5
   n36["Claude API"]
-  style n36 stroke-dasharray: 5 5
   n0["Article — states: draft, accepted, rejected"]
   n1["Run Admission — states: generate, recover, complete"]
   n2["Cron Firing"]
@@ -60,7 +58,6 @@ flowchart TD
   n34("Candidate Reference Resolving")
   n35("Suggestion Verifying")
   n37["Provider Action Proposal"]
-  n38["Provider Action Proposal and Draft Action Candidates"]
   n39["Canonical Action Proposal"]
   n40["Malformed Output Repair Budget — states: available, spent"]
   n41("Action Output Repairing")
@@ -69,31 +66,27 @@ flowchart TD
   n44["Candidate Record Binding — states: available, unavailable"]
   n45("Candidate Record Isolating")
   n46("Candidate Record Repairing")
-  n47["Candidate Record Binding, Provider Action Proposal, and Source Evidence"]
   n48["Draft Action Candidate — states: awaiting-review, promoted, mapped-existing, rejected, verified-closure"]
   n157["Candidate Review History"]
-  n216["Candidate Review Transition"]
-  n217["Historical Source Metadata"]
-  n49["Source Identity, Source Kind, Source Locator, and Full Content Digest"]
+  n271["Candidate Review Transition"]
+  n272["Historical Source Metadata"]
   n50["Draft Candidate Evidence Association — states: required, context"]
-  n218["Background Evidence Reference"]
-  n219["Candidate Action Relation"]
-  n220["Candidate Input View"]
-  n51["Action Registry, Draft Action Candidates, Action Review Cycle, Operator Feedback, and Article Status"]
+  n273["Background Evidence Reference"]
+  n274["Candidate Action Relation"]
+  n275["Candidate Input View"]
   n52("Candidate Evidence Preparing")
-  n221["Canonical Action Index"]
-  n222["Held Suggestion Memory"]
-  n223["Rejection Memory"]
+  n276["Canonical Action Index"]
+  n277["Held Suggestion Memory"]
+  n278["Rejection Memory"]
   n53["Action Review Snapshot"]
   n54("Candidate Evidence Refreshing")
   n55["unchanged Draft Candidate Evidence Association"]
   n56["unchanged prior Candidate Input View"]
   n57["Accepted Outcome Stamp"]
-  n58["Action Review Snapshot and Accepted Outcome Stamp"]
   n59("Acceptance Status Evidence Refreshing")
   n60["current-binding Draft Candidate Evidence Requirements"]
-  n224["Ranked Recommendations"]
-  n225["Handled Suggestions"]
+  n279["Ranked Recommendations"]
+  n280["Handled Suggestions"]
   n61("Editorial Revising")
   n62["Editorial Revision Request"]
   n63["Draft Suggestion — states: proposed, open, done, dismissed, superseded, deferred"]
@@ -101,7 +94,7 @@ flowchart TD
   n113["Article Action Files — states: pending, verified"]
   n64("Inclusion Choosing")
   n65["Reviewed Disposition — states: deferred, completed-existing-evidence, pending-receipt"]
-  n226["Canonical Actions"]
+  n281["Canonical Actions"]
   n66["JSON API"]
   n67("Frontend Rendering")
   n68["Rendered Site"]
@@ -112,8 +105,8 @@ flowchart TD
   n73["Revision Request"]
   n74("Conversation Saving")
   n75["Saved Message"]
-  n227["Review Records"]
-  n228["Correspondence"]
+  n282["Review Records"]
+  n283["Correspondence"]
   n76["Time Record Pointer"]
   n77("Time Recording")
   n78["Commit Context"]
@@ -138,7 +131,13 @@ flowchart TD
   n97["Device Timezone"]
   n98["Time Popover"]
   n99("Time Metadata Preserving")
-  n2 -->|"object event"| n3
+  n292["Source Identity"]
+  n293["Source Kind"]
+  n294["Source Locator"]
+  n295["Full Content Digest"]
+  n296["Operator Feedback"]
+  n297["Article Status"]
+  n2 -->|"triggers"| n3
   n4 -->|"requires (instrument)"| n3
   n3 -->|"yields"| n1
   n3 -->|"invokes"| n5
@@ -153,13 +152,13 @@ flowchart TD
   n10 -->|"yields"| n11
   n11 -->|"condition: run"| n12
   n13 -->|"requires (instrument)"| n12
-  n12 <-->|"affects"| n4
+  n12 -->|"affects"| n4
   n4 -->|"requires (instrument)"| n14
   n14 -->|"yields"| n15
   n15 -->|"condition: missing"| n16
   n4 -->|"requires (instrument)"| n16
   n16 -->|"yields"| n17
-  n17 -->|"object event"| n3
+  n17 -->|"triggers"| n3
   n7 -->|"yields"| n0
   n7 -->|"yields"| n18
   n19 -->|"handles (human)"| n20
@@ -187,7 +186,8 @@ flowchart TD
   n31 -->|"requires (instrument)"| n35
   n18 -->|"requires (instrument)"| n33
   n33 -->|"yields"| n37
-  n38 -->|"requires (instrument)"| n34
+  n37 -->|"requires (instrument)"| n34
+  n18 -->|"requires (instrument)"| n34
   n34 -->|"yields"| n39
   n39 -->|"requires (instrument)"| n35
   n28 -->|"invokes"| n41
@@ -195,45 +195,56 @@ flowchart TD
   n41 -->|"changes: available to spent"| n40
   n42 -->|"requires (instrument)"| n41
   n43 -->|"requires (instrument)"| n41
-  n38 -->|"requires (instrument)"| n45
+  n37 -->|"requires (instrument)"| n45
+  n18 -->|"requires (instrument)"| n45
   n45 -->|"yields"| n44
   n33 -->|"invokes"| n45
   n44 -->|"condition: available"| n46
   n41 -->|"invokes"| n46
-  n47 -->|"requires (instrument)"| n46
+  n44 -->|"requires (instrument)"| n46
+  n37 -->|"requires (instrument)"| n46
+  n30 -->|"requires (instrument)"| n46
   n36 -->|"requires (instrument)"| n46
   n46 -->|"yields"| n37
   n18 -->|"requires (instrument)"| n35
-  n28 <-->|"affects"| n23
-  n28 <-->|"affects"| n0
+  n28 -->|"affects"| n23
+  n28 -->|"affects"| n0
   n28 -->|"yields"| n24
   n28 -->|"yields"| n31
   n28 -->|"changes: transient to retained"| n27
   n48 -->|"part of"| n18
-  n216 -->|"part of"| n157
-  n217 -->|"part of"| n157
-  n217 -->|"exhibits"| n49
+  n271 -->|"part of"| n157
+  n272 -->|"part of"| n157
+  n272 -->|"exhibits"| n292
+  n272 -->|"exhibits"| n293
+  n272 -->|"exhibits"| n294
+  n272 -->|"exhibits"| n295
   n50 -->|"part of"| n32
-  n218 -->|"part of"| n32
-  n219 -->|"part of"| n32
-  n220 -->|"part of"| n32
-  n51 -->|"requires (instrument)"| n52
+  n273 -->|"part of"| n32
+  n274 -->|"part of"| n32
+  n275 -->|"part of"| n32
+  n23 -->|"requires (instrument)"| n52
+  n18 -->|"requires (instrument)"| n52
+  n29 -->|"requires (instrument)"| n52
+  n296 -->|"requires (instrument)"| n52
+  n297 -->|"requires (instrument)"| n52
   n52 -->|"yields"| n32
-  n221 -->|"part of"| n220
-  n222 -->|"part of"| n220
-  n223 -->|"part of"| n220
+  n276 -->|"part of"| n275
+  n277 -->|"part of"| n275
+  n278 -->|"part of"| n275
   n53 -->|"requires (instrument)"| n54
   n55 -->|"requires (instrument)"| n54
   n56 -->|"requires (instrument)"| n54
   n54 -->|"changes: prior-binding to current-binding"| n32
   n20 -->|"yields"| n57
-  n58 -->|"requires (instrument)"| n59
+  n53 -->|"requires (instrument)"| n59
+  n57 -->|"requires (instrument)"| n59
   n0 -->|"condition: accepted"| n59
   n59 -->|"yields"| n60
-  n224 -->|"part of"| n26
+  n279 -->|"part of"| n26
   n18 -->|"part of"| n26
   n27 -->|"part of"| n26
-  n225 -->|"part of"| n26
+  n280 -->|"part of"| n26
   n7 -->|"yields"| n29
   n7 -->|"invokes"| n28
   n61 -->|"yields"| n29
@@ -247,9 +258,9 @@ flowchart TD
   n113 -->|"part of"| n23
   n23 -->|"requires (instrument)"| n64
   n4 -->|"requires (instrument)"| n64
-  n64 <-->|"affects"| n23
+  n64 -->|"affects"| n23
   n19 -->|"handles (human)"| n64
-  n226 -->|"part of"| n13
+  n281 -->|"part of"| n13
   n65 -->|"part of"| n13
   n21 -->|"invokes"| n22
   n13 -->|"requires (instrument)"| n21
@@ -265,21 +276,21 @@ flowchart TD
   n19 -->|"handles (human)"| n72
   n71 -->|"requires (instrument)"| n72
   n72 -->|"yields"| n73
-  n72 <-->|"affects"| n4
+  n72 -->|"affects"| n4
   n4 -->|"requires (instrument)"| n74
   n69 -->|"requires (instrument)"| n74
   n71 -->|"requires (instrument)"| n74
   n74 -->|"yields"| n75
-  n74 <-->|"affects"| n4
-  n227 -->|"part of"| n71
-  n228 -->|"part of"| n71
+  n74 -->|"affects"| n4
+  n282 -->|"part of"| n71
+  n283 -->|"part of"| n71
   n0 -->|"exhibits"| n76
   n0 -->|"requires (instrument)"| n77
   n13 -->|"requires (instrument)"| n77
   n78 -->|"requires (instrument)"| n77
   n79 -->|"requires (instrument)"| n77
   n77 -->|"yields"| n80
-  n77 <-->|"affects"| n0
+  n77 -->|"affects"| n0
   n0 -->|"requires (instrument)"| n81
   n4 -->|"requires (instrument)"| n81
   n81 -->|"yields"| n80
@@ -324,10 +335,12 @@ flowchart TD
   n19 -->|"handles (human)"| n61
   n61 -->|"invokes"| n99
   n0 -->|"requires (instrument)"| n99
-  n99 <-->|"affects"| n0
+  n99 -->|"affects"| n0
+  style n4 stroke-dasharray: 5 5
+  style n36 stroke-dasharray: 5 5
 ```
 
-Initial-state shorthand: Draft. Object scope must be checked in the source model.
+Initial state: Draft.
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
 
@@ -373,7 +386,7 @@ Action Projecting yields Canonical Action Projection. [src: src/action-registry.
 Suggested Action Card Rendering requires Closing Prompt. [src: src/action-registry.ts]
 Suggested Action Card Rendering requires Action Registry. [src: src/action-registry.ts]
 Suggested Action Card Rendering yields Suggested Actions Card. [src: src/action-registry.ts]
-Draft Continuation Context can be transient or retained. [src: src/recommendation-prose.ts]
+Draft Continuation Context can be transient or retained. [src: packages/journal/src/recommendation-prose.ts]
 Action Reconciling requires Article. [src: src/review-actions.ts]
 Action Reconciling requires Action Registry. [src: src/review-actions.ts]
 Action Review Cycle can be generation or revision. [src: src/action-review-cycle.ts]
@@ -414,7 +427,7 @@ Action Reconciling affects Action Registry. [src: src/review-actions.ts]
 Action Reconciling affects Article. [src: src/action-registry.ts]
 Action Reconciling yields Closing Prompt. [src: src/review-actions.ts]
 Action Reconciling yields Recommendation Maintenance Memory. [src: src/review-actions.ts]
-Action Reconciling changes Draft Continuation Context from transient to retained. [src: src/recommendation-prose.ts]
+Action Reconciling changes Draft Continuation Context from transient to retained. [src: packages/journal/src/recommendation-prose.ts]
 Closing Prompt can be legacy-options, ranked-shortlist, or needs-evidence. [src: src/action-registry-schema.ts]
 Draft Action Candidate can be awaiting-review, promoted, mapped-existing, rejected, or verified-closure. [src: src/action-registry-schema.ts]
 Draft Action Candidates consists of Draft Action Candidate. [src: src/action-registry-schema.ts]
@@ -559,7 +572,6 @@ flowchart TD
   n109("Provenance Attaching")
   n77("Time Recording")
   n4["GitHub"]
-  style n4 stroke-dasharray: 5 5
   n13["Canonical Action Projection"]
   n110("Closing Continuity Projecting")
   n111("Telemetry Collecting")
@@ -569,12 +581,12 @@ flowchart TD
   n113["Article Action Files — states: pending, verified"]
   n114["Telemetry Digest"]
   n36["Claude API"]
-  style n36 stroke-dasharray: 5 5
   n115["Credit Status"]
   n27["Draft Continuation Context — states: transient, retained"]
   n116["Council Critiques"]
   n117["Claim Report"]
   n80["Time Evidence"]
+  n425("Article Body Assembling")
   n101 -->|"part of"| n6
   n4 -->|"requires (instrument)"| n102
   n13 -->|"requires (instrument)"| n102
@@ -598,26 +610,29 @@ flowchart TD
   n100 -->|"condition: run"| n105
   n105 -->|"yields"| n0
   n105 -->|"yields"| n27
+  n105 -->|"invokes"| n425
   n36 -->|"requires (instrument)"| n106
   n0 -->|"requires (instrument)"| n106
   n106 -->|"yields"| n116
   n36 -->|"requires (instrument)"| n107
   n116 -->|"consumes"| n107
-  n107 <-->|"affects"| n0
+  n107 -->|"affects"| n0
   n0 -->|"requires (instrument)"| n108
   n78 -->|"requires (instrument)"| n108
   n108 -->|"yields"| n117
-  n108 <-->|"affects"| n0
+  n108 -->|"affects"| n0
   n0 -->|"requires (instrument)"| n109
   n6 -->|"requires (instrument)"| n109
-  n109 <-->|"affects"| n0
+  n109 -->|"affects"| n0
   n78 -->|"requires (instrument)"| n77
   n0 -->|"requires (instrument)"| n77
   n77 -->|"yields"| n80
-  n77 <-->|"affects"| n0
+  n77 -->|"affects"| n0
+  style n4 stroke-dasharray: 5 5
+  style n36 stroke-dasharray: 5 5
 ```
 
-In-zoom membership: Article Generating contains Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, Provenance Attaching, and Time Recording. No execution order is inferred.
+In-zoom membership: Article Generating contains Context Collecting, Activity Assessing, Credit Checking, Drafting, Council Reviewing, Synthesizing, Claim Verifying, Provenance Attaching, and Time Recording. No execution order is inferred from this compatibility view.
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
 
@@ -636,8 +651,8 @@ Closing Continuity Projecting requires Article. [src: src/collect-context.ts]
 Closing Continuity Projecting requires Article Action Files. [src: src/collect-context.ts]
 Closing Continuity Projecting yields Closing Continuity Projection. [src: src/collect-context.ts]
 Telemetry Collecting yields Telemetry Digest. [src: src/collect-telemetry.ts]
-Activity Assessing requires Commit Context. [src: src/should-skip-run.ts]
-Activity Assessing yields Activity Decision. [src: src/should-skip-run.ts]
+Activity Assessing requires Commit Context. [src: src/should-skip-run.ts] [src: packages/journal/src/eligibility.ts]
+Activity Assessing yields Activity Decision. [src: src/should-skip-run.ts] [src: packages/journal/src/eligibility.ts]
 Credit Checking occurs if Activity Decision is run. [src: src/index.ts]
 Credit Checking requires Claude API. [src: src/check-anthropic-credits.ts]
 Credit Checking yields Credit Status. [src: src/check-anthropic-credits.ts]
@@ -649,6 +664,7 @@ Drafting requires Closing Continuity Projection. [src: src/generate-article.ts]
 Drafting occurs if Activity Decision is run. [src: src/index.ts]
 Drafting yields Article.
 Drafting yields Draft Continuation Context. [src: src/generate-article.ts]
+Drafting invokes Article Body Assembling. [src: src/generate-article.ts]
 Council Reviewing requires Claude API. [src: src/index.ts]
 Council Reviewing requires Article.
 Council Reviewing yields Council Critiques.
@@ -683,7 +699,6 @@ flowchart TD
   accTitle: SD1.2 — Continued Editorial Revising in-zoom
   accDescr: Lossy system model projection. Complete source facts follow this diagram.
   n4["GitHub"]
-  style n4 stroke-dasharray: 5 5
   n118("Feedback Version Saving")
   n69["Article Fingerprint"]
   n119["Feedback Version"]
@@ -713,7 +728,6 @@ flowchart TD
   n143("Continued Article Revising")
   n144("Continued Clean Accepting")
   n36["Claude API"]
-  style n36 stroke-dasharray: 5 5
   n23["Action Registry"]
   n0["Article — states: draft, accepted, rejected"]
   n145["Revision Outcome"]
@@ -721,7 +735,6 @@ flowchart TD
   n146["Clean Acceptance Outcome"]
   n147["Incomplete Action Review"]
   n148["Verified Action Output Storage Limit Failure"]
-  n149["Incomplete Action Review and Action Registry"]
   n150("Article Completing")
   n20("Editorial Accepting")
   n151["Article Only Acceptance"]
@@ -772,9 +785,9 @@ flowchart TD
   n43["Lossless Action Model View"]
   n188["Evidence Resolution Intent"]
   n189["Action Review Output Provenance"]
-  n229["Created Action Record Binding"]
-  n230["Updated Action Record Binding"]
-  n231["Rejection Memory Binding"]
+  n284["Created Action Record Binding"]
+  n285["Updated Action Record Binding"]
+  n286["Rejection Memory Binding"]
   n190("Evidence Resolution Recording")
   n7("Article Generating")
   n61("Editorial Revising")
@@ -784,12 +797,12 @@ flowchart TD
   n119 -->|"requires (instrument)"| n120
   n121 -->|"requires (instrument)"| n120
   n120 -->|"yields"| n122
-  n122 -->|"object event"| n123
+  n122 -->|"triggers"| n123
   n121 -->|"requires (instrument)"| n124
   n125 -->|"requires (instrument)"| n124
   n126 -->|"requires (instrument)"| n124
   n124 -->|"yields"| n127
-  n127 -->|"object event"| n128
+  n127 -->|"triggers"| n128
   n4 -->|"requires (instrument)"| n130
   n131 -->|"requires (instrument)"| n130
   n132 -->|"requires (instrument)"| n130
@@ -803,33 +816,34 @@ flowchart TD
   n4 -->|"requires (instrument)"| n128
   n137 -->|"requires (instrument)"| n128
   n128 -->|"yields"| n138
-  n136 -->|"object event"| n139
-  n138 -->|"object event"| n139
+  n136 -->|"triggers"| n139
+  n138 -->|"triggers"| n139
   n4 -->|"requires (instrument)"| n139
   n139 -->|"yields"| n140
-  n140 -->|"object event"| n141
+  n140 -->|"triggers"| n141
   n4 -->|"requires (instrument)"| n141
   n126 -->|"requires (instrument)"| n141
   n127 -->|"requires (instrument)"| n141
   n141 -->|"yields"| n142
-  n140 -->|"object event"| n143
-  n142 -->|"object event"| n144
+  n140 -->|"triggers"| n143
+  n142 -->|"triggers"| n144
   n36 -->|"requires (instrument)"| n143
   n23 -->|"requires (instrument)"| n143
-  n143 <-->|"affects"| n0
-  n143 <-->|"affects"| n23
+  n143 -->|"affects"| n0
+  n143 -->|"affects"| n23
   n143 -->|"yields"| n145
   n23 -->|"requires (instrument)"| n144
   n144 -->|"invokes"| n28
-  n144 <-->|"affects"| n0
-  n144 <-->|"affects"| n23
+  n144 -->|"affects"| n0
+  n144 -->|"affects"| n23
   n144 -->|"yields"| n146
   n28 -->|"yields"| n147
   n28 -->|"yields"| n148
   n148 -->|"is a"| n147
-  n149 -->|"requires (instrument)"| n150
+  n147 -->|"requires (instrument)"| n150
+  n23 -->|"requires (instrument)"| n150
   n20 -->|"invokes"| n150
-  n150 <-->|"affects"| n0
+  n150 -->|"affects"| n0
   n150 -->|"yields"| n151
   n151 -->|"exhibits"| n152
   n151 -->|"exhibits"| n153
@@ -857,7 +871,7 @@ flowchart TD
   n164 -->|"requires (instrument)"| n123
   n164 -->|"requires (instrument)"| n165
   n0 -->|"requires (instrument)"| n166
-  n166 <-->|"affects"| n113
+  n166 -->|"affects"| n113
   n28 -->|"invokes"| n167
   n0 -->|"requires (instrument)"| n167
   n23 -->|"requires (instrument)"| n167
@@ -904,9 +918,9 @@ flowchart TD
   n168 -->|"requires (instrument)"| n35
   n28 -->|"yields"| n188
   n28 -->|"yields"| n189
-  n229 -->|"part of"| n189
-  n230 -->|"part of"| n189
-  n231 -->|"part of"| n189
+  n284 -->|"part of"| n189
+  n285 -->|"part of"| n189
+  n286 -->|"part of"| n189
   n189 -->|"part of"| n113
   n188 -->|"requires (instrument)"| n190
   n113 -->|"requires (instrument)"| n190
@@ -914,13 +928,15 @@ flowchart TD
   n7 -->|"invokes"| n190
   n61 -->|"invokes"| n190
   n20 -->|"invokes"| n190
+  style n4 stroke-dasharray: 5 5
+  style n36 stroke-dasharray: 5 5
 ```
 
-In-zoom membership: Action Model View Serializing contains Lossless Metadata Factoring. No execution order is inferred.
+In-zoom membership: Action Model View Serializing contains Lossless Metadata Factoring. No execution order is inferred from this compatibility view.
 
-In-zoom membership: Action Model View Serializing contains Coverage Model Packing. No execution order is inferred.
+In-zoom membership: Action Model View Serializing contains Coverage Model Packing. No execution order is inferred from this compatibility view.
 
-In-zoom membership: Action Model View Serializing contains Generated Metadata Compacting. No execution order is inferred.
+In-zoom membership: Action Model View Serializing contains Generated Metadata Compacting. No execution order is inferred from this compatibility view.
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
 
@@ -1106,8 +1122,8 @@ flowchart TD
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
 
 ```text
-Activity Window Resolving requires Article Date. [src: src/activity-window.ts]
-Activity Window Resolving yields Activity Window. [src: src/activity-window.ts]
+Activity Window Resolving requires Article Date. [src: packages/journal/src/activity-window.ts]
+Activity Window Resolving yields Activity Window. [src: packages/journal/src/activity-window.ts]
 Context Collecting requires Activity Window. [src: src/collect-context.ts]
 Context Collecting invokes Activity Window Resolving. [src: src/collect-context.ts]
 Start Target Waiting requires Clock. [src: .github/scripts/daily_blog_schedule.py]
@@ -1134,15 +1150,15 @@ flowchart TD
   n39["Canonical Action Proposal"]
   n28("Action Reconciling")
   n198["Captured Invocation Birth Output"]
-  n229["Created Action Record Binding"]
-  n216["Candidate Review Transition"]
+  n284["Created Action Record Binding"]
+  n271["Candidate Review Transition"]
   n113["Article Action Files — states: pending, verified"]
   n199["valid Captured Invocation Birth Output"]
   n160("Action Registry Writing")
   n39 -->|"exhibits"| n197
   n28 -->|"yields"| n198
-  n229 -->|"part of"| n198
-  n216 -->|"part of"| n198
+  n284 -->|"part of"| n198
+  n271 -->|"part of"| n198
   n198 -->|"part of"| n113
   n199 -->|"requires (instrument)"| n160
 ```
@@ -1178,21 +1194,23 @@ flowchart TD
   n202["Validation Rule"]
   n203["Validation Stage"]
   n204["Review Attempt"]
-  n205["Candidate Association Diagnostic, Provider Action Proposal, and Draft Action Candidates"]
   n206("Candidate Association Correcting")
   n36["Claude API"]
-  style n36 stroke-dasharray: 5 5
   n37["Provider Action Proposal"]
   n41("Action Output Repairing")
+  n18["Draft Action Candidates"]
   n39 -->|"exhibits"| n200
   n34 -->|"yields"| n201
   n201 -->|"exhibits"| n202
   n201 -->|"exhibits"| n203
   n201 -->|"exhibits"| n204
-  n205 -->|"requires (instrument)"| n206
+  n201 -->|"requires (instrument)"| n206
+  n37 -->|"requires (instrument)"| n206
+  n18 -->|"requires (instrument)"| n206
   n36 -->|"requires (instrument)"| n206
   n206 -->|"yields"| n37
   n41 -->|"invokes"| n206
+  style n36 stroke-dasharray: 5 5
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -1231,8 +1249,8 @@ flowchart TD
   n211["Operation Reservation"]
   n212["Unmerged Dated Proposal"]
   n213["Bounded Operation Receipt"]
-  n232["Proposed Article Card"]
-  n233["Proposed Article Action File"]
+  n287["Proposed Article Card"]
+  n288["Proposed Article Action File"]
   n169["Evidence Coverage"]
   n214("Coverage Storage Packing")
   n215["Packed Coverage Representation"]
@@ -1243,8 +1261,8 @@ flowchart TD
   n211 -->|"requires (instrument)"| n208
   n208 -->|"yields"| n212
   n208 -->|"yields"| n213
-  n232 -->|"part of"| n212
-  n233 -->|"part of"| n212
+  n287 -->|"part of"| n212
+  n288 -->|"part of"| n212
   n169 -->|"requires (instrument)"| n214
   n214 -->|"yields"| n215
 ```
@@ -1262,4 +1280,1218 @@ Held Action Reviewing yields Bounded Operation Receipt. [src: scripts/review-hel
 Unmerged Dated Proposal consists of Proposed Article Card and Proposed Article Action File. [src: scripts/review-held-actions.ts]
 Coverage Storage Packing requires Evidence Coverage. [src: src/action-coverage-storage.ts]
 Coverage Storage Packing yields Packed Coverage Representation. [src: src/action-coverage-storage.ts]
+```
+
+## SD2 — Isolated recorded fixture service
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2 — Isolated recorded fixture service"
+---
+flowchart TD
+  accTitle: SD2 — Isolated recorded fixture service
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n216["Pinned Local Git Artifacts"]
+  n217("Fixture Input Freezing")
+  n218["Frozen Fixture Inputs"]
+  n219("Fixture Replaying")
+  n220["Graph Checkpoints"]
+  n221["Isolated Fixture Bundle"]
+  n222("Fixture Collecting")
+  n223("Fixture Drafting")
+  n224("Fixture Reviewing")
+  n225("Fixture Approving")
+  n226("Fixture Bundle Writing")
+  n227["Recorded Source Identity"]
+  n228["Recorded Article Digests"]
+  n229["Invariant Review"]
+  n19["Jim"]
+  n230["Local Fixture Approval"]
+  n289["Recorded Article"]
+  n290["Pending Action Candidates"]
+  n291["Fixture Receipt"]
+  n216 -->|"requires (instrument)"| n217
+  n217 -->|"yields"| n218
+  n218 -->|"requires (instrument)"| n219
+  n220 -->|"requires (instrument)"| n219
+  n219 -->|"yields"| n221
+  n222 -->|"yields"| n227
+  n223 -->|"yields"| n228
+  n224 -->|"yields"| n229
+  n19 -->|"handles (human)"| n225
+  n229 -->|"requires (instrument)"| n225
+  n225 -->|"yields"| n230
+  n230 -->|"requires (instrument)"| n226
+  n226 -->|"yields"| n221
+  n289 -->|"part of"| n221
+  n290 -->|"part of"| n221
+  n229 -->|"part of"| n221
+  n291 -->|"part of"| n221
+```
+
+In-zoom membership: Fixture Replaying contains Fixture Collecting, Fixture Drafting, Fixture Reviewing, Fixture Approving, and Fixture Bundle Writing. No execution order is inferred from this compatibility view.
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Fixture Input Freezing requires Pinned Local Git Artifacts. [src: apps/service/src/fixture.ts]
+Fixture Input Freezing yields Frozen Fixture Inputs. [src: apps/service/src/storage.ts]
+Fixture Replaying requires Frozen Fixture Inputs. [src: apps/service/src/workflow.ts]
+Fixture Replaying requires Graph Checkpoints. [src: apps/service/src/workflow.ts]
+Fixture Replaying yields Isolated Fixture Bundle. [src: apps/service/src/workflow.ts]
+Fixture Replaying zooms into Fixture Collecting, Fixture Drafting, Fixture Reviewing, Fixture Approving, and Fixture Bundle Writing. [src: apps/service/src/workflow.ts]
+Fixture Collecting yields Recorded Source Identity. [src: apps/service/src/workflow.ts]
+Fixture Drafting yields Recorded Article Digests. [src: apps/service/src/workflow.ts]
+Fixture Reviewing yields Invariant Review. [src: apps/service/src/fixture.ts]
+Jim handles Fixture Approving. [src: apps/service/src/workflow.ts]
+Fixture Approving requires Invariant Review. [src: apps/service/src/workflow.ts]
+Fixture Approving yields Local Fixture Approval. [src: apps/service/src/workflow.ts]
+Fixture Bundle Writing requires Local Fixture Approval. [src: apps/service/src/workflow.ts]
+Fixture Bundle Writing yields Isolated Fixture Bundle. [src: apps/service/src/storage.ts]
+Isolated Fixture Bundle consists of Recorded Article, Pending Action Candidates, Invariant Review, and Fixture Receipt. [src: apps/service/src/storage.ts]
+```
+
+## SD2.1 — PostgreSQL fixture persistence
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.1 — PostgreSQL fixture persistence"
+---
+flowchart TD
+  accTitle: SD2.1 — PostgreSQL fixture persistence
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n231("Destination Reserving")
+  n232["Physical Destination Reservation"]
+  n216["Pinned Local Git Artifacts"]
+  n233("PostgreSQL Run Admitting")
+  n234["Admission Namespace Lock"]
+  n235["Request Key Lock"]
+  n236["PostgreSQL Admission Transaction"]
+  n237["Fixture Run Binding"]
+  n238["Run UUID"]
+  n239["Request Key"]
+  n240["Canonical Run Directory"]
+  n241("PostgreSQL Fixture Executing")
+  n242["Run Advisory Lock"]
+  n243("PostgreSQL Input Initializing")
+  n218["Frozen Fixture Inputs"]
+  n219("Fixture Replaying")
+  n244["Operation Attempt — states: running, succeeded, failed, abandoned"]
+  n220["Graph Checkpoints"]
+  n245("Run Projection Reconciling")
+  n231 -->|"yields"| n232
+  n216 -->|"requires (instrument)"| n233
+  n232 -->|"requires (instrument)"| n233
+  n234 -->|"requires (instrument)"| n233
+  n235 -->|"requires (instrument)"| n233
+  n236 -->|"requires (instrument)"| n233
+  n233 -->|"yields"| n237
+  n237 -->|"exhibits"| n238
+  n237 -->|"exhibits"| n239
+  n237 -->|"exhibits"| n240
+  n237 -->|"requires (instrument)"| n241
+  n242 -->|"requires (instrument)"| n241
+  n241 -->|"invokes"| n243
+  n237 -->|"requires (instrument)"| n243
+  n232 -->|"requires (instrument)"| n243
+  n243 -->|"yields"| n218
+  n241 -->|"invokes"| n219
+  n241 -->|"yields"| n244
+  n220 -->|"requires (instrument)"| n245
+  n245 -->|"affects"| n237
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Destination Reserving yields Physical Destination Reservation. [src: apps/service/src/postgres-destination.ts]
+PostgreSQL Run Admitting requires Pinned Local Git Artifacts. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires Physical Destination Reservation. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires Admission Namespace Lock. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires Request Key Lock. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting requires PostgreSQL Admission Transaction. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Run Admitting yields Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
+Fixture Run Binding exhibits Run UUID. [src: apps/service/src/postgres-fixture.ts]
+Fixture Run Binding exhibits Request Key. [src: apps/service/migrations/001_fixture_runs.sql]
+Fixture Run Binding exhibits Canonical Run Directory. [src: apps/service/migrations/001_fixture_runs.sql]
+PostgreSQL Fixture Executing requires Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Fixture Executing requires Run Advisory Lock. [src: apps/service/src/postgres-db.ts]
+PostgreSQL Fixture Executing invokes PostgreSQL Input Initializing. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Input Initializing requires Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Input Initializing requires Physical Destination Reservation. [src: apps/service/src/postgres-destination.ts]
+PostgreSQL Input Initializing yields Frozen Fixture Inputs. [src: apps/service/src/postgres-destination.ts]
+PostgreSQL Fixture Executing invokes Fixture Replaying. [src: apps/service/src/postgres-runner.ts]
+PostgreSQL Fixture Executing yields Operation Attempt. [src: apps/service/src/postgres-runner.ts]
+Operation Attempt can be running, succeeded, failed, or abandoned. [src: apps/service/migrations/001_fixture_runs.sql]
+Run Projection Reconciling requires Graph Checkpoints. [src: apps/service/src/postgres-runner.ts]
+Run Projection Reconciling affects Fixture Run Binding. [src: apps/service/src/postgres-runner.ts]
+```
+
+## SD2.2 — Durable fixture command delivery
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.2 — Durable fixture command delivery"
+---
+flowchart TD
+  accTitle: SD2.2 — Durable fixture command delivery
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n246["Fixture Command Request"]
+  n247("Fixture Command Admitting")
+  n248["Immutable Command Admission — states: admitted, rejected"]
+  n249("Fixture Job Enqueuing")
+  n250["Fixture Delivery Job"]
+  n251("Fixture Delivery Executing")
+  n242["Run Advisory Lock"]
+  n241("PostgreSQL Fixture Executing")
+  n252["Command Result"]
+  n220["Graph Checkpoints"]
+  n253("Resume Target Recording")
+  n254["Exact Resume Target"]
+  n255("Resume Target Consuming")
+  n256("Fixture Cancellation Requesting")
+  n257["Run Cancellation — states: requested, effective, already_completed"]
+  n258("Fixture Cancellation Reconciling")
+  n246 -->|"requires (instrument)"| n247
+  n247 -->|"yields"| n248
+  n247 -->|"invokes"| n249
+  n248 -->|"requires (instrument)"| n249
+  n249 -->|"yields"| n250
+  n250 -->|"requires (instrument)"| n251
+  n248 -->|"requires (instrument)"| n251
+  n242 -->|"requires (instrument)"| n251
+  n251 -->|"invokes"| n241
+  n251 -->|"yields"| n252
+  n220 -->|"requires (instrument)"| n253
+  n253 -->|"yields"| n254
+  n254 -->|"requires (instrument)"| n255
+  n248 -->|"requires (instrument)"| n255
+  n255 -->|"affects"| n254
+  n256 -->|"yields"| n257
+  n220 -->|"requires (instrument)"| n258
+  n258 -->|"affects"| n257
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Fixture Command Admitting requires Fixture Command Request. [src: apps/service/src/delivery-commands.ts]
+Fixture Command Admitting yields Immutable Command Admission. [src: apps/service/src/delivery-commands.ts]
+Immutable Command Admission can be admitted or rejected. [src: apps/service/migrations/002_delivery_commands.sql]
+Fixture Command Admitting invokes Fixture Job Enqueuing. [src: apps/service/src/delivery-commands.ts]
+Fixture Job Enqueuing requires Immutable Command Admission. [src: apps/service/src/delivery-commands.ts]
+Fixture Job Enqueuing yields Fixture Delivery Job. [src: apps/service/src/delivery-commands.ts]
+Fixture Delivery Executing requires Fixture Delivery Job. [src: apps/service/src/delivery-worker.ts]
+Fixture Delivery Executing requires Immutable Command Admission. [src: apps/service/src/delivery-worker.ts]
+Fixture Delivery Executing requires Run Advisory Lock. [src: apps/service/src/postgres-runner.ts]
+Fixture Delivery Executing invokes PostgreSQL Fixture Executing. [src: apps/service/src/delivery-worker.ts]
+Fixture Delivery Executing yields Command Result. [src: apps/service/src/delivery-worker.ts]
+Resume Target Recording requires Graph Checkpoints. [src: apps/service/src/delivery-commands.ts]
+Resume Target Recording yields Exact Resume Target. [src: apps/service/src/delivery-commands.ts]
+Resume Target Consuming requires Exact Resume Target. [src: apps/service/src/delivery-worker.ts]
+Resume Target Consuming requires Immutable Command Admission. [src: apps/service/src/delivery-worker.ts]
+Resume Target Consuming affects Exact Resume Target. [src: apps/service/src/delivery-worker.ts]
+Fixture Cancellation Requesting yields Run Cancellation. [src: apps/service/src/delivery-commands.ts]
+Run Cancellation can be requested, effective, or already_completed. [src: apps/service/migrations/002_delivery_commands.sql]
+Fixture Cancellation Reconciling requires Graph Checkpoints. [src: apps/service/src/delivery-worker.ts]
+Fixture Cancellation Reconciling affects Run Cancellation. [src: apps/service/src/delivery-worker.ts]
+```
+
+## SD2.3 — Authenticated fixture HTTP
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.3 — Authenticated fixture HTTP"
+---
+flowchart TD
+  accTitle: SD2.3 — Authenticated fixture HTTP
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n259["GitHub OAuth Identity"]
+  n260("Owner Authenticating")
+  n261["OAuth Login Challenge"]
+  n262["Private Owner Session — states: active, revoked, expired"]
+  n263("Owner Session Revoking")
+  n264("Fixture HTTP Admitting")
+  n265["Same Origin CSRF Proof"]
+  n236["PostgreSQL Admission Transaction"]
+  n247("Fixture Command Admitting")
+  n266["Browser Intent Binding"]
+  n267["Command UUID"]
+  n268("Fixture Projection Reading")
+  n269["Read Only Database Snapshot"]
+  n270["Browser Fixture View"]
+  n259 -->|"requires (instrument)"| n260
+  n261 -->|"requires (instrument)"| n260
+  n260 -->|"yields"| n262
+  n263 -->|"changes: active to revoked"| n262
+  n262 -->|"requires (instrument)"| n264
+  n265 -->|"requires (instrument)"| n264
+  n236 -->|"requires (instrument)"| n264
+  n264 -->|"invokes"| n247
+  n264 -->|"yields"| n266
+  n266 -->|"exhibits"| n267
+  n262 -->|"requires (instrument)"| n268
+  n269 -->|"requires (instrument)"| n268
+  n268 -->|"yields"| n270
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Owner Authenticating requires GitHub OAuth Identity. [src: apps/service/src/http-sessions.ts]
+Owner Authenticating requires OAuth Login Challenge. [src: apps/service/src/http-sessions.ts]
+Owner Authenticating yields Private Owner Session. [src: apps/service/src/http-sessions.ts]
+Private Owner Session can be active, revoked, or expired. [src: apps/service/migrations/003_fixture_http.sql]
+Owner Session Revoking changes Private Owner Session from active to revoked. [src: apps/service/src/http-server.ts]
+Fixture HTTP Admitting requires Private Owner Session. [src: apps/service/src/http-sessions.ts]
+Fixture HTTP Admitting requires Same Origin CSRF Proof. [src: apps/service/src/http-sessions.ts]
+Fixture HTTP Admitting requires PostgreSQL Admission Transaction. [src: apps/service/src/http-server.ts]
+Fixture HTTP Admitting invokes Fixture Command Admitting. [src: apps/service/src/http-fixtures.ts]
+Fixture HTTP Admitting yields Browser Intent Binding. [src: apps/service/src/http-fixtures.ts]
+Browser Intent Binding exhibits Command UUID. [src: apps/service/migrations/003_fixture_http.sql]
+Fixture Projection Reading requires Private Owner Session. [src: apps/service/src/http-sessions.ts]
+Fixture Projection Reading requires Read Only Database Snapshot. [src: apps/service/src/http-db.ts]
+Fixture Projection Reading yields Browser Fixture View. [src: apps/service/src/http-projections.ts]
+```
+
+## SD2.4 — Offline fixture metadata observations
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.4 — Offline fixture metadata observations"
+---
+flowchart TD
+  accTitle: SD2.4 — Offline fixture metadata observations
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n264("Fixture HTTP Admitting")
+  n298("Admission Response Observing")
+  n299["Committed Admission Response"]
+  n300("Offline Observation Recording")
+  n251("Fixture Delivery Executing")
+  n241("PostgreSQL Fixture Executing")
+  n219("Fixture Replaying")
+  n301["Explicit Offline Observation Configuration"]
+  n302["Closed Observation Policy"]
+  n303["Projected Fixture Observations"]
+  n304["Correlation Metadata"]
+  n305["Fixed Lifecycle Labels"]
+  n306["Bounded Timing"]
+  n307("Offline Observation Exporting")
+  n308["Trusted Nonblocking Test Sinks"]
+  n309["Telemetry Diagnostics"]
+  n310("Exporter Process Admitting")
+  n264 -->|"invokes"| n298
+  n299 -->|"requires (instrument)"| n298
+  n298 -->|"invokes"| n300
+  n251 -->|"invokes"| n300
+  n241 -->|"invokes"| n300
+  n219 -->|"invokes"| n300
+  n301 -->|"requires (instrument)"| n300
+  n302 -->|"requires (instrument)"| n300
+  n300 -->|"yields"| n303
+  n304 -->|"part of"| n303
+  n305 -->|"part of"| n303
+  n306 -->|"part of"| n303
+  n303 -->|"requires (instrument)"| n307
+  n308 -->|"requires (instrument)"| n307
+  n307 -->|"yields"| n309
+  n307 -->|"invokes"| n310
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Fixture HTTP Admitting invokes Admission Response Observing. [src: apps/service/src/http-server.ts]
+Admission Response Observing requires Committed Admission Response. [src: apps/service/src/delivery-commands.ts] [src: apps/service/src/http-server.ts]
+Admission Response Observing invokes Offline Observation Recording. [src: apps/service/src/telemetry.ts]
+Fixture Delivery Executing invokes Offline Observation Recording. [src: apps/service/src/delivery-worker.ts]
+PostgreSQL Fixture Executing invokes Offline Observation Recording. [src: apps/service/src/postgres-runner.ts]
+Fixture Replaying invokes Offline Observation Recording. [src: apps/service/src/workflow.ts]
+Offline Observation Recording requires Explicit Offline Observation Configuration. [src: apps/service/src/telemetry.ts]
+Offline Observation Recording requires Closed Observation Policy. [src: apps/service/src/telemetry-schema.ts]
+Offline Observation Recording yields Projected Fixture Observations. [src: apps/service/src/telemetry-schema.ts]
+Projected Fixture Observations consists of Correlation Metadata, Fixed Lifecycle Labels, and Bounded Timing. [src: apps/service/src/telemetry-schema.ts]
+Offline Observation Exporting requires Projected Fixture Observations. [src: apps/service/src/telemetry.ts]
+Offline Observation Exporting requires Trusted Nonblocking Test Sinks. [src: apps/service/src/telemetry.ts]
+Offline Observation Exporting yields Telemetry Diagnostics. [src: apps/service/src/telemetry.ts]
+Offline Observation Exporting invokes Exporter Process Admitting. [src: apps/service/src/telemetry-export-process.ts]
+```
+
+## SD2.5 — Private fixture HTTPS ingress
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.5 — Private fixture HTTPS ingress"
+---
+flowchart TD
+  accTitle: SD2.5 — Private fixture HTTPS ingress
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n311("Private Ingress Preparing")
+  n312["Private Ingress Configuration"]
+  n313["Private Proxy Configuration"]
+  n314["Exact Private Authority"]
+  n315["Private IPv4 Publication"]
+  n316["Approved Peer CIDRs"]
+  n317("Private HTTPS Forwarding")
+  n318["Private Leaf Generation"]
+  n319["Approved Socket Peer"]
+  n320["Explicit IPv4 Bridge Listener"]
+  n321["Forwarded Fixture HTTP Request"]
+  n312 -->|"requires (instrument)"| n311
+  n311 -->|"yields"| n313
+  n314 -->|"part of"| n313
+  n315 -->|"part of"| n313
+  n316 -->|"part of"| n313
+  n313 -->|"requires (instrument)"| n317
+  n318 -->|"requires (instrument)"| n317
+  n319 -->|"requires (instrument)"| n317
+  n320 -->|"requires (instrument)"| n317
+  n317 -->|"yields"| n321
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Private Ingress Preparing requires Private Ingress Configuration. [src: apps/service/runtime/prepare-ingress.ts]
+Private Ingress Preparing yields Private Proxy Configuration. [src: apps/service/runtime/prepare-ingress.ts]
+Private Proxy Configuration consists of Exact Private Authority, Private IPv4 Publication, and Approved Peer CIDRs. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Private Proxy Configuration. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Private Leaf Generation. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Approved Socket Peer. [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding requires Explicit IPv4 Bridge Listener. [src: apps/service/src/http-cli.ts] [src: apps/service/runtime/prepare-ingress.ts]
+Private HTTPS Forwarding yields Forwarded Fixture HTTP Request. [src: apps/service/runtime/prepare-ingress.ts]
+```
+
+## SD2.6 — Opt-in metadata exporter process
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.6 — Opt-in metadata exporter process"
+---
+flowchart TD
+  accTitle: SD2.6 — Opt-in metadata exporter process
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n322["Explicit Exporter Configuration"]
+  n310("Exporter Process Admitting")
+  n303["Projected Fixture Observations"]
+  n323["Compiled Exporter Entry Points"]
+  n324["Bounded IPC Batches"]
+  n325("Exporter Thread Assembling")
+  n326["Completed Metadata Segments"]
+  n327("Wire Span Projecting")
+  n328["Pinned Langfuse SDK"]
+  n329["Closed OTLP Spans"]
+  n330("OTLP Serializing")
+  n331["Official OTLP JSON Serializer"]
+  n332["Bounded OTLP Request"]
+  n333("Private HTTPS Exporting")
+  n334["Explicit Endpoint Trust"]
+  n335["Child Secret File References"]
+  n336["Transport Outcome"]
+  n337("Exporter Compiling")
+  n338["Committed Exporter Sources"]
+  n339["Pinned Build Toolchain"]
+  n340("Runtime Image Packaging")
+  n341["Production Service Dependencies"]
+  n342["Committed Shared Journal Sources"]
+  n343["Explicit Journal Package Exports"]
+  n344["Offline Capable Service Image"]
+  n322 -->|"condition: enabled"| n310
+  n303 -->|"requires (instrument)"| n310
+  n323 -->|"requires (instrument)"| n310
+  n310 -->|"yields"| n324
+  n324 -->|"requires (instrument)"| n325
+  n325 -->|"yields"| n326
+  n326 -->|"requires (instrument)"| n327
+  n328 -->|"requires (instrument)"| n327
+  n327 -->|"yields"| n329
+  n329 -->|"requires (instrument)"| n330
+  n331 -->|"requires (instrument)"| n330
+  n330 -->|"yields"| n332
+  n332 -->|"requires (instrument)"| n333
+  n334 -->|"requires (instrument)"| n333
+  n335 -->|"requires (instrument)"| n333
+  n333 -->|"yields"| n336
+  n338 -->|"requires (instrument)"| n337
+  n339 -->|"requires (instrument)"| n337
+  n337 -->|"yields"| n323
+  n323 -->|"requires (instrument)"| n340
+  n341 -->|"requires (instrument)"| n340
+  n342 -->|"requires (instrument)"| n340
+  n343 -->|"requires (instrument)"| n340
+  n340 -->|"yields"| n344
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Exporter Process Admitting occurs if Explicit Exporter Configuration is enabled. [src: apps/service/src/telemetry-export-config.ts]
+Exporter Process Admitting requires Projected Fixture Observations. [src: apps/service/src/telemetry-export-process.ts]
+Exporter Process Admitting requires Compiled Exporter Entry Points. [src: apps/service/scripts/build-telemetry.mjs]
+Exporter Process Admitting yields Bounded IPC Batches. [src: apps/service/src/telemetry-export-process.ts]
+Exporter Thread Assembling requires Bounded IPC Batches. [src: apps/service/src/telemetry-export-child.ts]
+Exporter Thread Assembling yields Completed Metadata Segments. [src: apps/service/src/telemetry-langfuse.ts]
+Wire Span Projecting requires Completed Metadata Segments. [src: apps/service/src/telemetry-langfuse.ts]
+Wire Span Projecting requires Pinned Langfuse SDK. [src: apps/service/package.json]
+Wire Span Projecting yields Closed OTLP Spans. [src: apps/service/src/telemetry-wire.ts]
+OTLP Serializing requires Closed OTLP Spans. [src: apps/service/src/telemetry-transport.ts]
+OTLP Serializing requires Official OTLP JSON Serializer. [src: apps/service/src/telemetry-transport.ts]
+OTLP Serializing yields Bounded OTLP Request. [src: apps/service/src/telemetry-transport.ts]
+Private HTTPS Exporting requires Bounded OTLP Request. [src: apps/service/src/telemetry-transport.ts]
+Private HTTPS Exporting requires Explicit Endpoint Trust. [src: apps/service/src/telemetry-export-config.ts]
+Private HTTPS Exporting requires Child Secret File References. [src: apps/service/src/telemetry-langfuse.ts]
+Private HTTPS Exporting yields Transport Outcome. [src: apps/service/src/telemetry-transport.ts]
+Exporter Compiling requires Committed Exporter Sources. [src: apps/service/runtime/prepare-context.ts]
+Exporter Compiling requires Pinned Build Toolchain. [src: apps/service/package.json]
+Exporter Compiling yields Compiled Exporter Entry Points. [src: apps/service/scripts/build-telemetry.mjs]
+Runtime Image Packaging requires Compiled Exporter Entry Points. [src: apps/service/runtime/Dockerfile]
+Runtime Image Packaging requires Production Service Dependencies. [src: apps/service/package.json]
+Runtime Image Packaging requires Committed Shared Journal Sources. [src: apps/service/runtime/prepare-context.ts]
+Runtime Image Packaging requires Explicit Journal Package Exports. [src: packages/journal/package.json]
+Runtime Image Packaging yields Offline Capable Service Image. [src: apps/service/runtime/Dockerfile]
+```
+
+## SD2.7 — Disposable fixture image delivery
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.7 — Disposable fixture image delivery"
+---
+flowchart TD
+  accTitle: SD2.7 — Disposable fixture image delivery
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n345("Fixture Artifact Exporting")
+  n346["Committed Runtime Context"]
+  n347["CI Run Identity"]
+  n348["Runtime Image"]
+  n349["Exported Fixture Image"]
+  n350("Fixture Image Qualifying")
+  n351["Installed Shared Journal Package"]
+  n352["Fixture Qualification Receipts"]
+  n353["Offline Exporter Startup Proof"]
+  n354["Closed Fixture Manifest"]
+  n355("Fixture Artifact Verifying")
+  n356["Authenticated GitHub Artifact Evidence"]
+  n357["Independently Pinned Build Identity"]
+  n358["Verified Fixture Candidate"]
+  n359["Private Verification Receipt"]
+  n402("Enabled Image Exporter Qualifying")
+  n360("Matched Fixture Restore Qualifying")
+  n474["Same Image Gate Receipts"]
+  n475("Image Gate Receipt Validating")
+  n403["Enabled Image Exporter Receipt"]
+  n374["Isolated Matched Restore Receipt"]
+  n476["Exported Image Identities"]
+  n346 -->|"requires (instrument)"| n345
+  n347 -->|"requires (instrument)"| n345
+  n348 -->|"requires (instrument)"| n345
+  n345 -->|"yields"| n349
+  n345 -->|"invokes"| n350
+  n349 -->|"requires (instrument)"| n350
+  n351 -->|"requires (instrument)"| n350
+  n350 -->|"yields"| n352
+  n350 -->|"yields"| n353
+  n350 -->|"invokes"| n402
+  n350 -->|"invokes"| n360
+  n474 -->|"requires (instrument)"| n345
+  n403 -->|"requires (instrument)"| n475
+  n374 -->|"requires (instrument)"| n475
+  n476 -->|"requires (instrument)"| n475
+  n475 -->|"yields"| n474
+  n345 -->|"yields"| n354
+  n356 -->|"requires (instrument)"| n355
+  n357 -->|"requires (instrument)"| n355
+  n349 -->|"requires (instrument)"| n355
+  n354 -->|"requires (instrument)"| n355
+  n353 -->|"requires (instrument)"| n355
+  n474 -->|"requires (instrument)"| n355
+  n355 -->|"yields"| n358
+  n355 -->|"yields"| n359
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Fixture Artifact Exporting requires Committed Runtime Context. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting requires CI Run Identity. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting requires Runtime Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting yields Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting invokes Fixture Image Qualifying. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying requires Installed Shared Journal Package. [src: apps/service/runtime/smoke.mjs]
+Fixture Image Qualifying yields Fixture Qualification Receipts. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying yields Offline Exporter Startup Proof. [src: apps/service/runtime/smoke.mjs]
+Fixture Image Qualifying invokes Enabled Image Exporter Qualifying. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying invokes Matched Fixture Restore Qualifying. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting requires Same Image Gate Receipts. [src: apps/service/runtime/artifact.py]
+Image Gate Receipt Validating requires Enabled Image Exporter Receipt. [src: apps/service/runtime/artifact.py]
+Image Gate Receipt Validating requires Isolated Matched Restore Receipt. [src: apps/service/runtime/artifact.py]
+Image Gate Receipt Validating requires Exported Image Identities. [src: apps/service/runtime/artifact.py]
+Image Gate Receipt Validating yields Same Image Gate Receipts. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting yields Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Authenticated GitHub Artifact Evidence. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Independently Pinned Build Identity. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Offline Exporter Startup Proof. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Same Image Gate Receipts. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying yields Verified Fixture Candidate. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
+```
+
+## SD2.8 — Isolated matched fixture restoration
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.8 — Isolated matched fixture restoration"
+---
+flowchart TD
+  accTitle: SD2.8 — Isolated matched fixture restoration
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n360("Matched Fixture Restore Qualifying")
+  n348["Runtime Image"]
+  n352["Fixture Qualification Receipts"]
+  n361["Quiesced Source Fixture"]
+  n362("Matched Fixture Recovery Capturing")
+  n363["Complete Fixture Database"]
+  n364["Complete Fixture File Tree"]
+  n365["Matched Fixture Recovery Point"]
+  n366("Isolated Fixture Restoring")
+  n367["Raw Restored Fixture State"]
+  n368("Fixture Ownership Reconciling")
+  n369["Validated Matched Fixture Bindings"]
+  n370["Measured Destination Identity"]
+  n371["Reconciled Fixture Reservation Markers"]
+  n372("Restored Fixture Continuing")
+  n373["Explicit Fixture Resume Release"]
+  n374["Isolated Matched Restore Receipt"]
+  n375("Fixture Artifact Retaining")
+  n349["Exported Fixture Image"]
+  n354["Closed Fixture Manifest"]
+  n376["Retained Fixture Artifact"]
+  n348 -->|"requires (instrument)"| n360
+  n352 -->|"requires (instrument)"| n360
+  n361 -->|"requires (instrument)"| n360
+  n363 -->|"requires (instrument)"| n362
+  n364 -->|"requires (instrument)"| n362
+  n362 -->|"yields"| n365
+  n365 -->|"requires (instrument)"| n366
+  n366 -->|"yields"| n367
+  n369 -->|"requires (instrument)"| n368
+  n370 -->|"requires (instrument)"| n368
+  n368 -->|"yields"| n371
+  n371 -->|"requires (instrument)"| n372
+  n373 -->|"requires (instrument)"| n372
+  n360 -->|"yields"| n374
+  n374 -->|"requires (instrument)"| n375
+  n349 -->|"requires (instrument)"| n375
+  n354 -->|"requires (instrument)"| n375
+  n375 -->|"yields"| n376
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Matched Fixture Restore Qualifying requires Runtime Image. [src: apps/service/test/restore/matched-restore.test.mjs]
+Matched Fixture Restore Qualifying requires Fixture Qualification Receipts. [src: apps/service/test/restore/matched-restore.test.mjs]
+Matched Fixture Restore Qualifying requires Quiesced Source Fixture. [src: apps/service/test/restore/matched-restore.test.mjs]
+Matched Fixture Recovery Capturing requires Complete Fixture Database. [src: apps/service/test/restore/matched-restore.test.mjs]
+Matched Fixture Recovery Capturing requires Complete Fixture File Tree. [src: apps/service/test/restore/archive.mjs]
+Matched Fixture Recovery Capturing yields Matched Fixture Recovery Point. [src: apps/service/test/restore/matched-restore.test.mjs]
+Isolated Fixture Restoring requires Matched Fixture Recovery Point. [src: apps/service/test/restore/matched-restore.test.mjs]
+Isolated Fixture Restoring yields Raw Restored Fixture State. [src: apps/service/test/restore/matched-restore.test.mjs]
+Fixture Ownership Reconciling requires Validated Matched Fixture Bindings. [src: apps/service/test/restore/archive.mjs]
+Fixture Ownership Reconciling requires Measured Destination Identity. [src: apps/service/test/restore/archive.mjs]
+Fixture Ownership Reconciling yields Reconciled Fixture Reservation Markers. [src: apps/service/test/restore/archive.mjs]
+Restored Fixture Continuing requires Reconciled Fixture Reservation Markers. [src: apps/service/test/restore/matched-restore.test.mjs]
+Restored Fixture Continuing requires Explicit Fixture Resume Release. [src: apps/service/test/restore/matched-restore.test.mjs]
+Matched Fixture Restore Qualifying yields Isolated Matched Restore Receipt. [src: apps/service/test/restore/matched-restore.test.mjs]
+Fixture Artifact Retaining requires Isolated Matched Restore Receipt. [src: .github/workflows/service-runtime.yml]
+Fixture Artifact Retaining requires Exported Fixture Image. [src: .github/workflows/service-runtime.yml]
+Fixture Artifact Retaining requires Closed Fixture Manifest. [src: .github/workflows/service-runtime.yml]
+Fixture Artifact Retaining yields Retained Fixture Artifact. [src: .github/workflows/service-runtime.yml]
+```
+
+## SD2.9 — Explicit CLI observation lifecycle
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.9 — Explicit CLI observation lifecycle"
+---
+flowchart TD
+  accTitle: SD2.9 — Explicit CLI observation lifecycle
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n377["Explicit Telemetry Argument"]
+  n378("Runtime Telemetry Configuring")
+  n379["Protected Telemetry Configuration File"]
+  n380["Closed Exporter Configuration Policy"]
+  n381["Admitted Exporter Configuration"]
+  n382("Runtime Observation Attaching")
+  n383["Process Owned Observation Adapter"]
+  n384("Fixture API Starting")
+  n385("Fixture Worker Starting")
+  n386("Runtime Observation Closing")
+  n387["Existing Shutdown Deadline"]
+  n388["Closed Observation Adapter"]
+  n389("Enabled CLI Exporter Qualifying")
+  n390["Disposable PostgreSQL Database"]
+  n391["Synthetic Private TLS Receiver"]
+  n323["Compiled Exporter Entry Points"]
+  n392["CLI Exporter Lifecycle Evidence"]
+  n377 -->|"condition: supplied"| n378
+  n379 -->|"requires (instrument)"| n378
+  n380 -->|"requires (instrument)"| n378
+  n378 -->|"yields"| n381
+  n381 -->|"requires (instrument)"| n382
+  n382 -->|"yields"| n383
+  n384 -->|"invokes"| n382
+  n385 -->|"invokes"| n382
+  n383 -->|"requires (instrument)"| n386
+  n387 -->|"requires (instrument)"| n386
+  n386 -->|"yields"| n388
+  n390 -->|"requires (instrument)"| n389
+  n391 -->|"requires (instrument)"| n389
+  n323 -->|"requires (instrument)"| n389
+  n389 -->|"yields"| n392
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Runtime Telemetry Configuring occurs if Explicit Telemetry Argument is supplied. [src: apps/service/src/telemetry-runtime.ts]
+Runtime Telemetry Configuring requires Protected Telemetry Configuration File. [src: apps/service/src/telemetry-runtime.ts]
+Runtime Telemetry Configuring requires Closed Exporter Configuration Policy. [src: apps/service/src/telemetry-export-config.ts]
+Runtime Telemetry Configuring yields Admitted Exporter Configuration. [src: apps/service/src/telemetry-runtime.ts]
+Runtime Observation Attaching requires Admitted Exporter Configuration. [src: apps/service/src/telemetry-runtime.ts]
+Runtime Observation Attaching yields Process Owned Observation Adapter. [src: apps/service/src/telemetry-runtime.ts]
+Fixture API Starting invokes Runtime Observation Attaching. [src: apps/service/src/http-cli.ts]
+Fixture Worker Starting invokes Runtime Observation Attaching. [src: apps/service/src/delivery-cli.ts]
+Runtime Observation Closing requires Process Owned Observation Adapter. [src: apps/service/src/http-cli.ts] [src: apps/service/src/delivery-worker.ts]
+Runtime Observation Closing requires Existing Shutdown Deadline. [src: apps/service/src/telemetry.ts]
+Runtime Observation Closing yields Closed Observation Adapter. [src: apps/service/src/telemetry-export-process.ts]
+Enabled CLI Exporter Qualifying requires Disposable PostgreSQL Database. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
+Enabled CLI Exporter Qualifying requires Synthetic Private TLS Receiver. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
+Enabled CLI Exporter Qualifying requires Compiled Exporter Entry Points. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
+Enabled CLI Exporter Qualifying yields CLI Exporter Lifecycle Evidence. [src: apps/service/test/exporter/telemetry-enabled.integration.test.ts]
+```
+
+## SD2.10 — Enabled exporter image qualification
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.10 — Enabled exporter image qualification"
+---
+flowchart TD
+  accTitle: SD2.10 — Enabled exporter image qualification
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n393("Enabled Image Test Running")
+  n348["Runtime Image"]
+  n394["Qualified Image Identity Pair"]
+  n395["Pinned PostgreSQL Image"]
+  n396["Read Only Integration Test Mounts"]
+  n397["Isolated Internal Network"]
+  n391["Synthetic Private TLS Receiver"]
+  n398["Enabled Image Test Results"]
+  n399("Image Proof Resource Cleaning")
+  n400["Nonce Bound Fixture Resources"]
+  n401["Verified Image Proof Cleanup"]
+  n402("Enabled Image Exporter Qualifying")
+  n403["Enabled Image Exporter Receipt"]
+  n375("Fixture Artifact Retaining")
+  n348 -->|"requires (instrument)"| n393
+  n394 -->|"requires (instrument)"| n393
+  n395 -->|"requires (instrument)"| n393
+  n396 -->|"requires (instrument)"| n393
+  n397 -->|"requires (instrument)"| n393
+  n391 -->|"requires (instrument)"| n393
+  n393 -->|"yields"| n398
+  n400 -->|"requires (instrument)"| n399
+  n399 -->|"yields"| n401
+  n398 -->|"requires (instrument)"| n402
+  n401 -->|"requires (instrument)"| n402
+  n402 -->|"yields"| n403
+  n403 -->|"requires (instrument)"| n375
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Enabled Image Test Running requires Runtime Image. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Test Running requires Qualified Image Identity Pair. [src: .github/workflows/service-runtime.yml]
+Enabled Image Test Running requires Pinned PostgreSQL Image. [src: apps/service/runtime/compose.yaml]
+Enabled Image Test Running requires Read Only Integration Test Mounts. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Test Running requires Isolated Internal Network. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Test Running requires Synthetic Private TLS Receiver. [src: apps/service/test/fixtures/telemetry-tls.ts]
+Enabled Image Test Running yields Enabled Image Test Results. [src: apps/service/runtime/exporter-smoke.mjs]
+Image Proof Resource Cleaning requires Nonce Bound Fixture Resources. [src: apps/service/runtime/exporter-smoke.mjs]
+Image Proof Resource Cleaning yields Verified Image Proof Cleanup. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Exporter Qualifying requires Enabled Image Test Results. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Exporter Qualifying requires Verified Image Proof Cleanup. [src: apps/service/runtime/exporter-smoke.mjs]
+Enabled Image Exporter Qualifying yields Enabled Image Exporter Receipt. [src: apps/service/runtime/exporter-smoke.mjs]
+Fixture Artifact Retaining requires Enabled Image Exporter Receipt. [src: .github/workflows/service-runtime.yml]
+```
+
+## SD2.11 — Sealed recorded evidence protocol
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.11 — Sealed recorded evidence protocol"
+---
+flowchart TD
+  accTitle: SD2.11 — Sealed recorded evidence protocol
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n404("Recorded Evidence Opening")
+  n405["Bounded Canonical Envelope Bytes"]
+  n406["Independently Expected Bundle Digest"]
+  n407["Exact Artifact And Reference Bindings"]
+  n408["Opaque Recorded Evidence Handle"]
+  n409("Recorded Artifact Reading")
+  n410["Defensive Artifact Bytes"]
+  n411("Recorded Response Looking Up")
+  n412["Exact Request Binding"]
+  n413["Recorded Response Outcome"]
+  n414("Recorded Protocol Qualifying")
+  n415["Synthetic Binding And Boundary Cases"]
+  n416["Replay Protocol Evidence"]
+  n417("Recorded Draft Validating")
+  n418["Bounded Original Draft JSON"]
+  n419["Shared Article Schema Definitions"]
+  n420["Original Draft Shape Result"]
+  n421("Original Draft Qualifying")
+  n422["Synthetic Original Response Cases"]
+  n423["Installed Journal Package Exports"]
+  n424["Original Response Validation Evidence"]
+  n405 -->|"requires (instrument)"| n404
+  n406 -->|"requires (instrument)"| n404
+  n407 -->|"requires (instrument)"| n404
+  n404 -->|"yields"| n408
+  n408 -->|"requires (instrument)"| n409
+  n409 -->|"yields"| n410
+  n408 -->|"requires (instrument)"| n411
+  n412 -->|"requires (instrument)"| n411
+  n411 -->|"yields"| n413
+  n415 -->|"requires (instrument)"| n414
+  n414 -->|"yields"| n416
+  n408 -->|"requires (instrument)"| n417
+  n412 -->|"requires (instrument)"| n417
+  n418 -->|"requires (instrument)"| n417
+  n419 -->|"requires (instrument)"| n417
+  n417 -->|"yields"| n420
+  n422 -->|"requires (instrument)"| n421
+  n423 -->|"requires (instrument)"| n421
+  n421 -->|"yields"| n424
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Recorded Evidence Opening requires Bounded Canonical Envelope Bytes. [src: apps/service/src/recorded-evidence.ts]
+Recorded Evidence Opening requires Independently Expected Bundle Digest. [src: apps/service/src/recorded-evidence.ts]
+Recorded Evidence Opening requires Exact Artifact And Reference Bindings. [src: apps/service/src/recorded-evidence.ts]
+Recorded Evidence Opening yields Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-evidence.ts]
+Recorded Artifact Reading requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-evidence.ts]
+Recorded Artifact Reading yields Defensive Artifact Bytes. [src: apps/service/src/recorded-evidence.ts]
+Recorded Response Looking Up requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-response.ts]
+Recorded Response Looking Up requires Exact Request Binding. [src: apps/service/src/recorded-response.ts]
+Recorded Response Looking Up yields Recorded Response Outcome. [src: apps/service/src/recorded-response.ts]
+Recorded Protocol Qualifying requires Synthetic Binding And Boundary Cases. [src: apps/service/test/recorded-evidence.test.ts]
+Recorded Protocol Qualifying yields Replay Protocol Evidence. [src: apps/service/test/recorded-evidence.test.ts]
+Recorded Draft Validating requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-article.ts]
+Recorded Draft Validating requires Exact Request Binding. [src: apps/service/src/recorded-article.ts]
+Recorded Draft Validating requires Bounded Original Draft JSON. [src: apps/service/src/recorded-article.ts]
+Recorded Draft Validating requires Shared Article Schema Definitions. [src: packages/journal/src/article-schema.ts]
+Recorded Draft Validating yields Original Draft Shape Result. [src: apps/service/src/recorded-article.ts]
+Original Draft Qualifying requires Synthetic Original Response Cases. [src: apps/service/test/recorded-article.test.ts]
+Original Draft Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
+Original Draft Qualifying yields Original Response Validation Evidence. [src: apps/service/test/recorded-article.test.ts]
+```
+
+## SD2.12 — Shared journal rendering
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.12 — Shared journal rendering"
+---
+flowchart TD
+  accTitle: SD2.12 — Shared journal rendering
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n425("Article Body Assembling")
+  n426["Structured Article Values"]
+  n427["GitHub Resource Kind Index"]
+  n428("Article Markdown Normalizing")
+  n429("Article Reference Checking")
+  n430["Draft Article Body"]
+  n27["Draft Continuation Context — states: transient, retained"]
+  n431["Generated Prose"]
+  n432["Normalized Markdown"]
+  n433["Reference Verification Counts"]
+  n434("Article HTML Rendering")
+  n435["Article Markdown"]
+  n436["Escaped Article HTML"]
+  n437("Journal Rendering Qualifying")
+  n423["Installed Journal Package Exports"]
+  n438["Synthetic Draft Values"]
+  n439["Rendering Compatibility Evidence"]
+  n426 -->|"requires (instrument)"| n425
+  n427 -->|"requires (instrument)"| n425
+  n425 -->|"invokes"| n428
+  n425 -->|"invokes"| n429
+  n425 -->|"yields"| n430
+  n425 -->|"yields"| n27
+  n431 -->|"requires (instrument)"| n428
+  n428 -->|"yields"| n432
+  n432 -->|"requires (instrument)"| n429
+  n427 -->|"requires (instrument)"| n429
+  n429 -->|"yields"| n433
+  n435 -->|"requires (instrument)"| n434
+  n434 -->|"yields"| n436
+  n423 -->|"requires (instrument)"| n437
+  n438 -->|"requires (instrument)"| n437
+  n437 -->|"yields"| n439
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Article Body Assembling requires Structured Article Values. [src: packages/journal/src/article-body.ts]
+Article Body Assembling requires GitHub Resource Kind Index. [src: packages/journal/src/article-references.ts]
+Article Body Assembling invokes Article Markdown Normalizing. [src: packages/journal/src/article-body.ts]
+Article Body Assembling invokes Article Reference Checking. [src: packages/journal/src/article-body.ts]
+Article Body Assembling yields Draft Article Body. [src: packages/journal/src/article-body.ts]
+Article Body Assembling yields Draft Continuation Context. [src: packages/journal/src/recommendation-prose.ts]
+Article Markdown Normalizing requires Generated Prose. [src: packages/journal/src/normalize-article-markdown.ts]
+Article Markdown Normalizing yields Normalized Markdown. [src: packages/journal/src/normalize-article-markdown.ts]
+Article Reference Checking requires Normalized Markdown. [src: packages/journal/src/article-references.ts]
+Article Reference Checking requires GitHub Resource Kind Index. [src: packages/journal/src/article-references.ts]
+Article Reference Checking yields Reference Verification Counts. [src: packages/journal/src/article-references.ts]
+Article HTML Rendering requires Article Markdown. [src: packages/journal/src/render-article.ts]
+Article HTML Rendering yields Escaped Article HTML. [src: packages/journal/src/render-article.ts]
+Journal Rendering Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
+Journal Rendering Qualifying requires Synthetic Draft Values. [src: apps/service/runtime/smoke.mjs]
+Journal Rendering Qualifying yields Rendering Compatibility Evidence. [src: src/__tests__/journal-render.test.ts]
+```
+
+## SD2.13 — Shared article serialization and provenance
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.13 — Shared article serialization and provenance"
+---
+flowchart TD
+  accTitle: SD2.13 — Shared article serialization and provenance
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n440("Article Markdown Serializing")
+  n441["Generated Article Values"]
+  n428("Article Markdown Normalizing")
+  n442("Article Footer Formatting")
+  n443["Draft Article Markdown"]
+  n444("Article Provenance Building")
+  n445["Supplied Run Evidence"]
+  n446["Supplied Authoring Stages"]
+  n447["Supplied Runtime Metadata"]
+  n448["Optional Article Provenance"]
+  n449["Article Attribution Footer"]
+  n450("Authoring Stage Appending")
+  n435["Article Markdown"]
+  n451["Supplied Authoring Stage"]
+  n452("Journal Serialization Qualifying")
+  n423["Installed Journal Package Exports"]
+  n438["Synthetic Draft Values"]
+  n453["Serialization Compatibility Evidence"]
+  n441 -->|"requires (instrument)"| n440
+  n440 -->|"invokes"| n428
+  n440 -->|"invokes"| n442
+  n440 -->|"yields"| n443
+  n445 -->|"requires (instrument)"| n444
+  n446 -->|"requires (instrument)"| n444
+  n447 -->|"requires (instrument)"| n444
+  n444 -->|"yields"| n448
+  n448 -->|"requires (instrument)"| n442
+  n442 -->|"yields"| n449
+  n435 -->|"requires (instrument)"| n450
+  n451 -->|"requires (instrument)"| n450
+  n450 -->|"yields"| n435
+  n423 -->|"requires (instrument)"| n452
+  n438 -->|"requires (instrument)"| n452
+  n452 -->|"yields"| n453
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Article Markdown Serializing requires Generated Article Values. [src: packages/journal/src/article-markdown.ts]
+Article Markdown Serializing invokes Article Markdown Normalizing. [src: packages/journal/src/article-markdown.ts]
+Article Markdown Serializing invokes Article Footer Formatting. [src: packages/journal/src/article-markdown.ts]
+Article Markdown Serializing yields Draft Article Markdown. [src: packages/journal/src/article-markdown.ts]
+Article Provenance Building requires Supplied Run Evidence. [src: packages/journal/src/article-provenance.ts]
+Article Provenance Building requires Supplied Authoring Stages. [src: packages/journal/src/article-provenance.ts]
+Article Provenance Building requires Supplied Runtime Metadata. [src: packages/journal/src/article-provenance.ts]
+Article Provenance Building yields Optional Article Provenance. [src: packages/journal/src/article-provenance.ts]
+Article Footer Formatting requires Optional Article Provenance. [src: packages/journal/src/article-provenance.ts]
+Article Footer Formatting yields Article Attribution Footer. [src: packages/journal/src/article-provenance.ts]
+Authoring Stage Appending requires Article Markdown. [src: packages/journal/src/article-provenance.ts]
+Authoring Stage Appending requires Supplied Authoring Stage. [src: packages/journal/src/article-provenance.ts]
+Authoring Stage Appending yields Article Markdown. [src: packages/journal/src/article-provenance.ts]
+Journal Serialization Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
+Journal Serialization Qualifying requires Synthetic Draft Values. [src: apps/service/runtime/smoke.mjs]
+Journal Serialization Qualifying yields Serialization Compatibility Evidence. [src: src/__tests__/journal-serialization.test.ts]
+```
+
+## SD2.14 — Shared draft prompt definitions
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.14 — Shared draft prompt definitions"
+---
+flowchart TD
+  accTitle: SD2.14 — Shared draft prompt definitions
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n105("Drafting")
+  n454["Shared Journal Prompt Definitions"]
+  n455["Shared Draft Tool Definition"]
+  n456("Draft Prompt Selecting")
+  n457["Telemetry Presence Flag"]
+  n458["Selected Draft System Prompt"]
+  n459("Journal Prompt Qualifying")
+  n423["Installed Journal Package Exports"]
+  n460["Prompt Compatibility Evidence"]
+  n454 -->|"requires (instrument)"| n105
+  n455 -->|"requires (instrument)"| n105
+  n457 -->|"requires (instrument)"| n456
+  n454 -->|"requires (instrument)"| n456
+  n456 -->|"yields"| n458
+  n423 -->|"requires (instrument)"| n459
+  n459 -->|"yields"| n460
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Drafting requires Shared Journal Prompt Definitions. [src: packages/journal/src/article-prompts.ts]
+Drafting requires Shared Draft Tool Definition. [src: packages/journal/src/article-prompts.ts]
+Draft Prompt Selecting requires Telemetry Presence Flag. [src: packages/journal/src/article-prompts.ts]
+Draft Prompt Selecting requires Shared Journal Prompt Definitions. [src: packages/journal/src/article-prompts.ts]
+Draft Prompt Selecting yields Selected Draft System Prompt. [src: packages/journal/src/article-prompts.ts]
+Journal Prompt Qualifying requires Installed Journal Package Exports. [src: apps/service/runtime/smoke.mjs]
+Journal Prompt Qualifying yields Prompt Compatibility Evidence. [src: src/__tests__/fleet-prompt-contract.test.ts]
+```
+
+## SD2.15 — Request-bound service draft output
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.15 — Request-bound service draft output"
+---
+flowchart TD
+  accTitle: SD2.15 — Request-bound service draft output
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n461("Service Draft Tool Building")
+  n462["Sealed Reporting Date"]
+  n455["Shared Draft Tool Definition"]
+  n463["Complete Service Draft Tool"]
+  n464("Recorded Request Reading")
+  n408["Opaque Recorded Evidence Handle"]
+  n412["Exact Request Binding"]
+  n465["Defensive Request And Report Values"]
+  n466("Service Draft Request Validating")
+  n467["Request Contract Result"]
+  n468("Service Draft Output Validating")
+  n418["Bounded Original Draft JSON"]
+  n419["Shared Article Schema Definitions"]
+  n469["Original Service Draft Shape Result"]
+  n470("Service Draft Contract Qualifying")
+  n471["Synthetic Request And Output Boundary Cases"]
+  n472["Installed Service Runtime"]
+  n473["Request Bound Draft Compatibility Evidence"]
+  n462 -->|"requires (instrument)"| n461
+  n455 -->|"requires (instrument)"| n461
+  n461 -->|"yields"| n463
+  n408 -->|"requires (instrument)"| n464
+  n412 -->|"requires (instrument)"| n464
+  n464 -->|"yields"| n465
+  n465 -->|"requires (instrument)"| n466
+  n463 -->|"requires (instrument)"| n466
+  n466 -->|"yields"| n467
+  n467 -->|"requires (instrument)"| n468
+  n418 -->|"requires (instrument)"| n468
+  n419 -->|"requires (instrument)"| n468
+  n468 -->|"yields"| n469
+  n471 -->|"requires (instrument)"| n470
+  n472 -->|"requires (instrument)"| n470
+  n470 -->|"yields"| n473
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Service Draft Tool Building requires Sealed Reporting Date. [src: apps/service/src/article-output-contract.ts]
+Service Draft Tool Building requires Shared Draft Tool Definition. [src: apps/service/src/article-output-contract.ts]
+Service Draft Tool Building yields Complete Service Draft Tool. [src: apps/service/src/article-output-contract.ts]
+Recorded Request Reading requires Opaque Recorded Evidence Handle. [src: apps/service/src/recorded-evidence.ts]
+Recorded Request Reading requires Exact Request Binding. [src: apps/service/src/recorded-evidence.ts]
+Recorded Request Reading yields Defensive Request And Report Values. [src: apps/service/src/recorded-evidence.ts]
+Service Draft Request Validating requires Defensive Request And Report Values. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Request Validating requires Complete Service Draft Tool. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Request Validating yields Request Contract Result. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Output Validating requires Request Contract Result. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Output Validating requires Bounded Original Draft JSON. [src: apps/service/src/recorded-json.ts]
+Service Draft Output Validating requires Shared Article Schema Definitions. [src: packages/journal/src/article-schema.ts]
+Service Draft Output Validating yields Original Service Draft Shape Result. [src: apps/service/src/recorded-service-draft.ts]
+Service Draft Contract Qualifying requires Synthetic Request And Output Boundary Cases. [src: apps/service/test/recorded-service-draft.test.ts]
+Service Draft Contract Qualifying requires Installed Service Runtime. [src: apps/service/runtime/smoke.mjs]
+Service Draft Contract Qualifying yields Request Bound Draft Compatibility Evidence. [src: apps/service/test/recorded-service-draft.test.ts]
+```
+
+## SD2.16 — Merged-source release candidate delivery
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.16 — Merged-source release candidate delivery"
+---
+flowchart TD
+  accTitle: SD2.16 — Merged-source release candidate delivery
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n477("Release Candidate Exporting")
+  n478["Merged Main Source"]
+  n479["Release Candidate Version"]
+  n346["Committed Runtime Context"]
+  n348["Runtime Image"]
+  n480["Exported Release Candidate Image"]
+  n481("Release Candidate Image Qualifying")
+  n482["Release Candidate Qualification Receipts"]
+  n402("Enabled Image Exporter Qualifying")
+  n360("Matched Fixture Restore Qualifying")
+  n474["Same Image Gate Receipts"]
+  n483["Closed Release Candidate Manifest"]
+  n484("Release Candidate Verifying")
+  n356["Authenticated GitHub Artifact Evidence"]
+  n357["Independently Pinned Build Identity"]
+  n485["Verified Release Candidate"]
+  n359["Private Verification Receipt"]
+  n478 -->|"requires (instrument)"| n477
+  n479 -->|"requires (instrument)"| n477
+  n346 -->|"requires (instrument)"| n477
+  n348 -->|"requires (instrument)"| n477
+  n477 -->|"yields"| n480
+  n477 -->|"invokes"| n481
+  n480 -->|"requires (instrument)"| n481
+  n481 -->|"yields"| n482
+  n481 -->|"invokes"| n402
+  n481 -->|"invokes"| n360
+  n474 -->|"requires (instrument)"| n477
+  n477 -->|"yields"| n483
+  n356 -->|"requires (instrument)"| n484
+  n357 -->|"requires (instrument)"| n484
+  n483 -->|"requires (instrument)"| n484
+  n474 -->|"requires (instrument)"| n484
+  n484 -->|"yields"| n485
+  n484 -->|"yields"| n359
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Release Candidate Exporting requires Merged Main Source. [src: .github/workflows/service-release-candidate.yml]
+Release Candidate Exporting requires Release Candidate Version. [src: .github/workflows/service-release-candidate.yml]
+Release Candidate Exporting requires Committed Runtime Context. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting requires Runtime Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting yields Exported Release Candidate Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting invokes Release Candidate Image Qualifying. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying requires Exported Release Candidate Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying yields Release Candidate Qualification Receipts. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying invokes Enabled Image Exporter Qualifying. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying invokes Matched Fixture Restore Qualifying. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting requires Same Image Gate Receipts. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting yields Closed Release Candidate Manifest. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Authenticated GitHub Artifact Evidence. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Independently Pinned Build Identity. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Closed Release Candidate Manifest. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Same Image Gate Receipts. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying yields Verified Release Candidate. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
 ```

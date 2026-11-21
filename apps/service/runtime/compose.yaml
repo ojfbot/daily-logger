@@ -1,0 +1,72 @@
+name: dailylogger-private-fixture
+
+x-application: &application
+  image: ${DAILYLOGGER_RUNTIME_IMAGE:?Set the locally qualified runtime image}
+  user: "1000:1000"
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs:
+    - /tmp:rw,nosuid,nodev,noexec,mode=1777,size=64m
+  stop_grace_period: 10s
+  depends_on:
+    database:
+      condition: service_healthy
+  networks: [application]
+
+x-environment: &environment
+  DAILYLOGGER_DATABASE_URL: ${DAILYLOGGER_DATABASE_URL:?Set the dedicated application PostgreSQL URL}
+  DAILYLOGGER_FIXTURE_ROOT: /var/lib/dailylogger/fixtures
+
+services:
+  database:
+    image: postgres:18.7-trixie@sha256:2ea8630df176ad090ec92136dee850397c5af8781e4bcf2e4162593691c61bbc
+    environment:
+      POSTGRES_USER: dailylogger
+      POSTGRES_DB: dailylogger
+      POSTGRES_PASSWORD: ${DAILYLOGGER_DATABASE_PASSWORD:?Set a private application database password}
+    volumes:
+      - application-database:/var/lib/postgresql
+    networks: [application]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U dailylogger -d dailylogger]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  migrate:
+    <<: *application
+    profiles: [migration]
+    environment: *environment
+    command: [src/http-cli.ts, migrate]
+
+  api:
+    <<: *application
+    environment:
+      <<: *environment
+      DAILYLOGGER_PRIVATE_ORIGIN: ${DAILYLOGGER_PRIVATE_ORIGIN:?Set the exact private HTTPS origin}
+      DAILYLOGGER_OWNER_GITHUB_ID: ${DAILYLOGGER_OWNER_GITHUB_ID:?Set the immutable owner ID}
+      DAILYLOGGER_GITHUB_CLIENT_ID: ${DAILYLOGGER_GITHUB_CLIENT_ID:?Set the private OAuth client ID}
+      DAILYLOGGER_GITHUB_CLIENT_SECRET: ${DAILYLOGGER_GITHUB_CLIENT_SECRET:?Set the private OAuth client secret}
+    volumes:
+      - fixture-files:/var/lib/dailylogger/fixtures
+    networks: [application, oauth-outbound]
+
+  worker:
+    <<: *application
+    environment: *environment
+    command: [src/delivery-cli.ts, work]
+    volumes:
+      - fixture-files:/var/lib/dailylogger/fixtures
+
+networks:
+  application:
+    internal: true
+    enable_ipv6: false
+  oauth-outbound:
+    enable_ipv6: false
+
+volumes:
+  application-database: {}
+  fixture-files: {}

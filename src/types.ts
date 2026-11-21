@@ -1,7 +1,5 @@
-import type { ActionItem as ActionItemType } from './schema.js'
 import type { CanonicalAction } from './action-model.js'
 import type { TelemetrySummary } from './collect-telemetry.js'
-import type { ArticleProvenance } from './run-provenance.js'
 export type { TelemetrySummary }
 
 export interface CommitInfo {
@@ -172,18 +170,7 @@ export interface BlogContext {
   adrRegistry?: ADRRegistryEntry[]
 }
 
-export interface GeneratedArticle {
-  title: string
-  date: string
-  tags: string[]
-  summary: string
-  body: string
-  suggestedActions?: ActionItemType[]
-  commitCount?: number
-  reposActive?: string[]
-  provenance?: ArticleProvenance
-  generationMode?: 'model' | 'mock' | 'stub'
-}
+export type { GeneratedArticle } from '@ojfbot/daily-logger-journal/article-markdown'
 
 export interface Persona {
   slug: string
@@ -206,22 +193,7 @@ export interface GeneratedReport {
 
 // ─── Structured article (what Claude returns from the write_article tool) ──────
 
-export interface StructuredArticle {
-  title: string
-  tags: string[]
-  summary: string
-  lede?: string
-  whatShipped: string
-  theDecisions: string
-  roadmapPulse: string
-  whatsNext: string
-  actions?: {
-    whatShipped?: string[]
-    theDecisions?: string[]
-    roadmapPulse?: string[]
-    whatsNext?: string[]
-  }
-}
+export type { StructuredArticle } from '@ojfbot/daily-logger-journal/article-body'
 
 // ─── v2 structured article types (re-exported from schema.ts) ────────────────
 

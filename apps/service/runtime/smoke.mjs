@@ -1,0 +1,275 @@
+import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
+import { createHash, randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { ownedContainer } from './owned-container.mjs'
+
+const [image, ...extra] = process.argv.slice(2)
+assert.ok(image && extra.length === 0, 'Usage: pnpm service:runtime:smoke IMAGE')
+const composeFile = fileURLToPath(new URL('./compose.yaml', import.meta.url))
+const httpTests = fileURLToPath(new URL('../test/http', import.meta.url))
+const deliveryTests = fileURLToPath(new URL('../test/delivery', import.meta.url))
+// Reviewed synthetic input is injected as data; test files and legacy source are absent in the image.
+const recordedFixture = readFileSync(new URL('../test/fixtures/recorded-article-v2.json', import.meta.url))
+const recordedFixtureSha256 = createHash('sha256').update(recordedFixture).digest('hex')
+const serviceDraftFixture = readFileSync(new URL('../test/fixtures/recorded-service-draft-v1.json', import.meta.url))
+const serviceDraftFixtureSha256 = createHash('sha256').update(serviceDraftFixture).digest('hex')
+const project = `dailylogger-runtime-${randomUUID().slice(0, 8)}`
+const password = randomUUID()
+const environment = { ...process.env, DAILYLOGGER_RUNTIME_IMAGE: image,
+  DAILYLOGGER_DATABASE_PASSWORD: password,
+  DAILYLOGGER_DATABASE_URL: `postgresql://dailylogger:${password}@database:5432/dailylogger`,
+  DAILYLOGGER_TEST_DATABASE_URL: `postgresql://dailylogger:${password}@database:5432/dailylogger`,
+  DAILYLOGGER_PRIVATE_ORIGIN: 'https://dailylogger.invalid', DAILYLOGGER_OWNER_GITHUB_ID: '151410806',
+  DAILYLOGGER_GITHUB_CLIENT_ID: 'runtime-fixture-client', DAILYLOGGER_GITHUB_CLIENT_SECRET: 'runtime-fixture-secret' }
+
+function docker(args, { input, acceptFailure = false, timeout = 30000 } = {}) {
+  const result = spawnSync('docker', args, { env: environment, input, encoding: 'utf8', timeout, killSignal: 'SIGKILL', maxBuffer: 4 * 1024 * 1024 })
+  if (!acceptFailure && (result.error || result.status !== 0)) {
+    throw new Error(`Runtime proof Docker command failed: ${args[0]}; exit ${result.status}; ${result.stderr?.slice(-4000) || result.error?.message || ''}\n${result.stdout?.slice(-6000) ?? ''}`)
+  }
+  return result
+}
+const compose = (args, options) => docker(['compose', '-p', project, '-f', composeFile, ...args], options)
+const offlineContainer = ownedContainer(docker, `${project}-offline`, randomUUID())
+const script = (service, input) => compose(['exec', '-T', service, 'node', '--import', 'tsx', '--input-type=module'], { input }).stdout
+const cli = (service, args) => JSON.parse(script(service, `
+  import { execFileSync } from 'node:child_process';
+  const value = execFileSync(process.execPath, ['--import','tsx','src/delivery-cli.ts',...${JSON.stringify(args)}], {encoding:'utf8'});
+  console.log(value);
+`))
+const enqueue = request => {
+  const value = JSON.parse(script('api', `
+    import { writeFileSync } from 'node:fs';
+    import { execFileSync } from 'node:child_process';
+    writeFileSync('/tmp/runtime-request.json',${JSON.stringify(JSON.stringify(request))},{mode:0o600});
+    console.log(execFileSync(process.execPath,['--import','tsx','src/delivery-cli.ts','enqueue','--request','/tmp/runtime-request.json'],{encoding:'utf8'}));
+  `))
+  assert.equal(value.status, 202)
+  return JSON.parse(value.body)
+}
+async function waitFor(read, timeout = 20000) {
+  const deadline = Date.now() + timeout
+  let lastError
+  while (Date.now() < deadline) {
+    try { const value = read(); if (value) return value } catch (error) { lastError = error }
+    await new Promise(resolve => setTimeout(resolve, 250))
+  }
+  throw new Error('Runtime image did not reach expected state', { cause: lastError })
+}
+
+let failed = false
+try {
+  const offline = offlineContainer.run(['--rm', '-i', '--network', 'none', '--read-only', '--cap-drop', 'ALL',
+    '--security-opt', 'no-new-privileges', '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,mode=1777,size=64m', image,
+    '--input-type=module'], { input: `
+      import assert from 'node:assert/strict';
+      import { execFileSync } from 'node:child_process';
+      import { existsSync,readFileSync,writeFileSync,mkdtempSync,rmSync,statSync,realpathSync } from 'node:fs';
+      import { fileURLToPath,pathToFileURL } from 'node:url';
+      import { activityWindow } from '@ojfbot/daily-logger-journal/activity-window';
+      import { shouldSkipRun } from '@ojfbot/daily-logger-journal/eligibility';
+      import { ArticleDataSchema } from '@ojfbot/daily-logger-journal/article-schema';
+      import { assembleBody } from '@ojfbot/daily-logger-journal/article-body';
+      import { renderArticle } from '@ojfbot/daily-logger-journal/render-article';
+      import { githubReferenceKinds,assertArticleReferenceContract } from '@ojfbot/daily-logger-journal/article-references';
+      import { draftRecommendationContextMarker,extractDraftRecommendationContext } from '@ojfbot/daily-logger-journal/recommendation-prose';
+      import { titleWithReportingWeekday } from '@ojfbot/daily-logger-journal/article-title';
+      import { toMarkdown } from '@ojfbot/daily-logger-journal/article-markdown';
+      import { ARTICLE_PROMPT_VERSION,SYSTEM_PROMPT,articleSystemPrompt,ARTICLE_TOOL_V2 } from '@ojfbot/daily-logger-journal/article-prompts';
+      import { buildArticleProvenance,parseArticleProvenance,promptSha256,appendAuthoringStage } from '@ojfbot/daily-logger-journal/article-provenance';
+      import { openRecordedEvidence } from './src/recorded-evidence.ts';
+      import { validateRecordedDraft } from './src/recorded-article.ts';
+      import { validateRecordedServiceDraft } from './src/recorded-service-draft.ts';
+      import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
+      import { readFixture,reviewFixture } from './src/fixture.ts';
+      import { createLangfuseTelemetry } from './src/telemetry-export-process.ts';
+      import { NOOP_TELEMETRY } from './src/telemetry.ts';
+      assert.equal(process.getuid(),1000);
+      assert.equal(existsSync('test'),false);
+      assert.equal(existsSync('/app/src'),false);
+      assert.equal(existsSync('/build'),false);
+      for(const entry of ['activity-window','eligibility','article-schema','action-item-schema','shipment-reference','article-body','article-references','article-title','normalize-article-markdown','render-article','recommendation-prose','article-provenance','article-markdown','article-prompts']) {
+        const resolved=import.meta.resolve('@ojfbot/daily-logger-journal/'+entry);
+        const path=realpathSync(fileURLToPath(resolved));
+        assert.ok(path.startsWith('/app/'));
+        assert.ok(!path.includes('/build/'));
+        const manifest=JSON.parse(readFileSync(new URL('../package.json',pathToFileURL(path)),'utf8'));
+        assert.equal(manifest.name,'@ojfbot/daily-logger-journal');
+        assert.deepEqual(manifest.dependencies,{marked:'17.0.5',parse5:'7.3.0',zod:'4.3.6'});
+        for(const field of ['optionalDependencies','peerDependencies']) assert.deepEqual(manifest[field]??{},{});
+      }
+      for(const [date,hours] of [['2026-03-08',23],['2026-11-01',25],['2026-11-17',24]]) {
+        const window=activityWindow(date);
+        assert.equal((window.end-window.start)/3600000,hours);
+      }
+      assert.deepEqual(shouldSkipRun({date:'2026-11-17',commits:[],recentPRs:[],openIssues:[],closedIssues:[]}),
+        {skip:true,reason:'no activity in reporting window'});
+      const recordedBytes=Buffer.from(${JSON.stringify(recordedFixture.toString('base64'))},'base64');
+      const recorded=openRecordedEvidence(recordedBytes,${JSON.stringify(recordedFixtureSha256)});
+      const draft=validateRecordedDraft(recorded,${JSON.stringify(JSON.parse(recordedFixture.toString()).requests[0].binding)});
+      assert.equal(draft.status,'validated');
+      assert.equal(draft.article.title,'Recorded draft');
+      assert.equal(draft.publicationAuthority,'none');
+      const serviceDraftBytes=Buffer.from(${JSON.stringify(serviceDraftFixture.toString('base64'))},'base64');
+      const serviceRecording=openRecordedEvidence(serviceDraftBytes,${JSON.stringify(serviceDraftFixtureSha256)});
+      const serviceDraft=validateRecordedServiceDraft(serviceRecording,${JSON.stringify(JSON.parse(serviceDraftFixture.toString()).requests[0].binding)});
+      assert.equal(serviceDraft.status,'validated');
+      assert.equal(serviceDraft.payloadValidation,'dailylogger-service-draft-v1');
+      assert.equal(serviceDraft.requestValidation,'dailylogger-service-draft-request-v1');
+      assert.equal(serviceDraft.article.title,'Synthetic service draft');
+      assert.equal('status' in serviceDraft.article,false);
+      assert.equal(serviceDraft.actionAuthority,'none');
+      assert.equal(serviceDraft.publicationAuthority,'none');
+      const kinds=githubReferenceKinds({openIssues:[],closedIssues:[],mergedPRs:[],openPRs:[],recentPRs:[]});
+      const body=assembleBody(draft.article,kinds);
+      assert.ok(renderArticle(body).includes('<h2>What shipped</h2>'));
+      assert.deepEqual(assertArticleReferenceContract(body,kinds),{verified:0,unknown:0});
+      const marker=draftRecommendationContextMarker('Unreviewed synthetic continuation');
+      assert.equal(renderArticle(marker),'');
+      assert.deepEqual(extractDraftRecommendationContext(marker).context,{kind:'retained',markdown:'Unreviewed synthetic continuation'});
+      assert.equal(titleWithReportingWeekday('2026-11-19','Shared body'),'Wednesday — Shared body');
+      const draftStage={role:'draft',model:'synthetic',promptVersion:'runtime-fixture-v1',promptSha256:promptSha256('synthetic')};
+      const provenanceInput={run:{kind:'local',capturedAt:'2026-11-19T00:00:00.000Z'},stages:[draftStage],nodeVersion:process.version};
+      assert.equal(buildArticleProvenance(provenanceInput),undefined);
+      const provenance=buildArticleProvenance({...provenanceInput,packageVersion:'0.1.0'});
+      const markdown=toMarkdown({...draft.article,tags:[],body,provenance});
+      assert.ok(markdown.includes('status: "draft"'));
+      assert.ok(markdown.endsWith('.*\\n'));
+      const raw=markdown.split('\\n').find(line=>line.startsWith('provenance: ')).slice('provenance: '.length);
+      assert.deepEqual(parseArticleProvenance(raw),provenance);
+      const revision={...draftStage,role:'revision',model:'synthetic-revision'};
+      const revised=appendAuthoringStage(markdown,revision);
+      const revisedRaw=revised.split('\\n').find(line=>line.startsWith('provenance: ')).slice('provenance: '.length);
+      assert.deepEqual(parseArticleProvenance(revisedRaw).authoring,[draftStage,revision]);
+      assert.equal(parseArticleProvenance('{'),undefined);
+      assert.equal(appendAuthoringStage(markdown,{...revision,model:''}),markdown);
+      assert.equal(ARTICLE_PROMPT_VERSION,'article-v8-2026-11-19-fleet-roadmap-pulse');
+      assert.equal(articleSystemPrompt(false),SYSTEM_PROMPT);
+      assert.ok(SYSTEM_PROMPT.startsWith('You are the technical writer and educational narrator for the CircusGreen / ojfbot fleet'));
+      assert.ok(articleSystemPrompt(true).includes('## Claude Code skill telemetry'));
+      assert.equal(ARTICLE_TOOL_V2.name,'write_article');
+      assert.equal(ARTICLE_TOOL_V2.input_schema.type,'object');
+      assert.ok(ARTICLE_TOOL_V2.input_schema.properties.roadmapPulse.description.includes('Also in flight'));
+      assert.equal(ArticleDataSchema.safeParse({}).success,false);
+      assert.equal(existsSync('/app/.git/objects/info/alternates'),false);
+      assert.equal(existsSync('/app/.git/logs'),false);
+      assert.equal(execFileSync('git',['-C','/app','remote'],{encoding:'utf8'}),'');
+      assert.throws(()=>writeFileSync('/app/runtime-write-canary','forbidden'));
+      const native=SqliteSaver.fromConnString(':memory:'); native.db.close();
+      const fixture=readFixture(),review=reviewFixture(fixture);
+      const context=JSON.parse(readFileSync('/app/runtime-context.json','utf8'));
+      assert.equal(review.articleSha256,context.articleSha256);
+      assert.equal(review.actionsSha256,context.actionsSha256);
+      await import('./src/http-server.ts'); await import('./src/delivery-worker.ts');
+      assert.equal(createLangfuseTelemetry(),NOOP_TELEMETRY);
+      assert.equal(existsSync('scripts/build-telemetry.mjs'),false);
+      for(const asset of ['dist/telemetry/telemetry-export-child.mjs','dist/telemetry/telemetry-export-worker.mjs']) {
+        assert.equal(statSync(asset).uid,1000);
+        assert.throws(()=>writeFileSync(asset,'forbidden'));
+      }
+      const secretRoot=mkdtempSync('/tmp/exporter-startup-proof-');
+      let telemetry;
+      try {
+        // Disposable synthetic identity only; no trust installation or endpoint.
+        execFileSync('openssl',['req','-x509','-newkey','ec','-pkeyopt','ec_paramgen_curve:P-256','-nodes','-keyout',secretRoot+'/unused-ca.key','-out',secretRoot+'/ca.pem','-days','1','-subj','/CN=Disposable exporter startup fixture'],{stdio:'ignore',timeout:5000,killSignal:'SIGKILL'});
+        writeFileSync(secretRoot+'/public','pk-synthetic-offline-startup',{mode:0o600});
+        writeFileSync(secretRoot+'/secret','sk-synthetic-offline-startup',{mode:0o600});
+        telemetry=createLangfuseTelemetry({mode:'langfuse',endpoint:'https://127.0.0.1:1/api/public/otel/v1/traces',publicKeyFile:secretRoot+'/public',secretKeyFile:secretRoot+'/secret',caFile:secretRoot+'/ca.pem',environment:'qualification'});
+        assert.notEqual(telemetry,NOOP_TELEMETRY);
+        assert.equal(typeof telemetry.exporterDiagnostics,'function');
+        const deadline=Date.now()+4500;
+        while(!telemetry.exporterDiagnostics().ready) {
+          assert.equal(telemetry.exporterDiagnostics().closed,false,'Compiled exporter child failed startup');
+          assert.ok(Date.now()<deadline,'Compiled exporter did not become ready');
+          await new Promise(resolve=>setTimeout(resolve,10));
+        }
+        assert.equal(telemetry.exporterDiagnostics().acknowledged,0);
+        assert.equal(telemetry.exporterDiagnostics().failures,0);
+        assert.equal(telemetry.diagnostics().accepted,0);
+      } finally {
+        if(telemetry) await telemetry.shutdown();
+        rmSync(secretRoot,{recursive:true,force:true});
+      }
+      assert.equal(telemetry.exporterDiagnostics().closed,true);
+      console.log(JSON.stringify({proof:'offline-final-image',node:process.version,git:execFileSync('git',['--version'],{encoding:'utf8'}).trim(),uid:process.getuid(),fixtureCommit:context.fixtureCommit,nativeSqlite:'passed',compiledExporterChild:'ready-then-closed',exporterBatches:0,defaultTelemetry:'disabled'}));
+    ` })
+  process.stdout.write(offline.stdout)
+  const config = JSON.parse(compose(['config', '--format', 'json']).stdout)
+  for (const service of Object.values(config.services)) assert.equal(service.ports?.length ?? 0, 0)
+  compose(['up', '-d', '--wait', 'database'], { timeout: 120000 })
+  const uninitialized = compose(['run', '--rm', '--no-deps', 'api'], { acceptFailure: true, timeout: 20000 })
+  assert.equal(uninitialized.status, 1, 'Production API must reject an unmigrated database')
+  compose(['run', '--rm', 'migrate'])
+  compose(['run', '--rm', 'migrate'])
+  compose(['up', '-d', 'api', 'worker'])
+  await waitFor(() => {
+    const response = JSON.parse(script('api', `
+      import { request } from 'node:http';
+      const result=await new Promise((resolve,reject)=>{const req=request('http://127.0.0.1:4300/v1/auth/me',{headers:{Host:'dailylogger.invalid'}},res=>{res.resume();res.on('end',()=>resolve({status:res.statusCode,cache:res.headers['cache-control']}))});req.on('error',reject);req.end()});
+      console.log(JSON.stringify(result));
+    `))
+    assert.equal(response.status, 401); assert.equal(response.cache, 'no-store'); return true
+  })
+  for (const service of ['api', 'worker']) {
+    const id = compose(['ps', '-q', service]).stdout.trim()
+    const info = JSON.parse(docker(['inspect', id]).stdout)[0]
+    assert.equal(info.Config.User, '1000:1000')
+    assert.equal(info.HostConfig.ReadonlyRootfs, true)
+    assert.equal(Object.keys(info.HostConfig.PortBindings ?? {}).length, 0)
+    assert.equal(JSON.parse(script(service, 'console.log(JSON.stringify(process.getuid()))')), 1000)
+  }
+  const runDir = `/var/lib/dailylogger/fixtures/proof-${randomUUID()}`
+  const start = { schemaVersion: 1, actorId: 'runtime-fixture-owner', key: 'runtime-start', operation: 'start', payload: { runDir } }
+  const admitted = enqueue(start)
+  const waiting = await waitFor(() => { const state = cli('api', ['run', '--run-id', admitted.runId]); return state.status === 'awaiting-approval' && state.resumeTargetId ? state : false })
+  assert.equal(waiting.runDir, runDir)
+  compose(['stop', 'worker'])
+  const workerId = compose(['ps', '-aq', 'worker']).stdout.trim()
+  assert.equal(JSON.parse(docker(['inspect', workerId]).stdout)[0].State.ExitCode, 0)
+  compose(['up', '-d', 'worker'])
+  assert.deepEqual(enqueue(start), admitted)
+  enqueue({ schemaVersion: 1, actorId: start.actorId, key: 'runtime-resume', operation: 'resume', payload: { runId: admitted.runId, resumeTargetId: waiting.resumeTargetId } })
+  const complete = await waitFor(() => { const state = cli('api', ['run', '--run-id', admitted.runId]); return state.status === 'complete' ? state : false })
+  assert.ok(complete.receiptSha256)
+  script('api', `
+    import assert from 'node:assert/strict';
+    import { readFileSync,statSync } from 'node:fs';
+    import { join } from 'node:path';
+    import { readFixture,ARTICLE_PATH,ACTIONS_PATH } from './src/fixture.ts';
+    const fixture=readFixture(),root=${JSON.stringify(runDir)};
+    assert.equal(statSync(root).uid,1000);
+    assert.deepEqual(readFileSync(join(root,'artifacts',ARTICLE_PATH)),fixture.article);
+    assert.deepEqual(readFileSync(join(root,'artifacts',ACTIONS_PATH)),fixture.actions);
+  `)
+  compose(['stop', 'api', 'worker'])
+  for (const service of ['api', 'worker']) {
+    const id = compose(['ps', '-aq', service]).stdout.trim()
+    assert.equal(JSON.parse(docker(['inspect', id]).stdout)[0].State.ExitCode, 0)
+  }
+  console.log(JSON.stringify({ proof: 'production-entrypoints-and-cross-container-storage', migration: 'explicit-and-repeatable', fixture: 'complete', shutdown: 'clean', publishedPorts: 0 }))
+  const http = compose(['run', '--rm', '--no-deps', '-T', '-e', 'DAILYLOGGER_TEST_DATABASE_URL',
+    '-v', `${httpTests}:/app/apps/service/test/http:ro`, '-v', `${deliveryTests}:/app/apps/service/test/delivery:ro`,
+    'api', '--import', './test/http/faults.mjs', '--test', '--test-reporter=tap', 'test/http/http.test.ts'], { timeout: 120000 })
+  process.stdout.write(http.stdout)
+  const counts = Object.fromEntries([...http.stdout.matchAll(/^# (tests|pass|fail|cancelled|skipped|todo) (\d+)\s*$/gm)]
+    .map(([, key, value]) => [key, Number(value)]))
+  assert.deepEqual(Object.keys(counts).sort(), ['cancelled', 'fail', 'pass', 'skipped', 'tests', 'todo'])
+  assert.ok(counts.tests > 0)
+  assert.equal(counts.pass, counts.tests)
+  for (const key of ['fail', 'cancelled', 'skipped', 'todo']) assert.equal(counts[key], 0)
+  console.log(JSON.stringify({ proof: 'production-runtime-with-external-http-tests', result: 'passed', realGithubLogin: 'not-qualified',
+    counts: { tests: counts.tests, passed: counts.pass, failed: counts.fail, skipped: counts.skipped } }))
+} catch (error) { failed = true; throw error }
+finally {
+  let cleanupFailed = false
+  try { offlineContainer.cleanup() }
+  catch { cleanupFailed = true; process.stderr.write('Owned offline runtime container cleanup failed; no unverified container was removed\n') }
+  const cleanup = compose(['down', '--volumes', '--remove-orphans'], { timeout: 45000, acceptFailure: true })
+  if (cleanup.error || cleanup.status !== 0) {
+    cleanupFailed = true
+    process.stderr.write(`Disposable runtime cleanup failed: ${cleanup.stderr?.slice(-2000) ?? ''}\n`)
+  }
+  if (cleanupFailed && !failed) throw new Error('Disposable runtime cleanup failed')
+}

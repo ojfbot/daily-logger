@@ -1,0 +1,60 @@
+name: DailyLogger release candidate image proof
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: Candidate version in vMAJOR.MINOR.PATCH-rc.N form
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  release-candidate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DAILYLOGGER_RELEASE_VERSION: ${{ inputs.release_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm type-check:service
+      - run: pnpm type-check:journal
+      - run: pnpm test:service:runtime
+      - run: pnpm test:service:artifact
+      - name: Prepare credential-free committed build context
+        run: pnpm service:runtime:context "$RUNNER_TEMP/dailylogger-runtime-context"
+      - name: Build release candidate without publishing
+        run: docker build -t dailylogger-runtime:proof "$RUNNER_TEMP/dailylogger-runtime-context"
+      - name: Export, reload and qualify release candidate including exporter and matched restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DAILYLOGGER_ARTIFACT_CREDENTIAL_CANARY: release-credential-canary-${{ github.run_id }}-${{ github.run_attempt }}
+        run: >-
+          pnpm service:artifact:export --image dailylogger-runtime:proof
+          --context "$RUNNER_TEMP/dailylogger-runtime-context"
+          --output "$RUNNER_TEMP/dailylogger-release-candidate"
+          --release-version "$DAILYLOGGER_RELEASE_VERSION"
+      - name: Retain release candidate for independent verification
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dailylogger-release-candidate-${{ inputs.release_version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/dailylogger-release-candidate/manifest.json
+            ${{ runner.temp }}/dailylogger-release-candidate/runtime-image.tar
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90

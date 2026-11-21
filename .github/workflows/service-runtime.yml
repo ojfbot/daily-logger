@@ -1,0 +1,62 @@
+name: Private fixture runtime image proof
+
+on:
+  pull_request:
+    paths:
+      - apps/service/**
+      - packages/journal/**
+      - docs/agent-service/editorial-api-responses.schema.json
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - packages/frontend/package.json
+      - .github/workflows/service-runtime.yml
+      - .github/workflows/service-release-candidate.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  runtime-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm type-check:service
+      - run: pnpm type-check:journal
+      - run: pnpm test:service:runtime
+      - run: pnpm test:service:artifact
+      - name: Prepare credential-free committed build context
+        run: pnpm service:runtime:context "$RUNNER_TEMP/dailylogger-runtime-context"
+      - name: Build without publishing
+        run: docker build -t dailylogger-runtime:proof "$RUNNER_TEMP/dailylogger-runtime-context"
+      - name: Export, reload and qualify fixture including exporter and matched restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DAILYLOGGER_ARTIFACT_CREDENTIAL_CANARY: fixture-credential-canary-${{ github.run_id }}-${{ github.run_attempt }}
+        run: >-
+          pnpm service:artifact:export --image dailylogger-runtime:proof
+          --context "$RUNNER_TEMP/dailylogger-runtime-context"
+          --output "$RUNNER_TEMP/dailylogger-fixture-artifact"
+      - name: Retain fixture candidate without publishing or deploying
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dailylogger-fixture-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/dailylogger-fixture-artifact/manifest.json
+            ${{ runner.temp }}/dailylogger-fixture-artifact/runtime-image.tar
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7

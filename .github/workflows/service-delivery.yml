@@ -1,0 +1,96 @@
+name: Service durable fixture delivery proof
+
+on:
+  pull_request:
+    paths:
+      - apps/service/**
+      - packages/journal/**
+      - src/activity-window.ts
+      - src/should-skip-run.ts
+      - src/__tests__/activity-window.test.ts
+      - src/__tests__/should-skip-run.test.ts
+      - src/schema.ts
+      - src/action-item-schema.ts
+      - src/article-references.ts
+      - src/generate-article.ts
+      - src/council.ts
+      - src/normalize-article-markdown.ts
+      - src/render-article.ts
+      - src/article-title.ts
+      - src/recommendation-prose.ts
+      - src/types.ts
+      - src/run-provenance.ts
+      - src/__tests__/schema.test.ts
+      - src/__tests__/journal-schema.test.ts
+      - src/__tests__/article-references.test.ts
+      - src/__tests__/article-markdown-normalization.test.ts
+      - src/__tests__/generate-article-provenance.test.ts
+      - src/__tests__/article-completion.test.ts
+      - src/__tests__/assembleBody.test.ts
+      - src/__tests__/renderArticle.test.ts
+      - src/__tests__/closing-options.test.ts
+      - src/__tests__/journal-render.test.ts
+      - src/__tests__/run-provenance.test.ts
+      - src/__tests__/toMarkdown.test.ts
+      - src/__tests__/model-time-output.test.ts
+      - src/__tests__/journal-serialization.test.ts
+      - src/__tests__/fleet-prompt-contract.test.ts
+      - eslint.config.js
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - docs/agent-service/editorial-api-responses.schema.json
+      - .github/workflows/service-delivery.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixture-delivery:
+    name: S03b durable delivery (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['24.11.1', '24']
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: dailylogger_test
+          POSTGRES_PASSWORD: local-ci-fixture-only
+          POSTGRES_DB: dailylogger_test_admin
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dailylogger_test -d dailylogger_test_admin"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DAILYLOGGER_TEST_DATABASE_URL: postgresql://dailylogger_test:local-ci-fixture-only@127.0.0.1:5432/dailylogger_test_admin
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm type-check:service
+      - run: pnpm type-check
+      - run: pnpm type-check:journal
+      - run: pnpm lint:journal
+      - run: pnpm test:journal
+      - run: pnpm test:service
+      - run: pnpm test:service:postgres
+      - run: pnpm test:service:delivery
+      - run: pnpm test:service:http
+      - run: pnpm test:service:exporter

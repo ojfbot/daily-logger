@@ -2,6 +2,49 @@
 
 ## Deviations
 
+- 2026-11-18. A real second-controller transfer was still progressing when the 180-second total deadline expired. Retain the exact authenticated byte ceiling and child termination, but allow a bounded 600-second total, with regressions for slow progress and hard expiry.
+
+- 2026-11-18. A follow-up reproduction used Solaris uppercase PAX and warmed descriptor content to bypass per-reference policy. Allow only the explicitly supported raw tar record types with zero-body directories, and validate platform/attestation metadata on every descriptor edge before using cached content.
+
+- 2026-11-18. The synthetic GitHub fixture accepted a repository-root trailing slash, but the authenticated live API returned 404. Use the canonical root route and align the fixture with the real API before accepting controller verification.
+
+- 2026-11-18. Re-review bypassed raw tar framing with PAX size overrides, raced the final pathname cleanup, and supplied two Linux/amd64 OCI candidates. Reject framing-changing extensions, retain failed private stages without recursive pathname deletion, and require an unambiguous runtime platform beneath accepted indexes.
+
+- 2026-11-18. The image exporter intentionally uses umask 077, but inherited fixture setup assumed create-mode arguments produced exact public readability. Actual Caddy startup reported permission denied. Set only public config/certificate and disposable leaf-directory modes explicitly, preserving private output/key modes and testing the real restrictive-umask preparation path.
+
+- 2026-11-18. Artifact cleanup assumed a created pathname remained owned, but independent review replaced it before failure and reproduced deletion of the replacement. Hold the created directory descriptor, perform relative file I/O, and check device/inode before cleanup; retain an ownership-changed stage for reconciliation instead of deleting another directory.
+- 2026-11-18. A nonzero Git probe and post-parse tar member limits were assumed sufficient, but independent review reproduced a bare-repository probe error and oversized PAX allocation. Accept only the recognized outside-repository result under a deadline and preflight raw tar extension/header budgets before invoking tarfile.
+
+- 2026-11-18. The exporter assumed Docker inspect's ID was the config digest, but real containerd-backed CI returned an index/manifest target. Record the engine target and config digest separately, verify their archive descriptor graph and layer closure, and execute/reload by the actual engine identity.
+
+- 2026-11-18. The reviewed private mount paths were assumed to exist, but independent host-permission review found Compose could create missing bind sources. Disabled host-path creation for both proxy mounts and added actual missing-source startup failures that assert no host directory was created.
+
+- 2026-11-18. Artifact output exclusion initially used Git's worktree-root probe, but independent review reproduced writes beneath `.git` and a `GIT_DIR` override. Strip Git overrides, reject metadata/ancestor markers, and use the repository-directory probe so bare repositories also stay excluded.
+- 2026-11-18. Download size was initially checked after the CLI finished writing, but a bounded fake response proved that could exceed its budget. Stream through a deadline and authenticated-size cap, terminating the owned downloader before writing excess bytes.
+
+- 2026-11-18. The installed OPM renderer was assumed to match the checked-in view, but it collapsed existing compound requirements and changed unrelated rendering. Preserved the prior generated view while obtaining compatible rendering through the existing reviewer.
+
+- 2026-11-18. The published-socket test client reused the runtime image without its writable temporary mount, so tsx could not initialize its private cache. Added the same bounded tmpfs used by the other disposable clients while keeping its root filesystem read-only.
+
+- 2026-11-18. Proxy privacy checks initially collected logs only after container replacement, but removed containers no longer contributed their successful/forbidden request logs. Capture each generation before recreation, then scan the combined buffers without printing request values.
+
+- 2026-11-18. The proxy callback canary used a prefixed state string, but the API validates an exact 43-character base64url state before checking the login cookie. Replaced it with a valid random state so the test reaches the intended forbidden-cookie path instead of merely testing malformed input.
+
+- 2026-11-18. Ingress proof assumed overriding HTTP Host left TLS identity unchanged, but Node derives default SNI from that header. The verifying client now selects TLS servername independently from its URL, so foreign-Host tests reach HTTP policy while wrong-name tests still exercise TLS rejection.
+- 2026-11-18. Explicitly disabling IPv6 only in the ingress overlay looked equivalent to the base default, but Compose hashes the configuration difference and may replace a network with external test clients attached. Made the base network setting explicit before startup so overlay application preserves its network identity.
+
+- 2026-11-18. A fresh credential-free Git store still created reflogs carrying builder identity. Disabled reference logging before fetching or creating refs and added context/image assertions that no local reflogs are packaged.
+
+- 2026-11-18. Runtime CI initially mounted only the HTTP test directory, but the combined suite launches its observation worker from the delivery test directory. Added that read-only external helper mount while keeping both test directories out of the shipped image and retaining the earlier unmounted production-entrypoint proof.
+
+- 2026-11-18. Packaging tests assumed another shared clone was safe, but the long-running session already had enough alternate object stores to hit Git's nesting limit. Tests now create a self-contained shallow local-transfer clone and explicitly fetch the pinned fixture commit; production context assembly already uses independent objects.
+
+- 2026-11-18. Portable runtime packaging initially assumed every CLI subprocess used the service directory, but the existing HTTP suite starts real CLI entrypoints from the repository root. Kept one service-owned production dependency tree and added a root node_modules link to that same tree, preserving loader resolution without shipping root development dependencies.
+
+- 2026-11-18. HTTP teardown assumed ending pools made a forced database drop safe, but the minimum-Node CI run passed every case and then emitted an asynchronous connection-termination error. Teardown now requires PostgreSQL to report no remaining database sessions before an unforced drop, so a connection leak fails verification instead of being forcibly hidden.
+
+- 2026-11-19, #549 continuation: the initiative snapshot alone left both the writer introduction and council reviewer evaluating the whole fleet as Frame OS. Aligned those prompts with core's current fleet goal, separated HelpDesk transport from agent consumption and FleetRunner qualification from deployed capability, and removed synthesis's contradictory per-section action quota. Preserved the roadmap-first structure and existing independent action review; prompt versions advance to article-v8 and council-synthesis-v3. Static orientation is not a live status ledger or approved weekly priority record. Model-output date/telemetry adaptation and evidence-aware council review remain separate service work.
+
 - The initial weekday rewrite assumed a leading weekday named the reporting day, but independent review found it can be content such as “Friday Night”; rewrite only an explicit separated label and preserve other weekday prose under a workday prefix.
 
 - The title rollout assumed browser fixtures asserted article behavior independently of the displayed heading, but the grouped-time fixture expected its raw title; update that exact heading assertion to the new reporting-workday display and rerun all browser journeys before merge.
@@ -606,3 +649,32 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 30 historical backfill (2026-10-31)
 
 - The backfill plan assumed the repository action-review pause affected only generation, but job-level wiring also injected it into the unit suite and caused the first recovery run to fail before drafting. Scope the variable to the Generate article step, retain normal test fixtures, and rerun the same dated backfill with actions held.
+
+## Deviations
+
+- 2026-11-18. The S04 pickup assumed the reviewed S03a reservation repairs protected completed bundles, but an absent nested leaf through a case-aliased parent bypassed the database ancestry check when the ancestor marker was missing. Kept #555 changes-requested, sent the real PostgreSQL reproduction and regular/native realpath mismatch to Yojimbo in HelpDesk sequence 14164, and continued the fixture-only S04 contract mapping.
+- 2026-11-18. The HTTP test client assumed Node fetch preserved its supplied Host header, but the service observed the loopback host and correctly rejected it. Switched the loopback fixture client to node:http and retained exact configured-host checks.
+- 2026-11-18. Initial S04 receipt checks covered command GET, but independent review reproduced inconsistent admission identities accepted by POST replay and run summaries. Shared receipt identity validation across those paths, checked cancellation-command links, and added poisoned-record regressions.
+- 2026-11-18. The read deadline design assumed destroying a PostgreSQL socket stopped active SQL, but forced cutoff and disconnect probes showed the backend could keep executing. Added a separately bounded cancellation connection to cancel the owned backend before destroying its client, with real-query cleanup regressions.
+- 2026-11-18. Command GET initially filtered by the HTTP actor, but run summaries also link prior trusted-CLI commands with older actor labels. Made configured-owner inspection cover those fixture records while preserving the authenticated actor namespace for new admissions, and verified legacy direct attempts retain null command IDs.
+- 2026-11-18. The HTTP error contract assumed normal hooks covered router failures, but independent Fastify reproduction showed bad URL encoding and overlong parameters bypassed those hooks and reflected raw paths. Added raw router sanitizers and exact error/no-store canary regressions.
+
+## Deviations — roadmap-first pulse and current initiatives (2026-11-15)
+
+- The plan was to change only the drafter's `roadmapPulse` rule and replace its Frame OS-era "Architecture snapshot". The council synthesis pass rewrites every section and had no instruction about the pulse, so it could expand the pulse back into a PR-by-PR narrative. Added one clause to synthesis rule 5 to keep the Direction / Next milestone / Blocked lines and the "Also in flight" list. Bumped both prompt versions so article provenance shows the change.
+- The conservative choice was to keep "reference every open PR by [repo] #number" and move it into the closing "Also in flight" list, rather than drop it.
+
+## Deviations — shared journal prompts (2026-11-19)
+
+- Full-root lint during prompt extraction found two unused imports left in the legacy generator by the earlier shared-renderer move. Removed those imports and expanded the journal lint boundary to include the generator, council and prompt contract test; full-root lint passes.
+- The journal suite initially exceeded the existing closing-options timeout while competing with parallel compiler work. The unchanged suite passed with two test workers; no timeout, assertion or production behavior was relaxed.
+
+## Deviations — service draft output contract (2026-11-19)
+
+- The first service tool name differed from the shared prompt's explicit `write_article` instruction. Independent review caught the contradiction; retain that tool name under the separate versioned service schema and assert instruction/selection agreement.
+- Removing per-date schemas from a long-lived AJV instance did not release its generated-code scope. Pinned-library reproduction showed retained validators; use a short-lived compiler per validation instead of claiming bounded retention from `removeSchema`.
+
+## Deviations — release-candidate integration (2026-11-19)
+
+- The first release workflow retained its image before the newer enabled-exporter and matched-restore gates. Combining the qualified journal stack with the candidate now moves those gates into the shared export producer, before manifest creation. Manifest version 2 requires their exact image/config identities, pinned PostgreSQL image, complete test outcomes and cleanup; the receiver rejects historical version 1 manifests rather than silently promoting their narrower proof.
+- The existing smoke parser expected JSON to start with `proof`. Exporter JSON begins with `schemaVersion`, and restore emits its summary inside TAP. Parse those gate records separately, reject duplicates/missing records, and add the restore config identity and upstream pin to its content-free summary.
