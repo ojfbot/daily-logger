@@ -1,0 +1,103 @@
+name: Service PostgreSQL checkpoint proof
+
+on:
+  pull_request:
+    branches: [main, codex/dailylogger-service-m1]
+    paths:
+      - apps/service/**
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - .github/workflows/service-postgres.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-checkpoints:
+    name: S03a PostgreSQL recovery (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['24.11.1', '24']
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: dailylogger_test
+          POSTGRES_PASSWORD: local-ci-fixture-only
+          POSTGRES_DB: dailylogger_test_admin
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dailylogger_test -d dailylogger_test_admin"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DAILYLOGGER_TEST_DATABASE_URL: postgresql://dailylogger_test:local-ci-fixture-only@127.0.0.1:5432/dailylogger_test_admin
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm type-check:service
+      - run: pnpm test:service
+      - name: Real PostgreSQL subprocess crash and concurrency tests
+        run: pnpm test:service:postgres
+
+  macos-postgres-aliases:
+    name: PostgreSQL recovery on case-insensitive APFS
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.11.1'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start disposable PostgreSQL 18 and case-insensitive APFS volume
+        run: |
+          brew install postgresql@18
+          DAILYLOGGER_PG_BIN="$(brew --prefix postgresql@18)/bin"
+          "$DAILYLOGGER_PG_BIN/initdb" -D "$RUNNER_TEMP/dailylogger-pg-data" -A trust -U dailylogger_test --encoding=UTF8 --locale=C
+          "$DAILYLOGGER_PG_BIN/pg_ctl" -D "$RUNNER_TEMP/dailylogger-pg-data" -l "$RUNNER_TEMP/dailylogger-pg.log" -o "-h 127.0.0.1 -p 55432" -w start
+          "$DAILYLOGGER_PG_BIN/createdb" -h 127.0.0.1 -p 55432 -U dailylogger_test dailylogger_test_admin
+          hdiutil create -size 256m -fs APFS -volname DailyLoggerCaseProof "$RUNNER_TEMP/dailylogger-case.dmg"
+          mkdir -p "$RUNNER_TEMP/dailylogger-case-volume"
+          hdiutil attach -nobrowse -mountpoint "$RUNNER_TEMP/dailylogger-case-volume" "$RUNNER_TEMP/dailylogger-case.dmg"
+      - name: Qualify actual filesystem aliases and PostgreSQL admission
+        env:
+          DAILYLOGGER_TEST_DATABASE_URL: postgresql://dailylogger_test@127.0.0.1:55432/dailylogger_test_admin
+          DAILYLOGGER_REQUIRE_CASE_INSENSITIVE: '1'
+        run: |
+          export TMPDIR="$RUNNER_TEMP/dailylogger-case-volume"
+          pnpm type-check:service
+          pnpm test:service
+          pnpm test:service:postgres
+      - name: Stop and detach disposable test resources
+        if: always()
+        run: |
+          if [[ -d "$RUNNER_TEMP/dailylogger-pg-data" ]]; then
+            DAILYLOGGER_PG_BIN="$(brew --prefix postgresql@18)/bin"
+            "$DAILYLOGGER_PG_BIN/pg_ctl" -D "$RUNNER_TEMP/dailylogger-pg-data" -m immediate -w stop || true
+          fi
+          hdiutil detach "$RUNNER_TEMP/dailylogger-case-volume" || true

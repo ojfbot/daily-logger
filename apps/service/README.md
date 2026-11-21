@@ -1,5 +1,12 @@
 # DailyLogger service: M1A offline fixture checkpoint
 
+The [S03a PostgreSQL fixture path](POSTGRES.md) adds checkpoint storage and durable
+run/attempt identities. [S03b durable delivery](DELIVERY.md) adds transactional
+command admission and a pg-boss worker for that same fixture.
+[S04 authenticated fixture HTTP](HTTP.md) adds owner sessions, command routes, and
+database projections. The SQLite commands below document the original proof.
+Model providers, publication, and Langfuse have separate delivery slices.
+
 This package is the first executable slice of the proposed persistent backend.
 It runs a real TypeScript LangGraph with the official SQLite checkpointer. It
 replays two **recorded artifacts**, pauses for an explicit local review decision,
@@ -8,8 +15,8 @@ review article quality, admit actions, publish, or replace the scheduled runner.
 The existing web app remains at `packages/frontend`.
 
 This is **M1A**, not completion of M1 or a deployable service. PostgreSQL remains
-the production persistence target. Langfuse export, a scheduler, authenticated
-API, provider adapters, deployment, and protected journal content are deferred.
+the production persistence target. Langfuse export, a scheduler, provider
+adapters, deployment, and protected journal content are deferred.
 
 ## Run the proof
 
