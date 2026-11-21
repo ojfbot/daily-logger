@@ -214,6 +214,10 @@ Use trace/span IDs for execution correlation and stable workflow/action/artifact
 
 Instrument collection, context selection, model calls, tool calls, review, checkpoints, and publication. Langfuse should answer which input and prompt produced a draft, why it needed revision, which reviewer found the problem, and what each attempt cost. Track source coverage, queue age, pending review age, retries, uncertain effects, and export failures as operational metrics. Keep high-cardinality action/run IDs in traces and records rather than metric labels.
 
+The first implementation boundary is [S05a offline fixture observations](../../apps/service/OBSERVABILITY.md). Explicit hooks project only fixed lifecycle labels, application-generated correlation IDs and bounded timing before any test sink receives a record. Admission observations describe the response after confirmed commit, including identical retries; they do not assert a newly created command. Durable attempts, saved run state, delivery-call results and queue acknowledgement retain separate meanings. The adapter is disabled by default and keeps observations outside graph state, approvals and artifacts.
+
+S05a's in-process test sinks must be trusted and nonblocking. Queues and asynchronous export waits are bounded; a timed-out sink is quarantined without repeatedly creating unresolved exports. Synchronous JavaScript blocking cannot be preempted by that timeout. S05b must qualify the real SDK transport, map application correlation UUIDs to SDK trace/span identities, and demonstrate actual private Langfuse readback and outage behavior before claiming operational observability. Fixture events supply no model-quality, token-cost or production evidence.
+
 Prompt assets remain versioned with reviewed code initially; record their digest in Langfuse. A later Langfuse prompt-management adoption must preserve reproducible version pins and promotion controls. Store human edits and reviewer findings as evaluation data with distinct authorship, rubric, dataset revision, and model version. Do not promote a model-generated score into an approval or an accepted fact.
 
 ## Security boundaries
