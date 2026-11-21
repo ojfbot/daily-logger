@@ -1,5 +1,10 @@
 # DailyLogger service: M1A offline fixture checkpoint
 
+The separate [S03a PostgreSQL fixture path](POSTGRES.md) adds production-target
+checkpoint storage and durable run/attempt identities. The SQLite commands below
+retain their original behavior. S03a does not add pg-boss, an owner API, model
+providers, authentication, publication, or Langfuse; those remain later slices.
+
 This package is the first executable slice of the proposed persistent backend.
 It runs a real TypeScript LangGraph with the official SQLite checkpointer. It
 replays two **recorded artifacts**, pauses for an explicit local review decision,
