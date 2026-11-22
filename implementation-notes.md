@@ -673,3 +673,8 @@ must establish the candidate's actual fit before a new model-run decision.
 
 - The first service tool name differed from the shared prompt's explicit `write_article` instruction. Independent review caught the contradiction; retain that tool name under the separate versioned service schema and assert instruction/selection agreement.
 - Removing per-date schemas from a long-lived AJV instance did not release its generated-code scope. Pinned-library reproduction showed retained validators; use a short-lived compiler per validation instead of claiming bounded retention from `removeSchema`.
+
+## Deviations — release-candidate integration (2026-11-19)
+
+- The first release workflow retained its image before the newer enabled-exporter and matched-restore gates. Combining the qualified journal stack with the candidate now moves those gates into the shared export producer, before manifest creation. Manifest version 2 requires their exact image/config identities, pinned PostgreSQL image, complete test outcomes and cleanup; the receiver rejects historical version 1 manifests rather than silently promoting their narrower proof.
+- The existing smoke parser expected JSON to start with `proof`. Exporter JSON begins with `schemaVersion`, and restore emits its summary inside TAP. Parse those gate records separately, reject duplicates/missing records, and add the restore config identity and upstream pin to its content-free summary.

@@ -208,15 +208,46 @@ def parse_counts(value):
             and type(value['skipped']) is int and value['skipped'] == 0, 'Incomplete qualification tests')
 
 
-def parse_proofs(value):
-    object_keys(value, ('preparation', 'offline', 'entrypoints', 'http', 'ingress', 'exportReload'))
+RESTORE_CHECKS = {
+    'matchedPairAndNegativeControls': True, 'allRawTablesAndSequencesEqual': True,
+    'ordinaryCopyAndDamagedStateRejected': True, 'narrowReconciliationRestartAndRuntimeValidation': True,
+    'singleOriginalResumeNoRepeatedSteps': True, 'duplicateConsumedAndCancelledAuthorityPreserved': True,
+    'zeroPostCutSourceEffects': True,
+}
+
+
+def parse_image_gates(value, image, postgres):
+    exporter = object_keys(value['enabledExporter'], ('proof', 'image', 'configId', 'postgresImage', 'counts',
+        'cleanup', 'productionEligible', 'actualLangfuseBackend', 'indexingQualified', 'hostDeploymentQualified'))
+    require(exact(exporter, {
+        'proof': 'enabled-exporter-final-image', 'image': image['engineId'], 'configId': image['configId'],
+        'postgresImage': postgres, 'counts': {'tests': 4, 'passed': 4, 'failed': 0, 'skipped': 0},
+        'cleanup': 'passed', 'productionEligible': False, 'actualLangfuseBackend': False,
+        'indexingQualified': False, 'hostDeploymentQualified': False}), 'Invalid same-image exporter proof')
+    restore = object_keys(value['matchedRestore'], ('proof', 'image', 'configId', 'postgresImage', 'status',
+        'checks', 'counts', 'cleanupComplete', 'productionEligible', 'authorityEpochQualified'))
+    parse_counts(restore['counts'])
+    require(exact(restore, {
+        'proof': 'isolated-matched-fixture-restore', 'image': image['engineId'], 'configId': image['configId'],
+        'postgresImage': postgres, 'status': 'PASS', 'checks': RESTORE_CHECKS, 'counts': restore['counts'],
+        'cleanupComplete': True, 'productionEligible': False, 'authorityEpochQualified': False}),
+        'Invalid same-image matched-restore proof')
+
+
+def parse_proofs(value, image, postgres):
+    object_keys(value, ('preparation', 'offline', 'entrypoints', 'http', 'ingress', 'exportReload',
+                        'enabledExporter', 'matchedRestore'))
     parse_counts(value['preparation'])
-    offline = object_keys(value['offline'], ('proof', 'node', 'git', 'uid', 'fixtureCommit', 'nativeSqlite'))
+    offline = object_keys(value['offline'], ('proof', 'node', 'git', 'uid', 'fixtureCommit', 'nativeSqlite',
+                                             'compiledExporterChild', 'exporterBatches', 'defaultTelemetry'))
     require(offline['proof'] == 'offline-final-image' and type(offline['node']) is str
             and re.fullmatch(r'v24\.\d+\.\d+', offline['node']) is not None
             and type(offline['git']) is str and len(offline['git']) < 100
             and type(offline['uid']) is int and offline['uid'] == 1000
-            and offline['nativeSqlite'] == 'passed', 'Invalid offline proof')
+            and offline['nativeSqlite'] == 'passed'
+            and offline['compiledExporterChild'] == 'ready-then-closed'
+            and type(offline['exporterBatches']) is int and offline['exporterBatches'] == 0
+            and offline['defaultTelemetry'] == 'disabled', 'Invalid offline proof')
     digest(offline['fixtureCommit'], SHA)
     require(exact(value['entrypoints'], {'proof': 'production-entrypoints-and-cross-container-storage',
             'migration': 'explicit-and-repeatable', 'fixture': 'complete', 'shutdown': 'clean', 'publishedPorts': 0}),
@@ -231,13 +262,14 @@ def parse_proofs(value):
             'mutationForwardCount': 1, 'logCanaries': 'absent', 'realGithubLogin': 'not-qualified'}), 'Invalid TLS proof')
     require(exact(value['exportReload'], {'status': 'passed', 'imageRecordRemoved': True,
             'archiveClosure': 'passed', 'emptyLayerStore': False}), 'Invalid export/reload proof')
+    parse_image_gates(value, image, postgres)
 
 
 def parse_manifest(value, profile):
     keys = ('schemaVersion', 'purpose', 'repository', 'source', 'ci', 'image', 'archive',
             'context', 'sourceFileDigests', 'upstreamImages', 'qualifications')
     object_keys(value, keys + (('release',) if profile is RELEASE_PROFILE else ()))
-    require(type(value['schemaVersion']) is int and value['schemaVersion'] == 1
+    require(type(value['schemaVersion']) is int and value['schemaVersion'] == 2
             and value['purpose'] == profile['manifest_purpose'] and value['repository'] == REPOSITORY,
             'Unsupported artifact manifest')
     source = validate_source(profile, parse_source(value['source']))
@@ -268,7 +300,7 @@ def parse_manifest(value, profile):
     for key, reference in value['upstreamImages'].items():
         require(type(reference) is str and re.fullmatch(key + r':[A-Za-z0-9._-]+@sha256:[0-9a-f]{64}', reference) is not None,
                 'Invalid upstream image pin')
-    parse_proofs(value['qualifications'])
+    parse_proofs(value['qualifications'], image, value['upstreamImages']['postgres'])
     require(value['qualifications']['offline']['fixtureCommit'] == context['fixtureCommit'], 'Fixture proof identity mismatch')
     return value
 
@@ -774,6 +806,50 @@ def proof_records(text):
     return result
 
 
+def single_gate_record(text, proof):
+    """Read one actual child receipt, including a Node TAP diagnostic line."""
+    records = []
+    for line in text.splitlines():
+        line = line[2:] if line.startswith('# ') else line
+        if line.startswith('{'):
+            value = json_bytes(line)
+            require(type(value) is dict, 'Invalid gate receipt')
+            if value.get('proof') == proof:
+                records.append(value)
+    require(len(records) == 1, 'Missing or duplicate image gate receipt')
+    return records[0]
+
+
+def qualify_image_gates(image, postgres, proof_env):
+    """Both producers execute the same gates before any manifest is written."""
+    exporter_text = run(['pnpm', 'service:runtime:exporter', image['engineId'], image['configId']],
+                        env=proof_env, timeout=660)
+    print(exporter_text, end='', flush=True)
+    exporter = single_gate_record(exporter_text, 'enabled-exporter-final-image')
+    require(exact(exporter.get('counts'), {'tests': 4, 'pass': 4, 'fail': 0, 'cancelled': 0, 'skipped': 0, 'todo': 0}),
+            'Incomplete exporter test suite')
+    # Preserve only the closed, content-free qualification summary in the artifact.
+    gates = {'enabledExporter': {key: exporter.get(key) for key in (
+        'proof', 'image', 'configId', 'postgresImage', 'cleanup', 'productionEligible',
+        'actualLangfuseBackend', 'indexingQualified', 'hostDeploymentQualified')}}
+    require(exporter.get('result') == 'passed', 'Exporter image qualification failed')
+    gates['enabledExporter']['counts'] = {'tests': 4, 'passed': 4, 'failed': 0, 'skipped': 0}
+    restore_env = dict(proof_env, DAILYLOGGER_RESTORE_IMAGE=image['engineId'],
+                       DAILYLOGGER_RESTORE_CONFIG_ID=image['configId'])
+    restore_text = run(['pnpm', 'exec', 'node', '--test', '--test-reporter=tap', '--test-concurrency=1',
+        *[str(path.relative_to(SOURCE_ROOT)) for path in sorted((SOURCE_ROOT / 'apps/service/test/restore').glob('*.test.mjs'))]],
+        env=restore_env, timeout=660)
+    print(restore_text, end='', flush=True)
+    restore = single_gate_record(restore_text, 'isolated-matched-fixture-restore')
+    gates['matchedRestore'] = {key: restore.get(key) for key in (
+        'proof', 'image', 'postgresImage', 'status', 'checks', 'cleanupComplete',
+        'productionEligible', 'authorityEpochQualified')}
+    gates['matchedRestore']['configId'] = restore.get('imageConfigId')
+    gates['matchedRestore']['counts'] = tap_counts(restore_text)
+    parse_image_gates(gates, image, postgres)
+    return gates
+
+
 def export_fixture(image, context, output, github=None, profile=FIXTURE_PROFILE, release=None):
     require(os.environ.get('GITHUB_ACTIONS') == 'true' and os.environ.get('GITHUB_REPOSITORY') == REPOSITORY
             and os.environ.get('GITHUB_JOB') == profile['job'] and image == OWNED_IMAGE, 'Export requires the owned CI image')
@@ -837,7 +913,8 @@ def export_fixture(image, context, output, github=None, profile=FIXTURE_PROFILE,
             'entrypoints': records['production-entrypoints-and-cross-container-storage'],
             'http': records['production-runtime-with-external-http-tests'], 'ingress': records['private-tls-proxy'],
             'exportReload': {'status': 'passed', 'imageRecordRemoved': True, 'archiveClosure': 'passed', 'emptyLayerStore': False}}
-        manifest = {'schemaVersion': 1, 'purpose': profile['manifest_purpose'], 'repository': REPOSITORY,
+        proofs.update(qualify_image_gates(image_identity, upstreams['postgres'], proof_env))
+        manifest = {'schemaVersion': 2, 'purpose': profile['manifest_purpose'], 'repository': REPOSITORY,
             'source': source, 'ci': {'workflowPath': profile['workflow'], 'workflowId': workflow['workflow_id'], 'runId': run_id,
                 'attempt': attempt, 'jobId': job['id'], 'jobKey': profile['job']}, 'image': image_identity,
             'archive': {'name': 'runtime-image.tar', 'size': owned.size('runtime-image.tar'), 'sha256': owned.hash('runtime-image.tar')},

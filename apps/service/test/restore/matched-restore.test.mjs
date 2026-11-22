@@ -290,6 +290,6 @@ test('matched database/files restore preserves authority and resumes only the fe
     save(failed ? 'UNQUALIFIED.json' : 'receipt.json', encode(receipt))
   }
   if (failed) throw new Error(`Isolated restore proof failed during ${receipt.failedPhase}; diagnostic=${JSON.stringify(receipt.failure ?? receipt.cleanupFailure)}; private evidence retained under ${evidence}; no database/configuration payload logged`)
-  console.log(JSON.stringify({ proof: receipt.proof, status: receipt.status, backupId: receipt.backupId, image,
+  console.log(JSON.stringify({ proof: receipt.proof, status: receipt.status, backupId: receipt.backupId, image, imageConfigId, postgresImage,
     productionEligible: false, authorityEpochQualified: false, checks: receipt.checks, cleanupComplete: receipt.cleanupComplete }))
 })
