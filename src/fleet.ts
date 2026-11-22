@@ -77,6 +77,9 @@ export const REPO_NOTES: Record<string, string> = {
   'classic-space-venue': 'Classic Space Venue (CSV) — ambient Arcade venue where LEGO Classic Space minifigs will represent live ojfbot agents/tasks via fleet-runner only; dev-host work uses labelled mock data while the fleet-runner read projection is pending; founded 2026-10-20 from core wayfinder map #541',
   // Added 2026-11-02 (BookcaseDiscovery card Z-2, fleet registration; northstar l1-bookcase-discovery).
   'BookcaseDiscovery': 'phone-at-a-bookshelf discovery — spine detection + OCR, local ISFDB catalog identification with evidence bands, taste-based recommendations; public build-in-public repo (AGPL-3.0), no photos in git',
+  // Added 2026-11-15 (owner ruling: HelpDesk/LocalHelp existence and architecture are public;
+  // specific network and device configuration is not). Private repo, so this entry is the opt-in.
+  'LocalHelp': 'LocalHelp — local-first coordination service; its HelpDesk package is presence check-ins + an addressed relay forum between devices and agents, signed per device, with a device adapter (MCP + CLI) and duty listeners; the "talking" side beside FleetRunner\'s "doing"; private repo — never report addresses, hostnames, ports, certificates or device/NAS/router settings',
 }
 
 /** Names that appear in older article tags/bodies but are no longer org repos (renames). */
