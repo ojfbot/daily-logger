@@ -142,6 +142,35 @@ separate operator inputs. This increment implements no NAS activation, productio
 invoker, upgrade quiescence, restoration, real GitHub login or unattended renewal.
 See [ingress preparation](INGRESS.md) for the remaining live checks.
 
+## Private fixture staging on a host
+
+Select a successful `service-runtime.yml` run from this repository for the exact
+PR head. Independently pin its tested merge and artifact ID and run the receiver
+above. Transfer its three verified files into a new, mode-0700 `incoming.NAME`
+directory under a dedicated private stage root. Include the candidate's
+`compose.yaml`, `artifact.py`, and `private-stage.py`, and copy
+`private-stage-probe.mjs` as `probe.mjs`. Use mode 0600 for files. Generate
+`stage-inputs.json` on the receiver controller with the SHA-256 values of
+`probe.mjs`, `private-stage.py`, and `artifact.py` under the respective keys
+`probeSha256`, `stagerSha256`, and `verifierSha256`.
+
+Run `python3 <inbox>/private-stage.py activate <inbox>`. The helper retains the
+release by built revision, rechecks the runtime bytes before Docker load, and
+starts a new revision-specific Compose project on internal networks with zero
+published ports. It generates fixture credentials locally. After the API and
+worker recover a test run across a restart, the helper writes the test receipt
+and atomically records the active staging revision. Verify the receipt, active
+record, and running containers agree before recording success.
+
+On a failed smoke test the helper stops only the candidate and keeps the prior
+active revision. If interrupted, check the active record and exact candidate
+containers before retrying. To reclaim an inactive candidate's resources, run
+`python3 <release>/private-stage.py discard <release>`. This deletes its fixture
+volumes and local credentials and keeps its release files and receipts for
+operator review. Release files have no automatic expiry. Each revision has
+fresh stage-only data. This path does not verify a browser login or publish an
+article.
+
 GitHub documents [artifact identity and digest metadata](https://docs.github.com/en/rest/actions/artifacts),
 [run-attempt evidence](https://docs.github.com/en/rest/actions/workflow-runs#get-a-workflow-run-attempt)
 and [job records](https://docs.github.com/en/rest/actions/workflow-jobs).
