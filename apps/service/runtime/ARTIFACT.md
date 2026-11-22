@@ -155,16 +155,18 @@ directory under a dedicated private stage root. Include the candidate's
 `probeSha256`, `stagerSha256`, and `verifierSha256`.
 
 Run `python3 <inbox>/private-stage.py activate <inbox>`. The helper retains the
-release by built revision, rechecks the runtime bytes before Docker load, and
-starts a new revision-specific Compose project on internal networks with zero
+release by built revision and attempt, rechecks the runtime bytes before Docker
+load, and starts a dedicated Compose project on internal networks with zero
 published ports. It generates fixture credentials locally. After the API and
 worker recover a test run across a restart, the helper writes the test receipt
 and atomically records the active staging revision. Verify the receipt, active
 record, and running containers agree before recording success.
 
 On a failed smoke test the helper stops only the candidate and keeps the prior
-active revision. If interrupted, check the active record and exact candidate
-containers before retrying. To reclaim an inactive candidate's resources, run
+active revision. Retry a failed build with a new inbox containing the same
+verified files. Each attempt has its own directory and project. If interrupted,
+check the active record and exact candidate containers before retrying. To
+reclaim an inactive candidate's resources, run
 `python3 <release>/private-stage.py discard <release>`. This deletes its fixture
 volumes and local credentials and keeps its release files and receipts for
 operator review. Release files have no automatic expiry. Each revision has

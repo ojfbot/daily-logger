@@ -15,9 +15,12 @@ from tempfile import TemporaryFile
 from artifact import FIXTURE_PROFILE, inspect_image_archive, json_bytes, parse_manifest
 
 
-os.umask(0o077)
 DOCKER = ["docker", "--host", "unix:///var/run/docker.sock"]
 SERVICES = ["api", "worker", "database"]
+PROJECT_LABEL = "com.docker.compose.project"
+DIRECTORY_LABEL = "com.docker.compose.project.working_dir"
+SERVICE_LABEL = "com.docker.compose.service"
+STAGE_DIRECTORY_LABEL = "com.ojfbot.dailylogger.stage.directory"
 ENV = {key: value for key, value in os.environ.items()
        if not key.startswith(("DAILYLOGGER_", "COMPOSE_", "DOCKER_"))}
 
@@ -175,11 +178,13 @@ def stage_environment(directory, image_id):
             f"DAILYLOGGER_GITHUB_CLIENT_SECRET={secrets.token_hex(32)}\n"
         )
     limits = {"database": "768m", "api": "512m", "worker": "512m"}
+    owner = {"labels": {STAGE_DIRECTORY_LABEL: str(directory)}}
     overlay = {
         "services": {service: {"restart": "unless-stopped", "mem_limit": capacity,
                                "logging": {"driver": "json-file", "options": {"max-size": "5m", "max-file": "2"}}}
                      for service, capacity in limits.items()},
-        "networks": {"oauth-outbound": {"internal": True}},
+        "networks": {"application": owner, "oauth-outbound": {"internal": True, **owner}},
+        "volumes": {"application-database": owner, "fixture-files": owner},
     }
     atomic_json(directory / "stage.json", overlay)
 
@@ -190,7 +195,7 @@ def compose_command(directory, project):
 
 
 def require_unused_project(directory, project):
-    label = "label=com.docker.compose.project=" + project
+    label = "label=" + PROJECT_LABEL + "=" + project
     containers = run([*DOCKER, "ps", "-aq", "--filter", label], cwd=directory, capture=True)
     require(not containers.strip(), "Staging Compose project already has containers")
     for resource in ("network", "volume"):
@@ -201,11 +206,32 @@ def require_unused_project(directory, project):
                 "Staging Compose project already has " + resource + " resources")
 
 
+def project_containers(directory, project):
+    ids = run([*DOCKER, "ps", "-aq", "--filter", f"label={PROJECT_LABEL}={project}"],
+              cwd=directory, capture=True).split()
+    if not ids:
+        return []
+    containers = json.loads(run([*DOCKER, "inspect", *ids], cwd=directory, capture=True))
+    for container in containers:
+        labels = container["Config"]["Labels"]
+        require(labels.get(PROJECT_LABEL) == project and labels.get(DIRECTORY_LABEL) == str(directory) and
+                labels.get(SERVICE_LABEL) in [*SERVICES, "migrate"], "Stage operation refuses a foreign container")
+    return containers
+
+
+def stop_candidate(directory, project):
+    containers = project_containers(directory, project)
+    for service in ("api", "migrate", "worker", "database"):
+        ids = [c["Id"] for c in containers if c["Config"]["Labels"][SERVICE_LABEL] == service and c["State"]["Running"]]
+        if ids:
+            run([*DOCKER, "stop", "--time", "10", *ids], cwd=directory)
+
+
 def qualify(directory, project, image_id, manifest):
     def compose(*args, **kwargs):
         return run([*compose_command(directory, project), *args], cwd=directory, **kwargs)
 
-    config = json.loads(compose("config", "--format", "json", capture=True))
+    config = json.loads(compose("--profile", "migration", "config", "--format", "json", capture=True))
     require(all(not s.get("ports") for s in config["services"].values()) and
             all(n["internal"] for n in config["networks"].values()), "Staging exposes a port or external network")
     require(config["services"]["database"]["image"] == manifest["upstreamImages"]["postgres"],
@@ -227,24 +253,26 @@ def qualify(directory, project, image_id, manifest):
     compose("restart", "api", "worker")
     result = smoke("resume", admitted["runId"], admitted["resumeTargetId"], admitted["key"])
     containers = {}
-    networks = set()
+    networks = {}
     for service in SERVICES:
         container = compose("ps", "-q", service, capture=True).strip()
         details = json.loads(run([*DOCKER, "inspect", container], cwd=directory, capture=True))[0]
-        require(details["State"]["Running"] and not details["HostConfig"]["PortBindings"],
+        require(details["State"]["Status"] == "running" and not details["HostConfig"]["PortBindings"],
                 service + " is stopped or has a published host port")
         attachments = details["NetworkSettings"]["Networks"]
         require(set(attachments) == ({project + "_application", project + "_oauth-outbound"} if service == "api"
                                      else {project + "_application"}), "A service joined an unexpected network")
-        networks.update(attachments)
+        for name in attachments:
+            networks.setdefault(name, set()).add(details["Id"])
         if service != "database":
             require(details["Image"] in {image_id, manifest["image"]["configId"]}, "Running image does not match")
         else:
             require(details["State"]["Health"]["Status"] == "healthy", "PostgreSQL is not healthy")
         containers[service] = "healthy" if service == "database" else "running"
-    for name in networks:
+    for name, members in networks.items():
         network = json.loads(run([*DOCKER, "network", "inspect", name], cwd=directory, capture=True))[0]
-        require(network["Internal"] and network["Labels"].get("com.docker.compose.project") == project,
+        require(network["Internal"] and network["Labels"].get(PROJECT_LABEL) == project and
+                network["Labels"].get(STAGE_DIRECTORY_LABEL) == str(directory) and set(network["Containers"]) == members,
                 "Stage network is not internal and project-owned")
     flags = ("anonymousRequestRejected", "invalidCsrfRejected", "stoppedAndResumed",
              "duplicateStayedSameRun", "articleAndActionsMatch")
@@ -260,16 +288,20 @@ def activate(root, pending):
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         manifest = verify_release(pending)
         revision = manifest["source"]["builtRevision"]
-        project = "dailylogger-stage-" + revision[:16]
+        attempt = secrets.token_hex(6)
+        project = "dailylogger-stage-" + revision[:16] + "-" + attempt
         require_unused_project(pending, project)
         store = root / "releases"
         store.mkdir(mode=0o700, exist_ok=True)
         require(private_directory(store), "Release store is not private")
-        destination = store / revision
-        require(not os.path.lexists(destination), "Release already exists. Preserve the existing release.")
+        destination = store / (revision + "-" + attempt)
+        require(not os.path.lexists(destination), "Stage attempt already exists")
         current = root / "active.json"
         previous = json.loads(current.read_text()) if current.exists() else None
+        require(not previous or previous["revision"] != revision, "This revision is already the active stage")
         pending.rename(destination)
+        atomic_json(destination / "project.json", {"project": project})
+        active = {"revision": revision, "release": destination.name, "project": project, "qualified": True}
         configured = False
         try:
             image = load_image(destination, manifest)
@@ -280,20 +312,28 @@ def activate(root, pending):
                 "result": "PASS", "scope": "private-fixture-staging",
                 "completedAt": datetime.now(timezone.utc).isoformat(),
                 "revision": revision, "prHead": manifest["source"]["pullRequest"]["head"],
-                "ciRunId": manifest["ci"]["runId"], "project": project,
+                "ciRunId": manifest["ci"]["runId"], "release": destination.name, "project": project,
                 "previousRevision": previous["revision"] if previous else None,
                 "productionEligible": False, **smoke,
             }
             atomic_json(destination / "stage-receipt.json", receipt)
-            atomic_json(current, {"revision": revision, "project": project, "qualified": True})
+            atomic_json(current, active)
         except Exception as error:
             stop_status = "not-started"
             if configured:
                 try:
-                    run([*compose_command(destination, project), "stop", *SERVICES], cwd=destination)
-                    stop_status = "stopped-candidate"
-                except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-                    stop_status = "stop-failed"
+                    live = json.loads(current.read_text()) if current.exists() else None
+                except (OSError, ValueError):
+                    stop_status = "activation-uncertain"
+                else:
+                    if live == active:
+                        stop_status = "activation-uncertain"
+                    else:
+                        try:
+                            stop_candidate(destination, project)
+                            stop_status = "stopped-candidate"
+                        except (RuntimeError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                            stop_status = "stop-failed"
             atomic_json(destination / "stage-failure.json",
                         {"result": "FAIL", "revision": revision, "candidate": stop_status,
                          "error": type(error).__name__})
@@ -309,14 +349,22 @@ def discard(release):
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         manifest = verify_release(release)
         revision = manifest["source"]["builtRevision"]
-        require(release.name == revision, "Release path and identity differ")
+        match = re.fullmatch(revision + "-([a-f0-9]{12})", release.name)
+        require(match, "Release path and identity differ")
         current = root / "active.json"
-        require(not current.exists() or json.loads(current.read_text())["revision"] != revision,
-                "Discard refuses the active staging revision")
-        if not (release / ".env").exists():
-            require(not (release / "stage.json").exists(), "Stage credentials are unexpectedly absent")
+        require(not current.exists() or json.loads(current.read_text())["release"] != release.name,
+                "Discard refuses the active staging release")
+        project = json_bytes(one_file(release, "project.json").read_bytes())["project"]
+        require(project == "dailylogger-stage-" + revision[:16] + "-" + match.group(1),
+                "Release project identity is invalid")
+        env_file = release / ".env"
+        overlay = release / "stage.json"
+        if not env_file.exists() or not overlay.exists():
+            require_unused_project(release, project)
+            env_file.unlink(missing_ok=True)
+            overlay.unlink(missing_ok=True)
             return
-        project = "dailylogger-stage-" + revision[:16]
+        project_containers(release, project)
         command = compose_command(release, project)
         config = json.loads(run([*command, "config", "--format", "json"], cwd=release, capture=True))
         for kind in ("volume", "network"):
@@ -327,15 +375,18 @@ def discard(release):
                 listed = run([*DOCKER, kind, "ls", "--format", "{{.Name}}"], cwd=release, capture=True)
                 if expected in listed.splitlines():
                     (existing,) = json.loads(run([*DOCKER, kind, "inspect", expected], cwd=release, capture=True))
-                    require(existing["Labels"].get("com.docker.compose.project") == project,
+                    require(existing["Labels"].get(PROJECT_LABEL) == project and
+                            existing["Labels"].get(STAGE_DIRECTORY_LABEL) == str(release),
                             "Stage cleanup refuses a resource with a different owner")
         run([*command, "down", "--volumes"], cwd=release)
-        (release / "stage.json").unlink()
-        (release / ".env").unlink()
+        require_unused_project(release, project)
+        env_file.unlink(missing_ok=True)
+        overlay.unlink(missing_ok=True)
         print("Discarded inactive private stage containers, volumes and credentials.", flush=True)
 
 
 if __name__ == "__main__":
+    os.umask(0o077)
     if len(sys.argv) == 3 and sys.argv[1] == "discard":
         discard(Path(sys.argv[2]).absolute())
     else:
