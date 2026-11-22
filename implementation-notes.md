@@ -678,3 +678,10 @@ must establish the candidate's actual fit before a new model-run decision.
 
 - The first release workflow retained its image before the newer enabled-exporter and matched-restore gates. Combining the qualified journal stack with the candidate now moves those gates into the shared export producer, before manifest creation. Manifest version 2 requires their exact image/config identities, pinned PostgreSQL image, complete test outcomes and cleanup; the receiver rejects historical version 1 manifests rather than silently promoting their narrower proof.
 - The existing smoke parser expected JSON to start with `proof`. Exporter JSON begins with `schemaVersion`, and restore emits its summary inside TAP. Parse those gate records separately, reject duplicates/missing records, and add the restore config identity and upstream pin to its content-free summary.
+
+## Deviations — trust build slicing (2026-11-22)
+
+Slicing core#674 into roadmap slices and issues (discoveries issue ojfbot/core#687).
+
+- 2026-11-22 (slicing): #674 names no watch-only stage, and ADR-0086 requires one for every check that blocks. Went: each enforcer ships watch-only on staging, with go-live slices (P1-GL-LH, P1-GL-FR) after the outside review, one owner tap each.
+- 2026-11-22 (slicing): The roadmap schema takes one `depends_on`. Went: it names each slice's first blocker; native GitHub links hold the full graph.

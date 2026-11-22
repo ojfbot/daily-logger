@@ -182,3 +182,21 @@ Maintain independent pause controls for generation, model spend, action review, 
 | Protected-content access | VPN-only first; any protected routes on the public origin require the separate security review | S12 |
 
 The first implementation action is S01/S02 on current main, followed immediately by the persistent fixture service. Host procurement, model-spend limits, and deployment details do not prevent preparing that reviewable code, but their unresolved values must be settled before dependent live operation.
+
+## Agent trust build slices (map core#661)
+
+The ruled agent-trust map gives DailyLogger five slices: its publish door record, the measures block, the claim-check and label fixes, the hosted writers' cut, and the publishing-merge gate. They are registered in Core's fleet roadmap (`decisions/northstar/roadmap-l2-ojfbot.md`, phases PH8–PH13). A merge that publishes counts as go-live and needs the owner's tap, and the daily article's auto-merge is the one written standing exception. Discoveries: ojfbot/core#687.
+
+| Slice | Title | Repo | Issue | Blocked by | Complexity (draft) |
+|---|---|---|---|---|---|
+| `DLG-1` | DailyLogger publish door record | daily-logger | ojfbot/daily-logger#595 | `RETRO-2` | low |
+| `DLG-5` | Publishing merges need the merge proof or the written standing exception | daily-logger | ojfbot/daily-logger#596 | `TI-4` | medium |
+| `DLG-4` | Hosted writers' cut: disable the workflows and narrow their secret on a stop | daily-logger | ojfbot/daily-logger#597 | `RETRO-3` | low |
+| `DLG-3` | DailyLogger labels, comment actuators and the claim-check fix | daily-logger | ojfbot/daily-logger#598 | `RETRO-3` | medium |
+| `DLG-2` | Measures block pasted from the feed, written by code | daily-logger | ojfbot/daily-logger#599 | `BD-3` | low |
+
+**Catching surprises.** Every slice issue has a "Deviations and discoveries" section. Builders append to it, and to the repo's `implementation-notes.md` under `## Deviations`, whenever reality differs from the plan. Newly found unknowns go in the tracking issue ojfbot/core#687 ("Trust build: discoveries and plan gaps"), which every epic links.
+
+- A discovery that **changes a ruled decision** (#662–#682, #674) goes to the owner **through the conductor**.
+- A discovery that **only changes a slice** gets a re-plan of that slice, not of the whole map.
+- Each layer ends with a **layer retro** slice (`RETRO-0` to `RETRO-5`) that re-checks the next layer's assumptions before it starts.
