@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261104-d6907a703c20",
+  "article": {
+    "date": "2026-11-04",
+    "sourceCommitSha": "d6907a703c200c611fec57600a07debc0a995814",
+    "blobSha": "9c0703a8806698143e7fc1f6ef68d2a2f6c62dca"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-05T11:34:28Z",
+  "scope": "Final visible Draft, exact source/article/action bytes, rendered-link targets, fleet-runner stack ordering, daily-blog issue and subsequent run receipts, and current review registry/discovery state. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "5f0ddd0235952c9357df3f0d720371368193ca7b",
+  "fullRecordPath": "reviews/articles/2026-11-04-d6907a703c200c611fec57600a07debc0a995814.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Two cross-repository links point at the wrong repositories",
+      "location": "Line 17 links core #578 to BookcaseDiscovery; line 32 links BookcaseDiscovery #28 to core.",
+      "explanation": "The visible anchors name the intended records, but their href targets swap repositories and lead to nonexistent or unrelated repository-number pairs.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/d6907a703c200c611fec57600a07debc0a995814/_articles/2026-11-04.md#L17",
+        "https://github.com/ojfbot/daily-logger/blob/d6907a703c200c611fec57600a07debc0a995814/_articles/2026-11-04.md#L32",
+        "https://github.com/ojfbot/core/issues/578",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/28"
+      ],
+      "correction": "Link the fleet-runner parent to core issue #578 and the compute-fleet plan to BookcaseDiscovery PR #28.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The downstream fleet dependency order is reversed",
+      "location": "Lines 90, 98, 116 and 117 place #59 before #40 and #53 while saying no technical dependency remains.",
+      "explanation": "The PR bodies establish core #584 after #583, BookcaseDiscovery #40 after #584, #53 stacked on #40, and #59 stacked on #53. The article instead places #59 near the front and erases explicit stack-order dependencies.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/d6907a703c200c611fec57600a07debc0a995814/_articles/2026-11-04.md#L90-L98",
+        "https://github.com/ojfbot/core/pull/584",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/40",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/53",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/59"
+      ],
+      "correction": "State the downstream order as core #583 to #584 to BookcaseDiscovery #40 to #53 to #59, subject to recorded review and owner gates, and retain the technical ordering constraints.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Issue 516 does not establish a current pipeline failure",
+      "location": "Lines 104, 116 and 119 call #516 a live daily-blog.yml failure and propose finding its unblock.",
+      "explanation": "Issue #516 records a November 1 failed run but no later status evidence. Subsequent scheduled run 41877544769 completed successfully and generated this article, so the open issue is not proof of a current failure.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/d6907a703c200c611fec57600a07debc0a995814/_articles/2026-11-04.md#L104-L119",
+        "https://github.com/ojfbot/daily-logger/issues/516",
+        "https://github.com/ojfbot/daily-logger/actions/runs/41877544769"
+      ],
+      "correction": "Describe #516 as an open, stale alert whose current applicability is unverified; remove the live-failure and unblock premises unless a current failed receipt is linked.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The single-session and reviewer-identity claim lacks a durable source binding",
+      "location": "Retained draft context at line 125 says all 28 PRs were reviewed in one session and no reviewer other than the owner is identified.",
+      "explanation": "Public PRs and commits prove the work and authenticated GitHub account, but do not expose a stable agent/chat session binding for all 28 reviews or establish that the shared login is the independent reviewer identity.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/d6907a703c200c611fec57600a07debc0a995814/_articles/2026-11-04.md#L117-L125"
+      ],
+      "correction": "Omit the single-session and reviewer-identity claims, or link a durable public handoff record that proves them without relying on raw or private session transcripts.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
