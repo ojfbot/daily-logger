@@ -192,7 +192,8 @@ The ruled agent-trust map gives DailyLogger five slices: its publish door record
 | `DLG-1` | DailyLogger publish door record | daily-logger | ojfbot/daily-logger#595 | `RETRO-2` | low |
 | `DLG-5` | Publishing merges need the merge proof or the written standing exception | daily-logger | ojfbot/daily-logger#596 | `TI-4` | medium |
 | `DLG-4` | Hosted writers' cut: disable the workflows and narrow their secret on a stop | daily-logger | ojfbot/daily-logger#597 | `RETRO-3` | low |
-| `DLG-3` | DailyLogger labels, comment actuators and the claim-check fix | daily-logger | ojfbot/daily-logger#598 | `RETRO-3` | medium |
+| `DLG-3a` | DailyLogger claim-check fix: verdicts depend only on independent records | daily-logger | ojfbot/daily-logger#598 | `RETRO-3` | medium |
+| `DLG-3b` | DailyLogger comment actuators and status labels | daily-logger | ojfbot/daily-logger#601 | `DLG-3a` | medium |
 | `DLG-2` | Measures block pasted from the feed, written by code | daily-logger | ojfbot/daily-logger#599 | `BD-3` | low |
 
 **Catching surprises.** Every slice issue has a "Deviations and discoveries" section. Builders append to it, and to the repo's `implementation-notes.md` under `## Deviations`, whenever reality differs from the plan. Newly found unknowns go in the tracking issue ojfbot/core#687 ("Trust build: discoveries and plan gaps"), which every epic links.

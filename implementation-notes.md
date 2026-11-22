@@ -684,4 +684,5 @@ must establish the candidate's actual fit before a new model-run decision.
 Slicing core#674 into roadmap slices and issues (discoveries issue ojfbot/core#687).
 
 - 2026-11-22 (slicing): #674 names no watch-only stage, and ADR-0086 requires one for every check that blocks. Went: each enforcer ships watch-only on staging, with go-live slices (P1-GL-LH, P1-GL-FR) after the outside review, one owner tap each.
-- 2026-11-22 (slicing): The roadmap schema takes one `depends_on`. Went: it names each slice's first blocker; native GitHub links hold the full graph.
+- 2026-11-22 (slicing): The first Codex review found two missing slices (the data layer's fingerprint sender, DA-W, and the switch of the ask-first gate and merge proof to enforcing, P2-GL) and owner steps described as agent success (AU-1b, AU-8, DLG-4). Went: added the slices and reworded the success lines.
+- 2026-11-22 (slicing): The first Claude review found that the planned checks could not fail when tests were missing, plus missing owner steps (NAS service accounts, the checker's GitHub credential) and missing go-live steps. Went: checks run a test file named for the slice; added OW-SVC, OW-CK, P0-GL and P3-GL; split DLG-3; phase 1 stays off in production until its go-live slice.
