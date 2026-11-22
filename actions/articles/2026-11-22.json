@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-22",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-22",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Ambiguous or unsupported exact-command PR target; review pending"
+    },
+    "articleDigest": "a8eae7be37276c6964e3574409ea1c8e78d67a52884b38db5a6e50989cdbabb2",
+    "roundId": "9f9fc1bca25dc737e094ecec9bcd0ca327dd1644d7eb65bb58d02cd9667305a1",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "fe709304e0dc89c38594e957a8d606e6366021cbaf70dc208fbe924268700835",
+        "payload": {
+          "command": "fleet-stage-setup.sh && fleet-stage.sh <rev>",
+          "description": "Run the first real staging operation against the NAS test copy. `fleet-stage-setup.sh` is idempotent; skip if already run on this machine. `<rev>` is the git SHA or CI run identifier for the target artifact (latest successful main run by documented rule). This is the gate that proves the pipeline end-to-end before the promote-with-undo slice opens. Requires NAS reachability.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-22"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "27accfc1576af6f367b90a057f33041ec11334f2e377463e1fef01c7901c30ba",
+        "payload": {
+          "command": "gh issue view 655 --repo ojfbot/core",
+          "description": "Review the two identified fix points for the `pnpm verify` two-concurrent-run race: image tag registration at `scripts/verify.mjs:644` and shared scratch HOME/TMPDIR at `scripts/verify.mjs:207`. Assign an owner and a fix milestone before `pnpm verify` is used by multiple developers in parallel.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-22"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "ec481a87e8c871202671a789fdd69518a5f063ca1545759e37a67166ba853142",
+        "payload": {
+          "command": "gh pr view 659 --repo ojfbot/core",
+          "description": "Track the one-time `release-as: 0.3.0` removal on fleet-runner (core #659). This must execute immediately after the tag `fleet-runner-v0.3.0` is created. The issue is the only tracking mechanism; ensure an owner is named before the first tag is cut.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-22"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "39b5f64a8ba7bd3cb43e237686e5bc34bf5beaab5a7422fc6897cbfffd45c178",
+        "payload": {
+          "command": "gh pr view 569 --repo ojfbot/daily-logger",
+          "description": "Confirm whether daily-logger #569 is unblocked now that the service foundation (#592) is on main. If its stated dependencies are satisfied, it is the next merge in the sequenced stack of sixteen draft PRs (#569–#584).",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-22"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "ba303e4558945e1828cfbc9ad7107c95e2362f3624c0f24dc59ec76299f0e584",
+        "payload": {
+          "command": "gh issue view 21 --repo ojfbot/HouseholdAgentKit",
+          "description": "Assess the November 25 gate date on HouseholdAgentKit #21 (live beat blocked). Three days remain from publication. Determine whether the date will be hit and what the consequence is if it isn't. This is HouseholdAgentKit-side triage, not a FleetRunner concern, but the gate date requires an explicit disposition.",
+          "repo": "HouseholdAgentKit",
+          "status": "open",
+          "sourceDate": "2026-11-22"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "The FleetRunner release pipeline has all three slices on main. The next concrete step is a first real staging run against the NAS test copy: `fleet-stage-setup.sh` (idempotent) followed by `fleet-stage.sh <rev>`. This is owner-gated; the NAS must be reachable. No date or named owner is recorded in the available evidence.\n\nMac workers pieces 5–6 (installs and the two-host run, under core #647) are prerequisites before G5 is fully satisfied. No owner is named in the available evidence.\n\nThe `pnpm verify` two-concurrent-run race (core #655) has two identified fix points: image tag registration at `scripts/verify.mjs:644` and shared scratch HOME/TMPDIR at `scripts/verify.mjs:207`. It fails loudly. No fix timeline or owner is named.\n\ncore #659 (one-time `release-as: 0.3.0` removal on fleet-runner) must execute immediately after the tag `fleet-runner-v0.3.0` is created. This is a manual step with no automated enforcement. The issue itself is the only tracking mechanism named.\n\nWhether daily-logger #569 is unblocked and mergeable now that #592 is on main requires inspecting #569's stated dependencies against current main state. The sixteen draft PRs (#569–#584) are sequenced; merge order is in the PR dependency chain. #591 shows as merged in the activity snapshot but is not confirmed in the commit list for this interval.\n\nThe four core DRAFT PRs (#627, #634, #636, #637) have no age, no stated blocker, and no next action in the available evidence. #636 (stale Frame-wide CLAUDE.md) and #637 (reusable takeover practice) may be relevant to agent-trust and onboarding work respectively, but their disposition — parked, active, or rotting — is not established.\n\nAgent-trust bugs from #663 challenge pass: core #677 (VERIFIED), core #683 (CONFLICT), daily-logger #593 (verify-claims repeated-claim bug) — all require triage independent of the release pipeline.\n\nHouseholdAgentKit #1 P0 gate date (#21) is November 25 — three days from publication. Whether this date will be hit is not established by available evidence. Requires HouseholdAgentKit-side triage.\n\nThe byte-identical tree diff check for #592 was a one-time manual verification (`git diff <replay-head> 3e43c07` to empty output). There is no automated CI enforcement on future replays. If this check matters for audit continuity, it should be automated.\n\nWhether the DailyLogger service is deployable through the FleetRunner pipeline today is not confirmed. That determination requires the first real staging run."
+    },
+    "stateDigest": "f6d2fdc357c6ca8e8879065eac2a1f4236864bf14f8d825be5506a195c095e72",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

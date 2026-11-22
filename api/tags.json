@@ -2,27 +2,27 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 121
+    "count": 122
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 97
+    "count": 98
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 91
+    "count": 92
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 80
+    "count": 81
   },
   {
     "name": "hardening",
     "type": "practice",
-    "count": 54
+    "count": 55
   },
   {
     "name": "model-behavior-as-design",
@@ -40,19 +40,19 @@
     "count": 38
   },
   {
+    "name": "tooling-for-iteration",
+    "type": "concept",
+    "count": 35
+  },
+  {
     "name": "rest-day",
     "type": "activity",
     "count": 35
   },
   {
-    "name": "tooling-for-iteration",
-    "type": "concept",
-    "count": 34
-  },
-  {
     "name": "security-as-emergent-ux",
     "type": "concept",
-    "count": 31
+    "count": 32
   },
   {
     "name": "sprint",
@@ -85,14 +85,14 @@
     "count": 20
   },
   {
-    "name": "verification-flagged",
+    "name": "fleet-runner",
     "type": "concept",
     "count": 18
   },
   {
-    "name": "fleet-runner",
+    "name": "verification-flagged",
     "type": "concept",
-    "count": 17
+    "count": 18
   },
   {
     "name": "cleanup",
