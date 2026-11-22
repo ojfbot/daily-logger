@@ -1,5 +1,226 @@
 [
   {
+    "date": "2026-11-22",
+    "title": "Saturday — FleetRunner Release Pipeline Closes All Three Slices; Daily-Logger Service Foundation Lands",
+    "summary": "Saturday merged nine PRs across core and daily-logger: FleetRunner's CI image, test copy, and stage script complete a deployable release pipeline while the persistent DailyLogger service foundation lands on main.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "daily-logger"
+    ],
+    "commitCount": 40,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Reproducible two-build CI image as the release artifact",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Test copy is fully isolated — its own Compose project, port, database, and owner identity",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Stage script rollback on any failure, interrupt, or lost connection",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "`pnpm verify` reads workflow files directly — unknown inputs are reported, not skipped",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "GitHub-only jobs are SKIPPED with a named reason — never silently passed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "History replay rather than squash to land the DailyLogger service foundation",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Worker pin-check refuses group/others-writable Node binaries — test harness must match",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "648",
+          "url": "https://github.com/ojfbot/core/pull/648"
+        },
+        "at": "2026-11-22T03:28:11.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "657",
+          "url": "https://github.com/ojfbot/core/pull/657"
+        },
+        "at": "2026-11-22T06:19:43.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "652",
+          "url": "https://github.com/ojfbot/core/pull/652"
+        },
+        "at": "2026-11-22T05:10:58.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "650",
+          "url": "https://github.com/ojfbot/core/pull/650"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "653",
+          "url": "https://github.com/ojfbot/core/pull/653"
+        },
+        "at": "2026-11-22T04:17:41.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "592",
+          "url": "https://github.com/ojfbot/daily-logger/pull/592"
+        },
+        "at": "2026-11-22T06:40:13.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "590",
+          "url": "https://github.com/ojfbot/daily-logger/pull/590"
+        },
+        "at": "2026-11-22T04:32:42.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "589",
+          "url": "https://github.com/ojfbot/daily-logger/pull/589"
+        },
+        "at": "2026-11-22T04:29:55.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "579",
+          "url": "https://github.com/ojfbot/daily-logger/pull/579"
+        },
+        "at": "2026-11-22T04:15:42.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-22T17:20:30.797Z",
+        "runId": "45048728056",
+        "runNumber": 326,
+        "runAttempt": 1,
+        "event": "schedule",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/45048728056",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "5e6ba1587c630a9441fd807c5484a1479ff4e7ed",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-22T17:18:50.000Z",
+          "startedAt": "2026-11-22T17:18:50.000Z",
+          "expectedAt": "2026-11-22T09:30:00.000Z",
+          "dispatchDelaySeconds": 28130,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v8-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "1f77b56f789d818b02f9b24cb876bb631c4a504c2c8f1246cf875237fadab523"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v3-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "3dfb130de94e33458f539a925d9d12446ffaaa88ad67a0b3c07801dbce21a325"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.3",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-21",
     "title": "Friday — FleetRunner Mac Workers Plan Clears Four Pieces; HouseholdAgentKit Enters the Fleet",
     "summary": "Friday merged four core PRs advancing FleetRunner's G4 Mac workers plan through pause/drain/resume presence, while HouseholdAgentKit made its first commit as a new fleet member.",
