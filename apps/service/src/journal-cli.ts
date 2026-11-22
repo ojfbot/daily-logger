@@ -28,7 +28,7 @@ async function main() {
   } })
   const [operation] = positionals
   const required: Record<string, readonly (keyof typeof values)[]> = {
-    migrate: [], work: ['models'], enqueue: ['models', 'request'], status: ['run-id'], result: ['run-id'],
+    migrate: [], work: ['models'], enqueue: ['models', 'request'], status: ['run-id'], result: ['run-id'], redrive: ['run-id'],
   }
   if (positionals.length !== 1 || !Object.hasOwn(required, operation) || !required[operation].every(key => values[key])
     || Object.keys(values).some(key => !required[operation].includes(key as keyof typeof values) && !(operation === 'work' && key === 'telemetry-config'))) {
@@ -37,7 +37,7 @@ async function main() {
 
   const { canonicalRunId, databaseUrl, openDatabase } = await import('./postgres-db.js')
   const { journalRouting, journalRequest, verifyModelCredentials } = await import('./journal-model.js')
-  const { executeJournal, enqueueJournal, migrateJournal, startJournal, journalStatus, journalResult, JOURNAL_QUEUE } = await import('./journal-delivery.js')
+  const { executeJournal, enqueueJournal, migrateJournal, startJournal, journalStatus, journalResult, redriveJournal, JOURNAL_QUEUE } = await import('./journal-delivery.js')
   const { createRuntimeTelemetry } = await import('./telemetry-runtime.js')
   const { shutdownTelemetry } = await import('./telemetry.js')
   const url = databaseUrl(process.env.DAILYLOGGER_DATABASE_URL)
@@ -84,7 +84,8 @@ async function main() {
       console.log(JSON.stringify(await enqueueJournal(pool, boss, journalRequest.parse(readPrivateJson(values.request, 512 * 1024)), routing)))
     } else {
       const runId = canonicalRunId(values['run-id']!)
-      const result = operation === 'status' ? await journalStatus(pool, boss, runId) : await journalResult(pool, runId)
+      const result = operation === 'status' ? await journalStatus(pool, boss, runId)
+        : operation === 'redrive' ? await redriveJournal(pool, boss, runId) : await journalResult(pool, runId)
       console.log(JSON.stringify(result))
     }
   } finally {

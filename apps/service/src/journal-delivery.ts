@@ -3,14 +3,16 @@ import type pg from 'pg'
 import type { Job, PgBoss } from 'pg-boss'
 import { createBoss, migrateDelivery, startDelivery, transactionAdapter } from './delivery-db.js'
 import { digest, json, requireCondition } from './fixture.js'
-import { journalRequest, JOURNAL_VERSION, routingDigest, validateJournalOutput, type JournalRequest, type JournalRouting } from './journal-model.js'
+import { journalRequest, JOURNAL_ATTEMPTS, JOURNAL_STEPS, JOURNAL_VERSION, routingDigest, validateJournalOutput, type JournalRequest, type JournalRouting } from './journal-model.js'
 import { JournalBlocked, JournalRetry, runJournalGraph } from './journal-workflow.js'
 import { migrateDatabase, openCheckpointer, requireMigrated, withRunLock } from './postgres-db.js'
 import { beginObservation, type Telemetry } from './telemetry.js'
 
 export const JOURNAL_QUEUE = 'private-journal-v1'
 const QUEUE_OPTIONS = {
-  policy: 'standard' as const, retryLimit: 4, retryDelay: 8,
+  policy: 'standard' as const,
+  // Each step can be rejected twice. Reserve room for worker or database failures too.
+  retryLimit: JOURNAL_STEPS.length * (JOURNAL_ATTEMPTS - 1) + 2, retryDelay: 8,
   expireInSeconds: 420, heartbeatSeconds: 15, retentionSeconds: 86400, deleteAfterSeconds: 604800,
 }
 export type JournalJob = { runId: string }
@@ -44,6 +46,11 @@ function admissionDigest(request: JournalRequest) {
   return digest(json(journalRequest.parse(request)))
 }
 
+async function sendJournal(client: pg.PoolClient, boss: PgBoss, runId: string, jobId: string) {
+  const sent = await boss.send(JOURNAL_QUEUE, { runId }, { id: jobId, ...QUEUE_OPTIONS, db: transactionAdapter(client) })
+  requireCondition(sent === jobId, 'Private journal queue did not accept the bound job')
+}
+
 /** Bind a request key and its queue job in one transaction. */
 export async function enqueueJournal(pool: pg.Pool, boss: PgBoss, request: JournalRequest, routing: JournalRouting) {
   const client = await pool.connect()
@@ -55,10 +62,7 @@ export async function enqueueJournal(pool: pg.Pool, boss: PgBoss, request: Journ
       (run_id,request_key,request_digest,request,routing_digest,job_id)
       VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT(request_key) DO NOTHING`,
     [runId, request.key, requestSha, JSON.stringify(request), routingSha, jobId])
-    if (inserted.rowCount) {
-      const sent = await boss.send(JOURNAL_QUEUE, { runId }, { id: jobId, ...QUEUE_OPTIONS, db: transactionAdapter(client) })
-      requireCondition(sent === jobId, 'Private journal queue did not accept the bound job')
-    }
+    if (inserted.rowCount) await sendJournal(client, boss, runId, jobId)
     const { rows: [run] } = await client.query<Run>('SELECT * FROM dailylogger_service.journal_runs WHERE request_key=$1', [request.key])
     requireCondition(run.request_digest === requestSha && run.routing_digest === routingSha, 'Journal key already refers to different inputs or model routing')
     await client.query('COMMIT')
@@ -67,6 +71,31 @@ export async function enqueueJournal(pool: pg.Pool, boss: PgBoss, request: Journ
     await client.query('ROLLBACK').catch(() => {})
     throw error
   } finally { client.release() }
+}
+
+/** Replace an expired or terminal delivery, retaining the same immutable run and call history. */
+export async function redriveJournal(pool: pg.Pool, boss: PgBoss, runId: string) {
+  return withRunLock(pool, runId, async client => {
+    await client.query('BEGIN')
+    try {
+      const { rows: [run] } = await client.query<Run>('SELECT * FROM dailylogger_service.journal_runs WHERE run_id=$1', [runId])
+      requireCondition(run?.status === 'queued', 'Only an unsettled private journal run can be re-driven')
+      const job = await boss.getJobById(JOURNAL_QUEUE, run.job_id)
+      if (job && !['failed', 'cancelled'].includes(job.state)) {
+        requireCondition(job.state !== 'completed', 'Completed queue delivery has no journal settlement')
+        await client.query('COMMIT')
+        return { runId, jobId: run.job_id }
+      }
+      const jobId = randomUUID()
+      await sendJournal(client, boss, runId, jobId)
+      await client.query('UPDATE dailylogger_service.journal_runs SET job_id=$2 WHERE run_id=$1', [runId, jobId])
+      await client.query('COMMIT')
+      return { runId, jobId }
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => {})
+      throw error
+    }
+  })
 }
 
 export async function journalStatus(pool: pg.Pool, boss: PgBoss, runId: string) {

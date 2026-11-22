@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `309e59bcb2cd2c0fdd6669cd3097e4c6b77094dded82dd5fe5c642978a84246f`.
+> Source SHA-256: `89615e461a96d792ec8b5bad830741224a9b25c729e421319a8822db4b68d06a`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -2527,6 +2527,10 @@ flowchart TD
   n500["Private Revision"]
   n501["Durable Model Call Records"]
   n502["Journal Graph Checkpoints"]
+  n503("Private Journal Delivery Recovering")
+  n504["Unsettled Private Journal Run"]
+  n505["Unavailable Journal Delivery"]
+  n506["Replacement Journal Job"]
   n487 -->|"requires (instrument)"| n486
   n488 -->|"requires (instrument)"| n486
   n486 -->|"yields"| n489
@@ -2550,6 +2554,9 @@ flowchart TD
   n495 -->|"yields"| n500
   n491 -->|"yields"| n501
   n491 -->|"yields"| n502
+  n504 -->|"requires (instrument)"| n503
+  n505 -->|"requires (instrument)"| n503
+  n503 -->|"yields"| n506
 ```
 
 **Source facts (OJF-OPL; bracketed provenance is local metadata):**
@@ -2577,4 +2584,7 @@ Private Draft Revising requires Writer Model. [src: apps/service/src/journal-mod
 Private Draft Revising yields Private Revision. [src: apps/service/src/journal-workflow.ts]
 Private Journal Running yields Durable Model Call Records. [src: apps/service/src/journal-workflow.ts]
 Private Journal Running yields Journal Graph Checkpoints. [src: apps/service/src/journal-workflow.ts]
+Private Journal Delivery Recovering requires Unsettled Private Journal Run. [src: apps/service/src/journal-delivery.ts]
+Private Journal Delivery Recovering requires Unavailable Journal Delivery. [src: apps/service/src/journal-delivery.ts]
+Private Journal Delivery Recovering yields Replacement Journal Job. [src: apps/service/src/journal-delivery.ts]
 ```

@@ -853,3 +853,6 @@ Private Draft Revising yields Private Revision. [src: apps/service/src/journal-w
 Private Journal Running yields Durable Model Call Records. [src: apps/service/src/journal-workflow.ts]
 Private Journal Running yields Journal Graph Checkpoints. [src: apps/service/src/journal-workflow.ts]
 # Each request is recorded before dispatch. Valid results are committed before checkpoint advance and reused on replay. A rate rejection can retry. An uncertain outcome holds the run. [src: apps/service/src/journal-workflow.ts]
+Private Journal Delivery Recovering requires Unsettled Private Journal Run. [src: apps/service/src/journal-delivery.ts]
+Private Journal Delivery Recovering requires Unavailable Journal Delivery. [src: apps/service/src/journal-delivery.ts]
+Private Journal Delivery Recovering yields Replacement Journal Job. [src: apps/service/src/journal-delivery.ts]
