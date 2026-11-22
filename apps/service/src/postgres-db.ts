@@ -38,7 +38,8 @@ async function requireVendorHistory(db: Pick<pg.Pool, 'query'>, allowPrefix: boo
 const deliveryMigration = readFileSync(new URL('../migrations/002_delivery_commands.sql', import.meta.url), 'utf8')
 const deliveryMigrationDigest = digest(deliveryMigration)
 const httpMigration = readFileSync(new URL('../migrations/003_fixture_http.sql', import.meta.url), 'utf8')
-const applicationDigests = [migrationDigest, deliveryMigrationDigest, digest(httpMigration)]
+const journalMigration = readFileSync(new URL('../migrations/004_private_journal.sql', import.meta.url), 'utf8')
+const applicationDigests = [migrationDigest, deliveryMigrationDigest, digest(httpMigration), digest(journalMigration)]
 
 function validateApplicationMigrations(rows: { version: number; digest: string; checkpointer_version: string | null }[]) {
   requireCondition(rows.length >= 1 && rows.length <= applicationDigests.length && rows.every((row, index) => row.version === index + 1), 'Database has unsupported application migrations; refusing downgrade')
@@ -69,7 +70,7 @@ export function openCheckpointer(connectionString: string): PostgresSaver {
 }
 
 /** Explicit migration command; runtime commands never call setup(). */
-export async function migrateDatabase(pool: pg.Pool, connectionString: string, options: { delivery?: boolean; http?: boolean } = {}): Promise<void> {
+export async function migrateDatabase(pool: pg.Pool, connectionString: string, options: { delivery?: boolean; http?: boolean; journal?: boolean } = {}): Promise<void> {
   const client = await pool.connect()
   const checkpointer = openCheckpointer(connectionString)
   let inTransaction = false
@@ -91,13 +92,17 @@ export async function migrateDatabase(pool: pg.Pool, connectionString: string, o
       await client.query('INSERT INTO dailylogger_service.schema_migrations(version, digest) VALUES (1, $1)', [migrationDigest])
     }
     await requireVendorHistory(client, !existing.rows[0]?.checkpointer_version)
-    if ((options.delivery || options.http) && !existing.rows.some(row => row.version === 2)) {
+    if ((options.delivery || options.http || options.journal) && !existing.rows.some(row => row.version === 2)) {
       await client.query(deliveryMigration)
       await client.query('INSERT INTO dailylogger_service.schema_migrations(version, digest) VALUES (2, $1)', [deliveryMigrationDigest])
     }
-    if (options.http && !existing.rows.some(row => row.version === 3)) {
+    if ((options.http || options.journal) && !existing.rows.some(row => row.version === 3)) {
       await client.query(httpMigration)
       await client.query('INSERT INTO dailylogger_service.schema_migrations(version, digest) VALUES (3, $1)', [applicationDigests[2]])
+    }
+    if (options.journal && !existing.rows.some(row => row.version === 4)) {
+      await client.query(journalMigration)
+      await client.query('INSERT INTO dailylogger_service.schema_migrations(version, digest) VALUES (4, $1)', [applicationDigests[3]])
     }
     await client.query('COMMIT')
     inTransaction = false
@@ -115,7 +120,7 @@ export async function migrateDatabase(pool: pg.Pool, connectionString: string, o
   }
 }
 
-export async function requireMigrated(pool: pg.Pool, options: { delivery?: boolean; http?: boolean } = {}): Promise<void> {
+export async function requireMigrated(pool: pg.Pool, options: { delivery?: boolean; http?: boolean; journal?: boolean } = {}): Promise<void> {
   const exists = await pool.query<{ application: string | null; checkpoints: string | null }>(
     `SELECT to_regclass('dailylogger_service.schema_migrations')::text AS application,
       to_regclass('dailylogger_checkpoints.checkpoint_migrations')::text AS checkpoints`,
@@ -126,6 +131,7 @@ export async function requireMigrated(pool: pg.Pool, options: { delivery?: boole
   requireCondition(!options.delivery || result.rows.length >= 2, 'Delivery migration 002 is missing; migrate explicitly')
   requireCondition(!options.http || result.rows.length >= 3, 'HTTP migration 003 is missing; migrate explicitly')
   requireCondition(result.rows[0]?.checkpointer_version === POSTGRES_SAVER_VERSION, 'Database migration/version differs; run the reviewed migration before execution')
+  requireCondition(!options.journal || result.rows.length >= 4, 'Private journal migration 004 is missing; migrate explicitly')
   await requireVendorHistory(pool, false)
 }
 

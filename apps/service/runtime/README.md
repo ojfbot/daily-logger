@@ -150,3 +150,41 @@ bridge. The NAS-specific connection must be designed from the observed topology.
 This draft configures no proxy, WAN forwarding, public exposure or production
 publication authority. LAN and WireGuard access, including both address families,
 must be demonstrated before the private deployment is called ready.
+
+## Private draft, review and revision
+
+The image also includes an opt-in journal worker. It uses the same PostgreSQL,
+pg-boss installation and LangGraph checkpointer as the service. Start it with a
+process supervisor and the dedicated application database. Mount owner-only
+JSON input files readable by UID 1000. Run these commands from the application
+working directory in the image.
+
+```sh
+node --import tsx src/journal-cli.ts migrate
+node --import tsx src/journal-cli.ts work --models /run/private/models.json
+node --import tsx src/journal-cli.ts enqueue --models /run/private/models.json --request /run/private/request.json
+node --import tsx src/journal-cli.ts status --run-id "$run_id"
+node --import tsx src/journal-cli.ts result --run-id "$run_id"
+```
+
+`models.json` has a `writer` and `reviewer` object. Each specifies the full
+OpenAI-compatible chat-completions `endpoint`, `model`, `maxOutputTokens` and
+`timeoutMs`. The writer handles draft and revision. The worker supports an
+optional `tokenEnv` naming a `DAILYLOGGER_MODEL_*` environment variable for an
+HTTPS endpoint. Use endpoints approved to receive the evidence. The queue and
+run bind to the model configuration supplied at admission.
+
+The request file has `key`, `reportDate` and `evidence` fields. Reusing the exact
+key, evidence and configuration returns the existing run. The worker saves each
+request before sending it and saves the validated result before advancing the
+graph. The provider adapter requires HTTP 429 to mean rejection before
+inference. It retries that response up to three total attempts per step. If a
+worker dies during a request or the provider outcome is uncertain, the run
+holds for inspection. Review findings and the revision stay in the private
+database. The operator-only result command returns the validated revision JSON.
+
+The journal worker accepts the existing optional `--telemetry-config` for
+metadata-only Langfuse observations. Qualification uses a loopback provider
+and counts requests across worker restarts. From the service working directory
+on an isolated stage, feed `runtime/journal-probe.mjs` to
+`node --input-type=module -` to run the probe using the staging database.

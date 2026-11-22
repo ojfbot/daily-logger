@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `5b78f08deb2e06c125275fc84b412208f8d527a096d20ea0382eb342152a835b`.
+> Source SHA-256: `309e59bcb2cd2c0fdd6669cd3097e4c6b77094dded82dd5fe5c642978a84246f`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -2494,4 +2494,87 @@ Release Candidate Verifying requires Closed Release Candidate Manifest. [src: ap
 Release Candidate Verifying requires Same Image Gate Receipts. [src: apps/service/runtime/artifact.py]
 Release Candidate Verifying yields Verified Release Candidate. [src: apps/service/runtime/artifact.py]
 Release Candidate Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
+```
+
+## SD2.17 — Private journal drafting and recovery
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.17 — Private journal drafting and recovery"
+---
+flowchart TD
+  accTitle: SD2.17 — Private journal drafting and recovery
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n486("Private Journal Admitting")
+  n487["Operator Evidence"]
+  n488["Model Routing Configuration"]
+  n489["Private Journal Run"]
+  n490["Durable Journal Job"]
+  n491("Private Journal Running")
+  n492["PostgreSQL"]
+  n493("Private Draft Generating")
+  n494("Private Draft Reviewing")
+  n495("Private Draft Revising")
+  n496["Writer Model"]
+  n497["Private Draft"]
+  n498["Reviewer Model"]
+  n499["Review Findings"]
+  n500["Private Revision"]
+  n501["Durable Model Call Records"]
+  n502["Journal Graph Checkpoints"]
+  n487 -->|"requires (instrument)"| n486
+  n488 -->|"requires (instrument)"| n486
+  n486 -->|"yields"| n489
+  n486 -->|"yields"| n490
+  n490 -->|"triggers"| n491
+  n492 -->|"requires (instrument)"| n491
+  n491 -->|"invokes"| n493
+  n491 -->|"invokes"| n494
+  n491 -->|"invokes"| n495
+  n487 -->|"requires (instrument)"| n493
+  n496 -->|"requires (instrument)"| n493
+  n493 -->|"yields"| n497
+  n497 -->|"requires (instrument)"| n494
+  n487 -->|"requires (instrument)"| n494
+  n498 -->|"requires (instrument)"| n494
+  n494 -->|"yields"| n499
+  n497 -->|"requires (instrument)"| n495
+  n499 -->|"requires (instrument)"| n495
+  n487 -->|"requires (instrument)"| n495
+  n496 -->|"requires (instrument)"| n495
+  n495 -->|"yields"| n500
+  n491 -->|"yields"| n501
+  n491 -->|"yields"| n502
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Private Journal Admitting requires Operator Evidence. [src: apps/service/src/journal-cli.ts]
+Private Journal Admitting requires Model Routing Configuration. [src: apps/service/src/journal-model.ts]
+Private Journal Admitting yields Private Journal Run. [src: apps/service/src/journal-delivery.ts]
+Private Journal Admitting yields Durable Journal Job. [src: apps/service/src/journal-delivery.ts]
+Durable Journal Job triggers Private Journal Running. [src: apps/service/src/journal-cli.ts]
+Private Journal Running requires PostgreSQL. [src: apps/service/src/journal-delivery.ts]
+Private Journal Running invokes Private Draft Generating. [src: apps/service/src/journal-workflow.ts]
+Private Journal Running invokes Private Draft Reviewing. [src: apps/service/src/journal-workflow.ts]
+Private Journal Running invokes Private Draft Revising. [src: apps/service/src/journal-workflow.ts]
+Private Draft Generating requires Operator Evidence. [src: apps/service/src/journal-model.ts]
+Private Draft Generating requires Writer Model. [src: apps/service/src/journal-model.ts]
+Private Draft Generating yields Private Draft. [src: apps/service/src/journal-workflow.ts]
+Private Draft Reviewing requires Private Draft. [src: apps/service/src/journal-workflow.ts]
+Private Draft Reviewing requires Operator Evidence. [src: apps/service/src/journal-model.ts]
+Private Draft Reviewing requires Reviewer Model. [src: apps/service/src/journal-model.ts]
+Private Draft Reviewing yields Review Findings. [src: apps/service/src/journal-workflow.ts]
+Private Draft Revising requires Private Draft and Review Findings. [src: apps/service/src/journal-workflow.ts]
+Private Draft Revising requires Operator Evidence. [src: apps/service/src/journal-model.ts]
+Private Draft Revising requires Writer Model. [src: apps/service/src/journal-model.ts]
+Private Draft Revising yields Private Revision. [src: apps/service/src/journal-workflow.ts]
+Private Journal Running yields Durable Model Call Records. [src: apps/service/src/journal-workflow.ts]
+Private Journal Running yields Journal Graph Checkpoints. [src: apps/service/src/journal-workflow.ts]
 ```
