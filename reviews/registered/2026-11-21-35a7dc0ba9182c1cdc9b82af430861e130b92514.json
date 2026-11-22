@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261121-35a7dc0ba918",
+  "article": {
+    "date": "2026-11-21",
+    "sourceCommitSha": "35a7dc0ba9182c1cdc9b82af430861e130b92514",
+    "blobSha": "3cdfd92db7b06060a1c749b80680db9ca492e5c5"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review (GPT-5)",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-21T11:31:28Z",
+  "scope": "Final visible Draft; exact source/article/action/deployed bytes; core #638-#645 Mac-worker sequence; core #501/#307 telemetry path; core #626/#627/#634/#636/#637; HouseholdAgentKit #1, reviews and issues #2/#3/#11-#38; all-state same-source review searches; current review schema/discovery; and held-candidate custody. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "3a400134711cbd2ef696c4fca6bbc4c07d15e874",
+  "fullRecordPath": "reviews/articles/2026-11-21-35a7dc0ba9182c1cdc9b82af430861e130b92514.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Four pieces landed through two FleetRunner PRs",
+      "location": "Lines 6, 15-17 and 88 say four core/FleetRunner PRs merged and completed pieces 1-4; the section links only #638, #639 and #645.",
+      "explanation": "Core #639 merged piece 1. Piece-2 PR #643 and piece-3 PR #644 closed unmerged; their stacked changes arrived through merged piece-4 PR #645. Core #638 is the separate ADR-0110 merge. Thus three core PRs merged, only two of them FleetRunner delivery PRs, while four plan pieces landed.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/35a7dc0ba9182c1cdc9b82af430861e130b92514/_articles/2026-11-21.md#L6",
+        "https://github.com/ojfbot/core/pull/638",
+        "https://github.com/ojfbot/core/pull/639",
+        "https://github.com/ojfbot/core/pull/643",
+        "https://github.com/ojfbot/core/pull/644",
+        "https://github.com/ojfbot/core/pull/645"
+      ],
+      "correction": "Report three core merges: ADR #638 plus FleetRunner #639 and #645. Say four Mac-worker pieces landed through two FleetRunner PRs, with #643/#644 retained as closed review history.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "presenceMs default and bound are documented",
+      "location": "Line 70 says the default and configuration location are unknown and warns about configuring a value above 30 seconds.",
+      "explanation": "Core #645 states that presenceMs is a new optional worker setting with a 10-second default and 30-second maximum, documented in worker-release.md.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/35a7dc0ba9182c1cdc9b82af430861e130b92514/_articles/2026-11-21.md#L70",
+        "https://github.com/ojfbot/core/pull/645"
+      ],
+      "correction": "Report the 10-second default, enforced 30-second maximum and worker-setting surface; do not present an above-30-second value as an available misconfiguration.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "PR #1 does not gate every HouseholdAgentKit rung",
+      "location": "Lines 82 and 92 say no rung progression begins and none of issues #2-#10 can start until PR #1 merges.",
+      "explanation": "HouseholdAgentKit #1 is itself rungs 0 and 1. Issue #2 defines rung 2 without a founding-merge dependency. Issue #3 is the first cited rung that explicitly requires the independent review and founding PR merge.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/35a7dc0ba9182c1cdc9b82af430861e130b92514/_articles/2026-11-21.md#L82",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/1",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/2",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/3"
+      ],
+      "correction": "Say PR #1 delivers rungs 0-1, rung 2 is a separate stage-host proof, and the explicit founding-merge prerequisite begins at rung 3 in the cited records.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "A telemetry investigation path already exists",
+      "location": "Line 96 and the third held candidate say the 0% streak has no investigation path and propose a new generic skill-telemetry audit.",
+      "explanation": "Merged core #501 records the telemetry defects, dedicated investigation, normative design, delivery handoff and verification notes under open fleet-runner umbrella #307. It says implementation still needs approved scope and a registered owner; that is a gate, not absence of a path.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/35a7dc0ba9182c1cdc9b82af430861e130b92514/_articles/2026-11-21.md#L96",
+        "https://github.com/ojfbot/core/pull/501",
+        "https://github.com/ojfbot/core/issues/307"
+      ],
+      "correction": "Acknowledge the existing investigation and delivery path, separate the frozen legacy stream from current measurements, and name approved scope plus owner registration as the remaining gate instead of creating a duplicate audit.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The Draft PRs already carry different statuses and gates",
+      "location": "Line 90 and the second held candidate describe #634/#626/#627 as undocumented and all five Draft PRs as lacking a documented status.",
+      "explanation": "The PR bodies distinguish a documentation-only pointer update (#634), reviewed context replacement (#636), active takeover implementation (#637), unresolved M3 HELD evidence and human gates (#627), and adoption-review intake (#626).",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/35a7dc0ba9182c1cdc9b82af430861e130b92514/_articles/2026-11-21.md#L90",
+        "https://github.com/ojfbot/core/pull/626",
+        "https://github.com/ojfbot/core/pull/627",
+        "https://github.com/ojfbot/core/pull/634",
+        "https://github.com/ojfbot/core/pull/636",
+        "https://github.com/ojfbot/core/pull/637"
+      ],
+      "correction": "Preserve each PR's existing status, evidence and gates. Ask only for unresolved prioritization decisions after summarizing those records; do not describe the whole set as undocumented or ownerless.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "The broad hardening candidate is held and duplicative",
+      "location": "Lines 103-107 propose /hardening HouseholdAgentKit#1 as the highest-leverage action.",
+      "explanation": "The dated action map records review pending because HouseholdAgentKit#1 is an unsupported qualified candidate reference, with both reviewer roles not verified. Issues #11-#38 already carry individual contracts, checks, budgets and owner steps.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/35a7dc0ba9182c1cdc9b82af430861e130b92514/_articles/2026-11-21.md#L103",
+        "https://github.com/ojfbot/daily-logger/blob/35a7dc0ba9182c1cdc9b82af430861e130b92514/actions/articles/2026-11-21.json",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/11",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/38"
+      ],
+      "correction": "Keep the candidate held and non-dispatchable; work through the existing issue contracts and owner priorities or create a source-qualified replacement only after supervised review.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Issue #21 is not established as the PR #1 merge gate",
+      "location": "Line 82 calls HouseholdAgentKit #21 the current merge-path gate for PR #1.",
+      "explanation": "Issue #21 is a P0 owner decision about the engine's November 25 calendar gate and is due November 23. PR #1 defines rungs 0-1 but does not identify #21 as its merge prerequisite in the public record checked.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/35a7dc0ba9182c1cdc9b82af430861e130b92514/_articles/2026-11-21.md#L82",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/21",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/1"
+      ],
+      "correction": "Describe #21 as an open P0 owner decision affecting the later engine calendar; call it a PR #1 blocker only when an owner decision or PR dependency records that gate.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "Shared transport does not authenticate reviewer independence",
+      "location": "Lines 11, 38 and 82 rely on the independent review as a quality signal.",
+      "explanation": "Review 6002962131 reports OpenAI Codex; review 6003036606 reports a complementary Claude Code session and says it is not the independent review. Both were submitted through the same ojfbot account, which authenticates transport but not a separate human, provider or session identity.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/35a7dc0ba9182c1cdc9b82af430861e130b92514/_articles/2026-11-21.md#L11",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/1#pullrequestreview-6002962131",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/1#pullrequestreview-6003036606"
+      ],
+      "correction": "Attribute the reports to their stated agents while keeping the shared GitHub login separate; do not treat that login or model agreement as independent human/provider authentication.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
