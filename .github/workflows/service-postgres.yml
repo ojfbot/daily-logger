@@ -2,7 +2,7 @@ name: Service PostgreSQL checkpoint proof
 
 on:
   pull_request:
-    branches: [main, codex/dailylogger-service-m1]
+    branches: [main, codex/dailylogger-service-m1, codex/release-candidate-slice1]
     paths:
       - apps/service/**
       - package.json

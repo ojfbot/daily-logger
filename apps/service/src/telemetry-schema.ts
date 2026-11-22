@@ -1,7 +1,7 @@
 /** Closed S05a application metadata. Never serialize arbitrary application objects. */
 export const OBSERVATION_KINDS = ['admission_response_observed', 'delivery', 'operation', 'node', 'reconciliation'] as const
 export const OBSERVATION_OUTCOMES = ['admitted_response', 'rejected_response', 'idempotency_conflict_response', 'admitted', 'rejected', 'returned', 'succeeded', 'failed', 'paused', 'complete', 'recoverable', 'awaiting_approval', 'inspection', 'retrying', 'stale', 'cancelled'] as const
-export const OBSERVATION_NODES = ['collect_fixture', 'draft_fixture', 'review_fixture', 'human_gate', 'write_shadow_artifacts'] as const
+export const OBSERVATION_NODES = ['collect_fixture', 'draft_fixture', 'review_fixture', 'human_gate', 'write_shadow_artifacts', 'draft', 'review', 'revise'] as const
 export type ObservationKind = typeof OBSERVATION_KINDS[number]
 export type ObservationOutcome = typeof OBSERVATION_OUTCOMES[number]
 export type ObservationNode = typeof OBSERVATION_NODES[number]
@@ -23,7 +23,7 @@ export interface Observation {
   retryCount?: number
   durationMs?: number
   runState?: 'admitted' | 'recoverable' | 'awaiting_approval' | 'complete'
-  workflowVersion?: 'm1a-recorded-artifact-replay-v1' | 's03a-recorded-artifact-replay-v1'
+  workflowVersion?: 'm1a-recorded-artifact-replay-v1' | 's03a-recorded-artifact-replay-v1' | 'private-journal-v1'
 }
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/
 const includes = <T extends string>(values: readonly T[], value: unknown): value is T => typeof value === 'string' && (values as readonly string[]).includes(value)
@@ -52,7 +52,7 @@ export function projectObservation(input: unknown): Readonly<Observation> | null
     const runState = get('runState')
     if (includes(['admitted', 'recoverable', 'awaiting_approval', 'complete'], runState)) projected.runState = runState
     const workflowVersion = get('workflowVersion')
-    if (includes(['m1a-recorded-artifact-replay-v1', 's03a-recorded-artifact-replay-v1'], workflowVersion)) projected.workflowVersion = workflowVersion
+    if (includes(['m1a-recorded-artifact-replay-v1', 's03a-recorded-artifact-replay-v1', 'private-journal-v1'], workflowVersion)) projected.workflowVersion = workflowVersion
     return Object.freeze(projected)
   } catch { return null } // Proxy/getter failures cannot escape into application work.
 }
