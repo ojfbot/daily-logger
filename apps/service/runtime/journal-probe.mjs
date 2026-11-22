@@ -253,9 +253,9 @@ try {
   await new Promise(resolve => provider.close(resolve))
   try {
     if (created) {
-      await waitFor(async () => (await admin.query('SELECT 1 FROM pg_stat_activity WHERE datname=$1', [name])).rowCount === 0,
-        'The isolated proof database still has sessions', 5000)
-      await admin.query(`DROP DATABASE "${name}"`)
+      // The randomly named database belongs to this probe alone. Close any
+      // remaining backends even if a killed subprocess left a session behind.
+      await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`)
     }
   } finally {
     await admin.end()

@@ -21,23 +21,42 @@ type Run = {
   status: 'queued' | 'complete' | 'blocked'; error_code: string | null
 }
 
+async function verifyJournalQueue(boss: PgBoss, expectedRetryLimit = QUEUE_OPTIONS.retryLimit) {
+  const queue = await boss.getQueue(JOURNAL_QUEUE)
+  requireCondition(queue && Object.entries({ ...QUEUE_OPTIONS, retryLimit: expectedRetryLimit })
+    .every(([key, value]) => queue[key as keyof typeof queue] === value),
+  'Private journal queue is absent or differs from reviewed configuration')
+}
+
 export async function migrateJournal(pool: pg.Pool, connectionString: string) {
   await migrateDelivery(pool, connectionString)
   await migrateDatabase(pool, connectionString, { journal: true })
+  const client = await pool.connect()
   const boss = createBoss(connectionString)
   try {
+    await client.query('SELECT pg_advisory_lock(830031, 3)')
     await boss.start()
     await boss.createQueue(JOURNAL_QUEUE, QUEUE_OPTIONS)
-  } finally { await boss.stop() }
+    const queue = await boss.getQueue(JOURNAL_QUEUE)
+    if (queue?.retryLimit === 4) {
+      await verifyJournalQueue(boss, 4)
+      await boss.updateQueue(JOURNAL_QUEUE, { retryLimit: QUEUE_OPTIONS.retryLimit })
+    }
+    await verifyJournalQueue(boss)
+  } finally {
+    try { await boss.stop() }
+    finally {
+      await client.query('SELECT pg_advisory_unlock(830031, 3)').catch(() => {})
+      client.release()
+    }
+  }
 }
 
 export async function startJournal(pool: pg.Pool, connectionString: string, supervise: boolean) {
   await requireMigrated(pool, { journal: true })
   const boss = await startDelivery(pool, connectionString, supervise)
   try {
-    const queue = await boss.getQueue(JOURNAL_QUEUE)
-    requireCondition(queue && Object.entries(QUEUE_OPTIONS).every(([key, value]) => queue[key as keyof typeof queue] === value),
-      'Private journal queue is absent or differs from reviewed configuration')
+    await verifyJournalQueue(boss)
     return boss
   } catch (error) { await boss.stop(); throw error }
 }
