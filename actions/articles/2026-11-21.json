@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-21",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-21",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Unsupported qualified candidate reference HouseholdAgentKit#1 for 92757505141bc05e81cf0797fdb01d7cc08392fab07aa56c19f24cee9f3b0a49; review pending"
+    },
+    "articleDigest": "a5a5ce424fd677888adf355971860216aed9b3e72eda7cdd1f6b18e204da75ac",
+    "roundId": "233d7f6205632ad94f8a37b804094b6367554e45c8911e43c69024b6ebd69253",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "92757505141bc05e81cf0797fdb01d7cc08392fab07aa56c19f24cee9f3b0a49",
+        "payload": {
+          "command": "/hardening HouseholdAgentKit#1 --focus p0-contract-bugs,false-green-doctor",
+          "description": "Run a targeted hardening pass on the HouseholdAgentKit founding PR against the P0 contract bugs and false-green doctor checks surfaced in the independent review (issues #11–#38). This is the highest-leverage quality action in the fleet right now: no rung progression begins until this PR merges, and the founding test suite demonstrably did not catch the issues the reviewer found.",
+          "repo": "HouseholdAgentKit",
+          "status": "open",
+          "sourceDate": "2026-11-21"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "1f469c0ee508bbebd2f3b488311efbbdf2886f8a5cfb36d9d8e5dcb263eebc1f",
+        "payload": {
+          "command": "/audit core --scope draft-pr-disposition --prs 634,626,627,636,637",
+          "description": "Produce a one-line disposition statement for each of the five DRAFT PRs in core: actively working / parked until Phase N / closing. These PRs have been open with no documented status and represent compounding ambiguity on the G4 critical path and the context-refresh owner gate.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-21"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "1b1c50174d772203a102c4a95cf7c410e9ccc372bea52122bde4e7dbc95a72fe",
+        "payload": {
+          "command": "/audit skill-telemetry --scope instrument-vs-workflow --since 2026-05-12",
+          "description": "Determine whether the 0% quality-skill coverage streak reflects a broken instrument (frozen stream), a workflow adoption problem, or both — and open an investigation issue with an assigned owner. The corrective action is different in each case; six months of unresolved ambiguity is the gap.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-21"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Pieces 5 and 6 of the Mac workers plan (installs and the two-host run) are the next G4 gate. Core #637 (reusable takeover practice with immediate preflight) is the nearest unmerged draft PR on that path. Core #636/#635 (context refresh to CircusGreen scope) is owner-gated with no stated decision date — the existing AGENTS.md and CLAUDE.md still present Frame framing to agents entering the repo. Core #634, #626, #627 have no stated disposition and no description of active work in this window's materials; each requires an explicit decision (actively working / parked until Phase N / closing). HouseholdAgentKit #1 is the highest-leverage open item in the fleet: no rung progression begins until it merges, and it is blocked on (a) resolution of 20+ review issues including P0 contract bugs and (b) the Q-BS-3 engine gate date decision (issue #21, owner-gated). The merge path and target date are not documented. ADR-0110 has no implementation slice open; the trigger for opening the first work register delivery PR is not named. Daily-logger #574 (qualification gate: exporter inside final image) must close before production cutover on the persistent service can be scoped; its current state is draft. The skill telemetry stream has been frozen since 2026-05-12 with no assigned owner and no open investigation path; the ambiguity between broken instrument and workflow problem is unresolved and materially affects what corrective action is appropriate. The default value and configuration surface for `presenceMs` are not documented in this window's materials — a sharp edge for fleet operators since misconfiguring it above 30 s causes workers to go stale before their next heartbeat. The operational response path for input-fetching failures at scale (dead-letter queue, stale-job accumulation, alert surface) is not documented."
+    },
+    "stateDigest": "91b0751daa7f2ee04cd3461d49dd9077d571cdcfd5a290af4f50ed4d476405d2",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

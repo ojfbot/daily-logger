@@ -2,27 +2,27 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 119
+    "count": 121
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 95
+    "count": 97
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 89
+    "count": 91
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 78
+    "count": 80
   },
   {
     "name": "hardening",
     "type": "practice",
-    "count": 52
+    "count": 54
   },
   {
     "name": "model-behavior-as-design",
@@ -47,7 +47,12 @@
   {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 32
+    "count": 34
+  },
+  {
+    "name": "security-as-emergent-ux",
+    "type": "concept",
+    "count": 31
   },
   {
     "name": "sprint",
@@ -58,11 +63,6 @@
     "name": "adr",
     "type": "practice",
     "count": 31
-  },
-  {
-    "name": "security-as-emergent-ux",
-    "type": "concept",
-    "count": 29
   },
   {
     "name": "cv-builder",
@@ -90,14 +90,14 @@
     "count": 18
   },
   {
-    "name": "cleanup",
+    "name": "fleet-runner",
     "type": "concept",
     "count": 17
   },
   {
-    "name": "fleet-runner",
+    "name": "cleanup",
     "type": "concept",
-    "count": 15
+    "count": 17
   },
   {
     "name": "asset-foundry",
@@ -170,6 +170,11 @@
     "count": 8
   },
   {
+    "name": "ojfbot",
+    "type": "concept",
+    "count": 7
+  },
+  {
     "name": "workstation-yuri",
     "type": "repo",
     "count": 7
@@ -206,11 +211,6 @@
   },
   {
     "name": "build",
-    "type": "concept",
-    "count": 6
-  },
-  {
-    "name": "ojfbot",
     "type": "concept",
     "count": 6
   },
@@ -568,6 +568,11 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
+  },
+  {
+    "name": "HouseholdAgentKit",
+    "type": "concept",
+    "count": 1
   },
   {
     "name": "env-convention",
