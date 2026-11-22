@@ -826,6 +826,15 @@ class ArtifactBoundaryTests(unittest.TestCase):
                 fixture.replace_oci_image(invalid_field_at=field_at)
                 self.rejected(fixture)
 
+    def test_canonical_buildkit_metadata_is_accepted_and_case_variants_are_refused(self):
+        image = {'architecture': 'amd64', 'os': 'linux', 'config': {'User': '1000:1000'},
+                 'rootfs': {'type': 'layers', 'diff_ids': []}}
+        for key in ('moby.buildkit.cache.v0', 'moby.buildkit.buildinfo.v1'):
+            with self.subTest(key=key):
+                self.assertEqual(artifact.parse_image_config(encoded({**image, key: 'fixture'}))[key], 'fixture')
+                with self.assertRaisesRegex(ValueError, 'Unexpected image configuration fields'):
+                    artifact.parse_image_config(encoded({**image, key.upper(): 'fixture'}))
+
     def test_oci_index_with_root_runtime_before_good_runtime_is_ambiguous_and_rejected(self):
         identities = self.fixture.replace_oci_image(root_first=True)
         self.assertNotEqual(identities['rootRuntimeId'], identities['manifestId'])

@@ -126,6 +126,7 @@ def parse_image_config(data):
     canonical_image_fields(value, ('architecture', 'os', 'rootfs'), (
         'config', 'created', 'author', 'history', 'variant', 'os.version', 'os.features',
         'container', 'container_config', 'docker_version', 'comment', 'parent',
+        'moby.buildkit.cache.v0', 'moby.buildkit.buildinfo.v1',
     ))
     object_keys(value['rootfs'], ('type', 'diff_ids'))
     for section in ('config', 'container_config'):
