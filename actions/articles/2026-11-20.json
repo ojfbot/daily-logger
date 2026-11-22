@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-20",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-20",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked"
+    },
+    "articleDigest": "e5ef4d25305cec1421f731a96859b81a097bb784a4ce505b118760495758c17e",
+    "roundId": "3bfb4dae3c3fb06ba6518b679c47503fafd17e14191f7e3a5d89c5d6caf6bdee",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "2a55bb6e374b41a60d48156bc45b7c406bc687038589dae30e99c402f4ed7b31",
+        "payload": {
+          "command": "/pr review ojfbot/core#631",
+          "description": "Patch cpuSlot unconditional unlink: replace rmSync call with rmSync({ force: true }) to prevent residual slot state from masking a clean stop result. This is the recommended first step before any live M3/M4 proof run attempt.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-20"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "ee80bca186a762b366533abb6d295a12d4833aae5bebdc689b2226aaee86fdf9",
+        "payload": {
+          "command": "/pr promote ojfbot/core#627",
+          "description": "Promote the wayfinder DRAFT to ready-for-review and merge the M1–M5 burn-down record. No technical dependency on live runs; continued draft status is a prioritization choice, not a blocker.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-20"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "28e0caa35af6270ee5e5e49c9b45ec4967753040669dedfc17bd325d861a13df",
+        "payload": {
+          "command": "/pr review ojfbot/daily-logger#580",
+          "description": "Begin journal refactor review at the schema slice (#580) — the correct entry point for the sequenced chain. Reviewing #581 or #582 before #580 merges creates a dependency inversion; #580 is the unblocked pickup candidate today.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-20"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-20",
+      "articleDigest": "e5ef4d25305cec1421f731a96859b81a097bb784a4ce505b118760495758c17e",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "6eaa46f829dfb5e492390c1be4dab403ca7b915cd786b3c15201ed9e2d43f9c7",
+      "candidatePayloadsSha256": "508d71e821ec0c309bc52f0ea50fa73422a7274aa992eb2fc8831b5e80e31c70",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "0e8681fe2987ba0a18cbdf3c2193d2109189c25ecf22a34cf37c5ff304435278",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "2a55bb6e374b41a60d48156bc45b7c406bc687038589dae30e99c402f4ed7b31",
+          "payloadSha256": "3c8ac60269bdb9cc50221388dd222395f4b13f12d8d17afe29ace5b5a5677fd1",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#631",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "ee80bca186a762b366533abb6d295a12d4833aae5bebdc689b2226aaee86fdf9",
+          "payloadSha256": "f2ed1e7167c0cc666f05613fa9e835be90d06363529a99d3080ef16f33007d29",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "core#627",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "28e0caa35af6270ee5e5e49c9b45ec4967753040669dedfc17bd325d861a13df",
+          "payloadSha256": "f3744cbfb4f8aec8d5ef3c834097bd5ce17e21df5eec7557e3e35865204995ab",
+          "references": [
+            {
+              "classification": "required",
+              "reference": "daily-logger#580",
+              "role": "target",
+              "reason": "Direct immutable candidate target requires current primary evidence."
+            }
+          ],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#634",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#636",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "core#637",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        },
+        {
+          "classification": "required",
+          "reference": "daily-logger#549",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "G4 is source-complete but the wayfinder (core #627, DRAFT) has not merged — M1–M5 record remains in a draft PR. M3–M5 are gated on live proof runs; no live run has occurred. The recommended pre-live sequence is: (1) patch core #631 (cpuSlot rmSync), (2) land core #637 (immediate preflight practice path), (3) execute first live proof run. Core #627 should be promoted from DRAFT and merged independently of the above — it has no technical dependency on live runs.\n\nDaily-logger merge order for journal refactor: #580 (schemas) → #581 (rendering) → #582 (serialization); #576 (eligibility) and #583 (draft prompts) are independently mergeable. #583 blocks core #634. Consolidation PR #577 cannot close until all six slices land. Downstream service slices (#573, #574, #575, #572, #566, #569) are downstream of #577.\n\nDaily-logger #549 dependency status unconfirmed — needs triage before pickup. BookcaseDiscovery #104 open since 2026-11-17 with no stated blocker — needs disposition. Core #636 (stale frame-os-context.md) is an owner-gated doc update with no external dependency.\n\nTelemetry discrepancy noted: suggestion funnel shows 7 suggested → 0 followed (0% conversion) across 3 sessions; telemetry stream frozen since 2026-05-12; quality skill coverage reported at 100% against 0 skills invoked. This inconsistency in the legacy stream is a known gap in the measurement infrastructure the persistent service will eventually depend on. Not resolved; noted for independent action review."
+    },
+    "stateDigest": "57ee2620465925bcc1e05dab6ed7937330bb0d7ba341010bb40285b004458e92",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}

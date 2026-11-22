@@ -1,5 +1,400 @@
 [
   {
+    "date": "2026-11-21",
+    "title": "Friday — FleetRunner Mac Workers Plan Clears Four Pieces; HouseholdAgentKit Enters the Fleet",
+    "summary": "Friday merged four core PRs advancing FleetRunner's G4 Mac workers plan through pause/drain/resume presence, while HouseholdAgentKit made its first commit as a new fleet member.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "HouseholdAgentKit",
+        "type": "concept"
+      },
+      {
+        "name": "ojfbot",
+        "type": "concept"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core"
+    ],
+    "commitCount": 19,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Workers fetch their own inputs — no manual staging before a job runs",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Handler pinning stops a kind from claiming after a mismatch — not just the current job",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Workers report their own state using only the service's closed vocabulary",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0110 accepted: work register layer is a first-class module inside FleetRunner, not a sidecar",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "HouseholdAgentKit enters the fleet at tier none — integration ladder governs the ramp",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "638",
+          "url": "https://github.com/ojfbot/core/pull/638"
+        },
+        "at": "2026-11-21T03:07:02.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "639",
+          "url": "https://github.com/ojfbot/core/pull/639"
+        },
+        "at": "2026-11-21T03:25:23.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "645",
+          "url": "https://github.com/ojfbot/core/pull/645"
+        },
+        "at": "2026-11-21T03:46:30.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/ojfbot",
+          "ref": "7",
+          "url": "https://github.com/ojfbot/ojfbot/pull/7"
+        },
+        "at": "2026-11-21T03:38:34.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "585",
+          "url": "https://github.com/ojfbot/daily-logger/pull/585"
+        },
+        "at": "2026-11-20T10:13:52.000Z"
+      }
+    ],
+    "issueTimes": [
+      {
+        "source": {
+          "repo": "ojfbot/HouseholdAgentKit",
+          "ref": "11",
+          "url": "https://github.com/ojfbot/HouseholdAgentKit/issues/11"
+        },
+        "event": "created",
+        "at": "2026-11-21T04:42:21.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/HouseholdAgentKit",
+          "ref": "38",
+          "url": "https://github.com/ojfbot/HouseholdAgentKit/issues/38"
+        },
+        "event": "created",
+        "at": "2026-11-21T05:33:10.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-21T10:05:55.655Z",
+        "runId": "44892529996",
+        "runNumber": 323,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/44892529996",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "9928e007e7dc437a4c41e396a50dca4ecb2b8652",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-21T10:04:01.000Z",
+          "startedAt": "2026-11-21T10:04:01.000Z",
+          "expectedAt": "2026-11-21T09:30:00.000Z",
+          "dispatchDelaySeconds": 2041,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "25c08446c32fb01fb983e3a07dc3137dd404aada664345830469d2d33d26e8df"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.3",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
+    "date": "2026-11-20",
+    "title": "Thursday — FleetRunner Practice Hardens to G4 Inspectability; Daily-Logger Journal Refactor Opens Six Slices",
+    "summary": "Thursday merged four PRs hardening FleetRunner practice stops and installer validation while six new daily-logger draft PRs decompose journal-code sharing between legacy generator and persistent service.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "fleet-runner",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "daily-logger",
+      "core"
+    ],
+    "commitCount": 5,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Practice stops must be inspectable before a live proof attempt is authorized",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Installer must reject unsafe version folder names before any filesystem effect",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Proof startup codes are diagnostic contracts, not arbitrary strings, and must not be redacted",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Shared journal code must be extracted before the persistent service can safely consume it",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "2026-11-20T00:34Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-20T00:34:00.000Z",
+        "evidence": {
+          "kind": "explicit-offset",
+          "value": "2026-11-20T00:34Z"
+        }
+      },
+      {
+        "text": "(20:27–22:13Z)",
+        "occurrence": 0,
+        "kind": "interval",
+        "start": {
+          "text": "(20:27",
+          "precision": "minute",
+          "certainty": "exact",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "ineligible-context"
+          }
+        },
+        "end": {
+          "text": "22:13Z",
+          "precision": "minute",
+          "certainty": "exact",
+          "resolution": {
+            "kind": "unresolved",
+            "reason": "ineligible-context"
+          }
+        },
+        "relation": "unestablished"
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "630",
+          "url": "https://github.com/ojfbot/core/pull/630"
+        },
+        "at": "2026-11-19T20:27:50.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "632",
+          "url": "https://github.com/ojfbot/core/pull/632"
+        },
+        "at": "2026-11-19T21:49:16.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "633",
+          "url": "https://github.com/ojfbot/core/pull/633"
+        },
+        "at": "2026-11-19T22:13:04.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "578",
+          "url": "https://github.com/ojfbot/daily-logger/pull/578"
+        },
+        "at": "2026-11-19T10:07:48.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-20T10:04:45.815Z",
+        "runId": "44715877728",
+        "runNumber": 321,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/44715877728",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "1c8c95128d26190fcb0631ac8ac197892f3f0e0d",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-20T10:03:06.000Z",
+          "startedAt": "2026-11-20T10:03:06.000Z",
+          "expectedAt": "2026-11-20T09:30:00.000Z",
+          "dispatchDelaySeconds": 1986,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v6-2026-10-30-reporting-workday-title",
+          "promptSha256": "25c08446c32fb01fb983e3a07dc3137dd404aada664345830469d2d33d26e8df"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v1-2026-10-16-no-model-time-metadata",
+          "promptSha256": "a084637241b8f35df9a8fc33dd7b7e174d5b25a20cbdefa2afe6872ac5e50ca4"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.2",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-19",
     "title": "Wednesday — FleetRunner Bookcase Proof Packaged; Daily-Logger Service Stack Expands to 15 Draft PRs",
     "summary": "Wednesday merged five core PRs completing and packaging the FleetRunner Bookcase worker-takeover proof, while daily-logger opened fifteen draft service slices advancing the LangGraph persistent backend.",
