@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261112-8eb63bae017f",
+  "article": {
+    "date": "2026-11-12",
+    "sourceCommitSha": "8eb63bae017f17d0b5d2abf0fb29e10612fa7207",
+    "blobSha": "b30ccd0b410fca161e499bfffc3152c0417c35aa"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-12T11:33:15Z",
+  "scope": "Final visible Draft; exact source, article, action-state, and deployed-JSON bytes; generation and publication timing; FleetRunner physical-trial claims, G7 gates, and merge identities; BookcaseDiscovery F-0 execution context, machine-agreement semantics, sampling limits, later-card status, and historical PR dispositions; workstation-yuri #11 scope; current review registry/discovery state; and held action custody. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "d10b889449519c9624e92d8f333b2b4fd438a5aa",
+  "fullRecordPath": "reviews/articles/2026-11-12-8eb63bae017f17d0b5d2abf0fb29e10612fa7207.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "F-0 ran on a local session dataset, not a FleetRunner NAS machine",
+      "location": "Lines 11 and 48 claim shared NAS infrastructure and call sf-store-001 a physical store machine running the production NAS image.",
+      "explanation": "The pinned F-0 report identifies sf-store-001 as a 616-frame training-source session and says the evaluation ran on a Mac with a local catalog, offline helpers, and network fetches refused. It did not use the FleetRunner trial adapter, NAS image, or host-local FleetRunner credentials.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8eb63bae017f17d0b5d2abf0fb29e10612fa7207/_articles/2026-11-12.md#L11-L48",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/98",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/24ff5d248815713a360ede4d07b2cc72b0cfcb4c/evals/F0-frames/report.md"
+      ],
+      "correction": "Describe sf-store-001 as the video-session dataset and the evaluation as a local Mac run; keep it independent from the FleetRunner NAS physical-trial infrastructure.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "F-0 was not a reproducibility comparison against a frozen reference run",
+      "location": "Line 48 equates machine agreement with label-distribution comparison against a frozen reference and treats divergence as nondeterminism or drift.",
+      "explanation": "The pre-registration defines machine agreement as agreement among the stack's own stages and readers. The report compares aggregate rates on different inputs, video frames versus high-resolution stills, and records expected differences and hypotheses rather than an exact-output replay verdict.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8eb63bae017f17d0b5d2abf0fb29e10612fa7207/_articles/2026-11-12.md#L46-L48",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/24ff5d248815713a360ede4d07b2cc72b0cfcb4c/evals/F0-frames/prereg.md",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/24ff5d248815713a360ede4d07b2cc72b0cfcb4c/evals/F0-frames/report.md"
+      ],
+      "correction": "Say the run measures internal stage/reader agreement on the video sample and compares aggregate rates with pilot-000; do not interpret differences as failure, nondeterminism, or environment drift.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The source does not establish stride robustness or later-card readiness",
+      "location": "Line 62 says the metric is robust to the every-three stride, calls F-0 complete as a gate, and clears TS-0 and TS-2 to proceed.",
+      "explanation": "The source covers one-third of the session, says frames are not independent and provides no confidence intervals, and warns that recurrence at three-second spacing differs from one-second spacing. The report lists the remaining frames, sf-store-002, TS-0, and TS-2 as not done.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8eb63bae017f17d0b5d2abf0fb29e10612fa7207/_articles/2026-11-12.md#L60-L62",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/24ff5d248815713a360ede4d07b2cc72b0cfcb4c/evals/F0-frames/prereg.md",
+        "https://github.com/ojfbot/BookcaseDiscovery/blob/24ff5d248815713a360ede4d07b2cc72b0cfcb4c/evals/F0-frames/report.md"
+      ],
+      "correction": "Report a bounded one-third-session observation. Do not claim stride robustness or that this sample itself establishes acceptance/readiness for TS-0 or TS-2.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "Core #590 is not an evidenced G7 prerequisite",
+      "location": "Lines 86 and 88 and retained candidate 1 say G7 is blocked on deciding whether core #590 must merge first.",
+      "explanation": "Core #590 is a Proposed SMB tenant-identity ADR and says bookcase backup needs no code change. The source-current #578 checkpoint names transport, SSH, and restore qualification as G7 blockers without making #590 a prerequisite.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8eb63bae017f17d0b5d2abf0fb29e10612fa7207/_articles/2026-11-12.md#L84-L90",
+        "https://github.com/ojfbot/core/pull/590",
+        "https://github.com/ojfbot/core/issues/578#issuecomment-6780710959"
+      ],
+      "correction": "Preserve the documented G7 blockers. Treat any relationship between #590 and G7 as unsupported until an owner records that gate; do not claim rerun risk or blocked status from it.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Proposed review records are not an unverified backlog and #531 is unrelated",
+      "location": "Line 94 calls Draft review PRs an unverified audit trail; candidate 2 lists ten PRs, including #531, while calling them nine review PRs.",
+      "explanation": "The discovery service intentionally exposes eligible open review-only PRs as proposed/current records, and their handoffs identify supervised finding disposition as the next step. Daily-logger #531 is a Selfco telemetry-cutover code PR, not an article review.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8eb63bae017f17d0b5d2abf0fb29e10612fa7207/_articles/2026-11-12.md#L92-L110",
+        "https://github.com/ojfbot/daily-logger/blob/8eb63bae017f17d0b5d2abf0fb29e10612fa7207/api/_lib/article-review-service.ts",
+        "https://github.com/ojfbot/daily-logger/pull/539",
+        "https://github.com/ojfbot/daily-logger/pull/531"
+      ],
+      "correction": "Distinguish completed proposed review publication from supervised finding disposition; do not call intentional Draft review records unverified or include unrelated #531 in a review-backlog action.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "BookcaseDiscovery #37 and #59 do not lack all disposition",
+      "location": "Line 96 and retained candidate 3 say #37 and #59 have no explicit disposition and tie closing or parking them to G7.",
+      "explanation": "Core #593 explicitly makes #37 historical context and replaces it with the frozen #95 packet. #37 records its bounded incomplete trial. #59 records a bounded daytime test and is stacked on closed #53. Neither source makes its next decision depend on G7.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8eb63bae017f17d0b5d2abf0fb29e10612fa7207/_articles/2026-11-12.md#L94-L113",
+        "https://github.com/ojfbot/core/pull/593",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/37",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/59",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/53"
+      ],
+      "correction": "Retain #37 as superseded historical evidence. Reconcile #59 against the delivered resident-worker lineage and its closed base as a separate owner decision, without inventing a G7 dependency.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "workstation-yuri #11 is not merely a prose rename",
+      "location": "Line 96 calls #11 a prose rename and retained context calls it unblocked with no open gate.",
+      "explanation": "PR #11 also admits yojimbo in the server device enum and changes HTTP/WebSocket check-in and replay behavior. Its body says service reload and live verification remain separately tracked.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8eb63bae017f17d0b5d2abf0fb29e10612fa7207/_articles/2026-11-12.md#L94-L111",
+        "https://github.com/ojfbot/workstation-yuri/pull/11"
+      ],
+      "correction": "Describe the prose plus server-compatibility slice and retain the separate reload/live-verification gate; do not call it prose-only or fully unblocked.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "Two displayed commit references are not Git SHAs",
+      "location": "Lines 25 and 37 display 593-merge and 594-merge as commit references.",
+      "explanation": "Those strings are not hexadecimal Git object identities. PR #593 and PR #594 have actual landed commit SHAs; #594 is 321a44637b8fc406b8823a192c1194511007e6c0.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8eb63bae017f17d0b5d2abf0fb29e10612fa7207/_articles/2026-11-12.md#L21-L37",
+        "https://github.com/ojfbot/core/pull/593",
+        "https://github.com/ojfbot/core/pull/594",
+        "https://github.com/ojfbot/core/commit/321a44637b8fc406b8823a192c1194511007e6c0"
+      ],
+      "correction": "Use the actual landed commit SHAs or omit commit bullets when the collector lacks a source-verified identity.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Closure of all six physical trials lacks a durable public receipt",
+      "location": "The title, summary, lines 11 and 86 say the physical loop and G6 are complete with six verified trials.",
+      "explanation": "Core #593 says its source merge does not claim full G6. BookcaseDiscovery #97 fixes the sixth-trial verifier but says target-machine execution remains required. The source-current #578 checkpoint says lid/Wi-Fi trials remain open, and no later public six-trial packet or checkpoint receipt was found.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/8eb63bae017f17d0b5d2abf0fb29e10612fa7207/_articles/2026-11-12.md#L3-L11",
+        "https://github.com/ojfbot/daily-logger/blob/8eb63bae017f17d0b5d2abf0fb29e10612fa7207/_articles/2026-11-12.md#L84-L86",
+        "https://github.com/ojfbot/core/pull/593",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/97",
+        "https://github.com/ojfbot/core/issues/578#issuecomment-6780710959"
+      ],
+      "correction": "Publish the bounded six-trial receipt with source/image pins, unique trial IDs, independent receipt references, fence/sequence evidence, and verdicts before certifying G6 closed; until then mark closure unverified.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
