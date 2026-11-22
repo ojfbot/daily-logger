@@ -85,7 +85,7 @@ def image_tar(*, user='1000:1000', architecture='amd64', system='linux',
 
 
 def oci_image_tar(*, compressed=False, attestation=False, wrong_diff=False, crossed_config=False,
-                  root_first=False, descriptor_platform=None, cached_reference=None):
+                  root_first=False, descriptor_platform=None, cached_reference=None, invalid_field_at=None):
     """Docker/containerd save layout with independently hashed OCI graph nodes."""
     blobs = {}
     index_type = 'application/vnd.oci.image.index.v1+json'
@@ -101,11 +101,18 @@ def oci_image_tar(*, compressed=False, attestation=False, wrong_diff=False, cros
     stored_layer = gzip.compress(layer, mtime=0) if compressed else layer
     layer_type = 'application/vnd.oci.image.layer.v1.tar' + ('+gzip' if compressed else '')
     layer_descriptor = blob(stored_layer, layer_type)
+    if invalid_field_at == 'layer':
+        layer_descriptor['Digest'] = layer_descriptor['digest']
     config = {'architecture': 'amd64', 'os': 'linux', 'config': {'User': '1000:1000'},
               'rootfs': {'type': 'layers', 'diff_ids': ['sha256:' + hashed(stored_layer if wrong_diff else layer)]}}
     config_descriptor = blob(encoded(config), config_type)
-    runtime = blob(encoded({'schemaVersion': 2, 'mediaType': manifest_type,
-                           'config': config_descriptor, 'layers': [layer_descriptor]}), manifest_type,
+    if invalid_field_at == 'config':
+        config_descriptor['Size'] = config_descriptor['size']
+    manifest = {'schemaVersion': 2, 'mediaType': manifest_type,
+                'config': config_descriptor, 'layers': [layer_descriptor]}
+    if invalid_field_at == 'manifest':
+        manifest['Layers'] = manifest['layers']
+    runtime = blob(encoded(manifest), manifest_type,
                    platform=descriptor_platform or {'architecture': 'amd64', 'os': 'linux'})
     descriptors = [runtime]
     identities = {'configId': config_descriptor['digest'], 'manifestId': runtime['digest'],
@@ -800,6 +807,13 @@ class ArtifactBoundaryTests(unittest.TestCase):
         staged = json.loads((self.root / 'verified/manifest.json').read_bytes())
         self.assertEqual(staged['image']['engineId'], identities['manifestId'])
         self.assertEqual(staged['image']['engineIdentityKind'], 'manifest-sha256')
+
+    def test_oci_manifest_and_image_descriptors_refuse_case_variants(self):
+        for field_at in ('manifest', 'config', 'layer'):
+            with self.subTest(field_at=field_at):
+                fixture = GithubFixture()
+                fixture.replace_oci_image(invalid_field_at=field_at)
+                self.rejected(fixture)
 
     def test_oci_index_with_root_runtime_before_good_runtime_is_ambiguous_and_rejected(self):
         identities = self.fixture.replace_oci_image(root_first=True)
