@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261115-815e9467d294",
+  "article": {
+    "date": "2026-11-15",
+    "sourceCommitSha": "815e9467d294687455f0018fe721073edd9c4db7",
+    "blobSha": "6d321d44803bcc9494bf81d50f06e9f1b28d391f"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": "01a1def6-6efd-71c2-b272-9555c5c01700"
+  },
+  "reviewedAt": "2026-11-15T11:33:26Z",
+  "scope": "Final visible Draft, exact source/article/action/deployed bytes, core #590/#594/#600/#602-#607 lifecycle and package records, BookcaseDiscovery #99 changed files, the complete open daily-logger review-data PR set and intended Draft lifecycle, workstation-yuri #12 lifecycle, current review schema/discovery and held-candidate custody. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "60fdd50bb7a516eb824c9030e7d36c1ef79b1801",
+  "fullRecordPath": "reviews/articles/2026-11-15-815e9467d294687455f0018fe721073edd9c4db7.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The seven-PR summary excludes the seventh repository entry",
+      "location": "Line 6 says seven PRs merged across core and BookcaseDiscovery.",
+      "explanation": "The article enumerates five core PRs and one BookcaseDiscovery PR. Seven is reached only by also including daily-logger #544.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/815e9467d294687455f0018fe721073edd9c4db7/_articles/2026-11-15.md#L6",
+        "https://github.com/ojfbot/core/pull/603",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/99",
+        "https://github.com/ojfbot/daily-logger/pull/544"
+      ],
+      "correction": "Say six PRs across core and BookcaseDiscovery, or seven across core, BookcaseDiscovery, and daily-logger.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Native-dispatch versions and test counts are shifted across PRs",
+      "location": "Lines 17 and 59 assign adjacent releases' versions and counts to the wrong PRs.",
+      "explanation": "The source sequence is 0.1.0 with 27 focused cases; 0.2.1 with 40 focused and 1,763 full-suite; 0.3.2 with 1,782 full-suite; 0.3.3 with 1,799; and 0.3.4 with 80 native and 1,803 full-suite cases. The article calls #605 0.2.2, shifts 1,799 and 1,803 one PR earlier, and lists only four counts for five releases.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/815e9467d294687455f0018fe721073edd9c4db7/_articles/2026-11-15.md#L17",
+        "https://github.com/ojfbot/core/pull/603",
+        "https://github.com/ojfbot/core/pull/604",
+        "https://github.com/ojfbot/core/pull/605",
+        "https://github.com/ojfbot/core/pull/606",
+        "https://github.com/ojfbot/core/pull/607"
+      ],
+      "correction": "Report 0.1.0 → 0.2.1 → 0.3.2 → 0.3.3 → 0.3.4 and keep focused/native counts separate from repository-wide full-suite counts.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "BookcaseDiscovery #99 changed code and tests",
+      "location": "Lines 33 and 65 say no code changes were required and the PR required zero code changes.",
+      "explanation": "PR #99 modifies src/eval/set-roles.ts and three test files in addition to manifests and documentation. Its body makes the narrower claim that no ingest code fixes were needed for the resolution increase.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/815e9467d294687455f0018fe721073edd9c4db7/_articles/2026-11-15.md#L33",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/99/files"
+      ],
+      "correction": "Say the existing ingest implementation needed no resolution-specific fix; the PR still changed the role registry and tests to register the sessions.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "Core #600 is implemented and already records a live replay",
+      "location": "Line 75 says #600 depends on live readiness, is not authorized for implementation, and has #605 as its technical prerequisite.",
+      "explanation": "PR #600 opened before #605 existed. It adds the operator-run command, reports an author-run live request plus duplicate, records a separate Yojimbo replay, and says no blocking findings remain. #605 is a later subscription-canary slice, not #600's recorded prerequisite.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/815e9467d294687455f0018fe721073edd9c4db7/_articles/2026-11-15.md#L75",
+        "https://github.com/ojfbot/core/pull/600",
+        "https://github.com/ojfbot/core/pull/605"
+      ],
+      "correction": "Describe #600 as an implemented Draft with completed author-reported live replay evidence and no deployment or delegated-authority change; keep any owner/merge gate separate.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Core #590 already names its owner-review gate",
+      "location": "Lines 75 and 92 call #590 stalled, parked, or indistinguishable from abandoned because no hold is stated.",
+      "explanation": "PR #590 is an unnumbered Proposed ADR whose unchecked test-plan item is owner review; acceptance then numbers it with /adr accept and applies the glossary terms.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/815e9467d294687455f0018fe721073edd9c4db7/_articles/2026-11-15.md#L75",
+        "https://github.com/ojfbot/core/pull/590"
+      ],
+      "correction": "Report #590 as waiting on explicit owner review and ADR acceptance; do not infer abandonment from elapsed time or silence.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Core #594 was already merged",
+      "location": "Lines 75, 89 and 91 call #594's merge status ambiguous and propose /confirm-status.",
+      "explanation": "PR #594 merged on 2026-11-11T14:51:12Z as commit 321a44637b8fc406b8823a192c1194511007e6c0.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/815e9467d294687455f0018fe721073edd9c4db7/_articles/2026-11-15.md#L75",
+        "https://github.com/ojfbot/core/pull/594",
+        "https://github.com/ojfbot/core/commit/321a44637b8fc406b8823a192c1194511007e6c0"
+      ],
+      "correction": "Report #594 as merged and remove the duplicate status-confirmation action while preserving its candidate ID and held history.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "workstation-yuri #12 had already merged",
+      "location": "Line 75 says #12 is waiting for owner review and merge.",
+      "explanation": "PR #12 merged on 2026-11-12T02:13:02Z, more than three days before the article capture. Its retained pre-merge body wording is historical after that lifecycle event.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/815e9467d294687455f0018fe721073edd9c4db7/_articles/2026-11-15.md#L75",
+        "https://github.com/ojfbot/workstation-yuri/pull/12"
+      ],
+      "correction": "Report #12 as merged and remove it from open work.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "The review-data set and intended Draft lifecycle are misreported",
+      "location": "Lines 79 and 93 say seven review Drafts are open and lack a disposition process or authority.",
+      "explanation": "Twelve review-only Draft PRs were open: #515, #524, #526, #529, #530, #533, #535, #537, #539, #541, #543 and #545. Their records intentionally reserve article revision, acceptance, readiness and merge authority while naming supervised finding disposition as the next step; the discovery service uses eligible open review PRs as proposed/current publication records.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/815e9467d294687455f0018fe721073edd9c4db7/_articles/2026-11-15.md#L79",
+        "https://github.com/ojfbot/daily-logger/pull/515",
+        "https://github.com/ojfbot/daily-logger/pull/524",
+        "https://github.com/ojfbot/daily-logger/pull/545",
+        "https://github.com/ojfbot/daily-logger/blob/815e9467d294687455f0018fe721073edd9c4db7/api/_lib/article-review-service.ts"
+      ],
+      "correction": "Report all twelve open review-data PRs and explain that Draft/open is the advisory publication state pending supervised disposition, not evidence of a missing process or merge owner.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "The public record does not independently authenticate the confirmation sessions",
+      "location": "Line 59 says every native-dispatch version has an independent confirmation step.",
+      "explanation": "The five PR bodies, all submitted through the shared ojfbot account, report Claude, Codex, or HelpDesk confirmation activity. None has a GitHub review submission, and the cited HelpDesk messages are not public links. The code and author-reported receipts support implementation claims but not independently authenticated provider, session, machine, or person identity.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/core/pull/603",
+        "https://github.com/ojfbot/core/pull/604",
+        "https://github.com/ojfbot/core/pull/605",
+        "https://github.com/ojfbot/core/pull/606",
+        "https://github.com/ojfbot/core/pull/607"
+      ],
+      "correction": "Attribute confirmation to the PR author record or link a public source-bound report; do not treat a shared account or model agreement as independently authenticated identity.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "The public record does not establish that #602 is ready to merge",
+      "location": "Lines 73 and 89 call #602 ready to merge with no known blockers and propose /merge core#602.",
+      "explanation": "PR #602 is open and non-Draft, and its body says the cleaner output was validated by Claude Opus. It has no GitHub review submission or public human merge authorization. Automation and model validation do not supply owner acceptance or merge authority.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/815e9467d294687455f0018fe721073edd9c4db7/_articles/2026-11-15.md#L73",
+        "https://github.com/ojfbot/core/pull/602"
+      ],
+      "correction": "Report #602 as open, non-Draft and model-validated; keep merge as a held suggestion until the operator reviews and authorizes it.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
