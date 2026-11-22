@@ -2,6 +2,8 @@
 
 ## Deviations
 
+- 2026-11-19, #549 continuation: the initiative snapshot alone left both the writer introduction and council reviewer evaluating the whole fleet as Frame OS. Aligned those prompts with core's current fleet goal, separated HelpDesk transport from agent consumption and FleetRunner qualification from deployed capability, and removed synthesis's contradictory per-section action quota. Preserved the roadmap-first structure and existing independent action review; prompt versions advance to article-v8 and council-synthesis-v3. Static orientation is not a live status ledger or approved weekly priority record. Model-output date/telemetry adaptation and evidence-aware council review remain separate service work.
+
 - The initial weekday rewrite assumed a leading weekday named the reporting day, but independent review found it can be content such as “Friday Night”; rewrite only an explicit separated label and preserve other weekday prose under a workday prefix.
 
 - The title rollout assumed browser fixtures asserted article behavior independently of the displayed heading, but the grouped-time fixture expected its raw title; update that exact heading assertion to the new reporting-workday display and rerun all browser journeys before merge.
@@ -606,3 +608,8 @@ must establish the candidate's actual fit before a new model-run decision.
 ## Deviations — October 30 historical backfill (2026-10-31)
 
 - The backfill plan assumed the repository action-review pause affected only generation, but job-level wiring also injected it into the unit suite and caused the first recovery run to fail before drafting. Scope the variable to the Generate article step, retain normal test fixtures, and rerun the same dated backfill with actions held.
+
+## Deviations — roadmap-first pulse and current initiatives (2026-11-15)
+
+- The plan was to change only the drafter's `roadmapPulse` rule and replace its Frame OS-era "Architecture snapshot". The council synthesis pass rewrites every section and had no instruction about the pulse, so it could expand the pulse back into a PR-by-PR narrative. Added one clause to synthesis rule 5 to keep the Direction / Next milestone / Blocked lines and the "Also in flight" list. Bumped both prompt versions so article provenance shows the change.
+- The conservative choice was to keep "reference every open PR by [repo] #number" and move it into the closing "Also in flight" list, rather than drop it.
