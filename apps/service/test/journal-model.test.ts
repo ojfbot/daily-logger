@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { once } from 'node:events'
 import { createServer } from 'node:http'
 import { test } from 'node:test'
-import { callJournalModel, journalRouting, modelRequest } from '../src/journal-model.js'
+import { callJournalModel, journalRouting, modelRequest, routingDigest } from '../src/journal-model.js'
 
 test('model transport distinguishes rejection, uncertainty and invalid replies without hidden retries', async () => {
   const received: string[] = []
@@ -40,4 +40,12 @@ test('model transport distinguishes rejection, uncertainty and invalid replies w
     server.closeAllConnections()
     await new Promise<void>(resolve => server.close(() => resolve()))
   }
+})
+
+test('routing identity binds each model selection and stays invariant under URL normalization', () => {
+  const writer = { endpoint: 'https://models.invalid/v1/chat/completions', model: 'writer', maxOutputTokens: 2048, timeoutMs: 5000 }
+  const reviewer = { ...writer, model: 'reviewer', maxOutputTokens: 512 }
+  const selected = routingDigest(journalRouting.parse({ writer, reviewer }))
+  assert.equal(selected, routingDigest(journalRouting.parse({ writer, reviewer: { ...reviewer, endpoint: 'https://MODELS.invalid:443/v1/chat/completions' } })))
+  assert.notEqual(selected, routingDigest(journalRouting.parse({ writer, reviewer: { ...reviewer, model: 'other-reviewer' } })))
 })

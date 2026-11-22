@@ -184,7 +184,9 @@ holds for inspection. Review findings and the revision stay in the private
 database. The operator-only result command returns the validated revision JSON.
 If a delivery expires or fails, `redrive --run-id "$run_id"` replaces the
 delivery while preserving the original call records and retry limits. A settled
-or blocked run cannot be re-driven.
+or blocked run cannot be re-driven. Run `migrate` during an upgrade to update
+the queue config. Previously dispatched jobs keep their original delivery
+budget. Re-driving an expired job uses the updated queue budget.
 
 The journal worker accepts the existing optional `--telemetry-config` for
 metadata-only Langfuse observations. Qualification uses a loopback provider
