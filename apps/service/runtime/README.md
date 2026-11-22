@@ -182,9 +182,13 @@ inference. It retries that response up to three total attempts per step. If a
 worker dies during a request or the provider outcome is uncertain, the run
 holds for inspection. Review findings and the revision stay in the private
 database. The operator-only result command returns the validated revision JSON.
+If a delivery expires or fails, `redrive --run-id "$run_id"` replaces the
+delivery while preserving the original call records and retry limits. A settled
+or blocked run cannot be re-driven.
 
 The journal worker accepts the existing optional `--telemetry-config` for
 metadata-only Langfuse observations. Qualification uses a loopback provider
 and counts requests across worker restarts. From the service working directory
 on an isolated stage, feed `runtime/journal-probe.mjs` to
-`node --input-type=module -` to run the probe using the staging database.
+`node --input-type=module -`. The probe creates and drops its own randomly
+named database. Its connection role needs create-database permission.
