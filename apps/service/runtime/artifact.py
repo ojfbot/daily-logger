@@ -428,8 +428,8 @@ def inspect_image_archive(stream):
                 return stream.read(maximum + 1)
         records = json_bytes(read('manifest.json', MAX_MANIFEST))
         require(type(records) is list and len(records) == 1, 'Single-image Docker save required')
-        record = records[0]
-        require(type(record) is dict and type(record.get('Layers')) is list and 0 < len(record['Layers']) < 200,
+        record = object_keys(records[0], ('Config', 'RepoTags', 'Layers'))
+        require(type(record['Layers']) is list and 0 < len(record['Layers']) < 200,
                 'Unsupported Docker-save manifest')
         config = read(record.get('Config'), 4 * 1024 * 1024)
         config_id = 'sha256:' + hashlib.sha256(config).hexdigest()
@@ -469,11 +469,21 @@ def inspect_image_archive(stream):
             manifest_platforms = {}
             indexes = ('application/vnd.oci.image.index.v1+json', 'application/vnd.docker.distribution.manifest.list.v2+json')
             manifests = ('application/vnd.oci.image.manifest.v1+json', 'application/vnd.docker.distribution.manifest.v2+json')
+            descriptor_keys = {'mediaType', 'digest', 'size'}
+
+            def index_node(value):
+                node = object_keys(value, ('schemaVersion', 'mediaType', 'manifests'))
+                require(node['schemaVersion'] == 2 and node['mediaType'] in indexes and
+                        type(node['manifests']) is list and 0 < len(node['manifests']) < 100, 'Unsupported image index')
+                return node
+
             def reference_policy(item, media, runtime_members):
                 annotations = item.get('annotations', {})
                 require(type(annotations) is dict, 'Invalid descriptor annotations')
                 marker = annotations.get('vnd.docker.reference.type')
                 declared = item.get('platform')
+                if declared is not None:
+                    object_keys(declared, ('os', 'architecture'))
                 if media in manifests:
                     platform = manifest_platforms[item['digest']]
                     require(declared is None or (type(declared) is dict
@@ -486,8 +496,11 @@ def inspect_image_archive(stream):
                         require(media in indexes and type(declared) is dict
                                 and {runtime_manifests[member]['platform'] for member in runtime_members}
                                 == {(declared.get('os'), declared.get('architecture'))}, 'Index reference platform disagrees with content')
-            def descriptor(item, depth=0):
-                require(type(item) is dict and depth < 12, 'Invalid image descriptor graph')
+            def descriptor(item, depth=0, *, leaf=False):
+                optional = {'annotations'} if leaf else {'annotations', 'platform'}
+                require(type(item) is dict and depth < 12 and
+                        descriptor_keys <= item.keys() <= descriptor_keys | optional,
+                        'Invalid image descriptor fields')
                 identity = item.get('digest')
                 require(type(identity) is str and re.fullmatch(r'sha256:[0-9a-f]{64}', identity) is not None,
                         'Unsupported image descriptor digest')
@@ -508,9 +521,7 @@ def inspect_image_archive(stream):
                 configs = set()
                 runtime_members = set()
                 if media in indexes:
-                    node = json_bytes(read(name, MAX_MANIFEST))
-                    require(node.get('schemaVersion') == 2 and type(node.get('manifests')) is list
-                            and 0 < len(node['manifests']) < 100, 'Unsupported image index')
+                    node = index_node(json_bytes(read(name, MAX_MANIFEST)))
                     for child in node['manifests']:
                         child_configs, child_members = descriptor(child, depth + 1)
                         configs.update(child_configs)
@@ -521,12 +532,13 @@ def inspect_image_archive(stream):
                         require(len(eligible) == 1 and eligible[0]['config'] == config_id, 'Ambiguous runtime platform selection')
                         engine_kinds[identity] = 'index-sha256'
                 elif media in manifests:
-                    node = json_bytes(read(name, MAX_MANIFEST))
-                    require(node.get('schemaVersion') == 2 and type(node.get('config')) is dict
-                            and type(node.get('layers')) is list and len(node['layers']) < 200, 'Unsupported image manifest')
-                    descriptor(node['config'], depth + 1)
+                    node = object_keys(json_bytes(read(name, MAX_MANIFEST)), ('schemaVersion', 'mediaType', 'config', 'layers'))
+                    require(node['schemaVersion'] == 2 and node['mediaType'] == media and
+                            type(node['layers']) is list and len(node['layers']) < 200, 'Unsupported image manifest')
+                    object_keys(node['config'], ('mediaType', 'digest', 'size'))
+                    descriptor(node['config'], depth + 1, leaf=True)
                     for child in node['layers']:
-                        descriptor(child, depth + 1)
+                        descriptor(child, depth + 1, leaf=True)
                     configs.add(node['config']['digest'])
                     config_name = 'blobs/sha256/' + node['config']['digest'][7:]
                     config_value = json_bytes(read(config_name, 4 * 1024 * 1024))
@@ -545,9 +557,7 @@ def inspect_image_archive(stream):
                 reference_policy(item, media, runtime_members)
                 verified[identity] = (media, configs, runtime_members)
                 return configs, runtime_members
-            root = json_bytes(read('index.json', MAX_MANIFEST))
-            require(root.get('schemaVersion') == 2 and type(root.get('manifests')) is list
-                    and 0 < len(root['manifests']) < 100, 'Unsupported OCI archive index')
+            root = index_node(json_bytes(read('index.json', MAX_MANIFEST)))
             reachable = set()
             for item in root['manifests']:
                 configs, _runtime_members = descriptor(item)
