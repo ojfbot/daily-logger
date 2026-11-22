@@ -116,6 +116,43 @@ def json_bytes(data, *, case_insensitive_keys=False):
     return json.loads(data, object_pairs_hook=unique, parse_constant=lambda _: require(False, 'Invalid JSON number'))
 
 
+def canonical_image_fields(value, required, optional=()):
+    require(type(value) is dict and set(required) <= value.keys() <= set(required) | set(optional),
+            'Unexpected image configuration fields')
+
+
+def parse_image_config(data):
+    value = json_bytes(data, case_insensitive_keys=True)
+    canonical_image_fields(value, ('architecture', 'os', 'rootfs'), (
+        'config', 'created', 'author', 'history', 'variant', 'os.version', 'os.features',
+        'container', 'container_config', 'docker_version', 'comment', 'parent',
+    ))
+    object_keys(value['rootfs'], ('type', 'diff_ids'))
+    for section in ('config', 'container_config'):
+        if section not in value:
+            continue
+        config = value[section]
+        canonical_image_fields(config, (), (
+            'User', 'ExposedPorts', 'Env', 'Entrypoint', 'Cmd', 'Volumes', 'WorkingDir',
+            'Labels', 'StopSignal', 'ArgsEscaped', 'Healthcheck', 'OnBuild', 'Shell',
+            'Hostname', 'Domainname', 'AttachStdin', 'AttachStdout', 'AttachStderr',
+            'Tty', 'OpenStdin', 'StdinOnce', 'Image', 'NetworkDisabled', 'MacAddress', 'StopTimeout',
+        ))
+        if config.get('Healthcheck') is not None:
+            canonical_image_fields(config['Healthcheck'], (),
+                                   ('Test', 'Interval', 'Timeout', 'StartPeriod', 'StartInterval', 'Retries'))
+        for name in ('ExposedPorts', 'Volumes'):
+            entries = config.get(name)
+            if entries is not None:
+                require(type(entries) is dict and all(type(entry) is dict and not entry for entry in entries.values()),
+                        'Invalid image resource declarations')
+    history = value.get('history', [])
+    require(type(history) is list, 'Invalid image history')
+    for entry in history:
+        canonical_image_fields(entry, (), ('created', 'created_by', 'author', 'comment', 'empty_layer'))
+    return value
+
+
 def sha256_stream(stream):
     result = hashlib.sha256()
     for chunk in iter(lambda: stream.read(1024 * 1024), b''):
@@ -436,7 +473,7 @@ def inspect_image_archive(stream):
                 'Unsupported Docker-save manifest')
         config = read(record.get('Config'), 4 * 1024 * 1024)
         config_id = 'sha256:' + hashlib.sha256(config).hexdigest()
-        value = json_bytes(config, case_insensitive_keys=True)
+        value = parse_image_config(config)
         require(value.get('os') == 'linux' and value.get('architecture') == 'amd64'
                 and value.get('config', {}).get('User') == '1000:1000', 'Wrong image platform/user')
         layers = value.get('rootfs', {}).get('diff_ids')
@@ -545,7 +582,7 @@ def inspect_image_archive(stream):
                         descriptor(child, depth + 1, leaf=True)
                     configs.add(node['config']['digest'])
                     config_name = 'blobs/sha256/' + node['config']['digest'][7:]
-                    config_value = json_bytes(read(config_name, 4 * 1024 * 1024), case_insensitive_keys=True)
+                    config_value = parse_image_config(read(config_name, 4 * 1024 * 1024))
                     platform = (config_value.get('os'), config_value.get('architecture'))
                     manifest_platforms[identity] = platform
                     if platform != ('unknown', 'unknown'):
