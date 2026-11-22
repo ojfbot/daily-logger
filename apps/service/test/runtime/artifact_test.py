@@ -123,6 +123,14 @@ def oci_image_tar(*, compressed=False, attestation=False, wrong_diff=False, cros
               'rootfs': {'type': 'layers', 'diff_ids': ['sha256:' + hashed(stored_layer if wrong_diff else layer)]}}
     if invalid_field_at == 'config-document':
         config['Os'] = config['os']
+    if invalid_field_at == 'runtime-config':
+        config['config']['eNv'] = []
+    if invalid_field_at == 'rootfs':
+        config['rootfs']['Type'] = config['rootfs'].pop('type')
+    if invalid_field_at == 'history':
+        config['history'] = [{'Created_By': 'fixture'}]
+    if invalid_field_at == 'healthcheck':
+        config['config']['Healthcheck'] = {'test': ['NONE']}
     config_descriptor = blob(encoded(config), config_type)
     if invalid_field_at == 'config':
         config_descriptor['Size'] = config_descriptor['size']
@@ -885,7 +893,8 @@ class ArtifactBoundaryTests(unittest.TestCase):
         self.assertEqual(staged['image']['engineIdentityKind'], 'manifest-sha256')
 
     def test_oci_manifest_and_image_descriptors_refuse_case_variants(self):
-        for field_at in ('manifest', 'config', 'layer', 'config-document'):
+        for field_at in ('manifest', 'config', 'layer', 'config-document',
+                         'runtime-config', 'rootfs', 'history', 'healthcheck'):
             with self.subTest(field_at=field_at):
                 fixture = GithubFixture()
                 fixture.replace_oci_image(invalid_field_at=field_at)
