@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261116-3863b49e9998",
+  "article": {
+    "date": "2026-11-16",
+    "sourceCommitSha": "3863b49e9998fd0c92e2bd235d44a9f3d0152b85",
+    "blobSha": "9c62038a7f74802d57b06a1bc61a109d1a996249"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": "01a1e41e-d775-7b93-8578-8390956003e5"
+  },
+  "reviewedAt": "2026-11-16T11:36:59Z",
+  "scope": "Final visible Draft, exact source/article/action/deployed bytes, core #609 discussion/commits/final loop documentation, BookcaseDiscovery #100, daily-logger #548/#549 and all open review-data PRs, core #600/#602/#608/#590, workstation-yuri #11/#12, current review schema/discovery, telemetry stream boundaries and held-candidate custody. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "e74b88f9aa08a7ed0554c89d422159467e73e09d",
+  "fullRecordPath": "reviews/articles/2026-11-16-3863b49e9998fd0c92e2bd235d44a9f3d0152b85.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The accepted ownership race is linked and described incorrectly",
+      "location": "Line 17 links finding #5 to core PR #5 and describes two repo-sync invocations racing update-ref.",
+      "explanation": "Core #609 records a Medium race between a concurrent session checkout or branch switch and the loop's non-atomic ownership check/write gap. Repo-sync invocations are serialized by flock. The owner comment records only Accept #5; the final docs retain recovery paths and the discussed alternative.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/_articles/2026-11-16.md#L17",
+        "https://github.com/ojfbot/core/pull/609#issuecomment-6908465299",
+        "https://github.com/ojfbot/core/blob/d4422aa0972b402f184ba6b87ddff186be981a4a/docs/repo-sync.md#known-limits"
+      ],
+      "correction": "Link core #609, describe the accepted Medium session-versus-loop ownership race, preserve both documented outcomes and recovery paths, and attribute only the recorded owner decision.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Dirty-worktree safety is implemented by an explicit loop guard",
+      "location": "Lines 17 and 49 say git merge --ff-only itself refuses whenever the checked-out worktree is dirty.",
+      "explanation": "The loop detects uncommitted tracked edits and returns skipped-dirty-worktree before merge. Only the clean tracked case reaches merge --ff-only, with separate no-autostash and no-overwrite-ignore protections.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/_articles/2026-11-16.md#L17",
+        "https://github.com/ojfbot/core/blob/d4422aa0972b402f184ba6b87ddff186be981a4a/docs/repo-sync.md#what-it-does"
+      ],
+      "correction": "Say the loop explicitly skips a checked-out main with tracked edits and reaches guarded merge --ff-only only for the clean case.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Detailed Claude-versus-Codex review attribution is recoverable",
+      "location": "Line 61 says per-finding tool attribution was not captured and cannot be recovered from the window.",
+      "explanation": "Core #609's public discussion records the Claude seat's findings and first fix, then the initial Codex report, later rechecks and round summaries. Commit messages separately label the Claude fix and successive Codex fixes.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/_articles/2026-11-16.md#L61",
+        "https://github.com/ojfbot/core/pull/609#issuecomment-6907321200",
+        "https://github.com/ojfbot/core/pull/609#issuecomment-6907417938",
+        "https://github.com/ojfbot/core/pull/609/commits"
+      ],
+      "correction": "Distinguish the first Claude review/fix from the initial Codex review and later Codex rounds, while qualifying these as author-reported identities carried by the shared account.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The review-data set and its intended Draft lifecycle are misreported",
+      "location": "Line 74 reports seven stalled review Drafts, one to seven days old, with no resolution plan.",
+      "explanation": "Thirteen review-only Draft PRs were open: #515, #524, #526, #529, #530, #533, #535, #537, #539, #541, #543, #545 and #547. The oldest opened October 31. Their intended state is proposed/current publication pending supervised disposition, as implemented by the discovery service.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/_articles/2026-11-16.md#L74",
+        "https://github.com/ojfbot/daily-logger/pull/515",
+        "https://github.com/ojfbot/daily-logger/pull/524",
+        "https://github.com/ojfbot/daily-logger/pull/547",
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/api/_lib/article-review-service.ts"
+      ],
+      "correction": "Report all thirteen open review-data PRs and explain that Draft/open is the advisory publication state pending supervised disposition; label any different retention policy as a new decision.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "workstation-yuri #12 had already merged",
+      "location": "Line 79 says #12 is awaiting owner review and merge.",
+      "explanation": "PR #12 merged on 2026-11-12T02:13:02Z, more than four days before article capture. Its retained pre-merge body wording is historical after that lifecycle event.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/_articles/2026-11-16.md#L79",
+        "https://github.com/ojfbot/workstation-yuri/pull/12"
+      ],
+      "correction": "Report #12 as merged and remove it from open owner-action work.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "Core #600 already records completed live replay evidence",
+      "location": "Line 83 calls #600 blocked on an operator run.",
+      "explanation": "PR #600 adds the operator-run command, reports an author-run live request plus duplicate, reports a separate Yojimbo replay with fresh sources and state, and says no blocking findings remain. It remains Draft and unmerged, which are separate lifecycle facts.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/_articles/2026-11-16.md#L83",
+        "https://github.com/ojfbot/core/pull/600"
+      ],
+      "correction": "Describe #600 as an implemented Draft with completed author-reported and separate replay evidence, no blocking findings, and no deployment or delegated-authority change; keep owner or merge decisions separate.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The held slash commands are not workflow surfaces and the triage set is incomplete",
+      "location": "Lines 106-107 retain /merge, /triage and /capture-billing-rate commands and target only seven review PRs.",
+      "explanation": "The daily-cycle index defines the supervised workflows and exposes none of those commands. The dated action record marks all candidates awaiting-review, both model roles not-verified and the card non-dispatchable. The triage payload omits six older open proposed reviews.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/_articles/2026-11-16.md#L106",
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/actions/articles/2026-11-16.json",
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/docs/daily-cycle.md"
+      ],
+      "correction": "Preserve the three candidate IDs and held history, but do not present the strings as executable commands. Route new review-retention, merge and sizing decisions through documented supervised surfaces.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "The blanket frozen-telemetry claim conflates legacy and live streams",
+      "location": "Line 94 says the telemetry stream has been frozen since 2026-05-12.",
+      "explanation": "Core's loops registry identifies only the legacy skill-telemetry.jsonl stream as frozen while the primary dispositions, tool-use, suggestion, authoring and telemetry/daily sync streams remain live. The daily-logger collector consumes dispositions as primary with a labeled legacy fallback.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/_articles/2026-11-16.md#L94",
+        "https://github.com/ojfbot/core/blob/d4422aa0972b402f184ba6b87ddff186be981a4a/decisions/loops/loops.md",
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/src/collect-telemetry.ts"
+      ],
+      "correction": "Name the frozen legacy stream explicitly and report current disposition/suggestion coverage from its own primary source and bounded interval without blending telemetry tracks.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Open non-Draft status does not establish merge readiness for #548 and #549",
+      "location": "Lines 69-71 and 106 impose a decision-this-week framing and propose merge when no blocker is documented.",
+      "explanation": "PRs #548 and #549 are open and non-Draft but have no GitHub review submission or public human merge authorization. #548 records an unenforced prompt-only disclosure rule as a known security limit. Silence and non-Draft state do not establish readiness, authority or a deadline.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/_articles/2026-11-16.md#L69",
+        "https://github.com/ojfbot/daily-logger/pull/548",
+        "https://github.com/ojfbot/daily-logger/pull/549"
+      ],
+      "correction": "Report actual open/non-Draft state and known limits, then ask the operator for a review or merge decision without inventing readiness, authorization or a deadline.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "The shared account does not independently authenticate the reported review identities",
+      "location": "Lines 59-61 call the sequence a five-round Codex cycle and assign findings to Codex or Claude.",
+      "explanation": "Core #609's public discussion reports Claude and Codex CLI activity, versions and machine names, but every substantive comment is submitted through the shared ojfbot account and the cited HelpDesk source is not a public independent identity record. This supports author-reported provenance, not independently authenticated provider, session, machine or human identity.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/3863b49e9998fd0c92e2bd235d44a9f3d0152b85/_articles/2026-11-16.md#L59",
+        "https://github.com/ojfbot/core/pull/609"
+      ],
+      "correction": "Retain the reported review labels and exact comments while identifying ojfbot as the submitting account; do not turn agreement or shared-account attribution into independent identity proof.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
