@@ -112,8 +112,9 @@ See [ingress preparation](INGRESS.md) for the remaining live checks.
 ## Private fixture staging on a host
 
 Select a successful `service-runtime.yml` run from this repository for the exact
-PR head. Independently pin its tested merge and artifact ID and run the receiver
-above. Transfer its three verified files into a new, mode-0700 `incoming.NAME`
+PR head. Staging expects the OCI index archive produced by this workflow.
+Independently pin its tested merge and artifact ID and run the receiver above.
+Transfer its three verified files into a new, mode-0700 `incoming.NAME`
 directory under a dedicated private stage root. Include the candidate's
 `compose.yaml`, `artifact.py`, and `private-stage.py`, and copy
 `private-stage-probe.mjs` as `probe.mjs`. Use mode 0600 for files. Generate
