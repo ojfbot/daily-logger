@@ -42,6 +42,22 @@ def hashed(value):
     return hashlib.sha256(value).hexdigest()
 
 
+def image_gate_fixture(image, config, postgres):
+    return {
+        'enabledExporter': {'proof': 'enabled-exporter-final-image', 'image': image, 'configId': config,
+            'postgresImage': postgres, 'counts': {'tests': 4, 'passed': 4, 'failed': 0, 'skipped': 0},
+            'cleanup': 'passed', 'productionEligible': False, 'actualLangfuseBackend': False,
+            'indexingQualified': False, 'hostDeploymentQualified': False},
+        'matchedRestore': {'proof': 'isolated-matched-fixture-restore', 'image': image, 'configId': config,
+            'postgresImage': postgres, 'status': 'PASS', 'counts': {'tests': 14, 'passed': 14, 'failed': 0, 'skipped': 0},
+            'checks': {'matchedPairAndNegativeControls': True, 'allRawTablesAndSequencesEqual': True,
+                'ordinaryCopyAndDamagedStateRejected': True, 'narrowReconciliationRestartAndRuntimeValidation': True,
+                'singleOriginalResumeNoRepeatedSteps': True, 'duplicateConsumedAndCancelledAuthorityPreserved': True,
+                'zeroPostCutSourceEffects': True},
+            'cleanupComplete': True, 'productionEligible': False, 'authorityEpochQualified': False},
+    }
+
+
 def tar_bytes(entries):
     output = io.BytesIO()
     with tarfile.open(fileobj=output, mode='w', format=tarfile.USTAR_FORMAT) as archive:
@@ -192,7 +208,7 @@ class GithubFixture:
         }
         self.image, image_id = image_tar()
         self.manifest = {
-            'schemaVersion': 1, 'purpose': 'disposable-fixture-candidate', 'repository': REPOSITORY,
+            'schemaVersion': 2, 'purpose': 'disposable-fixture-candidate', 'repository': REPOSITORY,
             'source': copy.deepcopy(self.expected['source']),
             'ci': {'workflowPath': WORKFLOW, 'workflowId': 50, 'runId': 100,
                    'attempt': 2, 'jobId': 110, 'jobKey': 'runtime-image'},
@@ -207,9 +223,11 @@ class GithubFixture:
             'upstreamImages': {'postgres': 'postgres:18.7-trixie@sha256:' + 'a' * 64,
                                'caddy': 'caddy:2.11.9-alpine@sha256:' + 'b' * 64},
             'qualifications': {
-                'preparation': {'tests': 8, 'passed': 8, 'failed': 0, 'skipped': 0},
+                'preparation': {'tests': 10, 'passed': 10, 'failed': 0, 'skipped': 0},
                 'offline': {'proof': 'offline-final-image', 'node': 'v24.22.3', 'git': 'git version 2.47.3',
-                            'uid': 1000, 'fixtureCommit': '4' * 40, 'nativeSqlite': 'passed'},
+                            'uid': 1000, 'fixtureCommit': '4' * 40, 'nativeSqlite': 'passed',
+                            'compiledExporterChild': 'ready-then-closed', 'exporterBatches': 0,
+                            'defaultTelemetry': 'disabled'},
                 'entrypoints': {'proof': 'production-entrypoints-and-cross-container-storage',
                                 'migration': 'explicit-and-repeatable', 'fixture': 'complete',
                                 'shutdown': 'clean', 'publishedPorts': 0},
@@ -224,6 +242,7 @@ class GithubFixture:
                                  'archiveClosure': 'passed', 'emptyLayerStore': False},
             },
         }
+        self.manifest['qualifications'].update(image_gate_fixture(image_id, image_id, self.manifest['upstreamImages']['postgres']))
         root = f'repos/{REPOSITORY}/'
         self.artifact_route = root + 'actions/artifacts/700'
         self.run_route = root + 'actions/runs/100/attempts/2'
@@ -321,6 +340,7 @@ class GithubFixture:
         self.manifest['image']['configId'] = image_id
         self.manifest['image']['engineId'] = image_id
         self.manifest['image']['engineIdentityKind'] = 'config-sha256'
+        self.manifest['qualifications'].update(image_gate_fixture(image_id, image_id, self.manifest['upstreamImages']['postgres']))
         self.manifest['archive'].update(size=len(self.image), sha256=hashed(self.image))
         self.repack()
 
@@ -328,6 +348,8 @@ class GithubFixture:
         self.image, identities = oci_image_tar(**options)
         self.manifest['image'].update(configId=identities['configId'], engineIdentityKind=engine_kind,
             engineId=identities['indexId'] if engine_kind == 'index-sha256' else identities['manifestId'])
+        self.manifest['qualifications'].update(image_gate_fixture(self.manifest['image']['engineId'],
+            identities['configId'], self.manifest['upstreamImages']['postgres']))
         self.manifest['archive'].update(size=len(self.image), sha256=hashed(self.image))
         self.repack()
         return identities
@@ -452,6 +474,7 @@ class ArtifactBoundaryTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 artifact.export_release_candidate(artifact.OWNED_IMAGE, self.root / 'context',
                                                   self.root / 'exported', RELEASE_VERSION)
+
         environment['GITHUB_JOB'] = 'release-candidate'
         environment['DAILYLOGGER_RELEASE_VERSION'] = 'v0.1.0-rc.2'
         with patch.dict(os.environ, environment, clear=True), \
@@ -460,6 +483,57 @@ class ArtifactBoundaryTests(unittest.TestCase):
                 artifact.export_release_candidate(artifact.OWNED_IMAGE, self.root / 'context',
                                                   self.root / 'exported', RELEASE_VERSION)
 
+    def test_v2_receiver_requires_both_same_image_gates_for_both_profiles(self):
+        for release in (False, True):
+            for mutation in ('v1', 'missing-exporter', 'missing-restore', 'extra', 'engine', 'config',
+                             'postgres', 'exporter-failure', 'restore-failure', 'cleanup', 'skipped',
+                             'empty-suite', 'failed-check', 'authority', 'boolean-count'):
+                with self.subTest(release=release, mutation=mutation):
+                    fixture = GithubFixture()
+                    if release:
+                        fixture.as_release_candidate()
+                    proofs = fixture.manifest['qualifications']
+                    if mutation == 'v1':
+                        fixture.manifest['schemaVersion'] = 1
+                    elif mutation.startswith('missing-'):
+                        del proofs['enabledExporter' if mutation.endswith('exporter') else 'matchedRestore']
+                    elif mutation == 'extra':
+                        proofs['enabledExporter']['endpoint'] = 'https://fixture.invalid'
+                    elif mutation in ('engine', 'config', 'postgres'):
+                        field = {'engine': 'image', 'config': 'configId', 'postgres': 'postgresImage'}[mutation]
+                        proofs['matchedRestore'][field] = 'sha256:' + 'f' * 64
+                    elif mutation == 'exporter-failure':
+                        proofs['enabledExporter']['counts']['failed'] = 1
+                    elif mutation == 'restore-failure':
+                        proofs['matchedRestore']['status'] = 'FAIL'
+                    elif mutation == 'cleanup':
+                        proofs['enabledExporter']['cleanup'] = 'failed'
+                    elif mutation == 'skipped':
+                        proofs['matchedRestore']['counts']['skipped'] = 1
+                    elif mutation == 'empty-suite':
+                        proofs['matchedRestore']['counts'].update(tests=0, passed=0)
+                    elif mutation == 'failed-check':
+                        proofs['matchedRestore']['checks']['zeroPostCutSourceEffects'] = False
+                    elif mutation == 'authority':
+                        proofs['matchedRestore']['authorityEpochQualified'] = True
+                    else:
+                        proofs['enabledExporter']['counts']['failed'] = False
+                    fixture.repack()
+                    self.rejected(fixture)
+
+    def test_both_workflows_run_the_shared_producer_before_the_only_upload_without_failure_bypass(self):
+        for path in (WORKFLOW, RELEASE_WORKFLOW):
+            workflow = (MODULE.parents[3] / path).read_text()
+            self.assertLess(workflow.index('pnpm type-check:journal'), workflow.index('pnpm service:artifact:export'))
+            self.assertLess(workflow.index('pnpm service:artifact:export'), workflow.index('uses: ' + UPLOAD))
+            self.assertEqual(workflow.count('pnpm service:artifact:export'), 1)
+            self.assertEqual(workflow.count('uses: ' + UPLOAD), 1)
+            for bypass in ('continue-on-error:', 'always()', 'failure()', '||', 'set +e'):
+                self.assertNotIn(bypass, workflow)
+            # The only allowed condition is the release job's existing main restriction.
+            conditions = [line.strip() for line in workflow.splitlines() if line.strip().startswith('if:')]
+            self.assertEqual(conditions, ["if: github.ref == 'refs/heads/main'"] if path == RELEASE_WORKFLOW else [])
+        self.assertIn('      - ' + RELEASE_WORKFLOW, (MODULE.parents[3] / WORKFLOW).read_text())
     def test_output_ownership_git_metadata_and_overrides_are_not_authorization(self):
         directory = self.root / 'existing'
         directory.mkdir()
@@ -917,6 +991,25 @@ class ArtifactBoundaryTests(unittest.TestCase):
                     proof['ingress']['strictTls'] = False
                 else:
                     proof['exportReload']['imageRecordRemoved'] = False
+                fixture.repack()
+                self.rejected(fixture)
+
+    def test_offline_exporter_proof_requires_actual_startup_zero_integer_batches_and_disabled_default(self):
+        fields = ('compiledExporterChild', 'exporterBatches', 'defaultTelemetry')
+        for missing in fields:
+            with self.subTest(missing=missing):
+                fixture = GithubFixture()
+                del fixture.manifest['qualifications']['offline'][missing]
+                fixture.repack()
+                self.rejected(fixture)
+        for field, value in (('compiledExporterChild', 'noop'), ('compiledExporterChild', 'ready'),
+                             ('compiledExporterChild', None), ('exporterBatches', False),
+                             ('exporterBatches', 0.0), ('exporterBatches', '0'), ('exporterBatches', 1),
+                             ('exporterBatches', -1), ('defaultTelemetry', 'enabled'),
+                             ('defaultTelemetry', False), ('exporterEndpoint', 'https://fixture.invalid')):
+            with self.subTest(field=field, value=value):
+                fixture = GithubFixture()
+                fixture.manifest['qualifications']['offline'][field] = value
                 fixture.repack()
                 self.rejected(fixture)
 

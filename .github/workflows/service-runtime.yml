@@ -11,6 +11,7 @@ on:
       - pnpm-workspace.yaml
       - packages/frontend/package.json
       - .github/workflows/service-runtime.yml
+      - .github/workflows/service-release-candidate.yml
   workflow_dispatch:
 
 permissions:
@@ -20,7 +21,7 @@ permissions:
 jobs:
   runtime-image:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,7 +42,7 @@ jobs:
         run: pnpm service:runtime:context "$RUNNER_TEMP/dailylogger-runtime-context"
       - name: Build without publishing
         run: docker build -t dailylogger-runtime:proof "$RUNNER_TEMP/dailylogger-runtime-context"
-      - name: Export, reload and qualify disposable fixture image
+      - name: Export, reload and qualify fixture including exporter and matched restore
         env:
           GH_TOKEN: ${{ github.token }}
           DAILYLOGGER_ARTIFACT_CREDENTIAL_CANARY: fixture-credential-canary-${{ github.run_id }}-${{ github.run_attempt }}
@@ -49,28 +50,6 @@ jobs:
           pnpm service:artifact:export --image dailylogger-runtime:proof
           --context "$RUNNER_TEMP/dailylogger-runtime-context"
           --output "$RUNNER_TEMP/dailylogger-fixture-artifact"
-      - name: Read qualified image identities
-        id: qualified-image
-        run: |
-          python3 - "$RUNNER_TEMP/dailylogger-fixture-artifact/manifest.json" >> "$GITHUB_OUTPUT" <<'PY'
-          import json, re, sys
-          with open(sys.argv[1]) as source:
-              identity = json.load(source)["image"]
-          values = {"engine_id": identity["engineId"], "config_id": identity["configId"]}
-          assert all(re.fullmatch(r"sha256:[0-9a-f]{64}", value) for value in values.values())
-          for key, value in values.items():
-              print(f"{key}={value}")
-          PY
-      - name: Prove enabled exporter lifecycle in the exact final image
-        env:
-          DAILYLOGGER_QUALIFIED_IMAGE: ${{ steps.qualified-image.outputs.engine_id }}
-          DAILYLOGGER_QUALIFIED_CONFIG_ID: ${{ steps.qualified-image.outputs.config_id }}
-        run: pnpm service:runtime:exporter "$DAILYLOGGER_QUALIFIED_IMAGE" "$DAILYLOGGER_QUALIFIED_CONFIG_ID"
-      - name: Prove isolated matched database and fixture-file restoration
-        env:
-          DAILYLOGGER_RESTORE_IMAGE: ${{ steps.qualified-image.outputs.engine_id }}
-          DAILYLOGGER_RESTORE_CONFIG_ID: ${{ steps.qualified-image.outputs.config_id }}
-        run: pnpm test:service:restore
       - name: Retain fixture candidate without publishing or deploying
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

@@ -1,7 +1,7 @@
 # System model — Mermaid compatibility views
 
 > Generated from `system.opl` by the /opm subset renderer v1. Do not hand-edit.
-> Source SHA-256: `c979a3a482a08f814bfdfbfec993a3900447c5f020d61fe60042f583c526d4da`.
+> Source SHA-256: `5b78f08deb2e06c125275fc84b412208f8d527a096d20ea0382eb342152a835b`.
 > Lossy projection, not a native OPD or ISO conformance claim. Rounded process nodes and
 > labeled arrows replace standard symbols. States are summarized; native state, control,
 > property, and refinement geometry is omitted. No order is inferred from decomposition.
@@ -1815,6 +1815,13 @@ flowchart TD
   n357["Independently Pinned Build Identity"]
   n358["Verified Fixture Candidate"]
   n359["Private Verification Receipt"]
+  n402("Enabled Image Exporter Qualifying")
+  n360("Matched Fixture Restore Qualifying")
+  n474["Same Image Gate Receipts"]
+  n475("Image Gate Receipt Validating")
+  n403["Enabled Image Exporter Receipt"]
+  n374["Isolated Matched Restore Receipt"]
+  n476["Exported Image Identities"]
   n346 -->|"requires (instrument)"| n345
   n347 -->|"requires (instrument)"| n345
   n348 -->|"requires (instrument)"| n345
@@ -1824,12 +1831,20 @@ flowchart TD
   n351 -->|"requires (instrument)"| n350
   n350 -->|"yields"| n352
   n350 -->|"yields"| n353
+  n350 -->|"invokes"| n402
+  n350 -->|"invokes"| n360
+  n474 -->|"requires (instrument)"| n345
+  n403 -->|"requires (instrument)"| n475
+  n374 -->|"requires (instrument)"| n475
+  n476 -->|"requires (instrument)"| n475
+  n475 -->|"yields"| n474
   n345 -->|"yields"| n354
   n356 -->|"requires (instrument)"| n355
   n357 -->|"requires (instrument)"| n355
   n349 -->|"requires (instrument)"| n355
   n354 -->|"requires (instrument)"| n355
   n353 -->|"requires (instrument)"| n355
+  n474 -->|"requires (instrument)"| n355
   n355 -->|"yields"| n358
   n355 -->|"yields"| n359
 ```
@@ -1846,12 +1861,20 @@ Fixture Image Qualifying requires Exported Fixture Image. [src: apps/service/run
 Fixture Image Qualifying requires Installed Shared Journal Package. [src: apps/service/runtime/smoke.mjs]
 Fixture Image Qualifying yields Fixture Qualification Receipts. [src: apps/service/runtime/artifact.py]
 Fixture Image Qualifying yields Offline Exporter Startup Proof. [src: apps/service/runtime/smoke.mjs]
+Fixture Image Qualifying invokes Enabled Image Exporter Qualifying. [src: apps/service/runtime/artifact.py]
+Fixture Image Qualifying invokes Matched Fixture Restore Qualifying. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Exporting requires Same Image Gate Receipts. [src: apps/service/runtime/artifact.py]
+Image Gate Receipt Validating requires Enabled Image Exporter Receipt. [src: apps/service/runtime/artifact.py]
+Image Gate Receipt Validating requires Isolated Matched Restore Receipt. [src: apps/service/runtime/artifact.py]
+Image Gate Receipt Validating requires Exported Image Identities. [src: apps/service/runtime/artifact.py]
+Image Gate Receipt Validating yields Same Image Gate Receipts. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Exporting yields Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying requires Authenticated GitHub Artifact Evidence. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying requires Independently Pinned Build Identity. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying requires Exported Fixture Image. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying requires Closed Fixture Manifest. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying requires Offline Exporter Startup Proof. [src: apps/service/runtime/artifact.py]
+Fixture Artifact Verifying requires Same Image Gate Receipts. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying yields Verified Fixture Candidate. [src: apps/service/runtime/artifact.py]
 Fixture Artifact Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
 ```
@@ -2397,4 +2420,78 @@ Service Draft Output Validating yields Original Service Draft Shape Result. [src
 Service Draft Contract Qualifying requires Synthetic Request And Output Boundary Cases. [src: apps/service/test/recorded-service-draft.test.ts]
 Service Draft Contract Qualifying requires Installed Service Runtime. [src: apps/service/runtime/smoke.mjs]
 Service Draft Contract Qualifying yields Request Bound Draft Compatibility Evidence. [src: apps/service/test/recorded-service-draft.test.ts]
+```
+
+## SD2.16 — Merged-source release candidate delivery
+
+**Caption:** This view summarizes the source facts in this section. Rectangles identify objects;
+rounded nodes identify processes. Labeled solid arrows distinguish human participation,
+required instruments, and transformations. These are compatibility labels, not native OPM links.
+Use the source facts below for properties, state detail, and decomposition membership.
+
+```mermaid
+---
+title: "SD2.16 — Merged-source release candidate delivery"
+---
+flowchart TD
+  accTitle: SD2.16 — Merged-source release candidate delivery
+  accDescr: Lossy system model projection. Complete source facts follow this diagram.
+  n477("Release Candidate Exporting")
+  n478["Merged Main Source"]
+  n479["Release Candidate Version"]
+  n346["Committed Runtime Context"]
+  n348["Runtime Image"]
+  n480["Exported Release Candidate Image"]
+  n481("Release Candidate Image Qualifying")
+  n482["Release Candidate Qualification Receipts"]
+  n402("Enabled Image Exporter Qualifying")
+  n360("Matched Fixture Restore Qualifying")
+  n474["Same Image Gate Receipts"]
+  n483["Closed Release Candidate Manifest"]
+  n484("Release Candidate Verifying")
+  n356["Authenticated GitHub Artifact Evidence"]
+  n357["Independently Pinned Build Identity"]
+  n485["Verified Release Candidate"]
+  n359["Private Verification Receipt"]
+  n478 -->|"requires (instrument)"| n477
+  n479 -->|"requires (instrument)"| n477
+  n346 -->|"requires (instrument)"| n477
+  n348 -->|"requires (instrument)"| n477
+  n477 -->|"yields"| n480
+  n477 -->|"invokes"| n481
+  n480 -->|"requires (instrument)"| n481
+  n481 -->|"yields"| n482
+  n481 -->|"invokes"| n402
+  n481 -->|"invokes"| n360
+  n474 -->|"requires (instrument)"| n477
+  n477 -->|"yields"| n483
+  n356 -->|"requires (instrument)"| n484
+  n357 -->|"requires (instrument)"| n484
+  n483 -->|"requires (instrument)"| n484
+  n474 -->|"requires (instrument)"| n484
+  n484 -->|"yields"| n485
+  n484 -->|"yields"| n359
+```
+
+**Source facts (OJF-OPL; bracketed provenance is local metadata):**
+
+```text
+Release Candidate Exporting requires Merged Main Source. [src: .github/workflows/service-release-candidate.yml]
+Release Candidate Exporting requires Release Candidate Version. [src: .github/workflows/service-release-candidate.yml]
+Release Candidate Exporting requires Committed Runtime Context. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting requires Runtime Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting yields Exported Release Candidate Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting invokes Release Candidate Image Qualifying. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying requires Exported Release Candidate Image. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying yields Release Candidate Qualification Receipts. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying invokes Enabled Image Exporter Qualifying. [src: apps/service/runtime/artifact.py]
+Release Candidate Image Qualifying invokes Matched Fixture Restore Qualifying. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting requires Same Image Gate Receipts. [src: apps/service/runtime/artifact.py]
+Release Candidate Exporting yields Closed Release Candidate Manifest. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Authenticated GitHub Artifact Evidence. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Independently Pinned Build Identity. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Closed Release Candidate Manifest. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying requires Same Image Gate Receipts. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying yields Verified Release Candidate. [src: apps/service/runtime/artifact.py]
+Release Candidate Verifying yields Private Verification Receipt. [src: apps/service/runtime/artifact.py]
 ```
