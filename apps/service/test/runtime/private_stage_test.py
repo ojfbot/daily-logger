@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from artifact_test import artifact
+from artifact_test import GithubFixture, artifact
 
 
 SPEC = importlib.util.spec_from_file_location(
@@ -19,6 +19,7 @@ stage = importlib.util.module_from_spec(SPEC)
 with patch.dict(sys.modules, {"artifact": artifact}):
     SPEC.loader.exec_module(stage)
 
+verify_release = stage.verify_release
 REVISION = "1" * 40
 MANIFEST = {
     "source": {"builtRevision": REVISION, "pullRequest": {"head": "2" * 40}},
@@ -109,3 +110,39 @@ class PrivateStageTests(unittest.TestCase):
             with self.assertRaises(subprocess.CalledProcessError):
                 stage.qualify(directory, "test-project", "sha256:fixture", MANIFEST)
         self.assertEqual(run.call_args.args[0][-5:], ["--profile", "migration", "config", "--format", "json"])
+
+    def test_classic_archive_is_refused_before_intake(self):
+        directory = self.inbox("classic")
+        fixture = GithubFixture()
+        manifest = fixture.manifest
+        (directory / "manifest.json").write_text(json.dumps(manifest))
+        (directory / "verification.json").write_text(json.dumps({
+            "purpose": "verified-disposable-fixture-candidate", "productionEligible": False,
+            "source": manifest["source"], "runId": manifest["ci"]["runId"], "attempt": manifest["ci"]["attempt"],
+            "engineIdentityKind": "config-sha256",
+        }))
+        (directory / "runtime-image.tar").write_bytes(fixture.image)
+        with patch.object(stage, "verify_release", verify_release):
+            with self.assertRaisesRegex(RuntimeError, "requires an OCI index archive"):
+                stage.activate(self.root, directory)
+        self.assertTrue(directory.is_dir())
+        self.assertFalse((self.root / "releases").exists())
+
+    def test_discard_removes_credentials_when_overlay_write_failed(self):
+        write = stage.atomic_json
+
+        def fails_overlay(path, payload):
+            if path.name == "stage.json":
+                raise OSError("overlay write failed")
+            write(path, payload)
+
+        with patch.object(stage, "atomic_json", side_effect=fails_overlay):
+            with self.assertRaisesRegex(OSError, "overlay write failed"):
+                stage.activate(self.root, self.inbox("partial"))
+        release, = (self.root / "releases").iterdir()
+        self.assertTrue((release / ".env").exists())
+        self.assertFalse((release / "stage.json").exists())
+        with patch.object(stage, "run") as command:
+            stage.discard(release)
+        command.assert_not_called()
+        self.assertFalse((release / ".env").exists())

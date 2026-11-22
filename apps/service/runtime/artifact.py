@@ -103,11 +103,14 @@ def validate_source(profile, source):
     return source
 
 
-def json_bytes(data):
+def json_bytes(data, *, case_insensitive_keys=False):
     def unique(pairs):
         result = {}
+        spellings = set()
         for key, value in pairs:
-            require(key not in result, 'Duplicate JSON key')
+            spelling = key.casefold() if case_insensitive_keys else key
+            require(spelling not in spellings, 'Duplicate JSON key')
+            spellings.add(spelling)
             result[key] = value
         return result
     return json.loads(data, object_pairs_hook=unique, parse_constant=lambda _: require(False, 'Invalid JSON number'))
@@ -458,14 +461,14 @@ def inspect_image_archive(stream):
             require(safe_name(name) and name in members and members[name].isfile() and members[name].size <= maximum, 'Incomplete image archive')
             with archive.extractfile(members[name]) as stream:
                 return stream.read(maximum + 1)
-        records = json_bytes(read('manifest.json', MAX_MANIFEST))
+        records = json_bytes(read('manifest.json', MAX_MANIFEST), case_insensitive_keys=True)
         require(type(records) is list and len(records) == 1, 'Single-image Docker save required')
         record = object_keys(records[0], ('Config', 'RepoTags', 'Layers'))
         require(type(record['Layers']) is list and 0 < len(record['Layers']) < 200,
                 'Unsupported Docker-save manifest')
         config = read(record.get('Config'), 4 * 1024 * 1024)
         config_id = 'sha256:' + hashlib.sha256(config).hexdigest()
-        value = json_bytes(config)
+        value = json_bytes(config, case_insensitive_keys=True)
         require(value.get('os') == 'linux' and value.get('architecture') == 'amd64'
                 and value.get('config', {}).get('User') == '1000:1000', 'Wrong image platform/user')
         layers = value.get('rootfs', {}).get('diff_ids')
@@ -553,7 +556,7 @@ def inspect_image_archive(stream):
                 configs = set()
                 runtime_members = set()
                 if media in indexes:
-                    node = index_node(json_bytes(read(name, MAX_MANIFEST)))
+                    node = index_node(json_bytes(read(name, MAX_MANIFEST), case_insensitive_keys=True))
                     for child in node['manifests']:
                         child_configs, child_members = descriptor(child, depth + 1)
                         configs.update(child_configs)
@@ -564,7 +567,8 @@ def inspect_image_archive(stream):
                         require(len(eligible) == 1 and eligible[0]['config'] == config_id, 'Ambiguous runtime platform selection')
                         engine_kinds[identity] = 'index-sha256'
                 elif media in manifests:
-                    node = object_keys(json_bytes(read(name, MAX_MANIFEST)), ('schemaVersion', 'mediaType', 'config', 'layers'))
+                    node = object_keys(json_bytes(read(name, MAX_MANIFEST), case_insensitive_keys=True),
+                                       ('schemaVersion', 'mediaType', 'config', 'layers'))
                     require(node['schemaVersion'] == 2 and node['mediaType'] == media and
                             type(node['layers']) is list and len(node['layers']) < 200, 'Unsupported image manifest')
                     object_keys(node['config'], ('mediaType', 'digest', 'size'))
@@ -573,7 +577,7 @@ def inspect_image_archive(stream):
                         descriptor(child, depth + 1, leaf=True)
                     configs.add(node['config']['digest'])
                     config_name = 'blobs/sha256/' + node['config']['digest'][7:]
-                    config_value = json_bytes(read(config_name, 4 * 1024 * 1024))
+                    config_value = json_bytes(read(config_name, 4 * 1024 * 1024), case_insensitive_keys=True)
                     platform = (config_value.get('os'), config_value.get('architecture'))
                     manifest_platforms[identity] = platform
                     if platform != ('unknown', 'unknown'):
@@ -589,7 +593,7 @@ def inspect_image_archive(stream):
                 reference_policy(item, media, runtime_members)
                 verified[identity] = (media, configs, runtime_members)
                 return configs, runtime_members
-            root = index_node(json_bytes(read('index.json', MAX_MANIFEST)))
+            root = index_node(json_bytes(read('index.json', MAX_MANIFEST), case_insensitive_keys=True))
             reachable = set()
             for item in root['manifests']:
                 configs, _runtime_members = descriptor(item)

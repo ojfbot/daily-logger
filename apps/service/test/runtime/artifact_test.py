@@ -121,6 +121,8 @@ def oci_image_tar(*, compressed=False, attestation=False, wrong_diff=False, cros
         layer_descriptor['Digest'] = layer_descriptor['digest']
     config = {'architecture': 'amd64', 'os': 'linux', 'config': {'User': '1000:1000'},
               'rootfs': {'type': 'layers', 'diff_ids': ['sha256:' + hashed(stored_layer if wrong_diff else layer)]}}
+    if invalid_field_at == 'config-document':
+        config['Os'] = config['os']
     config_descriptor = blob(encoded(config), config_type)
     if invalid_field_at == 'config':
         config_descriptor['Size'] = config_descriptor['size']
@@ -883,7 +885,7 @@ class ArtifactBoundaryTests(unittest.TestCase):
         self.assertEqual(staged['image']['engineIdentityKind'], 'manifest-sha256')
 
     def test_oci_manifest_and_image_descriptors_refuse_case_variants(self):
-        for field_at in ('manifest', 'config', 'layer'):
+        for field_at in ('manifest', 'config', 'layer', 'config-document'):
             with self.subTest(field_at=field_at):
                 fixture = GithubFixture()
                 fixture.replace_oci_image(invalid_field_at=field_at)

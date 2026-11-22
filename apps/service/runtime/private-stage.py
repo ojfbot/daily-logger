@@ -78,6 +78,8 @@ def verify_release(directory):
     require(manifest["ci"]["runId"] == verification["runId"] and
             manifest["ci"]["attempt"] == verification["attempt"], "CI run does not match verification")
     image = manifest["image"]
+    require(image["engineIdentityKind"] == "index-sha256" and verification["engineIdentityKind"] == "index-sha256",
+            "Private staging requires an OCI index archive")
     require(image["configId"] == verification["imageConfigId"] and image["engineId"] == verification["imageEngineId"],
             "Verified image identity does not match manifest")
     require(archive.stat().st_size == manifest["archive"]["size"] and
@@ -113,7 +115,7 @@ def rewrite_image(archive_path, output, image, tag):
             data = source.extractfile(member)
             if member.name in {"index.json", "manifest.json"}:
                 require(member.size <= 64 * 1024, "Image load metadata exceeds its limit")
-                metadata = json_bytes(data.read())
+                metadata = json_bytes(data.read(), case_insensitive_keys=True)
                 if member.name == "index.json":
                     require(set(metadata) == {"schemaVersion", "mediaType", "manifests"}, "Unexpected index fields")
                     (entry,) = metadata["manifests"]
