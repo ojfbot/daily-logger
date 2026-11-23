@@ -1,0 +1,257 @@
+{
+  "schemaVersion": 1,
+  "id": "claude-conductor-20261122-14fe42a1d2bd",
+  "article": {
+    "date": "2026-11-22",
+    "sourceCommitSha": "14fe42a1d2bdce692e07ef4c8ecb547e050a9352",
+    "blobSha": "9177d5447c1c1ee829a1d0cc928e2b0683789eea"
+  },
+  "reviewer": {
+    "name": "Claude Code conductor session (Claude Opus 5.5); not provider-independent of the Claude authoring models",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-23T14:36:12Z",
+  "scope": "Final visible Draft; exact source, action-map and deployed JSON bytes; core #647 body and 06:25Z status comment, #639, #648, #651, #652, #653, #656, #657, #659, #676; the FleetRunner release workflow, release-image.sh and README; release-one-gates.json and mac-workers-plan.md; DailyLogger #569-#584, #589-#592, the default-branch ruleset, the service release workflow, the activity-window rule and commits on main; and held-candidate custody. Revised after one Codex and one Claude review of this record. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "5dce66f80e5730909af8e4c9e10e975f7a5f4641",
+  "fullRecordPath": "reviews/articles/2026-11-22-14fe42a1d2bdce692e07ef4c8ecb547e050a9352.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The release pipeline is half done, not complete",
+      "location": "Title, summary and opening (lines 3, 6, 11) and the roadmap pulse (line 129) say the pipeline closes all three slices and is complete.",
+      "explanation": "Core #647 lists six slices. CI image, test copy and stage script are done (#648, #657); promote script, alerts and first real release are open, and the issue is open. Its done-when requires promote, rollback and production on current main.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L3",
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L129",
+        "https://github.com/ojfbot/core/issues/647",
+        "https://github.com/ojfbot/core/pull/648",
+        "https://github.com/ojfbot/core/pull/657"
+      ],
+      "correction": "Say three of six slices are done: the pipeline can build, verify and stage a release but cannot yet promote, alert or roll production back.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The first real staging had already passed, and staging needs no approval",
+      "location": "Line 11 says the first real staging is owner-gated and has not occurred; lines 131 and 133 and the first held candidate make it the next gate.",
+      "explanation": "The #647 status comment at 2026-11-22T06:25:37Z, inside the article's reporting interval, records the first real staging of main at 2a51360 passing on the test copy with a full receipt. The issue's rules say staging needs no approval; going live needs the owner's yes naming the revision.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L11",
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L131",
+        "https://github.com/ojfbot/core/issues/647#issuecomment-7075319335"
+      ],
+      "correction": "Report that the first real staging passed at 2a51360 and re-staging needs no approval. Name the next steps from that comment (G5 inspection, G6 interruption, G7 backups and rehearsal, promote script); the promote needs the owner's yes naming the revision, and the comment lists other owner inputs (backup destination, an attended slot for physical trials, a production health watcher, pointing the real Macs at the test copy).",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The fault-contract fix was a lease-timing change, not a private Node copy",
+      "location": "Line 51 traces all three failures to a 0777 Node and says worker-inputs and fault-contract now use a private 0500 Node copy.",
+      "explanation": "Core #653 traces worker-inputs and ledger-proof-runtime (already fixed on main) to the 0777 Node. fault-contract failed because a 100 ms lease raced real timers while the store clock was frozen; the fix raised the lease to 600,000 ms and expires it by advancing the fake clock. Only worker-inputs gained the 0500 copy.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L51",
+        "https://github.com/ojfbot/core/pull/653"
+      ],
+      "correction": "Say two failures came from the 0777 Node and one from a 100 ms lease racing real timers; worker-inputs uses a private 0500 Node, fault-contract a long lease with the fake clock.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "The two hardening commits are five commits from #592, listed twice",
+      "location": "Lines 73-81 present two hardening commits as a separate item, then list five: a1519de, 2fd8e02, 19f6cf0, faf7e07, effd125.",
+      "explanation": "All five are replayed commits that DailyLogger #592 brought to main, committed at 2026-11-22T00:40:12-06:00 with the rest of the replay; all five already appear in #592's own list at lines 60-64.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L73",
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L60",
+        "https://github.com/ojfbot/daily-logger/pull/592"
+      ],
+      "correction": "Remove the separate item or describe the five commits as part of #592's replay; do not count them as additional shipped work.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The rebase-only rule is DailyLogger's own, and the replay was the owner's request",
+      "location": "Line 117 explains the replay with 'Core allows only rebase merges'.",
+      "explanation": "DailyLogger #592 says it replaces #577 on a linear history at the owner's request (2026-11-22) to remove the merge commits as noise. The rebase-only rule on DailyLogger's default branch is DailyLogger's own ruleset; Core's setting does not govern a DailyLogger PR.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L117",
+        "https://github.com/ojfbot/daily-logger/pull/592"
+      ],
+      "correction": "Say the owner asked to remove #577's merge commits, and DailyLogger's own rebase-only rule meant a linear replay was the way to merge it.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "The replay check is not an empty diff against 3e43c07",
+      "location": "Lines 57 and 117 say the check ran git diff <replay-head> 3e43c07 to empty output and that the replay is byte-identical to 3e43c07.",
+      "explanation": "git diff 3e43c07 2d19aaa (the replay head on main) shows seven files under reviews/, the three article audits that merged to main in between (#579, #589, #590). #592 claims its change against current main equals #577's change; outside reviews/ the trees are equal.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L57",
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L117",
+        "https://github.com/ojfbot/daily-logger/pull/592",
+        "https://github.com/ojfbot/daily-logger/pull/579",
+        "https://github.com/ojfbot/daily-logger/pull/589",
+        "https://github.com/ojfbot/daily-logger/pull/590"
+      ],
+      "correction": "Say the replay's change against main matches #577's reviewed change, and the trees differ only by the audits that landed on main in between; do not quote an empty git diff between the two heads.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The Mac-worker pieces and the gate names are misplaced",
+      "location": "Line 129 glosses G5-G8 as staged deploy, promote-with-undo and 48-hour soak; lines 131 and 176 put Mac-worker pieces 5-6 under core #647 as G5 prerequisites.",
+      "explanation": "release-one-gates.json names G4 joining both Macs, G5 inspection through API/CLI/browser, G6 interruption and recovery, G7 backups and cutover rehearsal, G8 cutover and acceptance (where the 48-hour soak belongs). The Mac-worker pieces are tracked in mac-workers-plan.md for G4, linked from core #639; #647 does not list them.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L129",
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L131",
+        "https://github.com/ojfbot/core/blob/main/decisions/fleet-runner/release-one-gates.json",
+        "https://github.com/ojfbot/core/blob/main/decisions/fleet-runner/mac-workers-plan.md",
+        "https://github.com/ojfbot/core/pull/639",
+        "https://github.com/ojfbot/core/issues/647"
+      ],
+      "correction": "Use the gate names from release-one-gates.json and say Mac-worker pieces 5-6 are G4 work tracked in the Mac-workers plan, not part of #647.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "Thirteen open drafts, already integrated, not a stack still to merge",
+      "location": "Line 139 says sixteen draft PRs (#569-#584) must merge in order as the build-out above the foundation; the fourth held candidate asks whether #569 is the next merge.",
+      "explanation": "In that range #577 is closed (replaced by #592), #578 merged on 19 Nov and #579 on 22 Nov; thirteen are open drafts, matching the article's list at lines 152-164. #577 says it preserves the reviewed source histories through #584 and the smaller PRs remain review history; that integration reached main through #592.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L139",
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L152",
+        "https://github.com/ojfbot/daily-logger/pull/577",
+        "https://github.com/ojfbot/daily-logger/pull/578",
+        "https://github.com/ojfbot/daily-logger/pull/579",
+        "https://github.com/ojfbot/daily-logger/pull/592"
+      ],
+      "correction": "Say thirteen drafts (#569-#576, #580-#584) remain open as review history whose changes are already on main through #592; there is no merge sequence to resume; the one exception is #569's last commit 1800b8b, two lines in implementation-notes.md.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C9",
+      "classification": "confirmed_error",
+      "title": "The #659 candidate uses a pull-request command on an issue",
+      "location": "The third held candidate (line 174) is gh pr view 659 --repo ojfbot/core.",
+      "explanation": "Core #659 is an open issue filed as an agent task to remove the one-shot release-as 0.3.0; gh pr view does not resolve it.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L174",
+        "https://github.com/ojfbot/core/issues/659"
+      ],
+      "correction": "Use gh issue view 659 --repo ojfbot/core.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C10",
+      "classification": "confirmed_error",
+      "title": "The release-as removal has planned automated enforcement",
+      "location": "Lines 137 and 178 say the removal is a manual step with no automated enforcement.",
+      "explanation": "Core #659 says that once the tag exists the versions / versions check fails on every pull request and every push to main with a message naming the task. That check comes from core #656, still open, so the enforcement is planned rather than live.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L137",
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L178",
+        "https://github.com/ojfbot/core/issues/659",
+        "https://github.com/ojfbot/core/pull/656"
+      ],
+      "correction": "Say the removal will be enforced by the versions check from #656 once it merges; until then the issue is the reminder.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C11",
+      "classification": "confirmed_error",
+      "title": "The two-build check proves repeatability, not a clean build machine",
+      "location": "Line 87 frames the double build as protection against a compromised build environment that converts a trust assumption into a falsifiable check.",
+      "explanation": "The release workflow runs both builds in one release-image job on one ubuntu-24.04 runner through release-image.sh, each with a fresh BuildKit builder. A difference between passes is caught; a compromised runner that alters both builds the same way is not. Core #648 claims reproducibility, not tamper detection.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L87",
+        "https://github.com/ojfbot/core/blob/main/.github/workflows/fleet-runner-release.yml",
+        "https://github.com/ojfbot/core/blob/main/packages/fleet-runner/scripts/release-image.sh",
+        "https://github.com/ojfbot/core/pull/648"
+      ],
+      "correction": "Say the check proves the build is repeatable from the same commit, catching stray inputs and anything that varies between passes; it does not show the runner itself is clean, which needs an independent rebuild elsewhere.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C12",
+      "classification": "confirmed_error",
+      "title": "FleetRunner's release pipeline is for FleetRunner, not the route for other services",
+      "location": "Lines 11, 129 and 184 call the FleetRunner pipeline the mechanism by which fleet services will be promoted, call FleetRunner fleet-wide release infrastructure, and tie DailyLogger's deployability to FleetRunner's first staging.",
+      "explanation": "Core #647 gives FleetRunner itself the same release pipeline HelpDesk already has. The FleetRunner README describes a job queue, signed client and worker loop. DailyLogger has its own service release workflow and isolated staging (effd125, part of #592).",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L11",
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L129",
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L184",
+        "https://github.com/ojfbot/core/issues/647",
+        "https://github.com/ojfbot/core/blob/main/packages/fleet-runner/README.md",
+        "https://github.com/ojfbot/daily-logger/blob/main/.github/workflows/service-release-candidate.yml"
+      ],
+      "correction": "Say FleetRunner gained its own release pipeline, matching HelpDesk's; do not present it as the path other services are promoted through or tie DailyLogger's deployability to it.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C13",
+      "classification": "confirmed_error",
+      "title": "The DailyLogger service does not generate these articles yet",
+      "location": "Line 57 says DailyLogger is the fleet service that generates these articles and will recover in-progress article generation across restarts.",
+      "explanation": "DailyLogger #577, whose reviewed change #592 brought to main, says the service is still fixture-only, with real evidence collection, provider-backed drafting and review and the journal graph as later work, and that merging does not activate the NAS service or transfer publication. This article was written by the GitHub Actions writer (run #326).",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L57",
+        "https://github.com/ojfbot/daily-logger/pull/577",
+        "https://github.com/ojfbot/daily-logger/pull/592",
+        "https://github.com/ojfbot/daily-logger/actions/runs/45048728056"
+      ],
+      "correction": "Say the service foundation landed as a fixture workflow with durable delivery and recovery of that fixture; articles are still generated by the GitHub Actions writer.",
+      "disposition": {
+        "kind": "open"
+      }
+    },
+    {
+      "id": "C14",
+      "classification": "confirmed_error",
+      "title": "<rev> is a revision; the script picks the CI run",
+      "location": "Line 32 and the first held candidate say <rev> is a git SHA or workflow run identifier.",
+      "explanation": "Core #657 says fleet-stage.sh <rev> selects the CI run by the documented rule and downloads by run ID.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/14fe42a1d2bdce692e07ef4c8ecb547e050a9352/_articles/2026-11-22.md#L32",
+        "https://github.com/ojfbot/core/pull/657"
+      ],
+      "correction": "Say <rev> is the revision to stage and the script finds its CI run by rule.",
+      "disposition": {
+        "kind": "open"
+      }
+    }
+  ]
+}
