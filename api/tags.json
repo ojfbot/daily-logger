@@ -2,27 +2,27 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 122
+    "count": 123
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 98
+    "count": 99
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 92
+    "count": 93
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 81
+    "count": 82
   },
   {
     "name": "hardening",
     "type": "practice",
-    "count": 55
+    "count": 56
   },
   {
     "name": "model-behavior-as-design",
@@ -42,7 +42,7 @@
   {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 35
+    "count": 36
   },
   {
     "name": "rest-day",
@@ -52,16 +52,16 @@
   {
     "name": "security-as-emergent-ux",
     "type": "concept",
+    "count": 33
+  },
+  {
+    "name": "adr",
+    "type": "practice",
     "count": 32
   },
   {
     "name": "sprint",
     "type": "concept",
-    "count": 31
-  },
-  {
-    "name": "adr",
-    "type": "practice",
     "count": 31
   },
   {

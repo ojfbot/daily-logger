@@ -1,5 +1,174 @@
 [
   {
+    "date": "2026-11-23",
+    "title": "Sunday — Agent Trust Build Gets Its Roadmap and Proof Checks in One Burst",
+    "summary": "Sunday's interval merged six PRs across core and daily-logger, slicing the agent trust build into 114 roadmap phases and hardening layer-retro proof checks to require closed evidence, not just closed issues.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "daily-logger"
+    ],
+    "commitCount": 15,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Phase proof requires a close event naming a merged PR, not just a closed issue",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Deviations sections must have real entries, never the placeholder",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "114 roadmap slices assigned once at gate-0, never pre-claimed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "DailyLogger trust build slices live in daily-logger's own delivery-roadmap, not core's",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "721",
+          "url": "https://github.com/ojfbot/core/pull/721"
+        },
+        "at": "2026-11-23T01:11:26.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "723",
+          "url": "https://github.com/ojfbot/core/pull/723"
+        },
+        "at": "2026-11-23T01:43:09.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "600",
+          "url": "https://github.com/ojfbot/daily-logger/pull/600"
+        },
+        "at": "2026-11-23T01:11:32.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "594",
+          "url": "https://github.com/ojfbot/daily-logger/pull/594"
+        },
+        "at": "2026-11-22T17:31:07.000Z"
+      }
+    ],
+    "issueTimes": [
+      {
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "674",
+          "url": "https://github.com/ojfbot/core/issues/674"
+        },
+        "event": "updated",
+        "at": "2026-11-22T17:22:57.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-23T14:40:18.093Z",
+        "runId": "45196357208",
+        "runNumber": 327,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/45196357208",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "08f2662278996244dabfc2bc108b1814e4fc64bd",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-23T14:38:21.000Z",
+          "startedAt": "2026-11-23T14:38:21.000Z",
+          "expectedAt": "2026-11-23T09:30:00.000Z",
+          "dispatchDelaySeconds": 18501,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v8-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "e98dce2c035d74d5f1d68a6ba8bcc4da5b7da1059e42582e263f1e60eaa1ecba"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v3-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "3dfb130de94e33458f539a925d9d12446ffaaa88ad67a0b3c07801dbce21a325"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.3",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-22",
     "title": "Saturday — FleetRunner Release Pipeline Closes All Three Slices; Daily-Logger Service Foundation Lands",
     "summary": "Saturday merged nine PRs across core and daily-logger: FleetRunner's CI image, test copy, and stage script complete a deployable release pipeline while the persistent DailyLogger service foundation lands on main.",
