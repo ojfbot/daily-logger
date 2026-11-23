@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-23",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-23",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Ambiguous or unsupported exact-command PR target; review pending"
+    },
+    "articleDigest": "4e6ecd385b05af23991ee00107deeabafd28bfe4d711faf1342363c761321ab5",
+    "roundId": "c7f2bb6d699589eeb45dd9e36819b1d6e9f37eb70a21ebafd61c48010126d23e",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "cf9d727c1b099cbb29396ced65ae392bfa2877ba300885c807fc951af4a0fa6b",
+        "payload": {
+          "command": "gh issue create --repo ojfbot/core --title 'PH8 owner gate tracker: passkey setup + authority service account' --body 'Track completion of the two unconfirmed physical prerequisites for PH8 phase 0. Passkey setup and authority service account provisioning are owner-gated steps. This issue is the single pointer for returning readers checking whether PH8 is unblocked.' --label 'gate,owner-action'",
+          "description": "Create a tracking issue for the two unconfirmed PH8 physical gate prerequisites so there is a single pointer for gate status. Currently no checklist issue or wayfinder field records whether passkey setup and authority service account provisioning are complete.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-23"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "ab54a6c57cafd804d9bb4a1f599729e53296a4ee7a38a725c28c520108997284",
+        "payload": {
+          "command": "gh pr view 602 --repo ojfbot/daily-logger --json title,body,comments | jq '.comments[] | select(.body | test(\"finding|P0|correctness|style\"; \"i\"))'",
+          "description": "Review the 10 confirmed findings in daily-logger #602 and disposition each as P0 correctness, process, or style. The PR opened 2026-11-23 and findings have not been categorized. Without disposition the audit will go stale and lose its forcing function.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-23"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "f9a843f777d3afae4af048c0ef49da3ba400ea72d5c28b56e4655753f9c383d3",
+        "payload": {
+          "command": "node scripts/check-trust-phase-proof.mjs --phase PH8",
+          "description": "Run the phase proof check from the core repo root (Node 18+) to confirm the script is operational and to establish a baseline output before any PH8 slices begin closing. This also surfaces any configuration issues before execution starts.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-23"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "The two things that require action before PH8 can start: (1) the owner must confirm passkey setup and authority service account provisioning — these are physical gates with no current tracking issue or wayfinder field; someone needs to either create a tracking artifact or confirm completion directly; (2) the 10 confirmed findings in daily-logger #602 need disposition — the PR opened the same day as this article and the findings have not been categorized as P0 correctness issues vs. style findings vs. process observations; without disposition the audit PR will go stale and the findings will lose their forcing function.\n\nCore #656 (commitlint + release-please) is in review; no blocker or reviewer is recorded in the available context. Age of the review is not stated. It is step 1 of #654 and does not block trust-build work.\n\nThe four core DRAFT PRs (#627, #634, #636, #637) have no recorded sequencing dependency on the trust build. #636 (Frame-wide context) and #634 (fleet-onboard docs) may be prerequisites for onboarding sessions to be useful, but no explicit sequencing or park decision is recorded. Disposition — close, hold for a named phase, or actively work — is not stated in available context.\n\nHouseholdAgentKit PR #1 has three open P0 issues (#36, #37, #38) from independent review. The founding PR should not advance past review until those are addressed. No owner or resolution timeline is recorded.\n\nThe unknowns added to `decisions/open-unknowns.md` during slicing (the #674 ledger plus slicing discoveries) are not characterized in available context. Whether any are architectural and could threaten slice boundaries or force a re-plan mid-build is unknown.\n\nThe daily-logger shared-journal refactor chain (#576–#584) and fixture qualification chain (#569–#575) are both sequenced. The base of each chain (#576 and #569 respectively) must land before anything downstream can move. Neither chain's current blocker or active owner is stated in available context.\n\nNo calendar estimate for PH8–PH13 duration is recorded. The plan is scoped (114 slices, six epics) but not time-boxed. This is an acknowledged gap in the available record."
+    },
+    "stateDigest": "12cf6edc003773a35249ede804b0a63dde380e56f64bb4cc6f7747cbb0bafcdc",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
