@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-24",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-24",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Ambiguous or unsupported exact-command PR target; review pending"
+    },
+    "articleDigest": "47cea2a2a5ce97b51e9a7fce84936ea8410eb176462e1fb655db2234a7e3ce3d",
+    "roundId": "d71d26933633b5d3d2e3e423ae02da54b5d25cb54b612594f2a4e2fcf3645eb1",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "6f1d80962206431aee069ad5e4bb6f6c34a78ec00156a4b0a8d66b6c9e23e23f",
+        "payload": {
+          "command": "gh issue view 724 --repo ojfbot/core",
+          "description": "Assess whether the six CI-excluded test files (core #724) cover any code path exercised by the trust-phase proof check. If they do, the 'machine-checkable' gate claim is weaker than stated. This gap was opened during the interval and has no urgency assigned.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-24"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "c96424b9ce6ca7b79290136f9b0a72e49bc500ec0316a5b4870e750020359f51",
+        "payload": {
+          "command": "node scripts/check-trust-phase-proof.mjs --phase PH8",
+          "description": "Run the trust-phase proof check against the current state of PH8 slices to confirm the enforcement mechanism is operational before any slice work begins. Expected to fail with a clear signal naming which slice evidence is missing.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-24"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "5d8f3e71059ad47b34f67f71f260fe38cd60ad1c7939f201002dc5d467980260",
+        "payload": {
+          "command": "gh pr view 602 --repo ojfbot/daily-logger --json body | jq '.body'",
+          "description": "Review the full C1–C14 finding list to determine whether any finding requires a correction merge to the Nov 22 article or formally blocks a downstream gate. The independent action review has not yet ruled on disposition.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-24"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "3d8b65e764710fa49dfc40bdd497ac08f7dd3069abfbddcbee978ebc266d80ec",
+        "payload": {
+          "command": "gh pr view 576 --repo ojfbot/daily-logger",
+          "description": "Identify the specific unblock condition for #576 (first slice in the shared-journal refactor prerequisite chain). The sixteen service draft PRs are held pending this chain; the blocker is not named in the supplied evidence.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-24"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "7a8b907362c4c566584f41ee3105fac4718e3a2e35281be2b4e6109ba9a2e77e",
+        "payload": {
+          "command": "gh pr view 1 --repo ojfbot/HouseholdAgentKit",
+          "description": "Determine the review dependency and merge condition for HouseholdAgentKit #1. The repo init PR has been in review with no named reviewer or owner gate; its disposition is unresolved.",
+          "repo": "HouseholdAgentKit",
+          "status": "open",
+          "sourceDate": "2026-11-24"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Fourteen findings from PR #602 are recorded and merged but unsettled — no finding has been accepted, revised, or dispositioned by the independent action review. The original Nov 22 article remains live with known errors. No gate is currently formally blocked on finding disposition, but C1 (FleetRunner pipeline completeness) and C13 (DailyLogger service attribution) affect how any reader assesses what has actually shipped and is running. Whether any finding requires a correction merge to the Nov 22 article is a disposition question for the independent action review.\n\nCore #724 (six test files never run in CI) opened during this interval and is not gated by any formal blocker. This is an integrity gap in the CI layer that the trust-build enforcement mechanism depends on. No urgency has been assigned in the supplied evidence.\n\nCore #725 (fleet rule proposal: model-written claims must name source, quote it, and mark unquoted claims as hypotheses) and github-actions #4 (shared security scan dependency audit can never fail) also opened during the interval sweep. Neither is formally gated.\n\nThe 114 trust-build slices (core #694–#720, daily-logger #596–#601) are all open at gate-0. The enforcement mechanism (core #723) is in place. No slice has started. No projected start date or forcing function is recorded. RETRO-0 cannot close until all PH8 slices carry closed-with-proof evidence; the check command is `node scripts/check-trust-phase-proof.mjs --phase PH8`.\n\nThe daily-logger draft queue (#566–#584) has an explicit prerequisite chain: shared-journal refactor slices (#576–#583) must precede service-runtime work (#573–#575, #584). The specific blocker for #576 (first in chain) is not named in the supplied context. The sixteen drafts have not moved during this interval.\n\n[HouseholdAgentKit] #1 remains in review with no named reviewer, no merge condition, and no owner gate recorded. Its dependency status is unknown from supplied evidence.\n\nCore #636 (replace stale Frame-wide context) is open in draft; whether it gates accurate orientation for trust-build slice pickup is not established by supplied evidence but is a reasonable question for the owner to answer before PH8 work begins.\n\nHow many times the DailyLogger service/Actions writer conflation has appeared in the article record prior to C13 is not established. Quantifying that recurrence rate would let the audit layer assess whether the finding frequency is declining."
+    },
+    "stateDigest": "06c1bdd63211c4b4b3adc5a4f1de4274ab96eb2a0fff247f9a1c6d7428aeb03d",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
