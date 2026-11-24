@@ -109,6 +109,10 @@ vi.mock('child_process', () => ({
 
 import { collectContext } from '../collect-context.js'
 import { execSync } from 'child_process'
+import { GH_API_RETRY } from '../gh-api.js'
+
+// Transient gh failures are retried with backoff; no real waiting in tests.
+GH_API_RETRY.baseDelayMs = 0
 import { buildUserPrompt } from '../generate-article.js'
 import { buildReportUserPrompt } from '../generate-report.js'
 import { MERGED_PR_EVIDENCE_CHARS } from '../pr-body.js'
@@ -304,17 +308,30 @@ describe('collectContext — recent PR change classification', () => {
     expect(pr?.headRef).toBe('feat/old-pr')
   })
 
-  it('keeps collecting when an old PR head commit cannot be resolved', async () => {
+  // The head commit date decides whether a push to an old PR counts as
+  // activity (shouldSkipRun). Without it the day could skip green.
+  it('fails the collection when an old PR head commit lookup fails', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
-      if (cmd.includes('/commits/old-head-sha')) throw new Error('HTTP 503')
+      if (cmd.includes('/commits/old-head-sha')) throw new Error('gh: Bad Gateway (HTTP 502)')
       return mockExecSync(cmd)
     })
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
     try {
-      const ctx = await collectContext('2026-02-28')
-      const pr = ctx.recentPRs.find((candidate) => candidate.number === 11 && candidate.repo === 'shell')
-      expect(pr?.headCommitAt).toBeUndefined()
-      expect(warning).toHaveBeenCalledWith(expect.stringContaining('Could not classify head commit for shell#11'))
+      await expect(collectContext('2026-02-28')).rejects.toThrow(/repos\/ojfbot\/shell\/commits\/old-head-sha.*HTTP 502/s)
+    } finally {
+      warning.mockRestore()
+      vi.mocked(execSync).mockImplementation(mockExecSync)
+    }
+  })
+
+  it('fails the collection when an old PR head commit has no date', async () => {
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('/commits/old-head-sha')) return JSON.stringify({ commit: {} })
+      return mockExecSync(cmd)
+    })
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      await expect(collectContext('2026-02-28')).rejects.toThrow(/shell#11 has no author or committer date/)
     } finally {
       warning.mockRestore()
       vi.mocked(execSync).mockImplementation(mockExecSync)
@@ -461,7 +478,36 @@ describe('collectContext — failed endpoints are not an empty day', () => {
     await expect(collectContext('2026-02-28')).rejects.toThrow(/not valid JSON/)
   })
 
-  it('treats "not found" and an empty repository as nothing there, not as a failure', async () => {
+  it('fails the collection when an activity list 404s on a repo the token just listed', async () => {
+    // GitHub answers 404 for private resources a token can't read, e.g. after
+    // it lost contents access but kept PR access.
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('repos/ojfbot/foundry-recipes/commits?')) throw ghError(cmd, 'gh: Not Found (HTTP 404)')
+      return mockExecSync(cmd)
+    })
+    await expect(collectContext('2026-02-28')).rejects.toThrow(/repos\/ojfbot\/foundry-recipes\/commits.*HTTP 404/s)
+  })
+
+  it.each(['pulls?state=open', 'pulls?state=closed', 'pulls?state=all', 'issues?state=open', 'issues?state=closed'])('fails the collection when %s 404s', async (endpoint) => {
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes(`repos/ojfbot/shell/${endpoint}`)) throw ghError(cmd, 'gh: Not Found (HTTP 404)')
+      return mockExecSync(cmd)
+    })
+    await expect(collectContext('2026-02-28')).rejects.toThrow(/GitHub collection incomplete/)
+  })
+
+  it('retries a transient 5xx and collects normally when the retry succeeds', async () => {
+    let calls = 0
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('repos/ojfbot/shell/commits?') && ++calls < 3) throw ghError(cmd, 'gh: Bad Gateway (HTTP 502)')
+      return mockExecSync(cmd)
+    })
+    const ctx = await collectContext('2026-02-28')
+    expect(calls).toBe(3)
+    expect(ctx.repos).toContain('shell')
+  })
+
+  it('treats a missing decisions/adr directory and an empty repository as nothing there, not as a failure', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
       if (cmd.includes('/contents/decisions/adr')) throw ghError(cmd, 'gh: Not Found (HTTP 404)')
       if (cmd.includes('repos/ojfbot/foundry-recipes/commits?')) throw ghError(cmd, 'gh: Git Repository is empty. (HTTP 409)')
