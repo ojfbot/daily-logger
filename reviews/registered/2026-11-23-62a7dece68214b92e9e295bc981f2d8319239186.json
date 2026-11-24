@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261123-62a7dece6821",
+  "article": {
+    "date": "2026-11-23",
+    "sourceCommitSha": "62a7dece68214b92e9e295bc981f2d8319239186",
+    "blobSha": "7fcf72517cf271a9c5ac6e8a2556dd0c88195427"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review (OpenAI; model configuration unavailable)",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-24T11:40:00Z",
+  "scope": "Final visible Draft; exact source/deployed/article/action bytes; all six reporting-window merges; trust-build roadmap and phase records; DailyLogger service recovery and review-history PRs; all-state same-source review searches; current review schema/discovery; and held-candidate custody. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "452575ee100fd168fe3dea212011f0180cc4ba2f",
+  "fullRecordPath": "reviews/articles/2026-11-23-62a7dece68214b92e9e295bc981f2d8319239186.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Two of the six merges are omitted, including service code",
+      "location": "The opening (line 11) says the interval was planning/instrumentation and no DailyLogger draft queue moved; What shipped names only four of the stated six merges.",
+      "explanation": "The exact reporting window contains core #676/#721/#723 and DailyLogger #591/#594/#600. DailyLogger #591 added PostgreSQL-backed private-journal recovery, queue upgrade, fault handling, CLI/runtime code and tests in three commits, so the interval was not planning/instrumentation only.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/62a7dece68214b92e9e295bc981f2d8319239186/_articles/2026-11-23.md#L11",
+        "https://github.com/ojfbot/daily-logger/pull/591",
+        "https://github.com/ojfbot/core/pull/676"
+      ],
+      "correction": "Enumerate all six merges. Report #591 as substantive service code and #676 as the wayfinder merge; do not characterize the whole interval as planning/instrumentation only.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The open service drafts are review history, not two merge chains",
+      "location": "Lines 98-99 and retained context call #576-#584 and #569-#575 sequenced chains whose base must merge before downstream PRs can move.",
+      "explanation": "DailyLogger #577 says it preserves the reviewed source histories through #584 and that the smaller PRs remain review history. #592 brought that integrated change to main. At the reviewed source #577 was closed, #578/#579 merged, and thirteen PRs in #569-#584 remained open Drafts as review history.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/62a7dece68214b92e9e295bc981f2d8319239186/_articles/2026-11-23.md#L98",
+        "https://github.com/ojfbot/daily-logger/pull/577",
+        "https://github.com/ojfbot/daily-logger/pull/592"
+      ],
+      "correction": "Say the reviewed changes are already on main through #592 and the remaining Drafts preserve review history. Do not propose resuming a predecessor merge chain or finding an unblock condition for #569/#576.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "PH8 owner work already has a canonical tracker and per-step issues",
+      "location": "Line 85 and the first held candidate say there is no checklist or single pointer for passkey/service-account status, propose a new tracker, and blanket-block PH8 code on owner decisions.",
+      "explanation": "Core #688 is the Phase 0 epic and ordered checklist. It links the authority-service account owner step, signing/passkey work, first-key/pinning and Face ID approval plus code slices and native blockers. Its order begins with code slice P0-PROBE, so it does not support a blanket before-any-code owner block.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/62a7dece68214b92e9e295bc981f2d8319239186/_articles/2026-11-23.md#L85",
+        "https://github.com/ojfbot/core/issues/688"
+      ],
+      "correction": "Point readers to #688 and its linked owner-step slices, report each native blocker separately, and do not create a duplicate tracker or one blanket owner gate.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "DLG-1 is DailyLogger #595, not core #595",
+      "location": "Line 75 identifies DLG-1 as the publish door record at core #595.",
+      "explanation": "The pinned DailyLogger delivery roadmap registers DLG-1 to ojfbot/daily-logger#595, blocked by RETRO-2.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/62a7dece68214b92e9e295bc981f2d8319239186/_articles/2026-11-23.md#L73",
+        "https://github.com/ojfbot/daily-logger/blob/62a7dece68214b92e9e295bc981f2d8319239186/docs/agent-service/delivery-roadmap.md#L190-L197",
+        "https://github.com/ojfbot/daily-logger/issues/595"
+      ],
+      "correction": "Identify the issue as DailyLogger #595 and preserve RETRO-2 as its entrance condition.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The roadmap has 114 slices, not 114 phases",
+      "location": "The summary at line 6 says the build was sliced into 114 roadmap phases.",
+      "explanation": "Core #721 records 114 slices, S40-S153, across six phases PH8-PH13. The article body uses that correct distinction.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/62a7dece68214b92e9e295bc981f2d8319239186/_articles/2026-11-23.md#L6",
+        "https://github.com/ojfbot/core/pull/721"
+      ],
+      "correction": "Say 114 roadmap slices across six phases.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
