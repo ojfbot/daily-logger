@@ -32,27 +32,36 @@ const REPO_ROOT = join(__dirname, '../')
 // values are "top N by updated" caps and are meant to be the whole answer.
 const GH_MAX_BUFFER = 16 * 1024 * 1024
 
-/** A required endpoint that failed for a reason other than "not found". */
+/** A required endpoint that failed, with gh's error text. */
 export type FailedEndpoint = { endpoint: string; detail: string }
 
+function recordFailedEndpoint(failures: FailedEndpoint[], endpoint: string, detail: string): void {
+  console.warn(`  ⚠ gh api ${endpoint} failed: ${detail}`)
+  failures.push({ endpoint, detail })
+}
+
 /**
- * Required call: its answer decides what the day contains. "Not found" is an
- * empty answer; any other failure is recorded in `failures`, and the whole
- * collection fails at the end so a broken sweep can never read as a quiet day.
+ * Required call: its answer decides what the day contains. Failures are
+ * recorded in `failures`, and the whole collection fails at the end so a
+ * broken sweep can never read as a quiet day.
+ *
+ * An empty repository (409) is an empty answer. A 404 is a failure unless the
+ * caller says it means "doesn't exist" for this endpoint: GitHub also answers
+ * 404 for a private resource the token can no longer read, and every activity
+ * endpoint here is on a repo the token has just listed.
  */
-function ghApi<T>(endpoint: string, failures: FailedEndpoint[]): T | null {
+function ghApi<T>(endpoint: string, failures: FailedEndpoint[], options: { notFoundMeansEmpty?: boolean } = {}): T | null {
   const outcome = ghApiOutcome<T>(endpoint, { timeout: 30_000, maxBuffer: GH_MAX_BUFFER })
   if (outcome.status === 'ok') return outcome.data
-  if (outcome.status === 'failed') {
-    console.warn(`  ⚠ gh api ${endpoint} failed: ${outcome.detail}`)
-    failures.push({ endpoint, detail: outcome.detail })
-  }
+  if (outcome.status === 'empty-repository') return null
+  if (outcome.status === 'not-found' && options.notFoundMeansEmpty) return null
+  recordFailedEndpoint(failures, endpoint, outcome.detail)
   return null
 }
 
 /**
- * Best-effort enrichment (one PR's merge state, a head commit date, skill
- * comments, one ADR's title). Callers already treat a missing answer as
+ * Best-effort enrichment (one PR's merge state, skill comments, one ADR's
+ * title). None of these decide whether the day runs (shouldSkipRun). Callers already treat a missing answer as
  * "unknown"; a failure is shown with gh's reason but does not fail the run.
  */
 function ghApiOptional<T>(endpoint: string): T | null {
@@ -93,7 +102,10 @@ function getADRRegistry(org: string, repo: string, failures: FailedEndpoint[]): 
     download_url: string | null
   }
   const listing = ghApi<GHContent[]>(
-    `repos/${org}/${repo}/contents/decisions/adr`, failures
+    `repos/${org}/${repo}/contents/decisions/adr`, failures,
+    // Most repos have no decisions/adr directory. Lost contents access would
+    // also 404 this repo's commits call, which is required, so it can't hide.
+    { notFoundMeansEmpty: true },
   )
   if (!Array.isArray(listing)) return []
 
@@ -359,11 +371,14 @@ function getRecentPRs(org: string, repo: string, window: ActivityWindow, failure
       // GitHub advances updated_at for comments, labels, reviews, checks, and
       // pushes. The head commit date is an approximation of push time for an
       // old PR; the lookup costs one extra API call per recently touched PR.
+      // Required: without it a push to an old PR reads as a metadata-only
+      // update, and a day whose only activity was that push would skip green.
       if (!lifecycleChanged) {
-        const headCommit = ghApiOptional<GHCommit>(`repos/${org}/${repo}/commits/${pr.head.sha}`)
+        const endpoint = `repos/${org}/${repo}/commits/${pr.head.sha}`
+        const headCommit = ghApi<GHCommit>(endpoint, failures)
         headCommitAt = headCommit?.commit?.committer?.date ?? headCommit?.commit?.author?.date
-        if (!headCommitAt) {
-          console.warn(`::warning::Could not classify head commit for ${repo}#${pr.number} (${pr.head.sha}); treating this PR update as metadata-only.`)
+        if (headCommit && !headCommitAt) {
+          recordFailedEndpoint(failures, endpoint, `head commit for ${repo}#${pr.number} has no author or committer date`)
         }
       }
 

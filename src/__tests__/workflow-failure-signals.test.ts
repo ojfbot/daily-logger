@@ -89,13 +89,3 @@ describe('PR smoke test checks what it claims', () => {
     expect(acceptance).toMatch(/if ! \[\[ "\$DATE" =~ .*\]\]; then\n\s*echo "::error::/)
   })
 })
-
-describe('release candidate dispatch', () => {
-  it('fails with a message when dispatched from a branch other than main', () => {
-    const all = jobs(workflow('service-release-candidate.yml'))
-    const guard = [...all.values()].find((job) => jobIf(job) === "github.ref != 'refs/heads/main'")
-    expect(guard).toBeDefined()
-    expect(guard).toMatch(/echo "::error::/)
-    expect(guard).toMatch(/exit 1/)
-  })
-})

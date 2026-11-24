@@ -33,6 +33,7 @@ import type {
 import { isReviewedAction } from './action-model.js'
 import { readRegistryProjection } from './action-registry.js'
 import { commandErrorDetail, ghApiOutcome } from './gh-api.js'
+import { z } from 'zod'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
@@ -96,29 +97,48 @@ export function finishCleanRun(failures: readonly CleanFailure[], successMessage
   return 1
 }
 
-function ghApi<T>(endpoint: string, failures: CleanFailure[]): T | null {
+/**
+ * A 404 is a failure unless the caller says it means "doesn't exist" for this
+ * endpoint (an optional doc file, a branch that may not exist): GitHub also
+ * answers 404 for a private resource the token can no longer read.
+ */
+function ghApi<T>(endpoint: string, failures: CleanFailure[], options: { notFoundMeansEmpty?: boolean } = {}): T | null {
   // Single page: every endpoint here is either a capped list (per_page) or one object.
   const outcome = ghApiOutcome<T>(endpoint, { timeout: 60_000, maxBuffer: RUN_MAX_BUFFER })
   if (outcome.status === 'ok') return outcome.data
-  if (outcome.status === 'failed') recordFailure(failures, { stage: 'sweep', target: endpoint, detail: outcome.detail })
+  if (outcome.status === 'empty-repository') return null
+  if (outcome.status === 'not-found' && options.notFoundMeansEmpty) return null
+  recordFailure(failures, { stage: 'sweep', target: endpoint, detail: outcome.detail })
   return null
 }
 
 // ─── Remote file reader ───────────────────────────────────────────────────────
 
+// A file that doesn't exist is null. A file that exists but can't be read is
+// a recorded failure, never a silent skip.
 function readRemoteFile(org: string, repo: string, path: string, failures: CleanFailure[], ref?: string): string | null {
-  type GHContent = { content: string; encoding: string }
+  type GHContent = { type?: string; content?: string; encoding?: string; sha?: string }
   const refSuffix = ref ? `?ref=${encodeURIComponent(ref)}` : ''
-  const data = ghApi<GHContent>(
-    `repos/${org}/${repo}/contents/${encodeURIComponent(path)}${refSuffix}`,
-    failures,
-  )
-  if (!data || data.encoding !== 'base64') return null
-  try {
+  const endpoint = `repos/${org}/${repo}/contents/${encodeURIComponent(path)}${refSuffix}`
+  const data = ghApi<GHContent>(endpoint, failures, { notFoundMeansEmpty: true })
+  if (!data) return null
+  if (data.encoding === 'base64' && typeof data.content === 'string') {
     return Buffer.from(data.content.replace(/\n/g, ''), 'base64').toString('utf-8')
-  } catch {
+  }
+  // Files over 1 MB come back with encoding "none" and no content; the Git
+  // blob API returns them (base64) up to 100 MB.
+  if (data.encoding === 'none' && data.type === 'file' && data.sha) {
+    const blobEndpoint = `repos/${org}/${repo}/git/blobs/${data.sha}`
+    const blob = ghApi<GHContent>(blobEndpoint, failures)
+    if (!blob) return null
+    if (blob.encoding === 'base64' && typeof blob.content === 'string') {
+      return Buffer.from(blob.content.replace(/\n/g, ''), 'base64').toString('utf-8')
+    }
+    recordFailure(failures, { stage: 'sweep', target: blobEndpoint, detail: `unreadable blob response (encoding: ${String(blob.encoding)})` })
     return null
   }
+  recordFailure(failures, { stage: 'sweep', target: endpoint, detail: `not a readable file (type: ${String(data.type)}, encoding: ${String(data.encoding)})` })
+  return null
 }
 
 // Reads today's daily-logger article.
@@ -334,6 +354,50 @@ export async function sweepForCandidates(ctx: BlogContext, failures: CleanFailur
 
 // ─── Phase 2: Validate ────────────────────────────────────────────────────────
 
+// Model replies are checked against these shapes before any verdict is read.
+// A reply that doesn't match is a recorded validation failure, not "nothing
+// stale" (#604).
+
+const DocEditSchema = z.object({
+  startLine: z.number().int().min(1),
+  endLine: z.number().int().min(1),
+  original: z.string(),
+  replacement: z.string(),
+  rationale: z.string().min(1),
+  confidence: z.enum(['high', 'medium', 'low']),
+}).refine((edit) => edit.endLine >= edit.startLine, { message: 'endLine is before startLine' })
+
+const DocValidationSchema = z.array(DocEditSchema)
+
+const TodoValidationSchema = z.object({
+  resolved: z.boolean(),
+  evidence: z.string().optional(),
+  replacement: z.string().optional(),
+  confidence: z.enum(['high', 'medium', 'low']),
+}).refine((result) => !result.resolved || (typeof result.evidence === 'string' && result.evidence.length > 0 && typeof result.replacement === 'string'), {
+  message: 'a resolved TODO needs evidence and a replacement (empty string to delete)',
+})
+
+/** The reply's text block as JSON, checked against `schema`; throws with the reason otherwise. */
+function parseModelReply<T>(message: { content: Array<{ type: string; text?: string }> }, schema: z.ZodType<T>): T {
+  const block = message.content[0]
+  if (!block || block.type !== 'text' || typeof block.text !== 'string') {
+    throw new Error(`model reply has no text block (got ${block ? block.type : 'nothing'})`)
+  }
+  const jsonText = block.text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(jsonText)
+  } catch {
+    throw new Error(`model reply is not JSON: ${jsonText.slice(0, 120)}`)
+  }
+  const result = schema.safeParse(parsed)
+  if (!result.success) {
+    throw new Error(`model reply has the wrong shape: ${result.error.issues.map((issue) => `${issue.path.join('.') || '(root)'} ${issue.message}`).join('; ')}`)
+  }
+  return result.data
+}
+
 // Doc validation: Claude reads the full file + recent commits + today's article,
 // returns an array of specific edits (each with line range, original, replacement,
 // rationale, confidence). Returns [] if nothing is stale.
@@ -406,19 +470,10 @@ Rules:
       messages: [{ role: 'user', content: userPrompt }],
     })
 
-    const raw = msg.content[0].type === 'text' ? msg.content[0].text : '[]'
-    const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
-    const edits = JSON.parse(jsonText) as Array<{
-      startLine: number
-      endLine: number
-      original: string
-      replacement: string
-      rationale: string
-      confidence: 'high' | 'medium'
-    }>
+    const edits = parseModelReply(msg, DocValidationSchema)
 
     return edits
-      .filter((e) => e.confidence === 'high' || e.confidence === 'medium')
+      .filter((e): e is typeof e & { confidence: 'high' | 'medium' } => e.confidence === 'high' || e.confidence === 'medium')
       .map((e) => ({
         repo: candidate.repo,
         filePath: candidate.filePath,
@@ -502,14 +557,7 @@ Rules:
       messages: [{ role: 'user', content: userPrompt }],
     })
 
-    const raw = msg.content[0].type === 'text' ? msg.content[0].text : '{}'
-    const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
-    const result = JSON.parse(jsonText) as {
-      resolved: boolean
-      evidence: string
-      replacement: string
-      confidence: 'high' | 'medium' | 'low'
-    }
+    const result = parseModelReply(msg, TodoValidationSchema)
 
     if (!result.resolved || result.confidence === 'low') return null
 
@@ -520,7 +568,7 @@ Rules:
       endLine: candidate.endLine,
       original: candidate.original,
       replacement: result.replacement ?? '',
-      rationale: result.evidence,
+      rationale: result.evidence ?? '',
       confidence: result.confidence,
     }
   } catch (err) {
@@ -657,11 +705,23 @@ export async function openCleanPRs(
     // other answer is a failure, not permission to proceed.
     const existing = ghApiOutcome(`repos/${org}/${repo}/git/ref/heads/${branch}`, { timeout: 60_000, maxBuffer: RUN_MAX_BUFFER })
     if (existing.status === 'ok') {
-      console.log(`  ⚠ Branch ${branch} already exists in ${repo} — skipping`)
+      // An earlier run today pushed this branch. That is fine only if its PR
+      // exists; a pushed branch whose PR open failed must not read as done.
+      const prs = ghApiOutcome<Array<{ html_url: string }>>(
+        `repos/${org}/${repo}/pulls?head=${encodeURIComponent(`${org}:${branch}`)}&state=all&per_page=1`,
+        { timeout: 60_000, maxBuffer: RUN_MAX_BUFFER },
+      )
+      if (prs.status === 'ok' && Array.isArray(prs.data) && prs.data.length > 0) {
+        console.log(`  ⚠ Branch ${branch} already exists in ${repo} with PR ${prs.data[0].html_url} — skipping`)
+      } else if (prs.status === 'ok' && Array.isArray(prs.data)) {
+        recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `branch ${branch} exists but has no PR; open one for it or delete the branch, then re-run` })
+      } else {
+        recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `PR check for existing branch ${branch} failed: ${'detail' in prs ? prs.detail : 'unexpected response'}` })
+      }
       continue
     }
-    if (existing.status === 'failed') {
-      recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `branch check failed: ${existing.detail}` })
+    if (existing.status !== 'not-found') {
+      recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `branch check failed: ${'detail' in existing ? existing.detail : existing.status}` })
       continue
     }
 
