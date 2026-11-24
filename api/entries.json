@@ -1,5 +1,144 @@
 [
   {
+    "date": "2026-11-24",
+    "title": "Monday — Independent Audit Closes on the Nov 22 Article; Nov 23 Article Publishes",
+    "summary": "Monday's two-commit interval merged the structured fourteen-finding audit of the Nov 22 article and published the Nov 23 article to main.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      },
+      {
+        "name": "audit",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "daily-logger"
+    ],
+    "commitCount": 3,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Fourteen-finding audit establishes the error taxonomy for trust-build articles",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Reviewer identity is disclosed, not hidden — the Claude-on-Claude provenance problem is named",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "C6 illustrates the specific verification failure behind replay diff claims",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "602",
+          "url": "https://github.com/ojfbot/daily-logger/pull/602"
+        },
+        "at": "2026-11-23T14:59:02.000Z"
+      },
+      {
+        "status": "unavailable",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "326",
+          "url": "https://github.com/ojfbot/daily-logger/pull/326"
+        },
+        "reason": "missing-merge-time"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "603",
+          "url": "https://github.com/ojfbot/daily-logger/pull/603"
+        },
+        "at": "2026-11-23T14:49:56.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-24T10:05:34.748Z",
+        "runId": "45371098722",
+        "runNumber": 329,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/45371098722",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "08c268ad507bdb3dc297f41918219563ce4581c7",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-24T10:03:41.000Z",
+          "startedAt": "2026-11-24T10:03:41.000Z",
+          "expectedAt": "2026-11-24T09:30:00.000Z",
+          "dispatchDelaySeconds": 2021,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v8-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "e98dce2c035d74d5f1d68a6ba8bcc4da5b7da1059e42582e263f1e60eaa1ecba"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v3-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "3dfb130de94e33458f539a925d9d12446ffaaa88ad67a0b3c07801dbce21a325"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.3",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-23",
     "title": "Sunday — Agent Trust Build Gets Its Roadmap and Proof Checks in One Burst",
     "summary": "Sunday's interval merged six PRs across core and daily-logger, slicing the agent trust build into 114 roadmap phases and hardening layer-retro proof checks to require closed evidence, not just closed issues.",
