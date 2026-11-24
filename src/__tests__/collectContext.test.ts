@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 
 // --- fixtures ------------------------------------------------------------------
 
@@ -422,32 +422,77 @@ describe('collectContext — open issue createdAt mapping', () => {
   })
 })
 
-describe('collectContext — resilience', () => {
-  it('returns empty arrays when endpoint calls fail despite valid auth', async () => {
+describe('collectContext — failed endpoints are not an empty day', () => {
+  const ghError = (cmd: string, stderr: string) =>
+    Object.assign(new Error(`Command failed: ${cmd}\n${stderr}`), { status: 1, stderr })
+  let warning: ReturnType<typeof vi.spyOn>
+  beforeEach(() => {
+    warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  it('fails the collection, naming each endpoint and gh error, when endpoint calls fail despite valid auth', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
       // Preflight passes (token is valid); per-endpoint calls fail.
       if (cmd.includes('gh api rate_limit')) return '{}'
       if (cmd.includes('gh repo list')) return JSON.stringify(repoListFixture)
-      throw new Error('gh: HTTP 500')
+      throw ghError(cmd, 'gh: Server Error (HTTP 500)')
     })
-    const ctx = await collectContext('2026-02-28')
-    expect(ctx.commits).toEqual([])
-    expect(ctx.openPRs).toEqual([])
-    expect(ctx.mergedPRs).toEqual([])
-    expect(ctx.openIssues).toEqual([])
-    expect(ctx.closedIssues).toEqual([])
+    const failure = await collectContext('2026-02-28').then(() => null, (error: Error) => error)
+    expect(failure?.message).toMatch(/GitHub collection incomplete/)
+    expect(failure?.message).toContain('repos/ojfbot/shell/commits')
+    expect(failure?.message).toContain('repos/ojfbot/shell/pulls?state=open')
+    expect(failure?.message).toContain('Server Error (HTTP 500)')
+    expect(warning).toHaveBeenCalledWith(expect.stringContaining('Server Error (HTTP 500)'))
   })
 
-  it('returns empty arrays when API returns malformed JSON', async () => {
+  it('fails the collection when one repo returns a single 5xx and the rest succeed', async () => {
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('repos/ojfbot/BlogEngine/commits?')) throw ghError(cmd, 'gh: Bad Gateway (HTTP 502)')
+      return mockExecSync(cmd)
+    })
+    await expect(collectContext('2026-02-28')).rejects.toThrow(/repos\/ojfbot\/BlogEngine\/commits.*HTTP 502/s)
+  })
+
+  it('fails the collection when the API returns malformed JSON', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
       if (cmd.includes('gh repo list')) return JSON.stringify(repoListFixture)
       return Buffer.from('not valid json')
     })
+    await expect(collectContext('2026-02-28')).rejects.toThrow(/not valid JSON/)
+  })
+
+  it('treats "not found" and an empty repository as nothing there, not as a failure', async () => {
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('/contents/decisions/adr')) throw ghError(cmd, 'gh: Not Found (HTTP 404)')
+      if (cmd.includes('repos/ojfbot/foundry-recipes/commits?')) throw ghError(cmd, 'gh: Git Repository is empty. (HTTP 409)')
+      return mockExecSync(cmd)
+    })
     const ctx = await collectContext('2026-02-28')
-    expect(ctx.openPRs).toEqual([])
+    expect(ctx.adrRegistry).toEqual([])
+    expect(ctx.openPRs.some((pr) => pr.number === 10)).toBe(true)
+  })
+
+  it('shows gh its own error text instead of sending it to /dev/null', async () => {
+    vi.mocked(execSync).mockClear()
+    await collectContext('2026-02-28')
+    const ghCalls = vi.mocked(execSync).mock.calls.filter((call) => String(call[0]).startsWith('gh api'))
+    expect(ghCalls.length).toBeGreaterThan(0)
+    for (const call of ghCalls) {
+      expect(String(call[0])).not.toContain('2>/dev/null')
+      expect(call[1]).toMatchObject({ stdio: ['ignore', 'pipe', 'pipe'] })
+    }
+  })
+
+  it('includes gh error text when the auth preflight is rejected', async () => {
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('gh api rate_limit')) throw ghError(cmd, 'gh: Bad credentials (HTTP 401)')
+      return mockExecSync(cmd)
+    })
+    await expect(collectContext('2026-02-28')).rejects.toThrow(/auth preflight failed.*Bad credentials \(HTTP 401\)/s)
   })
 
   afterEach(() => {
+    warning.mockRestore()
     vi.mocked(execSync).mockImplementation(mockExecSync)
   })
 })

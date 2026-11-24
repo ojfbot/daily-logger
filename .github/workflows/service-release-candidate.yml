@@ -13,6 +13,19 @@ permissions:
   actions: read
 
 jobs:
+  # A dispatch from another branch used to skip the job with no message.
+  wrong-branch:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Refuse a release candidate from a branch other than main
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Release candidates are built from main only; this run was dispatched from ${REF}. Re-run it from main."
+          exit 1
+
   release-candidate:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

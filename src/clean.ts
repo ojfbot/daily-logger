@@ -15,12 +15,16 @@
  *   TARGET_REPO          Only sweep this repo slug (e.g. "shell"). Default: all active.
  */
 
+import { resolve } from 'path'
+import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
 import {
+  finishCleanRun,
   loadStructuredContext,
   sweepForCandidates,
   validateCandidates,
   openCleanPRs,
+  type CleanFailure,
 } from './cleaner.js'
 import { checkAnthropicCredits } from './check-anthropic-credits.js'
 
@@ -28,7 +32,12 @@ function todayUTC(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-async function main() {
+/**
+ * Runs the cleaner and returns the exit code: 0 only when no step failed.
+ * Any failed sweep read, validation, push or PR open makes it 1 (#604).
+ */
+export async function main(): Promise<number> {
+  const failures: CleanFailure[] = []
   const date = process.env.DATE_OVERRIDE?.trim().slice(0, 10) || todayUTC()
   const isDryRun = process.env.DRY_RUN === 'true'
   const targetRepo = process.env.TARGET_REPO?.trim() || undefined
@@ -40,7 +49,7 @@ async function main() {
 
   if (!process.env.ANTHROPIC_API_KEY) {
     console.error('❌ ANTHROPIC_API_KEY is not set')
-    process.exit(1)
+    return 1
   }
   if (!process.env.GITHUB_TOKEN && !process.env.GH_TOKEN) {
     console.warn('⚠  No GitHub token — sweep will fail for private repos')
@@ -61,13 +70,12 @@ async function main() {
 
   if (ctx.commits.length === 0) {
     console.log('     No recent commits found — nothing to sweep.')
-    console.log('\n✓ Done (no activity).')
-    return
+    return finishCleanRun(failures, '✓ Done (no activity).')
   }
 
   // Load structured context from api/ files (entries, actions, done-actions).
   // Falls back to raw article via GitHub API if structured data is unavailable.
-  const cleanCtx = loadStructuredContext(date, org)
+  const cleanCtx = loadStructuredContext(date, org, failures)
   if (cleanCtx.recentEntries.length > 0) {
     console.log(`     Structured context: ${cleanCtx.recentEntries.length} entries, ${cleanCtx.openActions.length} open actions, ${cleanCtx.doneActions.length} done actions`)
   } else if (cleanCtx.rawArticleFallback) {
@@ -79,13 +87,12 @@ async function main() {
 
   // ── 2. Sweep ──────────────────────────────────────────────────────────────────
   console.log('2/3  Sweeping for candidates...')
-  const candidates = await sweepForCandidates(ctx)
+  const candidates = await sweepForCandidates(ctx, failures)
   console.log()
 
   if (candidates.length === 0) {
     console.log('     No candidates found.')
-    console.log('\n✓ Done (no candidates).')
-    return
+    return finishCleanRun(failures, '✓ Done (no candidates).')
   }
 
   await checkAnthropicCredits(process.env.ANTHROPIC_API_KEY)
@@ -93,26 +100,26 @@ async function main() {
   // ── 3. Validate ───────────────────────────────────────────────────────────────
   console.log(`3/3  Validating ${candidates.length} candidate(s) with Claude Opus...`)
   console.log('     (This is the slow phase — each call is rigorous.)')
-  const proposals = await validateCandidates(candidates, cleanCtx)
+  const proposals = await validateCandidates(candidates, cleanCtx, failures)
   console.log()
 
   if (proposals.length === 0) {
     console.log('     No stale items confirmed — no PRs needed.')
-    console.log('\n✓ Done (nothing stale).')
-    return
+    return finishCleanRun(failures, '✓ Done (nothing stale).')
   }
 
   // ── 4. Open PRs ───────────────────────────────────────────────────────────────
-  await openCleanPRs(proposals, date, org, isDryRun)
+  await openCleanPRs(proposals, date, org, isDryRun, failures)
 
-  if (isDryRun) {
-    console.log('\n✓ Dry run complete — no PRs opened.')
-  } else {
-    console.log('\n✓ Done.')
-  }
+  return finishCleanRun(failures, isDryRun ? '✓ Dry run complete — no PRs opened.' : '✓ Done.')
 }
 
-main().catch((err) => {
-  console.error('\n❌ Fatal:', err)
-  process.exit(1)
-})
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().then(
+    (code) => { process.exitCode = code },
+    (err) => {
+      console.error('\n❌ Fatal:', err)
+      process.exit(1)
+    },
+  )
+}

@@ -32,6 +32,7 @@ import type {
 } from './types.js'
 import { isReviewedAction } from './action-model.js'
 import { readRegistryProjection } from './action-registry.js'
+import { commandErrorDetail, ghApiOutcome } from './gh-api.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..')
@@ -65,32 +66,52 @@ function run(cmd: string, cwd?: string): string {
   })
 }
 
-function tryRun(cmd: string, cwd?: string): string | null {
-  try {
-    return run(cmd, cwd)
-  } catch {
-    return null
-  }
+// ─── Failure accounting ───────────────────────────────────────────────────────
+//
+// Every step that can fail records here instead of quietly returning an empty
+// result. clean.ts exits non-zero when any were recorded, so the owner alert
+// fires and the run log names each failing repo/file with the tool's error (#604).
+
+export type CleanFailure = {
+  stage: 'sweep' | 'validate' | 'publish'
+  /** Repo, repo/file, or gh api endpoint that failed. */
+  target: string
+  /** The tool's own error text. */
+  detail: string
 }
 
-function ghApi<T>(endpoint: string): T | null {
-  // Single page: every endpoint here is either a capped list (per_page) or one object.
-  const raw = tryRun(`gh api "${endpoint}" 2>/dev/null`)
-  if (!raw) return null
-  try {
-    return JSON.parse(raw) as T
-  } catch {
-    return null
+function recordFailure(failures: CleanFailure[], failure: CleanFailure): void {
+  failures.push(failure)
+  console.warn(`    ⚠ ${failure.stage} failed: ${failure.target} — ${failure.detail}`)
+}
+
+/** Prints the run outcome; returns the process exit code. */
+export function finishCleanRun(failures: readonly CleanFailure[], successMessage: string): number {
+  if (failures.length === 0) {
+    console.log(`\n${successMessage}`)
+    return 0
   }
+  console.error(`\n❌ Cleaner finished with ${failures.length} failure(s):`)
+  for (const f of failures) console.error(`   - [${f.stage}] ${f.target}: ${f.detail}`)
+  return 1
+}
+
+function ghApi<T>(endpoint: string, failures: CleanFailure[]): T | null {
+  // Single page: every endpoint here is either a capped list (per_page) or one object.
+  const outcome = ghApiOutcome<T>(endpoint, { timeout: 60_000, maxBuffer: RUN_MAX_BUFFER })
+  if (outcome.status === 'ok') return outcome.data
+  if (outcome.status === 'failed') recordFailure(failures, { stage: 'sweep', target: endpoint, detail: outcome.detail })
+  return null
 }
 
 // ─── Remote file reader ───────────────────────────────────────────────────────
 
-function readRemoteFile(org: string, repo: string, path: string, ref?: string): string | null {
+function readRemoteFile(org: string, repo: string, path: string, failures: CleanFailure[], ref?: string): string | null {
   type GHContent = { content: string; encoding: string }
   const refSuffix = ref ? `?ref=${encodeURIComponent(ref)}` : ''
   const data = ghApi<GHContent>(
     `repos/${org}/${repo}/contents/${encodeURIComponent(path)}${refSuffix}`,
+    failures,
   )
   if (!data || data.encoding !== 'base64') return null
   try {
@@ -103,17 +124,17 @@ function readRemoteFile(org: string, repo: string, path: string, ref?: string): 
 // Reads today's daily-logger article.
 // The article lands in branch article/YYYY-MM-DD (draft PR) before it merges to main.
 // Tries the draft branch first, falls back to main.
-export function readTodayArticle(org: string, date: string): string {
+export function readTodayArticle(org: string, date: string, failures: CleanFailure[]): string {
   const path = `_articles/${date}.md`
-  const fromBranch = readRemoteFile(org, 'daily-logger', path, `article/${date}`)
+  const fromBranch = readRemoteFile(org, 'daily-logger', path, failures, `article/${date}`)
   if (fromBranch) return fromBranch
-  const fromMain = readRemoteFile(org, 'daily-logger', path)
+  const fromMain = readRemoteFile(org, 'daily-logger', path, failures)
   return fromMain ?? ''
 }
 
 // ─── Structured context loader ────────────────────────────────────────────────
 
-export function loadStructuredContext(date: string, org: string): StructuredCleanContext {
+export function loadStructuredContext(date: string, org: string, failures: CleanFailure[]): StructuredCleanContext {
   const empty: StructuredCleanContext = {
     todaySummary: '',
     recentEntries: [],
@@ -143,7 +164,7 @@ export function loadStructuredContext(date: string, org: string): StructuredClea
   if (!todayEntry && entries.length === 0) {
     // No structured data available — fall back to raw article via GitHub API
     console.log('     Structured API data not available — falling back to raw article')
-    return { ...empty, rawArticleFallback: readTodayArticle(org, date) }
+    return { ...empty, rawArticleFallback: readTodayArticle(org, date, failures) }
   }
 
   return {
@@ -207,17 +228,18 @@ function formatShipments(entries: CleanEntryData[], repo: string): string {
 
 // ─── Phase 1: Sweep ───────────────────────────────────────────────────────────
 
-function getChangedSourceFiles(org: string, repo: string, since: string): string[] {
+function getChangedSourceFiles(org: string, repo: string, since: string, failures: CleanFailure[]): string[] {
   type GHCommit = { sha: string }
   const commits = ghApi<GHCommit[]>(
     `repos/${org}/${repo}/commits?since=${encodeURIComponent(since)}&per_page=20`,
+    failures,
   )
   if (!commits?.length) return []
 
   const files = new Set<string>()
   for (const c of commits.slice(0, 8)) {
     type GHDetail = { files: Array<{ filename: string; status: string }> }
-    const detail = ghApi<GHDetail>(`repos/${org}/${repo}/commits/${c.sha}`)
+    const detail = ghApi<GHDetail>(`repos/${org}/${repo}/commits/${c.sha}`, failures)
     detail?.files
       .filter((f) => f.status !== 'removed' && SOURCE_EXT.test(f.filename))
       .forEach((f) => files.add(f.filename))
@@ -258,7 +280,7 @@ function extractTodos(
   return candidates
 }
 
-export async function sweepForCandidates(ctx: BlogContext): Promise<CleanCandidate[]> {
+export async function sweepForCandidates(ctx: BlogContext, failures: CleanFailure[]): Promise<CleanCandidate[]> {
   const org = process.env.OJFBOT_ORG ?? 'ojfbot'
   const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
   const candidates: CleanCandidate[] = []
@@ -277,7 +299,7 @@ export async function sweepForCandidates(ctx: BlogContext): Promise<CleanCandida
 
     // 1. Doc files — read full content, one candidate per file
     for (const docFile of DOC_FILES) {
-      const content = readRemoteFile(org, repo, docFile)
+      const content = readRemoteFile(org, repo, docFile, failures)
       if (!content || content.length < 50) continue
 
       const numbered = content
@@ -298,9 +320,9 @@ export async function sweepForCandidates(ctx: BlogContext): Promise<CleanCandida
     }
 
     // 2. Changed source files — extract TODOs only
-    const changedFiles = getChangedSourceFiles(org, repo, since48h)
+    const changedFiles = getChangedSourceFiles(org, repo, since48h, failures)
     for (const filePath of changedFiles.slice(0, 15)) {
-      const content = readRemoteFile(org, repo, filePath)
+      const content = readRemoteFile(org, repo, filePath, failures)
       if (!content) continue
       candidates.push(...extractTodos(repo, filePath, content, recentCommits))
     }
@@ -319,6 +341,7 @@ export async function sweepForCandidates(ctx: BlogContext): Promise<CleanCandida
 async function validateDocCandidate(
   candidate: CleanCandidate,
   ctx: StructuredCleanContext,
+  failures: CleanFailure[],
 ): Promise<CleanProposal[]> {
   const client = new Anthropic()
 
@@ -406,8 +429,8 @@ Rules:
         rationale: e.rationale,
         confidence: e.confidence,
       }))
-  } catch {
-    console.warn(`    ⚠ Doc validation failed for ${candidate.repo}/${candidate.filePath}`)
+  } catch (err) {
+    recordFailure(failures, { stage: 'validate', target: `${candidate.repo}/${candidate.filePath}`, detail: commandErrorDetail(err) })
     return []
   }
 }
@@ -418,6 +441,7 @@ Rules:
 async function validateTodoCandidate(
   candidate: CleanCandidate,
   ctx: StructuredCleanContext,
+  failures: CleanFailure[],
 ): Promise<CleanProposal | null> {
   const client = new Anthropic()
 
@@ -499,8 +523,8 @@ Rules:
       rationale: result.evidence,
       confidence: result.confidence,
     }
-  } catch {
-    console.warn(`    ⚠ TODO validation failed: ${candidate.repo}/${candidate.filePath}:${candidate.startLine}`)
+  } catch (err) {
+    recordFailure(failures, { stage: 'validate', target: `${candidate.repo}/${candidate.filePath}:${candidate.startLine}`, detail: commandErrorDetail(err) })
     return null
   }
 }
@@ -508,6 +532,7 @@ Rules:
 export async function validateCandidates(
   candidates: CleanCandidate[],
   ctx: StructuredCleanContext,
+  failures: CleanFailure[],
 ): Promise<CleanProposal[]> {
   const proposals: CleanProposal[] = []
 
@@ -519,10 +544,10 @@ export async function validateCandidates(
     console.log(`  Validating ${tag}...`)
 
     if (candidate.kind === 'doc-file') {
-      const edits = await validateDocCandidate(candidate, ctx)
+      const edits = await validateDocCandidate(candidate, ctx, failures)
       proposals.push(...edits)
     } else {
-      const proposal = await validateTodoCandidate(candidate, ctx)
+      const proposal = await validateTodoCandidate(candidate, ctx, failures)
       if (proposal) proposals.push(proposal)
     }
   }
@@ -600,6 +625,7 @@ export async function openCleanPRs(
   date: string,
   org: string,
   isDryRun: boolean,
+  failures: CleanFailure[],
 ): Promise<void> {
   // Group by repo
   const byRepo = new Map<string, CleanProposal[]>()
@@ -627,25 +653,33 @@ export async function openCleanPRs(
       continue
     }
 
-    try {
-      // Check if branch already exists
-      const branchExists = tryRun(`gh api repos/${org}/${repo}/git/ref/heads/${branch} 2>/dev/null`)
-      if (branchExists) {
-        console.log(`  ⚠ Branch ${branch} already exists in ${repo} — skipping`)
-        continue
-      }
+    // Check if branch already exists. Only "not found" means it is free; any
+    // other answer is a failure, not permission to proceed.
+    const existing = ghApiOutcome(`repos/${org}/${repo}/git/ref/heads/${branch}`, { timeout: 60_000, maxBuffer: RUN_MAX_BUFFER })
+    if (existing.status === 'ok') {
+      console.log(`  ⚠ Branch ${branch} already exists in ${repo} — skipping`)
+      continue
+    }
+    if (existing.status === 'failed') {
+      recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `branch check failed: ${existing.detail}` })
+      continue
+    }
 
+    let step = 'clone'
+    try {
       // Clone into temp dir
       const tmpDir = mkdtempSync(join(tmpdir(), `ojf-clean-${repo}-`))
       run(`gh repo clone ${org}/${repo} ${tmpDir}`)
 
       // Apply proposals (descending line order to avoid offset drift)
+      step = 'apply edits'
       const sorted = [...repoProposals].sort((a, b) => b.startLine - a.startLine)
       for (const p of sorted) {
         applyProposal(tmpDir, p)
       }
 
       // Commit
+      step = 'commit'
       run(`git -C ${tmpDir} config user.name "ojfbot-clean[bot]"`)
       run(
         `git -C ${tmpDir} config user.email "41898282+github-actions[bot]@users.noreply.github.com"`,
@@ -653,6 +687,7 @@ export async function openCleanPRs(
       run(`git -C ${tmpDir} checkout -b ${branch}`)
       run(`git -C ${tmpDir} add -A`)
       run(`git -C ${tmpDir} commit -m "clean: remove stale comments/docs ${date}"`)
+      step = 'push'
       run(`git -C ${tmpDir} push -u origin ${branch}`)
 
       // Open PR
@@ -660,13 +695,15 @@ export async function openCleanPRs(
       const bodyFile = join(tmpDir, '.pr-body.md')
       writeFileSync(bodyFile, prBody, 'utf-8')
 
-      const prUrl = tryRun(
+      step = 'open PR'
+      const prUrl = run(
         `gh pr create --title "clean: stale docs/comments ${date}" --body-file ${bodyFile} --base main --head ${branch} --repo ${org}/${repo}`,
         tmpDir,
-      )
-      console.log(`  ✓ PR opened: ${prUrl?.trim()}`)
+      ).trim()
+      if (!prUrl) throw new Error('gh pr create printed no PR URL')
+      console.log(`  ✓ PR opened: ${prUrl}`)
     } catch (err) {
-      console.warn(`  ⚠ Failed to open PR for ${repo}: ${(err as Error).message}`)
+      recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `${step} failed: ${commandErrorDetail(err)}` })
     }
   }
 }
