@@ -269,7 +269,8 @@ jobs:
           echo "Auto-merge enabled. PR will merge when all checks pass."
 
   # ── Failure alert (roadmap A2) ──────────────────────────────────────────────
-  # On any job failure: open (or update) a single `pipeline-alert` issue
+  # On any job failure or cancellation (a job that hits timeout-minutes ends
+  # "cancelled"): open (or update) a single `pipeline-alert` issue
   # assigned to the owner. Assignment makes the GitHub mobile app push it.
   # Replying /disable on the issue turns the cron off — see
   # pipeline-alert-commands.yml. Email proved ignorable across two outages;
@@ -278,7 +279,7 @@ jobs:
   alert-on-failure:
     name: Alert on failure
     needs: [generate, auto-merge]
-    if: always() && contains(needs.*.result, 'failure')
+    if: always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
     runs-on: ubuntu-latest
     timeout-minutes: 3
     permissions:
@@ -297,11 +298,11 @@ jobs:
             --search "in:title ${WORKFLOW_FILE}" --json number --jq '.[0].number // empty')
 
           if [ -n "$EXISTING" ]; then
-            gh issue comment "$EXISTING" -R "$REPO" --body "Failed again: ${RUN_URL}"
+            gh issue comment "$EXISTING" -R "$REPO" --body "Failed or cancelled again (a timeout ends as cancelled): ${RUN_URL}"
           else
             gh issue create -R "$REPO" \
               --title "$TITLE" \
               --label pipeline-alert \
               --assignee "$OWNER" \
-              --body "$(printf 'workflow-file: %s\n\nLatest failed run: %s\n\n@%s reply here:\n- `/disable` — stop the cron until further notice\n- `/enable` — turn it back on\n\n_Opened automatically; one issue per workflow, updated on repeat failures._' "$WORKFLOW_FILE" "$RUN_URL" "$OWNER")"
+              --body "$(printf 'workflow-file: %s\n\nLatest failed or cancelled run: %s\n\n@%s reply here:\n- `/disable` — stop the cron until further notice\n- `/enable` — turn it back on\n\n_Opened automatically; one issue per workflow, updated on repeat failures._' "$WORKFLOW_FILE" "$RUN_URL" "$OWNER")"
           fi

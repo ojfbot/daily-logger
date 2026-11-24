@@ -99,7 +99,10 @@ jobs:
           EDITORIAL_WORKSPACE: ${{ github.workspace }}
         run: |
           DATE="${HEAD_BRANCH#accept/}"
-          [[ "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
+          if ! [[ "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "::error::Branch '${HEAD_BRANCH}' must be named accept/YYYY-MM-DD; got date part '${DATE}'."
+            exit 1
+          fi
           git fetch --no-tags origin "$BASE_SHA" "$HEAD_SHA"
           POLICY_DIRECTORY="$RUNNER_TEMP/editorial-admission-policy"
           git worktree add --detach "$POLICY_DIRECTORY" "$BASE_SHA"
@@ -201,7 +204,10 @@ jobs:
           # fans out to hundreds of gh calls — it blew the 5-minute job budget
           # once the busy repos' PR lists started parsing (2026-09-24).
           FLEET_REPOS: daily-logger
-        run: pnpm generate
+        # Keep the log: the next step checks the council actually ran.
+        run: |
+          set -o pipefail
+          pnpm generate 2>&1 | tee /tmp/smoke-generate.log
 
       - name: Verify article was written
         run: |
@@ -210,6 +216,14 @@ jobs:
             exit 1
           fi
           echo "✓ Article file exists"
+          # The smoke test claims council coverage; an empty personas/ would
+          # skip the council without failing (src/index.ts), so check the log.
+          if ! grep -Eq "3/4  Council review — [1-9][0-9]* persona" /tmp/smoke-generate.log; then
+            echo "❌ Council review did not run in the smoke test (no personas loaded, or it was skipped)"
+            grep -E "3/4  Council review" /tmp/smoke-generate.log || true
+            exit 1
+          fi
+          echo "✓ Council review ran"
           # Verify the three authored prose sections are present.
           for section in "## What shipped" "## The decisions" "## Roadmap pulse"; do
             if ! grep -q "${section}" _articles/2026-01-01.md; then
@@ -234,7 +248,7 @@ jobs:
             echo "❌ Found the retired draft-context disclosure label"
             exit 1
           fi
-          node -e "const fs=require('fs'); const file=JSON.parse(fs.readFileSync('actions/articles/2026-01-01.json','utf8')); const snapshot=file.snapshot; if(snapshot.draftContext?.kind!=='retained'||!snapshot.draftContext.markdown.includes('Merge the PR if the smoke test passes.')||!/^[a-f0-9]{64}$/.test(snapshot.stateDigest)) throw new Error('Draft context is not preserved and bound into action-review state');"
+          node -e "const fs=require('fs'); const file=JSON.parse(fs.readFileSync('actions/articles/2026-01-01.json','utf8')); const snapshot=file.snapshot; const errors=[]; if(snapshot.draftContext?.kind!=='retained') errors.push('draft context was not retained (kind: '+snapshot.draftContext?.kind+')'); else if(!snapshot.draftContext.markdown.includes('Merge the PR if the smoke test passes.')) errors.push('draft context lost the fixture text'); if(!/^[a-f0-9]{64}$/.test(snapshot.stateDigest)) errors.push('state digest is not a sha256 hex string'); if(errors.length) throw new Error('Draft context is not preserved and bound into action-review state: '+errors.join('; '));"
           echo "✓ Authored sections, single maintained card, and bound draft context present"
 
       - name: Build and verify static JSON API

@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { execSync } from 'child_process'
+import { commandErrorDetail, ghApiOutcome } from './gh-api.js'
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -31,19 +32,46 @@ const REPO_ROOT = join(__dirname, '../')
 // values are "top N by updated" caps and are meant to be the whole answer.
 const GH_MAX_BUFFER = 16 * 1024 * 1024
 
-function ghApi<T>(endpoint: string): T | null {
-  try {
-    const raw = execSync(`gh api "${endpoint}" 2>/dev/null`, {
-      encoding: 'utf-8',
-      env: { ...process.env },
-      timeout: 30_000,
-      maxBuffer: GH_MAX_BUFFER,
-    })
-    return JSON.parse(raw) as T
-  } catch {
-    console.warn(`  ⚠ gh api ${endpoint} — skipped`)
-    return null
+/** A required endpoint that failed for a reason other than "not found". */
+export type FailedEndpoint = { endpoint: string; detail: string }
+
+/**
+ * Required call: its answer decides what the day contains. "Not found" is an
+ * empty answer; any other failure is recorded in `failures`, and the whole
+ * collection fails at the end so a broken sweep can never read as a quiet day.
+ */
+function ghApi<T>(endpoint: string, failures: FailedEndpoint[]): T | null {
+  const outcome = ghApiOutcome<T>(endpoint, { timeout: 30_000, maxBuffer: GH_MAX_BUFFER })
+  if (outcome.status === 'ok') return outcome.data
+  if (outcome.status === 'failed') {
+    console.warn(`  ⚠ gh api ${endpoint} failed: ${outcome.detail}`)
+    failures.push({ endpoint, detail: outcome.detail })
   }
+  return null
+}
+
+/**
+ * Best-effort enrichment (one PR's merge state, a head commit date, skill
+ * comments, one ADR's title). Callers already treat a missing answer as
+ * "unknown"; a failure is shown with gh's reason but does not fail the run.
+ */
+function ghApiOptional<T>(endpoint: string): T | null {
+  const outcome = ghApiOutcome<T>(endpoint, { timeout: 30_000, maxBuffer: GH_MAX_BUFFER })
+  if (outcome.status === 'ok') return outcome.data
+  if (outcome.status === 'failed') console.warn(`  ⚠ gh api ${endpoint} failed (optional, continuing): ${outcome.detail}`)
+  return null
+}
+
+const FAILURE_LIST_LIMIT = 20
+
+export function collectionIncompleteMessage(failures: readonly FailedEndpoint[]): string {
+  const listed = failures.slice(0, FAILURE_LIST_LIMIT).map((f) => `  - ${f.endpoint}: ${f.detail}`)
+  if (failures.length > FAILURE_LIST_LIMIT) listed.push(`  - …and ${failures.length - FAILURE_LIST_LIMIT} more`)
+  return [
+    `GitHub collection incomplete: ${failures.length} required gh api call(s) failed, ` +
+      'so this run cannot tell a quiet day from a failed sweep. Failed endpoints:',
+    ...listed,
+  ].join('\n')
 }
 
 // ─── Per-repo collectors ──────────────────────────────────────────────────────
@@ -56,7 +84,7 @@ function ghApi<T>(endpoint: string): T | null {
  * ADRs (asset-foundry ADR-0011 on 2026-05-05) and missed ADRs that
  * landed late in the day (core ADR-0067 on the same article).
  */
-function getADRRegistry(org: string, repo: string): ADRRegistryEntry[] {
+function getADRRegistry(org: string, repo: string, failures: FailedEndpoint[]): ADRRegistryEntry[] {
   type GHContent = {
     name: string
     path: string
@@ -65,7 +93,7 @@ function getADRRegistry(org: string, repo: string): ADRRegistryEntry[] {
     download_url: string | null
   }
   const listing = ghApi<GHContent[]>(
-    `repos/${org}/${repo}/contents/decisions/adr`
+    `repos/${org}/${repo}/contents/decisions/adr`, failures
   )
   if (!Array.isArray(listing)) return []
 
@@ -90,7 +118,7 @@ function getADRRegistry(org: string, repo: string): ADRRegistryEntry[] {
   const recentByNumber = entries.slice().sort((a, b) => b.number - a.number)
   for (const e of recentByNumber.slice(0, ENRICH_CAP)) {
     type GHFile = { content?: string; encoding?: string }
-    const file = ghApi<GHFile>(`repos/${org}/${repo}/contents/${e.path}`)
+    const file = ghApiOptional<GHFile>(`repos/${org}/${repo}/contents/${e.path}`)
     if (!file?.content) continue
     let body: string
     try {
@@ -126,14 +154,14 @@ export function parseCommitTrailers(message: string): Pick<CommitInfo, 'sessionU
   }
 }
 
-function getCommits(org: string, repo: string, window: ActivityWindow): CommitInfo[] {
+function getCommits(org: string, repo: string, window: ActivityWindow, failures: FailedEndpoint[]): CommitInfo[] {
   type GHCommit = {
     sha: string
     commit: { message: string; author: { name: string; date: string }; committer?: { date: string } }
     html_url: string
   }
   const data = ghApi<GHCommit[]>(
-    `repos/${org}/${repo}/commits?since=${encodeURIComponent(new Date(window.start).toISOString())}&until=${encodeURIComponent(new Date(window.end).toISOString())}&per_page=100`
+    `repos/${org}/${repo}/commits?since=${encodeURIComponent(new Date(window.start).toISOString())}&until=${encodeURIComponent(new Date(window.end).toISOString())}&per_page=100`, failures
   )
   if (!data) return []
   return data.filter((c) => occurredInWindow(c.commit.author.date, window)).map((c) => ({
@@ -155,7 +183,7 @@ function getCommits(org: string, repo: string, window: ActivityWindow): CommitIn
   }))
 }
 
-function getMergedPRs(org: string, repo: string, window: ActivityWindow): PRInfo[] {
+function getMergedPRs(org: string, repo: string, window: ActivityWindow, failures: FailedEndpoint[]): PRInfo[] {
   type GHPR = {
     number: number
     title: string
@@ -167,7 +195,7 @@ function getMergedPRs(org: string, repo: string, window: ActivityWindow): PRInfo
     user: { login: string } | null
   }
   const data = ghApi<GHPR[]>(
-    `repos/${org}/${repo}/pulls?state=closed&sort=updated&direction=desc&per_page=30`
+    `repos/${org}/${repo}/pulls?state=closed&sort=updated&direction=desc&per_page=30`, failures
   )
   if (!data) return []
   return data
@@ -185,7 +213,7 @@ function getMergedPRs(org: string, repo: string, window: ActivityWindow): PRInfo
     }))
 }
 
-function getClosedIssues(org: string, repo: string, window: ActivityWindow, reportingWindow: ActivityWindow): IssueInfo[] {
+function getClosedIssues(org: string, repo: string, window: ActivityWindow, reportingWindow: ActivityWindow, failures: FailedEndpoint[]): IssueInfo[] {
   type GHIssue = {
     number: number
     title: string
@@ -198,7 +226,7 @@ function getClosedIssues(org: string, repo: string, window: ActivityWindow, repo
     body: string | null
   }
   const data = ghApi<GHIssue[]>(
-    `repos/${org}/${repo}/issues?state=closed&sort=updated&direction=desc&per_page=30`
+    `repos/${org}/${repo}/issues?state=closed&sort=updated&direction=desc&per_page=30`, failures
   )
   if (!data) return []
   return data
@@ -218,7 +246,7 @@ function getClosedIssues(org: string, repo: string, window: ActivityWindow, repo
     }))
 }
 
-function getOpenIssues(org: string, repo: string, window: ActivityWindow): IssueInfo[] {
+function getOpenIssues(org: string, repo: string, window: ActivityWindow, failures: FailedEndpoint[]): IssueInfo[] {
   type GHIssue = {
     number: number
     title: string
@@ -232,7 +260,7 @@ function getOpenIssues(org: string, repo: string, window: ActivityWindow): Issue
   // Sort by updated so both newly created AND recently commented/labelled issues
   // appear first. Fetch 30 so active issues aren't pushed off by the cap.
   const data = ghApi<GHIssue[]>(
-    `repos/${org}/${repo}/issues?state=open&sort=updated&direction=desc&per_page=30`
+    `repos/${org}/${repo}/issues?state=open&sort=updated&direction=desc&per_page=30`, failures
   )
   if (!data) return []
   return data
@@ -260,7 +288,7 @@ function getOpenIssues(org: string, repo: string, window: ActivityWindow): Issue
     .sort((a, b) => (a.isNew === b.isNew ? 0 : a.isNew ? -1 : 1))
 }
 
-function getOpenPRs(org: string, repo: string): OpenPRInfo[] {
+function getOpenPRs(org: string, repo: string, failures: FailedEndpoint[]): OpenPRInfo[] {
   type GHPR = {
     number: number
     title: string
@@ -270,7 +298,7 @@ function getOpenPRs(org: string, repo: string): OpenPRInfo[] {
     draft: boolean
   }
   const data = ghApi<GHPR[]>(
-    `repos/${org}/${repo}/pulls?state=open&sort=updated&direction=desc&per_page=15`
+    `repos/${org}/${repo}/pulls?state=open&sort=updated&direction=desc&per_page=15`, failures
   )
   if (!data) return []
   return data.map((pr) => ({
@@ -284,7 +312,7 @@ function getOpenPRs(org: string, repo: string): OpenPRInfo[] {
   }))
 }
 
-function getRecentPRs(org: string, repo: string, window: ActivityWindow): RecentPRInfo[] {
+function getRecentPRs(org: string, repo: string, window: ActivityWindow, failures: FailedEndpoint[]): RecentPRInfo[] {
   type GHPullState = { merged?: boolean }
   type GHCommit = {
     commit?: {
@@ -308,7 +336,7 @@ function getRecentPRs(org: string, repo: string, window: ActivityWindow): Recent
   }
   // Fetch all PRs (open + closed) sorted by most recently updated
   const data = ghApi<GHPR[]>(
-    `repos/${org}/${repo}/pulls?state=all&sort=updated&direction=desc&per_page=50`
+    `repos/${org}/${repo}/pulls?state=all&sort=updated&direction=desc&per_page=50`, failures
   )
   if (!data) return []
   return data
@@ -320,7 +348,7 @@ function getRecentPRs(org: string, repo: string, window: ActivityWindow): Recent
         occurredInWindow(pr.merged_at, window)
       let headCommitAt: string | undefined
       const currentState = pr.state === 'closed' && pr.merged_at === null
-        ? ghApi<GHPullState>(`repos/${org}/${repo}/pulls/${pr.number}`)?.merged
+        ? ghApiOptional<GHPullState>(`repos/${org}/${repo}/pulls/${pr.number}`)?.merged
         : undefined
       const merged = pr.merged_at !== null
         ? true
@@ -332,7 +360,7 @@ function getRecentPRs(org: string, repo: string, window: ActivityWindow): Recent
       // pushes. The head commit date is an approximation of push time for an
       // old PR; the lookup costs one extra API call per recently touched PR.
       if (!lifecycleChanged) {
-        const headCommit = ghApi<GHCommit>(`repos/${org}/${repo}/commits/${pr.head.sha}`)
+        const headCommit = ghApiOptional<GHCommit>(`repos/${org}/${repo}/commits/${pr.head.sha}`)
         headCommitAt = headCommit?.commit?.committer?.date ?? headCommit?.commit?.author?.date
         if (!headCommitAt) {
           console.warn(`::warning::Could not classify head commit for ${repo}#${pr.number} (${pr.head.sha}); treating this PR update as metadata-only.`)
@@ -476,7 +504,7 @@ const SKILL_UPDATE_MARKER = '<!-- skill-usage-update'
 
 function getSkillUsageFromPRComments(org: string, repo: string, prNumber: number, window: ActivityWindow): PRSkillUsage | undefined {
   type GHComment = { body: string; created_at: string; updated_at: string }
-  const comments = ghApi<GHComment[]>(`repos/${org}/${repo}/issues/${prNumber}/comments?per_page=100`)
+  const comments = ghApiOptional<GHComment[]>(`repos/${org}/${repo}/issues/${prNumber}/comments?per_page=100`)
   if (!comments) return undefined
 
   const skillComments = comments.filter(
@@ -537,15 +565,17 @@ export async function collectContext(date: string): Promise<BlogContext> {
   // rate_limit (not /user) — it authenticates fine-grained PATs AND the
   // Actions installation token, which 403s on /user even when healthy.
   try {
-    execSync('gh api rate_limit 2>/dev/null', {
+    execSync('gh api rate_limit', {
       encoding: 'utf-8',
       env: { ...process.env },
       timeout: 30_000,
+      stdio: ['ignore', 'pipe', 'pipe'],
     })
-  } catch {
+  } catch (err) {
     throw new Error(
       'GitHub auth preflight failed: `gh api rate_limit` rejected the token. ' +
-        'Check GH_PAT expiry in repo secrets before re-running the sweep.',
+        'Check GH_PAT expiry in repo secrets before re-running the sweep. ' +
+        `gh said: ${commandErrorDetail(err)}`,
     )
   }
 
@@ -559,6 +589,7 @@ export async function collectContext(date: string): Promise<BlogContext> {
   const allClosed: IssueInfo[] = []
   const allOpen: IssueInfo[] = []
   const allADRs: ADRRegistryEntry[] = []
+  const failures: FailedEndpoint[] = []
 
   // Fleet discovery (surface 2 is derived; throws on failure — see fleet.ts).
   const repos = discoverRepos(org)
@@ -570,19 +601,23 @@ export async function collectContext(date: string): Promise<BlogContext> {
 
   for (const repo of repos) {
     console.log(`  ${repo}...`)
-    allCommits.push(...getCommits(org, repo, window))
-    allPRs.push(...getMergedPRs(org, repo, week))
-    allOpenPRs.push(...getOpenPRs(org, repo))
-    const recentPRs = getRecentPRs(org, repo, window)
+    allCommits.push(...getCommits(org, repo, window, failures))
+    allPRs.push(...getMergedPRs(org, repo, week, failures))
+    allOpenPRs.push(...getOpenPRs(org, repo, failures))
+    const recentPRs = getRecentPRs(org, repo, window, failures)
     // Scrape skill usage comments from recent PRs
     for (const pr of recentPRs) {
       pr.skillUsage = getSkillUsageFromPRComments(org, repo, pr.number, window)
     }
     allRecentPRs.push(...recentPRs)
-    allClosed.push(...getClosedIssues(org, repo, week, window))
-    allOpen.push(...getOpenIssues(org, repo, window))
-    allADRs.push(...getADRRegistry(org, repo))
+    allClosed.push(...getClosedIssues(org, repo, week, window, failures))
+    allOpen.push(...getOpenIssues(org, repo, window, failures))
+    allADRs.push(...getADRRegistry(org, repo, failures))
   }
+
+  // A failed required call is not "no activity". Fail the run so the article
+  // step (shouldSkipRun) never sees a partial or empty sweep as a quiet day.
+  if (failures.length > 0) throw new Error(collectionIncompleteMessage(failures))
 
   // Deduplicate by URL (org-level pagination can surface duplicates)
   const dedup = <T extends { url: string }>(arr: T[]): T[] =>
