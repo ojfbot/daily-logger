@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
-import { execSync } from 'child_process'
-import { commandErrorDetail, ghApiOutcome } from './gh-api.js'
+import { ghApiOutcome } from './gh-api.js'
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -579,18 +578,14 @@ export async function collectContext(date: string): Promise<BlogContext> {
   // Abort instead so the workflow run goes red and the failure is visible.
   // rate_limit (not /user) — it authenticates fine-grained PATs AND the
   // Actions installation token, which 403s on /user even when healthy.
-  try {
-    execSync('gh api rate_limit', {
-      encoding: 'utf-8',
-      env: { ...process.env },
-      timeout: 30_000,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
-  } catch (err) {
+  // Through the shared helper: a 5xx, timeout or rate limit is retried; an
+  // auth or permission error (401/403) fails at once.
+  const preflight = ghApiOutcome('rate_limit', { timeout: 30_000, maxBuffer: GH_MAX_BUFFER })
+  if (preflight.status !== 'ok') {
     throw new Error(
-      'GitHub auth preflight failed: `gh api rate_limit` rejected the token. ' +
+      'GitHub auth preflight failed: `gh api rate_limit` did not succeed. ' +
         'Check GH_PAT expiry in repo secrets before re-running the sweep. ' +
-        `gh said: ${commandErrorDetail(err)}`,
+        `gh said: ${'detail' in preflight ? preflight.detail : preflight.status}`,
     )
   }
 

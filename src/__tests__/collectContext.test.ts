@@ -109,7 +109,7 @@ vi.mock('child_process', () => ({
 
 import { collectContext } from '../collect-context.js'
 import { execSync } from 'child_process'
-import { GH_API_RETRY } from '../gh-api.js'
+import { GH_API_RETRY, resetGhApiBudget } from '../gh-api.js'
 
 // Transient gh failures are retried with backoff; no real waiting in tests.
 GH_API_RETRY.baseDelayMs = 0
@@ -346,7 +346,7 @@ describe('collectContext — auth preflight', () => {
 
   it('throws when the gh token is rejected instead of returning an empty context', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
-      if (cmd.includes('gh api rate_limit')) throw new Error('HTTP 401: Bad credentials')
+      if (cmd.includes('"rate_limit"')) throw new Error('HTTP 401: Bad credentials')
       return mockExecSync(cmd)
     })
     await expect(collectContext('2026-02-28')).rejects.toThrow(/auth preflight failed/)
@@ -450,7 +450,7 @@ describe('collectContext — failed endpoints are not an empty day', () => {
   it('fails the collection, naming each endpoint and gh error, when endpoint calls fail despite valid auth', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
       // Preflight passes (token is valid); per-endpoint calls fail.
-      if (cmd.includes('gh api rate_limit')) return '{}'
+      if (cmd.includes('"rate_limit"')) return '{}'
       if (cmd.includes('gh repo list')) return JSON.stringify(repoListFixture)
       throw ghError(cmd, 'gh: Server Error (HTTP 500)')
     })
@@ -529,9 +529,54 @@ describe('collectContext — failed endpoints are not an empty day', () => {
     }
   })
 
+  it('retries the auth preflight on a 5xx and then collects', async () => {
+    let preflightCalls = 0
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('"rate_limit"') && ++preflightCalls === 1) throw ghError(cmd, 'gh: Bad Gateway (HTTP 502)')
+      return mockExecSync(cmd)
+    })
+    const ctx = await collectContext('2026-02-28')
+    expect(preflightCalls).toBe(2)
+    expect(ctx.repos).toContain('shell')
+  })
+
+  it('fails the auth preflight at once, without retrying, on bad credentials', async () => {
+    let preflightCalls = 0
+    vi.mocked(execSync).mockImplementation((cmd: string) => {
+      if (cmd.includes('"rate_limit"')) { preflightCalls++; throw ghError(cmd, 'gh: Bad credentials (HTTP 401)') }
+      return mockExecSync(cmd)
+    })
+    await expect(collectContext('2026-02-28')).rejects.toThrow(/auth preflight failed/)
+    expect(preflightCalls).toBe(1)
+  })
+
+  it('stops calling gh once the run-wide time budget is used up, and fails with the summary', async () => {
+    const realNow = GH_API_RETRY.now
+    let clock = 0
+    GH_API_RETRY.now = () => clock
+    resetGhApiBudget(60_000)
+    try {
+      vi.mocked(execSync).mockImplementation((cmd: string) => {
+        // One slow call eats the whole budget.
+        if (cmd.includes('repos/ojfbot/shell/commits?')) clock += 60_000
+        return mockExecSync(cmd)
+      })
+      vi.mocked(execSync).mockClear()
+      const failure = await collectContext('2026-02-28').then(() => null, (error: Error) => error)
+      expect(failure?.message).toMatch(/GitHub collection incomplete/)
+      expect(failure?.message).toContain("gh api time budget (60 s, GH_API_BUDGET_SECONDS) is used up")
+      expect(failure?.message).toContain('repos/ojfbot/BlogEngine/commits')
+      const calls = vi.mocked(execSync).mock.calls.map((call) => String(call[0]))
+      expect(calls.some((call) => call.includes('repos/ojfbot/BlogEngine/'))).toBe(false)
+    } finally {
+      GH_API_RETRY.now = realNow
+      resetGhApiBudget()
+    }
+  })
+
   it('includes gh error text when the auth preflight is rejected', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
-      if (cmd.includes('gh api rate_limit')) throw ghError(cmd, 'gh: Bad credentials (HTTP 401)')
+      if (cmd.includes('"rate_limit"')) throw ghError(cmd, 'gh: Bad credentials (HTTP 401)')
       return mockExecSync(cmd)
     })
     await expect(collectContext('2026-02-28')).rejects.toThrow(/auth preflight failed.*Bad credentials \(HTTP 401\)/s)
@@ -563,7 +608,7 @@ describe('collectContext — fleet discovery (derived sweep set)', () => {
 
   it('never falls back to a hand list: discovery failure throws instead of sweeping nothing', async () => {
     vi.mocked(execSync).mockImplementation((cmd: string) => {
-      if (cmd.includes('gh api rate_limit')) return '{}'
+      if (cmd.includes('"rate_limit"')) return '{}'
       if (cmd.includes('gh repo list')) throw new Error('gh: HTTP 403')
       return mockExecSync(cmd)
     })

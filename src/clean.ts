@@ -19,6 +19,7 @@ import { resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { collectContext } from './collect-context.js'
 import {
+  checkCleanBranches,
   finishCleanRun,
   loadStructuredContext,
   sweepForCandidates,
@@ -68,9 +69,18 @@ export async function main(): Promise<number> {
     }
   }
 
+  // Every finish checks today's clean/<date> branch in each swept repo that
+  // openCleanPRs did not already check: a branch pushed by an earlier run
+  // whose PR open failed must turn even a "nothing to do" rerun red (#604).
+  const sweptRepos = targetRepo ? [targetRepo] : ctx.repos
+  const finish = (message: string, checked: ReadonlySet<string> = new Set()): number => {
+    checkCleanBranches(sweptRepos.filter((repo) => !checked.has(repo)), date, org, failures)
+    return finishCleanRun(failures, message)
+  }
+
   if (ctx.commits.length === 0) {
     console.log('     No recent commits found — nothing to sweep.')
-    return finishCleanRun(failures, '✓ Done (no activity).')
+    return finish('✓ Done (no activity).')
   }
 
   // Load structured context from api/ files (entries, actions, done-actions).
@@ -92,7 +102,7 @@ export async function main(): Promise<number> {
 
   if (candidates.length === 0) {
     console.log('     No candidates found.')
-    return finishCleanRun(failures, '✓ Done (no candidates).')
+    return finish('✓ Done (no candidates).')
   }
 
   await checkAnthropicCredits(process.env.ANTHROPIC_API_KEY)
@@ -105,13 +115,14 @@ export async function main(): Promise<number> {
 
   if (proposals.length === 0) {
     console.log('     No stale items confirmed — no PRs needed.')
-    return finishCleanRun(failures, '✓ Done (nothing stale).')
+    return finish('✓ Done (nothing stale).')
   }
 
   // ── 4. Open PRs ───────────────────────────────────────────────────────────────
   await openCleanPRs(proposals, date, org, isDryRun, failures)
 
-  return finishCleanRun(failures, isDryRun ? '✓ Dry run complete — no PRs opened.' : '✓ Done.')
+  const checked = new Set(isDryRun ? [] : proposals.map((p) => p.repo))
+  return finish(isDryRun ? '✓ Dry run complete — no PRs opened.' : '✓ Done.', checked)
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

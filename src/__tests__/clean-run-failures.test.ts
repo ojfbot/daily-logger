@@ -19,7 +19,7 @@ vi.mock('@anthropic-ai/sdk', () => ({
 import { execSync } from 'child_process'
 import { collectContext } from '../collect-context.js'
 import { main } from '../clean.js'
-import { GH_API_RETRY } from '../gh-api.js'
+import { GH_API_RETRY, resetGhApiBudget } from '../gh-api.js'
 
 // Transient gh failures are retried with backoff; no real waiting in tests.
 GH_API_RETRY.baseDelayMs = 0
@@ -254,5 +254,63 @@ describe('cleaner run outcome — reruns, replies and reads', () => {
     }) as never)
     expect(await main()).toBe(0)
     expect(calls).toBe(2)
+  })
+})
+
+describe('cleaner run outcome — orphan branches and the gh api budget', () => {
+  const orphan: Array<[string, () => string]> = [
+    ['/git/ref/heads/clean/2026-11-20', () => JSON.stringify({ ref: 'refs/heads/clean/2026-11-20' })],
+    ['/pulls?head=', () => '[]'],
+  ]
+
+  it('exits non-zero when validation finds nothing stale but an orphan branch is left from an earlier run', async () => {
+    vi.mocked(execSync).mockImplementation(router({ routes: orphan }) as never)
+    create.mockResolvedValue({ content: [{ type: 'text', text: '[]' }] })
+    expect(await main()).toBe(1)
+    expect(errors.join('\n')).toMatch(/ojfbot\/shell.*branch clean\/2026-11-20 exists but has no PR/)
+    expect(logs.join('\n')).not.toMatch(/✓ Done/)
+  })
+
+  it('exits non-zero on a day with no activity when an orphan branch is left', async () => {
+    vi.mocked(collectContext).mockResolvedValue({ date: '2026-11-20', repos: ['shell'], commits: [] } as never)
+    vi.mocked(execSync).mockImplementation(router({ routes: orphan }) as never)
+    expect(await main()).toBe(1)
+    expect(errors.join('\n')).toContain('exists but has no PR')
+  })
+
+  it('exits non-zero with no candidates when an orphan branch is left', async () => {
+    vi.mocked(execSync).mockImplementation(router({
+      readme: (cmd) => { throw commandError(cmd, 'gh: Not Found (HTTP 404)') },
+      routes: orphan,
+    }) as never)
+    expect(await main()).toBe(1)
+    expect(errors.join('\n')).toContain('exists but has no PR')
+  })
+
+  it('checks only today\'s branch name and passes when no branch is left', async () => {
+    create.mockResolvedValue({ content: [{ type: 'text', text: '[]' }] })
+    vi.mocked(execSync).mockClear()
+    expect(await main()).toBe(0)
+    const calls = vi.mocked(execSync).mock.calls.map((call) => String(call[0]))
+    expect(calls.some((call) => call.includes('repos/ojfbot/shell/git/ref/heads/clean/2026-11-20'))).toBe(true)
+  })
+
+  it('stops calling gh when the budget is used up, then prints the summary and exits 1', async () => {
+    const realNow = GH_API_RETRY.now
+    let clock = 0
+    GH_API_RETRY.now = () => clock
+    resetGhApiBudget(30_000)
+    try {
+      vi.mocked(execSync).mockImplementation(router({
+        readme: () => { clock += 30_000; return JSON.stringify({ type: 'file', encoding: 'base64', content: base64(README) }) },
+      }) as never)
+      expect(await main()).toBe(1)
+      const report = errors.join('\n')
+      expect(report).toMatch(/Cleaner finished with \d+ failure/)
+      expect(report).toContain("gh api time budget (30 s, GH_API_BUDGET_SECONDS) is used up")
+    } finally {
+      GH_API_RETRY.now = realNow
+      resetGhApiBudget()
+    }
   })
 })

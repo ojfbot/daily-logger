@@ -668,6 +668,48 @@ function buildPRBody(proposals: CleanProposal[], date: string): string {
   return sections.join('\n')
 }
 
+// ─── Dated branch state ───────────────────────────────────────────────────────
+
+/**
+ * State of today's `clean/<date>` branch in one repo. A branch left by an
+ * earlier run is fine only if its PR exists: a push that succeeded followed by
+ * a PR open that failed leaves an orphan, recorded here as a failure so a
+ * same-day rerun can't end green (#604). Failed checks are recorded too.
+ */
+export function cleanBranchState(
+  org: string,
+  repo: string,
+  branch: string,
+  failures: CleanFailure[],
+): 'absent' | 'has-pr' | 'orphan' | 'unknown' {
+  const options = { timeout: 60_000, maxBuffer: RUN_MAX_BUFFER }
+  const existing = ghApiOutcome(`repos/${org}/${repo}/git/ref/heads/${branch}`, options)
+  if (existing.status === 'not-found') return 'absent'
+  if (existing.status !== 'ok') {
+    recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `branch check failed: ${'detail' in existing ? existing.detail : existing.status}` })
+    return 'unknown'
+  }
+  const prs = ghApiOutcome<Array<{ html_url: string }>>(
+    `repos/${org}/${repo}/pulls?head=${encodeURIComponent(`${org}:${branch}`)}&state=all&per_page=1`,
+    options,
+  )
+  if (prs.status === 'ok' && Array.isArray(prs.data) && prs.data.length > 0) {
+    console.log(`  ⚠ Branch ${branch} already exists in ${repo} with PR ${prs.data[0].html_url} — skipping`)
+    return 'has-pr'
+  }
+  if (prs.status === 'ok' && Array.isArray(prs.data)) {
+    recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `branch ${branch} exists but has no PR; open one for it or delete the branch, then re-run` })
+    return 'orphan'
+  }
+  recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `PR check for existing branch ${branch} failed: ${'detail' in prs ? prs.detail : 'unexpected response'}` })
+  return 'unknown'
+}
+
+/** Checks today's branch in each repo; orphans and failed checks become failures. */
+export function checkCleanBranches(repos: readonly string[], date: string, org: string, failures: CleanFailure[]): void {
+  for (const repo of repos) cleanBranchState(org, repo, `clean/${date}`, failures)
+}
+
 export async function openCleanPRs(
   proposals: CleanProposal[],
   date: string,
@@ -701,29 +743,9 @@ export async function openCleanPRs(
       continue
     }
 
-    // Check if branch already exists. Only "not found" means it is free; any
-    // other answer is a failure, not permission to proceed.
-    const existing = ghApiOutcome(`repos/${org}/${repo}/git/ref/heads/${branch}`, { timeout: 60_000, maxBuffer: RUN_MAX_BUFFER })
-    if (existing.status === 'ok') {
-      // An earlier run today pushed this branch. That is fine only if its PR
-      // exists; a pushed branch whose PR open failed must not read as done.
-      const prs = ghApiOutcome<Array<{ html_url: string }>>(
-        `repos/${org}/${repo}/pulls?head=${encodeURIComponent(`${org}:${branch}`)}&state=all&per_page=1`,
-        { timeout: 60_000, maxBuffer: RUN_MAX_BUFFER },
-      )
-      if (prs.status === 'ok' && Array.isArray(prs.data) && prs.data.length > 0) {
-        console.log(`  ⚠ Branch ${branch} already exists in ${repo} with PR ${prs.data[0].html_url} — skipping`)
-      } else if (prs.status === 'ok' && Array.isArray(prs.data)) {
-        recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `branch ${branch} exists but has no PR; open one for it or delete the branch, then re-run` })
-      } else {
-        recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `PR check for existing branch ${branch} failed: ${'detail' in prs ? prs.detail : 'unexpected response'}` })
-      }
-      continue
-    }
-    if (existing.status !== 'not-found') {
-      recordFailure(failures, { stage: 'publish', target: `${org}/${repo}`, detail: `branch check failed: ${'detail' in existing ? existing.detail : existing.status}` })
-      continue
-    }
+    // Only an absent branch may be created. An existing one is fine only if
+    // its PR exists (cleanBranchState records an orphan or a failed check).
+    if (cleanBranchState(org, repo, branch, failures) !== 'absent') continue
 
     let step = 'clone'
     try {
