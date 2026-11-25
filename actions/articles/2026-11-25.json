@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-25",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-25",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Ambiguous or unsupported exact-command PR target; review pending"
+    },
+    "articleDigest": "255a3b7bc28ddb4a6a78ea763787e4a0952353c0378be97e9471521a7a2fd34f",
+    "roundId": "7925c083eed44900098078d60145182b18633e2d1dafbd14bf64b3147cf8bbf2",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "5363dd7ea4622fb38571afe9a87abf0340f0f9dec22ec75f9983e3c8bfdeeaa4",
+        "payload": {
+          "command": "gh issue view 729 --repo ojfbot/core && gh pr create --repo ojfbot/core --title 'fix: resolve 11 broken ADR trace links to unblock /adr publish' --body 'Closes #729. Resolves or removes each broken slug so decisions/README.md can be rebuilt and ADR-0111 appears in the index on main.'",
+          "description": "core #729 is a mechanical fix with no owner — resolve or remove 11 broken trace links so `/adr publish` can list ADR-0111 and ADR-0107 on main. ADR-0111 shipped this interval and is currently absent from the index.",
+          "repo": "ojfbot/core",
+          "status": "open",
+          "sourceDate": "2026-11-25"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "3bc62f0cf733c5c7cb8ae7c46bb808765393904e1b2ed678400bb3e9693cce5f",
+        "payload": {
+          "command": "gh issue comment 6 --repo ojfbot/github-actions --body 'Owner decision required: core has 15 vulnerabilities (9 high). Options: (a) fix vulnerabilities before adopting @v2, or (b) accept audit-advisory: true with a dated rationale. This gate must close before core can move to @v2. Please record the decision here with a date.'",
+          "description": "github-actions #6 is blocked on an owner decision about Core's 9 high vulnerabilities. The gate is open-ended with no date recorded. Surface the decision explicitly so the near-term milestone can move.",
+          "repo": "ojfbot/github-actions",
+          "status": "open",
+          "sourceDate": "2026-11-25"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "17396fcb291b1c06bb33e4b2c458ae507382e5365991e8b30426708aec98aad4",
+        "payload": {
+          "command": "gh pr view 607 --repo ojfbot/daily-logger && gh pr view 606 --repo ojfbot/daily-logger",
+          "description": "daily-logger #606 and #607 (independent audits of Nov 23 and Nov 24 articles) are open drafts with no reviewer and no close event. Their disposition — merge, abandon, or blocked on something unrecorded — should be stated. The stall is particularly visible on the day ADR-0111 ships.",
+          "repo": "ojfbot/daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-25"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "f6af99c5a46261f258957a03aef3b3f64f4345200392413d0b25f6a8cd9c9618",
+        "payload": {
+          "command": "node scripts/check-ci-tests.mjs && pnpm test 2>&1 | head -40",
+          "description": "Validate that BookcaseDiscovery's check-ci-tests.mjs guard catches a narrowed suite locally before relying on CI. Run from the repo root; output should list all 91 files and exit 0. A narrowed test script or file-list step in the workflow will cause exit 1 with a specific message.",
+          "repo": "ojfbot/BookcaseDiscovery",
+          "status": "open",
+          "sourceDate": "2026-11-25"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "Seven PRs merged across five repos. Priority context for independent action review:\n\nOWNER-GATED, NO DATE RECORDED: Core vulnerability disposition (fix 9 high vulns or accept `audit-advisory: true` with a dated reason) is required before core can adopt github-actions @v2. github-actions #6 cannot move without it. No owner, no date, no consequence-of-inaction statement is recorded.\n\nMECHANICAL, NO OWNER: core #729 (broken ADR index, 11 trace links). Fix is resolve-or-remove each broken slug. Blocks `/adr publish` from listing ADR-0111 and ADR-0107 on main. ADR-0111 is the centerpiece decision of this interval and is currently invisible in the index. Low effort, unassigned.\n\nSTALLED AUDITS, NO BLOCKING REASON RECORDED: daily-logger #606 (Nov 23 article audit) and #607 (Nov 24 article audit) are both open drafts with no reviewer and no close event. These exist to enforce ADR-0111's claim-source-quote rule on prior articles. Their stall on the day ADR-0111 ships has no recorded explanation.\n\nDISPOSITION UNKNOWN: core #656 (commitlint + release-please fleet-wide) and daily-logger #575–#584 (six journal refactor slices) have no recorded status signal — not started, stalled, parked, or phase-gated. Cannot determine from available context.\n\nFRAME STATUS: Frame is represented only by core #730 (CircusGreen seats and correspondence overview), a draft PR with no phase gate recorded. No Frame deployment state, URL, or hardening coverage is noted for this interval. Frame is not a default goal for every project; its absence from this CI sweep is not explained in available context.\n\nTRUST BUILD RETRO ISSUES (#694, #699, #701, #705, #709, #720): All remain open. Each requires its layer's slices to be closed with proof before the retro gate passes. No retro has closed yet.\n\nSTALENESS MAP (#745): Nine grilling tickets (#736–#743, #746) opened, all open, none owner-gated yet. Feeds trust build later phases but does not block PH8 entry.\n\nSKILL TELEMETRY: Stream confirmed frozen since 2026-05-12. Quality-skill coverage at 0% across this interval (no /validate, /hardening, /lint-audit, or /test-expand recorded). The persistence claim across consecutive intervals is weakened by the frozen instrumentation — the counter may not be moving because the stream is not moving. The behavioral conclusion (habit problem vs. tooling problem vs. miscalibrated suggestion mechanism) is not supportable from frozen data alone. No fix timeline for the telemetry stream is recorded; until it is fixed, quality-coverage numbers should be treated as lower bounds, not measurements.\n\nBYPASS PATHS ON NEW GUARDS: core #728 and BookcaseDiscovery #107 both document that deliberate workflow edits can bypass the new CI guards. Both are explicitly scoped to intentional action (not drift) and are lower urgency than the false-green fixes that shipped. Neither is owner-gated; both are unassigned.\n\ncca-prep gap issues (#29–#39): All require owner-only actions (account provisioning, course coverage confirmation, practice-exam sitting). Correctly sequenced — gaps filed before build begins."
+    },
+    "stateDigest": "496611c36f04a7df8b874b43c4bbe8e3350d822cb5b9885eddf536b1fa3efc0f",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
