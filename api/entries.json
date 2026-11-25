@@ -1,5 +1,296 @@
 [
   {
+    "date": "2026-11-25",
+    "title": "Tuesday — CI Hardening Sweep: False Greens Eliminated Across Five Repos, ADR-0111 Formalizes Claim-Source Discipline",
+    "summary": "Tuesday's 13-commit interval closed false-green gaps in five repos and accepted ADR-0111, the fleet rule requiring every model-written claim to name its source and quote the words it rests on.",
+    "tags": [
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "workstation-yuri",
+        "type": "repo"
+      },
+      {
+        "name": "github-actions",
+        "type": "repo"
+      },
+      {
+        "name": "BookcaseDiscovery",
+        "type": "repo"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "adr",
+        "type": "practice"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "cca-prep",
+      "daily-logger",
+      "github-actions",
+      "BookcaseDiscovery",
+      "workstation-yuri"
+    ],
+    "commitCount": 13,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "False greens are worse than missing checks — every CI step must fail closed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "ADR-0111: unquoted model-written claims are hypotheses, not facts",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "G0 baselines fetched by exact SHA, not by branch or tag",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Glob-based CI test discovery so new files run automatically",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "BookcaseDiscovery's check-ci-tests guard: enforce the full suite structurally, not by convention",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/workstation-yuri",
+          "ref": "15",
+          "url": "https://github.com/ojfbot/workstation-yuri/pull/15"
+        },
+        "at": "2026-11-25T00:07:28.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "608",
+          "url": "https://github.com/ojfbot/daily-logger/pull/608"
+        },
+        "at": "2026-11-24T16:26:38.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "605",
+          "url": "https://github.com/ojfbot/daily-logger/pull/605"
+        },
+        "at": "2026-11-24T10:15:39.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "727",
+          "url": "https://github.com/ojfbot/core/pull/727"
+        },
+        "at": "2026-11-24T16:21:58.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "726",
+          "url": "https://github.com/ojfbot/core/pull/726"
+        },
+        "at": "2026-11-24T16:10:14.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/github-actions",
+          "ref": "5",
+          "url": "https://github.com/ojfbot/github-actions/pull/5"
+        },
+        "at": "2026-11-24T15:56:20.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "106",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/pull/106"
+        },
+        "at": "2026-11-24T15:51:38.000Z"
+      }
+    ],
+    "issueTimes": [
+      {
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "604",
+          "url": "https://github.com/ojfbot/daily-logger/issues/604"
+        },
+        "event": "updated",
+        "at": "2026-11-24T16:26:40.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "724",
+          "url": "https://github.com/ojfbot/core/issues/724"
+        },
+        "event": "updated",
+        "at": "2026-11-24T16:22:00.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "105",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/issues/105"
+        },
+        "event": "updated",
+        "at": "2026-11-24T15:51:40.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "729",
+          "url": "https://github.com/ojfbot/core/issues/729"
+        },
+        "event": "created",
+        "at": "2026-11-24T16:22:26.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "728",
+          "url": "https://github.com/ojfbot/core/issues/728"
+        },
+        "event": "created",
+        "at": "2026-11-24T16:22:24.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "725",
+          "url": "https://github.com/ojfbot/core/issues/725"
+        },
+        "event": "updated",
+        "at": "2026-11-24T16:22:28.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/core",
+          "ref": "687",
+          "url": "https://github.com/ojfbot/core/issues/687"
+        },
+        "event": "updated",
+        "at": "2026-11-24T20:43:41.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "609",
+          "url": "https://github.com/ojfbot/daily-logger/issues/609"
+        },
+        "event": "created",
+        "at": "2026-11-24T16:26:56.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/github-actions",
+          "ref": "6",
+          "url": "https://github.com/ojfbot/github-actions/issues/6"
+        },
+        "event": "created",
+        "at": "2026-11-24T16:22:27.000Z"
+      },
+      {
+        "source": {
+          "repo": "ojfbot/BookcaseDiscovery",
+          "ref": "107",
+          "url": "https://github.com/ojfbot/BookcaseDiscovery/issues/107"
+        },
+        "event": "created",
+        "at": "2026-11-24T15:51:55.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-25T09:57:44.639Z",
+        "runId": "45590078541",
+        "runNumber": 331,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/45590078541",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "f2abd16833032a187a1d9aaf927bef0c573bc869",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-25T09:55:52.000Z",
+          "startedAt": "2026-11-25T09:55:52.000Z",
+          "expectedAt": "2026-11-25T09:30:00.000Z",
+          "dispatchDelaySeconds": 1552,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v8-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "1f77b56f789d818b02f9b24cb876bb631c4a504c2c8f1246cf875237fadab523"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v3-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "3dfb130de94e33458f539a925d9d12446ffaaa88ad67a0b3c07801dbce21a325"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.3",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-24",
     "title": "Monday — Independent Audit Closes on the Nov 22 Article; Nov 23 Article Publishes",
     "summary": "Monday's two-commit interval merged the structured fourteen-finding audit of the Nov 22 article and published the Nov 23 article to main.",
