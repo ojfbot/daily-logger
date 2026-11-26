@@ -1,5 +1,192 @@
 [
   {
+    "date": "2026-11-26",
+    "title": "Wednesday — HouseholdAgentKit Founding PR Merges; Review Cascade and FleetRunner Promote Redesign Follow",
+    "summary": "Wednesday's interval merges HouseholdAgentKit's founding PR and immediately opens a twelve-PR review and hardening cascade while FleetRunner's promote script gets a single-decider redesign.",
+    "tags": [
+      {
+        "name": "HouseholdAgentKit",
+        "type": "concept"
+      },
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "cca-prep",
+      "daily-logger"
+    ],
+    "commitCount": 11,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "Rebase-merge strategy immediately surfaces a doctor identity gap",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "Twelve-PR hardening cascade immediately follows the founding merge",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "FleetRunner promote script redesigned to single-decider model",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "21:05Z",
+        "occurrence": 1,
+        "precision": "minute",
+        "at": "2026-11-25T21:05:56.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/HouseholdAgentKit",
+          "ref": "1",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/HouseholdAgentKit/pull/1"
+        }
+      },
+      {
+        "text": "10:09Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-25T10:09:00.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "610",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/610"
+        }
+      },
+      {
+        "text": "21:19Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-25T21:19:38.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/core",
+          "ref": "751",
+          "event": "opened",
+          "url": "https://github.com/ojfbot/core/pull/751"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/HouseholdAgentKit",
+          "ref": "1",
+          "url": "https://github.com/ojfbot/HouseholdAgentKit/pull/1"
+        },
+        "at": "2026-11-25T21:05:56.000Z"
+      },
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "610",
+          "url": "https://github.com/ojfbot/daily-logger/pull/610"
+        },
+        "at": "2026-11-25T10:09:00.000Z"
+      }
+    ],
+    "issueTimes": [
+      {
+        "source": {
+          "repo": "ojfbot/HouseholdAgentKit",
+          "ref": "45",
+          "url": "https://github.com/ojfbot/HouseholdAgentKit/issues/45"
+        },
+        "event": "created",
+        "at": "2026-11-25T21:07:31.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-26T09:59:19.222Z",
+        "runId": "45796833690",
+        "runNumber": 333,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/45796833690",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "eee97e8485d66e91ef74c097930111dd787a6d3a",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-26T09:57:50.000Z",
+          "startedAt": "2026-11-26T09:57:50.000Z",
+          "expectedAt": "2026-11-26T09:30:00.000Z",
+          "dispatchDelaySeconds": 1670,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v8-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "1f77b56f789d818b02f9b24cb876bb631c4a504c2c8f1246cf875237fadab523"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v3-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "3dfb130de94e33458f539a925d9d12446ffaaa88ad67a0b3c07801dbce21a325"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.3",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-25",
     "title": "Tuesday — CI Hardening Sweep: False Greens Eliminated Across Five Repos, ADR-0111 Formalizes Claim-Source Discipline",
     "summary": "Tuesday's 13-commit interval closed false-green gaps in five repos and accepted ADR-0111, the fleet rule requiring every model-written claim to name its source and quote the words it rests on.",

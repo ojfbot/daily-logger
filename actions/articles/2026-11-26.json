@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-26",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-26",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Action review is paused by ACTION_REVIEW_DISABLED; acceptance remains blocked"
+    },
+    "articleDigest": "d31a7f6fae15bba782aef32c78f37970fcbb5af2b3a09ad834cac2fbfbaa4d21",
+    "roundId": "b75e88cb31b94ff8e3f0ea73c9d9f06ea657ab46f2c6204c61f94b652138d0e5",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "dee388dcd83593bc0158eaa39e21ad6d120467b49e8889becaf76c5fefe68ce5",
+        "payload": {
+          "command": "gh pr merge 46 --rebase",
+          "description": "Merge #46 (rebase-identity fix) immediately — main currently reads the founding review as unverified, which is a broken state on the fleet's primary correctness surface. No recorded blocker; this should not be in a queue.",
+          "repo": "HouseholdAgentKit",
+          "status": "open",
+          "sourceDate": "2026-11-26"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "164c326c6db30a608899f3227ae6823371fd4a048e00a1ab23afc5b48af50877",
+        "payload": {
+          "command": "gh pr view 48 && gh pr merge 48 --rebase",
+          "description": "After #46 merges, begin the stacked doctor-fix sequence at #48 (doctor date/gate and known-holes). Merge order: #48 → #49 → #50 → #51. #52 is independent and can go in any order.",
+          "repo": "HouseholdAgentKit",
+          "status": "open",
+          "sourceDate": "2026-11-26"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "5c26cdcae9a76423b492d4a860d7db817a70f040e946666ba8255f65271f1055",
+        "payload": {
+          "command": "# Identify and assign Q-RV-1 owner",
+          "description": "Q-RV-1 is an unowned question from the independent review blocking #41 C3, which in turn blocks rung 3's owner step. Surface the question text, name an owner, and record the resolution target. No other action unblocks this path.",
+          "repo": "HouseholdAgentKit",
+          "status": "open",
+          "sourceDate": "2026-11-26"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "7f3f0e8a7d563d7326197378a0708a1deb84c3dbbcf3e7366f2dbd3e3045dd4e",
+        "payload": {
+          "command": "gh issue view 39",
+          "description": "Issue #39 (beat 1 live poll) has a Dec 2 critical path date — six days out from this interval. Confirm current status and whether a contingency exists if the date slips.",
+          "repo": "HouseholdAgentKit",
+          "status": "open",
+          "sourceDate": "2026-11-26"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "77725b6f466d539c7f6d31c2e4274dbc1e3eb66d828211b8dbf7f5ff3b3ae176",
+        "payload": {
+          "command": "# Telemetry stream: decide freeze, replace, or deprecate",
+          "description": "The skill telemetry stream has been frozen since 2026-05-12. Publishing 0% coverage as a signal while the instrument is broken is not credible. The decision — unfreeze, replace, or formally deprecate — needs to be recorded so the number either means something or stops appearing.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-26"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftCandidateEvidence": {
+      "version": "draft-candidate-evidence-v2",
+      "provenance": {
+        "kind": "deterministic-default",
+        "identity": "progressive-action-evidence-v7-exact-coverage-views",
+        "decision": "Initial-generation fallback requires every retained reference until trusted review classifies relevance; it cannot suppress dependencies or grant review authority."
+      },
+      "articleDate": "2026-11-26",
+      "articleDigest": "d31a7f6fae15bba782aef32c78f37970fcbb5af2b3a09ad834cac2fbfbaa4d21",
+      "reviewCycle": {
+        "phase": "generation"
+      },
+      "draftContextSha256": "518039b7b70272a5fd76f562533e63cc21b38e71a530844f84b744eee24bd4bc",
+      "candidatePayloadsSha256": "35c0d4e0d1fc995c33debf0f7e0095907d2a30fe7723970cf3e2e1ca369f5177",
+      "feedbackSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "articleStatusesSha256": "f2c3c8f0d2a0b91c8d00406e2f2da6665702a14636241c5453eb3e08a6648d4f",
+      "canonicalIndexSha256": "a64e5a628bf809e7d6387ef19c0dfe541bee2e850035958d33a41d2720653bcc",
+      "inputActionKeys": [],
+      "actionStateSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidates": [
+        {
+          "candidateId": "dee388dcd83593bc0158eaa39e21ad6d120467b49e8889becaf76c5fefe68ce5",
+          "payloadSha256": "9b092a80c24862d850457a728aee3859f35ca4b60115211c4e81c40d2c781016",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "164c326c6db30a608899f3227ae6823371fd4a048e00a1ab23afc5b48af50877",
+          "payloadSha256": "ad9e7a40ddc4a8117b6d720d90f96550b276af3cf289737340bdbcf891ec7c4d",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "5c26cdcae9a76423b492d4a860d7db817a70f040e946666ba8255f65271f1055",
+          "payloadSha256": "f0fae25643ed5942a309e334f79a3f64162ca2e4f54bdc679943ca28ec5b262b",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "7f3f0e8a7d563d7326197378a0708a1deb84c3dbbcf3e7366f2dbd3e3045dd4e",
+          "payloadSha256": "92d563173ea844983d1e4f123646ea9825b3c632966ac70f4eae7ba4ae700d65",
+          "references": [],
+          "actionRelations": []
+        },
+        {
+          "candidateId": "77725b6f466d539c7f6d31c2e4274dbc1e3eb66d828211b8dbf7f5ff3b3ae176",
+          "payloadSha256": "a74bb5b5e7d8076bcdabde357dd67b2644a2cf86e316f67913327d52c902bcc5",
+          "references": [],
+          "actionRelations": []
+        }
+      ],
+      "unassignedReferences": [
+        {
+          "classification": "required",
+          "reference": "core#656",
+          "role": "retained-context",
+          "reason": "Conservative deterministic default retains this reference as required until trusted classification."
+        }
+      ]
+    },
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "P1 disposition: #46 (rebase-identity fix) is open with no recorded blocker. Main currently reads the founding review as unverified. This should merge before any other HouseholdAgentKit PR. After #46, the entry point for the doctor-fix stack is #48; merge order is #48 → #49 → #50 → #51. #52 (engine stage-0) is independent and can merge in any order. #47 (settings script, covers #41 C2) is independent of the doctor stack. Q-RV-1 is an unowned question from the independent review blocking #41 C3; no owner or resolution timeline is recorded. P0 issues #39 (Dec 2 critical path, beat 1 live poll), #40 (cross-site CORS), and #42 (hardening from second review) are open and do not gate the current stacked sequence, but #39 has a hard external date six days out. Core #656 (commitlint + release-please) and #637 (FleetRunner takeover practice) have no recorded age or block status. Three daily-logger audit drafts (#606, #607, #612) have no recorded closure model. Skill telemetry stream frozen since 2026-05-12; no decision on replacement or unfreeze recorded."
+    },
+    "stateDigest": "3b2eaa5673f1bfe0bc87e1b04ca8a9942e55ecacfcf0e7f1814087199bbbd131",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
