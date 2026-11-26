@@ -2,27 +2,27 @@
   {
     "name": "daily-logger",
     "type": "repo",
-    "count": 125
+    "count": 126
   },
   {
     "name": "ci-cd",
     "type": "practice",
-    "count": 101
+    "count": 102
   },
   {
     "name": "core",
     "type": "repo",
-    "count": 94
+    "count": 95
   },
   {
     "name": "assistant-centric",
     "type": "concept",
-    "count": 83
+    "count": 84
   },
   {
     "name": "hardening",
     "type": "practice",
-    "count": 58
+    "count": 59
   },
   {
     "name": "model-behavior-as-design",
@@ -42,12 +42,12 @@
   {
     "name": "tooling-for-iteration",
     "type": "concept",
-    "count": 36
+    "count": 37
   },
   {
     "name": "security-as-emergent-ux",
     "type": "concept",
-    "count": 35
+    "count": 36
   },
   {
     "name": "rest-day",
@@ -390,6 +390,11 @@
     "count": 3
   },
   {
+    "name": "HouseholdAgentKit",
+    "type": "concept",
+    "count": 2
+  },
+  {
     "name": "native-dispatch",
     "type": "concept",
     "count": 2
@@ -568,11 +573,6 @@
     "name": "blogengine",
     "type": "repo",
     "count": 2
-  },
-  {
-    "name": "HouseholdAgentKit",
-    "type": "concept",
-    "count": 1
   },
   {
     "name": "env-convention",
