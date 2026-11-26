@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261126-6f2f95665eee",
+  "article": {
+    "date": "2026-11-26",
+    "sourceCommitSha": "6f2f95665eee5e10388c2e215130eb471e1157b2",
+    "blobSha": "facc8f9ab09ea637167717a58ad1819e885b659b"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-26T11:33:45Z",
+  "scope": "Bounded factual review of the final visible article and held suggestions against primary GitHub records and pinned repository sources; no article revision or acceptance, finding disposition, action admission or settlement, readiness or merge, workflow dispatch, runtime or schedule change.",
+  "fullRecordBlobSha": "164933b5bdd1298a43c5d89c4acce001c33b477a",
+  "fullRecordPath": "reviews/articles/2026-11-26-6f2f95665eee5e10388c2e215130eb471e1157b2.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The post-founding cascade had eight open PRs, not twelve",
+      "location": "The title, summary and line 11 say a twelve-PR cascade existed by the interval end; lines 46–48 identify it as PRs #44–#52.",
+      "explanation": "The complete repository pull-request inventory through the interval cutoff contains merged founding PR #1 and eight open follow-ons: #44, #46, #47, #48, #49, #50, #51 and #52. Number 45 is an issue, not a PR.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L3",
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L11",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/44",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/46",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/47",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/48",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/49",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/50",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/51",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/52"
+      ],
+      "correction": "Call this an eight-PR follow-on cascade and adjust the title, summary, opening and decision heading accordingly.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "The independent review was an OpenAI Codex model review, not a human audit",
+      "location": "Line 50 says the independent review is a human audit pass.",
+      "explanation": "The PR #1 review submission identifies itself as an independent review by OpenAI Codex. It was carried by the shared ojfbot account; neither the login nor model separation authenticates a human reviewer.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L50",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/1#pullrequestreview-6002962131"
+      ],
+      "correction": "Describe the numbered list as an OpenAI Codex independent model review; do not authenticate a human reviewer from the shared GitHub account or model-to-model separation.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "PR #46 has an explicit owner-only merge gate",
+      "location": "Lines 36 and 95 say no owner gate or blocker is recorded; the first held candidate at line 110 commands an immediate rebase merge.",
+      "explanation": "PR #46 says doctor.py is owner-merge. HouseholdAgentKit AGENTS.md says doctor checks wait for the owner and are never merged by an agent, while noting that the owner and agents share one GitHub identity.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L36",
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L95",
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L110",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/46",
+        "https://github.com/ojfbot/HouseholdAgentKit/blob/9ff50adbe0cc45ac77617107ce4709ea9057a78c/AGENTS.md"
+      ],
+      "correction": "Retain the explicit owner merge decision and different-agent review gate. Replace the immediate merge command with a supervised owner review and decision checkpoint.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "Issues #39, #40 and #42 do not all have P0 priority",
+      "location": "Lines 54 and 74 and the retained context at line 111 call all three P0 issues.",
+      "explanation": "Issue #39 is labeled P0, #40 is P1 and #42 is P2. Their gates also differ: #39 gates live beat #20, #40 gates rung 10 and #42 explicitly gates no rung.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L54",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/39",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/40",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/42"
+      ],
+      "correction": "Report the recorded P0, P1 and P2 priorities and their distinct gates instead of grouping all three as P0.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "Rung 3 waits on #38 and #41 C1/C2, not every #41 item or Q-RV-1",
+      "location": "Lines 72–74 and the third held candidate at line 110 make all C1–C5, including Q-RV-1 for C3, rung-3 prerequisites.",
+      "explanation": "Issue #41 explicitly says C1 and C2 come before rung 3 and repeats that rung 3 does not start before C1 and C2 are done. Q-RV-1 is assigned to the owner as the C3 decision; C4 and C5 are not named as rung-3 prerequisites. Issue #38 separately gates rung 3 on its doctor findings.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L72",
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L110",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/41",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/38"
+      ],
+      "correction": "Name #38 plus #41 C1 and C2 as the recorded rung-3 prerequisites. Keep Q-RV-1 as the owner decision for C3 without inflating it into the sole rung-3 unblocker or calling it unowned.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "The doctor stack's finding map is not findings 1–10 followed by smoke and console",
+      "location": "Line 50 says #48 through #51 cover the findings in order as findings 1–10, then smoke and console, then 11–16, then 18–21.",
+      "explanation": "PR #48 is finding 4's date and known-hole half; #49 is findings 3 and 8; #50 is findings 11–16; #51 is findings 18–21; and independent #52 supplies finding 4's engine half. The PR bodies do not assign findings 1–10 to #48.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L50",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/48",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/49",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/50",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/51",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/52"
+      ],
+      "correction": "Use the exact recorded mapping and keep #52's independent second half of finding 4 visible; do not invent a sequential 1–10 block.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Only the legacy telemetry stream is frozen; the collector's primary source is live",
+      "location": "Line 78 says the telemetry stream has been frozen since 2026-05-12; the fifth held candidate at line 110 proposes replacing or deprecating the skill telemetry stream on that premise.",
+      "explanation": "The pinned collector makes skill-dispositions.jsonl the live primary source and uses frozen skill-telemetry.jsonl only as a legacy fallback. It records the selected source and newest timestamp and gives that provenance to the drafting model.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L78",
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/_articles/2026-11-26.md#L110",
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/src/collect-telemetry.ts#L124-L128",
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/src/collect-telemetry.ts#L154-L168",
+        "https://github.com/ojfbot/daily-logger/blob/6f2f95665eee5e10388c2e215130eb471e1157b2/src/generate-article.ts#L292-L303"
+      ],
+      "correction": "Distinguish the live dispositions ledger from the frozen legacy fallback and report the captured source and freshness; inspect those fields before proposing instrument replacement.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
