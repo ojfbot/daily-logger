@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261125-eee97e8485d6",
+  "article": {
+    "date": "2026-11-25",
+    "sourceCommitSha": "eee97e8485d66e91ef74c097930111dd787a6d3a",
+    "blobSha": "862334d1d62007faecbab13c52017c9fbfda07e5"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-25T11:40:20Z",
+  "scope": "Bounded factual review of the final visible article and held suggestions against primary GitHub records and pinned repository sources; no article revision or acceptance, finding disposition, action admission or settlement, readiness or merge, workflow dispatch, runtime or schedule change.",
+  "fullRecordBlobSha": "22b0896c6e26257ee6c671a23d52ef3cf2d0211e",
+  "fullRecordPath": "reviews/articles/2026-11-25-eee97e8485d66e91ef74c097930111dd787a6d3a.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "BookcaseDiscovery ran 92 files and 1,959 tests, not 91 and 195",
+      "location": "Line 49 says the full run covered all 91 files and surfaced 195 passing tests, with 89 files passing and 3 skipped.",
+      "explanation": "BookcaseDiscovery #106 records 92 files: 89 passed and 3 skipped, with 1,959 tests passed and 18 skipped. The article's own file split totals 92.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L49",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/106"
+      ],
+      "correction": "Report 92 collected files, 89 passed and 3 skipped, with 1,959 passing tests and 18 skipped tests, attributed to #106.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "A misnamed test file is excluded, not silently included",
+      "location": "Line 87 says a misnamed file silently joins the suite, then says a file outside the naming convention is silently excluded.",
+      "explanation": "Core #727's guard covers tracked files matching the named test patterns. A file outside those patterns is not discovered; #728 separately records deliberate command and filter bypasses.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L87",
+        "https://github.com/ojfbot/core/pull/727",
+        "https://github.com/ojfbot/core/issues/728"
+      ],
+      "correction": "Say a correctly named file joins automatically while a misnamed file can be silently excluded; remove the contradictory sentence.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "Known bypasses remain; the sweep did not eliminate every false-green path",
+      "location": "The title and opening say false greens were eliminated across five repos, and line 57 says all five audited every exit path.",
+      "explanation": "Core #728 and BookcaseDiscovery #107 list concrete, still-open bypasses in the new guards, including deliberate named-file or filter edits, unchecked trigger types and needs, and shell control-flow changes.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L3",
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L57",
+        "https://github.com/ojfbot/core/issues/728",
+        "https://github.com/ojfbot/BookcaseDiscovery/issues/107"
+      ],
+      "correction": "Say the interval closed the identified accidental false-green paths and added structural guards, while deliberate bypasses remain tracked in #728 and #107.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "cca-prep #40 was open, not landed",
+      "location": "Line 113 says the LCAE pack landed this interval; line 127 calls it in review.",
+      "explanation": "cca-prep #40 remained open and unmerged at the reviewed source revision.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L113",
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L127",
+        "https://github.com/ojfbot/cca-prep/pull/40"
+      ],
+      "correction": "Say the LCAE pack opened for review and filed gaps #29–#39; do not call it landed until the PR merges.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "One grilling ticket was closed, and the open prototype is omitted",
+      "location": "The retained context at line 154 says nine grilling tickets #736–#743 and #746 are all open.",
+      "explanation": "Core #737 was closed with an owner ruling before generation. #744 is an open prototype. #745 records the earlier set as eight grilling tickets and one prototype; #746 was added later as another grilling ticket.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L154",
+        "https://github.com/ojfbot/core/issues/737",
+        "https://github.com/ojfbot/core/issues/744",
+        "https://github.com/ojfbot/core/pull/745",
+        "https://github.com/ojfbot/core/issues/746"
+      ],
+      "correction": "Report eight open grilling tickets, one closed grilling ticket (#737), and one open prototype (#744).",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "PRs #606 and #607 already identify their reviewer, findings and next step",
+      "location": "Lines 129–136 call #606/#607 audits with no reviewer or close event; the held candidate at line 146 proposes viewing them to discover their disposition.",
+      "explanation": "Both PR bodies name the Codex independent reviewer, exact source/blob, finding counts, validation and scope. Their exact-source handoff comments record that they intentionally remain Draft with findings open and await supervised disposition.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L129",
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L146",
+        "https://github.com/ojfbot/daily-logger/pull/606",
+        "https://github.com/ojfbot/daily-logger/pull/606#issuecomment-7130529826",
+        "https://github.com/ojfbot/daily-logger/pull/607",
+        "https://github.com/ojfbot/daily-logger/pull/607#issuecomment-7130535634"
+      ],
+      "correction": "Say both reviews are complete as bounded Draft review-data proposals and await supervised finding disposition; do not propose a duplicate lookup as new work.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "The named journal range contains seven open service/journal slices, not six",
+      "location": "Line 132 calls #575–#584 six journal refactor slices.",
+      "explanation": "The open service/journal Drafts are #575, #576 and #580–#584: seven. #577 is a closed integration PR, #578 is the article PR and #579 is a review PR.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L132",
+        "https://github.com/ojfbot/daily-logger/pull/575",
+        "https://github.com/ojfbot/daily-logger/pull/576",
+        "https://github.com/ojfbot/daily-logger/pull/580",
+        "https://github.com/ojfbot/daily-logger/pull/581",
+        "https://github.com/ojfbot/daily-logger/pull/582",
+        "https://github.com/ojfbot/daily-logger/pull/583",
+        "https://github.com/ojfbot/daily-logger/pull/584"
+      ],
+      "correction": "Report seven open service/journal Drafts in the range and distinguish #577–#579 as non-slice PRs.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "Only the legacy skill stream is frozen; the collector uses the live dispositions ledger",
+      "location": "The retained context at line 155 says the stream is frozen since 2026-05-12 and treats 0% quality coverage as a lower bound for that reason.",
+      "explanation": "The pinned collector makes skill-dispositions.jsonl the live primary source and uses the frozen skill-telemetry.jsonl only as a fallback; live disposition invocations are included in quality coverage.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L155",
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/src/collect-telemetry.ts#L124-L128",
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/src/collect-telemetry.ts#L253-L257"
+      ],
+      "correction": "Distinguish the live dispositions ledger from the frozen legacy fallback and report the collector's recorded source and freshness.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C9",
+      "classification": "confirmed_error",
+      "title": "The held Bookcase command can hide a failing test run and repeats completed validation",
+      "location": "The fourth held candidate at line 146 pipes pnpm test to head -40 and says it should list all 91 files and preserve failure.",
+      "explanation": "BookcaseDiscovery #106 already records the guard and full-suite run with 92 files. Bash returns the last pipeline command's status unless pipefail is enabled, so head can report success after pnpm test fails; with pipefail, truncation can instead surface upstream SIGPIPE.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L146",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/106",
+        "https://www.gnu.org/software/bash/manual/html_node/Pipelines.html"
+      ],
+      "correction": "Use #106 as the existing receipt. If a fresh supervised run is needed, run pnpm check:ci-tests && pnpm test without the truncating pipeline, or capture output separately while preserving the test command's status.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "No fleet-wide pre-fix CI baseline was established by the checked evidence",
+      "location": "Line 61 says the fleet has no CI coverage baseline predating today's fixes that it can defend.",
+      "explanation": "Core #727 and BookcaseDiscovery #106 establish gaps in those two repos, not the nonexistence of any defensible baseline across the whole fleet. The bounded review found no exhaustive fleet inventory proving that negative.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L61",
+        "https://github.com/ojfbot/core/pull/727",
+        "https://github.com/ojfbot/BookcaseDiscovery/pull/106"
+      ],
+      "correction": "Limit the claim to the two documented repos or cite an exhaustive fleet baseline audit; until then label the fleet-wide absence unverified.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U2",
+      "classification": "unverified_claim",
+      "title": "The trust-build roadmap does not visibly record the asserted CI prerequisite",
+      "location": "Lines 59 and 105 say PH8–PH13 depends on every automation step failing closed and that this prerequisite is recorded in the Core trust-build plan.",
+      "explanation": "The pinned PH8–PH13 roadmap records authority service, enforcement, outside review, evidence, stops and tests goals, but the checked plan does not state this specific CI-integrity prerequisite. #727 and #728 do not establish a PH8 entrance dependency.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L59",
+        "https://github.com/ojfbot/daily-logger/blob/eee97e8485d66e91ef74c097930111dd787a6d3a/_articles/2026-11-25.md#L105",
+        "https://github.com/ojfbot/core/blob/bc7b5df738883aa175f01b64ad2fa32111208df8/decisions/northstar/roadmap-l2-ojfbot.md",
+        "https://github.com/ojfbot/core/pull/727",
+        "https://github.com/ojfbot/core/issues/728"
+      ],
+      "correction": "Cite the exact plan line that records this prerequisite or describe the connection as an interpretation rather than a recorded gate.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
