@@ -12,7 +12,7 @@
   },
   "reviewedAt": "2026-11-27T11:35:35Z",
   "scope": "Final visible Draft; exact source, action-map and deployed JSON bytes; public rendered prose and links; DailyLogger #608, #611, #613 and #615 plus cleaner workflow receipts; HouseholdAgentKit #1, #38-#42, #45-#52; core #647, #731, #733-#745 and #747-#751; cca-prep #38-#41; all-open review PR census and all-state exact-source deduplication. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness or merge, workflow dispatch, runtime, or scheduling authority.",
-  "fullRecordBlobSha": "b7eeb51eb7d094912a9999ffb85ff133b0c05f3c",
+  "fullRecordBlobSha": "1b78f5788d13a0a54883f09020a225bd12e4a9cb",
   "fullRecordPath": "reviews/articles/2026-11-27-a370c3a2195854bf6d496f0a46e388c002e7ea1e.md",
   "result": "completed",
   "findings": [
@@ -104,7 +104,7 @@
         "https://github.com/ojfbot/core/issues/744",
         "https://github.com/ojfbot/core/pull/745"
       ],
-      "correction": "Report six closed research tickets, one closed grilling ruling, six open grilling questions and prototype #744 waiting on #741/#742. Remove the fabricated sequencing decision and placeholder comment command.",
+      "correction": "Report six closed research tickets, one closed grilling ruling, seven open grilling questions and prototype #744 waiting on #741/#742. Remove the fabricated sequencing decision and placeholder comment command.",
       "disposition": { "kind": "open" }
     },
     {
