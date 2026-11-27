@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261127-a370c3a21958",
+  "article": {
+    "date": "2026-11-27",
+    "sourceCommitSha": "a370c3a2195854bf6d496f0a46e388c002e7ea1e",
+    "blobSha": "c64dcbc1f3e201615a99c9e8a0f13b20172d0c76"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review; exact model/reasoning configuration unavailable",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-27T11:35:35Z",
+  "scope": "Final visible Draft; exact source, action-map and deployed JSON bytes; public rendered prose and links; DailyLogger #608, #611, #613 and #615 plus cleaner workflow receipts; HouseholdAgentKit #1, #38-#42, #45-#52; core #647, #731, #733-#745 and #747-#751; cca-prep #38-#41; all-open review PR census and all-state exact-source deduplication. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness or merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "1b78f5788d13a0a54883f09020a225bd12e4a9cb",
+  "fullRecordPath": "reviews/articles/2026-11-27-a370c3a2195854bf6d496f0a46e388c002e7ea1e.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "The previous article missed both service targets",
+      "location": "Line 17 says the November 26 daily publication pipeline ran as expected.",
+      "explanation": "November 26 provenance records run #333 starting at 03:57:50 Chicago, 1,670 seconds after the 03:30 target. PR #613 opened at 04:06:23 and merged at 04:09:04 Chicago, after the 04:00 public-draft goal.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a370c3a2195854bf6d496f0a46e388c002e7ea1e/_articles/2026-11-27.md#L17",
+        "https://log.jim.software/api/articles/2026-11-26.json",
+        "https://github.com/ojfbot/daily-logger/pull/613"
+      ],
+      "correction": "Separate start, generation, merge and public availability. Say generation started 27 minutes 50 seconds after the 03:30 target and the source merged after 04:00; initial public availability remains unknown.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Six gap issues are named, and the follow-up PRs cover only three",
+      "location": "Line 25 says five known gaps were filed as #38-#42 and #45 and PRs #46-#52 address those gaps.",
+      "explanation": "The citation names six issues. PR #46 closes #45, #47 addresses #41 C2, and #48-#52 address parts of #38; issues #39, #40 and #42 are not covered by those seven PRs.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a370c3a2195854bf6d496f0a46e388c002e7ea1e/_articles/2026-11-27.md#L25",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/38",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/39",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/40",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/41",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/42",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/45"
+      ],
+      "correction": "Say six gap issues were filed and partition the follow-ups accurately: #46 to #45; #47 to #41 C2; #48-#52 to #38. Keep #39, #40 and #42 separate.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "PR #52 is independent of the doctor stack",
+      "location": "Lines 45 and 52 and the held #48 action say #52 awaits or belongs to the #48-#51 stack.",
+      "explanation": "HouseholdAgentKit #52 says it is independent of #48-#51, is based on main and can merge in any order. It changes engine stage-0 validation; #48-#51 are the stacked doctor changes.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a370c3a2195854bf6d496f0a46e388c002e7ea1e/_articles/2026-11-27.md#L45",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/52"
+      ],
+      "correction": "Keep #48 to #51 as one stack and list #52 as an independent #38 fix. Issue #38 closes after both tracks land, but neither is a merge prerequisite for the other.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "PR #47 does not wait on C1 and C3",
+      "location": "Lines 47 and 57 say #47 is blocked on issue #41 C1/C3 before the owner step can run.",
+      "explanation": "PR #47 implements C2 on main and waits for owner review/merge because it changes the settings script. Issue #41 says rung 3 waits for C1 and C2; C3 separately waits on Q-RV-1. It does not make C1 or C3 prerequisites for merging #47.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a370c3a2195854bf6d496f0a46e388c002e7ea1e/_articles/2026-11-27.md#L47",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/47",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/41"
+      ],
+      "correction": "Say #47 is the C2 fix and awaits owner review/merge. Keep the wider gates separate: rung 3 waits for C1 and C2, while C3 waits for Q-RV-1.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The cleaner failure mode is diagnosed in the workflow logs",
+      "location": "Lines 37 and 47 call the root cause undiagnosed; the first held candidate asks whether logs diagnose it.",
+      "explanation": "Cleaner runs 45591610525 and 45798226223, both before the article, fail because many validation model replies are prose rather than required JSON. Run 45979937919 repeats the same failure after publication. Checkout, dependency install, authentication and push access pass.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a370c3a2195854bf6d496f0a46e388c002e7ea1e/_articles/2026-11-27.md#L37",
+        "https://github.com/ojfbot/daily-logger/actions/runs/45591610525",
+        "https://github.com/ojfbot/daily-logger/actions/runs/45798226223",
+        "https://github.com/ojfbot/daily-logger/actions/runs/45979937919"
+      ],
+      "correction": "Name repeated validator output-shape rejection as the immediate failure mode and investigate why the model/validator contract is not holding. Do not present permissions or dependencies as equally live causes.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "The wayfinder research and grilling phase is not complete",
+      "location": "Lines 47, 62, 81 and 84 say eight grilling issues are closed, research is complete and #744 waits on a before/after-#745 owner decision.",
+      "explanation": "#733-#735 and #747-#749 are research tickets, not grilling tickets. Only #737 is closed among the original grilling set; #736 and #738-#743 remain open. Prototype #744 explicitly waits on #741 and #742 and records no before/after-#745 binary. PR #745 remains Draft and says pnpm verify has not run.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a370c3a2195854bf6d496f0a46e388c002e7ea1e/_articles/2026-11-27.md#L47",
+        "https://github.com/ojfbot/core/issues/736",
+        "https://github.com/ojfbot/core/issues/737",
+        "https://github.com/ojfbot/core/issues/738",
+        "https://github.com/ojfbot/core/issues/744",
+        "https://github.com/ojfbot/core/pull/745"
+      ],
+      "correction": "Report six closed research tickets, one closed grilling ruling, seven open grilling questions and prototype #744 waiting on #741/#742. Remove the fabricated sequencing decision and placeholder comment command.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "Twenty review Drafts are open, and #515 is the oldest",
+      "location": "Lines 49 and 68-71 say four review-only Drafts are open and #606 is the oldest at four days.",
+      "explanation": "The open-PR census found twenty review Drafts. PR #515 opened on October 31 and remains Draft/open; #524 and #526 also predate #606 and remain open.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a370c3a2195854bf6d496f0a46e388c002e7ea1e/_articles/2026-11-27.md#L49",
+        "https://github.com/ojfbot/daily-logger/pull/515",
+        "https://github.com/ojfbot/daily-logger/pull/524",
+        "https://github.com/ojfbot/daily-logger/pull/526",
+        "https://github.com/ojfbot/daily-logger/pull/606"
+      ],
+      "correction": "Say twenty review Drafts are open and #515 is the oldest. Do not infer a four-day age or cadence from the truncated recent subset.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C8",
+      "classification": "confirmed_error",
+      "title": "cca-prep #39 is a broad gap tracker, not a catalog-registration gate",
+      "location": "Lines 47 and 86 group #38/#39 as owner-gated catalog visibility and northstar registration with code unblocked.",
+      "explanation": "cca-prep #38 is the P3 skill/northstar/guide-fetch decision. Issue #39 is the whole prioritized LCAE gap tracker with P1, P2 and P3 work across accounts, course coverage, missing docs, practice exam, telemetry, readiness and deck/lint work.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a370c3a2195854bf6d496f0a46e388c002e7ea1e/_articles/2026-11-27.md#L47",
+        "https://github.com/ojfbot/cca-prep/issues/38",
+        "https://github.com/ojfbot/cca-prep/issues/39"
+      ],
+      "correction": "Attribute catalog/northstar visibility to #38 only. Describe #39 as the broader prioritized gap tracker and preserve its separate owner and technical dependencies.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C9",
+      "classification": "confirmed_error",
+      "title": "The #731 close command lacks conductor authority",
+      "location": "The second held candidate at line 81 closes #731 while claiming conductor authority; line 83 calls it immediate if conductor and owner are the same person.",
+      "explanation": "Core #751 says #731 is left open for the conductor to close. It does not delegate that authority to an article-action runner or establish that the proposed submitting actor is the conductor. The action card itself says the candidate is held and non-dispatchable.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/a370c3a2195854bf6d496f0a46e388c002e7ea1e/_articles/2026-11-27.md#L81",
+        "https://github.com/ojfbot/core/pull/751"
+      ],
+      "correction": "Keep the candidate held. Ask the identified conductor to confirm and perform closure, or provide durable delegation; do not execute the close command or claim conductor authority from the article.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
