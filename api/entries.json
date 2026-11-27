@@ -1,5 +1,154 @@
 [
   {
+    "date": "2026-11-27",
+    "title": "Thursday — Single Article Commit; HouseholdAgentKit Cascade Deepens as FleetRunner Promote Redesign Advances",
+    "summary": "Thursday's interval produced one commit — the daily article — while in-flight work on HouseholdAgentKit's twelve-PR review cascade and FleetRunner's promote redesign continued in open PRs.",
+    "tags": [
+      {
+        "name": "daily-logger",
+        "type": "repo"
+      },
+      {
+        "name": "core",
+        "type": "repo"
+      },
+      {
+        "name": "HouseholdAgentKit",
+        "type": "concept"
+      },
+      {
+        "name": "cca-prep",
+        "type": "repo"
+      },
+      {
+        "name": "hardening",
+        "type": "practice"
+      },
+      {
+        "name": "ci-cd",
+        "type": "practice"
+      },
+      {
+        "name": "assistant-centric",
+        "type": "concept"
+      },
+      {
+        "name": "tooling-for-iteration",
+        "type": "concept"
+      },
+      {
+        "name": "rest-day",
+        "type": "activity"
+      },
+      {
+        "name": "security-as-emergent-ux",
+        "type": "concept"
+      }
+    ],
+    "reposActive": [
+      "core",
+      "cca-prep",
+      "daily-logger"
+    ],
+    "commitCount": 1,
+    "activityType": "hardening",
+    "schemaVersion": 1,
+    "status": "draft",
+    "decisions": [
+      {
+        "title": "HouseholdAgentKit's twelve-PR cascade is ordered by dependency, not speed",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "FleetRunner promote redesign moves authority to a single server-side decider",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      },
+      {
+        "title": "daily-cleaner.yml pipeline alert is an open operational signal, not a dismissed incident",
+        "summary": "",
+        "repo": "daily-logger",
+        "relatedTags": []
+      }
+    ],
+    "actions": [],
+    "timeReferences": [
+      {
+        "text": "10:09Z",
+        "occurrence": 0,
+        "precision": "minute",
+        "at": "2026-11-26T10:09:04.000Z",
+        "evidence": {
+          "kind": "github-pull-request",
+          "repo": "ojfbot/daily-logger",
+          "ref": "613",
+          "event": "merged",
+          "url": "https://github.com/ojfbot/daily-logger/pull/613"
+        }
+      }
+    ],
+    "shipmentTimes": [
+      {
+        "status": "available",
+        "source": {
+          "repo": "ojfbot/daily-logger",
+          "ref": "613",
+          "url": "https://github.com/ojfbot/daily-logger/pull/613"
+        },
+        "at": "2026-11-26T10:09:04.000Z"
+      }
+    ],
+    "provenance": {
+      "schemaVersion": 1,
+      "run": {
+        "kind": "github-actions",
+        "capturedAt": "2026-11-27T10:05:14.796Z",
+        "runId": "45978873009",
+        "runNumber": 335,
+        "runAttempt": 1,
+        "event": "workflow_dispatch",
+        "url": "https://github.com/ojfbot/daily-logger/actions/runs/45978873009",
+        "workflowRef": "ojfbot/daily-logger/.github/workflows/daily-blog.yml@refs/heads/main",
+        "sourceSha": "6f2f95665eee5e10388c2e215130eb471e1157b2",
+        "actor": "ojfbot",
+        "scheduleExpression": "30 3 * * *",
+        "timezone": "America/Chicago",
+        "timing": {
+          "status": "available",
+          "createdAt": "2026-11-27T10:03:40.000Z",
+          "startedAt": "2026-11-27T10:03:40.000Z",
+          "expectedAt": "2026-11-27T09:30:00.000Z",
+          "dispatchDelaySeconds": 2020,
+          "startDelaySeconds": 0
+        }
+      },
+      "authoring": [
+        {
+          "role": "draft",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "article-v8-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "1f77b56f789d818b02f9b24cb876bb631c4a504c2c8f1246cf875237fadab523"
+        },
+        {
+          "role": "synthesis",
+          "model": "claude-sonnet-4-6",
+          "promptVersion": "council-synthesis-v3-2026-11-19-fleet-roadmap-pulse",
+          "promptSha256": "3dfb130de94e33458f539a925d9d12446ffaaa88ad67a0b3c07801dbce21a325"
+        }
+      ],
+      "runtime": {
+        "nodeVersion": "v24.22.3",
+        "packageVersion": "0.1.0",
+        "runnerOs": "Linux",
+        "runnerArch": "X64",
+        "job": "generate"
+      }
+    }
+  },
+  {
     "date": "2026-11-26",
     "title": "Wednesday — HouseholdAgentKit Founding PR Merges; Review Cascade and FleetRunner Promote Redesign Follow",
     "summary": "Wednesday's interval merges HouseholdAgentKit's founding PR and immediately opens a twelve-PR review and hardening cascade while FleetRunner's promote script gets a single-decider redesign.",

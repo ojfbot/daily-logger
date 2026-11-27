@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-27",
+  "suggestions": [],
+  "decisions": [],
+  "snapshot": {
+    "date": "2026-11-27",
+    "status": "draft",
+    "review": {
+      "state": "pending",
+      "reason": "Ambiguous or unsupported exact-command PR target; review pending"
+    },
+    "articleDigest": "8ab4e7c238ff6b758b63be365bc6ed60ae19497b27776d8d0d473fe90820ddd0",
+    "roundId": "c63072bfedece5d2e74f44cd5c6b46204f9117b993c0b07d90e6199f9e5e234f",
+    "reviewCycle": {
+      "phase": "generation"
+    },
+    "actionKeys": [],
+    "draftCandidates": [
+      {
+        "candidateId": "10728020f2331ef115f4f29ffc3657326940dcc03c6293ecdb4bdaf0f286abcb",
+        "payload": {
+          "command": "gh issue view 611 --repo ojfbot/daily-logger && gh run list --workflow=daily-cleaner.yml --repo ojfbot/daily-logger --limit 5",
+          "description": "Inspect the daily-cleaner.yml failure: retrieve the issue body and the last five workflow run outcomes to determine whether the root cause is diagnosable from logs before deciding whether a fix PR is warranted or the failure is a known transient.",
+          "repo": "daily-logger",
+          "status": "open",
+          "sourceDate": "2026-11-27"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "ba14fae458c45a095b33b56ef67a527bea954084d1860d33276439d6354dd49a",
+        "payload": {
+          "command": "gh pr close 731 --repo ojfbot/core --comment 'Superseded by #751 (single-decider promote redesign). Closing per conductor authority.'",
+          "description": "Close core #731 — no technical blocker exists; the original promote script is superseded by #751 and is left open only for the conductor to formally close.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-27"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "1c7bee076dc45089163ea4d5ab0e722297bbc8e756d222ea846083d57ec78c58",
+        "payload": {
+          "command": "gh pr view 745 --repo ojfbot/core && gh issue comment <OWNER_ISSUE> --body 'Research phase complete (#733–#737, #747–#749 closed). Decision needed: does prototype #744 run before or after #745 merges to ready?'",
+          "description": "Surface the binary sequencing decision on core #745 to the owner. Research is complete; the draft is parked on an unanswered question that has not been recorded as formally asked.",
+          "repo": "core",
+          "status": "open",
+          "sourceDate": "2026-11-27"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      },
+      {
+        "candidateId": "728db8168c1d82d4c857ab22a11b406c6261bc5222af5d9752ec9b63e757ff71",
+        "payload": {
+          "command": "gh pr view 48 --repo ojfbot/HouseholdAgentKit",
+          "description": "Confirm PR #48 (passed-date gate + known-holes) is review-ready and has no unresolved comments — it is the base of the #48→#49→#50→#51→#52 stack and unblocks the entire HouseholdAgentKit merge sequence.",
+          "repo": "HouseholdAgentKit",
+          "status": "open",
+          "sourceDate": "2026-11-27"
+        },
+        "review": {
+          "state": "awaiting-review"
+        }
+      }
+    ],
+    "draftContext": {
+      "kind": "retained",
+      "markdown": "The daily-cleaner.yml failure (daily-logger #611) has no open fix PR and no diagnosed root cause in the supplied evidence. The independent action review should determine: (a) whether the failure mode is known — misconfigured path, missing dependency, permissions, or other — and (b) whether this is a transient the alert system will auto-resolve or whether a fix PR needs to be opened. This is the one open liability with no named next action.\n\nCore #731 (original promote script) has no technical blocker on closure — the conductor can close it now. The conductor role is not named in the supplied evidence. If the conductor is the same person as the fleet owner, no handoff is required; the action is immediate. If not, the name and notification path are missing from the evidence.\n\nCore #745 (wayfinder map, draft): the owner decision on whether prototype #744 precedes or follows the draft merge has not been recorded as asked or answered in the supplied evidence. Research phase is complete. The decision is binary and unblocked on the technical side.\n\nHouseholdAgentKit #47 (settings script): blocked on issue #41 C1/C3. The owner of that issue is not named in the supplied evidence. Age of the block is not recorded.\n\ncca-prep owner decision on catalog visibility and northstar registration (issue #38 / #39): code side unblocked, decision not recorded as asked or answered.\n\nSkill telemetry: the legacy stream has been frozen since 2026-05-12. No replacement stream, tracking issue, or migration plan is referenced in the supplied evidence. Whether this is deferred, abandoned, or actively being replaced is unknown. The 100% quality coverage figure is computed over zero sessions and carries no interpretive weight.\n\nFrame relevance: none of Thursday's work directly advanced the Frame Tier-A cluster. The HouseholdAgentKit cascade and FleetRunner promote redesign are fleet-wide infrastructure work. A quiet Frame interval is a legitimate status.\n\nThe four daily-logger audit drafts (#606, #607, #612, #614) are review-only. Their merge cadence and reviewer are not documented in the supplied evidence. Whether the oldest (#606, four days) is within the intended cadence is unknown."
+    },
+    "stateDigest": "b4d4bae926709a373b175070fbc70128ecd02fb93ca8fdda1676e4a40a364cf4",
+    "verification": {
+      "proposer": "not-verified",
+      "verifier": "not-verified",
+      "promptVersion": "action-review-pending-v5-draft-candidate-custody",
+      "proposalSha256": "62a2fed3d6e08c44835fce71f02210b1ddabfb066e39edf1e6c261988f824dd3",
+      "verdicts": []
+    },
+    "sources": [],
+    "evidenceRequests": [],
+    "rejected": []
+  }
+}
