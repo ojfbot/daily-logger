@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "id": "codex-independent-20261124-56a13eb0c1ce",
+  "article": {
+    "date": "2026-11-24",
+    "sourceCommitSha": "56a13eb0c1ceeb6c60f2219e9b426f355785be80",
+    "blobSha": "5935640879403d75891518ab76a23772e29fa0b9"
+  },
+  "reviewer": {
+    "name": "Codex independent-daily-article-review (OpenAI; model configuration unavailable)",
+    "sessionId": null
+  },
+  "reviewedAt": "2026-11-24T11:40:30Z",
+  "scope": "Final visible Draft; exact source/deployed/article/action bytes; merged November 22 audit record and source history; current article-review and disposition contracts; DailyLogger service/review-history PRs; HouseholdAgentKit PR #1 reviews and P0 issues; core #724 and trust-phase proof rules; and all-state same-source review searches. Read-only review; no article revision or acceptance, finding disposition, action admission or settlement, readiness, merge, workflow dispatch, runtime, or scheduling authority.",
+  "fullRecordBlobSha": "fa260ecefad7acd200f1d78e30c69c4ff644e9f9",
+  "fullRecordPath": "reviews/articles/2026-11-24-56a13eb0c1ceeb6c60f2219e9b426f355785be80.md",
+  "result": "completed",
+  "findings": [
+    {
+      "id": "C1",
+      "classification": "confirmed_error",
+      "title": "Run #326 generated the article; it did not produce the audit findings",
+      "location": "Line 17 labels run #326 as the CI run that produced the findings but links to pull request #326.",
+      "explanation": "The merged November 22 review record says a Claude Code conductor session performed the review. Actions run 45048728056, run number 326, generated the November 22 article; PR #602 later published the review data.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/_articles/2026-11-24.md#L17",
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/reviews/articles/2026-11-22-14fe42a1d2bdce692e07ef4c8ecb547e050a9352.md",
+        "https://github.com/ojfbot/daily-logger/actions/runs/45048728056",
+        "https://github.com/ojfbot/daily-logger/pull/602"
+      ],
+      "correction": "Identify run 326 as article generation, the Claude session as the reported reviewer and PR #602 as publication. Do not claim CI produced the findings or link the run number to PR #326.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C2",
+      "classification": "confirmed_error",
+      "title": "Finding disposition belongs to supervised editorial authority",
+      "location": "Lines 17 and 31 plus retained context say the findings await settlement or a ruling by the independent action review.",
+      "explanation": "The article-review method assigns acceptance, revision or rejection to the human editor. The review schema records accepted/rejected findings with an actor and evidence, while the November 22 record explicitly disclaims finding-disposition and action-review authority. Action review governs held suggested actions, not article findings.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/_articles/2026-11-24.md#L17",
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/docs/article-review.md",
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/reviews/articles/2026-11-22-14fe42a1d2bdce692e07ef4c8ecb547e050a9352.md"
+      ],
+      "correction": "Say all fourteen findings remain open pending supervised editorial/operator disposition. Keep action-candidate review and article-finding disposition separate.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C3",
+      "classification": "confirmed_error",
+      "title": "The proposed C6 replay check compares the wrong heads",
+      "location": "Line 43 calls the replay tree byte-identical to the staged head and recommends git diff <staged-head> HEAD.",
+      "explanation": "The November 22 review says a direct diff between staged head 3e43c07 and replay head 2d19aaa shows seven intervening review files. PR #592 supports equality of each patch against its appropriate base, not equality of the two heads.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/_articles/2026-11-24.md#L43",
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/reviews/articles/2026-11-22-14fe42a1d2bdce692e07ef4c8ecb547e050a9352.md#c6--the-replay-check-is-not-an-empty-diff-against-3e43c07",
+        "https://github.com/ojfbot/daily-logger/pull/592"
+      ],
+      "correction": "Compare each patch to its own base, or explicitly account for intervening review paths. Do not use a direct staged-head-to-HEAD diff as proof of an empty or byte-identical tree.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C4",
+      "classification": "confirmed_error",
+      "title": "RETRO-0 preserves a separate owner-step proof rule",
+      "location": "Line 51 says every PH8 slice must close with a closed issue naming a merged PR as closer.",
+      "explanation": "Core #694 and #723 preserve two proof kinds: PR-type slices need a merged-PR close-event source; owner-step slices need a completed-status close and are read by hand. A not-planned close fails.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/_articles/2026-11-24.md#L51",
+        "https://github.com/ojfbot/core/issues/694",
+        "https://github.com/ojfbot/core/pull/723"
+      ],
+      "correction": "Retain the PR-type/owner-step distinction instead of applying the merged-PR rule to every slice.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C5",
+      "classification": "confirmed_error",
+      "title": "The service Drafts are miscounted and are not a queue still waiting to merge",
+      "location": "Lines 55, 65-82 and 97 say sixteen Draft PRs are queued or held on a prerequisite chain and propose finding #576's unblock condition.",
+      "explanation": "The article lists fourteen PRs: #566 plus thirteen open Drafts in #569-#584. Its cited November 22 finding C8 records that #577 was closed, #578/#579 merged and the thirteen open PRs are review history whose reviewed changes reached main through #592. #577 explicitly says the smaller PRs remain review history.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/_articles/2026-11-24.md#L55",
+        "https://github.com/ojfbot/daily-logger/pull/577",
+        "https://github.com/ojfbot/daily-logger/pull/592"
+      ],
+      "correction": "Report fourteen listed Drafts, distinguish #566 from the thirteen review-history PRs, say their reviewed changes are integrated, and remove the #576 unblock/merge-chain action.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C6",
+      "classification": "confirmed_error",
+      "title": "The sole open review Draft is #558, not merged PR #579",
+      "location": "Line 80 says there is one open review-only audit Draft, oldest #579.",
+      "explanation": "PR #579 merged on 2026-11-22. PR #558 remained the one open Draft review PR at the article source revision.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/_articles/2026-11-24.md#L80",
+        "https://github.com/ojfbot/daily-logger/pull/579",
+        "https://github.com/ojfbot/daily-logger/pull/558"
+      ],
+      "correction": "Identify #558 as the open Draft and #579 as merged/published history.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "C7",
+      "classification": "confirmed_error",
+      "title": "HouseholdAgentKit #1 already has named reviewers and recorded P0 gates",
+      "location": "Line 82 and the fifth held candidate say PR #1 has no named reviewer, merge condition or owner gate and propose discovering them.",
+      "explanation": "HouseholdAgentKit #1 contains a Codex review and a complementary Claude review with stated scopes. Open P0 findings are tracked as #36, #37 and #38. Shared GitHub transport does not authenticate the claimed agents, but the reviews and gates are not absent.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/_articles/2026-11-24.md#L82",
+        "https://github.com/ojfbot/HouseholdAgentKit/pull/1",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/36",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/37",
+        "https://github.com/ojfbot/HouseholdAgentKit/issues/38"
+      ],
+      "correction": "Preserve the recorded reviewers and P0 issues, distinguish claimed agent identity from GitHub transport identity, and ask only for any remaining owner disposition after those gates are summarized.",
+      "disposition": { "kind": "open" }
+    },
+    {
+      "id": "U1",
+      "classification": "unverified_claim",
+      "title": "Core #724 is not shown to weaken the trust-phase proof check",
+      "location": "Lines 57 and 94 plus the first held candidate call #724 an integrity gap in the trust-build enforcement mechanism.",
+      "explanation": "Core #724 names six excluded tests: FleetRunner G0/G6 tests and three skill tests. None is the trust-phase proof script or its tests. The article supplies no native run or source trace showing that check-trust-phase-proof.mjs depends on those files.",
+      "evidenceUrls": [
+        "https://github.com/ojfbot/daily-logger/blob/56a13eb0c1ceeb6c60f2219e9b426f355785be80/_articles/2026-11-24.md#L57",
+        "https://github.com/ojfbot/core/issues/724"
+      ],
+      "correction": "Report #724 as a separate CI-coverage defect. Connect it to the trust-phase proof gate only after tracing an affected code/test path or a native receipt demonstrates the dependency.",
+      "disposition": { "kind": "open" }
+    }
+  ]
+}
